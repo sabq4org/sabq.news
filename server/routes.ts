@@ -56,7 +56,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(user);
+
+      // Get user's role from RBAC system
+      const userRolesResult = await db
+        .select({ roleName: roles.name })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, userId))
+        .limit(1);
+
+      const role = userRolesResult.length > 0 ? userRolesResult[0].roleName : "reader";
+
+      res.json({ ...user, role });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
