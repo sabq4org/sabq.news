@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import {
@@ -565,11 +566,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OBJECT STORAGE ROUTES (Protected file uploading)
   // ============================================================
 
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // Check if object is public first (no auth needed)
+      const aclPolicy = await getObjectAclPolicy(objectFile);
+      if (aclPolicy?.visibility === "public") {
+        return objectStorageService.downloadObject(objectFile, res);
+      }
+      
+      // For private objects, require authentication
+      const userId = req.user?.claims?.sub;
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
         userId,

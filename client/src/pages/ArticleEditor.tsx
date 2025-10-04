@@ -109,9 +109,8 @@ export default function ArticleEditor() {
         },
       }) as { objectPath: string };
 
-      // Step 4: Set the public URL
-      const publicUrl = `/public-objects/${aclData.objectPath.split('/').pop()}`;
-      setImageUrl(publicUrl);
+      // Step 4: Use the full object path (already normalized by backend)
+      setImageUrl(aclData.objectPath);
 
       toast({
         title: "تم الرفع بنجاح",
