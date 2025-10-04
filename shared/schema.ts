@@ -327,6 +327,13 @@ export const updateUserSchema = z.object({
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
 });
+
+export const adminUpdateUserSchema = z.object({
+  status: z.enum(["active", "suspended", "banned"], {
+    errorMap: () => ({ message: "الحالة يجب أن تكون: نشط، معلق، أو محظور" })
+  }).optional(),
+  roleId: z.string().uuid("معرف الدور غير صحيح").optional(),
+});
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
   id: true, 

@@ -8,12 +8,16 @@ import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, logActivity } from "./rbac";
+import { db } from "./db";
+import { eq, and, or, desc, ilike } from "drizzle-orm";
+import { users, roles, userRoles } from "@shared/schema";
 import {
   insertArticleSchema,
   insertCategorySchema,
   insertCommentSchema,
   insertRssFeedSchema,
   updateUserSchema,
+  adminUpdateUserSchema,
   insertThemeSchema,
   updateThemeSchema,
 } from "@shared/schema";
@@ -234,6 +238,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting category:", error);
       res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // ============================================================
+  // USERS MANAGEMENT ROUTES
+  // ============================================================
+
+  // Get all users with filtering (admin only)
+  app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
+    try {
+      const { search, roleId, status } = req.query;
+
+      let query = db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          status: users.status,
+          isProfileComplete: users.isProfileComplete,
+          createdAt: users.createdAt,
+          roleName: roles.name,
+          roleNameAr: roles.nameAr,
+          roleId: roles.id,
+        })
+        .from(users)
+        .leftJoin(userRoles, eq(users.id, userRoles.userId))
+        .leftJoin(roles, eq(userRoles.roleId, roles.id))
+        .$dynamic();
+
+      // Apply filters
+      const conditions = [];
+      if (search) {
+        conditions.push(
+          or(
+            ilike(users.email, `%${search}%`),
+            ilike(users.firstName, `%${search}%`),
+            ilike(users.lastName, `%${search}%`)
+          )
+        );
+      }
+      if (roleId) {
+        conditions.push(eq(roles.id, roleId));
+      }
+      if (status) {
+        conditions.push(eq(users.status, status));
+      }
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const userList = await query.orderBy(desc(users.createdAt));
+
+      res.json(userList);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Get user by ID (admin only)
+  app.get("/api/admin/users/:id", requireAuth, requirePermission("users.view"), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          bio: users.bio,
+          phoneNumber: users.phoneNumber,
+          profileImageUrl: users.profileImageUrl,
+          status: users.status,
+          isProfileComplete: users.isProfileComplete,
+          createdAt: users.createdAt,
+          roleName: roles.name,
+          roleNameAr: roles.nameAr,
+          roleId: roles.id,
+        })
+        .from(users)
+        .leftJoin(userRoles, eq(users.id, userRoles.userId))
+        .leftJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Update user (status, role assignment)
+  app.patch("/api/admin/users/:id", requireAuth, requirePermission("users.update"), async (req: any, res) => {
+    try {
+      const adminUserId = req.user?.claims?.sub;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const targetUserId = req.params.id;
+      const parsed = adminUpdateUserSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      // Get old user data for logging
+      const [oldUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+
+      if (!oldUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user status if provided
+      if (parsed.data.status !== undefined) {
+        await db
+          .update(users)
+          .set({ status: parsed.data.status })
+          .where(eq(users.id, targetUserId));
+      }
+
+      // Update role if provided
+      if (parsed.data.roleId !== undefined) {
+        // Verify role exists
+        const [role] = await db
+          .select()
+          .from(roles)
+          .where(eq(roles.id, parsed.data.roleId))
+          .limit(1);
+
+        if (!role) {
+          return res.status(404).json({ message: "Role not found" });
+        }
+
+        // Remove existing role assignment
+        await db
+          .delete(userRoles)
+          .where(eq(userRoles.userId, targetUserId));
+
+        // Assign new role
+        await db.insert(userRoles).values({
+          userId: targetUserId,
+          roleId: parsed.data.roleId,
+          assignedBy: adminUserId,
+        });
+      }
+
+      // Get updated user data
+      const [updatedUser] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          status: users.status,
+          isProfileComplete: users.isProfileComplete,
+          createdAt: users.createdAt,
+          roleName: roles.name,
+          roleNameAr: roles.nameAr,
+          roleId: roles.id,
+        })
+        .from(users)
+        .leftJoin(userRoles, eq(users.id, userRoles.userId))
+        .leftJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+
+      // Log activity
+      await logActivity({
+        userId: adminUserId,
+        action: "updated",
+        entityType: "user",
+        entityId: targetUserId,
+        oldValue: oldUser,
+        newValue: updatedUser,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete/Ban user
+  app.delete("/api/admin/users/:id", requireAuth, requirePermission("users.delete"), async (req: any, res) => {
+    try {
+      const adminUserId = req.user?.claims?.sub;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const targetUserId = req.params.id;
+
+      // Prevent self-deletion
+      if (targetUserId === adminUserId) {
+        return res.status(403).json({ message: "Cannot delete your own account" });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Soft delete by setting status to banned
+      await db
+        .update(users)
+        .set({ status: "banned" })
+        .where(eq(users.id, targetUserId));
+
+      // Log activity
+      await logActivity({
+        userId: adminUserId,
+        action: "deleted",
+        entityType: "user",
+        entityId: targetUserId,
+        oldValue: user,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 
