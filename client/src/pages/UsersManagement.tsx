@@ -109,7 +109,7 @@ export default function UsersManagement() {
   }
 
   const handleLogout = () => {
-    window.location.href = "/api/auth/logout";
+    window.location.href = "/api/logout";
   };
 
   // State for dialogs and filters

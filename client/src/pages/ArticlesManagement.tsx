@@ -113,7 +113,7 @@ export default function ArticlesManagement() {
   const { toast } = useToast();
 
   const handleLogout = () => {
-    window.location.href = "/api/auth/logout";
+    window.location.href = "/api/logout";
   };
 
   // State for dialogs and filters

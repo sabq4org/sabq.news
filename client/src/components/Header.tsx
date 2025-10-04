@@ -122,7 +122,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/api/auth/logout" className="flex w-full items-center cursor-pointer" data-testid="link-logout">
+                    <a href="/api/logout" className="flex w-full items-center cursor-pointer" data-testid="link-logout">
                       <LogOut className="ml-2 h-4 w-4" />
                       تسجيل الخروج
                     </a>

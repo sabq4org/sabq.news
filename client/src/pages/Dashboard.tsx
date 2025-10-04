@@ -179,7 +179,7 @@ export default function Dashboard() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <a href="/api/auth/logout" className="flex items-center gap-3 w-full" data-testid="link-logout-dashboard">
+                      <a href="/api/logout" className="flex items-center gap-3 w-full" data-testid="link-logout-dashboard">
                         <LogOut className="h-4 w-4" />
                         <span>تسجيل الخروج</span>
                       </a>
