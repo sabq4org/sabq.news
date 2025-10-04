@@ -245,6 +245,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USERS MANAGEMENT ROUTES
   // ============================================================
 
+  // Get all roles (for admin dropdown)
+  app.get("/api/roles", requireAuth, async (req: any, res) => {
+    try {
+      const allRoles = await db.select().from(roles).orderBy(roles.name);
+      res.json(allRoles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
