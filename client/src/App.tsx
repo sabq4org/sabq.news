@@ -9,6 +9,7 @@ import ArticleDetail from "@/pages/ArticleDetail";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import Profile from "@/pages/Profile";
+import CompleteProfile from "@/pages/CompleteProfile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/profile" component={Profile} />
+      <Route path="/complete-profile" component={CompleteProfile} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Article not found" });
       }
 
-      const related = await storage.getRelatedArticles(article.id, article.categoryId);
+      const related = await storage.getRelatedArticles(article.id, article.categoryId || undefined);
       res.json(related);
     } catch (error) {
       console.error("Error fetching related articles:", error);

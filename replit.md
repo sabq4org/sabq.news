@@ -23,7 +23,8 @@ Preferred communication style: Simple, everyday language.
 - Tailwind CSS for utility-first styling with custom theme variables
 - shadcn/ui component library (New York style variant)
 - Custom theme system supporting light/dark modes with CSS variables
-- Arabic-optimized typography using Tajawal font family
+- Arabic-optimized typography using IBM Plex Sans Arabic font family
+- Custom SABQ logo integration
 
 **State Management**
 - TanStack Query (React Query) for server state management
@@ -33,7 +34,8 @@ Preferred communication style: Simple, everyday language.
 **Key Frontend Features**
 - Home page with featured articles and category filtering
 - Article detail pages with AI summaries and comment sections
-- User profile with reading history and bookmarks
+- User profile with reading history, bookmarks, and settings
+- User registration system with profile completion flow
 - Dashboard for content creators and editors
 - WYSIWYG article editor with AI-powered title generation
 - Responsive design with mobile-first approach
@@ -52,7 +54,7 @@ Preferred communication style: Simple, everyday language.
 - Session storage using connect-pg-simple
 
 **Core Data Models**
-- Users: Authentication and profile management
+- Users: Authentication and comprehensive profile management (firstName, lastName, bio, phoneNumber, profileImageUrl, role, isProfileComplete)
 - Articles: Content with versioning, AI summaries, and metadata
 - Categories: Hierarchical content organization
 - Comments: Threaded discussion system
@@ -65,6 +67,7 @@ Preferred communication style: Simple, everyday language.
 - Authentication middleware protecting sensitive routes
 - Role-based access control (reader, editor, admin)
 - Consistent error handling and response formats
+- User profile management (GET /api/auth/user, PATCH /api/auth/user)
 
 **AI Integration**
 - OpenAI GPT-5 integration for content features:

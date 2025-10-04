@@ -123,9 +123,9 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
-  bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional(),
-  phoneNumber: z.string().regex(/^[0-9+\-\s()]+$/, "رقم الهاتف غير صحيح").optional(),
-  profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional(),
+  bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional().or(z.literal("")),
+  phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
+  profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
 });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
