@@ -358,6 +358,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const targetUserId = req.params.id;
+
+      // Prevent self-modification to avoid privilege escalation/demotion
+      if (targetUserId === adminUserId) {
+        return res.status(403).json({ message: "Cannot modify your own account" });
+      }
+
       const parsed = adminUpdateUserSchema.safeParse(req.body);
 
       if (!parsed.success) {

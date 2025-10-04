@@ -103,6 +103,11 @@ export default function UsersManagement() {
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
 
+  // Store current user ID globally for button disable logic
+  if (user?.id) {
+    (globalThis as any).__currentUserId = user.id;
+  }
+
   const handleLogout = () => {
     window.location.href = "/api/auth/logout";
   };
@@ -408,6 +413,7 @@ export default function UsersManagement() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleEdit(user)}
+                                  disabled={user.id === (globalThis as any).__currentUserId}
                                   data-testid={`button-edit-${user.id}`}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -416,6 +422,7 @@ export default function UsersManagement() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => setDeletingUser(user)}
+                                  disabled={user.id === (globalThis as any).__currentUserId}
                                   data-testid={`button-delete-${user.id}`}
                                 >
                                   <Trash2 className="h-4 w-4" />
