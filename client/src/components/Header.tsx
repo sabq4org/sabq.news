@@ -131,7 +131,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
               </DropdownMenu>
             ) : (
               <Button asChild data-testid="button-login">
-                <a href="/api/auth/login">تسجيل الدخول</a>
+                <a href="/api/login">تسجيل الدخول</a>
               </Button>
             )}
           </div>

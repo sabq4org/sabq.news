@@ -41,13 +41,12 @@ export function CommentSection({
     }
   };
 
-  const getInitials = (name?: string, email?: string) => {
-    if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const getInitials = (firstName?: string | null, lastName?: string | null, email?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
-    if (email) {
-      return email[0].toUpperCase();
-    }
+    if (firstName) return firstName[0].toUpperCase();
+    if (email) return email[0].toUpperCase();
     return 'م';
   };
 
@@ -60,7 +59,7 @@ export function CommentSection({
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarFallback className="bg-primary/10 text-primary text-sm">
-            {getInitials(comment.user.name, comment.user.email)}
+            {getInitials(comment.user.firstName, comment.user.lastName, comment.user.email)}
           </AvatarFallback>
         </Avatar>
 
@@ -68,7 +67,9 @@ export function CommentSection({
           <div className="bg-muted rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
-                {comment.user.name || comment.user.email}
+                {comment.user.firstName && comment.user.lastName
+                  ? `${comment.user.firstName} ${comment.user.lastName}`
+                  : comment.user.email}
               </span>
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.createdAt), {
@@ -151,7 +152,7 @@ export function CommentSection({
             <div className="flex gap-3">
               <Avatar className="h-10 w-10 flex-shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                  {getInitials(currentUser.name, currentUser.email)}
+                  {getInitials(currentUser.firstName, currentUser.lastName, currentUser.email)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -180,7 +181,7 @@ export function CommentSection({
           <div className="text-center py-8 text-muted-foreground">
             <p className="mb-4">سجل الدخول لإضافة تعليق</p>
             <Button asChild data-testid="button-login-to-comment">
-              <a href="/api/auth/login">تسجيل الدخول</a>
+              <a href="/api/login">تسجيل الدخول</a>
             </Button>
           </div>
         )}
