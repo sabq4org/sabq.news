@@ -7,6 +7,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
+import { requireAuth, requirePermission, logActivity } from "./rbac";
 import {
   insertArticleSchema,
   insertCategorySchema,
@@ -64,9 +65,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
-  // CATEGORY ROUTES
+  // CATEGORY ROUTES (CMS Module 1)
   // ============================================================
 
+  // Get all categories
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getAllCategories();
@@ -77,23 +79,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/categories", isAuthenticated, async (req: any, res) => {
+  // Get single category by ID
+  app.get("/api/categories/:id", async (req, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden" });
+      const category = await storage.getCategoryById(req.params.id);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching category:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // Create new category (requires permission)
+  app.post("/api/categories", requireAuth, requirePermission("categories.create"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const parsed = insertCategorySchema.safeParse(req.body);
       if (!parsed.success) {
-        return res.status(400).json({ message: "Invalid category data" });
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Check if slug already exists
+      const existingCategory = await storage.getAllCategories();
+      if (existingCategory.some(cat => cat.slug === parsed.data.slug)) {
+        return res.status(409).json({ message: "هذا المعرف مستخدم بالفعل" });
       }
 
       const category = await storage.createCategory(parsed.data);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "created",
+        entityType: "category",
+        entityId: category.id,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
       res.json(category);
     } catch (error) {
       console.error("Error creating category:", error);
       res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // Update category (requires permission)
+  app.patch("/api/categories/:id", requireAuth, requirePermission("categories.edit"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const oldCategory = await storage.getCategoryById(categoryId);
+      if (!oldCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      // Only allow specific fields to be updated
+      const allowedFields = ["nameAr", "nameEn", "slug", "description", "icon"];
+      const updateData: any = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      const parsed = insertCategorySchema.partial().safeParse(updateData);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Check if slug already exists (excluding current category)
+      if (parsed.data.slug && parsed.data.slug !== oldCategory.slug) {
+        const existingCategory = await storage.getAllCategories();
+        if (existingCategory.some(cat => cat.slug === parsed.data.slug && cat.id !== categoryId)) {
+          return res.status(409).json({ message: "هذا المعرف مستخدم بالفعل" });
+        }
+      }
+
+      const category = await storage.updateCategory(categoryId, parsed.data);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "category",
+        entityId: categoryId,
+        oldValue: oldCategory,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Delete category (requires permission)
+  app.delete("/api/categories/:id", requireAuth, requirePermission("categories.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const category = await storage.getCategoryById(categoryId);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      await storage.deleteCategory(categoryId);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "deleted",
+        entityType: "category",
+        entityId: categoryId,
+        oldValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
     }
   });
 
