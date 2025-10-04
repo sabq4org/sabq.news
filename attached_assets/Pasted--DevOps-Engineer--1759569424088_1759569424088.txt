@@ -1,0 +1,108 @@
+
+
+بالتأكيد. إليك برومبت تقني ومركز مصمم خصيصًا لمهندس البنية التحتية (DevOps Engineer) لتنفيذ وتجهيز البنية التحتية لمشروع "سبق الذكية" فقط، مع التركيز على الحاويات والتوسع والبيئات المتعددة.
+
+---
+
+### **البرومبت التقني: إعداد البنية التحتية لمنصة "سبق الذكية"**
+
+**الدور:** أنت مهندس بنية تحتية (DevOps) أول متخصص في التطبيقات الحديثة والبنى الخدمية المصغرة (Microservices).
+
+**المهمة:** مهمتك هي تصميم وتنفيذ البنية التحتية الكاملة لمشروع "سبق الذكية". الهدف هو بناء بيئة تطوير محلية متكاملة وبيئة إنتاج قابلة للتوسع عاليًا (Highly Scalable)، مرنة (Resilient)، وآمنة (Secure) باستخدام Docker و Kubernetes. يجب أن تكون البنية قادرة على دعم التطبيق الرئيسي (Next.js) وكل الخدمات المصغرة المرتبطة به.
+
+**المبادئ الأساسية:**
+1.  **قابلية التكرار (Reproducibility):** يجب أن تكون البيئة المحلية مطابقة للبيئة الإنتاجية قدر الإمكان باستخدام الحاويات.
+2.  **الفصل (Separation of Concerns):** كل خدمة (قاعدة بيانات، كاش، واجهة API) يجب أن تعمل في حاوية منفصلة.
+3.  **قابلية التوسع (Scalability):** يجب أن تكون البنية جاهزة للتوسع الأفقي (Horizontal Scaling) باستخدام Kubernetes.
+4.  **الملاحظة (Observability):** يجب توفير آليات أساسية لجمع السجلات (Logs) والمقاييس (Metrics).
+
+---
+
+### **المرحلة الأولى: إعداد بيئة التطوير المحلية (Local Development)**
+
+**الهدف:** توفير بيئة تطوير متكاملة وسهلة التشغيل للمطورين باستخدام `docker-compose`.
+
+**المهام المطلوبة:**
+
+1.  **إنشاء `Dockerfile` للتطبيق الرئيسي:**
+    *   أنشئ `Dockerfile` في جذر المشروع لتطبيق Next.js 15.
+    *   يجب أن يستخدم `node:20-alpine` كصورة أساسية لتقليل الحجم.
+    *   اتبع أفضل الممارسات: مرحلة متعددة (Multi-stage build) لفصل بيئة التطوير عن بيئة الإنتاج.
+    *   تأكد من إعداد `next.config.js` مع `output: 'standalone'` لإنشاء صورة إنتاجية محسّنة.
+    *   يجب أن يعرض التطبيق على المنفذ `3000` داخل الحاوية.
+
+2.  **إنشاء `docker-compose.yml` شامل:**
+    *   أنشئ ملف `docker-compose.yml` في جذر المشروع لتشغيل جميع الخدمات التالية:
+        *   **`app`**: خدمة التطبيق الرئيسي (بناءً على `Dockerfile`).
+        *   **`postgres`**: قاعدة بيانات PostgreSQL (استخدم صورة `postgres:15-alpine`). قم بتعيين كلمة مرور، مستخدم، واسم قاعدة بيانات عبر متغيرات البيئة. قم بإنشاء `volume` دائم للاحتفاظ بالبيانات.
+        *   **`redis`**: خادم Redis (استخدم صورة `redis:7-alpine`).
+        *   **`nginx`**: خادم Nginx كـ reverse proxy. قم بإعداد ملف `nginx.conf` بسيط لإعادة توجيه الطلبات من `localhost:80` إلى خدمة `app` على المنفذ `3000`.
+    *   **الشبكات (Networking):** أنشئ شبكة Docker مخصصة (`sabq-network`) وربط جميع الخدمات بها للسماح لها بالتواصل فيما بينها.
+    *   **متغيرات البيئة**: استخدم ملف `.env.local` لتغذية `docker-compose` بالمتغيرات الحساسة (`DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`).
+
+**النتيجة المتوقعة لهذه المرحلة:** يجب أن يتمكن أي مطور من تشغيل `docker-compose up -d` والحصول على بيئة عمل كاملة تعمل على `http://localhost` مع قاعدة بيانات و Redis جاهزين للاستخدام.
+
+---
+
+### **المرحلة الثانية: إعداد بيئة الإنتاج (Production on Kubernetes)**
+
+**الهدف:** تصميم البنية التحتية للإنتاج باستخدام Kubernetes (K8s) مع الأخذ في الاعتبار أن قاعدة البيانات الأساسية ستكون Supabase (مدارة)، والصور على Cloudinary.
+
+**المهام المطلوبة:**
+
+1.  **هيكلية مجلد `k8s/`:**
+    *   أنشئ مجلد `k8s/` في جذر المشروع لتنظيم ملفات K8s.
+    *   يجب أن يحتوي على الهيكل التالي:
+        ```
+        k8s/
+        ├── namespace.yaml
+        ├── configmap.yaml
+        ├── secrets.yaml
+        ├── deployments/
+        │   ├── app-deployment.yaml
+        │   ├── redis-deployment.yaml
+        │   └── (deployments for other microservices)
+        ├── services/
+        │   ├── app-service.yaml
+        │   └── redis-service.yaml
+        └── ingress/
+            └── app-ingress.yaml
+        ```
+
+2.  **إنشاء ملفات K8s Manifests:**
+    *   **`namespace.yaml`**: تعريف `namespace` باسم `sabq-ai` لعزل موارد المشروع.
+    *   **`secrets.yaml`**: تعريف Kubernetes Secrets للمتغيرات الحساسة (مثل `JWT_SECRET`, `CLOUDINARY_API_KEY`, `OPENAI_API_KEY`). **ملاحظة:** يجب عدم إضافة هذا الملف إلى Git.
+    *   **`configmap.yaml`**: تعريف ConfigMap للمتغيرات غير الحساسة (مثل `NODE_ENV=production`, `NEXT_PUBLIC_API_URL`).
+    *   **`deployments/app-deployment.yaml`**:
+        *   تعريف Deployment لتطبيق Next.js.
+        *   استخدم الصورة التي سيتم بناؤها من `Dockerfile` ودفعها إلى سجل حاويات (مثل Docker Hub, AWS ECR, أو Google GCR).
+        *   قم بربط ConfigMap و Secrets مع الحاوية عبر `envFrom`.
+        *   حدد `resources` (requests و limits) للذاكرة و CPU.
+        *   أضف `livenessProbe` و `readinessProbe` للتأكد من صحة الحاوية.
+    *   **`deployments/redis-deployment.yaml`**: تعريف Deployment لـ Redis مع `PersistentVolumeClaim` للاحتفاظ بالبيانات.
+    *   **`services/`**: تعريف Service لكل Deployment لعرضه داخل الكتلة (ClusterIP) أو خارجيًا (LoadBalancer/NodePort).
+    *   **`ingress/app-ingress.yaml`**:
+        *   تعريف Ingress resource (باستخدام Nginx Ingress Controller) لتوجيه حركة المرور الخارجية إلى خدمة التطبيق.
+        *   قم بإعداد TLS لتفعيل HTTPS تلقائيًا (باستخدام Cert-Manager).
+
+3.  **إعداد الخدمات المصغرة (Microservices):**
+    *   لكل خدمة مصغرة (`ml_recommendation_engine`, `smart_notifications_system`، إلخ)، أنشئ `Deployment` و `Service` خاصين بها داخل مجلد `k8s/deployments/` و `k8s/services/`.
+    *   يجب أن تتواصل هذه الخدمات مع بعضها البعض عبر أسماء الخدمات الداخلية (Kubernetes DNS).
+
+**النتيجة المتوقعة لهذه المرحلة:** مجموعة من ملفات YAML جاهزة للنشر على أي مجموعة Kubernetes (محلية عبر Minikube/K3s أو سحابية عبر GKE/EKS/AKS) باستخدام أمر `kubectl apply -f k8s/`.
+
+---
+
+### **المخرجات النهائية (Deliverables):**
+
+1.  `Dockerfile` محسّن في جذر المشروع.
+2.  `docker-compose.yml` كامل مع ملف `nginx/nginx.conf` مرافق.
+3.  مجلد `k8s/` كامل يحتوي على جميع ملفات YAML المطلوبة لنشر الإنتاج.
+4.  مستند `README.md` مُحدّث يشرح كيفية تشغيل البيئة المحلية وكيفية نشر البنية على Kubernetes.
+
+**اعتبارات إضافية:**
+*   **CI/CD:** يجب أن تكون البنية جاهزة للتكامل مع خط أنابيب CI/CD (مثل GitHub Actions) لأتمتة عملية البناء والنشر.
+*   **المراقبة:** اترك نقاط امتداد (hooks) لإضافة Prometheus و Grafana لاحقًا.
+*   **السجلات:** تأكد من أن جميع الخدمات تُصدر سجلاتها إلى `stdout/stderr` لتسهيل جمعها من قبل نظام تجميع السجلات المركزي (مثل ELK Stack أو Loki).
+
+هذا البرومبت يوفر خارطة طريق واضحة ومفصلة لتنفيذ البنية التحتية، مع التركيز على أفضل الممارسات الحديثة وتقديم مخرجات ملموسة وقابلة للتنفيذ فورًا.
