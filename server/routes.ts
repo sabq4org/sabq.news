@@ -9,7 +9,7 @@ import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, logActivity, getUserPermissions } from "./rbac";
 import { db } from "./db";
-import { eq, and, or, desc, ilike } from "drizzle-orm";
+import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import { 
   users, 
   roles, 
@@ -634,6 +634,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prevent editing system roles
       if (role[0].isSystem) {
         return res.status(403).json({ message: "Cannot modify system role permissions" });
+      }
+
+      // Get system.manage_roles permission
+      const manageRolesPerm = await db
+        .select()
+        .from(permissions)
+        .where(eq(permissions.code, "system.manage_roles"))
+        .limit(1);
+
+      if (manageRolesPerm.length > 0) {
+        const manageRolesPermId = manageRolesPerm[0].id;
+
+        // Check if this update would remove system.manage_roles from ALL non-system roles
+        if (!parsed.data.permissionIds.includes(manageRolesPermId)) {
+          // This update wants to remove system.manage_roles from this role
+          // Check if any OTHER non-system role still has this permission
+          const otherRolesWithManagePerms = await db
+            .select({ roleId: rolePermissions.roleId })
+            .from(rolePermissions)
+            .innerJoin(roles, eq(rolePermissions.roleId, roles.id))
+            .where(
+              and(
+                eq(rolePermissions.permissionId, manageRolesPermId),
+                eq(roles.isSystem, false),
+                // Exclude the current role being edited
+                sql`${rolePermissions.roleId} != ${roleId}`
+              )
+            )
+            .limit(1);
+
+          // If no other non-system role has this permission, prevent removal
+          if (otherRolesWithManagePerms.length === 0) {
+            return res.status(409).json({ 
+              message: "لا يمكن إزالة صلاحية إدارة الأدوار من آخر دور يملكها. يجب أن يحتفظ دور واحد على الأقل بهذه الصلاحية.",
+              error: "Cannot remove system.manage_roles permission from the last role that has it. At least one role must retain this permission."
+            });
+          }
+        }
       }
 
       // Get old permissions for logging

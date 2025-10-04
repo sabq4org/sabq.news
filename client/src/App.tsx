@@ -11,6 +11,7 @@ import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
+import RolesManagement from "@/pages/RolesManagement";
 import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/users" component={UsersManagement} />
+      <Route path="/dashboard/roles" component={RolesManagement} />
       <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
