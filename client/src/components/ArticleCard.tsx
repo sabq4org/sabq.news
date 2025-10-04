@@ -36,60 +36,58 @@ export function ArticleCard({
 
   if (variant === "featured") {
     return (
-      <Link href={`/article/${article.slug}`}>
-        <a data-testid={`link-article-${article.id}`}>
-          <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 border-0 shadow-lg">
-            <div className="relative aspect-[21/9] overflow-hidden">
-              {article.imageUrl ? (
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+      <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
+        <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 border-0 shadow-lg">
+          <div className="relative aspect-[21/9] overflow-hidden">
+            {article.imageUrl ? (
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            
+            <div className="absolute top-4 right-4 flex gap-2">
+              {article.category && (
+                <Badge variant="default" className="shadow-lg" data-testid={`badge-category-${article.id}`}>
+                  {article.category.icon} {article.category.nameAr}
+                </Badge>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              
-              <div className="absolute top-4 right-4 flex gap-2">
-                {article.category && (
-                  <Badge variant="default" className="shadow-lg" data-testid={`badge-category-${article.id}`}>
-                    {article.category.icon} {article.category.nameAr}
-                  </Badge>
-                )}
-                {article.aiGenerated && (
-                  <Badge variant="secondary" className="shadow-lg gap-1" data-testid={`badge-ai-${article.id}`}>
-                    <Sparkles className="h-3 w-3" />
-                    ذكاء اصطناعي
-                  </Badge>
-                )}
-              </div>
+              {article.aiGenerated && (
+                <Badge variant="secondary" className="shadow-lg gap-1" data-testid={`badge-ai-${article.id}`}>
+                  <Sparkles className="h-3 w-3" />
+                  ذكاء اصطناعي
+                </Badge>
+              )}
+            </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
-                  {article.title}
-                </h2>
-                {article.excerpt && (
-                  <p className="text-base sm:text-lg text-white/90 mb-4 line-clamp-2 leading-relaxed">
-                    {article.excerpt}
-                  </p>
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
+                {article.title}
+              </h2>
+              {article.excerpt && (
+                <p className="text-base sm:text-lg text-white/90 mb-4 line-clamp-2 leading-relaxed">
+                  {article.excerpt}
+                </p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-white/80">
+                {article.author?.name && (
+                  <span className="font-medium">{article.author.name}</span>
                 )}
-                <div className="flex items-center gap-4 text-sm text-white/80">
-                  {article.author?.name && (
-                    <span className="font-medium">{article.author.name}</span>
-                  )}
-                  {timeAgo && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {timeAgo}
-                    </span>
-                  )}
-                </div>
+                {timeAgo && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {timeAgo}
+                  </span>
+                )}
               </div>
             </div>
-          </Card>
-        </a>
+          </div>
+        </Card>
       </Link>
     );
   }
@@ -99,19 +97,17 @@ export function ArticleCard({
       <Card className="group hover-elevate active-elevate-2 transition-all">
         <CardContent className="p-4">
           <div className="flex gap-4">
-            <Link href={`/article/${article.slug}`}>
-              <a className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
-                {article.imageUrl ? (
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-32 h-32 object-cover rounded-md"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-md" />
-                )}
-              </a>
+            <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
+              {article.imageUrl ? (
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-32 h-32 object-cover rounded-md"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-md" />
+              )}
             </Link>
 
             <div className="flex-1 min-w-0">
@@ -129,11 +125,9 @@ export function ArticleCard({
               </div>
 
               <Link href={`/article/${article.slug}`}>
-                <a>
-                  <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
-                    {article.title}
-                  </h3>
-                </a>
+                <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+                  {article.title}
+                </h3>
               </Link>
 
               {article.excerpt && (
@@ -189,112 +183,110 @@ export function ArticleCard({
 
   // Grid variant (default)
   return (
-    <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all">
+    <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all" data-testid={`card-article-${article.id}`}>
       <Link href={`/article/${article.slug}`}>
-        <a data-testid={`link-article-${article.id}`}>
-          <div className="relative aspect-[16/9] overflow-hidden">
-            {article.imageUrl ? (
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+        <div className="relative aspect-[16/9] overflow-hidden">
+          {article.imageUrl ? (
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          
+          {article.category && (
+            <Badge 
+              variant="default" 
+              className="absolute top-3 right-3 shadow-md" 
+              data-testid={`badge-category-${article.id}`}
+            >
+              {article.category.icon} {article.category.nameAr}
+            </Badge>
+          )}
+          {article.aiGenerated && (
+            <Badge 
+              variant="secondary" 
+              className="absolute top-3 left-3 shadow-md gap-1" 
+              data-testid={`badge-ai-${article.id}`}
+            >
+              <Sparkles className="h-3 w-3" />
+            </Badge>
+          )}
+        </div>
+      </Link>
+
+      <CardContent className="p-4">
+        <Link href={`/article/${article.slug}`}>
+          <h3 className="text-lg font-semibold mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+            {article.title}
+          </h3>
+        </Link>
+        
+        {article.excerpt && (
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+            {article.excerpt}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between pt-3 border-t">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {timeAgo && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {timeAgo}
+              </span>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            
-            {article.category && (
-              <Badge 
-                variant="default" 
-                className="absolute top-3 right-3 shadow-md" 
-                data-testid={`badge-category-${article.id}`}
-              >
-                {article.category.icon} {article.category.nameAr}
-              </Badge>
-            )}
-            {article.aiGenerated && (
-              <Badge 
-                variant="secondary" 
-                className="absolute top-3 left-3 shadow-md gap-1" 
-                data-testid={`badge-ai-${article.id}`}
-              >
-                <Sparkles className="h-3 w-3" />
-              </Badge>
-            )}
+            <span className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              {article.views}
+            </span>
           </div>
 
-          <CardContent className="p-4">
-            <h3 className="text-lg font-semibold mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
-              {article.title}
-            </h3>
-            
-            {article.excerpt && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
-                {article.excerpt}
-              </p>
-            )}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover-elevate"
+              onClick={(e) => {
+                e.preventDefault();
+                onReact?.(article.id);
+              }}
+              data-testid={`button-react-${article.id}`}
+            >
+              <Heart className={`h-4 w-4 ${article.hasReacted ? 'fill-red-500 text-red-500' : ''}`} />
+            </Button>
 
-            <div className="flex items-center justify-between pt-3 border-t">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                {timeAgo && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo}
-                  </span>
-                )}
-                <span className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  {article.views}
-                </span>
-              </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover-elevate"
+              onClick={(e) => {
+                e.preventDefault();
+                onBookmark?.(article.id);
+              }}
+              data-testid={`button-bookmark-${article.id}`}
+            >
+              <Bookmark className={`h-4 w-4 ${article.isBookmarked ? 'fill-current' : ''}`} />
+            </Button>
 
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover-elevate"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onReact?.(article.id);
-                  }}
-                  data-testid={`button-react-${article.id}`}
-                >
-                  <Heart className={`h-4 w-4 ${article.hasReacted ? 'fill-red-500 text-red-500' : ''}`} />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover-elevate"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onBookmark?.(article.id);
-                  }}
-                  data-testid={`button-bookmark-${article.id}`}
-                >
-                  <Bookmark className={`h-4 w-4 ${article.isBookmarked ? 'fill-current' : ''}`} />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover-elevate"
-                  asChild
-                  data-testid={`button-comments-${article.id}`}
-                >
-                  <Link href={`/article/${article.slug}#comments`}>
-                    <a onClick={(e) => e.stopPropagation()}>
-                      <MessageCircle className="h-4 w-4" />
-                    </a>
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </a>
-      </Link>
+            <Link href={`/article/${article.slug}#comments`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover-elevate"
+                onClick={(e) => e.stopPropagation()}
+                data-testid={`button-comments-${article.id}`}
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

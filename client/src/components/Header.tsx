@@ -43,13 +43,11 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo and brand */}
           <div className="flex items-center gap-6">
-            <Link href="/">
-              <a className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2" data-testid="link-home">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
-                  س
-                </div>
-                <span className="hidden sm:inline-block text-xl font-bold">سبق الذكية</span>
-              </a>
+            <Link href="/" className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2" data-testid="link-home">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
+                س
+              </div>
+              <span className="hidden sm:inline-block text-xl font-bold">سبق الذكية</span>
             </Link>
           </div>
 
