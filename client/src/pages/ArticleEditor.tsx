@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 
 export default function ArticleEditor() {
@@ -44,9 +46,116 @@ export default function ArticleEditor() {
     queryKey: ["/api/categories"],
   });
 
+  const { toast } = useToast();
+
   const { data: article } = useQuery<ArticleWithDetails>({
     queryKey: ["/api/dashboard/articles", id],
     enabled: !isNewArticle,
+  });
+
+  // Populate form when editing existing article
+  useEffect(() => {
+    if (article && !isNewArticle) {
+      setTitle(article.title);
+      setSlug(article.slug);
+      setContent(article.content);
+      setExcerpt(article.excerpt || "");
+      setCategoryId(article.categoryId || "");
+      setImageUrl(article.imageUrl || "");
+      setStatus(article.status as "draft" | "published");
+    }
+  }, [article, isNewArticle]);
+
+  const saveArticleMutation = useMutation({
+    mutationFn: async (data: { publishNow: boolean }) => {
+      const articleData = {
+        title,
+        slug,
+        content,
+        excerpt,
+        categoryId,
+        imageUrl,
+        status: data.publishNow ? "published" : status,
+      };
+
+      if (isNewArticle) {
+        return await apiRequest("/api/dashboard/articles", {
+          method: "POST",
+          body: JSON.stringify(articleData),
+        });
+      } else {
+        return await apiRequest(`/api/dashboard/articles/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(articleData),
+        });
+      }
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles"] });
+      toast({
+        title: variables.publishNow ? "تم النشر بنجاح" : "تم الحفظ بنجاح",
+        description: variables.publishNow ? "تم نشر المقال بنجاح" : "تم حفظ المقال كمسودة",
+      });
+      if (isNewArticle && data?.id) {
+        navigate(`/dashboard/articles/${data.id}`);
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حفظ المقال",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateSummaryMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/ai/summarize", {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    onSuccess: (data: { summary: string }) => {
+      setExcerpt(data.summary);
+      toast({
+        title: "تم التلخيص",
+        description: "تم إنشاء ملخص تلقائي للمقال",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في توليد الملخص",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateTitlesMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/ai/generate-titles", {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    onSuccess: (data: { titles: string[] }) => {
+      if (data.titles.length > 0) {
+        setTitle(data.titles[0]);
+        setSlug(generateSlug(data.titles[0]));
+        toast({
+          title: "تم توليد العناوين",
+          description: `اقتراح: ${data.titles.join(" | ")}`,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في توليد العناوين",
+        variant: "destructive",
+      });
+    },
   });
 
   const generateSlug = (text: string) => {
@@ -67,24 +176,28 @@ export default function ArticleEditor() {
 
   const handleGenerateSummary = async () => {
     if (!content.trim()) return;
-    setIsGenerating(true);
-    // Will be implemented in integration phase
-    console.log("Generate AI summary");
-    setTimeout(() => setIsGenerating(false), 1000);
+    generateSummaryMutation.mutate();
   };
 
   const handleGenerateTitle = async () => {
     if (!content.trim()) return;
-    setIsGenerating(true);
-    // Will be implemented in integration phase
-    console.log("Generate AI title");
-    setTimeout(() => setIsGenerating(false), 1000);
+    generateTitlesMutation.mutate();
   };
 
   const handleSave = async (publishNow = false) => {
-    console.log("Save article:", { title, slug, content, excerpt, categoryId, imageUrl, status: publishNow ? "published" : status });
-    // Will be implemented in integration phase
+    if (!title.trim() || !slug.trim() || !content.trim() || !categoryId) {
+      toast({
+        title: "حقول مطلوبة",
+        description: "الرجاء ملء جميع الحقول المطلوبة",
+        variant: "destructive",
+      });
+      return;
+    }
+    saveArticleMutation.mutate({ publishNow });
   };
+
+  const isSaving = saveArticleMutation.isPending;
+  const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,18 +228,28 @@ export default function ArticleEditor() {
               <Button
                 variant="outline"
                 onClick={() => handleSave(false)}
+                disabled={isSaving}
                 className="gap-2"
                 data-testid="button-save-draft"
               >
-                <Save className="h-4 w-4" />
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 <span className="hidden sm:inline">حفظ كمسودة</span>
               </Button>
               <Button
                 onClick={() => handleSave(true)}
+                disabled={isSaving}
                 className="gap-2"
                 data-testid="button-publish"
               >
-                <Send className="h-4 w-4" />
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
                 <span className="hidden sm:inline">نشر</span>
               </Button>
               <ThemeToggle />
@@ -190,11 +313,11 @@ export default function ArticleEditor() {
                         variant="outline"
                         size="sm"
                         onClick={handleGenerateTitle}
-                        disabled={isGenerating || !content.trim()}
+                        disabled={isGeneratingAI || !content.trim()}
                         className="gap-2"
                         data-testid="button-generate-title"
                       >
-                        {isGenerating ? (
+                        {generateTitlesMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <Sparkles className="h-3 w-3" />
@@ -206,11 +329,11 @@ export default function ArticleEditor() {
                         variant="outline"
                         size="sm"
                         onClick={handleGenerateSummary}
-                        disabled={isGenerating || !content.trim()}
+                        disabled={isGeneratingAI || !content.trim()}
                         className="gap-2"
                         data-testid="button-generate-summary"
                       >
-                        {isGenerating ? (
+                        {generateSummaryMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <Sparkles className="h-3 w-3" />
@@ -341,10 +464,14 @@ export default function ArticleEditor() {
                     size="sm"
                     className="w-full justify-start gap-2"
                     onClick={handleGenerateTitle}
-                    disabled={isGenerating || !content.trim()}
+                    disabled={isGeneratingAI || !content.trim()}
                     data-testid="button-ai-title-sidebar"
                   >
-                    <Sparkles className="h-4 w-4" />
+                    {generateTitlesMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
                     اقتراح عناوين بديلة
                   </Button>
                   <Button
@@ -352,10 +479,14 @@ export default function ArticleEditor() {
                     size="sm"
                     className="w-full justify-start gap-2"
                     onClick={handleGenerateSummary}
-                    disabled={isGenerating || !content.trim()}
+                    disabled={isGeneratingAI || !content.trim()}
                     data-testid="button-ai-summary-sidebar"
                   >
-                    <Sparkles className="h-4 w-4" />
+                    {generateSummaryMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
                     إنشاء ملخص تلقائي
                   </Button>
                 </div>

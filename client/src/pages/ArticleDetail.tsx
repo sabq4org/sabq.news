@@ -1,5 +1,5 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import {
   Heart,
   Bookmark,
@@ -24,9 +27,11 @@ import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const { toast } = useToast();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
+    retry: false,
   });
 
   const { data: article, isLoading } = useQuery<ArticleWithDetails>({
@@ -41,12 +46,89 @@ export default function ArticleDetail() {
     queryKey: ["/api/articles", slug, "related"],
   });
 
+  const reactMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest(`/api/articles/${article.id}/react`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "تسجيل دخول مطلوب",
+          description: "يجب تسجيل الدخول للتفاعل مع المقالات",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest(`/api/articles/${article.id}/bookmark`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
+      toast({
+        title: "تم الحفظ",
+        description: "تم تحديث المقالات المحفوظة",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "تسجيل دخول مطلوب",
+          description: "يجب تسجيل الدخول لحفظ المقالات",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: async (data: { content: string; parentId?: string }) => {
+      return await apiRequest(`/api/articles/${slug}/comments`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/articles", slug, "comments"] });
+      toast({
+        title: "تم إضافة التعليق",
+        description: "تم نشر تعليقك بنجاح",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "تسجيل دخول مطلوب",
+          description: "يجب تسجيل الدخول لإضافة تعليق",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.message || "فشل في إضافة التعليق",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
   const handleReact = async () => {
-    console.log("React to article");
+    reactMutation.mutate();
   };
 
   const handleBookmark = async () => {
-    console.log("Bookmark article");
+    bookmarkMutation.mutate();
   };
 
   const handleShare = async () => {
@@ -64,7 +146,7 @@ export default function ArticleDetail() {
   };
 
   const handleComment = async (content: string, parentId?: string) => {
-    console.log("Submit comment:", content, parentId);
+    commentMutation.mutate({ content, parentId });
   };
 
   if (isLoading) {

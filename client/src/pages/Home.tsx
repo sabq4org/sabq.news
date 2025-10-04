@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { CategoryPills } from "@/components/CategoryPills";
 import { ArticleCard } from "@/components/ArticleCard";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import type { ArticleWithDetails, Category } from "@shared/schema";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
+    retry: false,
   });
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
@@ -32,14 +37,70 @@ export default function Home() {
     enabled: !!user,
   });
 
+  const reactMutation = useMutation({
+    mutationFn: async (articleId: string) => {
+      return await apiRequest(`/api/articles/${articleId}/react`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "تسجيل دخول مطلوب",
+          description: "يجب تسجيل الدخول للتفاعل مع المقالات",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.message || "فشل في التفاعل",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async (articleId: string) => {
+      return await apiRequest(`/api/articles/${articleId}/bookmark`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile/bookmarks"] });
+      toast({
+        title: "تم الحفظ",
+        description: "تم تحديث المقالات المحفوظة",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "تسجيل دخول مطلوب",
+          description: "يجب تسجيل الدخول لحفظ المقالات",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.message || "فشل في حفظ المقال",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
   const handleReact = async (articleId: string) => {
-    // Will be implemented in integration phase
-    console.log("React to article:", articleId);
+    reactMutation.mutate(articleId);
   };
 
   const handleBookmark = async (articleId: string) => {
-    // Will be implemented in integration phase
-    console.log("Bookmark article:", articleId);
+    bookmarkMutation.mutate(articleId);
   };
 
   return (
