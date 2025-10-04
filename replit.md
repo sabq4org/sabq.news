@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Progress (2025-10-04)
 
+**✅ Completed: Task 5 - Users Management Module (Latest)**
+- Full Users Management module with Backend APIs + Frontend UI
+- Added `status` field to users table (active/suspended/banned) with migration
+- Implemented self-protection: admins cannot modify/delete their own accounts (API 403 + UI disabled controls)
+- Backend APIs: GET /api/roles, GET/PATCH/DELETE /api/admin/users with RBAC protection (users.view, users.update, users.delete)
+- Frontend: Search by name/email, filter by role/status, edit dialog with form validation
+- Security: Self-protection prevents privilege self-removal and admin lock-out scenarios
+- Testing: Full e2e coverage with test-admin-002, verified self-protection + regular edits
+- Architect reviewed and approved: Module ready for production
+
 **✅ Completed: Tasks 3 & 4 - RBAC + Categories Management Module**
 - Implemented full Role-Based Access Control (RBAC) system with 6 roles, 33 permissions, and optimized SQL JOINs
 - Built complete Categories Management UI with react-hook-form + zodResolver validation
