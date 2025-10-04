@@ -13,6 +13,7 @@ import {
   userPreferences,
   type User,
   type InsertUser,
+  type UpdateUser,
   type Category,
   type InsertCategory,
   type Article,
@@ -39,6 +40,7 @@ export interface IStorage {
     lastName?: string;
     profileImageUrl?: string;
   }): Promise<User>;
+  updateUser(id: string, userData: UpdateUser): Promise<User>;
   
   // Category operations
   getAllCategories(): Promise<Category[]>;
@@ -108,25 +110,48 @@ export class DatabaseStorage implements IStorage {
     lastName?: string;
     profileImageUrl?: string;
   }): Promise<User> {
-    const name = userData.firstName && userData.lastName 
-      ? `${userData.firstName} ${userData.lastName}`
-      : userData.firstName || userData.lastName || undefined;
-
     const [user] = await db
       .insert(users)
       .values({
         id: userData.id,
         email: userData.email || "",
-        name,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
       })
       .onConflictDoUpdate({
         target: users.id,
         set: {
           email: userData.email || "",
-          name,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
         },
       })
       .returning();
+    return user;
+  }
+
+  async updateUser(id: string, userData: UpdateUser): Promise<User> {
+    const updateData: any = {};
+    
+    if (userData.firstName !== undefined) updateData.firstName = userData.firstName;
+    if (userData.lastName !== undefined) updateData.lastName = userData.lastName;
+    if (userData.bio !== undefined) updateData.bio = userData.bio;
+    if (userData.phoneNumber !== undefined) updateData.phoneNumber = userData.phoneNumber;
+    if (userData.profileImageUrl !== undefined) updateData.profileImageUrl = userData.profileImageUrl;
+    
+    // Check if profile is complete
+    if (userData.firstName && userData.lastName) {
+      updateData.isProfileComplete = true;
+    }
+
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+      
     return user;
   }
 
@@ -478,7 +503,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(readingHistory.userId, userId), sql`${articles.categoryId} IS NOT NULL`))
       .limit(10);
 
-    const categoryIds = [...new Set(history.map(h => h.categoryId).filter(Boolean))] as string[];
+    const categoryIds = Array.from(new Set(history.map(h => h.categoryId).filter(Boolean))) as string[];
 
     if (categoryIds.length === 0) {
       return await this.getArticles({ status: "published" });

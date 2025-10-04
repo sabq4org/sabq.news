@@ -18,8 +18,13 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey(),
   email: text("email").notNull().unique(),
-  name: text("name"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  bio: text("bio"),
+  phoneNumber: text("phone_number"),
+  profileImageUrl: text("profile_image_url"),
   role: text("role").notNull().default("reader"),
+  isProfileComplete: boolean("is_profile_complete").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -109,7 +114,19 @@ export const userPreferences = pgTable("user_preferences", {
 });
 
 // Zod schemas for validation
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true,
+  isProfileComplete: true,
+});
+
+export const updateUserSchema = z.object({
+  firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
+  lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
+  bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional(),
+  phoneNumber: z.string().regex(/^[0-9+\-\s()]+$/, "رقم الهاتف غير صحيح").optional(),
+  profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional(),
+});
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
   id: true, 
@@ -130,6 +147,7 @@ export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: tru
 // TypeScript types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUser = z.infer<typeof updateUserSchema>;
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
