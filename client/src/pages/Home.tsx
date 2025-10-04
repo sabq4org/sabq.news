@@ -26,10 +26,11 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: homepage, isLoading } = useQuery<HomepageData>({
+  const { data: homepage, isLoading, error } = useQuery<HomepageData>({
     queryKey: ["/api/homepage"],
     staleTime: 60000,
     refetchInterval: 120000,
+    retry: 3,
   });
 
   if (isLoading) {
@@ -45,6 +46,24 @@ export default function Home() {
                 <Skeleton key={i} className="h-64" />
               ))}
             </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Header user={user} onSearch={setSearchQuery} />
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-20">
+            <p className="text-destructive text-lg mb-4">
+              حدث خطأ في تحميل الصفحة الرئيسية
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {error instanceof Error ? error.message : "خطأ غير معروف"}
+            </p>
           </div>
         </main>
       </div>

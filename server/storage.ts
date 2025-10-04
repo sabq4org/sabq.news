@@ -660,9 +660,9 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .where(and(
         eq(articles.status, "published"),
-        sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 2000`
+        sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`
       ))
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.createdAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -680,13 +680,10 @@ export class DatabaseStorage implements IStorage {
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .where(and(
-        eq(articles.status, "published"),
-        sql`${articles.publishedAt} > NOW() - INTERVAL '24 hours'`
-      ))
+      .where(eq(articles.status, "published"))
       .groupBy(categories.nameAr)
       .orderBy(desc(sql`count(*)`))
-      .limit(10);
+      .limit(5);
 
     return results
       .filter(r => r.category)
