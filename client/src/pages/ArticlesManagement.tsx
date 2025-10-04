@@ -64,7 +64,11 @@ import { Link } from "wouter";
 const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
   excerpt: z.string().optional(),
-  categoryId: z.string().uuid("معرف التصنيف غير صحيح").optional().or(z.literal("")),
+  categoryId: z.union([
+    z.string().uuid("معرف التصنيف غير صحيح"),
+    z.literal(""),
+    z.literal("none")
+  ]).optional(),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
   status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
 });
@@ -118,12 +122,26 @@ export default function ArticlesManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Fetch articles with filters
   const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/admin/articles", { search: searchTerm, status: statusFilter, articleType: typeFilter, categoryId: categoryFilter }],
+    queryKey: ["/api/admin/articles", searchTerm, statusFilter, typeFilter, categoryFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append("search", searchTerm);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (typeFilter && typeFilter !== "all") params.append("articleType", typeFilter);
+      if (categoryFilter && categoryFilter !== "all") params.append("categoryId", categoryFilter);
+      
+      const url = `/api/admin/articles${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch articles: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!user,
   });
 
@@ -148,20 +166,29 @@ export default function ArticlesManagement() {
   // Update article mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { id: string; values: ArticleFormValues }) => {
+      // Convert "none" to empty string for API (backend expects UUID | "" | null)
+      const { categoryId, ...rest } = data.values;
+      const payload = {
+        ...rest,
+        categoryId: categoryId === "none" || categoryId === undefined ? "" : categoryId,
+      };
       return await apiRequest(`/api/admin/articles/${data.id}`, {
         method: "PATCH",
-        body: JSON.stringify(data.values),
+        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
-      setEditingArticle(null);
-      form.reset();
       toast({
         title: "تم التحديث",
         description: "تم تحديث المقال بنجاح",
       });
+      // Close dialog after a brief delay to show toast
+      setTimeout(() => {
+        setEditingArticle(null);
+        form.reset();
+      }, 300);
     },
     onError: (error: any) => {
       toast({
@@ -242,7 +269,7 @@ export default function ArticlesManagement() {
     form.reset({
       title: article.title,
       excerpt: article.excerpt || "",
-      categoryId: article.category?.id || "",
+      categoryId: article.category?.id || "none",
       articleType: article.articleType as any,
       status: article.status as any,
     });
@@ -367,7 +394,6 @@ export default function ArticlesManagement() {
         <div className="absolute bottom-0 right-0 left-0 p-4 border-t border-border">
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.profileImageUrl || ""} />
               <AvatarFallback>
                 {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
               </AvatarFallback>
@@ -462,7 +488,7 @@ export default function ArticlesManagement() {
                     <SelectValue placeholder="التصنيف" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">كل التصنيفات</SelectItem>
+                    <SelectItem value="all">كل التصنيفات</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.nameAr}
@@ -639,14 +665,17 @@ export default function ArticlesManagement() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>التصنيف</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger data-testid="select-category">
                           <SelectValue placeholder="اختر التصنيف" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">بدون تصنيف</SelectItem>
+                        <SelectItem value="none">بدون تصنيف</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.nameAr}

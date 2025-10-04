@@ -736,6 +736,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parsed.data.status === "published" && !existingArticle.publishedAt && !updateData.publishedAt) {
         updateData.publishedAt = new Date();
       }
+      // Convert empty categoryId to null
+      if (updateData.categoryId === "") {
+        updateData.categoryId = null;
+      }
 
       const [updatedArticle] = await db
         .update(articles)

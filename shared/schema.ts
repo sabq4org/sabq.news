@@ -442,7 +442,11 @@ export const updateArticleSchema = z.object({
   content: z.string().min(10, "المحتوى يجب أن يكون 10 أحرف على الأقل").optional(),
   excerpt: z.string().optional(),
   imageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
-  categoryId: z.string().uuid("معرف التصنيف غير صحيح").optional().or(z.null()),
+  categoryId: z.union([
+    z.string().uuid("معرف التصنيف غير صحيح"),
+    z.literal(""),
+    z.null()
+  ]).optional(),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
   status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
   aiSummary: z.string().optional().or(z.null()),
