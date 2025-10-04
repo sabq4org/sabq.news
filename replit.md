@@ -10,7 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Progress (2025-10-04)
 
-**✅ Completed: Task 5 - Users Management Module (Latest)**
+**✅ Completed: News Management Module (Tasks 1-4) - Latest**
+- Full News/Articles Management module production-ready
+- Backend: 7 RBAC-protected admin APIs (list, get, create, update, publish, feature, archive)
+- Permission system: articles.view, articles.create, articles.edit_own, articles.edit_any, articles.publish, articles.delete, articles.archive, articles.feature
+- CategoryId handling: Complete validation chain from frontend → backend → database (UUID | "" | null with proper conversions)
+- Frontend: RTL Arabic interface with multi-filter system (search, status, type, category), edit dialog, status/type badges, quick actions
+- Bug fixes: SelectItem empty values, queryKey serialization, form validation, backend schema, payload conversion
+- UX enhancement: Auto-close dialog after successful updates (300ms delay for toast)
+- Testing: Comprehensive e2e coverage with category assignment/removal, all CRUD verified
+- Architect reviewed and approved: Module ready for production
+
+**✅ Completed: Users Management Module (Task 5)**
 - Full Users Management module with Backend APIs + Frontend UI
 - Added `status` field to users table (active/suspended/banned) with migration
 - Implemented self-protection: admins cannot modify/delete their own accounts (API 403 + UI disabled controls)
@@ -20,7 +31,7 @@ Preferred communication style: Simple, everyday language.
 - Testing: Full e2e coverage with test-admin-002, verified self-protection + regular edits
 - Architect reviewed and approved: Module ready for production
 
-**✅ Completed: Tasks 3 & 4 - RBAC + Categories Management Module**
+**✅ Completed: RBAC + Categories Management Module (Tasks 3 & 4)**
 - Implemented full Role-Based Access Control (RBAC) system with 6 roles, 33 permissions, and optimized SQL JOINs
 - Built complete Categories Management UI with react-hook-form + zodResolver validation
 - Fixed permission naming inconsistency: changed routes.ts to use "categories.update" (was "categories.edit")
