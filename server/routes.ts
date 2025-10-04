@@ -628,6 +628,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      const allInterests = await storage.getAllInterests();
+      const validInterestIds = allInterests.map(i => i.id);
+      const invalidIds = interestIds.filter(id => !validInterestIds.includes(id));
+      
+      if (invalidIds.length > 0) {
+        return res.status(400).json({ 
+          message: "بعض الاهتمامات المحددة غير صحيحة" 
+        });
+      }
+
       await storage.setUserInterests(userId, interestIds);
       
       res.json({ success: true });
@@ -642,14 +652,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { eventType, metadata } = req.body;
 
-      if (!eventType) {
-        return res.status(400).json({ message: "eventType is required" });
+      const validEventTypes = [
+        "article_view",
+        "article_read",
+        "comment_create",
+        "bookmark_add",
+        "bookmark_remove",
+        "reaction_add",
+        "search",
+        "category_filter",
+        "interest_update"
+      ];
+
+      if (!eventType || !validEventTypes.includes(eventType)) {
+        return res.status(400).json({ 
+          message: "Invalid eventType" 
+        });
       }
+
+      const sanitizedMetadata = metadata && typeof metadata === 'object' 
+        ? Object.fromEntries(
+            Object.entries(metadata)
+              .filter(([_, value]) => 
+                typeof value === 'string' || 
+                typeof value === 'number' || 
+                typeof value === 'boolean'
+              )
+              .slice(0, 10)
+          )
+        : {};
 
       await storage.logBehavior({
         userId,
         eventType,
-        metadata: metadata || {},
+        metadata: sanitizedMetadata,
       });
 
       res.json({ success: true });

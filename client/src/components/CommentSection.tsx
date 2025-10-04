@@ -11,7 +11,12 @@ import { arSA } from "date-fns/locale";
 interface CommentSectionProps {
   articleId: string;
   comments: CommentWithUser[];
-  currentUser?: { id: string; name?: string; email?: string };
+  currentUser?: { 
+    id: string; 
+    email?: string; 
+    firstName?: string | null;
+    lastName?: string | null;
+  };
   onSubmitComment?: (content: string, parentId?: string) => void;
 }
 

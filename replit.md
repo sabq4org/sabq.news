@@ -35,10 +35,12 @@ Preferred communication style: Simple, everyday language.
 - Home page with featured articles and category filtering
 - Article detail pages with AI summaries and comment sections
 - User profile with reading history, bookmarks, and settings
-- User registration system with profile completion flow
+- User registration system with profile completion flow (CompleteProfile → SelectInterests → Home)
+- Interest selection page with card-based UI (3-5 interests required)
 - Dashboard for content creators and editors
 - WYSIWYG article editor with AI-powered title generation
 - Responsive design with mobile-first approach
+- Behavior tracking hooks for user engagement analytics
 
 ### Backend Architecture
 
@@ -61,6 +63,10 @@ Preferred communication style: Simple, everyday language.
 - Reactions & Bookmarks: User engagement tracking
 - RSS Feeds: Automated content import sources
 - Reading History: User behavior tracking for recommendations
+- Interests: Predefined user interest categories (8 seed interests: politics, sports, economy, technology, health, culture, science, world)
+- User Interests: Many-to-many relationship with weighted preferences (3-5 required per user)
+- Behavior Logs: Tracks user actions (article views, reads, comments, bookmarks, searches) with metadata
+- Sentiment Scores: Stores AI-analyzed emotional sentiment from user comments
 
 **API Architecture**
 - RESTful endpoints organized by resource type
@@ -68,13 +74,35 @@ Preferred communication style: Simple, everyday language.
 - Role-based access control (reader, editor, admin)
 - Consistent error handling and response formats
 - User profile management (GET /api/auth/user, PATCH /api/auth/user)
+- Interest management:
+  - GET /api/interests: List all available interests
+  - GET /api/user/interests: Get user's selected interests (authenticated)
+  - POST /api/user/interests: Set interests with validation (3-5 required, authenticated)
+- Behavior tracking:
+  - POST /api/behavior/log: Log user actions with sanitized metadata (authenticated)
+  - GET /api/user/profile/complete: Get comprehensive user profile with interests, behavior summary, and sentiment profile
 
 **AI Integration**
 - OpenAI GPT-5 integration for content features:
   - Automatic article summarization
   - AI-powered title generation (3 variants)
   - Support for Arabic language processing
+  - Sentiment analysis for user comments (planned)
 - Fallback handling for AI service failures
+
+**نبض (Pulse) Intelligent Membership System - Phase 1**
+- Interest-based user profiling with 8 core categories
+- Behavior tracking system monitoring user interactions:
+  - Article views and read time with scroll depth tracking
+  - Comment creation and engagement
+  - Bookmark additions and removals
+  - Reaction patterns
+  - Search queries and category filters
+- Server-side validation: 3-5 interests required, with ID existence checks
+- Metadata sanitization: max 10 fields, primitive types only
+- Authentication-gated behavior logging to prevent abuse
+- Custom hooks: useBehaviorTracking, useArticleReadTracking
+- Weighted interest preferences (initial weight: 1.0, dynamic adjustment planned)
 
 **File Storage**
 - Google Cloud Storage integration via Replit Object Storage

@@ -613,21 +613,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async setUserInterests(userId: string, interestIds: string[]): Promise<void> {
-    await db.delete(userInterests).where(eq(userInterests.userId, userId));
+    await db.transaction(async (tx) => {
+      await tx.delete(userInterests).where(eq(userInterests.userId, userId));
 
-    if (interestIds.length > 0) {
-      await db.insert(userInterests).values(
-        interestIds.map((interestId) => ({
-          userId,
-          interestId,
-          weight: 1.0,
-        }))
-      );
-      
-      await db.update(users)
-        .set({ isProfileComplete: true })
-        .where(eq(users.id, userId));
-    }
+      if (interestIds.length > 0) {
+        await tx.insert(userInterests).values(
+          interestIds.map((interestId) => ({
+            userId,
+            interestId,
+            weight: 1.0,
+          }))
+        );
+        
+        await tx.update(users)
+          .set({ isProfileComplete: true })
+          .where(eq(users.id, userId));
+      }
+    });
   }
 
   async updateInterestWeight(userId: string, interestId: string, weight: number): Promise<void> {

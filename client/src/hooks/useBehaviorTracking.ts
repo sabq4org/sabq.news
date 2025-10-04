@@ -33,6 +33,9 @@ export function useBehaviorTracking() {
         headers: { "Content-Type": "application/json" },
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('401')) {
+        return;
+      }
       console.error("Failed to log behavior:", error);
     }
   }, []);

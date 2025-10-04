@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import type { Interest } from "@shared/schema";
 
 export default function SelectInterests() {
@@ -12,7 +13,12 @@ export default function SelectInterests() {
   const { toast } = useToast();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
-  const { data: interests, isLoading } = useQuery<Interest[]>({
+  const { data: user, isLoading: userLoading, error: userError } = useQuery<{ id: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
+  const { data: interests, isLoading, isError, error } = useQuery<Interest[]>({
     queryKey: ["/api/interests"],
   });
 
@@ -64,12 +70,89 @@ export default function SelectInterests() {
     saveInterestsMutation.mutate(selectedInterests);
   };
 
+  const isUnauthorized = userError && isUnauthorizedError(userError as Error);
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-3">يجب تسجيل الدخول</h2>
+          <p className="text-muted-foreground mb-6">
+            سجل الدخول لإكمال ملفك الشخصي واختيار اهتماماتك
+          </p>
+          <Button asChild data-testid="button-login-to-select">
+            <a href="/api/login">تسجيل الدخول</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (userError || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h2 className="text-2xl font-bold text-destructive mb-3">حدث خطأ</h2>
+          <p className="text-muted-foreground mb-6">
+            {(userError as Error)?.message || "فشل في تحميل بيانات المستخدم"}
+          </p>
+          <Button onClick={() => setLocation("/")} data-testid="button-go-home-error">
+            العودة للصفحة الرئيسية
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" dir="rtl">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h2 className="text-2xl font-bold text-destructive mb-3">حدث خطأ</h2>
+          <p className="text-muted-foreground mb-6">
+            {(error as Error)?.message || "فشل في تحميل الاهتمامات"}
+          </p>
+          <Button onClick={() => setLocation("/")} data-testid="button-go-home">
+            العودة للصفحة الرئيسية
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!interests || interests.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-3">لا توجد اهتمامات متاحة</h2>
+          <p className="text-muted-foreground mb-6">
+            لم نتمكن من العثور على اهتمامات متاحة حالياً
+          </p>
+          <Button onClick={() => setLocation("/")} data-testid="button-skip-empty">
+            تخطي للصفحة الرئيسية
+          </Button>
         </div>
       </div>
     );
@@ -96,7 +179,7 @@ export default function SelectInterests() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          {interests?.map((interest) => {
+          {interests.map((interest) => {
             const isSelected = selectedInterests.includes(interest.id);
             const canSelect = selectedInterests.length < 5 || isSelected;
 
