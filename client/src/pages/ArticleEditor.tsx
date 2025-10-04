@@ -22,6 +22,7 @@ import {
   Sparkles,
   ImagePlus,
   Loader2,
+  Upload,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,7 @@ export default function ArticleEditor() {
   const [imageUrl, setImageUrl] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -52,6 +54,82 @@ export default function ArticleEditor() {
     queryKey: ["/api/dashboard/articles", id],
     enabled: !isNewArticle,
   });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء اختيار ملف صورة فقط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      // Step 1: Get upload URL
+      const uploadData = await apiRequest("/api/objects/upload", {
+        method: "POST",
+      }) as { uploadURL: string };
+
+      // Step 2: Upload file to signed URL
+      const uploadResponse = await fetch(uploadData.uploadURL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      // Step 3: Set ACL policy to make image public
+      const aclData = await apiRequest("/api/article-images", {
+        method: "PUT",
+        body: JSON.stringify({ imageURL: uploadData.uploadURL }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }) as { objectPath: string };
+
+      // Step 4: Set the public URL
+      const publicUrl = `/public-objects/${aclData.objectPath.split('/').pop()}`;
+      setImageUrl(publicUrl);
+
+      toast({
+        title: "تم الرفع بنجاح",
+        description: "تم رفع الصورة بنجاح",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "خطأ في الرفع",
+        description: "فشل رفع الصورة، الرجاء المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+      // Reset input
+      event.target.value = "";
+    }
+  };
 
   // Populate form when editing existing article
   useEffect(() => {
@@ -392,16 +470,55 @@ export default function ArticleEditor() {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="imageUrl">رابط الصورة</Label>
-                  <Input
-                    id="imageUrl"
-                    placeholder="https://example.com/image.jpg"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    dir="ltr"
-                    data-testid="input-image-url"
-                  />
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>رفع صورة</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        disabled={isUploadingImage}
+                        onClick={() => document.getElementById('imageUpload')?.click()}
+                        data-testid="button-upload-image"
+                      >
+                        {isUploadingImage ? (
+                          <>
+                            <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                            جاري الرفع...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 ml-2" />
+                            اختر صورة
+                          </>
+                        )}
+                      </Button>
+                      <input
+                        id="imageUpload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImage}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      أو الصق رابط صورة أدناه
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="imageUrl">رابط الصورة</Label>
+                    <Input
+                      id="imageUrl"
+                      placeholder="https://example.com/image.jpg"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      dir="ltr"
+                      data-testid="input-image-url"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
