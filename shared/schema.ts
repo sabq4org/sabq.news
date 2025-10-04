@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number"),
   profileImageUrl: text("profile_image_url"),
   role: text("role").notNull().default("reader"),
+  status: text("status").default("active").notNull(), // active, suspended, banned
   isProfileComplete: boolean("is_profile_complete").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
