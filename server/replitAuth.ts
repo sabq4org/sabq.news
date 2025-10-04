@@ -77,9 +77,21 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    console.log("[AUTH] OAuth callback - Creating user session");
+    const claims = tokens.claims();
+    if (!claims) {
+      console.error("[AUTH] No claims found in tokens");
+      return verified(new Error("No claims found"));
+    }
+    console.log("[AUTH] User claims:", { sub: claims.sub, email: claims.email });
+    
+    const user: any = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    
+    // Upsert user in database
+    await upsertUser(claims);
+    console.log("[AUTH] User upserted to database:", claims.sub);
+    
     verified(null, user);
   };
 
@@ -96,8 +108,15 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, cb) => {
+    // Save the entire user object with claims in the session
+    cb(null, user);
+  });
+  
+  passport.deserializeUser((user: any, cb) => {
+    // Restore the user object from session
+    cb(null, user);
+  });
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
@@ -107,10 +126,19 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
+    console.log("[AUTH] Callback route hit");
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    })(req, res, (err: any) => {
+      if (err) {
+        console.error("[AUTH] Callback error:", err);
+        return next(err);
+      }
+      console.log("[AUTH] Authentication successful, user:", req.user ? 'logged in' : 'not logged in');
+      console.log("[AUTH] Session ID:", req.sessionID);
+      next();
+    });
   });
 
   app.get("/api/logout", (req, res) => {
