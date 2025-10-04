@@ -107,6 +107,13 @@ export interface IStorage {
   getUserPreferences(userId: string): Promise<string[]>;
   getRecommendations(userId: string): Promise<ArticleWithDetails[]>;
   
+  // Homepage operations
+  getHeroArticles(): Promise<ArticleWithDetails[]>;
+  getBreakingNews(limit?: number): Promise<ArticleWithDetails[]>;
+  getEditorPicks(limit?: number): Promise<ArticleWithDetails[]>;
+  getDeepDiveArticles(limit?: number): Promise<ArticleWithDetails[]>;
+  getTrendingTopics(): Promise<Array<{ topic: string; count: number }>>;
+  
   // Dashboard stats
   getDashboardStats(userId: string): Promise<{
     totalArticles: number;
@@ -576,6 +583,117 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.author || undefined,
     }));
+  }
+
+  async getHeroArticles(): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, "published"))
+      .orderBy(desc(articles.publishedAt), desc(articles.views))
+      .limit(3);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async getBreakingNews(limit: number = 5): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, "published"))
+      .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async getEditorPicks(limit: number = 6): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, "published"))
+      .orderBy(desc(articles.views), desc(articles.publishedAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async getDeepDiveArticles(limit: number = 6): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(and(
+        eq(articles.status, "published"),
+        sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 2000`
+      ))
+      .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async getTrendingTopics(): Promise<Array<{ topic: string; count: number }>> {
+    const results = await db
+      .select({
+        category: categories.nameAr,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(and(
+        eq(articles.status, "published"),
+        sql`${articles.publishedAt} > NOW() - INTERVAL '24 hours'`
+      ))
+      .groupBy(categories.nameAr)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    return results
+      .filter(r => r.category)
+      .map(r => ({
+        topic: r.category!,
+        count: r.count,
+      }));
   }
 
   // Dashboard stats

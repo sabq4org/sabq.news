@@ -1,199 +1,139 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { CategoryPills } from "@/components/CategoryPills";
-import { ArticleCard } from "@/components/ArticleCard";
-import { RecommendationsWidget } from "@/components/RecommendationsWidget";
+import { HeroCarousel } from "@/components/HeroCarousel";
+import { PersonalizedFeed } from "@/components/PersonalizedFeed";
+import { BreakingNews } from "@/components/BreakingNews";
+import { DeepDiveSection } from "@/components/DeepDiveSection";
+import { TrendingTopics } from "@/components/TrendingTopics";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import type { ArticleWithDetails, Category } from "@shared/schema";
+import type { ArticleWithDetails } from "@shared/schema";
+
+interface HomepageData {
+  hero: ArticleWithDetails[];
+  forYou: ArticleWithDetails[];
+  breaking: ArticleWithDetails[];
+  editorPicks: ArticleWithDetails[];
+  deepDive: ArticleWithDetails[];
+  trending: Array<{ topic: string; count: number }>;
+}
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
 
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+  const { data: homepage, isLoading } = useQuery<HomepageData>({
+    queryKey: ["/api/homepage"],
+    staleTime: 60000,
+    refetchInterval: 120000,
   });
 
-  const { data: articles = [], isLoading: articlesLoading } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/articles", selectedCategory, searchQuery],
-  });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Header user={user} onSearch={setSearchQuery} />
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+          <Skeleton className="w-full h-[400px] md:h-[500px] rounded-lg" />
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-64" />
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-  const { data: featuredArticle } = useQuery<ArticleWithDetails>({
-    queryKey: ["/api/articles/featured"],
-  });
-
-  const { data: recommendations = [] } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/recommendations"],
-    enabled: !!user,
-  });
-
-  const reactMutation = useMutation({
-    mutationFn: async (articleId: string) => {
-      return await apiRequest(`/api/articles/${articleId}/react`, {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-    },
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "تسجيل دخول مطلوب",
-          description: "يجب تسجيل الدخول للتفاعل مع المقالات",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ",
-          description: error.message || "فشل في التفاعل",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
-  const bookmarkMutation = useMutation({
-    mutationFn: async (articleId: string) => {
-      return await apiRequest(`/api/articles/${articleId}/bookmark`, {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/profile/bookmarks"] });
-      toast({
-        title: "تم الحفظ",
-        description: "تم تحديث المقالات المحفوظة",
-      });
-    },
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "تسجيل دخول مطلوب",
-          description: "يجب تسجيل الدخول لحفظ المقالات",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ",
-          description: error.message || "فشل في حفظ المقال",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
-  const handleReact = async (articleId: string) => {
-    reactMutation.mutate(articleId);
-  };
-
-  const handleBookmark = async (articleId: string) => {
-    bookmarkMutation.mutate(articleId);
-  };
+  if (!homepage) {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Header user={user} onSearch={setSearchQuery} />
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-20">
+            <p className="text-muted-foreground text-lg">
+              لا توجد بيانات متاحة حالياً
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} onSearch={setSearchQuery} />
-      
-      {!categoriesLoading && categories.length > 0 && (
-        <CategoryPills
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-      )}
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Featured Article */}
-        {!searchQuery && !selectedCategory && (
-          <section className="mb-12">
-            {featuredArticle ? (
-              <ArticleCard
-                article={featuredArticle}
-                variant="featured"
-                onReact={handleReact}
-                onBookmark={handleBookmark}
-              />
-            ) : (
-              <Skeleton className="w-full aspect-[21/9] rounded-lg" />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        {homepage.hero && homepage.hero.length > 0 && (
+          <HeroCarousel articles={homepage.hero} />
+        )}
+
+        {homepage.forYou && homepage.forYou.length > 0 && (
+          <PersonalizedFeed 
+            articles={homepage.forYou}
+            title={user ? "لك خصيصًا" : "مختارات لك"}
+            showReason={!!user}
+          />
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-12">
+            {homepage.breaking && homepage.breaking.length > 0 && (
+              <BreakingNews articles={homepage.breaking} />
             )}
-          </section>
-        )}
 
-        {/* Recommendations for logged in users */}
-        {user && recommendations.length > 0 && !searchQuery && (
-          <section className="mb-12">
-            <RecommendationsWidget articles={recommendations} />
-          </section>
-        )}
-
-        {/* Latest News Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">
-              {searchQuery 
-                ? `نتائج البحث: "${searchQuery}"`
-                : selectedCategory
-                ? categories.find(c => c.id === selectedCategory)?.nameAr || "الأخبار"
-                : "أحدث الأخبار"
-              }
-            </h2>
+            {homepage.deepDive && homepage.deepDive.length > 0 && (
+              <DeepDiveSection articles={homepage.deepDive} />
+            )}
           </div>
 
-          {articlesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="w-full aspect-[16/9] rounded-lg" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
+          <div className="space-y-8">
+            {homepage.editorPicks && homepage.editorPicks.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-bold" data-testid="heading-editor-picks">
+                  مختارات المحررين
+                </h2>
+                <div className="space-y-4">
+                  {homepage.editorPicks.map((article) => (
+                    <a
+                      key={article.id}
+                      href={`/article/${article.slug}`}
+                      className="block p-4 bg-card rounded-lg border hover-elevate active-elevate-2"
+                      data-testid={`card-editor-pick-${article.id}`}
+                    >
+                      {article.imageUrl && (
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-32 object-cover rounded-md mb-3"
+                        />
+                      )}
+                      <h3 className="font-semibold text-sm line-clamp-2 mb-2">
+                        {article.title}
+                      </h3>
+                      {article.category && (
+                        <span className="text-xs text-muted-foreground">
+                          {article.category.nameAr}
+                        </span>
+                      )}
+                    </a>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : articles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  variant="grid"
-                  onReact={handleReact}
-                  onBookmark={handleBookmark}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg mb-4">
-                {searchQuery 
-                  ? "لم يتم العثور على نتائج لبحثك"
-                  : "لا توجد أخبار متاحة حالياً"
-                }
-              </p>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-primary hover:underline"
-                >
-                  مسح البحث
-                </button>
-              )}
-            </div>
-          )}
-        </section>
+              </section>
+            )}
+
+            {homepage.trending && homepage.trending.length > 0 && (
+              <TrendingTopics topics={homepage.trending} />
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -97,6 +97,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // HOMEPAGE ROUTE
+  // ============================================================
+
+  app.get("/api/homepage", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+
+      const [
+        heroArticles,
+        personalizedArticles,
+        breakingNews,
+        editorPicks,
+        deepDiveArticles,
+        trendingTopics,
+      ] = await Promise.all([
+        storage.getHeroArticles(),
+        userId ? storage.getRecommendations(userId) : storage.getBreakingNews(6),
+        storage.getBreakingNews(5),
+        storage.getEditorPicks(6),
+        storage.getDeepDiveArticles(6),
+        storage.getTrendingTopics(),
+      ]);
+
+      res.json({
+        hero: heroArticles,
+        forYou: personalizedArticles,
+        breaking: breakingNews,
+        editorPicks,
+        deepDive: deepDiveArticles,
+        trending: trendingTopics,
+      });
+    } catch (error) {
+      console.error("Error fetching homepage data:", error);
+      res.status(500).json({ message: "Failed to fetch homepage data" });
+    }
+  });
+
+  // ============================================================
   // ARTICLE ROUTES
   // ============================================================
 
