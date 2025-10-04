@@ -10,7 +10,20 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Progress (2025-10-04)
 
-**✅ Completed: News Management Module (Tasks 1-4) - Latest**
+**✅ Completed: Roles & Permissions Management Module - Latest**
+- Full Roles & Permissions Management module production-ready
+- Backend: 4 RBAC-protected APIs (GET /api/admin/roles, GET /api/admin/roles/:id, GET /api/permissions, PATCH /api/admin/roles/:id/permissions)
+- Permission system: system.manage_roles required for all admin/roles APIs
+- Security features:
+  - System roles (isSystem=true) cannot be modified (403 Forbidden)
+  - CRITICAL: Prevents removal of system.manage_roles from last non-system role (409 Conflict)
+  - Admin lockout protection: At least one role must retain manage_roles permission
+- Frontend: RTL Arabic UI with permissions grouped by module (articles, categories, users, comments, staff, system)
+- Edit dialog: Checkbox-based permission assignment with Arabic labels
+- Testing: E2e verified basic CRUD operations, architect confirmed security logic
+- Architect reviewed and approved: Module ready for production
+
+**✅ Completed: News Management Module**
 - Full News/Articles Management module production-ready
 - Backend: 7 RBAC-protected admin APIs (list, get, create, update, publish, feature, archive)
 - Permission system: articles.view, articles.create, articles.edit_own, articles.edit_any, articles.publish, articles.delete, articles.archive, articles.feature
@@ -21,7 +34,7 @@ Preferred communication style: Simple, everyday language.
 - Testing: Comprehensive e2e coverage with category assignment/removal, all CRUD verified
 - Architect reviewed and approved: Module ready for production
 
-**✅ Completed: Users Management Module (Task 5)**
+**✅ Completed: Users Management Module**
 - Full Users Management module with Backend APIs + Frontend UI
 - Added `status` field to users table (active/suspended/banned) with migration
 - Implemented self-protection: admins cannot modify/delete their own accounts (API 403 + UI disabled controls)
@@ -31,7 +44,7 @@ Preferred communication style: Simple, everyday language.
 - Testing: Full e2e coverage with test-admin-002, verified self-protection + regular edits
 - Architect reviewed and approved: Module ready for production
 
-**✅ Completed: RBAC + Categories Management Module (Tasks 3 & 4)**
+**✅ Completed: RBAC + Categories Management Module**
 - Implemented full Role-Based Access Control (RBAC) system with 6 roles, 33 permissions, and optimized SQL JOINs
 - Built complete Categories Management UI with react-hook-form + zodResolver validation
 - Fixed permission naming inconsistency: changed routes.ts to use "categories.update" (was "categories.edit")
