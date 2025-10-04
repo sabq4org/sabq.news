@@ -95,6 +95,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                             variant="outline"
                             className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20"
                             data-testid={`button-listen-${article.id}`}
+                            onClick={(e) => e.preventDefault()}
                           >
                             <Volume2 className="h-4 w-4 ml-2" />
                             استماع
@@ -106,6 +107,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                           variant="outline"
                           className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20"
                           data-testid={`button-analysis-${article.id}`}
+                          onClick={(e) => e.preventDefault()}
                         >
                           <TrendingUp className="h-4 w-4 ml-2" />
                           تحليل
@@ -116,6 +118,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                           variant="outline"
                           className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20"
                           data-testid={`button-follow-${article.id}`}
+                          onClick={(e) => e.preventDefault()}
                         >
                           <Bell className="h-4 w-4 ml-2" />
                           تابع

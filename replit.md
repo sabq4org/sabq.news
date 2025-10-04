@@ -32,7 +32,13 @@ Preferred communication style: Simple, everyday language.
 - Local component state with React hooks
 
 **Key Frontend Features**
-- Home page with featured articles and category filtering
+- **Intelligent Homepage** (NEW): Multi-section layout with dynamic content
+  - Hero Carousel: Auto-rotating showcase of top 3 stories (5-second intervals)
+  - Personalized Feed ("لك خصيصًا"): AI-powered article recommendations
+  - Breaking News: Real-time urgent updates with numbered list
+  - Deep Dive Section: Analytical articles with AI summaries
+  - Editor Picks: Curated content sidebar
+  - Trending Topics: Popular categories with dynamic sizing
 - Article detail pages with AI summaries and comment sections
 - User profile with reading history, bookmarks, and settings
 - User registration system with profile completion flow (CompleteProfile → SelectInterests → Home)
@@ -83,6 +89,14 @@ Preferred communication style: Simple, everyday language.
 - Behavior tracking:
   - POST /api/behavior/log: Log user actions with sanitized metadata (authenticated)
   - GET /api/user/profile/complete: Get comprehensive user profile with interests, behavior summary, and sentiment profile
+- Homepage aggregation (NEW):
+  - GET /api/homepage: Returns structured homepage data with all sections:
+    - hero: Top 3 articles by views for carousel
+    - forYou: Personalized recommendations (uses PersonalizationEngine)
+    - breaking: Recent high-view articles (last 24 hours, 5 items)
+    - editorPicks: Curated content (4 items)
+    - deepDive: Analytical articles with AI summaries (6 items)
+    - trending: Top 5 categories by activity (article count)
 - Theme management:
   - GET /api/themes/active?scope=site_full: Get active theme with resolution logic
   - GET /api/themes: List all themes (admin/editor only)
