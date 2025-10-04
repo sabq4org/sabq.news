@@ -42,7 +42,7 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// News articles
+// Articles (supports both news and opinion pieces)
 export const articles = pgTable("articles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -52,10 +52,17 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   categoryId: varchar("category_id").references(() => categories.id),
   authorId: varchar("author_id").references(() => users.id).notNull(),
-  status: text("status").notNull().default("draft"),
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
   aiSummary: text("ai_summary"),
   aiGenerated: boolean("ai_generated").default(false),
+  isFeatured: boolean("is_featured").default(false).notNull(),
   views: integer("views").default(0).notNull(),
+  seo: jsonb("seo").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  }>(),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -81,13 +88,17 @@ export const readingHistory = pgTable("reading_history", {
   readDuration: integer("read_duration"),
 });
 
-// Comments
+// Comments with status management
 export const comments = pgTable("comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   articleId: varchar("article_id").references(() => articles.id).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
   parentId: varchar("parent_id"),
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  moderationReason: text("moderation_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -224,6 +235,83 @@ export const themeAuditLog = pgTable("theme_audit_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Roles for RBAC
+export const roles = pgTable("roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  nameAr: text("name_ar").notNull(),
+  description: text("description"),
+  isSystem: boolean("is_system").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Permissions for granular access control
+export const permissions = pgTable("permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // e.g., "articles.create", "users.ban"
+  label: text("label").notNull(),
+  labelAr: text("label_ar").notNull(),
+  module: text("module").notNull(), // articles, users, categories, comments, etc.
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Role-Permission mapping (many-to-many)
+export const rolePermissions = pgTable("role_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
+  permissionId: varchar("permission_id").references(() => permissions.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User-Role mapping (updated to support RBAC)
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
+  assignedBy: varchar("assigned_by").references(() => users.id),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+});
+
+// Staff (reporters, writers, supervisors)
+export const staff = pgTable("staff", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  nameAr: text("name_ar").notNull(),
+  title: text("title"),
+  titleAr: text("title_ar"),
+  bio: text("bio"),
+  bioAr: text("bio_ar"),
+  profileImage: text("profile_image"),
+  staffType: text("staff_type").notNull(), // reporter, writer, supervisor
+  specializations: text("specializations").array().default(sql`ARRAY[]::text[]`).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  publishedCount: integer("published_count").default(0).notNull(),
+  totalViews: integer("total_views").default(0).notNull(),
+  lastActiveAt: timestamp("last_active_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Activity logs for audit trail
+export const activityLogs = pgTable("activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  action: text("action").notNull(), // create, update, delete, publish, etc.
+  entityType: text("entity_type").notNull(), // article, user, category, etc.
+  entityId: varchar("entity_id").notNull(),
+  oldValue: jsonb("old_value").$type<Record<string, any>>(),
+  newValue: jsonb("new_value").$type<Record<string, any>>(),
+  metadata: jsonb("metadata").$type<{
+    ip?: string;
+    userAgent?: string;
+    reason?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -251,7 +339,13 @@ export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({
   createdAt: true,
   lastFetchedAt: true,
 });
-export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
+export const insertCommentSchema = createInsertSchema(comments).omit({ 
+  id: true, 
+  createdAt: true,
+  moderatedBy: true,
+  moderatedAt: true,
+  moderationReason: true,
+});
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
 export const insertInterestSchema = createInsertSchema(interests).omit({ id: true, createdAt: true });
@@ -294,6 +388,50 @@ export const updateThemeSchema = z.object({
   publishedBy: z.string().optional().or(z.null()),
 });
 export const insertThemeAuditLogSchema = createInsertSchema(themeAuditLog).omit({ id: true, createdAt: true });
+
+export const insertRoleSchema = createInsertSchema(roles).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({ id: true, createdAt: true });
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({ id: true, createdAt: true });
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({ 
+  id: true, 
+  assignedAt: true 
+});
+
+export const insertStaffSchema = createInsertSchema(staff).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  publishedCount: true,
+  totalViews: true,
+  lastActiveAt: true,
+});
+
+export const updateStaffSchema = z.object({
+  name: z.string().min(2).optional(),
+  nameAr: z.string().min(2).optional(),
+  title: z.string().optional(),
+  titleAr: z.string().optional(),
+  bio: z.string().optional(),
+  bioAr: z.string().optional(),
+  profileImage: z.string().url().optional(),
+  staffType: z.enum(["reporter", "writer", "supervisor"]).optional(),
+  specializations: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true });
+
+export const updateCommentStatusSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected", "flagged"]),
+  moderationReason: z.string().optional(),
+});
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -340,6 +478,27 @@ export type UpdateTheme = z.infer<typeof updateThemeSchema>;
 export type ThemeAuditLog = typeof themeAuditLog.$inferSelect;
 export type InsertThemeAuditLog = z.infer<typeof insertThemeAuditLogSchema>;
 
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+
+export type Permission = typeof permissions.$inferSelect;
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+
+export type Staff = typeof staff.$inferSelect;
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
+export type UpdateStaff = z.infer<typeof updateStaffSchema>;
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type UpdateCommentStatus = z.infer<typeof updateCommentStatusSchema>;
+
 // Extended types with joins for frontend
 export type ArticleWithDetails = Article & {
   category?: Category;
@@ -353,6 +512,17 @@ export type ArticleWithDetails = Article & {
 export type CommentWithUser = Comment & {
   user: User;
   replies?: CommentWithUser[];
+  moderator?: User;
+};
+
+export type RoleWithPermissions = Role & {
+  permissions: Permission[];
+  userCount?: number;
+};
+
+export type StaffWithUser = Staff & {
+  user?: User;
+  role?: Role;
 };
 
 export type InterestWithWeight = Interest & {
