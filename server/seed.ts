@@ -2,11 +2,15 @@
 import { db } from "./db";
 import { categories, articles, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { seedRBAC } from "./seedRBAC";
 
 async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
+    // First, seed RBAC (Roles & Permissions)
+    const { allRoles, allPermissions } = await seedRBAC();
+
     // Create a test user (editor)
     const testUserId = "test-editor-001";
     const [testUser] = await db
@@ -30,6 +34,20 @@ async function seed() {
       .returning();
 
     console.log(`✅ Created test user: ${testUser.firstName} ${testUser.lastName}`);
+
+    // Assign editor role to test user
+    const editorRole = allRoles.find(r => r.name === "editor");
+    if (editorRole) {
+      const { userRoles } = await import("@shared/schema");
+      await db
+        .insert(userRoles)
+        .values({
+          userId: testUserId,
+          roleId: editorRole.id,
+        })
+        .onConflictDoNothing();
+      console.log(`✅ Assigned editor role to test user`);
+    }
 
     // Create official categories (10 categories - production ready)
     const categoriesData = [
@@ -372,6 +390,8 @@ async function seed() {
 
     console.log("🎉 Seeding completed!");
     console.log(`\n📊 Summary:`);
+    console.log(`   - Roles: ${allRoles.length}`);
+    console.log(`   - Permissions: ${allPermissions.length}`);
     console.log(`   - Users: 1`);
     console.log(`   - Categories: ${allCategories.length}`);
     console.log(`   - Articles: ${insertedArticles.length}`);
