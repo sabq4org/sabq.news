@@ -34,6 +34,7 @@ import {
   adminUpdateUserSchema,
   insertThemeSchema,
   updateThemeSchema,
+  updateRolePermissionsSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -522,6 +523,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // ============================================================
+  // ADMIN: ROLES & PERMISSIONS MANAGEMENT  
+  // ============================================================
+
+  // Get all roles with their permissions
+  app.get("/api/admin/roles", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      // Get all roles with their permissions using JOIN
+      const rolesData = await db.select().from(roles).orderBy(roles.name);
+      
+      const rolesWithPermissions = await Promise.all(
+        rolesData.map(async (role) => {
+          // Get permissions for this role
+          const rolePerms = await db
+            .select({ permission: permissions })
+            .from(rolePermissions)
+            .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+            .where(eq(rolePermissions.roleId, role.id));
+
+          // Get user count for this role
+          const userCount = await db
+            .select()
+            .from(userRoles)
+            .where(eq(userRoles.roleId, role.id));
+
+          return {
+            ...role,
+            permissions: rolePerms.map(rp => rp.permission),
+            userCount: userCount.length,
+          };
+        })
+      );
+
+      res.json(rolesWithPermissions);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Get a single role with its permissions
+  app.get("/api/admin/roles/:id", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      const role = await db.select().from(roles).where(eq(roles.id, req.params.id)).limit(1);
+      
+      if (!role || role.length === 0) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+
+      // Get permissions for this role
+      const rolePerms = await db
+        .select({ permission: permissions })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(rolePermissions.roleId, req.params.id));
+
+      // Get user count
+      const userCount = await db
+        .select()
+        .from(userRoles)
+        .where(eq(userRoles.roleId, req.params.id));
+
+      res.json({
+        ...role[0],
+        permissions: rolePerms.map(rp => rp.permission),
+        userCount: userCount.length,
+      });
+    } catch (error) {
+      console.error("Error fetching role:", error);
+      res.status(500).json({ message: "Failed to fetch role" });
+    }
+  });
+
+  // Get all permissions (for UI selection)
+  app.get("/api/permissions", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      const allPermissions = await db.select().from(permissions).orderBy(permissions.module, permissions.code);
+      res.json(allPermissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
+
+  // Update role permissions
+  app.patch("/api/admin/roles/:id/permissions", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const roleId = req.params.id;
+
+      // Validate input
+      const parsed = updateRolePermissionsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Check if role exists
+      const role = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
+      if (!role || role.length === 0) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+
+      // Prevent editing system roles
+      if (role[0].isSystem) {
+        return res.status(403).json({ message: "Cannot modify system role permissions" });
+      }
+
+      // Get old permissions for logging
+      const oldPermissions = await db
+        .select({ permissionId: rolePermissions.permissionId })
+        .from(rolePermissions)
+        .where(eq(rolePermissions.roleId, roleId));
+
+      // Delete all existing permissions for this role
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+
+      // Insert new permissions
+      if (parsed.data.permissionIds.length > 0) {
+        await db.insert(rolePermissions).values(
+          parsed.data.permissionIds.map(permId => ({
+            roleId,
+            permissionId: permId,
+          }))
+        );
+      }
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "update_role_permissions",
+        entityType: "role",
+        entityId: roleId,
+        oldValue: { permissionIds: oldPermissions.map(p => p.permissionId) },
+        newValue: { permissionIds: parsed.data.permissionIds },
+        metadata: {
+          reason: `Admin updated permissions for role: ${role[0].name}`,
+        },
+      });
+
+      // Return updated role with permissions
+      const updatedRolePerms = await db
+        .select({ permission: permissions })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(rolePermissions.roleId, roleId));
+
+      res.json({
+        ...role[0],
+        permissions: updatedRolePerms.map(rp => rp.permission),
+      });
+    } catch (error) {
+      console.error("Error updating role permissions:", error);
+      res.status(500).json({ message: "Failed to update role permissions" });
     }
   });
 

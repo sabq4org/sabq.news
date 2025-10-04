@@ -473,6 +473,10 @@ export const updateCommentStatusSchema = z.object({
   moderationReason: z.string().optional(),
 });
 
+export const updateRolePermissionsSchema = z.object({
+  permissionIds: z.array(z.string().uuid("معرف الصلاحية غير صحيح")),
+});
+
 // TypeScript types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -540,6 +544,7 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 export type UpdateCommentStatus = z.infer<typeof updateCommentStatusSchema>;
+export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
 
 // Extended types with joins for frontend
 export type ArticleWithDetails = Article & {
