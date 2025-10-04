@@ -14,20 +14,22 @@ async function seed() {
       .values({
         id: testUserId,
         email: "editor@sabq.test",
-        name: "محرر سبق الذكية",
+        firstName: "محرر",
+        lastName: "سبق",
         role: "editor",
       })
       .onConflictDoUpdate({
         target: users.id,
         set: {
           email: "editor@sabq.test",
-          name: "محرر سبق الذكية",
+          firstName: "محرر",
+          lastName: "سبق",
           role: "editor",
         },
       })
       .returning();
 
-    console.log(`✅ Created test user: ${testUser.name}`);
+    console.log(`✅ Created test user: ${testUser.firstName} ${testUser.lastName}`);
 
     // Create categories (no emoji per design guidelines)
     const categoriesData = [
