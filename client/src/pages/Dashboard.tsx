@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import {
@@ -37,9 +37,16 @@ import { arSA } from "date-fns/locale";
 export default function Dashboard() {
   const [location] = useLocation();
 
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+  const { data: user, isLoading: isUserLoading, isError } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
   });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isUserLoading && (isError || !user)) {
+      window.location.href = "/api/login";
+    }
+  }, [user, isUserLoading, isError]);
 
   const { data: stats } = useQuery<{
     totalArticles: number;

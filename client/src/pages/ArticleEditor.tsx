@@ -44,15 +44,27 @@ export default function ArticleEditor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  const { toast } = useToast();
+
+  // Check authentication first
+  const { data: user, isLoading: isUserLoading, isError } = useQuery<{ id: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
+  });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isUserLoading && (isError || !user)) {
+      window.location.href = "/api/login";
+    }
+  }, [user, isUserLoading, isError]);
+
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
-  const { toast } = useToast();
-
   const { data: article } = useQuery<ArticleWithDetails>({
     queryKey: ["/api/dashboard/articles", id],
-    enabled: !isNewArticle,
+    enabled: !isNewArticle && !!user,
   });
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -43,10 +43,11 @@ Preferred communication style: Simple, everyday language.
 - User profile with reading history, bookmarks, and settings
 - User registration system with profile completion flow (CompleteProfile → SelectInterests → Home)
 - Interest selection page with card-based UI (3-5 interests required)
-- Dashboard for content creators and editors
-- WYSIWYG article editor with AI-powered title generation
+- Dashboard for content creators and editors (authentication-protected)
+- WYSIWYG article editor with AI-powered title generation and image upload (authentication-protected)
 - Responsive design with mobile-first approach
 - Behavior tracking hooks for user engagement analytics
+- Automatic redirect to login for protected pages (Dashboard, ArticleEditor)
 
 ### Backend Architecture
 
