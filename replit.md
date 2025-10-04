@@ -8,6 +8,16 @@ Sabq Smart is an AI-powered Arabic news platform built with Next.js 15, Express,
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Progress (2025-10-04)
+
+**✅ Completed: Tasks 3 & 4 - RBAC + Categories Management Module**
+- Implemented full Role-Based Access Control (RBAC) system with 6 roles, 33 permissions, and optimized SQL JOINs
+- Built complete Categories Management UI with react-hook-form + zodResolver validation
+- Fixed permission naming inconsistency: changed routes.ts to use "categories.update" (was "categories.edit")
+- Updated seedRBAC.ts: editor role now has full category permissions (view, create, update, delete)
+- All CRUD operations tested and verified with playwright-based e2e testing
+- Test user: test-editor-001 (editor@sabq.test) pre-seeded with editor role
+
 ## System Architecture
 
 ### Frontend Architecture

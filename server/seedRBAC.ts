@@ -132,7 +132,7 @@ export async function seedRBAC() {
     editor: [
       "articles.view", "articles.create", "articles.edit_any", "articles.publish",
       "articles.unpublish", "articles.archive", "articles.feature",
-      "categories.view",
+      "categories.view", "categories.create", "categories.update", "categories.delete",
       "users.view",
       "comments.view", "comments.approve", "comments.reject",
       "staff.view",

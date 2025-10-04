@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update category (requires permission)
-  app.patch("/api/categories/:id", requireAuth, requirePermission("categories.edit"), async (req: any, res) => {
+  app.patch("/api/categories/:id", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
