@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 
@@ -46,17 +47,8 @@ export default function ArticleEditor() {
 
   const { toast } = useToast();
 
-  // Check authentication first
-  const { data: user, isLoading: isUserLoading, isError } = useQuery<{ id: string; email?: string }>({
-    queryKey: ["/api/auth/user"],
-  });
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isUserLoading && (isError || !user)) {
-      window.location.href = "/api/login";
-    }
-  }, [user, isUserLoading, isError]);
+  // Check authentication and redirect if needed
+  const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
