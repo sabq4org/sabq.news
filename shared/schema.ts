@@ -436,6 +436,34 @@ export const updateStaffSchema = z.object({
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true });
 
+export const updateArticleSchema = z.object({
+  title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
+  slug: z.string().min(3).optional(),
+  content: z.string().min(10, "المحتوى يجب أن يكون 10 أحرف على الأقل").optional(),
+  excerpt: z.string().optional(),
+  imageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  categoryId: z.string().uuid("معرف التصنيف غير صحيح").optional().or(z.null()),
+  articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
+  status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
+  aiSummary: z.string().optional().or(z.null()),
+  isFeatured: z.boolean().optional(),
+  publishedAt: z.string().datetime().optional().or(z.null()),
+  seo: z.object({
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+    keywords: z.array(z.string()).optional(),
+  }).optional(),
+});
+
+export const adminArticleFiltersSchema = z.object({
+  status: z.enum(["draft", "scheduled", "published", "archived", "all"]).optional(),
+  articleType: z.enum(["news", "opinion", "analysis", "column", "all"]).optional(),
+  categoryId: z.string().uuid().optional(),
+  authorId: z.string().optional(),
+  search: z.string().optional(),
+  featured: z.boolean().optional(),
+});
+
 export const updateCommentStatusSchema = z.object({
   status: z.enum(["pending", "approved", "rejected", "flagged"]),
   moderationReason: z.string().optional(),
@@ -451,6 +479,8 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 
 export type Article = typeof articles.$inferSelect;
 export type InsertArticle = z.infer<typeof insertArticleSchema>;
+export type UpdateArticle = z.infer<typeof updateArticleSchema>;
+export type AdminArticleFilters = z.infer<typeof adminArticleFiltersSchema>;
 
 export type RssFeed = typeof rssFeeds.$inferSelect;
 export type InsertRssFeed = z.infer<typeof insertRssFeedSchema>;

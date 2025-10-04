@@ -7,12 +7,26 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
-import { requireAuth, requirePermission, logActivity } from "./rbac";
+import { requireAuth, requirePermission, logActivity, getUserPermissions } from "./rbac";
 import { db } from "./db";
 import { eq, and, or, desc, ilike } from "drizzle-orm";
-import { users, roles, userRoles } from "@shared/schema";
+import { 
+  users, 
+  roles, 
+  userRoles, 
+  articles, 
+  categories, 
+  comments,
+  rssFeeds,
+  themes,
+  themeAuditLog,
+  activityLogs,
+  rolePermissions,
+  permissions,
+} from "@shared/schema";
 import {
   insertArticleSchema,
+  updateArticleSchema,
   insertCategorySchema,
   insertCommentSchema,
   insertRssFeedSchema,
@@ -508,6 +522,401 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // ============================================================
+  // ADMIN ARTICLES ROUTES
+  // ============================================================
+
+  // Get all articles with filtering (admin only)
+  app.get("/api/admin/articles", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { search, status, articleType, categoryId, authorId, featured } = req.query;
+
+      let query = db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .$dynamic();
+
+      if (search) {
+        query = query.where(
+          or(
+            ilike(articles.title, `%${search}%`),
+            ilike(articles.content, `%${search}%`),
+            ilike(articles.excerpt, `%${search}%`)
+          )
+        );
+      }
+
+      if (status && status !== "all") {
+        query = query.where(eq(articles.status, status));
+      }
+
+      if (articleType && articleType !== "all") {
+        query = query.where(eq(articles.articleType, articleType));
+      }
+
+      if (categoryId) {
+        query = query.where(eq(articles.categoryId, categoryId));
+      }
+
+      if (authorId) {
+        query = query.where(eq(articles.authorId, authorId));
+      }
+
+      if (featured !== undefined) {
+        query = query.where(eq(articles.isFeatured, featured === "true"));
+      }
+
+      query = query.orderBy(desc(articles.updatedAt));
+
+      const results = await query;
+
+      const formattedArticles = results.map((row) => ({
+        ...row.article,
+        category: row.category,
+        author: row.author,
+      }));
+
+      res.json(formattedArticles);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // Get article by ID for editing (admin only)
+  app.get("/api/admin/articles/:id", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const articleId = req.params.id;
+
+      const [result] = await db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!result) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      res.json({
+        ...result.article,
+        category: result.category,
+        author: result.author,
+      });
+    } catch (error) {
+      console.error("Error fetching article:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  // Create new article
+  app.post("/api/admin/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
+    try {
+      const authorId = req.user?.claims?.sub;
+      if (!authorId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsed = insertArticleSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      const [newArticle] = await db
+        .insert(articles)
+        .values({
+          ...parsed.data,
+          authorId,
+        } as any)
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId: authorId,
+        action: "created",
+        entityType: "article",
+        entityId: newArticle.id,
+        newValue: newArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.status(201).json(newArticle);
+    } catch (error) {
+      console.error("Error creating article:", error);
+      res.status(500).json({ message: "Failed to create article" });
+    }
+  });
+
+  // Update article
+  app.patch("/api/admin/articles/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      // Check if article exists
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Check permissions: edit_own or edit_any
+      const userPermissions = await getUserPermissions(userId);
+      const canEditOwn = userPermissions.includes("articles.edit_own");
+      const canEditAny = userPermissions.includes("articles.edit_any");
+
+      if (!canEditAny && (!canEditOwn || existingArticle.authorId !== userId)) {
+        return res.status(403).json({ message: "You don't have permission to edit this article" });
+      }
+
+      const parsed = updateArticleSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      // If status is being changed to published, check publish permission
+      if (parsed.data.status === "published" && existingArticle.status !== "published") {
+        const canPublish = userPermissions.includes("articles.publish");
+        if (!canPublish) {
+          return res.status(403).json({ message: "You don't have permission to publish articles" });
+        }
+      }
+
+      // Convert publishedAt string to Date if provided
+      const updateData: any = { ...parsed.data };
+      if (updateData.publishedAt) {
+        updateData.publishedAt = new Date(updateData.publishedAt);
+      }
+      // Set publishedAt when publishing if not already set
+      if (parsed.data.status === "published" && !existingArticle.publishedAt && !updateData.publishedAt) {
+        updateData.publishedAt = new Date();
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error updating article:", error);
+      res.status(500).json({ message: "Failed to update article" });
+    }
+  });
+
+  // Publish article
+  app.post("/api/admin/articles/:id/publish", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          status: "published",
+          publishedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "published",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error publishing article:", error);
+      res.status(500).json({ message: "Failed to publish article" });
+    }
+  });
+
+  // Feature/unfeature article
+  app.post("/api/admin/articles/:id/feature", requireAuth, requirePermission("articles.feature"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const { featured } = req.body;
+
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          isFeatured: featured,
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: featured ? "featured" : "unfeatured",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error featuring article:", error);
+      res.status(500).json({ message: "Failed to feature article" });
+    }
+  });
+
+  // Archive article (soft delete)
+  app.delete("/api/admin/articles/:id", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Soft delete by setting status to archived
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          status: "archived",
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "archived",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Article archived successfully" });
+    } catch (error) {
+      console.error("Error archiving article:", error);
+      res.status(500).json({ message: "Failed to archive article" });
     }
   });
 
