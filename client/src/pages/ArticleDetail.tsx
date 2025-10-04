@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
+import { useArticleReadTracking } from "@/hooks/useArticleReadTracking";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import {
@@ -24,10 +26,12 @@ import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
+import { useEffect } from "react";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const { logBehavior } = useBehaviorTracking();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -46,6 +50,17 @@ export default function ArticleDetail() {
     queryKey: ["/api/articles", slug, "related"],
   });
 
+  const { logArticleView } = useArticleReadTracking({
+    articleId: article?.id || "",
+    enabled: !!article && !!user,
+  });
+
+  useEffect(() => {
+    if (article && user) {
+      logArticleView();
+    }
+  }, [article?.id, user?.id]);
+
   const reactMutation = useMutation({
     mutationFn: async () => {
       if (!article) return;
@@ -54,6 +69,9 @@ export default function ArticleDetail() {
       });
     },
     onSuccess: () => {
+      if (article) {
+        logBehavior("reaction_add", { articleId: article.id });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
     },
     onError: (error: Error) => {
@@ -74,7 +92,13 @@ export default function ArticleDetail() {
         method: "POST",
       });
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
+      if (article) {
+        logBehavior(
+          result?.isBookmarked ? "bookmark_add" : "bookmark_remove",
+          { articleId: article.id }
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
       toast({
         title: "تم الحفظ",
@@ -100,6 +124,9 @@ export default function ArticleDetail() {
       });
     },
     onSuccess: () => {
+      if (article) {
+        logBehavior("comment_create", { articleId: article.id });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug, "comments"] });
       toast({
         title: "تم إضافة التعليق",
@@ -197,8 +224,11 @@ export default function ArticleDetail() {
       })
     : null;
 
-  const getInitials = (name?: string, email?: string) => {
-    if (name) return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const getInitials = (firstName?: string | null, lastName?: string | null, email?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) return firstName[0].toUpperCase();
     if (email) return email[0].toUpperCase();
     return 'م';
   };
@@ -268,12 +298,14 @@ export default function ArticleDetail() {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(article.author.name, article.author.email)}
+                        {getInitials(article.author.firstName, article.author.lastName, article.author.email)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium" data-testid="text-author-name">
-                        {article.author.name || article.author.email}
+                        {article.author.firstName && article.author.lastName
+                          ? `${article.author.firstName} ${article.author.lastName}`
+                          : article.author.email}
                       </p>
                       {timeAgo && (
                         <p className="text-muted-foreground text-xs flex items-center gap-1">
