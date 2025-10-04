@@ -21,6 +21,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -118,9 +119,8 @@ export default function Dashboard() {
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full">
-        <Sidebar>
-          <SidebarContent>
+      <Sidebar side="right" collapsible="offcanvas">
+        <SidebarContent>
             <SidebarGroup>
               <div className="px-4 py-4">
                 <Link href="/">
@@ -184,7 +184,7 @@ export default function Dashboard() {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex flex-col flex-1">
+        <SidebarInset>
           <header className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
@@ -200,7 +200,7 @@ export default function Dashboard() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
@@ -322,9 +322,8 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-          </main>
-        </div>
-      </div>
+          </div>
+        </SidebarInset>
     </SidebarProvider>
   );
 }
