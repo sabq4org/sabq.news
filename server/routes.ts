@@ -592,6 +592,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // INTEREST & PERSONALIZATION ROUTES
+  // ============================================================
+
+  app.get("/api/interests", async (req, res) => {
+    try {
+      const interests = await storage.getAllInterests();
+      res.json(interests);
+    } catch (error) {
+      console.error("Error fetching interests:", error);
+      res.status(500).json({ message: "Failed to fetch interests" });
+    }
+  });
+
+  app.get("/api/user/interests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const interests = await storage.getUserInterests(userId);
+      res.json(interests);
+    } catch (error) {
+      console.error("Error fetching user interests:", error);
+      res.status(500).json({ message: "Failed to fetch user interests" });
+    }
+  });
+
+  app.post("/api/user/interests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { interestIds } = req.body;
+
+      if (!Array.isArray(interestIds) || interestIds.length < 3 || interestIds.length > 5) {
+        return res.status(400).json({ 
+          message: "يجب اختيار من 3 إلى 5 اهتمامات" 
+        });
+      }
+
+      await storage.setUserInterests(userId, interestIds);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error setting user interests:", error);
+      res.status(500).json({ message: "Failed to set user interests" });
+    }
+  });
+
+  app.post("/api/behavior/log", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { eventType, metadata } = req.body;
+
+      if (!eventType) {
+        return res.status(400).json({ message: "eventType is required" });
+      }
+
+      await storage.logBehavior({
+        userId,
+        eventType,
+        metadata: metadata || {},
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error logging behavior:", error);
+      res.status(500).json({ message: "Failed to log behavior" });
+    }
+  });
+
+  app.get("/api/user/profile/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const userInterests = await storage.getUserInterests(userId);
+      const behaviorSummary = await storage.getUserBehaviorSummary(userId, 7);
+      const sentimentProfile = await storage.getUserSentimentProfile(userId);
+      
+      res.json({
+        interests: userInterests,
+        behaviorSummary: {
+          last7Days: behaviorSummary,
+        },
+        sentimentProfile,
+      });
+    } catch (error) {
+      console.error("Error fetching complete profile:", error);
+      res.status(500).json({ message: "Failed to fetch complete profile" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

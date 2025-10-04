@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
+import SelectInterests from "@/pages/SelectInterests";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
+      <Route path="/select-interests" component={SelectInterests} />
       <Route component={NotFound} />
     </Switch>
   );

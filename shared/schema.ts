@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -113,6 +113,60 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Interests for personalization system
+export const interests = pgTable("interests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nameAr: text("name_ar").notNull().unique(),
+  nameEn: text("name_en").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  icon: text("icon"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User interests (many-to-many) with weights
+export const userInterests = pgTable("user_interests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  interestId: varchar("interest_id").references(() => interests.id).notNull(),
+  weight: real("weight").default(1.0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Behavior tracking logs
+export const behaviorLogs = pgTable("behavior_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  eventType: text("event_type").notNull(),
+  metadata: jsonb("metadata").$type<{
+    articleId?: string;
+    categoryId?: string;
+    duration?: number;
+    query?: string;
+    action?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Sentiment analysis scores
+export const sentimentScores = pgTable("sentiment_scores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  overallScore: real("overall_score").notNull(),
+  emotionalBreakdown: jsonb("emotional_breakdown").$type<{
+    enthusiasm?: number;
+    satisfaction?: number;
+    anger?: number;
+    sadness?: number;
+    neutral?: number;
+  }>(),
+  articleId: varchar("article_id").references(() => articles.id),
+  commentId: varchar("comment_id").references(() => comments.id),
+  source: text("source").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -143,6 +197,14 @@ export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
+export const insertInterestSchema = createInsertSchema(interests).omit({ id: true, createdAt: true });
+export const insertUserInterestSchema = createInsertSchema(userInterests).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+export const insertBehaviorLogSchema = createInsertSchema(behaviorLogs).omit({ id: true, createdAt: true });
+export const insertSentimentScoreSchema = createInsertSchema(sentimentScores).omit({ id: true, createdAt: true });
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -170,6 +232,18 @@ export type InsertBookmark = z.infer<typeof insertBookmarkSchema>;
 export type ReadingHistory = typeof readingHistory.$inferSelect;
 export type UserPreference = typeof userPreferences.$inferSelect;
 
+export type Interest = typeof interests.$inferSelect;
+export type InsertInterest = z.infer<typeof insertInterestSchema>;
+
+export type UserInterest = typeof userInterests.$inferSelect;
+export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+
+export type BehaviorLog = typeof behaviorLogs.$inferSelect;
+export type InsertBehaviorLog = z.infer<typeof insertBehaviorLogSchema>;
+
+export type SentimentScore = typeof sentimentScores.$inferSelect;
+export type InsertSentimentScore = z.infer<typeof insertSentimentScoreSchema>;
+
 // Extended types with joins for frontend
 export type ArticleWithDetails = Article & {
   category?: Category;
@@ -183,4 +257,35 @@ export type ArticleWithDetails = Article & {
 export type CommentWithUser = Comment & {
   user: User;
   replies?: CommentWithUser[];
+};
+
+export type InterestWithWeight = Interest & {
+  weight: number;
+};
+
+export type UserProfile = User & {
+  interests?: InterestWithWeight[];
+  behaviorSummary?: {
+    last7Days: {
+      clicks: Record<string, number>;
+      avgReadTime: Record<string, number>;
+      searches: string[];
+      interactions: {
+        shares: number;
+        comments: number;
+        likes: number;
+      };
+    };
+  };
+  sentimentProfile?: {
+    overallScore: number;
+    emotionalBreakdown: {
+      enthusiasm: number;
+      satisfaction: number;
+      anger: number;
+      sadness: number;
+      neutral: number;
+    };
+    trendingSentiments: string[];
+  };
 };

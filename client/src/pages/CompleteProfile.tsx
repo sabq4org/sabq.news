@@ -61,10 +61,10 @@ export default function CompleteProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
-        title: "تم إكمال الملف الشخصي بنجاح",
-        description: "مرحباً بك في سبق الذكية!",
+        title: "تم الحفظ بنجاح",
+        description: "الآن حدد اهتماماتك لتخصيص تجربتك الإخبارية",
       });
-      setLocation("/");
+      setLocation("/select-interests");
     },
     onError: () => {
       toast({
