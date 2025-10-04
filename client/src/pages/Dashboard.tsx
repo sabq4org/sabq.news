@@ -13,6 +13,7 @@ import {
   LogOut,
   BarChart3,
   Sparkles,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,6 +87,12 @@ export default function Dashboard() {
       title: "المستخدمون",
       icon: Users,
       href: "/dashboard/users",
+      adminOnly: true,
+    },
+    {
+      title: "الأدوار والصلاحيات",
+      icon: Shield,
+      href: "/dashboard/roles",
       adminOnly: true,
     },
   ];
