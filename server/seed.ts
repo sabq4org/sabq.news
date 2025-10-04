@@ -1,7 +1,7 @@
 // Seed database with initial data
 import { db } from "./db";
 import { categories, articles, users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -31,23 +31,128 @@ async function seed() {
 
     console.log(`✅ Created test user: ${testUser.firstName} ${testUser.lastName}`);
 
-    // Create categories (no emoji per design guidelines)
+    // Create official categories (10 categories - production ready)
     const categoriesData = [
-      { nameAr: "سياسة", nameEn: "Politics", slug: "politics" },
-      { nameAr: "اقتصاد", nameEn: "Economy", slug: "economy" },
-      { nameAr: "تكنولوجيا", nameEn: "Technology", slug: "technology" },
-      { nameAr: "رياضة", nameEn: "Sports", slug: "sports" },
-      { nameAr: "صحة", nameEn: "Health", slug: "health" },
-      { nameAr: "ثقافة", nameEn: "Culture", slug: "culture" },
+      { 
+        nameAr: "محليات", 
+        nameEn: "Local", 
+        slug: "local",
+        description: "أخبار المناطق والمدن السعودية",
+        color: "#3B82F6",
+        icon: "🗺️",
+        displayOrder: 1,
+        status: "active"
+      },
+      { 
+        nameAr: "العالم", 
+        nameEn: "World", 
+        slug: "world",
+        description: "أخبار العالم والتحليلات الدولية",
+        color: "#6366F1",
+        icon: "🌍",
+        displayOrder: 2,
+        status: "active"
+      },
+      { 
+        nameAr: "حياتنا", 
+        nameEn: "Life", 
+        slug: "life",
+        description: "نمط الحياة، الصحة، الأسرة والمجتمع",
+        color: "#F472B6",
+        icon: "🌱",
+        displayOrder: 3,
+        status: "active"
+      },
+      { 
+        nameAr: "محطات", 
+        nameEn: "Stations", 
+        slug: "stations",
+        description: "تقارير خاصة وملفات متنوعة",
+        color: "#FBBF24",
+        icon: "🛤️",
+        displayOrder: 4,
+        status: "active"
+      },
+      { 
+        nameAr: "رياضة", 
+        nameEn: "Sports", 
+        slug: "sports",
+        description: "أخبار رياضية محلية وعالمية",
+        color: "#F59E0B",
+        icon: "⚽",
+        displayOrder: 5,
+        status: "active"
+      },
+      { 
+        nameAr: "سياحة", 
+        nameEn: "Tourism", 
+        slug: "tourism",
+        description: "تقارير سياحية ومواقع مميزة",
+        color: "#34D399",
+        icon: "🧳",
+        displayOrder: 6,
+        status: "active"
+      },
+      { 
+        nameAr: "أعمال", 
+        nameEn: "Business", 
+        slug: "business",
+        description: "أخبار الأعمال والشركات وريادة الأعمال",
+        color: "#10B981",
+        icon: "💼",
+        displayOrder: 7,
+        status: "active"
+      },
+      { 
+        nameAr: "تقنية", 
+        nameEn: "Technology", 
+        slug: "technology",
+        description: "أخبار وتطورات التقنية والذكاء الاصطناعي",
+        color: "#8B5CF6",
+        icon: "💻",
+        displayOrder: 8,
+        status: "active"
+      },
+      { 
+        nameAr: "سيارات", 
+        nameEn: "Cars", 
+        slug: "cars",
+        description: "أخبار وتقارير السيارات",
+        color: "#0EA5E9",
+        icon: "🚗",
+        displayOrder: 9,
+        status: "active"
+      },
+      { 
+        nameAr: "ميديا", 
+        nameEn: "Media", 
+        slug: "media",
+        description: "فيديوهات وصور وإعلام رقمي",
+        color: "#EAB308",
+        icon: "🎬",
+        displayOrder: 10,
+        status: "active"
+      },
     ];
 
     const insertedCategories = await db
       .insert(categories)
       .values(categoriesData)
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: categories.slug,
+        set: {
+          nameAr: sql`excluded.name_ar`,
+          nameEn: sql`excluded.name_en`,
+          description: sql`excluded.description`,
+          color: sql`excluded.color`,
+          icon: sql`excluded.icon`,
+          displayOrder: sql`excluded.display_order`,
+          status: sql`excluded.status`,
+        },
+      })
       .returning();
 
-    console.log(`✅ Created ${insertedCategories.length} categories`);
+    console.log(`✅ Updated ${insertedCategories.length} categories`);
 
     // Get all categories for article creation
     const allCategories = await db.select().from(categories);
@@ -72,7 +177,7 @@ async function seed() {
 ## الاستثمارات المستقبلية
 
 من المتوقع أن تصل الاستثمارات في مجال الذكاء الاصطناعي في المنطقة العربية إلى مليارات الدولارات خلال السنوات القادمة، مما سيساهم في تعزيز التنمية المستدامة والابتكار.`,
-        categoryId: allCategories.find(c => c.slug === "technology")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "technology")?.id || allCategories[7]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: true,
@@ -99,7 +204,7 @@ async function seed() {
 3. الفريق الآسيوي
 
 ستكون البطولة فرصة رائعة لعشاق كرة القدم للاستمتاع بمباريات على أعلى مستوى.`,
-        categoryId: allCategories.find(c => c.slug === "sports")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "sports")?.id || allCategories[4]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: false,
@@ -126,7 +231,7 @@ async function seed() {
 أظهرت النتائج الأولية فعالية عالية في علاج بعض أنواع السرطان، مع آثار جانبية محدودة.
 
 يأمل الباحثون أن يكون هذا العلاج متاحاً للمرضى خلال السنوات القليلة القادمة بعد اكتمال جميع المراحل التجريبية.`,
-        categoryId: allCategories.find(c => c.slug === "health")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "life")?.id || allCategories[2]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: false,
@@ -161,7 +266,7 @@ async function seed() {
 - الطاقة المتجددة
 - السياحة
 - الصناعات التحويلية`,
-        categoryId: allCategories.find(c => c.slug === "economy")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "business")?.id || allCategories[6]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: false,
@@ -190,7 +295,7 @@ async function seed() {
 ## التراث والحداثة
 
 يسعى المهرجان إلى تحقيق توازن بين الحفاظ على التراث الثقافي العربي وتشجيع الإبداع المعاصر.`,
-        categoryId: allCategories.find(c => c.slug === "culture")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "life")?.id || allCategories[2]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: false,
@@ -220,7 +325,7 @@ async function seed() {
 - دعم الاستقرار الإقليمي
 
 من المتوقع أن تخرج القمة ببيان ختامي يتضمن مواقف موحدة تجاه القضايا المطروحة.`,
-        categoryId: allCategories.find(c => c.slug === "politics")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "world")?.id || allCategories[1]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "published",
         featured: false,
@@ -249,7 +354,7 @@ async function seed() {
 ## التوصيات
 
 يوصي الباحثون بتعزيز استخدام التكنولوجيا الصحية وتطوير تطبيقات أكثر تخصصاً لمختلف الحالات المرضية.`,
-        categoryId: allCategories.find(c => c.slug === "health")?.id || allCategories[0].id,
+        categoryId: allCategories.find(c => c.slug === "life")?.id || allCategories[2]?.id || allCategories[0].id,
         authorId: testUserId,
         status: "draft",
         featured: false,
