@@ -12,6 +12,8 @@ import {
   insertCommentSchema,
   insertRssFeedSchema,
   updateUserSchema,
+  insertThemeSchema,
+  updateThemeSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -713,6 +715,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching complete profile:", error);
       res.status(500).json({ message: "Failed to fetch complete profile" });
+    }
+  });
+
+  // ============================================================
+  // THEME MANAGEMENT ROUTES
+  // ============================================================
+
+  app.get("/api/themes/active", async (req, res) => {
+    try {
+      const scope = (req.query.scope as string) || 'site_full';
+      const theme = await storage.getActiveTheme(scope);
+      res.json(theme || null);
+    } catch (error) {
+      console.error("Error fetching active theme:", error);
+      res.status(500).json({ message: "Failed to fetch active theme" });
+    }
+  });
+
+  app.get("/api/themes", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, createdBy } = req.query;
+      const themes = await storage.getAllThemes({
+        status: status as string,
+        createdBy: createdBy as string,
+      });
+      res.json(themes);
+    } catch (error) {
+      console.error("Error fetching themes:", error);
+      res.status(500).json({ message: "Failed to fetch themes" });
+    }
+  });
+
+  app.get("/api/themes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const theme = await storage.getThemeById(req.params.id);
+      if (!theme) {
+        return res.status(404).json({ message: "Theme not found" });
+      }
+      res.json(theme);
+    } catch (error) {
+      console.error("Error fetching theme:", error);
+      res.status(500).json({ message: "Failed to fetch theme" });
+    }
+  });
+
+  app.post("/api/themes", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const parsed = insertThemeSchema.safeParse({
+        ...req.body,
+        createdBy: req.user.claims.sub,
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات السمة غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const theme = await storage.createTheme(parsed.data);
+      res.json(theme);
+    } catch (error) {
+      console.error("Error creating theme:", error);
+      res.status(500).json({ message: "Failed to create theme" });
+    }
+  });
+
+  app.patch("/api/themes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const parsed = updateThemeSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات السمة غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const theme = await storage.updateTheme(
+        req.params.id, 
+        parsed.data, 
+        req.user.claims.sub
+      );
+      res.json(theme);
+    } catch (error) {
+      console.error("Error updating theme:", error);
+      res.status(500).json({ message: "Failed to update theme" });
+    }
+  });
+
+  app.delete("/api/themes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      await storage.deleteTheme(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting theme:", error);
+      res.status(500).json({ message: "Failed to delete theme" });
+    }
+  });
+
+  app.post("/api/themes/:id/publish", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      const theme = await storage.publishTheme(req.params.id, req.user.claims.sub);
+      res.json(theme);
+    } catch (error) {
+      console.error("Error publishing theme:", error);
+      res.status(500).json({ message: "Failed to publish theme" });
+    }
+  });
+
+  app.post("/api/themes/:id/expire", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      const theme = await storage.expireTheme(req.params.id, req.user.claims.sub);
+      res.json(theme);
+    } catch (error) {
+      console.error("Error expiring theme:", error);
+      res.status(500).json({ message: "Failed to expire theme" });
+    }
+  });
+
+  app.post("/api/themes/:id/rollback", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      const theme = await storage.rollbackTheme(req.params.id, req.user.claims.sub);
+      res.json(theme);
+    } catch (error: any) {
+      console.error("Error rolling back theme:", error);
+      res.status(500).json({ message: error.message || "Failed to rollback theme" });
+    }
+  });
+
+  app.get("/api/themes/:id/logs", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const logs = await storage.getThemeAuditLogs(req.params.id);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching theme logs:", error);
+      res.status(500).json({ message: "Failed to fetch theme logs" });
+    }
+  });
+
+  app.post("/api/themes/initialize", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      const theme = await storage.initializeDefaultTheme(req.user.claims.sub);
+      res.json(theme);
+    } catch (error) {
+      console.error("Error initializing default theme:", error);
+      res.status(500).json({ message: "Failed to initialize default theme" });
     }
   });
 

@@ -11,6 +11,7 @@ import ArticleEditor from "@/pages/ArticleEditor";
 import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
+import ThemeManager from "@/pages/ThemeManager";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
+      <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />

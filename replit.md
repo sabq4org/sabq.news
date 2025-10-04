@@ -67,6 +67,8 @@ Preferred communication style: Simple, everyday language.
 - User Interests: Many-to-many relationship with weighted preferences (3-5 required per user)
 - Behavior Logs: Tracks user actions (article views, reads, comments, bookmarks, searches) with metadata
 - Sentiment Scores: Stores AI-analyzed emotional sentiment from user comments
+- Themes: Dynamic platform themes with assets (logos, banners), tokens (colors, fonts, spacing), scheduling, priority, and lifecycle status
+- Theme Audit Log: Complete audit trail of theme changes with user attribution and metadata
 
 **API Architecture**
 - RESTful endpoints organized by resource type
@@ -81,6 +83,16 @@ Preferred communication style: Simple, everyday language.
 - Behavior tracking:
   - POST /api/behavior/log: Log user actions with sanitized metadata (authenticated)
   - GET /api/user/profile/complete: Get comprehensive user profile with interests, behavior summary, and sentiment profile
+- Theme management:
+  - GET /api/themes/active?scope=site_full: Get active theme with resolution logic
+  - GET /api/themes: List all themes (admin/editor only)
+  - POST /api/themes: Create new theme (admin/editor)
+  - PATCH /api/themes/:id: Update theme (admin/editor)
+  - POST /api/themes/:id/publish: Publish theme (admin only)
+  - POST /api/themes/:id/expire: Expire active theme (admin only)
+  - POST /api/themes/:id/rollback: Rollback to previous version (admin only)
+  - GET /api/themes/:id/logs: Get audit trail (admin/editor)
+  - POST /api/themes/initialize: Create default theme (admin only)
 
 **AI Integration**
 - OpenAI GPT-5 integration for content features:
@@ -90,7 +102,7 @@ Preferred communication style: Simple, everyday language.
   - Sentiment analysis for user comments (planned)
 - Fallback handling for AI service failures
 
-**نبض (Pulse) Intelligent Membership System - Phase 1**
+**نبض (Pulse) Intelligent Membership System - Phase 1 ✅ Production-Ready**
 - Interest-based user profiling with 8 core categories
 - Behavior tracking system monitoring user interactions:
   - Article views and read time with scroll depth tracking
@@ -103,6 +115,20 @@ Preferred communication style: Simple, everyday language.
 - Authentication-gated behavior logging to prevent abuse
 - Custom hooks: useBehaviorTracking, useArticleReadTracking
 - Weighted interest preferences (initial weight: 1.0, dynamic adjustment planned)
+
+**Advanced Theme Management System (In Progress)**
+- Database schema: themes and themeAuditLog tables with comprehensive fields
+- Dynamic theme resolution logic with priority-based conflict resolution
+- Theme lifecycle management (draft → review → scheduled → active → expired)
+- Scheduled theme activation with automatic rollback to default
+- Full CRUD APIs with RBAC (admin, editor roles)
+- Theme assets support: logos (light/dark), favicon, banners, OG images
+- Design tokens: colors, fonts, spacing, border radius injected as CSS variables
+- Audit trail: Complete history of all theme changes with user tracking
+- Rollback functionality: Restore previous theme versions
+- Admin UI: Theme Manager page for creating, editing, and publishing themes
+- ThemeProvider integration: Automatic CSS variable injection on theme change
+- Emergency override support: High-priority themes (priority 9999) bypass normal resolution
 
 **File Storage**
 - Google Cloud Storage integration via Replit Object Storage

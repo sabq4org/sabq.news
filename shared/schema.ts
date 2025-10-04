@@ -167,6 +167,59 @@ export const sentimentScores = pgTable("sentiment_scores", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Theme management system
+export const themes = pgTable("themes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  priority: integer("priority").default(0).notNull(),
+  status: text("status").notNull().default("draft"),
+  startAt: timestamp("start_at"),
+  endAt: timestamp("end_at"),
+  assets: jsonb("assets").$type<{
+    logoLight?: string;
+    logoDark?: string;
+    favicon?: string;
+    banner?: string;
+    ogImage?: string;
+  }>(),
+  tokens: jsonb("tokens").$type<{
+    colors?: Record<string, string>;
+    fonts?: Record<string, string>;
+    spacing?: Record<string, string>;
+    borderRadius?: Record<string, string>;
+  }>(),
+  applyTo: text("apply_to").array().default(sql`ARRAY[]::text[]`).notNull(),
+  version: integer("version").default(1).notNull(),
+  changelog: jsonb("changelog").$type<Array<{
+    version: number;
+    changes: string;
+    timestamp: string;
+    userId: string;
+  }>>(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  publishedBy: varchar("published_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Theme audit log for tracking changes
+export const themeAuditLog = pgTable("theme_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  themeId: varchar("theme_id").references(() => themes.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(),
+  changes: jsonb("changes").$type<Record<string, any>>(),
+  metadata: jsonb("metadata").$type<{
+    previousStatus?: string;
+    newStatus?: string;
+    reason?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -205,6 +258,38 @@ export const insertUserInterestSchema = createInsertSchema(userInterests).omit({
 });
 export const insertBehaviorLogSchema = createInsertSchema(behaviorLogs).omit({ id: true, createdAt: true });
 export const insertSentimentScoreSchema = createInsertSchema(sentimentScores).omit({ id: true, createdAt: true });
+export const insertThemeSchema = createInsertSchema(themes).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  version: true,
+});
+export const updateThemeSchema = z.object({
+  name: z.string().min(2).optional(),
+  slug: z.string().min(2).optional(),
+  isDefault: z.boolean().optional(),
+  priority: z.number().int().min(0).max(9999).optional(),
+  status: z.enum(["draft", "review", "scheduled", "active", "expired", "disabled"]).optional(),
+  startAt: z.string().datetime().optional().or(z.null()),
+  endAt: z.string().datetime().optional().or(z.null()),
+  assets: z.object({
+    logoLight: z.string().url().optional(),
+    logoDark: z.string().url().optional(),
+    favicon: z.string().url().optional(),
+    banner: z.string().url().optional(),
+    ogImage: z.string().url().optional(),
+  }).optional(),
+  tokens: z.object({
+    colors: z.record(z.string()).optional(),
+    fonts: z.record(z.string()).optional(),
+    spacing: z.record(z.string()).optional(),
+    borderRadius: z.record(z.string()).optional(),
+  }).optional(),
+  applyTo: z.array(z.string()).optional(),
+  approvedBy: z.string().optional().or(z.null()),
+  publishedBy: z.string().optional().or(z.null()),
+});
+export const insertThemeAuditLogSchema = createInsertSchema(themeAuditLog).omit({ id: true, createdAt: true });
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -243,6 +328,13 @@ export type InsertBehaviorLog = z.infer<typeof insertBehaviorLogSchema>;
 
 export type SentimentScore = typeof sentimentScores.$inferSelect;
 export type InsertSentimentScore = z.infer<typeof insertSentimentScoreSchema>;
+
+export type Theme = typeof themes.$inferSelect;
+export type InsertTheme = z.infer<typeof insertThemeSchema>;
+export type UpdateTheme = z.infer<typeof updateThemeSchema>;
+
+export type ThemeAuditLog = typeof themeAuditLog.$inferSelect;
+export type InsertThemeAuditLog = z.infer<typeof insertThemeAuditLogSchema>;
 
 // Extended types with joins for frontend
 export type ArticleWithDetails = Article & {

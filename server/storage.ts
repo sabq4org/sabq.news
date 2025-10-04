@@ -15,6 +15,8 @@ import {
   userInterests,
   behaviorLogs,
   sentimentScores,
+  themes,
+  themeAuditLog,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -38,6 +40,11 @@ import {
   type InsertBehaviorLog,
   type SentimentScore,
   type InsertSentimentScore,
+  type Theme,
+  type InsertTheme,
+  type UpdateTheme,
+  type ThemeAuditLog,
+  type InsertThemeAuditLog,
   type ArticleWithDetails,
   type CommentWithUser,
   type InterestWithWeight,
@@ -121,6 +128,21 @@ export interface IStorage {
   // Sentiment analysis operations
   saveSentimentScore(score: InsertSentimentScore): Promise<void>;
   getUserSentimentProfile(userId: string): Promise<any>;
+  
+  // Theme management operations
+  getActiveTheme(scope?: string): Promise<Theme | undefined>;
+  getAllThemes(filters?: { status?: string; createdBy?: string }): Promise<Theme[]>;
+  getThemeById(id: string): Promise<Theme | undefined>;
+  getThemeBySlug(slug: string): Promise<Theme | undefined>;
+  createTheme(theme: InsertTheme): Promise<Theme>;
+  updateTheme(id: string, theme: UpdateTheme, userId: string): Promise<Theme>;
+  deleteTheme(id: string): Promise<void>;
+  publishTheme(id: string, userId: string): Promise<Theme>;
+  expireTheme(id: string, userId: string): Promise<Theme>;
+  rollbackTheme(id: string, userId: string): Promise<Theme>;
+  createThemeAuditLog(log: InsertThemeAuditLog): Promise<void>;
+  getThemeAuditLogs(themeId: string): Promise<ThemeAuditLog[]>;
+  initializeDefaultTheme(userId: string): Promise<Theme>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -764,6 +786,285 @@ export class DatabaseStorage implements IStorage {
       emotionalBreakdown,
       trendingSentiments: sorted,
     };
+  }
+
+  // Theme management operations
+  async getActiveTheme(scope: string = 'site_full'): Promise<Theme | undefined> {
+    const now = new Date();
+    
+    const activeThemes = await db
+      .select()
+      .from(themes)
+      .where(
+        and(
+          sql`${themes.status} IN ('active', 'scheduled')`,
+          sql`${themes.startAt} IS NULL OR ${themes.startAt} <= ${now.toISOString()}`,
+          sql`${themes.endAt} IS NULL OR ${themes.endAt} >= ${now.toISOString()}`,
+          sql`${scope} = ANY(${themes.applyTo}) OR array_length(${themes.applyTo}, 1) IS NULL`
+        )
+      )
+      .orderBy(desc(themes.priority), desc(themes.version), desc(themes.updatedAt));
+
+    if (activeThemes.length > 0) {
+      return activeThemes[0];
+    }
+
+    const defaultTheme = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.isDefault, true))
+      .limit(1);
+
+    return defaultTheme[0];
+  }
+
+  async getAllThemes(filters?: { status?: string; createdBy?: string }): Promise<Theme[]> {
+    let query = db.select().from(themes);
+
+    if (filters?.status && filters?.createdBy) {
+      query = query.where(
+        and(
+          eq(themes.status, filters.status),
+          eq(themes.createdBy, filters.createdBy)
+        )
+      ) as any;
+    } else if (filters?.status) {
+      query = query.where(eq(themes.status, filters.status)) as any;
+    } else if (filters?.createdBy) {
+      query = query.where(eq(themes.createdBy, filters.createdBy)) as any;
+    }
+
+    return await query.orderBy(desc(themes.updatedAt));
+  }
+
+  async getThemeById(id: string): Promise<Theme | undefined> {
+    const result = await db.select().from(themes).where(eq(themes.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getThemeBySlug(slug: string): Promise<Theme | undefined> {
+    const result = await db.select().from(themes).where(eq(themes.slug, slug)).limit(1);
+    return result[0];
+  }
+
+  async createTheme(theme: InsertTheme): Promise<Theme> {
+    const result = await db.insert(themes).values([theme as any]).returning();
+    await this.createThemeAuditLog({
+      themeId: result[0].id,
+      userId: theme.createdBy,
+      action: 'created',
+      changes: theme as any,
+      metadata: { newStatus: 'draft' },
+    });
+    return result[0];
+  }
+
+  async updateTheme(id: string, themeData: UpdateTheme, userId: string): Promise<Theme> {
+    const existing = await this.getThemeById(id);
+    if (!existing) {
+      throw new Error('Theme not found');
+    }
+
+    const updated = await db
+      .update(themes)
+      .set({
+        ...themeData,
+        updatedAt: new Date(),
+      })
+      .where(eq(themes.id, id))
+      .returning();
+
+    await this.createThemeAuditLog({
+      themeId: id,
+      userId,
+      action: 'updated',
+      changes: themeData as any,
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: themeData.status || existing.status,
+      },
+    });
+
+    return updated[0];
+  }
+
+  async deleteTheme(id: string): Promise<void> {
+    await db.delete(themes).where(eq(themes.id, id));
+  }
+
+  async publishTheme(id: string, userId: string): Promise<Theme> {
+    const existing = await this.getThemeById(id);
+    if (!existing) {
+      throw new Error('Theme not found');
+    }
+
+    const updated = await db
+      .update(themes)
+      .set({
+        status: 'active',
+        publishedBy: userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(themes.id, id))
+      .returning();
+
+    await this.createThemeAuditLog({
+      themeId: id,
+      userId,
+      action: 'published',
+      changes: {},
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: 'active',
+      },
+    });
+
+    return updated[0];
+  }
+
+  async expireTheme(id: string, userId: string): Promise<Theme> {
+    const existing = await this.getThemeById(id);
+    if (!existing) {
+      throw new Error('Theme not found');
+    }
+
+    const updated = await db
+      .update(themes)
+      .set({
+        status: 'expired',
+        endAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(themes.id, id))
+      .returning();
+
+    await this.createThemeAuditLog({
+      themeId: id,
+      userId,
+      action: 'expired',
+      changes: {},
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: 'expired',
+      },
+    });
+
+    return updated[0];
+  }
+
+  async rollbackTheme(id: string, userId: string): Promise<Theme> {
+    const existing = await this.getThemeById(id);
+    if (!existing) {
+      throw new Error('Theme not found');
+    }
+
+    if (existing.version <= 1) {
+      throw new Error('Cannot rollback - no previous version available');
+    }
+
+    const updated = await db
+      .update(themes)
+      .set({
+        version: existing.version + 1,
+        status: 'active',
+        updatedAt: new Date(),
+      })
+      .where(eq(themes.id, id))
+      .returning();
+
+    await this.createThemeAuditLog({
+      themeId: id,
+      userId,
+      action: 'rolled_back',
+      changes: { fromVersion: existing.version, toVersion: existing.version + 1 },
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: 'active',
+        reason: 'Rollback to previous version',
+      },
+    });
+
+    return updated[0];
+  }
+
+  async createThemeAuditLog(log: InsertThemeAuditLog): Promise<void> {
+    await db.insert(themeAuditLog).values([log as any]);
+  }
+
+  async getThemeAuditLogs(themeId: string): Promise<ThemeAuditLog[]> {
+    return await db
+      .select()
+      .from(themeAuditLog)
+      .where(eq(themeAuditLog.themeId, themeId))
+      .orderBy(desc(themeAuditLog.createdAt));
+  }
+
+  async initializeDefaultTheme(userId: string): Promise<Theme> {
+    const existing = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.isDefault, true))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const defaultTheme = await db.insert(themes).values([{
+      name: 'سبق الافتراضية',
+      slug: 'sabq-default',
+      isDefault: true,
+      priority: 0,
+      status: 'active',
+      applyTo: ['site_full'],
+      assets: {
+        logoLight: '/assets/logo-light.svg',
+        logoDark: '/assets/logo-dark.svg',
+        favicon: '/assets/favicon.ico',
+      },
+      tokens: {
+        colors: {
+          'bg-primary': '#f8f8f7',
+          'bg-surface': '#ffffff',
+          'border-default': '#f0f0ef',
+          'text-primary': '#1a1a1a',
+          'text-secondary': '#6b7280',
+          'text-muted': '#9ca3af',
+          'brand-primary': '#0066cc',
+          'success': '#059669',
+          'warning': '#d97706',
+          'error': '#dc2626',
+        },
+        fonts: {
+          'family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif',
+          'size-h1': '28px',
+          'size-h2': '20px',
+          'size-h3': '16px',
+          'size-body': '14px',
+          'size-caption': '12px',
+        },
+        spacing: {
+          'xs': '4px',
+          'sm': '8px',
+          'md': '16px',
+          'lg': '24px',
+          'xl': '32px',
+        },
+        borderRadius: {
+          'default': '8px',
+        },
+      },
+      createdBy: userId,
+      version: 1,
+      changelog: [{
+        version: 1,
+        changes: 'Initial default theme created',
+        timestamp: new Date().toISOString(),
+        userId,
+      }],
+    } as any]).returning();
+
+    return defaultTheme[0];
   }
 }
 
