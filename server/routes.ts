@@ -11,6 +11,7 @@ import {
   insertCategorySchema,
   insertCommentSchema,
   insertRssFeedSchema,
+  updateUserSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -36,6 +37,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.patch("/api/auth/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const parsed = updateUserSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const user = await storage.updateUser(userId, parsed.data);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "فشل في تحديث البيانات" });
     }
   });
 
