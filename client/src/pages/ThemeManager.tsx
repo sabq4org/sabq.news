@@ -32,7 +32,7 @@ export default function ThemeManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/themes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/themes/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/themes/active?scope=site_full"] });
       toast({
         title: "تم النشر",
         description: "تم تفعيل السمة بنجاح",
@@ -53,7 +53,7 @@ export default function ThemeManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/themes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/themes/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/themes/active?scope=site_full"] });
       toast({
         title: "تم الإنهاء",
         description: "تم إنهاء السمة بنجاح",
