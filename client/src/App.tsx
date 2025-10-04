@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import ArticleDetail from "@/pages/ArticleDetail";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
+import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
 import Profile from "@/pages/Profile";
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
+      <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/themes" component={ThemeManager} />
