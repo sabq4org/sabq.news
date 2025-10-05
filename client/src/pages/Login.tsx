@@ -34,15 +34,18 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
-      const response = await apiRequest("POST", "/api/login", data);
+      await apiRequest("/api/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
       
       toast({
         title: "نجح تسجيل الدخول",
         description: "مرحباً بك في سبق الذكية",
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      // Redirect back to login page
+      navigate("/login");
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",
