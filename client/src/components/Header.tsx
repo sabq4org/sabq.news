@@ -1,5 +1,5 @@
 import { Search, Menu, User, LogOut, LayoutDashboard } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeToggle";
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 
 interface HeaderProps {
@@ -22,10 +24,26 @@ interface HeaderProps {
 
 export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(searchQuery);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/logout", {});
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "نراك قريباً",
+      });
+      navigate("/login");
+      window.location.reload();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const getInitials = (name?: string, email?: string) => {
@@ -121,17 +139,19 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                       الملف الشخصي
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="flex w-full items-center cursor-pointer" data-testid="link-logout">
-                      <LogOut className="ml-2 h-4 w-4" />
-                      تسجيل الخروج
-                    </a>
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="flex w-full items-center cursor-pointer" 
+                    data-testid="link-logout"
+                  >
+                    <LogOut className="ml-2 h-4 w-4" />
+                    تسجيل الخروج
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button asChild data-testid="button-login">
-                <a href="/api/login">تسجيل الدخول</a>
+                <a href="/login">تسجيل الدخول</a>
               </Button>
             )}
           </div>

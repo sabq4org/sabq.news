@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Home from "@/pages/Home";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import ArticleDetail from "@/pages/ArticleDetail";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
@@ -22,6 +24,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
