@@ -23,7 +23,7 @@ export function useAuth(options?: { redirectToLogin?: boolean }) {
 
   useEffect(() => {
     if (redirectToLogin && !isLoading && (isError || !user)) {
-      window.location.href = "/api/login";
+      window.location.href = "/login";
     }
   }, [user, isLoading, isError, redirectToLogin]);
 
