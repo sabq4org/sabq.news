@@ -3,6 +3,7 @@ import { db } from "./db";
 import { categories, articles, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { seedRBAC } from "./seedRBAC";
+import bcrypt from "bcrypt";
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -47,6 +48,51 @@ async function seed() {
         })
         .onConflictDoNothing();
       console.log(`✅ Assigned editor role to test user`);
+    }
+
+    // Create admin user with known password
+    const adminUserId = "admin-sabq";
+    const adminPassword = "admin123";
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+    
+    const [adminUser] = await db
+      .insert(users)
+      .values({
+        id: adminUserId,
+        email: "admin@sabq.sa",
+        passwordHash: adminPasswordHash,
+        firstName: "مسؤول",
+        lastName: "النظام",
+        status: "active",
+        isProfileComplete: true,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: "admin@sabq.sa",
+          passwordHash: adminPasswordHash,
+          firstName: "مسؤول",
+          lastName: "النظام",
+          status: "active",
+          isProfileComplete: true,
+        },
+      })
+      .returning();
+
+    console.log(`✅ Created/Updated admin user: ${adminUser.email} (Password: ${adminPassword})`);
+
+    // Assign system_admin role to admin user
+    const systemAdminRole = allRoles.find(r => r.name === "system_admin");
+    if (systemAdminRole) {
+      const { userRoles } = await import("@shared/schema");
+      await db
+        .insert(userRoles)
+        .values({
+          userId: adminUserId,
+          roleId: systemAdminRole.id,
+        })
+        .onConflictDoNothing();
+      console.log(`✅ Assigned system_admin role to admin user`);
     }
 
     // Create official categories (10 categories - production ready)
