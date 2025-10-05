@@ -69,7 +69,7 @@ export function requirePermission(permissionCode: PermissionCode) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userId = (req as any).user?.claims?.sub;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -94,7 +94,7 @@ export function requireAnyPermission(...permissionCodes: PermissionCode[]) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userId = (req as any).user?.claims?.sub;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -124,7 +124,7 @@ export function requireAllPermissions(...permissionCodes: PermissionCode[]) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userId = (req as any).user?.claims?.sub;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }

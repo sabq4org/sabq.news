@@ -1,8 +1,8 @@
-// Reference: javascript_log_in_with_replit blueprint + javascript_object_storage blueprint
+// Reference: javascript_object_storage blueprint
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
@@ -10,6 +10,8 @@ import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, logActivity, getUserPermissions } from "./rbac";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
+import passport from "passport";
 import { 
   users, 
   roles, 
@@ -45,13 +47,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AUTH ROUTES
   // ============================================================
 
+  // Login
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "خطأ في الخادم" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "فشل تسجيل الدخول" });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "خطأ في إنشاء الجلسة" });
+        }
+        res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+      });
+    })(req, res, next);
+  });
+
+  // Register
+  app.post("/api/register", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "البريد الإلكتروني وكلمة المرور مطلوبان" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
+      }
+
+      // Check if user exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.toLowerCase()))
+        .limit(1);
+
+      if (existingUser) {
+        return res.status(409).json({ message: "هذا البريد الإلكتروني مستخدم بالفعل" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          id: userId,
+          email: email.toLowerCase(),
+          passwordHash,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          isProfileComplete: !!(firstName && lastName),
+        })
+        .returning();
+
+      res.status(201).json({ 
+        message: "تم إنشاء الحساب بنجاح", 
+        user: { id: newUser.id, email: newUser.email } 
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الحساب" });
+    }
+  });
+
+  // Logout
+  app.post("/api/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
+      }
+      res.json({ message: "تم تسجيل الخروج بنجاح" });
+    });
+  });
+
+  // Get current user
   app.get("/api/auth/user", async (req: any, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      if (!req.isAuthenticated() || !req.user?.id) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -76,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const parsed = updateUserSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -624,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update role permissions
   app.patch("/api/admin/roles/:id/permissions", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const roleId = req.params.id;
 
       // Validate input
@@ -1256,7 +1338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/articles/:id/react", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const result = await storage.toggleReaction(req.params.id, userId);
       res.json(result);
     } catch (error) {
@@ -1267,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/articles/:id/bookmark", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const result = await storage.toggleBookmark(req.params.id, userId);
       res.json(result);
     } catch (error) {
@@ -1278,7 +1360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/articles/:slug/comments", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const article = await storage.getArticleBySlug(req.params.slug);
 
       if (!article) {
@@ -1309,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dashboard/stats", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1326,7 +1408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dashboard/articles", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1343,7 +1425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dashboard/articles/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1369,7 +1451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/dashboard/articles", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1395,7 +1477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/dashboard/articles/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1422,7 +1504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/dashboard/articles/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
 
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
@@ -1453,7 +1535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ai/summarize", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1473,7 +1555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ai/generate-titles", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== "editor" && user.role !== "admin")) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1497,7 +1579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/rss-feeds", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== "admin") {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1512,7 +1594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/rss-feeds", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== "admin") {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1532,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/rss-feeds/:id/import", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== "admin") {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1552,7 +1634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/profile/bookmarks", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const bookmarks = await storage.getUserBookmarks(userId);
       res.json(bookmarks);
     } catch (error) {
@@ -1563,7 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/profile/liked", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const articles = await storage.getArticles({ status: "published" });
       res.json(articles);
     } catch (error) {
@@ -1574,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/profile/history", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const history = await storage.getUserReadingHistory(userId);
       res.json(history);
     } catch (error) {
@@ -1589,7 +1671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const recommendations = await storage.getRecommendations(userId);
       res.json(recommendations);
     } catch (error) {
@@ -1693,7 +1775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/interests", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const interests = await storage.getUserInterests(userId);
       res.json(interests);
     } catch (error) {
@@ -1704,7 +1786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/interests", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { interestIds } = req.body;
 
       if (!Array.isArray(interestIds) || interestIds.length < 3 || interestIds.length > 5) {
@@ -1734,7 +1816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/behavior/log", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { eventType, metadata } = req.body;
 
       const validEventTypes = [
@@ -1782,7 +1864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/profile/complete", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const userInterests = await storage.getUserInterests(userId);
       const behaviorSummary = await storage.getUserBehaviorSummary(userId, 7);
@@ -1818,7 +1900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/themes", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1837,7 +1919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/themes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1855,14 +1937,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/themes", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
       const parsed = insertThemeSchema.safeParse({
         ...req.body,
-        createdBy: req.user.claims.sub,
+        createdBy: req.user.id,
       });
 
       if (!parsed.success) {
@@ -1882,7 +1964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/themes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1898,7 +1980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const theme = await storage.updateTheme(
         req.params.id, 
         parsed.data, 
-        req.user.claims.sub
+        req.user.id
       );
       res.json(theme);
     } catch (error) {
@@ -1909,7 +1991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/themes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden - Admin only" });
       }
@@ -1924,12 +2006,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/themes/:id/publish", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden - Admin only" });
       }
 
-      const theme = await storage.publishTheme(req.params.id, req.user.claims.sub);
+      const theme = await storage.publishTheme(req.params.id, req.user.id);
       res.json(theme);
     } catch (error) {
       console.error("Error publishing theme:", error);
@@ -1939,12 +2021,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/themes/:id/expire", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden - Admin only" });
       }
 
-      const theme = await storage.expireTheme(req.params.id, req.user.claims.sub);
+      const theme = await storage.expireTheme(req.params.id, req.user.id);
       res.json(theme);
     } catch (error) {
       console.error("Error expiring theme:", error);
@@ -1954,12 +2036,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/themes/:id/rollback", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden - Admin only" });
       }
 
-      const theme = await storage.rollbackTheme(req.params.id, req.user.claims.sub);
+      const theme = await storage.rollbackTheme(req.params.id, req.user.id);
       res.json(theme);
     } catch (error: any) {
       console.error("Error rolling back theme:", error);
@@ -1969,7 +2051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/themes/:id/logs", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1984,12 +2066,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/themes/initialize", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (user?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden - Admin only" });
       }
 
-      const theme = await storage.initializeDefaultTheme(req.user.claims.sub);
+      const theme = await storage.initializeDefaultTheme(req.user.id);
       res.json(theme);
     } catch (error) {
       console.error("Error initializing default theme:", error);

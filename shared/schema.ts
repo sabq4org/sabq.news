@@ -14,10 +14,11 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Users table with Replit Auth integration
+// Users table with email/password authentication
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey(),
+  id: varchar("id").primaryKey(), // Keep existing structure - no default
   email: text("email").notNull().unique(),
+  passwordHash: text("password_hash"), // bcrypt hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
   bio: text("bio"),
