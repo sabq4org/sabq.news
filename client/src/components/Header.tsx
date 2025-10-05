@@ -40,7 +40,6 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
         description: "نراك قريباً",
       });
       navigate("/login");
-      window.location.reload();
     } catch (error) {
       console.error("Logout error:", error);
     }
