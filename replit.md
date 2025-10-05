@@ -1,248 +1,61 @@
 # Sabq Smart News Platform
 
 ## Overview
-
-Sabq Smart is an AI-powered Arabic news platform built with Next.js 15, Express, and PostgreSQL. The platform features intelligent article summarization, personalized recommendations, RSS feed imports, and a comprehensive content management system. It's designed with RTL-first Arabic language support and follows modern design principles inspired by Al Jazeera, The Guardian, and Medium.
+Sabq Smart is an AI-powered Arabic news platform built with Next.js 15, Express, and PostgreSQL. It aims to provide intelligent article summarization, personalized recommendations, and comprehensive content management. The platform supports RTL-first Arabic language design and draws inspiration from leading news outlets like Al Jazeera, The Guardian, and Medium. Key capabilities include dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver a cutting-edge news consumption experience, leveraging AI for personalization and content enrichment, targeting the Arabic-speaking market.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
-
-## Recent Progress (2025-10-04)
-
-**✅ Completed: Roles & Permissions Management Module - Latest**
-- Full Roles & Permissions Management module production-ready
-- Backend: 4 RBAC-protected APIs (GET /api/admin/roles, GET /api/admin/roles/:id, GET /api/permissions, PATCH /api/admin/roles/:id/permissions)
-- Permission system: system.manage_roles required for all admin/roles APIs
-- Security features:
-  - System roles (isSystem=true) cannot be modified (403 Forbidden)
-  - CRITICAL: Prevents removal of system.manage_roles from last non-system role (409 Conflict)
-  - Admin lockout protection: At least one role must retain manage_roles permission
-- Frontend: RTL Arabic UI with permissions grouped by module (articles, categories, users, comments, staff, system)
-- Edit dialog: Checkbox-based permission assignment with Arabic labels
-- Testing: E2e verified basic CRUD operations, architect confirmed security logic
-- Architect reviewed and approved: Module ready for production
-
-**✅ Completed: News Management Module**
-- Full News/Articles Management module production-ready
-- Backend: 7 RBAC-protected admin APIs (list, get, create, update, publish, feature, archive)
-- Permission system: articles.view, articles.create, articles.edit_own, articles.edit_any, articles.publish, articles.delete, articles.archive, articles.feature
-- CategoryId handling: Complete validation chain from frontend → backend → database (UUID | "" | null with proper conversions)
-- Frontend: RTL Arabic interface with multi-filter system (search, status, type, category), edit dialog, status/type badges, quick actions
-- Bug fixes: SelectItem empty values, queryKey serialization, form validation, backend schema, payload conversion
-- UX enhancement: Auto-close dialog after successful updates (300ms delay for toast)
-- Testing: Comprehensive e2e coverage with category assignment/removal, all CRUD verified
-- Architect reviewed and approved: Module ready for production
-
-**✅ Completed: Users Management Module**
-- Full Users Management module with Backend APIs + Frontend UI
-- Added `status` field to users table (active/suspended/banned) with migration
-- Implemented self-protection: admins cannot modify/delete their own accounts (API 403 + UI disabled controls)
-- Backend APIs: GET /api/roles, GET/PATCH/DELETE /api/admin/users with RBAC protection (users.view, users.update, users.delete)
-- Frontend: Search by name/email, filter by role/status, edit dialog with form validation
-- Security: Self-protection prevents privilege self-removal and admin lock-out scenarios
-- Testing: Full e2e coverage with test-admin-002, verified self-protection + regular edits
-- Architect reviewed and approved: Module ready for production
-
-**✅ Completed: RBAC + Categories Management Module**
-- Implemented full Role-Based Access Control (RBAC) system with 6 roles, 33 permissions, and optimized SQL JOINs
-- Built complete Categories Management UI with react-hook-form + zodResolver validation
-- Fixed permission naming inconsistency: changed routes.ts to use "categories.update" (was "categories.edit")
-- Updated seedRBAC.ts: editor role now has full category permissions (view, create, update, delete)
-- All CRUD operations tested and verified with playwright-based e2e testing
-- Test user: test-editor-001 (editor@sabq.test) pre-seeded with editor role
 
 ## System Architecture
 
 ### Frontend Architecture
-
-**Framework & Routing**
-- Next.js 15 with React 18 using Vite as the build tool
-- Client-side routing via Wouter (lightweight React router)
-- TypeScript for type safety across the application
-- RTL-first design system optimized for Arabic content
-
-**UI Component System**
-- Radix UI primitives for accessible, unstyled components
-- Tailwind CSS for utility-first styling with custom theme variables
-- shadcn/ui component library (New York style variant)
-- Custom theme system supporting light/dark modes with CSS variables
-- Arabic-optimized typography using IBM Plex Sans Arabic font family
-- Custom SABQ logo integration
-
-**State Management**
-- TanStack Query (React Query) for server state management
-- Custom hooks for authentication and user preferences
-- Local component state with React hooks
-
-**Key Frontend Features**
-- **Intelligent Homepage** (NEW): Multi-section layout with dynamic content
-  - Hero Carousel: Auto-rotating showcase of top 3 stories (5-second intervals)
-  - Personalized Feed ("لك خصيصًا"): AI-powered article recommendations
-  - Breaking News: Real-time urgent updates with numbered list
-  - Deep Dive Section: Analytical articles with AI summaries
-  - Editor Picks: Curated content sidebar
-  - Trending Topics: Popular categories with dynamic sizing
-- Article detail pages with AI summaries and comment sections
-- User profile with reading history, bookmarks, and settings
-- User registration system with profile completion flow (CompleteProfile → SelectInterests → Home)
-- Interest selection page with card-based UI (3-5 interests required)
-- Dashboard for content creators and editors (authentication-protected)
-- WYSIWYG article editor with AI-powered title generation and image upload (authentication-protected)
-- Responsive design with mobile-first approach
-- Behavior tracking hooks for user engagement analytics
-- Automatic redirect to login for protected pages (Dashboard, ArticleEditor)
+The frontend is built with Next.js 15, React 18, and Vite, using Wouter for client-side routing and TypeScript for type safety. It features an RTL-first design system with Radix UI, Tailwind CSS, shadcn/ui, and custom theming for light/dark modes using IBM Plex Sans Arabic font. State management is handled by TanStack Query for server state and React hooks for local component state.
+Key features include an intelligent, multi-section homepage with a hero carousel, personalized feed, breaking news, deep dives, and trending topics. It also supports article detail pages with AI summaries, user profiles, a user registration flow with interest selection, and a dashboard for content creators with a WYSIWYG article editor. Responsive design, behavior tracking, and authentication-protected routes are integral.
 
 ### Backend Architecture
+The backend uses Express.js with TypeScript, implementing RESTful APIs. Authentication is session-based via Passport.js with a local email/password strategy, using bcrypt for password hashing. PostgreSQL, hosted on Neon serverless, serves as the database, accessed via Drizzle ORM.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, RSS Feeds, Reading History, Interests, User Interests, Behavior Logs, Sentiment Scores, and Themes.
+The API architecture provides authenticated and RBAC-protected endpoints for user management, interest management, behavior tracking, homepage content aggregation, and comprehensive theme management.
+AI integration leverages OpenAI GPT-5 for Arabic text summarization, AI-powered title generation, and planned sentiment analysis, with fallback handling for service failures.
+The "نبض (Pulse)" Intelligent Membership System tracks user behavior and interests for personalized experiences. An advanced Theme Management System supports dynamic theme resolution, lifecycle management, scheduled activation, and an audit trail with rollback capabilities. File storage is handled by Google Cloud Storage via Replit Object Storage, with a custom ACL system. A Content Import System parses RSS feeds, performs duplicate detection, and uses AI for summarization.
 
-**Server Framework**
-- Express.js with TypeScript for RESTful API
-- Session-based authentication using Replit Auth (OpenID Connect)
-- Custom middleware for request logging and error handling
+### Core Modules
+- **Authentication System:** Migrated to traditional email/password with bcrypt hashing and session management.
+- **Roles & Permissions Management:** Full RBAC system with protected APIs, ensuring system integrity and preventing admin lockouts.
+- **News Management:** Comprehensive article lifecycle management with RBAC-protected APIs and multi-filter UI.
+- **Users Management:** Full user CRUD with status tracking, RBAC, and self-protection for admin accounts.
+- **Categories Management:** UI for hierarchical content organization with full CRUD and RBAC.
 
-**Database Layer**
-- PostgreSQL via Neon serverless
-- Drizzle ORM for type-safe database queries
-- Schema-first design with Zod validation
-- Session storage using connect-pg-simple
-
-**Core Data Models**
-- Users: Authentication and comprehensive profile management (firstName, lastName, bio, phoneNumber, profileImageUrl, role, isProfileComplete)
-- Articles: Content with versioning, AI summaries, and metadata
-- Categories: Hierarchical content organization
-- Comments: Threaded discussion system
-- Reactions & Bookmarks: User engagement tracking
-- RSS Feeds: Automated content import sources
-- Reading History: User behavior tracking for recommendations
-- Interests: Predefined user interest categories (8 seed interests: politics, sports, economy, technology, health, culture, science, world)
-- User Interests: Many-to-many relationship with weighted preferences (3-5 required per user)
-- Behavior Logs: Tracks user actions (article views, reads, comments, bookmarks, searches) with metadata
-- Sentiment Scores: Stores AI-analyzed emotional sentiment from user comments
-- Themes: Dynamic platform themes with assets (logos, banners), tokens (colors, fonts, spacing), scheduling, priority, and lifecycle status
-- Theme Audit Log: Complete audit trail of theme changes with user attribution and metadata
-
-**API Architecture**
-- RESTful endpoints organized by resource type
-- Authentication middleware protecting sensitive routes
-- Role-based access control (reader, editor, admin)
-- Consistent error handling and response formats
-- User profile management (GET /api/auth/user, PATCH /api/auth/user)
-- Interest management:
-  - GET /api/interests: List all available interests
-  - GET /api/user/interests: Get user's selected interests (authenticated)
-  - POST /api/user/interests: Set interests with validation (3-5 required, authenticated)
-- Behavior tracking:
-  - POST /api/behavior/log: Log user actions with sanitized metadata (authenticated)
-  - GET /api/user/profile/complete: Get comprehensive user profile with interests, behavior summary, and sentiment profile
-- Homepage aggregation (NEW):
-  - GET /api/homepage: Returns structured homepage data with all sections:
-    - hero: Top 3 articles by views for carousel
-    - forYou: Personalized recommendations (uses PersonalizationEngine)
-    - breaking: Recent high-view articles (last 24 hours, 5 items)
-    - editorPicks: Curated content (4 items)
-    - deepDive: Analytical articles with AI summaries (6 items)
-    - trending: Top 5 categories by activity (article count)
-- Theme management:
-  - GET /api/themes/active?scope=site_full: Get active theme with resolution logic
-  - GET /api/themes: List all themes (admin/editor only)
-  - POST /api/themes: Create new theme (admin/editor)
-  - PATCH /api/themes/:id: Update theme (admin/editor)
-  - POST /api/themes/:id/publish: Publish theme (admin only)
-  - POST /api/themes/:id/expire: Expire active theme (admin only)
-  - POST /api/themes/:id/rollback: Rollback to previous version (admin only)
-  - GET /api/themes/:id/logs: Get audit trail (admin/editor)
-  - POST /api/themes/initialize: Create default theme (admin only)
-
-**AI Integration**
-- OpenAI GPT-5 integration for content features:
-  - Automatic article summarization
-  - AI-powered title generation (3 variants)
-  - Support for Arabic language processing
-  - Sentiment analysis for user comments (planned)
-- Fallback handling for AI service failures
-
-**نبض (Pulse) Intelligent Membership System - Phase 1 ✅ Production-Ready**
-- Interest-based user profiling with 8 core categories
-- Behavior tracking system monitoring user interactions:
-  - Article views and read time with scroll depth tracking
-  - Comment creation and engagement
-  - Bookmark additions and removals
-  - Reaction patterns
-  - Search queries and category filters
-- Server-side validation: 3-5 interests required, with ID existence checks
-- Metadata sanitization: max 10 fields, primitive types only
-- Authentication-gated behavior logging to prevent abuse
-- Custom hooks: useBehaviorTracking, useArticleReadTracking
-- Weighted interest preferences (initial weight: 1.0, dynamic adjustment planned)
-
-**Advanced Theme Management System (In Progress)**
-- Database schema: themes and themeAuditLog tables with comprehensive fields
-- Dynamic theme resolution logic with priority-based conflict resolution
-- Theme lifecycle management (draft → review → scheduled → active → expired)
-- Scheduled theme activation with automatic rollback to default
-- Full CRUD APIs with RBAC (admin, editor roles)
-- Theme assets support: logos (light/dark), favicon, banners, OG images
-- Design tokens: colors, fonts, spacing, border radius injected as CSS variables
-- Audit trail: Complete history of all theme changes with user tracking
-- Rollback functionality: Restore previous theme versions
-- Admin UI: Theme Manager page for creating, editing, and publishing themes
-- ThemeProvider integration: Automatic CSS variable injection on theme change
-- Emergency override support: High-priority themes (priority 9999) bypass normal resolution
-
-**File Storage**
-- Google Cloud Storage integration via Replit Object Storage
-- Custom ACL (Access Control List) system for file permissions
-- Support for public and private content
-- Owner-based and role-based access controls
-
-**Content Import System**
-- RSS feed parser for automated article import
-- Duplicate detection using slug-based matching
-- Automatic AI summarization of imported content
-- Category mapping for imported articles
-
-### External Dependencies
+## External Dependencies
 
 **Authentication & Identity**
-- Replit Auth (OpenID Connect) for user authentication
-- Passport.js strategy for session management
-- express-session with PostgreSQL session store
+- Passport.js: Session-based authentication with local strategy
+- `express-session` & `connect-pg-simple`: Session management with PostgreSQL store
 
 **Database & ORM**
-- @neondatabase/serverless: Serverless PostgreSQL connection
-- drizzle-orm: Type-safe SQL query builder
-- drizzle-kit: Database migration tooling
+- `@neondatabase/serverless`: PostgreSQL connection
+- `drizzle-orm`: Type-safe SQL query builder
+- `drizzle-kit`: Database migration tooling
 
 **AI & Machine Learning**
-- OpenAI API (GPT-5 model) for:
-  - Arabic text summarization
-  - Title generation
-  - Content analysis
+- OpenAI API (GPT-5 model): Arabic text summarization, title generation, content analysis
 
 **File Storage**
-- @google-cloud/storage: Object storage client
-- Replit Object Storage sidecar for credential management
+- `@google-cloud/storage`: Google Cloud Storage client via Replit Object Storage
 
 **Content Processing**
-- rss-parser: RSS/Atom feed parsing
-- date-fns: Date formatting with Arabic locale support
+- `rss-parser`: RSS/Atom feed parsing
+- `date-fns`: Date formatting with Arabic locale support
 
 **Frontend Libraries**
-- @tanstack/react-query: Server state management
-- wouter: Lightweight routing
-- @radix-ui/*: Accessible UI primitives (20+ components)
-- tailwindcss: Utility-first CSS framework
-- class-variance-authority: Component variant management
+- `@tanstack/react-query`: Server state management
+- `wouter`: Lightweight routing
+- `@radix-ui/*`: Accessible UI primitives
+- `tailwindcss`: Utility-first CSS framework
+- `class-variance-authority`: Component variant management
 
 **Development Tools**
-- TypeScript: Static type checking
-- Vite: Fast build tooling and HMR
-- tsx: TypeScript execution for Node.js
-- esbuild: Production bundling
-
-**Deployment Considerations**
-- Environment variables for sensitive configuration
-- DATABASE_URL for PostgreSQL connection
-- OPENAI_API_KEY for AI features
-- SESSION_SECRET for session encryption
-- ISSUER_URL and REPL_ID for Replit Auth
+- `TypeScript`: Static type checking
+- `Vite`: Fast build tooling
+- `tsx`: TypeScript execution for Node.js
+- `esbuild`: Production bundling
