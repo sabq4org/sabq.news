@@ -44,8 +44,8 @@ export default function Login() {
         description: "مرحباً بك في سبق الذكية",
       });
 
-      // Redirect back to login page
-      navigate("/login");
+      // Redirect to dashboard
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",
