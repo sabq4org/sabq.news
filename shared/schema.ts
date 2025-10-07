@@ -39,6 +39,7 @@ export const categories = pgTable("categories", {
   description: text("description"),
   color: text("color"),
   icon: text("icon"),
+  heroImageUrl: text("hero_image_url"),
   displayOrder: integer("display_order").default(0),
   status: text("status").default("active").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
