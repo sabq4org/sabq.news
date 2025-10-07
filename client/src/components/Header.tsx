@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -114,6 +115,8 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
             </Button>
 
             <ThemeToggle />
+
+            {user && <NotificationBell />}
 
             {user ? (
               <DropdownMenu>
