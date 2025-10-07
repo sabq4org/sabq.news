@@ -2499,7 +2499,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const [notification] = await db
         .insert(notificationQueue)
-        .values([parsed.data])
+        .values({
+          userId: parsed.data.userId,
+          type: parsed.data.type,
+          payload: parsed.data.payload as any,
+          dedupeKey: parsed.data.dedupeKey,
+          priority: parsed.data.priority,
+          scheduledAt: parsed.data.scheduledAt,
+        })
         .returning();
 
       res.json(notification);
