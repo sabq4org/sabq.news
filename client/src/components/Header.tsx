@@ -83,7 +83,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo and Theme Toggle - Left side (Desktop only) */}
+          {/* Logo - Left side (Desktop only) */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home">
@@ -94,7 +94,6 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                 />
               </span>
             </Link>
-            <ThemeToggle />
           </div>
 
           {/* Mobile Logo */}
