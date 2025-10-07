@@ -60,9 +60,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           {articles.map((article) => (
             <div key={article.id} className="relative min-w-0 flex-[0_0_100%]">
               <Link href={`/article/${article.slug}`}>
-                <div className="relative h-[400px] md:h-[500px] cursor-pointer group flex flex-col md:flex-row">
-                  {/* Image Half */}
-                  <div className="w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden">
+                <div className="relative h-[300px] md:h-[500px] cursor-pointer group flex flex-col md:flex-row">
+                  {/* Image - 65% in mobile */}
+                  <div className="w-full md:w-1/2 h-[65%] md:h-full relative overflow-hidden">
                     {article.imageUrl ? (
                       <img
                         src={article.imageUrl}
@@ -75,8 +75,8 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                     )}
                   </div>
 
-                  {/* Content Half */}
-                  <div className="w-full md:w-1/2 h-1/2 md:h-full bg-card flex flex-col justify-center p-6 md:p-8 lg:p-12">
+                  {/* Content - 35% in mobile */}
+                  <div className="w-full md:w-1/2 h-[35%] md:h-full bg-card flex flex-col justify-center p-4 md:p-8 lg:p-12">
                     <div className="space-y-4">
                       {article.category && (
                         <Badge 
