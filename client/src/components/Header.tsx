@@ -26,7 +26,7 @@ import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 import type { Category } from "@shared/schema";
 
 interface HeaderProps {
-  user?: { name?: string; email?: string; role?: string; profileImageUrl?: string };
+  user?: { name?: string | null; email?: string; role?: string; profileImageUrl?: string | null };
   onSearch?: (query: string) => void;
   onMenuClick?: () => void;
 }
@@ -127,9 +127,9 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                     data-testid="button-user-menu"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.profileImageUrl || ""} alt={user.name || user.email} />
+                      <AvatarImage src={user.profileImageUrl || ""} alt={user.name || user.email || ""} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {getInitials(user.name, user.email)}
+                        {getInitials(user.name || undefined, user.email)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="hidden sm:inline-block">{user.name || user.email}</span>

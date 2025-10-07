@@ -63,6 +63,7 @@ export function ObjectUploader({
         variant={variant}
         size={size}
         type="button"
+        data-testid="button-upload-file"
       >
         {children}
       </Button>
@@ -72,6 +73,46 @@ export function ObjectUploader({
         open={showModal}
         onRequestClose={() => setShowModal(false)}
         proudlyDisplayPoweredByUppy={false}
+        locale={{
+          strings: {
+            dropPasteImportBoth: 'اسحب الملفات هنا أو %{browseFiles}',
+            dropPasteBoth: 'اسحب الملفات هنا أو %{browseFiles}',
+            dropPasteFiles: 'اسحب الملفات هنا أو %{browseFiles}',
+            browseFiles: 'اختر الملفات',
+            addMore: 'إضافة المزيد',
+            addMoreFiles: 'إضافة المزيد من الملفات',
+            dashboardWindowTitle: 'رافع الملفات',
+            dashboardTitle: 'رافع الملفات',
+            copyLinkToClipboardSuccess: 'تم نسخ الرابط',
+            done: 'تم',
+            removeFile: 'حذف الملف',
+            uploadComplete: 'اكتمل الرفع',
+            uploadXFiles: {
+              0: 'رفع %{smart_count} ملف',
+              1: 'رفع %{smart_count} ملف',
+            },
+            xFilesSelected: {
+              0: '%{smart_count} ملف محدد',
+              1: '%{smart_count} ملف محدد',
+            },
+            uploading: 'جاري الرفع...',
+            complete: 'مكتمل',
+            uploadFailed: 'فشل الرفع',
+            paused: 'متوقف',
+            retry: 'إعادة المحاولة',
+            cancel: 'إلغاء',
+            filesUploadedOfTotal: {
+              0: '%{complete} من %{smart_count} ملف تم رفعه',
+              1: '%{complete} من %{smart_count} ملف تم رفعه',
+            },
+            dataUploadedOfTotal: '%{complete} من %{total}',
+            xTimeLeft: '%{time} متبقي',
+            uploadingXFiles: {
+              0: 'رفع %{smart_count} ملف',
+              1: 'رفع %{smart_count} ملف',
+            },
+          },
+        }}
       />
     </div>
   );
