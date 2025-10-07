@@ -8,6 +8,7 @@ import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, logActivity, getUserPermissions } from "./rbac";
+import { createNotification } from "./notificationEngine";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -1228,6 +1229,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Trigger notification if article was just published
+      if (updatedArticle.status === "published" && existingArticle.status !== "published") {
+        try {
+          await createNotification({
+            type: updatedArticle.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
+            data: {
+              articleId: updatedArticle.id,
+              articleTitle: updatedArticle.title,
+              articleSlug: updatedArticle.slug,
+              categoryId: updatedArticle.categoryId,
+              newsType: updatedArticle.newsType,
+            },
+          });
+        } catch (notificationError) {
+          console.error("Error creating notification:", notificationError);
+          // Don't fail the update operation if notification fails
+        }
+      }
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error updating article:", error);
@@ -1278,6 +1298,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Trigger notification for published article
+      try {
+        await createNotification({
+          type: updatedArticle.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
+          data: {
+            articleId: updatedArticle.id,
+            articleTitle: updatedArticle.title,
+            articleSlug: updatedArticle.slug,
+            categoryId: updatedArticle.categoryId,
+            newsType: updatedArticle.newsType,
+          },
+        });
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        // Don't fail the publish operation if notification fails
+      }
 
       res.json(updatedArticle);
     } catch (error) {
