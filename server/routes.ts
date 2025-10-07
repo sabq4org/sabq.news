@@ -38,10 +38,50 @@ import {
   updateThemeSchema,
   updateRolePermissionsSchema,
 } from "@shared/schema";
+import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+
+  // ============================================================
+  // SETUP ROUTES (Protected, one-time use)
+  // ============================================================
+
+  // Bootstrap admin user endpoint (for production deployment)
+  app.post("/api/setup/admin", async (req, res) => {
+    try {
+      // Check if bootstrap is enabled
+      const isEnabled = process.env.ENABLE_ADMIN_BOOTSTRAP === "true";
+      if (!isEnabled) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // Check setup secret
+      const setupSecret = req.headers["x-setup-secret"];
+      const expectedSecret = process.env.SETUP_ADMIN_SECRET;
+      
+      if (!expectedSecret || setupSecret !== expectedSecret) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Bootstrap admin
+      const result = await bootstrapAdmin(db);
+
+      console.log("✅ Admin bootstrap completed successfully");
+      res.json({
+        success: true,
+        message: "Admin user created successfully",
+        credentials: {
+          email: result.email,
+          password: result.password,
+        },
+      });
+    } catch (error) {
+      console.error("❌ Admin bootstrap error:", error);
+      res.status(500).json({ message: "Bootstrap failed" });
+    }
+  });
 
   // ============================================================
   // AUTH ROUTES
