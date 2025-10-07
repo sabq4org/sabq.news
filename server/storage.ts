@@ -694,24 +694,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrendingTopics(): Promise<Array<{ topic: string; count: number }>> {
-    const results = await db
-      .select({
-        category: categories.nameAr,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .where(eq(articles.status, "published"))
-      .groupBy(categories.nameAr)
-      .orderBy(desc(sql`count(*)`))
-      .limit(5);
+    const results = await db.execute(sql`
+      WITH keyword_stats AS (
+        SELECT 
+          UNNEST(keywords) as keyword,
+          a.id as article_id,
+          COALESCE(a.views, 0) as views,
+          (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id) as comment_count
+        FROM articles a
+        WHERE a.status = 'published'
+          AND a.keywords IS NOT NULL
+          AND array_length(a.keywords, 1) > 0
+      )
+      SELECT 
+        keyword as topic,
+        (SUM(views) + (SUM(comment_count) * 10))::int as count
+      FROM keyword_stats
+      GROUP BY keyword
+      HAVING SUM(views) + (SUM(comment_count) * 10) > 0
+      ORDER BY count DESC
+      LIMIT 8
+    `);
 
-    return results
-      .filter(r => r.category)
-      .map(r => ({
-        topic: r.category!,
-        count: r.count,
-      }));
+    return (results.rows as Array<{ topic: string; count: number }>)
+      .filter(r => r.topic && r.topic.trim().length > 0);
   }
 
   // Dashboard stats
