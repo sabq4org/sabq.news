@@ -650,6 +650,70 @@ export default function CategoriesManagement() {
                   </FormItem>
                 )}
               />
+              
+              {/* Hero Image Upload */}
+              <FormField
+                control={form.control}
+                name="heroImageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>صورة الهيرو</FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isUploadingHeroImage}
+                            onClick={() => document.getElementById('hero-image-upload')?.click()}
+                            data-testid="button-upload-hero-image"
+                          >
+                            {isUploadingHeroImage ? (
+                              <>
+                                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                                جاري الرفع...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 ml-2" />
+                                رفع صورة
+                              </>
+                            )}
+                          </Button>
+                          <input
+                            id="hero-image-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleHeroImageUpload}
+                          />
+                        </div>
+                        {field.value && (
+                          <div className="relative rounded-lg overflow-hidden border">
+                            <img 
+                              src={field.value} 
+                              alt="Hero preview" 
+                              className="w-full h-32 object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 left-2"
+                              onClick={() => form.setValue('heroImageUrl', '')}
+                              data-testid="button-remove-hero-image"
+                            >
+                              إزالة
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button
                   type="button"
