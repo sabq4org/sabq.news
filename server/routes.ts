@@ -40,6 +40,7 @@ import {
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
+import { seedProductionData } from "./utils/seedProductionData";
 import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -49,6 +50,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
   // SETUP ROUTES (Protected, one-time use)
   // ============================================================
+
+  // Seed production data only (no schema changes)
+  app.post("/api/setup/seed", async (req, res) => {
+    try {
+      // Check if setup is enabled
+      const isEnabled = process.env.ENABLE_PRODUCTION_SETUP === "true";
+      if (!isEnabled) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // Check setup secret
+      const setupSecret = req.headers["x-setup-secret"];
+      const expectedSecret = process.env.SETUP_SECRET;
+      
+      if (!expectedSecret || setupSecret !== expectedSecret) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Seed data only
+      const result = await seedProductionData(db);
+
+      console.log("✅ Production data seeding completed successfully");
+      res.json(result);
+    } catch (error) {
+      console.error("❌ Production seeding error:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Seeding failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   // Complete production database setup (schema + seed + admin)
   app.post("/api/setup/production", async (req, res) => {
