@@ -359,6 +359,24 @@ export default function ArticleDetail() {
               </div>
             )}
 
+            {/* Keywords */}
+            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground">الكلمات المفتاحية</h3>
+                <div className="flex flex-wrap gap-2">
+                  {article.seo.keywords.map((keyword, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      data-testid={`badge-keyword-${index}`}
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Article Content */}
             <div 
               className="prose prose-lg dark:prose-invert max-w-none leading-loose"
