@@ -24,7 +24,7 @@ import {
   Loader2,
   Pause,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
@@ -34,6 +34,7 @@ export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const { logBehavior } = useBehaviorTracking();
+  const [, setLocation] = useLocation();
   
   // Audio player state
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -447,8 +448,10 @@ export default function ArticleDetail() {
                 <div className="flex flex-wrap gap-2">
                   {article.seo.keywords.map((keyword, index) => (
                     <Badge 
-                      key={index} 
+                      key={index}
                       variant="secondary"
+                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300 hover:scale-105"
+                      onClick={() => setLocation(`/keyword/${encodeURIComponent(keyword)}`)}
                       data-testid={`badge-keyword-${index}`}
                     >
                       {keyword}

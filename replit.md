@@ -24,7 +24,8 @@ The "نبض (Pulse)" Intelligent Membership System tracks user behavior and inte
 - **Roles & Permissions Management:** Full RBAC system with protected APIs, ensuring system integrity and preventing admin lockouts.
 - **News Management:** Comprehensive article lifecycle management with RBAC-protected APIs and multi-filter UI.
 - **Users Management:** Full user CRUD with status tracking, RBAC, and self-protection for admin accounts.
-- **Categories Management:** UI for hierarchical content organization with full CRUD and RBAC.
+- **Categories Management:** UI for hierarchical content organization with full CRUD, RBAC, and hero image support.
+- **Keyword Navigation:** Interactive keyword system with dedicated pages showing all articles tagged with specific keywords. Keywords are clickable with smooth hover animations.
 
 ## External Dependencies
 

@@ -1497,6 +1497,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get articles by keyword
+  app.get("/api/keyword/:keyword", async (req, res) => {
+    try {
+      const keyword = decodeURIComponent(req.params.keyword);
+      const allArticles = await storage.getArticles({ status: "published" });
+      
+      // Filter articles that contain the keyword in their SEO keywords
+      const filteredArticles = allArticles.filter(article => 
+        article.seo?.keywords?.some(k => k.toLowerCase() === keyword.toLowerCase())
+      );
+
+      res.json(filteredArticles);
+    } catch (error) {
+      console.error("Error fetching articles by keyword:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
   app.post("/api/articles/:id/react", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
