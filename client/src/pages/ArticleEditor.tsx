@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export default function ArticleEditor() {
   const { id } = useParams<{ id: string }>();
@@ -423,17 +424,13 @@ export default function ArticleEditor() {
                       </Button>
                     </div>
                   </div>
-                  <Textarea
-                    id="content"
-                    placeholder="اكتب محتوى المقال هنا..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={20}
-                    className="font-sans leading-loose"
-                    data-testid="textarea-article-content"
+                  <RichTextEditor
+                    content={content}
+                    onChange={setContent}
+                    placeholder="ابدأ بكتابة محتوى المقال..."
                   />
                   <p className="text-xs text-muted-foreground">
-                    {content.length} حرف | {content.split(/\s+/).filter(Boolean).length} كلمة
+                    {content.replace(/<[^>]*>/g, '').length} حرف | {content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length} كلمة
                   </p>
                 </div>
               </CardContent>
