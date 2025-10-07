@@ -45,6 +45,8 @@ export async function setupAuth(app: Express) {
       },
       async (email, password, done) => {
         try {
+          console.log("🔍 LocalStrategy: Checking user:", email);
+          
           const [user] = await db
             .select()
             .from(users)
@@ -52,24 +54,33 @@ export async function setupAuth(app: Express) {
             .limit(1);
 
           if (!user) {
+            console.log("❌ LocalStrategy: User not found");
             return done(null, false, { message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
           }
 
+          console.log("✅ LocalStrategy: User found, checking password");
+
           if (!user.passwordHash) {
+            console.log("❌ LocalStrategy: No password hash");
             return done(null, false, { message: "هذا الحساب يحتاج إلى إعادة تعيين كلمة المرور" });
           }
 
           const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+          console.log("🔑 LocalStrategy: Password valid?", isValidPassword);
+          
           if (!isValidPassword) {
             return done(null, false, { message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
           }
 
           if (user.status !== "active") {
+            console.log("❌ LocalStrategy: User not active:", user.status);
             return done(null, false, { message: "هذا الحساب معطل. يرجى التواصل مع الإدارة" });
           }
 
+          console.log("✅ LocalStrategy: Success!");
           return done(null, { id: user.id, email: user.email });
         } catch (error) {
+          console.error("❌ LocalStrategy error:", error);
           return done(error);
         }
       }
