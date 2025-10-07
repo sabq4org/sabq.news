@@ -361,14 +361,13 @@ export const notificationQueue = pgTable("notification_queue", {
   priority: integer("priority").default(50).notNull(),
   scheduledAt: timestamp("scheduled_at"),
   status: text("status").default("queued").notNull(), // queued, sent, error
-  dedupeKey: text("dedupe_key").notNull(), // user_id:article_id:type
+  dedupeKey: text("dedupe_key").notNull().unique(), // user_id:article_id:type (unique to prevent duplicates)
   errorMessage: text("error_message"),
   sentAt: timestamp("sent_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_notification_queue_user_status").on(table.userId, table.status),
   index("idx_notification_queue_scheduled").on(table.scheduledAt),
-  index("idx_notification_queue_dedupe").on(table.dedupeKey),
 ]);
 
 // Notifications Inbox (user's notification feed)

@@ -36,22 +36,28 @@ async function processNotificationQueue() {
         let body = "";
         let deeplink = payload.deeplink || null;
         
-        if (queueItem.type === "BREAKING_NEWS") {
+        if (queueItem.type === "BreakingNews") {
           title = "⚡ عاجل";
           body = payload.articleTitle || "خبر عاجل جديد";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
-        } else if (queueItem.type === "NEW_ARTICLE") {
+        } else if (queueItem.type === "InterestMatch") {
           title = "📰 مقال جديد";
           body = payload.articleTitle || "مقال جديد في اهتماماتك";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
-        } else if (queueItem.type === "TRENDING_TOPIC") {
-          title = "🔥 موضوع رائج";
-          body = payload.matchedTopic || "موضوع رائج قد يهمك";
-          deeplink = payload.deeplink;
-        } else if (queueItem.type === "PERSONALIZED_RECOMMENDATION") {
-          title = "💡 موصى به لك";
-          body = payload.articleTitle || "مقال قد يعجبك";
+        } else if (queueItem.type === "LikedStoryUpdate") {
+          title = "🔔 تحديث";
+          body = payload.articleTitle || "تحديث على مقال أعجبك";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+        } else if (queueItem.type === "MostReadTodayForYou") {
+          title = "🔥 الأكثر قراءة";
+          body = payload.articleTitle || "الأكثر قراءة اليوم في اهتماماتك";
+          deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+        } else {
+          // Fallback for unrecognized types
+          title = "📬 إشعار جديد";
+          body = payload.articleTitle || "لديك إشعار جديد";
+          deeplink = payload.deeplink || "/";
+          console.warn(`[NotificationWorker] Unknown notification type: ${queueItem.type}`);
         }
 
         // Create inbox notification

@@ -41,8 +41,8 @@ async function canSendToUser(userId: string): Promise<boolean> {
   const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
   const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
 
-  // Check 12-hour limit
-  const [count12h] = await db
+  // Check 12-hour limit (both inbox and queue)
+  const [inboxCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(notificationsInbox)
     .where(
@@ -52,12 +52,23 @@ async function canSendToUser(userId: string): Promise<boolean> {
       )
     );
 
-  if (Number(count12h?.count || 0) >= THROTTLE_MAX_PER_12H) {
+  const [queueCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(notificationQueue)
+    .where(
+      and(
+        eq(notificationQueue.userId, userId),
+        gt(notificationQueue.createdAt, twelveHoursAgo)
+      )
+    );
+
+  const totalCount = Number(inboxCount?.count || 0) + Number(queueCount?.count || 0);
+  if (totalCount >= THROTTLE_MAX_PER_12H) {
     return false;
   }
 
-  // Check 20-minute interval
-  const [recentNotif] = await db
+  // Check 20-minute interval (both inbox and queue)
+  const [recentInbox] = await db
     .select()
     .from(notificationsInbox)
     .where(
@@ -68,7 +79,18 @@ async function canSendToUser(userId: string): Promise<boolean> {
     )
     .limit(1);
 
-  return !recentNotif;
+  const [recentQueue] = await db
+    .select()
+    .from(notificationQueue)
+    .where(
+      and(
+        eq(notificationQueue.userId, userId),
+        gt(notificationQueue.createdAt, twentyMinutesAgo)
+      )
+    )
+    .limit(1);
+
+  return !recentInbox && !recentQueue;
 }
 
 /**
@@ -110,7 +132,8 @@ async function isDuplicate(userId: string, articleId: string, type: string): Pro
   const dedupeKey = `${userId}:${articleId}:${type}`;
   const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const [existing] = await db
+  // Check inbox
+  const [existingInbox] = await db
     .select()
     .from(notificationsInbox)
     .where(
@@ -123,11 +146,27 @@ async function isDuplicate(userId: string, articleId: string, type: string): Pro
     )
     .limit(1);
 
-  return !!existing;
+  if (existingInbox) return true;
+
+  // Check queue
+  const [existingQueue] = await db
+    .select()
+    .from(notificationQueue)
+    .where(
+      and(
+        eq(notificationQueue.userId, userId),
+        eq(sql`${notificationQueue.payload}->>'articleId'`, articleId),
+        eq(notificationQueue.type, type),
+        gt(notificationQueue.createdAt, last24h)
+      )
+    )
+    .limit(1);
+
+  return !!existingQueue;
 }
 
 /**
- * Send notification to inbox (respecting policies)
+ * Send notification to queue (respecting policies)
  */
 async function sendToInbox(
   userId: string,
@@ -144,12 +183,6 @@ async function sendToInbox(
       return false;
     }
 
-    // Check quiet hours (allow inbox, just don't push)
-    const inQuietHours = await isInQuietHours(userId);
-    if (inQuietHours) {
-      console.log(`🌙 User ${userId} in quiet hours - inbox only`);
-    }
-
     // Check duplicate
     if (payload.articleId) {
       const isDupe = await isDuplicate(userId, payload.articleId, type);
@@ -159,23 +192,39 @@ async function sendToInbox(
       }
     }
 
-    // Create notification
-    await db.insert(notificationsInbox).values({
-      userId,
-      type,
-      title,
-      body,
-      deeplink: payload.deeplink || "",
-      metadata: {
-        articleId: payload.articleId,
-        imageUrl: payload.imageUrl,
-      },
-    });
+    // Check quiet hours - schedule for later if in quiet hours
+    const inQuietHours = await isInQuietHours(userId);
+    const scheduledAt = inQuietHours ? new Date(Date.now() + 2 * 60 * 60 * 1000) : null; // Schedule 2 hours later if in quiet hours
 
-    console.log(`✅ Notification sent to user ${userId}: ${type}`);
-    return true;
+    // Add to notification queue (with deduplication via unique constraint)
+    const dedupeKey = `${userId}:${payload.articleId || 'general'}:${type}`;
+    try {
+      await db.insert(notificationQueue).values({
+        userId,
+        type,
+        payload,
+        priority: type === "BreakingNews" ? 100 : 50,
+        scheduledAt,
+        dedupeKey,
+        status: "queued",
+      });
+
+      if (inQuietHours) {
+        console.log(`🌙 User ${userId} in quiet hours - scheduled for later`);
+      } else {
+        console.log(`✅ Notification queued for user ${userId}: ${type}`);
+      }
+      return true;
+    } catch (insertError: any) {
+      // If unique constraint violation, it's already queued (race condition)
+      if (insertError.code === '23505') {
+        console.log(`🔁 Notification already queued for user ${userId}: ${type}`);
+        return false;
+      }
+      throw insertError;
+    }
   } catch (error) {
-    console.error(`❌ Failed to send notification to user ${userId}:`, error);
+    console.error(`❌ Failed to queue notification for user ${userId}:`, error);
     return false;
   }
 }
