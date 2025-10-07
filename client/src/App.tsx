@@ -11,6 +11,7 @@ import ArticleDetail from "@/pages/ArticleDetail";
 import CategoryPage from "@/pages/CategoryPage";
 import KeywordPage from "@/pages/KeywordPage";
 import NewsPage from "@/pages/NewsPage";
+import CategoriesListPage from "@/pages/CategoriesListPage";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
