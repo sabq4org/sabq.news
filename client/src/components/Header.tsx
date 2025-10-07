@@ -70,12 +70,21 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
     return 'س';
   };
 
+  const mainSections = [
+    { name: "الأخبار", href: "/" },
+    { name: "التصنيفات", href: "/categories" },
+    { name: "عمق", href: "/omq" },
+    { name: "مقترب", href: "/moqtareb" },
+    { name: "مقالات", href: "/articles" },
+    { name: "لحظة بلحظة", href: "/live" },
+  ];
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo and brand */}
-          <div className="flex items-center gap-6">
+          {/* Logo and Theme Toggle - Left side (Desktop only) */}
+          <div className="hidden md:flex items-center gap-3">
             <Link href="/">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home">
                 <img 
@@ -85,24 +94,34 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                 />
               </span>
             </Link>
+            <ThemeToggle />
           </div>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="ابحث في الأخبار..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10"
-                data-testid="input-search"
-              />
-            </div>
-          </form>
+          {/* Mobile Logo */}
+          <div className="md:hidden flex items-center">
+            <Link href="/">
+              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile">
+                <img 
+                  src={logoImage} 
+                  alt="سبق - SABQ" 
+                  className="h-10 w-auto object-contain"
+                />
+              </span>
+            </Link>
+          </div>
 
-          {/* Actions */}
+          {/* Main Navigation - Center (Desktop only) */}
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
+            {mainSections.map((section) => (
+              <Link key={section.name} href={section.href}>
+                <span className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" data-testid={`link-section-${section.name}`}>
+                  {section.name}
+                </span>
+              </Link>
+            ))}
+          </nav>
+
+          {/* Actions - Right side */}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -114,79 +133,83 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <ThemeToggle />
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
 
-            {user && <NotificationBell />}
+            <div className="hidden md:flex items-center gap-2">
+              {user && <NotificationBell />}
 
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="gap-2 hover-elevate active-elevate-2"
-                    data-testid="button-user-menu"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={user.profileImageUrl || ""} 
-                        alt={user.name || user.email || ""}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {getInitials(user.name || undefined, user.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden sm:inline-block">{user.name || user.email}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  {(user.role === "editor" || user.role === "admin") && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <a href="/dashboard" className="flex w-full items-center cursor-pointer" data-testid="link-dashboard">
-                          <LayoutDashboard className="ml-2 h-4 w-4" />
-                          لوحة التحكم
-                        </a>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  <DropdownMenuItem asChild>
-                    <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile">
-                      <User className="ml-2 h-4 w-4" />
-                      الملف الشخصي
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
-                      <Bell className="ml-2 h-4 w-4" />
-                      إعدادات الإشعارات
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="flex w-full items-center cursor-pointer" 
-                    data-testid="link-logout"
-                  >
-                    <LogOut className="ml-2 h-4 w-4" />
-                    تسجيل الخروج
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button asChild data-testid="button-login" className="gap-2">
-                <a href="/login">
-                  <User className="h-5 w-5 sm:hidden" />
-                  <span className="hidden sm:inline-block">تسجيل الدخول</span>
-                </a>
-              </Button>
-            )}
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="gap-2 hover-elevate active-elevate-2"
+                      data-testid="button-user-menu"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage 
+                          src={user.profileImageUrl || ""} 
+                          alt={user.name || user.email || ""}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                          {getInitials(user.name || undefined, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden sm:inline-block">{user.name || user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    {(user.role === "editor" || user.role === "admin") && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <a href="/dashboard" className="flex w-full items-center cursor-pointer" data-testid="link-dashboard">
+                            <LayoutDashboard className="ml-2 h-4 w-4" />
+                            لوحة التحكم
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile">
+                        <User className="ml-2 h-4 w-4" />
+                        الملف الشخصي
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
+                        <Bell className="ml-2 h-4 w-4" />
+                        إعدادات الإشعارات
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="flex w-full items-center cursor-pointer" 
+                      data-testid="link-logout"
+                    >
+                      <LogOut className="ml-2 h-4 w-4" />
+                      تسجيل الخروج
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button asChild data-testid="button-login" className="gap-2">
+                  <a href="/login">
+                    <User className="h-5 w-5 sm:hidden" />
+                    <span className="hidden sm:inline-block">تسجيل الدخول</span>
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -204,24 +227,6 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
             />
           </div>
         </form>
-
-        {/* Categories bar - Desktop only */}
-        {categories.length > 0 && (
-          <div className="hidden md:flex items-center gap-4 pb-3 overflow-x-auto">
-            <Link href="/">
-              <span className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap cursor-pointer" data-testid="link-category-all">
-                الكل
-              </span>
-            </Link>
-            {categories.map((category) => (
-              <Link key={category.id} href={`/category/${category.slug}`}>
-                <span className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap cursor-pointer" data-testid={`link-category-${category.slug}`}>
-                  {category.nameAr}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Mobile menu sheet */}
