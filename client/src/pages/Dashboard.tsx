@@ -97,9 +97,10 @@ export default function Dashboard() {
     },
   ];
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => !item.adminOnly || user?.role === "admin"
-  );
+  // Show all admin items while loading, then filter based on actual role
+  const filteredMenuItems = isUserLoading 
+    ? menuItems // Show all items while loading to prevent flashing
+    : menuItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
