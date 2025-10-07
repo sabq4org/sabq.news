@@ -175,8 +175,11 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild data-testid="button-login">
-                <a href="/login">تسجيل الدخول</a>
+              <Button asChild data-testid="button-login" className="gap-2">
+                <a href="/login">
+                  <User className="h-5 w-5 sm:hidden" />
+                  <span className="hidden sm:inline-block">تسجيل الدخول</span>
+                </a>
               </Button>
             )}
           </div>
