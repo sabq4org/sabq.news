@@ -332,6 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "رابط الصورة مطلوب" });
       }
 
+      console.log("[Profile Image] Upload URL received:", req.body.profileImageUrl);
+
       const objectStorageService = new ObjectStorageService();
       const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
         req.body.profileImageUrl,
@@ -341,10 +343,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
+      console.log("[Profile Image] Object path after ACL:", objectPath);
+
       // Update user profile with the new image path
       const user = await storage.updateUser(userId, { 
         profileImageUrl: objectPath 
       });
+
+      console.log("[Profile Image] User updated with new image:", user.profileImageUrl);
 
       res.json({ 
         success: true,

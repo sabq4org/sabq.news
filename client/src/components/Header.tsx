@@ -127,7 +127,11 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                     data-testid="button-user-menu"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.profileImageUrl || ""} alt={user.name || user.email || ""} />
+                      <AvatarImage 
+                        src={user.profileImageUrl || ""} 
+                        alt={user.name || user.email || ""}
+                        className="object-cover"
+                      />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                         {getInitials(user.name || undefined, user.email)}
                       </AvatarFallback>
