@@ -10,6 +10,7 @@ import Register from "@/pages/Register";
 import ArticleDetail from "@/pages/ArticleDetail";
 import CategoryPage from "@/pages/CategoryPage";
 import KeywordPage from "@/pages/KeywordPage";
+import NewsPage from "@/pages/NewsPage";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
@@ -27,6 +28,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/news" component={NewsPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/category/:slug" component={CategoryPage} />
