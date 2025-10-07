@@ -319,6 +319,95 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Notification Templates
+export const notificationTemplates = pgTable("notification_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull().unique(), // BreakingNews, InterestMatch, LikedStoryUpdate, MostReadTodayForYou
+  channel: text("channel").notNull(), // in-app, web-push, email, daily-digest
+  titleAr: text("title_ar").notNull(),
+  bodyAr: text("body_ar").notNull(),
+  deeplinkPattern: text("deeplink_pattern"), // e.g., "/news/{slug}"
+  ctaLabelAr: text("cta_label_ar"), // e.g., "افتح الخبر"
+  priority: integer("priority").default(50).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User Notification Preferences
+export const userNotificationPrefs = pgTable("user_notification_prefs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  breaking: boolean("breaking").default(true).notNull(),
+  interest: boolean("interest").default(true).notNull(),
+  likedUpdates: boolean("liked_updates").default(true).notNull(),
+  mostRead: boolean("most_read").default(true).notNull(),
+  webPush: boolean("web_push").default(false).notNull(),
+  dailyDigest: boolean("daily_digest").default(false).notNull(),
+  quietHoursStart: text("quiet_hours_start").default("23:00"),
+  quietHoursEnd: text("quiet_hours_end").default("08:00"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Notification Queue
+export const notificationQueue = pgTable("notification_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(), // BreakingNews, InterestMatch, LikedStoryUpdate, MostReadTodayForYou
+  payload: jsonb("payload").$type<{
+    articleId?: string;
+    articleTitle?: string;
+    matchedTopic?: string;
+    deeplink?: string;
+  }>().notNull(),
+  priority: integer("priority").default(50).notNull(),
+  scheduledAt: timestamp("scheduled_at"),
+  status: text("status").default("queued").notNull(), // queued, sent, error
+  dedupeKey: text("dedupe_key").notNull(), // user_id:article_id:type
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_notification_queue_user_status").on(table.userId, table.status),
+  index("idx_notification_queue_scheduled").on(table.scheduledAt),
+  index("idx_notification_queue_dedupe").on(table.dedupeKey),
+]);
+
+// Notifications Inbox (user's notification feed)
+export const notificationsInbox = pgTable("notifications_inbox", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  deeplink: text("deeplink"),
+  read: boolean("read").default(false).notNull(),
+  metadata: jsonb("metadata").$type<{
+    articleId?: string;
+    imageUrl?: string;
+    categorySlug?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_notifications_inbox_user_created").on(table.userId, table.createdAt),
+  index("idx_notifications_inbox_read").on(table.userId, table.read),
+]);
+
+// Notification metrics for analytics
+export const notificationMetrics = pgTable("notification_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  notificationId: varchar("notification_id").references(() => notificationsInbox.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(),
+  opened: boolean("opened").default(false).notNull(),
+  clicked: boolean("clicked").default(false).notNull(),
+  dismissed: boolean("dismissed").default(false).notNull(),
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  dismissedAt: timestamp("dismissed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_notification_metrics_type").on(table.type),
+]);
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -441,6 +530,47 @@ export const updateStaffSchema = z.object({
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true });
+
+export const insertNotificationTemplateSchema = createInsertSchema(notificationTemplates).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserNotificationPrefsSchema = createInsertSchema(userNotificationPrefs).omit({ 
+  id: true, 
+  updatedAt: true 
+});
+
+export const updateUserNotificationPrefsSchema = z.object({
+  breaking: z.boolean().optional(),
+  interest: z.boolean().optional(),
+  likedUpdates: z.boolean().optional(),
+  mostRead: z.boolean().optional(),
+  webPush: z.boolean().optional(),
+  dailyDigest: z.boolean().optional(),
+  quietHoursStart: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "صيغة الوقت غير صحيحة").optional(),
+  quietHoursEnd: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "صيغة الوقت غير صحيحة").optional(),
+});
+
+export const insertNotificationQueueSchema = createInsertSchema(notificationQueue).omit({ 
+  id: true, 
+  createdAt: true,
+  sentAt: true,
+  errorMessage: true,
+});
+
+export const insertNotificationsInboxSchema = createInsertSchema(notificationsInbox).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertNotificationMetricsSchema = createInsertSchema(notificationMetrics).omit({ 
+  id: true, 
+  createdAt: true,
+  openedAt: true,
+  clickedAt: true,
+  dismissedAt: true,
+});
 
 export const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
