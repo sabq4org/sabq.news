@@ -229,14 +229,12 @@ export default function CategoriesManagement() {
     try {
       setIsUploadingHeroImage(true);
 
-      const uploadData = await apiRequest("/api/article-images/upload-url", {
+      // Step 1: Get upload URL
+      const uploadData = await apiRequest("/api/objects/upload", {
         method: "POST",
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-        }),
       }) as { uploadURL: string };
 
+      // Step 2: Upload the image to GCS
       const uploadResponse = await fetch(uploadData.uploadURL, {
         method: "PUT",
         headers: {
@@ -249,6 +247,7 @@ export default function CategoriesManagement() {
         throw new Error("Failed to upload image");
       }
 
+      // Step 3: Set ACL policy to make image public
       const aclData = await apiRequest("/api/article-images", {
         method: "PUT",
         body: JSON.stringify({ imageURL: uploadData.uploadURL }),
@@ -257,6 +256,7 @@ export default function CategoriesManagement() {
         },
       }) as { objectPath: string };
 
+      // Step 4: Set the normalized object path
       form.setValue("heroImageUrl", aclData.objectPath);
 
       toast({
