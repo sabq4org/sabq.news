@@ -123,6 +123,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
 
           {/* Actions - Right side */}
           <div className="flex items-center gap-2">
+            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -137,8 +138,21 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
               <ThemeToggle />
             </div>
 
+            {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
+              <ThemeToggle />
+              
               {user && <NotificationBell />}
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover-elevate active-elevate-2"
+                onClick={() => {}}
+                data-testid="button-search"
+              >
+                <Search className="h-5 w-5" />
+              </Button>
 
               {user ? (
                 <DropdownMenu>
@@ -158,7 +172,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                           {getInitials(user.name || undefined, user.email)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden sm:inline-block">{user.name || user.email}</span>
+                      <span className="hidden lg:inline-block">{user.name || user.email}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-56">
@@ -202,10 +216,9 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild data-testid="button-login" className="gap-2">
+                <Button asChild data-testid="button-login">
                   <a href="/login">
-                    <User className="h-5 w-5 sm:hidden" />
-                    <span className="hidden sm:inline-block">تسجيل الدخول</span>
+                    تسجيل الدخول
                   </a>
                 </Button>
               )}
