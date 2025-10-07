@@ -695,24 +695,23 @@ export class DatabaseStorage implements IStorage {
 
   async getTrendingTopics(): Promise<Array<{ topic: string; count: number }>> {
     const results = await db.execute(sql`
-      WITH keyword_stats AS (
+      WITH topic_stats AS (
         SELECT 
-          UNNEST(COALESCE((seo->>'keywords')::text[], ARRAY[]::text[])) as keyword,
-          a.id as article_id,
-          COALESCE(a.views, 0) as views,
-          (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id) as comment_count
+          c.name_ar as topic,
+          COALESCE(SUM(a.views), 0) as total_views,
+          COUNT(DISTINCT a.id) as article_count,
+          COALESCE(SUM((SELECT COUNT(*) FROM comments cm WHERE cm.article_id = a.id)), 0) as total_comments
         FROM articles a
+        LEFT JOIN categories c ON a.category_id = c.id
         WHERE a.status = 'published'
-          AND a.seo IS NOT NULL
-          AND a.seo->>'keywords' IS NOT NULL
-          AND jsonb_array_length(a.seo->'keywords') > 0
+          AND c.name_ar IS NOT NULL
+        GROUP BY c.id, c.name_ar
       )
       SELECT 
-        keyword as topic,
-        (SUM(views) + (SUM(comment_count) * 10))::int as count
-      FROM keyword_stats
-      GROUP BY keyword
-      HAVING SUM(views) + (SUM(comment_count) * 10) > 0
+        topic,
+        ((total_views + (total_comments * 10) + (article_count * 5)))::int as count
+      FROM topic_stats
+      WHERE total_views + (total_comments * 10) + (article_count * 5) > 0
       ORDER BY count DESC
       LIMIT 8
     `);
