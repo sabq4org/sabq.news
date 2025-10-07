@@ -1686,6 +1686,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Text-to-Speech using ElevenLabs
+  app.post("/api/ai/text-to-speech", async (req: any, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      const apiKey = process.env.ELEVENLABS_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "ElevenLabs API key not configured" });
+      }
+
+      // Using Adam voice (pre-made multilingual voice ID)
+      const voiceId = "pNInz6obpgDQGcFmaJgB"; // Adam - multilingual
+
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: "POST",
+        headers: {
+          "Accept": "audio/mpeg",
+          "Content-Type": "application/json",
+          "xi-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("ElevenLabs API error:", errorText);
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+
+      const audioBuffer = await response.arrayBuffer();
+      
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Content-Length", audioBuffer.byteLength.toString());
+      res.send(Buffer.from(audioBuffer));
+    } catch (error) {
+      console.error("Error generating speech:", error);
+      res.status(500).json({ message: "Failed to generate speech" });
+    }
+  });
+
   // ============================================================
   // RSS FEED ROUTES (Admins only)
   // ============================================================

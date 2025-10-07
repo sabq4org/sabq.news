@@ -21,17 +21,24 @@ import {
   Eye,
   Sparkles,
   ChevronRight,
+  Loader2,
+  Pause,
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const { logBehavior } = useBehaviorTracking();
+  
+  // Audio player state
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -174,6 +181,57 @@ export default function ArticleDetail() {
 
   const handleComment = async (content: string, parentId?: string) => {
     commentMutation.mutate({ content, parentId });
+  };
+
+  const handlePlayAudio = async () => {
+    if (!article?.excerpt) return;
+
+    // If already playing, pause it
+    if (isPlayingAudio && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    try {
+      setIsLoadingAudio(true);
+
+      const response = await fetch("/api/ai/text-to-speech", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: article.excerpt }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate audio");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Create or reuse audio element
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+        audioRef.current.onended = () => {
+          setIsPlayingAudio(false);
+        };
+      }
+
+      audioRef.current.src = audioUrl;
+      await audioRef.current.play();
+      setIsPlayingAudio(true);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تشغيل الصوت",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingAudio(false);
+    }
   };
 
   if (isLoading) {
@@ -358,14 +416,22 @@ export default function ArticleDetail() {
                     variant="outline"
                     size="sm"
                     className="gap-2"
+                    onClick={handlePlayAudio}
+                    disabled={isLoadingAudio}
                     data-testid="button-listen-summary"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                    </svg>
-                    استمع
+                    {isLoadingAudio ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isPlayingAudio ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                      </svg>
+                    )}
+                    {isPlayingAudio ? "إيقاف" : "استمع"}
                   </Button>
                 </div>
                 <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
