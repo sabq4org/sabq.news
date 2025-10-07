@@ -444,6 +444,7 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ i
 
 export const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
+  subtitle: z.string().max(120, "العنوان الفرعي يجب ألا يتجاوز 120 حرف").optional(),
   slug: z.string().min(3).optional(),
   content: z.string().min(10, "المحتوى يجب أن يكون 10 أحرف على الأقل").optional(),
   excerpt: z.string().optional(),
@@ -454,13 +455,16 @@ export const updateArticleSchema = z.object({
     z.null()
   ]).optional(),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
+  newsType: z.enum(["breaking", "featured", "regular"]).optional(),
+  publishType: z.enum(["instant", "scheduled"]).optional(),
+  scheduledAt: z.string().datetime().optional().or(z.null()),
   status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
   aiSummary: z.string().optional().or(z.null()),
   isFeatured: z.boolean().optional(),
   publishedAt: z.string().datetime().optional().or(z.null()),
   seo: z.object({
-    metaTitle: z.string().optional(),
-    metaDescription: z.string().optional(),
+    metaTitle: z.string().max(70, "عنوان SEO يجب ألا يتجاوز 70 حرف").optional(),
+    metaDescription: z.string().max(160, "وصف SEO يجب ألا يتجاوز 160 حرف").optional(),
     keywords: z.array(z.string()).optional(),
   }).optional(),
 });

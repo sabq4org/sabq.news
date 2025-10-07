@@ -26,6 +26,7 @@ The "نبض (Pulse)" Intelligent Membership System tracks user behavior and inte
 - **Users Management:** Full user CRUD with status tracking, RBAC, and self-protection for admin accounts.
 - **Categories Management:** UI for hierarchical content organization with full CRUD, RBAC, and hero image support.
 - **Keyword Navigation:** Interactive keyword system with dedicated pages showing all articles tagged with specific keywords. Keywords are clickable with smooth hover animations.
+- **Advanced Article Editor:** Professional article creation interface with subtitle support, news type classification (breaking/featured/regular), instant/scheduled publishing, comprehensive SEO management with Google preview, and AI-powered title/summary generation. Features a two-column layout (70% content, 30% settings) with rich text editing capabilities.
 
 ## External Dependencies
 
