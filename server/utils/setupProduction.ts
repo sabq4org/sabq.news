@@ -14,15 +14,23 @@ export async function setupProductionDatabase(
   console.log("🚀 Starting production database setup...");
 
   try {
-    // Step 1: Apply schema (create tables)
-    console.log("\n📋 Step 1: Applying database schema...");
-    const migrationSQL = await readFile(
-      join(process.cwd(), "migrations", "0000_lazy_jocasta.sql"),
-      "utf-8"
-    );
-    
-    await pool.query(migrationSQL);
-    console.log("✅ Database schema applied successfully");
+    // Step 1: Apply schema (create tables) - Skip if tables exist
+    console.log("\n📋 Step 1: Checking database schema...");
+    try {
+      const migrationSQL = await readFile(
+        join(process.cwd(), "migrations", "0000_lazy_jocasta.sql"),
+        "utf-8"
+      );
+      
+      await pool.query(migrationSQL);
+      console.log("✅ Database schema applied successfully");
+    } catch (error: any) {
+      if (error.message?.includes("already exists")) {
+        console.log("⏭️  Tables already exist, skipping schema creation");
+      } else {
+        throw error;
+      }
+    }
 
     // Step 2: Seed RBAC (Roles & Permissions)
     console.log("\n👥 Step 2: Seeding RBAC (Roles & Permissions)...");
@@ -59,37 +67,6 @@ export async function setupProductionDatabase(
     console.log("\n👤 Step 4: Creating admin user...");
     const adminResult = await bootstrapAdmin(db);
     console.log(`✅ Admin user created: ${adminResult.email}`);
-
-    // Step 5: Create default theme
-    console.log("\n🎨 Step 5: Creating default theme...");
-    const [adminUser] = await db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.email, adminResult.email))
-      .limit(1);
-
-    if (adminUser) {
-      await db
-        .insert(schema.themes)
-        .values({
-          name: "سبق الافتراضي",
-          slug: "default",
-          isDefault: true,
-          status: "published",
-          priority: 100,
-          createdBy: adminUser.id,
-          publishedBy: adminUser.id,
-          tokens: {
-            colors: {
-              primary: { h: 210, s: 100, l: 50 },
-              secondary: { h: 270, s: 60, l: 50 },
-              accent: { h: 30, s: 90, l: 55 },
-            },
-          },
-        })
-        .onConflictDoNothing();
-      console.log("✅ Default theme created");
-    }
 
     console.log("\n🎉 Production database setup completed successfully!");
     return {
