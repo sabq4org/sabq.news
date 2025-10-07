@@ -14,6 +14,7 @@ import {
   BarChart3,
   Sparkles,
   Shield,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +94,12 @@ export default function Dashboard() {
       title: "الأدوار والصلاحيات",
       icon: Shield,
       href: "/dashboard/roles",
+      adminOnly: true,
+    },
+    {
+      title: "إدارة الثيمات",
+      icon: Palette,
+      href: "/dashboard/themes",
       adminOnly: true,
     },
   ];
