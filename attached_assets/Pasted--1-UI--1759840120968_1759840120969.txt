@@ -1,0 +1,137 @@
+تمام يا أبو محمد—واضح عندك ثغرتين:
+	1.	الـUI يعرض “ملف مرفوع” منفصل تحت زر الرفع بدل ما يربط النتيجة بمصدر صورة الـAvatar.
+	2.	الرابط ما يُحفَظ في بروفايل المستخدم (أو يتم استخدام objectURL مؤقت)، لذلك يختفي بعد التحديث (refresh).
+
+خلّنا نعالجها بخطوتين: ربط النتيجة بالـAvatar فوراً + حفظ الرابط الدائم في قاعدة البيانات.
+
+⸻
+
+1) واجهة العرض (Avatar) + الرفع
+	•	استخدم <Avatar> من shadcn/ui، وخله ياخذ src من حالة/قيمة محفوظة (TanStack Query أو React Hook Form).
+	•	عند اكتمال الرفع، خذ الرابط الدائم من الاستجابة (وليس blob: أو data:)، حدث الحالة، وأرسل PATCH لتحديث بروفايل المستخدم.
+	•	تأكد من جعل الصورة دائرية ومملوءة: object-cover + rounded-full.
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+
+type User = { id: string; name: string; avatarUrl?: string };
+
+function ProfilePhoto({ user }: { user: User }) {
+  const form = useForm<{ avatarUrl: string }>({ defaultValues: { avatarUrl: user.avatarUrl ?? "" } });
+
+  const updateAvatar = useMutation({
+    mutationFn: async (url: string) => {
+      const res = await fetch("/api/users/me/avatar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: url }),
+      });
+      if (!res.ok) throw new Error("Failed to save avatar");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      form.setValue("avatarUrl", data.avatarUrl, { shouldDirty: false });
+    },
+  });
+
+  async function handleUpload(file: File) {
+    // ارفع الملف لخدمتكم (GCS/S3/Cloudinary/Storage) وارجع URL دائم
+    const url = await uploadToBucketAndGetPublicUrl(file); // يجب أن تعيد URL يصلح بعد الريفريش
+    form.setValue("avatarUrl", url, { shouldDirty: true });
+    updateAvatar.mutate(url);
+  }
+
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-28 h-28">
+        <Avatar className="w-28 h-28">
+          <AvatarImage
+            src={form.watch("avatarUrl")}
+            className="rounded-full object-cover"
+          />
+          <AvatarFallback className="rounded-full">
+            {user.name?.slice(0,2) ?? "NA"}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
+      <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+        رفع صورة
+      </label>
+    </div>
+  );
+}
+
+ملاحظات UI:
+
+	•	لا تعرض “معرض الملفات” أسفل الزر. كل ما نحتاجه هو تحديث avatarUrl وإعادة رسم <Avatar>.
+	•	إن كنت مصرّ تترك صندوق “Drop your files here”، خليه مخفيًا بعد نجاح الرفع (state hasUploaded).
+
+⸻
+
+2) الطرف الخلفي وحفظ الرابط
+	•	تأكد أن الاستجابة من خدمة الرفع ترجع رابطًا دائمًا قابلاً للوصول (GCS signed URL طويل الأجل/URL عام عبر ACL).
+	•	احفظ الرابط في جدول المستخدمين.
+
+Drizzle (مثال)
+
+// schema
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  avatarUrl: text("avatar_url"), // nullable
+});
+
+Express Route
+
+app.patch("/api/users/me/avatar", requireAuth, async (req, res) => {
+  const { avatarUrl } = req.body as { avatarUrl: string };
+  if (!avatarUrl || !/^https?:\/\//.test(avatarUrl)) {
+    return res.status(400).json({ error: "Invalid avatarUrl" });
+  }
+  await db.update(users)
+    .set({ avatarUrl })
+    .where(eq(users.id, req.session.user.id));
+  res.json({ avatarUrl });
+});
+
+
+⸻
+
+3) أسباب شائعة لاختفاء الصورة بعد التحديث (وتثبيتها)
+	•	استخدام URL.createObjectURL: مؤقت ويضيع بعد reload → لازم رابط من التخزين.
+	•	خطأ CORS أو صلاحيات ACL: الصورة لا تُحمَّل علنًا → اضبط CORS وpublicRead أو استخدم Signed URL طويل.
+	•	الكاش: المتصفح يعلّق على نسخة قديمة → أضف query مثل ?v=<hash> بعد كل تحديث أو أرسل Cache-Control: no-cache للصفحة فقط.
+	•	تخزين بالحالة فقط دون حفظ في DB → طبّق PATCH كما فوق.
+
+⸻
+
+4) ستايل الدائرة (لو كانت صورة تظهر مربعة)
+
+لو تستخدم عنصر مخصص غير <AvatarImage>:
+
+<img src="{avatarUrl}" class="w-28 h-28 rounded-full object-cover" />
+
+	•	rounded-full يضمن الدائرة
+	•	object-cover يملأ الإطار بدون تمدد مشوّه
+
+⸻
+
+5) تجربة سريعة (Checklist)
+	•	ارفع صورة → استلم URL دائم من السيرفر.
+	•	حدّث avatarUrl في الحالة + نادِ PATCH.
+	•	تأكد أن <AvatarImage src={avatarUrl}> يستقبل الرابط.
+	•	أعد تحميل الصفحة: استرجع المستخدم من TanStack Query (أو /me) واستخدم avatarUrl المحفوظ.
+	•	لا تُظهر “ملف مرفوع 1” أسفل الزر بعد النجاح.
+
+لو ودّك أعطيك نسخة كاملة Plug-and-Play (مكوّن React + راوت Express + دالة رفع إلى GCS/S3)، أجهزها لك فورًا 👌

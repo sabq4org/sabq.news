@@ -182,7 +182,12 @@ export default function Profile() {
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="relative">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.profileImageUrl || ""} alt={getUserDisplayName()} />
+                      <AvatarImage 
+                        src={user.profileImageUrl || ""} 
+                        alt={getUserDisplayName()}
+                        className="object-cover"
+                        data-testid="img-profile-avatar"
+                      />
                       <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                         {getInitials()}
                       </AvatarFallback>
@@ -204,11 +209,14 @@ export default function Profile() {
                       onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
                         if (result.successful && result.successful[0]) {
                           const uploadURL = result.successful[0].uploadURL;
-                          await apiRequest("/api/profile/image", {
+                          const response = await apiRequest("/api/profile/image", {
                             method: "PUT",
                             body: JSON.stringify({ profileImageUrl: uploadURL }),
                           });
-                          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                          
+                          // Invalidate queries to refresh user data
+                          await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                          
                           toast({
                             title: "تم التحديث بنجاح",
                             description: "تم تحديث صورتك الشخصية",
