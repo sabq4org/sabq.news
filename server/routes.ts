@@ -39,6 +39,8 @@ import {
   updateRolePermissionsSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
+import { setupProductionDatabase } from "./utils/setupProduction";
+import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -48,7 +50,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SETUP ROUTES (Protected, one-time use)
   // ============================================================
 
-  // Bootstrap admin user endpoint (for production deployment)
+  // Complete production database setup (schema + seed + admin)
+  app.post("/api/setup/production", async (req, res) => {
+    try {
+      // Check if setup is enabled
+      const isEnabled = process.env.ENABLE_PRODUCTION_SETUP === "true";
+      if (!isEnabled) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // Check setup secret
+      const setupSecret = req.headers["x-setup-secret"];
+      const expectedSecret = process.env.SETUP_SECRET;
+      
+      if (!expectedSecret || setupSecret !== expectedSecret) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Run complete setup
+      const result = await setupProductionDatabase(pool, db);
+
+      console.log("✅ Production setup completed successfully");
+      res.json(result);
+    } catch (error) {
+      console.error("❌ Production setup error:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Setup failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Bootstrap admin user endpoint (for production deployment) - Legacy, use /api/setup/production instead
   app.post("/api/setup/admin", async (req, res) => {
     try {
       // Check if bootstrap is enabled
