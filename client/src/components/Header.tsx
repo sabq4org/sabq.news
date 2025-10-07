@@ -133,8 +133,17 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="md:hidden">
+            {/* Mobile Actions */}
+            <div className="md:hidden flex items-center gap-2">
               <ThemeToggle />
+              
+              {!user && (
+                <Button asChild size="icon" variant="ghost" data-testid="button-login-mobile">
+                  <a href="/login">
+                    <User className="h-5 w-5" />
+                  </a>
+                </Button>
+              )}
             </div>
 
             {/* Desktop Actions */}
