@@ -20,6 +20,7 @@ import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
 import ThemeManager from "@/pages/ThemeManager";
+import NotificationSettings from "@/pages/NotificationSettings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />
+      <Route path="/notification-settings" component={NotificationSettings} />
       <Route component={NotFound} />
     </Switch>
   );

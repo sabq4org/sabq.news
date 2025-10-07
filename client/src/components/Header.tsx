@@ -1,4 +1,4 @@
-import { Search, Menu, User, LogOut, LayoutDashboard, X } from "lucide-react";
+import { Search, Menu, User, LogOut, LayoutDashboard, X, Bell } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +157,13 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                       الملف الشخصي
                     </a>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
+                      <Bell className="ml-2 h-4 w-4" />
+                      إعدادات الإشعارات
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
                     className="flex w-full items-center cursor-pointer" 
