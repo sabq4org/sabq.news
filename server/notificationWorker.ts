@@ -116,6 +116,7 @@ async function processNotificationQueue() {
     console.log("[NotificationWorker] Queue processing completed");
   } catch (error) {
     console.error("[NotificationWorker] Error in queue processing:", error);
+    // Don't throw - just log and continue
   }
 }
 
@@ -149,24 +150,36 @@ async function cleanupOldNotifications() {
     console.log(`[NotificationWorker] Cleanup completed. Deleted ${deletedQueue.rowCount || 0} queue items and ${deletedInbox.rowCount || 0} inbox items`);
   } catch (error) {
     console.error("[NotificationWorker] Error in cleanup:", error);
+    // Don't throw - just log and continue
   }
 }
 
 export function startNotificationWorker() {
-  console.log("[NotificationWorker] Starting notification worker...");
+  try {
+    console.log("[NotificationWorker] Starting notification worker...");
 
-  // Process queue every minute
-  cron.schedule("*/1 * * * *", () => {
-    processNotificationQueue();
-  });
+    // Process queue every minute
+    cron.schedule("*/1 * * * *", () => {
+      processNotificationQueue().catch(error => {
+        console.error("[NotificationWorker] Cron job error:", error);
+      });
+    });
 
-  // Cleanup old notifications daily at 3 AM
-  cron.schedule("0 3 * * *", () => {
-    cleanupOldNotifications();
-  });
+    // Cleanup old notifications daily at 3 AM
+    cron.schedule("0 3 * * *", () => {
+      cleanupOldNotifications().catch(error => {
+        console.error("[NotificationWorker] Cleanup cron job error:", error);
+      });
+    });
 
-  console.log("[NotificationWorker] Notification worker started successfully");
-  
-  // Run initial processing
-  processNotificationQueue();
+    console.log("[NotificationWorker] Notification worker started successfully");
+    
+    // Run initial processing in a non-blocking way
+    processNotificationQueue().catch(error => {
+      console.error("[NotificationWorker] Initial processing error:", error);
+    });
+  } catch (error) {
+    console.error("[NotificationWorker] Failed to start notification worker:", error);
+    throw error; // Re-throw so the main server can handle it
+  }
 }
