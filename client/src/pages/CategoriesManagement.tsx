@@ -17,6 +17,9 @@ import {
   Settings,
   LogOut,
   Rss,
+  ImagePlus,
+  Loader2,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,6 +90,7 @@ export default function CategoriesManagement() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
 
   // Form
   const form = useForm<CategoryFormValues>({
@@ -98,6 +102,7 @@ export default function CategoriesManagement() {
       description: "",
       icon: "",
       color: "",
+      heroImageUrl: "",
       displayOrder: 0,
       status: "active",
     },
