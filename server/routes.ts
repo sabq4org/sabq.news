@@ -25,6 +25,15 @@ import {
   activityLogs,
   rolePermissions,
   permissions,
+  notificationTemplates,
+  userNotificationPrefs,
+  notificationQueue,
+  notificationsInbox,
+  notificationMetrics,
+  userInterests,
+  interests,
+  reactions,
+  bookmarks,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -37,6 +46,9 @@ import {
   insertThemeSchema,
   updateThemeSchema,
   updateRolePermissionsSchema,
+  updateUserNotificationPrefsSchema,
+  insertNotificationQueueSchema,
+  insertNotificationsInboxSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -2305,6 +2317,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error initializing default theme:", error);
       res.status(500).json({ message: "Failed to initialize default theme" });
+    }
+  });
+
+  // ============================================================
+  // NOTIFICATION ROUTES
+  // ============================================================
+
+  // Get user's notifications inbox (last 20)
+  app.get("/api/me/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      const notifications = await db
+        .select()
+        .from(notificationsInbox)
+        .where(eq(notificationsInbox.userId, userId))
+        .orderBy(desc(notificationsInbox.createdAt))
+        .limit(limit);
+
+      // Get unread count
+      const [unreadResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(notificationsInbox)
+        .where(
+          and(
+            eq(notificationsInbox.userId, userId),
+            eq(notificationsInbox.read, false)
+          )
+        );
+
+      res.json({
+        notifications,
+        unreadCount: Number(unreadResult?.count || 0),
+      });
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "فشل تحميل الإشعارات" });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/me/notifications/:id/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const notificationId = req.params.id;
+
+      const [notification] = await db
+        .update(notificationsInbox)
+        .set({ read: true })
+        .where(
+          and(
+            eq(notificationsInbox.id, notificationId),
+            eq(notificationsInbox.userId, userId)
+          )
+        )
+        .returning();
+
+      if (!notification) {
+        return res.status(404).json({ message: "الإشعار غير موجود" });
+      }
+
+      // Track opened metric
+      await db.insert(notificationMetrics).values({
+        notificationId,
+        userId,
+        type: notification.type,
+        opened: true,
+        openedAt: new Date(),
+      });
+
+      res.json(notification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "فشل تحديث الإشعار" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.patch("/api/me/notifications/read-all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      await db
+        .update(notificationsInbox)
+        .set({ read: true })
+        .where(
+          and(
+            eq(notificationsInbox.userId, userId),
+            eq(notificationsInbox.read, false)
+          )
+        );
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "فشل تحديث الإشعارات" });
+    }
+  });
+
+  // Get user notification preferences
+  app.get("/api/me/notification-prefs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      let [prefs] = await db
+        .select()
+        .from(userNotificationPrefs)
+        .where(eq(userNotificationPrefs.userId, userId))
+        .limit(1);
+
+      // Create default preferences if not exists
+      if (!prefs) {
+        [prefs] = await db
+          .insert(userNotificationPrefs)
+          .values({ userId })
+          .returning();
+      }
+
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "فشل تحميل إعدادات الإشعارات" });
+    }
+  });
+
+  // Update user notification preferences
+  app.patch("/api/me/notification-prefs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      const parsed = updateUserNotificationPrefsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "البيانات غير صحيحة",
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Upsert preferences
+      const [prefs] = await db
+        .insert(userNotificationPrefs)
+        .values({
+          userId,
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: userNotificationPrefs.userId,
+          set: {
+            ...parsed.data,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "فشل تحديث إعدادات الإشعارات" });
+    }
+  });
+
+  // Internal API: Enqueue notification (system use only)
+  app.post("/internal/notify/enqueue", async (req, res) => {
+    try {
+      // Simple API key check for internal services
+      const apiKey = req.headers["x-internal-key"];
+      if (apiKey !== process.env.INTERNAL_API_KEY && process.env.NODE_ENV === "production") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const parsed = insertNotificationQueueSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid notification data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const [notification] = await db
+        .insert(notificationQueue)
+        .values([parsed.data])
+        .returning();
+
+      res.json(notification);
+    } catch (error) {
+      console.error("Error enqueueing notification:", error);
+      res.status(500).json({ message: "Failed to enqueue notification" });
     }
   });
 
