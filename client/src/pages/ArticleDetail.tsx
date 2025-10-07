@@ -346,15 +346,30 @@ export default function ArticleDetail() {
               </div>
             )}
 
-            {/* AI Summary */}
-            {article.aiSummary && (
-              <div className="bg-accent/50 border border-accent-foreground/10 rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="h-5 w-5 text-accent-foreground" />
-                  <h3 className="font-semibold text-accent-foreground">ملخص تلقائي</h3>
+            {/* Smart Summary */}
+            {article.excerpt && (
+              <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-lg text-primary">الموجز الذكي</h3>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    data-testid="button-listen-summary"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    </svg>
+                    استمع
+                  </Button>
                 </div>
-                <p className="text-accent-foreground/90 leading-relaxed" data-testid="text-ai-summary">
-                  {article.aiSummary}
+                <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
+                  {article.excerpt}
                 </p>
               </div>
             )}

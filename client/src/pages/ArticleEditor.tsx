@@ -385,10 +385,10 @@ export default function ArticleEditor() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="excerpt">المقتطف</Label>
+                  <Label htmlFor="excerpt">الموجز الذكي</Label>
                   <Textarea
                     id="excerpt"
-                    placeholder="مقتطف قصير يصف المقال..."
+                    placeholder="موجز ذكي يلخص المقال..."
                     value={excerpt}
                     onChange={(e) => setExcerpt(e.target.value)}
                     rows={3}
