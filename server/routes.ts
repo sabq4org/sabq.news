@@ -369,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new category (requires permission)
   app.post("/api/categories", requireAuth, requirePermission("categories.create"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update category (requires permission)
   app.patch("/api/categories/:id", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete category (requires permission)
   app.delete("/api/categories/:id", requireAuth, requirePermission("categories.delete"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -621,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user (status, role assignment)
   app.patch("/api/admin/users/:id", requireAuth, requirePermission("users.update"), async (req: any, res) => {
     try {
-      const adminUserId = req.user?.claims?.sub;
+      const adminUserId = req.user?.id;
       if (!adminUserId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -732,7 +732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete/Ban user
   app.delete("/api/admin/users/:id", requireAuth, requirePermission("users.delete"), async (req: any, res) => {
     try {
-      const adminUserId = req.user?.claims?.sub;
+      const adminUserId = req.user?.id;
       if (!adminUserId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1090,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new article
   app.post("/api/admin/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
     try {
-      const authorId = req.user?.claims?.sub;
+      const authorId = req.user?.id;
       if (!authorId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1135,7 +1135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update article
   app.patch("/api/admin/articles/:id", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1226,7 +1226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Publish article
   app.post("/api/admin/articles/:id/publish", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1277,7 +1277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feature/unfeature article
   app.post("/api/admin/articles/:id/feature", requireAuth, requirePermission("articles.feature"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1328,7 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Archive article (soft delete)
   app.delete("/api/admin/articles/:id", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1382,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/homepage", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
 
       const [
         heroArticles,
@@ -1436,7 +1436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles/featured", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const article = await storage.getFeaturedArticle(userId);
       res.json(article || null);
     } catch (error) {
@@ -1447,7 +1447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles/:slug", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const article = await storage.getArticleBySlug(req.params.slug, userId);
 
       if (!article) {
@@ -1907,7 +1907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For private objects, require authentication
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
         userId,
@@ -1936,7 +1936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "imageURL is required" });
     }
 
-    const userId = req.user?.claims?.sub;
+    const userId = req.user?.id;
 
     try {
       const objectStorageService = new ObjectStorageService();
