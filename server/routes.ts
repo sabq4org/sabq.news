@@ -304,6 +304,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get category by slug
+  app.get("/api/categories/slug/:slug", async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      const category = categories.find(c => c.slug === req.params.slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching category:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // Get articles by category slug
+  app.get("/api/categories/:slug/articles", async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      const category = categories.find(c => c.slug === req.params.slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const articles = await storage.getArticles({ 
+        categoryId: category.id,
+        status: "published"
+      });
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching category articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
   // Get single category by ID
   app.get("/api/categories/:id", async (req, res) => {
     try {
