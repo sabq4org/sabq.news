@@ -415,3 +415,28 @@ export async function notifyMostReadToday(): Promise<void> {
     console.error("Error in notifyMostReadToday:", error);
   }
 }
+
+/**
+ * Generic function to create a notification based on article publication
+ */
+export async function createNotification(params: {
+  type: "BREAKING_NEWS" | "NEW_ARTICLE" | "TRENDING_TOPIC" | "PERSONALIZED_RECOMMENDATION";
+  data: {
+    articleId: string;
+    articleTitle: string;
+    articleSlug: string;
+    categoryId?: string | null;
+    newsType?: string;
+  };
+}): Promise<void> {
+  try {
+    if (params.type === "BREAKING_NEWS") {
+      await notifyBreakingNews(params.data.articleId);
+    } else if (params.type === "NEW_ARTICLE") {
+      await notifyInterestMatch(params.data.articleId);
+    }
+  } catch (error) {
+    console.error("Error creating notification:", error);
+    throw error;
+  }
+}
