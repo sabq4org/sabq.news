@@ -229,13 +229,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout
+  // Logout (POST)
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
         return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
       }
       res.json({ message: "تم تسجيل الخروج بنجاح" });
+    });
+  });
+
+  // Logout (GET) - redirect to login after logout
+  app.get("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
+      res.redirect("/login");
     });
   });
 
