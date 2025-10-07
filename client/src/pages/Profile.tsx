@@ -32,9 +32,12 @@ import {
   Shield,
   Save,
   Loader2,
+  Upload,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { ArticleWithDetails, User as UserType } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
@@ -177,12 +180,48 @@ export default function Profile() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.profileImageUrl || ""} alt={getUserDisplayName()} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={user.profileImageUrl || ""} alt={getUserDisplayName()} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={5242880}
+                      allowedFileTypes={['.jpg', '.jpeg', '.png', '.webp']}
+                      onGetUploadParameters={async () => {
+                        const response = await apiRequest("/api/profile/image/upload", {
+                          method: "POST",
+                        });
+                        return {
+                          method: "PUT" as const,
+                          url: response.uploadURL,
+                        };
+                      }}
+                      onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                        if (result.successful && result.successful[0]) {
+                          const uploadURL = result.successful[0].uploadURL;
+                          await apiRequest("/api/profile/image", {
+                            method: "PUT",
+                            body: JSON.stringify({ profileImageUrl: uploadURL }),
+                          });
+                          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                          toast({
+                            title: "تم التحديث بنجاح",
+                            description: "تم تحديث صورتك الشخصية",
+                          });
+                        }
+                      }}
+                      variant="ghost"
+                      size="icon"
+                      buttonClassName="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
+                    >
+                      <Upload className="h-4 w-4" />
+                    </ObjectUploader>
+                  </div>
 
                   <div className="space-y-1">
                     <h2 className="text-2xl font-bold" data-testid="text-profile-name">

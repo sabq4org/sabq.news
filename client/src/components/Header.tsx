@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,7 +26,7 @@ import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 import type { Category } from "@shared/schema";
 
 interface HeaderProps {
-  user?: { name?: string; email?: string; role?: string };
+  user?: { name?: string; email?: string; role?: string; profileImageUrl?: string };
   onSearch?: (query: string) => void;
   onMenuClick?: () => void;
 }
@@ -127,6 +127,7 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
                     data-testid="button-user-menu"
                   >
                     <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImageUrl || ""} alt={user.name || user.email} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                         {getInitials(user.name, user.email)}
                       </AvatarFallback>

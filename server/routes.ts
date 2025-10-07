@@ -312,6 +312,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile image upload endpoints (Reference: javascript_object_storage blueprint)
+  app.post("/api/profile/image/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ message: "فشل في الحصول على رابط الرفع" });
+    }
+  });
+
+  app.put("/api/profile/image", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      if (!req.body.profileImageUrl) {
+        return res.status(400).json({ message: "رابط الصورة مطلوب" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.profileImageUrl,
+        {
+          owner: userId,
+          visibility: "public",
+        }
+      );
+
+      // Update user profile with the new image path
+      const user = await storage.updateUser(userId, { 
+        profileImageUrl: objectPath 
+      });
+
+      res.json({ 
+        success: true,
+        profileImageUrl: objectPath,
+        user
+      });
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+      res.status(500).json({ message: "فشل في تحديث الصورة الشخصية" });
+    }
+  });
+
   // ============================================================
   // CATEGORY ROUTES (CMS Module 1)
   // ============================================================
