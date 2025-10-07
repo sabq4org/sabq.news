@@ -697,14 +697,15 @@ export class DatabaseStorage implements IStorage {
     const results = await db.execute(sql`
       WITH keyword_stats AS (
         SELECT 
-          UNNEST(keywords) as keyword,
+          UNNEST(COALESCE((seo->>'keywords')::text[], ARRAY[]::text[])) as keyword,
           a.id as article_id,
           COALESCE(a.views, 0) as views,
           (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id) as comment_count
         FROM articles a
         WHERE a.status = 'published'
-          AND a.keywords IS NOT NULL
-          AND array_length(a.keywords, 1) > 0
+          AND a.seo IS NOT NULL
+          AND a.seo->>'keywords' IS NOT NULL
+          AND jsonb_array_length(a.seo->'keywords') > 0
       )
       SELECT 
         keyword as topic,
