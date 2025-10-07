@@ -89,7 +89,7 @@ export default function Home() {
     <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} onSearch={setSearchQuery} />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         {homepage.hero && homepage.hero.length > 0 && (
           <HeroCarousel articles={homepage.hero} />
         )}
