@@ -198,9 +198,82 @@ export default function CategoriesManagement() {
       description: category.description || "",
       icon: category.icon || "",
       color: category.color || "",
+      heroImageUrl: category.heroImageUrl || "",
       displayOrder: category.displayOrder || 0,
       status: category.status || "active",
     });
+  };
+
+  const handleHeroImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء اختيار ملف صورة فقط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploadingHeroImage(true);
+
+      const uploadData = await apiRequest("/api/article-images/upload-url", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+        }),
+      }) as { uploadURL: string };
+
+      const uploadResponse = await fetch(uploadData.uploadURL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const aclData = await apiRequest("/api/article-images", {
+        method: "PUT",
+        body: JSON.stringify({ imageURL: uploadData.uploadURL }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }) as { objectPath: string };
+
+      form.setValue("heroImageUrl", aclData.objectPath);
+
+      toast({
+        title: "تم الرفع بنجاح",
+        description: "تم رفع صورة الهيرو بنجاح",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "خطأ في الرفع",
+        description: "فشل رفع الصورة، الرجاء المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingHeroImage(false);
+      event.target.value = "";
+    }
   };
 
   const onSubmit = (data: CategoryFormValues) => {
