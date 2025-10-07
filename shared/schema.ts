@@ -49,6 +49,7 @@ export const categories = pgTable("categories", {
 export const articles = pgTable("articles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
+  subtitle: text("subtitle"),
   slug: text("slug").notNull().unique(),
   content: text("content").notNull(),
   excerpt: text("excerpt"),
@@ -56,6 +57,9 @@ export const articles = pgTable("articles", {
   categoryId: varchar("category_id").references(() => categories.id),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
+  publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
+  scheduledAt: timestamp("scheduled_at"),
   status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
   aiSummary: text("ai_summary"),
   aiGenerated: boolean("ai_generated").default(false),
