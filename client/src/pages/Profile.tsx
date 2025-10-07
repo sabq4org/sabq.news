@@ -207,19 +207,30 @@ export default function Profile() {
                         };
                       }}
                       onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                        if (result.successful && result.successful[0]) {
-                          const uploadURL = result.successful[0].uploadURL;
-                          const response = await apiRequest("/api/profile/image", {
-                            method: "PUT",
-                            body: JSON.stringify({ profileImageUrl: uploadURL }),
-                          });
-                          
-                          // Invalidate queries to refresh user data
-                          await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                          
+                        try {
+                          if (result.successful && result.successful[0]) {
+                            const uploadURL = result.successful[0].uploadURL;
+                            
+                            // Send the upload URL to the server and get the permanent object path
+                            const response = await apiRequest("/api/profile/image", {
+                              method: "PUT",
+                              body: JSON.stringify({ profileImageUrl: uploadURL }),
+                            });
+                            
+                            // Invalidate queries to refresh user data with the new permanent path
+                            await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                            
+                            toast({
+                              title: "تم التحديث بنجاح",
+                              description: "تم تحديث صورتك الشخصية",
+                            });
+                          }
+                        } catch (error) {
+                          console.error("Error uploading profile image:", error);
                           toast({
-                            title: "تم التحديث بنجاح",
-                            description: "تم تحديث صورتك الشخصية",
+                            title: "خطأ",
+                            description: "فشل في رفع الصورة. حاول مرة أخرى.",
+                            variant: "destructive",
                           });
                         }
                       }}
