@@ -6,16 +6,50 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+// Graceful database connection with error handling
+let pool: Pool;
+let db: ReturnType<typeof drizzle>;
+
+try {
+  if (!process.env.DATABASE_URL) {
+    console.error("❌ DATABASE_URL is not set. Database features will be unavailable.");
+    console.error("Please configure DATABASE_URL in your deployment settings.");
+    
+    // Create a dummy pool that will fail gracefully
+    throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+  }
+
+  console.log("🔗 Initializing database connection...");
+  
+  pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  });
+  
+  db = drizzle({ client: pool, schema });
+  
+  console.log("✅ Database connection initialized successfully");
+} catch (error) {
+  console.error("❌ Database initialization error:", error);
+  
+  // In production, we still want the server to start even if DB fails
+  // This allows health checks to work and helps with debugging
+  if (process.env.NODE_ENV === 'production') {
+    console.error("⚠️  Server will start without database connection");
+    console.error("⚠️  Please fix database configuration and restart");
+    
+    // Create a minimal pool that will throw errors when used
+    pool = new Pool({ 
+      connectionString: 'postgresql://dummy:dummy@localhost:5432/dummy',
+      max: 1,
+    });
+    db = drizzle({ client: pool, schema });
+  } else {
+    // In development, fail fast to catch issues early
+    throw error;
+  }
 }
 
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-});
-export const db = drizzle({ client: pool, schema });
+export { pool, db };
