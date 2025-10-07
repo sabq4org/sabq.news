@@ -683,6 +683,22 @@ export type UpdateStaff = z.infer<typeof updateStaffSchema>;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
+export type NotificationTemplate = typeof notificationTemplates.$inferSelect;
+export type InsertNotificationTemplate = z.infer<typeof insertNotificationTemplateSchema>;
+
+export type UserNotificationPrefs = typeof userNotificationPrefs.$inferSelect;
+export type InsertUserNotificationPrefs = z.infer<typeof insertUserNotificationPrefsSchema>;
+export type UpdateUserNotificationPrefs = z.infer<typeof updateUserNotificationPrefsSchema>;
+
+export type NotificationQueue = typeof notificationQueue.$inferSelect;
+export type InsertNotificationQueue = z.infer<typeof insertNotificationQueueSchema>;
+
+export type NotificationsInbox = typeof notificationsInbox.$inferSelect;
+export type InsertNotificationsInbox = z.infer<typeof insertNotificationsInboxSchema>;
+
+export type NotificationMetrics = typeof notificationMetrics.$inferSelect;
+export type InsertNotificationMetrics = z.infer<typeof insertNotificationMetricsSchema>;
+
 export type UpdateCommentStatus = z.infer<typeof updateCommentStatusSchema>;
 export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
 
