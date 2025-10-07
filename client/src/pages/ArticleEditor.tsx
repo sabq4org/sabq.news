@@ -42,6 +42,7 @@ export default function ArticleEditor() {
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -144,12 +145,18 @@ export default function ArticleEditor() {
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
       setImageUrl(article.imageUrl || "");
+      setKeywords(article.seo?.keywords?.join(", ") || "");
       setStatus(article.status as "draft" | "published");
     }
   }, [article, isNewArticle]);
 
   const saveArticleMutation = useMutation({
     mutationFn: async (data: { publishNow: boolean }) => {
+      const keywordsArray = keywords
+        .split(",")
+        .map(k => k.trim())
+        .filter(k => k.length > 0);
+      
       const articleData = {
         title,
         slug,
@@ -157,6 +164,9 @@ export default function ArticleEditor() {
         excerpt,
         categoryId,
         imageUrl,
+        seo: {
+          keywords: keywordsArray.length > 0 ? keywordsArray : undefined,
+        },
         status: data.publishNow ? "published" : status,
       };
 
@@ -384,6 +394,20 @@ export default function ArticleEditor() {
                     rows={3}
                     data-testid="textarea-article-excerpt"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="keywords">الكلمات المفتاحية</Label>
+                  <Input
+                    id="keywords"
+                    placeholder="كلمة1, كلمة2, كلمة3 (افصل الكلمات بفاصلة)"
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    data-testid="input-article-keywords"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    افصل الكلمات المفتاحية بفواصل (,)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
