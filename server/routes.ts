@@ -49,17 +49,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Login
   app.post("/api/login", (req, res, next) => {
+    console.log("🔐 Login attempt:", { email: req.body?.email, hasPassword: !!req.body?.password });
+    
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
+        console.error("❌ Login error:", err);
         return res.status(500).json({ message: "خطأ في الخادم" });
       }
       if (!user) {
+        console.log("❌ Login failed:", info?.message);
         return res.status(401).json({ message: info?.message || "فشل تسجيل الدخول" });
       }
       req.logIn(user, (err) => {
         if (err) {
+          console.error("❌ Session error:", err);
           return res.status(500).json({ message: "خطأ في إنشاء الجلسة" });
         }
+        console.log("✅ Login successful:", user.email);
         res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
       });
     })(req, res, next);
