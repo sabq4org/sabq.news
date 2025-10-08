@@ -93,6 +93,14 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         >
                           🔴 عاجل
                         </Badge>
+                      ) : article.isFeatured ? (
+                        <Badge 
+                          variant="default" 
+                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+                          data-testid={`badge-featured-${article.id}`}
+                        >
+                          ⭐ مميز
+                        </Badge>
                       ) : article.category && (
                         <Badge 
                           variant="default" 
