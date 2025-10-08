@@ -13,7 +13,10 @@ interface HeroCarouselProps {
 }
 
 export function HeroCarousel({ articles }: HeroCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, direction: "rtl" });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true, 
+    direction: "rtl"
+  });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
@@ -55,10 +58,10 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
 
   return (
     <div className="relative w-full overflow-hidden rounded-lg bg-card" dir="rtl">
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
+      <div className="embla overflow-hidden" ref={emblaRef}>
+        <div className="embla__container flex">
           {articles.map((article) => (
-            <div key={article.id} className="relative min-w-0 flex-[0_0_100%]">
+            <div key={article.id} className="embla__slide relative flex-shrink-0 flex-grow-0" style={{ flexBasis: '100%' }}>
               <Link href={`/article/${article.slug}`}>
                 <div className="relative h-[280px] md:h-[400px] cursor-pointer group flex flex-row">
                   {/* Image - 65% of width */}
