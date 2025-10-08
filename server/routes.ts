@@ -35,6 +35,7 @@ import {
   interests,
   reactions,
   bookmarks,
+  passwordResetTokens,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -239,6 +240,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ message: "خطأ في إنشاء الحساب" });
+    }
+  });
+
+  // Forgot Password - Request reset token
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "البريد الإلكتروني مطلوب" });
+      }
+
+      // Check if user exists
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.toLowerCase()))
+        .limit(1);
+
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.json({ 
+          message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور" 
+        });
+      }
+
+      // Generate reset token
+      const resetToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`;
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Save token to database
+      await db.insert(passwordResetTokens).values({
+        userId: user.id,
+        token: resetToken,
+        expiresAt,
+      });
+
+      // In production, send email here
+      // For now, log the reset link
+      const resetLink = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+      console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
+
+      res.json({ 
+        message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور",
+        // Include link in development only
+        ...(process.env.NODE_ENV === 'development' && { resetLink })
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "خطأ في معالجة الطلب" });
+    }
+  });
+
+  // Reset Password - Set new password with token
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "الرمز وكلمة المرور مطلوبان" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
+      }
+
+      // Find valid token
+      const [resetToken] = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(
+          and(
+            eq(passwordResetTokens.token, token),
+            eq(passwordResetTokens.used, false)
+          )
+        )
+        .limit(1);
+
+      if (!resetToken) {
+        return res.status(400).json({ message: "رمز إعادة التعيين غير صحيح أو منتهي الصلاحية" });
+      }
+
+      // Check if token expired
+      if (new Date() > new Date(resetToken.expiresAt)) {
+        return res.status(400).json({ message: "رمز إعادة التعيين منتهي الصلاحية" });
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Update user password
+      await db
+        .update(users)
+        .set({ passwordHash })
+        .where(eq(users.id, resetToken.userId));
+
+      // Mark token as used
+      await db
+        .update(passwordResetTokens)
+        .set({ used: true })
+        .where(eq(passwordResetTokens.id, resetToken.id));
+
+      res.json({ message: "تم إعادة تعيين كلمة المرور بنجاح" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "خطأ في إعادة تعيين كلمة المرور" });
     }
   });
 
