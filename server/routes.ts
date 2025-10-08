@@ -266,26 +266,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Generate reset token
+      // Generate reset token (plaintext - will be sent via email)
       const resetToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`;
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-      // Save token to database
+      // Hash token before storing (security: never store plaintext tokens)
+      const tokenHash = await bcrypt.hash(resetToken, 10);
+
+      // Save hashed token to database
       await db.insert(passwordResetTokens).values({
         userId: user.id,
-        token: resetToken,
+        token: tokenHash,
         expiresAt,
       });
 
       // In production, send email here
-      // For now, log the reset link
-      const resetLink = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
-      console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
+      // For now, log the reset link (development only)
+      if (process.env.NODE_ENV === 'development') {
+        const resetLink = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+        console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
+      }
 
       res.json({ 
-        message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور",
-        // Include link in development only
-        ...(process.env.NODE_ENV === 'development' && { resetLink })
+        message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور"
       });
     } catch (error) {
       console.error("Forgot password error:", error);
@@ -306,24 +309,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
       }
 
-      // Find valid token
-      const [resetToken] = await db
+      // Find all unused tokens for potential matching
+      const candidateTokens = await db
         .select()
         .from(passwordResetTokens)
-        .where(
-          and(
-            eq(passwordResetTokens.token, token),
-            eq(passwordResetTokens.used, false)
-          )
-        )
-        .limit(1);
+        .where(eq(passwordResetTokens.used, false));
 
-      if (!resetToken) {
+      // Find matching token by comparing hashes
+      let matchedToken = null;
+      for (const candidate of candidateTokens) {
+        const isMatch = await bcrypt.compare(token, candidate.token);
+        if (isMatch) {
+          matchedToken = candidate;
+          break;
+        }
+      }
+
+      if (!matchedToken) {
         return res.status(400).json({ message: "رمز إعادة التعيين غير صحيح أو منتهي الصلاحية" });
       }
 
       // Check if token expired
-      if (new Date() > new Date(resetToken.expiresAt)) {
+      if (new Date() > new Date(matchedToken.expiresAt)) {
         return res.status(400).json({ message: "رمز إعادة التعيين منتهي الصلاحية" });
       }
 
@@ -334,13 +341,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db
         .update(users)
         .set({ passwordHash })
-        .where(eq(users.id, resetToken.userId));
+        .where(eq(users.id, matchedToken.userId));
 
       // Mark token as used
       await db
         .update(passwordResetTokens)
         .set({ used: true })
-        .where(eq(passwordResetTokens.id, resetToken.id));
+        .where(eq(passwordResetTokens.id, matchedToken.id));
 
       res.json({ message: "تم إعادة تعيين كلمة المرور بنجاح" });
     } catch (error) {
