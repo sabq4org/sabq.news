@@ -1746,10 +1746,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const parsed = insertArticleSchema.safeParse({
-        ...req.body,
-        authorId: userId,
-      });
+      // Convert date strings to Date objects before validation
+      const requestData = { ...req.body, authorId: userId };
+      if (requestData.publishedAt && typeof requestData.publishedAt === 'string') {
+        requestData.publishedAt = new Date(requestData.publishedAt);
+      }
+      if (requestData.scheduledAt && typeof requestData.scheduledAt === 'string') {
+        requestData.scheduledAt = new Date(requestData.scheduledAt);
+      }
+
+      const parsed = insertArticleSchema.safeParse(requestData);
 
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid article data", errors: parsed.error });
