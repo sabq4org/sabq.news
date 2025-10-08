@@ -110,9 +110,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         {article.title}
                       </h1>
                       
-                      {article.aiSummary && (
-                        <p className="text-muted-foreground text-sm md:text-base line-clamp-3">
-                          {article.aiSummary}
+                      {article.excerpt && (
+                        <p className="text-muted-foreground text-sm md:text-base line-clamp-2">
+                          {article.excerpt}
                         </p>
                       )}
 
