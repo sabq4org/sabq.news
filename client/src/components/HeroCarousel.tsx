@@ -76,9 +76,21 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   </div>
 
                   {/* Content - 35% of width */}
-                  <div className="w-[35%] md:w-1/2 h-full bg-card flex flex-col justify-center p-3 md:p-8 lg:p-12">
+                  <div className={`w-[35%] md:w-1/2 h-full flex flex-col justify-center p-3 md:p-8 lg:p-12 ${
+                    article.newsType === "breaking" 
+                      ? "bg-destructive/10" 
+                      : "bg-card"
+                  }`}>
                     <div className="space-y-4">
-                      {article.category && (
+                      {article.newsType === "breaking" ? (
+                        <Badge 
+                          variant="destructive" 
+                          className="w-fit"
+                          data-testid={`badge-breaking-${article.id}`}
+                        >
+                          🔴 عاجل
+                        </Badge>
+                      ) : article.category && (
                         <Badge 
                           variant="default" 
                           data-testid={`badge-category-${article.id}`}
@@ -88,7 +100,11 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       )}
                       
                       <h1 
-                        className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground line-clamp-3"
+                        className={`text-2xl md:text-3xl lg:text-4xl font-bold line-clamp-3 ${
+                          article.newsType === "breaking"
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`}
                         data-testid={`heading-hero-title-${article.id}`}
                       >
                         {article.title}

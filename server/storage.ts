@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, sql, and, inArray, ne } from "drizzle-orm";
+import { eq, desc, sql, and, or, inArray, ne } from "drizzle-orm";
 import {
   users,
   categories,
@@ -621,7 +621,7 @@ export class DatabaseStorage implements IStorage {
           eq(articles.status, "published"),
           or(
             eq(articles.newsType, "breaking"),
-            eq(articles.featured, true)
+            eq(articles.isFeatured, true)
           )
         )
       )
