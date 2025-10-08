@@ -1808,7 +1808,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const updated = await storage.updateArticle(req.params.id, req.body);
+      // Convert publishedAt from ISO string to Date if present
+      const articleData = { ...req.body };
+      if (articleData.publishedAt && typeof articleData.publishedAt === 'string') {
+        articleData.publishedAt = new Date(articleData.publishedAt);
+      }
+
+      const updated = await storage.updateArticle(req.params.id, articleData);
       res.json(updated);
     } catch (error) {
       console.error("Error updating article:", error);
