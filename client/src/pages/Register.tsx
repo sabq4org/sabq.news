@@ -43,11 +43,14 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsLoading(true);
-      await apiRequest("POST", "/api/register", {
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
+      await apiRequest("/api/register", {
+        method: "POST",
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }),
       });
 
       toast({
