@@ -60,7 +60,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           {articles.map((article) => (
             <div key={article.id} className="relative min-w-0 flex-[0_0_100%]">
               <Link href={`/article/${article.slug}`}>
-                <div className="relative h-[300px] md:h-[500px] cursor-pointer group flex flex-row">
+                <div className="relative h-[280px] md:h-[400px] cursor-pointer group flex flex-row">
                   {/* Image - 65% of width */}
                   <div className="w-[65%] md:w-1/2 h-full relative overflow-hidden">
                     {article.imageUrl ? (
