@@ -1177,12 +1177,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Add publishedAt automatically if status is published and publishedAt is not set
+      const articleData: any = {
+        ...parsed.data,
+        authorId,
+      };
+      
+      if (articleData.status === 'published' && !articleData.publishedAt) {
+        articleData.publishedAt = new Date();
+      }
+
       const [newArticle] = await db
         .insert(articles)
-        .values({
-          ...parsed.data,
-          authorId,
-        } as any)
+        .values(articleData)
         .returning();
 
       // Log activity
