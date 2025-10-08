@@ -101,7 +101,17 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>كلمة المرور</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>كلمة المرور</FormLabel>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/forgot-password")}
+                        className="text-sm text-primary hover:underline"
+                        data-testid="link-forgot-password"
+                      >
+                        نسيت كلمة المرور؟
+                      </button>
+                    </div>
                     <FormControl>
                       <Input
                         {...field}

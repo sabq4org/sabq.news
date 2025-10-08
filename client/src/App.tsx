@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import ArticleDetail from "@/pages/ArticleDetail";
 import CategoryPage from "@/pages/CategoryPage";
 import KeywordPage from "@/pages/KeywordPage";
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/keyword/:keyword" component={KeywordPage} />
       <Route path="/article/:slug" component={ArticleDetail} />
