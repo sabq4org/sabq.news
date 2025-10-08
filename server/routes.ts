@@ -1762,6 +1762,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const article = await storage.createArticle(parsed.data);
+
+      // If article is published, create notification
+      if (article.status === "published") {
+        try {
+          await createNotification({
+            type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
+            data: {
+              articleId: article.id,
+              articleTitle: article.title,
+              articleSlug: article.slug,
+              categoryId: article.categoryId,
+              newsType: article.newsType,
+            },
+          });
+        } catch (notificationError) {
+          console.error("Error creating notification:", notificationError);
+          // Don't fail the article creation if notification fails
+        }
+      }
+
       res.json(article);
     } catch (error) {
       console.error("Error creating article:", error);
