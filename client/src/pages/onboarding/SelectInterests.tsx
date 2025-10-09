@@ -12,18 +12,42 @@ import { CheckCircle2, Circle, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Category } from "@shared/schema";
 
+interface UserInterest {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  slug: string;
+  heroImageUrl?: string;
+}
+
 export default function SelectInterests() {
   const [, setLocation] = useLocation();
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
   const [selectedInterests, setSelectedInterests] = useState<Set<string>>(new Set());
 
-  // Redirect if profile is already complete
+  // Fetch user's current interests
+  const { data: userInterests = [], isLoading: userInterestsLoading } = useQuery<UserInterest[]>({
+    queryKey: ["/api/interests"],
+    enabled: !!user,
+  });
+
+  // Check if editing existing interests
+  const isEditingInterests = userInterests.length > 0;
+
+  // Redirect if profile is already complete and NOT editing
   useEffect(() => {
-    if (!isUserLoading && user?.isProfileComplete) {
+    if (!isUserLoading && user?.isProfileComplete && !isEditingInterests) {
       setLocation("/");
     }
-  }, [isUserLoading, user, setLocation]);
+  }, [isUserLoading, user, setLocation, isEditingInterests]);
+
+  // Pre-select user's current interests
+  useEffect(() => {
+    if (userInterests.length > 0) {
+      setSelectedInterests(new Set(userInterests.map(i => i.id)));
+    }
+  }, [userInterests]);
 
   // Fetch categories as interests
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
@@ -51,7 +75,18 @@ export default function SelectInterests() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/onboarding/personalize");
+      queryClient.invalidateQueries({ queryKey: ["/api/interests"] });
+      
+      // If editing, go back to profile; if onboarding, go to personalize
+      if (isEditingInterests) {
+        toast({
+          title: "تم التحديث بنجاح ✅",
+          description: "تم تحديث اهتماماتك الذكية بنجاح.",
+        });
+        setLocation("/profile");
+      } else {
+        setLocation("/onboarding/personalize");
+      }
     },
     onError: () => {
       toast({
@@ -76,7 +111,7 @@ export default function SelectInterests() {
 
   const progress = Math.min((selectedInterests.size / 3) * 100, 100);
 
-  if (isUserLoading || categoriesLoading) {
+  if (isUserLoading || categoriesLoading || userInterestsLoading) {
     return null;
   }
 
@@ -90,10 +125,13 @@ export default function SelectInterests() {
           className="text-center space-y-4"
         >
           <h1 className="text-3xl md:text-4xl font-bold">
-            🧭 اختر اهتماماتك
+            {isEditingInterests ? "✏️ تعديل اهتماماتك" : "🧭 اختر اهتماماتك"}
           </h1>
           <p className="text-muted-foreground text-lg">
-            اختر على الأقل <strong>3 اهتمامات</strong> لنبني لك تجربة أكثر ذكاءً
+            {isEditingInterests 
+              ? "عدّل اهتماماتك لتكتشف محتوى أكثر قربًا لك"
+              : <>اختر على الأقل <strong>3 اهتمامات</strong> لنبني لك تجربة أكثر ذكاءً</>
+            }
           </p>
         </motion.div>
 
@@ -186,13 +224,24 @@ export default function SelectInterests() {
           transition={{ delay: 0.3 }}
           className="flex justify-center gap-4"
         >
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/onboarding/welcome")}
-            data-testid="button-back"
-          >
-            رجوع
-          </Button>
+          {!isEditingInterests && (
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/onboarding/welcome")}
+              data-testid="button-back"
+            >
+              رجوع
+            </Button>
+          )}
+          {isEditingInterests && (
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/profile")}
+              data-testid="button-cancel"
+            >
+              إلغاء
+            </Button>
+          )}
           <Button
             onClick={handleContinue}
             disabled={selectedInterests.size < 3 || saveInterestsMutation.isPending}
@@ -205,7 +254,7 @@ export default function SelectInterests() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                تأكيد الاهتمامات
+                {isEditingInterests ? "حفظ التغييرات" : "تأكيد الاهتمامات"}
               </>
             )}
           </Button>
