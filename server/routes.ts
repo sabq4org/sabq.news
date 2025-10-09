@@ -2793,6 +2793,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // LOYALTY SYSTEM ROUTES
+  // ============================================================
+
+  // Get user loyalty points
+  app.get("/api/loyalty/points", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const points = await storage.getUserPoints(userId);
+      
+      if (!points) {
+        // إنشاء سجل جديد للمستخدم
+        return res.json({
+          totalPoints: 0,
+          currentRank: "القارئ الجديد",
+          lifetimePoints: 0
+        });
+      }
+      
+      res.json(points);
+    } catch (error) {
+      console.error("Error fetching loyalty points:", error);
+      res.status(500).json({ message: "Failed to fetch loyalty points" });
+    }
+  });
+
+  // Get user loyalty history
+  app.get("/api/loyalty/history", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const history = await storage.getUserLoyaltyHistory(userId, limit);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching loyalty history:", error);
+      res.status(500).json({ message: "Failed to fetch loyalty history" });
+    }
+  });
+
+  // Get active loyalty rewards
+  app.get("/api/loyalty/rewards", isAuthenticated, async (req: any, res) => {
+    try {
+      const rewards = await storage.getActiveRewards();
+      res.json(rewards);
+    } catch (error) {
+      console.error("Error fetching rewards:", error);
+      res.status(500).json({ message: "Failed to fetch rewards" });
+    }
+  });
+
+  // Get loyalty leaderboard
+  app.get("/api/loyalty/leaderboard", async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const topUsers = await storage.getTopUsers(limit);
+      res.json(topUsers);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

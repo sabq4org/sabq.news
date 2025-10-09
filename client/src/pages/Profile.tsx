@@ -34,11 +34,14 @@ import {
   Upload,
   TrendingUp,
   LayoutDashboard,
+  Trophy,
+  Coins,
+  Star,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
-import type { ArticleWithDetails, User as UserType } from "@shared/schema";
+import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
 const updateUserSchema = z.object({
@@ -112,6 +115,11 @@ export default function Profile() {
     enabled: !!user,
   });
 
+  const { data: loyaltyPoints } = useQuery<UserPointsTotal>({
+    queryKey: ["/api/loyalty/points"],
+    enabled: !!user,
+  });
+
   const getInitials = () => {
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -151,6 +159,32 @@ export default function Profile() {
         {labels[role || "reader"] || role}
       </Badge>
     );
+  };
+
+  const getRankIcon = (rank?: string) => {
+    switch (rank) {
+      case "سفير سبق":
+        return <Trophy className="h-5 w-5 text-yellow-500" />;
+      case "العضو الذهبي":
+        return <Star className="h-5 w-5 text-amber-500" />;
+      case "المتفاعل":
+        return <TrendingUp className="h-5 w-5 text-blue-500" />;
+      default:
+        return <Coins className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getRankColor = (rank?: string) => {
+    switch (rank) {
+      case "سفير سبق":
+        return "from-yellow-500/20 to-amber-500/20 border-yellow-500/30";
+      case "العضو الذهبي":
+        return "from-amber-500/20 to-orange-500/20 border-amber-500/30";
+      case "المتفاعل":
+        return "from-blue-500/20 to-cyan-500/20 border-blue-500/30";
+      default:
+        return "from-gray-500/20 to-slate-500/20 border-gray-500/30";
+    }
   };
 
   if (!user) {
@@ -325,6 +359,61 @@ export default function Profile() {
           <aside className="space-y-6">
             {/* Smart Interests */}
             <SmartInterestsBlock userId={user.id} />
+
+            {/* Loyalty Program */}
+            <Card className={`bg-gradient-to-br ${getRankColor(loyaltyPoints?.currentRank)} border`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {getRankIcon(loyaltyPoints?.currentRank)}
+                    برنامج الولاء
+                  </CardTitle>
+                  <Badge variant="secondary" className="gap-1">
+                    <Coins className="h-3 w-3" />
+                    {loyaltyPoints?.totalPoints || 0}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">رتبتك الحالية</span>
+                  </div>
+                  <div className="font-semibold text-lg" data-testid="text-loyalty-rank">
+                    {loyaltyPoints?.currentRank || "القارئ الجديد"}
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">النقاط الكلية</span>
+                    <span className="font-semibold" data-testid="text-loyalty-lifetime">
+                      {loyaltyPoints?.lifetimePoints || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">النقاط المتاحة</span>
+                    <span className="font-semibold text-primary" data-testid="text-loyalty-available">
+                      {loyaltyPoints?.totalPoints || 0}
+                    </span>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="default"
+                  className="w-full gap-2"
+                  asChild
+                  data-testid="button-view-rewards"
+                >
+                  <a href="/loyalty">
+                    <Trophy className="h-4 w-4" />
+                    استبدل النقاط
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Quick Actions */}
             <Card>
