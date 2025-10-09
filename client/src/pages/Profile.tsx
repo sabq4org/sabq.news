@@ -23,16 +23,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { 
-  User, 
   Heart, 
   Bookmark, 
   FileText, 
   Settings,
   Bell,
   Shield,
-  Save,
   Loader2,
   Upload,
+  TrendingUp,
+  LayoutDashboard,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -174,178 +174,199 @@ export default function Profile() {
     <div className="min-h-screen bg-background">
       <Header user={user} />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage 
-                        src={user.profileImageUrl || ""} 
-                        alt={getUserDisplayName()}
-                        className="object-cover"
-                        data-testid="img-profile-avatar"
-                      />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={5242880}
-                      allowedFileTypes={['.jpg', '.jpeg', '.png', '.webp']}
-                      onGetUploadParameters={async () => {
-                        const response = await apiRequest("/api/profile/image/upload", {
-                          method: "POST",
+      {/* Hero Header with Cover */}
+      <div className="relative">
+        {/* Cover Image with Gradient */}
+        <div className="h-48 bg-gradient-to-br from-primary/10 to-accent/10" />
+        
+        {/* Profile Info Section */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative -mt-20 pb-6">
+            {/* Avatar + Basic Info */}
+            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end mb-8">
+              <div className="relative">
+                <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+                  <AvatarImage 
+                    src={user.profileImageUrl || ""} 
+                    alt={getUserDisplayName()}
+                    className="object-cover"
+                    data-testid="img-profile-avatar"
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880}
+                  allowedFileTypes={['.jpg', '.jpeg', '.png', '.webp']}
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("/api/profile/image/upload", {
+                      method: "POST",
+                    });
+                    return {
+                      method: "PUT" as const,
+                      url: response.uploadURL,
+                    };
+                  }}
+                  onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                    try {
+                      if (result.successful && result.successful[0]) {
+                        const uploadURL = result.successful[0].uploadURL;
+                        
+                        const response = await apiRequest("/api/profile/image", {
+                          method: "PUT",
+                          body: JSON.stringify({ profileImageUrl: uploadURL }),
                         });
-                        return {
-                          method: "PUT" as const,
-                          url: response.uploadURL,
-                        };
-                      }}
-                      onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                        try {
-                          if (result.successful && result.successful[0]) {
-                            const uploadURL = result.successful[0].uploadURL;
-                            
-                            // Send the upload URL to the server and get the permanent object path
-                            const response = await apiRequest("/api/profile/image", {
-                              method: "PUT",
-                              body: JSON.stringify({ profileImageUrl: uploadURL }),
-                            });
-                            
-                            // Invalidate queries to refresh user data with the new permanent path
-                            await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                            
-                            toast({
-                              title: "تم التحديث بنجاح",
-                              description: "تم تحديث صورتك الشخصية",
-                            });
-                          }
-                        } catch (error) {
-                          console.error("Error uploading profile image:", error);
-                          toast({
-                            title: "خطأ",
-                            description: "فشل في رفع الصورة. حاول مرة أخرى.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                      variant="ghost"
-                      size="icon"
-                      buttonClassName="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
-                    >
-                      <Upload className="h-4 w-4" />
-                    </ObjectUploader>
-                  </div>
+                        
+                        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                        
+                        toast({
+                          title: "تم التحديث بنجاح",
+                          description: "تم تحديث صورتك الشخصية",
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Error uploading profile image:", error);
+                      toast({
+                        title: "خطأ",
+                        description: "فشل في رفع الصورة. حاول مرة أخرى.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  buttonClassName="absolute bottom-0 right-0 h-10 w-10 rounded-full shadow-lg"
+                >
+                  <Upload className="h-4 w-4" />
+                </ObjectUploader>
+              </div>
 
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-bold" data-testid="text-profile-name">
-                      {getUserDisplayName()}
-                    </h2>
-                    <p className="text-sm text-muted-foreground" data-testid="text-profile-email">
-                      {user.email}
-                    </p>
-                    {getRoleBadge(user.role)}
-                  </div>
-
-                  <Separator />
-
-                  <div className="w-full space-y-2">
-                    {(user.role === "editor" || user.role === "admin") && (
-                      <Button
-                        variant="default"
-                        className="w-full gap-2"
-                        asChild
-                        data-testid="button-go-to-dashboard"
-                      >
-                        <Link href="/dashboard">
-                          <a>
-                            <FileText className="h-4 w-4" />
-                            لوحة التحكم
-                          </a>
-                        </Link>
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      asChild
-                      data-testid="button-settings"
-                    >
-                      <a>
-                        <Settings className="h-4 w-4" />
-                        الإعدادات
-                      </a>
-                    </Button>
-                  </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <h1 className="text-3xl font-bold" data-testid="text-profile-name">
+                    {getUserDisplayName()}
+                  </h1>
+                  {getRoleBadge(user.role)}
                 </div>
-              </CardContent>
-            </Card>
+                <p className="text-muted-foreground" data-testid="text-profile-email">
+                  {user.email}
+                </p>
+                {user.bio && (
+                  <p className="text-foreground/80 max-w-2xl">
+                    {user.bio}
+                  </p>
+                )}
+              </div>
+            </div>
 
+            {/* Quick Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="hover-elevate transition-all">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Heart className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">الإعجابات</p>
+                      <p className="text-2xl font-bold" data-testid="text-stat-likes">
+                        {likedArticles.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate transition-all">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-accent/30 flex items-center justify-center">
+                      <Bookmark className="h-6 w-6 text-accent-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">المحفوظات</p>
+                      <p className="text-2xl font-bold" data-testid="text-stat-bookmarks">
+                        {bookmarkedArticles.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate transition-all">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">القراءات</p>
+                      <p className="text-2xl font-bold" data-testid="text-stat-history">
+                        {readingHistory.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
+          {/* Sidebar */}
+          <aside className="space-y-6">
             {/* Smart Interests */}
             <SmartInterestsBlock userId={user.id} />
 
-            {/* Stats */}
+            {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">الإحصائيات</CardTitle>
+                <CardTitle className="text-base">إجراءات سريعة</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Heart className="h-4 w-4 text-muted-foreground" />
-                    <span>الإعجابات</span>
-                  </div>
-                  <span className="font-semibold" data-testid="text-stat-likes">
-                    {likedArticles.length}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Bookmark className="h-4 w-4 text-muted-foreground" />
-                    <span>المحفوظات</span>
-                  </div>
-                  <span className="font-semibold" data-testid="text-stat-bookmarks">
-                    {bookmarkedArticles.length}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span>القراءات</span>
-                  </div>
-                  <span className="font-semibold" data-testid="text-stat-history">
-                    {readingHistory.length}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preferences */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">التفضيلات</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2">
+                {(user.role === "editor" || user.role === "admin") && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                    asChild
+                    data-testid="button-go-to-dashboard"
+                  >
+                    <Link href="/dashboard">
+                      <a className="flex items-center gap-2 w-full">
+                        <LayoutDashboard className="h-4 w-4" />
+                        لوحة التحكم
+                      </a>
+                    </Link>
+                  </Button>
+                )}
+                
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2 hover-elevate"
+                  className="w-full justify-start gap-2"
+                  data-testid="button-settings"
+                >
+                  <Settings className="h-4 w-4" />
+                  الإعدادات
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
                   data-testid="button-notifications"
                 >
                   <Bell className="h-4 w-4" />
                   إعدادات الإشعارات
                 </Button>
+                
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2 hover-elevate"
+                  className="w-full justify-start gap-2"
                   data-testid="button-privacy"
                 >
                   <Shield className="h-4 w-4" />
@@ -353,36 +374,67 @@ export default function Profile() {
                 </Button>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2">
+            {/* Contact Info (if available) */}
+            {(user.phoneNumber || user.firstName || user.lastName) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">معلومات الاتصال</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {user.phoneNumber && (
+                    <div className="text-sm">
+                      <p className="text-muted-foreground mb-1">رقم الهاتف</p>
+                      <p className="font-medium">{user.phoneNumber}</p>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="text-sm">
+                    <p className="text-muted-foreground mb-1">البريد الإلكتروني</p>
+                    <p className="font-medium break-all">{user.email}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </aside>
+
+          {/* Main Content with Tabs */}
+          <main>
             <Card>
-              <CardHeader>
-                <CardTitle>نشاطي</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <Tabs defaultValue="bookmarks" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="bookmarks" data-testid="tab-bookmarks">
-                      <Bookmark className="h-4 w-4 ml-2" />
-                      المحفوظات
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
+                    <TabsTrigger value="bookmarks" className="gap-2" data-testid="tab-bookmarks">
+                      <Bookmark className="h-4 w-4" />
+                      <span className="hidden sm:inline">المحفوظات</span>
+                      <Badge variant="secondary" className="sm:mr-1">
+                        {bookmarkedArticles.length}
+                      </Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="liked" data-testid="tab-liked">
-                      <Heart className="h-4 w-4 ml-2" />
-                      الإعجابات
+                    
+                    <TabsTrigger value="liked" className="gap-2" data-testid="tab-liked">
+                      <Heart className="h-4 w-4" />
+                      <span className="hidden sm:inline">الإعجابات</span>
+                      <Badge variant="secondary" className="sm:mr-1">
+                        {likedArticles.length}
+                      </Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="history" data-testid="tab-history">
-                      <FileText className="h-4 w-4 ml-2" />
-                      السجل
+                    
+                    <TabsTrigger value="history" className="gap-2" data-testid="tab-history">
+                      <FileText className="h-4 w-4" />
+                      <span className="hidden sm:inline">السجل</span>
+                      <Badge variant="secondary" className="sm:mr-1">
+                        {readingHistory.length}
+                      </Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="settings" data-testid="tab-settings">
-                      <Settings className="h-4 w-4 ml-2" />
-                      الإعدادات
+                    
+                    <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
+                      <Settings className="h-4 w-4" />
+                      <span className="hidden sm:inline">الإعدادات</span>
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="bookmarks" className="space-y-4 mt-6">
+                  <TabsContent value="bookmarks" className="space-y-4">
                     {bookmarkedArticles.length > 0 ? (
                       <div className="space-y-4">
                         {bookmarkedArticles.map((article) => (
@@ -394,14 +446,24 @@ export default function Profile() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12">
-                        <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <p className="text-muted-foreground">لا توجد مقالات محفوظة</p>
+                      <div className="text-center py-16">
+                        <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <Bookmark className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">لا توجد مقالات محفوظة</h3>
+                        <p className="text-muted-foreground mb-6">
+                          احفظ المقالات المفضلة لديك للوصول إليها بسهولة لاحقاً
+                        </p>
+                        <Button asChild>
+                          <Link href="/">
+                            <a>تصفح المقالات</a>
+                          </Link>
+                        </Button>
                       </div>
                     )}
                   </TabsContent>
 
-                  <TabsContent value="liked" className="space-y-4 mt-6">
+                  <TabsContent value="liked" className="space-y-4">
                     {likedArticles.length > 0 ? (
                       <div className="space-y-4">
                         {likedArticles.map((article) => (
@@ -413,14 +475,24 @@ export default function Profile() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12">
-                        <Heart className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <p className="text-muted-foreground">لم تعجب بأي مقالات بعد</p>
+                      <div className="text-center py-16">
+                        <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <Heart className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">لم تعجب بأي مقالات بعد</h3>
+                        <p className="text-muted-foreground mb-6">
+                          اكتشف المقالات المميزة وأظهر إعجابك بها
+                        </p>
+                        <Button asChild>
+                          <Link href="/">
+                            <a>تصفح المقالات</a>
+                          </Link>
+                        </Button>
                       </div>
                     )}
                   </TabsContent>
 
-                  <TabsContent value="history" className="space-y-4 mt-6">
+                  <TabsContent value="history" className="space-y-4">
                     {readingHistory.length > 0 ? (
                       <div className="space-y-4">
                         {readingHistory.map((article) => (
@@ -432,73 +504,44 @@ export default function Profile() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12">
-                        <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <p className="text-muted-foreground">لا يوجد سجل قراءة</p>
+                      <div className="text-center py-16">
+                        <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <FileText className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">لا يوجد سجل قراءة</h3>
+                        <p className="text-muted-foreground mb-6">
+                          ابدأ القراءة وسيظهر سجل قراءتك هنا
+                        </p>
+                        <Button asChild>
+                          <Link href="/">
+                            <a>تصفح المقالات</a>
+                          </Link>
+                        </Button>
                       </div>
                     )}
                   </TabsContent>
 
-                  <TabsContent value="settings" className="space-y-4 mt-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>تحديث المعلومات الشخصية</CardTitle>
-                        <CardDescription>
-                          قم بتحديث بياناتك الشخصية. جميع الحقول اختيارية.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Form {...form}>
-                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <FormField
-                                control={form.control}
-                                name="firstName"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>الاسم الأول</FormLabel>
-                                    <FormControl>
-                                      <Input 
-                                        placeholder="أدخل الاسم الأول" 
-                                        {...field} 
-                                        data-testid="input-firstName"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={form.control}
-                                name="lastName"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>اسم العائلة</FormLabel>
-                                    <FormControl>
-                                      <Input 
-                                        placeholder="أدخل اسم العائلة" 
-                                        {...field}
-                                        data-testid="input-lastName"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-
+                  <TabsContent value="settings" className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">تحديث المعلومات الشخصية</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        قم بتحديث بياناتك الشخصية. جميع الحقول اختيارية.
+                      </p>
+                      
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          <div className="grid gap-6 md:grid-cols-2">
                             <FormField
                               control={form.control}
-                              name="phoneNumber"
+                              name="firstName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>رقم الهاتف</FormLabel>
+                                  <FormLabel>الاسم الأول</FormLabel>
                                   <FormControl>
                                     <Input 
-                                      placeholder="+966 123 456 789" 
-                                      {...field}
-                                      data-testid="input-phoneNumber"
+                                      placeholder="أدخل الاسم الأول" 
+                                      {...field} 
+                                      data-testid="input-firstName"
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -508,74 +551,110 @@ export default function Profile() {
 
                             <FormField
                               control={form.control}
-                              name="profileImageUrl"
+                              name="lastName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>رابط الصورة الشخصية</FormLabel>
+                                  <FormLabel>اسم العائلة</FormLabel>
                                   <FormControl>
                                     <Input 
-                                      placeholder="https://example.com/image.jpg" 
+                                      placeholder="أدخل اسم العائلة" 
                                       {...field}
-                                      data-testid="input-profileImageUrl"
+                                      data-testid="input-lastName"
                                     />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
+                          </div>
 
-                            <FormField
-                              control={form.control}
-                              name="bio"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>نبذة عنك</FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      placeholder="اكتب نبذة مختصرة عنك..."
-                                      className="resize-none min-h-[100px]"
-                                      {...field}
-                                      data-testid="input-bio"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  <p className="text-xs text-muted-foreground">
-                                    {field.value?.length || 0} / 500 حرف
-                                  </p>
-                                </FormItem>
+                          <FormField
+                            control={form.control}
+                            name="phoneNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>رقم الهاتف</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="+966 123 456 789" 
+                                    {...field}
+                                    data-testid="input-phoneNumber"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="profileImageUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>رابط الصورة الشخصية</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="https://example.com/image.jpg" 
+                                    {...field}
+                                    data-testid="input-profileImageUrl"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="bio"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>نبذة عنك</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="اكتب نبذة مختصرة عنك..."
+                                    className="resize-none min-h-[120px]"
+                                    {...field}
+                                    data-testid="input-bio"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                <p className="text-xs text-muted-foreground">
+                                  {field.value?.length || 0} / 500 حرف
+                                </p>
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                              type="submit"
+                              disabled={updateMutation.isPending}
+                              data-testid="button-save"
+                            >
+                              {updateMutation.isPending ? (
+                                <>
+                                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                                  جاري الحفظ...
+                                </>
+                              ) : (
+                                <>
+                                  <FileText className="ml-2 h-4 w-4" />
+                                  حفظ التغييرات
+                                </>
                               )}
-                            />
-
-                            <div className="flex justify-end gap-2 pt-4">
-                              <Button
-                                type="submit"
-                                disabled={updateMutation.isPending}
-                                data-testid="button-save"
-                              >
-                                {updateMutation.isPending ? (
-                                  <>
-                                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                                    جاري الحفظ...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="ml-2 h-4 w-4" />
-                                    حفظ التغييرات
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </CardContent>
-                    </Card>
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
-          </div>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
