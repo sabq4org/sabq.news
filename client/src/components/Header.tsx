@@ -1,7 +1,6 @@
-import { Search, Menu, User, LogOut, LayoutDashboard, X, Bell } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import {
@@ -27,12 +26,10 @@ import type { Category } from "@shared/schema";
 
 interface HeaderProps {
   user?: { name?: string | null; email?: string; role?: string; profileImageUrl?: string | null };
-  onSearch?: (query: string) => void;
   onMenuClick?: () => void;
 }
 
-export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+export function Header({ user, onMenuClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -212,16 +209,6 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
               <ThemeToggle />
               
               {user && <NotificationBell />}
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover-elevate active-elevate-2"
-                onClick={() => {}}
-                data-testid="button-search"
-              >
-                <Search className="h-5 w-5" />
-              </Button>
 
               {user ? (
                 <DropdownMenu>
@@ -294,21 +281,6 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
             </div>
           </div>
         </div>
-
-        {/* Mobile search */}
-        <form onSubmit={handleSearch} className="md:hidden pb-4">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="ابحث في الأخبار..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-10"
-              data-testid="input-search-mobile"
-            />
-          </div>
-        </form>
       </div>
 
       {/* Mobile menu sheet */}
