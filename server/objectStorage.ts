@@ -230,19 +230,16 @@ export class ObjectStorageService {
       // Copy file to public location
       await objectFile.copy(newFile);
       
-      // Make file publicly readable on GCS
-      await newFile.makePublic();
-      
       // Set ACL policy in metadata
       await setObjectAclPolicy(newFile, aclPolicy);
       
       // Delete original private file
       await objectFile.delete();
       
-      // Return public HTTPS URL
-      const publicUrl = `https://storage.googleapis.com/${objectFile.bucket.name}/public/${relativePath}`;
-      console.log("[ObjectStorage] Returning public URL:", publicUrl);
-      return publicUrl;
+      // Return public object path (served via /public-objects/ route)
+      const publicPath = `/public-objects/${relativePath}`;
+      console.log("[ObjectStorage] Returning public path:", publicPath);
+      return publicPath;
     }
     
     // For private files, just set ACL
