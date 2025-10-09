@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +53,7 @@ type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 
 export default function Profile() {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("bookmarks");
 
   const { data: user } = useQuery<UserType>({
     queryKey: ["/api/auth/user"],
@@ -349,6 +351,7 @@ export default function Profile() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
                   data-testid="button-settings"
                 >
                   <Settings className="h-4 w-4" />
@@ -358,6 +361,7 @@ export default function Profile() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
                   data-testid="button-notifications"
                 >
                   <Bell className="h-4 w-4" />
@@ -367,6 +371,7 @@ export default function Profile() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
                   data-testid="button-privacy"
                 >
                   <Shield className="h-4 w-4" />
@@ -402,7 +407,7 @@ export default function Profile() {
           <main>
             <Card>
               <CardContent className="p-6">
-                <Tabs defaultValue="bookmarks" className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
                     <TabsTrigger value="bookmarks" className="gap-2" data-testid="tab-bookmarks">
                       <Bookmark className="h-4 w-4" />
