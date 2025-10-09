@@ -39,9 +39,15 @@ import {
 import type { RoleWithPermissions, Permission } from "@shared/schema";
 
 export default function RolesManagement() {
-  const [location] = useLocation();
-  const { user } = useAuth({ redirectToLogin: true });
+  const [location, setLocation] = useLocation();
+  const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+
+  // Redirect non-admin users to home
+  if (!isUserLoading && user && user.role !== "admin") {
+    setLocation("/");
+    return null;
+  }
 
   const [editingRole, setEditingRole] = useState<RoleWithPermissions | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());

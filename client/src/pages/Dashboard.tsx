@@ -38,10 +38,16 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 
 export default function Dashboard() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
+
+  // Redirect readers to home page - only content creators and admins can access dashboard
+  if (!isUserLoading && user && user.role === "reader") {
+    setLocation("/");
+    return null;
+  }
 
   const { data: stats } = useQuery<{
     totalArticles: number;

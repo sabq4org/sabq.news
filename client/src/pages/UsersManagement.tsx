@@ -99,9 +99,15 @@ interface Role {
 type UserFormValues = z.infer<typeof adminUpdateUserSchema>;
 
 export default function UsersManagement() {
-  const [location] = useLocation();
-  const { user } = useAuth({ redirectToLogin: true });
+  const [location, setLocation] = useLocation();
+  const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+
+  // Redirect non-admin users to home
+  if (!isUserLoading && user && user.role !== "admin") {
+    setLocation("/");
+    return null;
+  }
 
   // Store current user ID globally for button disable logic
   if (user?.id) {

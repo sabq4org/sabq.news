@@ -81,9 +81,15 @@ const categoryFormSchema = insertCategorySchema.extend({
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
 export default function CategoriesManagement() {
-  const [location] = useLocation();
-  const { user } = useAuth({ redirectToLogin: true });
+  const [location, setLocation] = useLocation();
+  const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+
+  // Redirect non-admin users to home
+  if (!isUserLoading && user && user.role !== "admin") {
+    setLocation("/");
+    return null;
+  }
 
   // State for dialogs
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
