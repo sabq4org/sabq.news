@@ -618,6 +618,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get personalized feed for user based on interests weights
+  app.get("/api/personal-feed", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+      // Validate limit parameter
+      if (isNaN(limit) || limit < 1 || limit > 50) {
+        return res.status(400).json({ message: "معامل العدد يجب أن يكون بين 1 و 50" });
+      }
+
+      const articles = await storage.getPersonalizedFeed(userId, limit);
+
+      res.json({
+        articles,
+        count: articles.length,
+      });
+    } catch (error) {
+      console.error("Error getting personalized feed:", error);
+      res.status(500).json({ message: "فشل في جلب التوصيات المخصصة" });
+    }
+  });
+
   // ============================================================
   // CATEGORY ROUTES (CMS Module 1)
   // ============================================================

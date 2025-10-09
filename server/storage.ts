@@ -125,6 +125,7 @@ export interface IStorage {
   // Recommendation operations
   getUserPreferences(userId: string): Promise<string[]>;
   getRecommendations(userId: string): Promise<ArticleWithDetails[]>;
+  getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   
   // Homepage operations
   getHeroArticles(): Promise<ArticleWithDetails[]>;
@@ -691,6 +692,163 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+    }));
+  }
+
+  async getPersonalizedFeed(userId: string, limit: number = 20): Promise<ArticleWithDetails[]> {
+    const results = await db.execute(sql`
+      WITH user_interests_weights AS (
+        SELECT 
+          category_id,
+          weight
+        FROM user_interests
+        WHERE user_id = ${userId}
+      ),
+      recently_read_articles AS (
+        SELECT article_id
+        FROM reading_history
+        WHERE user_id = ${userId}
+          AND read_at > NOW() - INTERVAL '3 days'
+      ),
+      article_scores AS (
+        SELECT 
+          a.id,
+          a.title,
+          a.subtitle,
+          a.slug,
+          a.content,
+          a.excerpt,
+          a.image_url,
+          a.category_id,
+          a.author_id,
+          a.article_type,
+          a.news_type,
+          a.publish_type,
+          a.scheduled_at,
+          a.status,
+          a.ai_summary,
+          a.ai_generated,
+          a.is_featured,
+          a.views,
+          a.seo,
+          a.published_at,
+          a.created_at,
+          a.updated_at,
+          COALESCE(ui.weight, 0) as category_weight,
+          COALESCE(
+            CASE 
+              WHEN a.published_at > NOW() - INTERVAL '7 days' 
+              THEN 10 - EXTRACT(EPOCH FROM (NOW() - a.published_at)) / (86400.0 * 7) * 10
+              ELSE 0
+            END, 0
+          ) as recency_score,
+          COALESCE(a.views, 0) + COALESCE(
+            (SELECT COUNT(*) FROM reactions r WHERE r.article_id = a.id), 0
+          ) * 2 as popularity_score,
+          (
+            COALESCE(ui.weight, 0) * 10 +
+            COALESCE(
+              CASE 
+                WHEN a.published_at > NOW() - INTERVAL '7 days' 
+                THEN 10 - EXTRACT(EPOCH FROM (NOW() - a.published_at)) / (86400.0 * 7) * 10
+                ELSE 0
+              END, 0
+            ) +
+            COALESCE(a.views, 0) / 10.0 + COALESCE(
+              (SELECT COUNT(*) FROM reactions r WHERE r.article_id = a.id), 0
+            ) * 0.5
+          ) as total_score
+        FROM articles a
+        LEFT JOIN user_interests_weights ui ON a.category_id = ui.category_id
+        WHERE a.status = 'published'
+          AND a.id NOT IN (SELECT article_id FROM recently_read_articles)
+          AND (
+            EXISTS (SELECT 1 FROM user_interests_weights WHERE category_id = a.category_id)
+            OR NOT EXISTS (SELECT 1 FROM user_interests_weights)
+          )
+        ORDER BY total_score DESC, a.published_at DESC
+        LIMIT ${limit}
+      )
+      SELECT 
+        ascores.*,
+        c.id as category_id,
+        c.name_ar as category_name_ar,
+        c.name_en as category_name_en,
+        c.slug as category_slug,
+        c.description as category_description,
+        c.color as category_color,
+        c.icon as category_icon,
+        c.hero_image_url as category_hero_image_url,
+        c.display_order as category_display_order,
+        c.status as category_status,
+        c.created_at as category_created_at,
+        u.id as author_id,
+        u.email as author_email,
+        u.first_name as author_first_name,
+        u.last_name as author_last_name,
+        u.bio as author_bio,
+        u.phone_number as author_phone_number,
+        u.profile_image_url as author_profile_image_url,
+        u.role as author_role,
+        u.status as author_status,
+        u.is_profile_complete as author_is_profile_complete,
+        u.created_at as author_created_at
+      FROM article_scores ascores
+      LEFT JOIN categories c ON ascores.category_id = c.id
+      LEFT JOIN users u ON ascores.author_id = u.id
+      ORDER BY ascores.total_score DESC, ascores.published_at DESC
+    `);
+
+    return (results.rows as any[]).map((row) => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      slug: row.slug,
+      content: row.content,
+      excerpt: row.excerpt,
+      imageUrl: row.image_url,
+      categoryId: row.category_id,
+      authorId: row.author_id,
+      articleType: row.article_type,
+      newsType: row.news_type,
+      publishType: row.publish_type,
+      scheduledAt: row.scheduled_at,
+      status: row.status,
+      aiSummary: row.ai_summary,
+      aiGenerated: row.ai_generated,
+      isFeatured: row.is_featured,
+      views: row.views,
+      seo: row.seo,
+      publishedAt: row.published_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      category: row.category_id ? {
+        id: row.category_id,
+        nameAr: row.category_name_ar,
+        nameEn: row.category_name_en,
+        slug: row.category_slug,
+        description: row.category_description,
+        color: row.category_color,
+        icon: row.category_icon,
+        heroImageUrl: row.category_hero_image_url,
+        displayOrder: row.category_display_order,
+        status: row.category_status,
+        createdAt: row.category_created_at,
+      } : undefined,
+      author: row.author_id ? {
+        id: row.author_id,
+        email: row.author_email,
+        passwordHash: null,
+        firstName: row.author_first_name,
+        lastName: row.author_last_name,
+        bio: row.author_bio,
+        phoneNumber: row.author_phone_number,
+        profileImageUrl: row.author_profile_image_url,
+        role: row.author_role,
+        status: row.author_status,
+        isProfileComplete: row.author_is_profile_complete,
+        createdAt: row.author_created_at,
+      } : undefined,
     }));
   }
 
