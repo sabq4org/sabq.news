@@ -2331,60 +2331,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============================================================
-  // INTEREST & PERSONALIZATION ROUTES
-  // ============================================================
-
-  app.get("/api/interests", async (req, res) => {
-    try {
-      const interests = await storage.getAllInterests();
-      res.json(interests);
-    } catch (error) {
-      console.error("Error fetching interests:", error);
-      res.status(500).json({ message: "Failed to fetch interests" });
-    }
-  });
-
-  app.get("/api/user/interests", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const interests = await storage.getUserInterests(userId);
-      res.json(interests);
-    } catch (error) {
-      console.error("Error fetching user interests:", error);
-      res.status(500).json({ message: "Failed to fetch user interests" });
-    }
-  });
-
-  app.post("/api/user/interests", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const { interestIds } = req.body;
-
-      if (!Array.isArray(interestIds) || interestIds.length < 3 || interestIds.length > 5) {
-        return res.status(400).json({ 
-          message: "يجب اختيار من 3 إلى 5 اهتمامات" 
-        });
-      }
-
-      const allInterests = await storage.getAllInterests();
-      const validInterestIds = allInterests.map(i => i.id);
-      const invalidIds = interestIds.filter(id => !validInterestIds.includes(id));
-      
-      if (invalidIds.length > 0) {
-        return res.status(400).json({ 
-          message: "بعض الاهتمامات المحددة غير صحيحة" 
-        });
-      }
-
-      await storage.setUserInterests(userId, interestIds);
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error setting user interests:", error);
-      res.status(500).json({ message: "Failed to set user interests" });
-    }
-  });
 
   app.post("/api/behavior/log", isAuthenticated, async (req: any, res) => {
     try {
