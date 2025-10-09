@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, sql, and, or, inArray, ne } from "drizzle-orm";
+import { eq, desc, sql, and, or, inArray, ne, gte, lte } from "drizzle-orm";
 import {
   users,
   categories,
@@ -17,6 +17,11 @@ import {
   sentimentScores,
   themes,
   themeAuditLog,
+  userLoyaltyEvents,
+  userPointsTotal,
+  loyaltyRewards,
+  userRewardsHistory,
+  loyaltyCampaigns,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -48,6 +53,16 @@ import {
   type ArticleWithDetails,
   type CommentWithUser,
   type InterestWithWeight,
+  type UserLoyaltyEvent,
+  type InsertUserLoyaltyEvent,
+  type UserPointsTotal,
+  type InsertUserPointsTotal,
+  type LoyaltyReward,
+  type InsertLoyaltyReward,
+  type UserRewardsHistory,
+  type InsertUserRewardsHistory,
+  type LoyaltyCampaign,
+  type InsertLoyaltyCampaign,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -154,6 +169,39 @@ export interface IStorage {
   createThemeAuditLog(log: InsertThemeAuditLog): Promise<void>;
   getThemeAuditLogs(themeId: string): Promise<ThemeAuditLog[]>;
   initializeDefaultTheme(userId: string): Promise<Theme>;
+
+  // Loyalty System - Points and Events
+  recordLoyaltyPoints(params: {
+    userId: string;
+    action: string;
+    points: number;
+    source?: string;
+    metadata?: any;
+  }): Promise<{ pointsEarned: number; totalPoints: number; rankChanged: boolean; newRank?: string }>;
+  getUserPoints(userId: string): Promise<UserPointsTotal | undefined>;
+  getUserLoyaltyHistory(userId: string, limit?: number): Promise<UserLoyaltyEvent[]>;
+  getTopUsers(limit?: number): Promise<Array<UserPointsTotal & { user: User }>>;
+
+  // Loyalty System - Rewards
+  getActiveRewards(): Promise<LoyaltyReward[]>;
+  getRewardById(rewardId: string): Promise<LoyaltyReward | undefined>;
+  redeemReward(params: {
+    userId: string;
+    rewardId: string;
+  }): Promise<{ success: boolean; message: string; redemption?: UserRewardsHistory }>;
+  getUserRedemptionHistory(userId: string): Promise<UserRewardsHistory[]>;
+
+  // Loyalty System - Campaigns
+  getActiveCampaigns(): Promise<LoyaltyCampaign[]>;
+  getApplicableCampaign(action: string, categoryId?: string): Promise<LoyaltyCampaign | undefined>;
+
+  // Loyalty System - Admin
+  createReward(data: InsertLoyaltyReward): Promise<LoyaltyReward>;
+  updateReward(id: string, data: Partial<InsertLoyaltyReward>): Promise<LoyaltyReward>;
+  deleteReward(id: string): Promise<void>;
+  createCampaign(data: InsertLoyaltyCampaign): Promise<LoyaltyCampaign>;
+  updateCampaign(id: string, data: Partial<InsertLoyaltyCampaign>): Promise<LoyaltyCampaign>;
+  adjustUserPoints(userId: string, points: number, reason: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1238,6 +1286,452 @@ export class DatabaseStorage implements IStorage {
     } as any]).returning();
 
     return defaultTheme[0];
+  }
+
+  // Loyalty System - Private Helpers
+  private calculateRank(totalPoints: number): string {
+    if (totalPoints >= 2001) return "سفير سبق";
+    if (totalPoints >= 501) return "العضو الذهبي";
+    if (totalPoints >= 101) return "المتفاعل";
+    return "القارئ الجديد";
+  }
+
+  private async getApplicableCampaignInTx(tx: any, action: string, categoryId?: string): Promise<LoyaltyCampaign | undefined> {
+    const now = new Date();
+    const conditions = [
+      eq(loyaltyCampaigns.isActive, true),
+      lte(loyaltyCampaigns.startAt, now),
+      gte(loyaltyCampaigns.endAt, now),
+    ];
+
+    if (action) {
+      conditions.push(
+        or(
+          sql`${loyaltyCampaigns.targetAction} IS NULL`,
+          eq(loyaltyCampaigns.targetAction, action)
+        )!
+      );
+    }
+
+    if (categoryId) {
+      conditions.push(
+        or(
+          sql`${loyaltyCampaigns.targetCategory} IS NULL`,
+          eq(loyaltyCampaigns.targetCategory, categoryId)
+        )!
+      );
+    }
+
+    const [campaign] = await tx
+      .select()
+      .from(loyaltyCampaigns)
+      .where(and(...conditions))
+      .orderBy(desc(loyaltyCampaigns.multiplier))
+      .limit(1);
+
+    return campaign;
+  }
+
+  // Loyalty System - Points and Events
+  async recordLoyaltyPoints(params: {
+    userId: string;
+    action: string;
+    points: number;
+    source?: string;
+    metadata?: any;
+  }): Promise<{ pointsEarned: number; totalPoints: number; rankChanged: boolean; newRank?: string }> {
+    return await db.transaction(async (tx) => {
+      const now = new Date();
+      
+      // 1. Get active campaign inside transaction
+      const applicableCampaign = await this.getApplicableCampaignInTx(
+        tx,
+        params.action, 
+        params.metadata?.categoryId
+      );
+
+      // 2. Calculate points with multiplier or bonus
+      let pointsToAward = params.points;
+      let campaignId: string | undefined = undefined;
+
+      if (applicableCampaign) {
+        campaignId = applicableCampaign.id;
+        if (applicableCampaign.multiplier && applicableCampaign.multiplier > 1) {
+          pointsToAward = Math.floor(params.points * applicableCampaign.multiplier);
+        }
+        if (applicableCampaign.bonusPoints && applicableCampaign.bonusPoints > 0) {
+          pointsToAward += applicableCampaign.bonusPoints;
+        }
+      }
+
+      // 3. Create loyalty event
+      await tx.insert(userLoyaltyEvents).values({
+        userId: params.userId,
+        action: params.action,
+        points: pointsToAward,
+        source: params.source,
+        campaignId,
+        metadata: params.metadata,
+      });
+
+      // 4. Get or create user points total
+      const [existingPoints] = await tx
+        .select()
+        .from(userPointsTotal)
+        .where(eq(userPointsTotal.userId, params.userId));
+
+      const oldRank = existingPoints?.currentRank || "القارئ الجديد";
+      const newTotalPoints = (existingPoints?.totalPoints || 0) + pointsToAward;
+      const newLifetimePoints = (existingPoints?.lifetimePoints || 0) + (pointsToAward > 0 ? pointsToAward : 0);
+      const newRank = this.calculateRank(newTotalPoints);
+
+      // 5. Update or insert user points
+      if (existingPoints) {
+        await tx
+          .update(userPointsTotal)
+          .set({
+            totalPoints: newTotalPoints,
+            lifetimePoints: newLifetimePoints,
+            currentRank: newRank,
+            lastActivityAt: now,
+            updatedAt: now,
+          })
+          .where(eq(userPointsTotal.userId, params.userId));
+      } else {
+        await tx.insert(userPointsTotal).values({
+          userId: params.userId,
+          totalPoints: newTotalPoints,
+          lifetimePoints: newLifetimePoints,
+          currentRank: newRank,
+          lastActivityAt: now,
+        });
+      }
+
+      // 6. Check for rank change
+      const rankChanged = oldRank !== newRank;
+
+      // 7. Return result
+      return {
+        pointsEarned: pointsToAward,
+        totalPoints: newTotalPoints,
+        rankChanged,
+        newRank: rankChanged ? newRank : undefined,
+      };
+    });
+  }
+
+  async getUserPoints(userId: string): Promise<UserPointsTotal | undefined> {
+    const [points] = await db
+      .select()
+      .from(userPointsTotal)
+      .where(eq(userPointsTotal.userId, userId));
+    return points;
+  }
+
+  async getUserLoyaltyHistory(userId: string, limit: number = 50): Promise<UserLoyaltyEvent[]> {
+    return await db
+      .select()
+      .from(userLoyaltyEvents)
+      .where(eq(userLoyaltyEvents.userId, userId))
+      .orderBy(desc(userLoyaltyEvents.createdAt))
+      .limit(limit);
+  }
+
+  async getTopUsers(limit: number = 100): Promise<Array<UserPointsTotal & { user: User }>> {
+    const results = await db
+      .select({
+        points: userPointsTotal,
+        user: users,
+      })
+      .from(userPointsTotal)
+      .leftJoin(users, eq(userPointsTotal.userId, users.id))
+      .orderBy(desc(userPointsTotal.totalPoints))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.points,
+      user: r.user!,
+    }));
+  }
+
+  // Loyalty System - Rewards
+  async getActiveRewards(): Promise<LoyaltyReward[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(loyaltyRewards)
+      .where(
+        and(
+          eq(loyaltyRewards.isActive, true),
+          or(
+            sql`${loyaltyRewards.expiresAt} IS NULL`,
+            gte(loyaltyRewards.expiresAt, now)
+          )
+        )
+      )
+      .orderBy(loyaltyRewards.pointsCost);
+  }
+
+  async getRewardById(rewardId: string): Promise<LoyaltyReward | undefined> {
+    const [reward] = await db
+      .select()
+      .from(loyaltyRewards)
+      .where(eq(loyaltyRewards.id, rewardId));
+    return reward;
+  }
+
+  async redeemReward(params: {
+    userId: string;
+    rewardId: string;
+  }): Promise<{ success: boolean; message: string; redemption?: UserRewardsHistory }> {
+    return await db.transaction(async (tx) => {
+      // 1. Get reward details
+      const [reward] = await tx
+        .select()
+        .from(loyaltyRewards)
+        .where(eq(loyaltyRewards.id, params.rewardId));
+
+      if (!reward) {
+        return { success: false, message: "الجائزة غير موجودة" };
+      }
+
+      if (!reward.isActive) {
+        return { success: false, message: "الجائزة غير متاحة حالياً" };
+      }
+
+      if (reward.expiresAt && new Date(reward.expiresAt) < new Date()) {
+        return { success: false, message: "انتهت صلاحية الجائزة" };
+      }
+
+      // 2. Check user points
+      const [userPoints] = await tx
+        .select()
+        .from(userPointsTotal)
+        .where(eq(userPointsTotal.userId, params.userId));
+
+      if (!userPoints || userPoints.totalPoints < reward.pointsCost) {
+        return { 
+          success: false, 
+          message: `النقاط غير كافية. تحتاج إلى ${reward.pointsCost} نقطة` 
+        };
+      }
+
+      // 3. Check stock
+      if (reward.remainingStock !== null && reward.remainingStock <= 0) {
+        return { success: false, message: "نفذت كمية الجائزة" };
+      }
+
+      // 4. Check max redemptions per user
+      if (reward.maxRedemptionsPerUser !== null) {
+        const [{ count: userRedemptions }] = await tx
+          .select({ count: sql<number>`count(*)` })
+          .from(userRewardsHistory)
+          .where(
+            and(
+              eq(userRewardsHistory.userId, params.userId),
+              eq(userRewardsHistory.rewardId, params.rewardId)
+            )
+          );
+
+        if (Number(userRedemptions) >= reward.maxRedemptionsPerUser) {
+          return { 
+            success: false, 
+            message: `لقد وصلت إلى الحد الأقصى لاستبدال هذه الجائزة (${reward.maxRedemptionsPerUser})` 
+          };
+        }
+      }
+
+      // 5. Deduct points
+      await tx
+        .update(userPointsTotal)
+        .set({ 
+          totalPoints: userPoints.totalPoints - reward.pointsCost,
+          updatedAt: new Date(),
+        })
+        .where(eq(userPointsTotal.userId, params.userId));
+
+      // 6. Create redemption record with snapshot
+      const [redemption] = await tx
+        .insert(userRewardsHistory)
+        .values({
+          userId: params.userId,
+          rewardId: params.rewardId,
+          pointsSpent: reward.pointsCost,
+          rewardSnapshot: {
+            nameAr: reward.nameAr,
+            nameEn: reward.nameEn,
+            pointsCost: reward.pointsCost,
+            rewardType: reward.rewardType,
+          },
+          deliveryData: reward.rewardData?.couponCode ? {
+            couponCode: reward.rewardData.couponCode,
+          } : undefined,
+        })
+        .returning();
+
+      // 7. Update stock if applicable
+      if (reward.remainingStock !== null) {
+        await tx
+          .update(loyaltyRewards)
+          .set({ remainingStock: reward.remainingStock - 1 })
+          .where(eq(loyaltyRewards.id, params.rewardId));
+      }
+
+      return { 
+        success: true, 
+        message: "تم استبدال الجائزة بنجاح", 
+        redemption 
+      };
+    });
+  }
+
+  async getUserRedemptionHistory(userId: string): Promise<UserRewardsHistory[]> {
+    return await db
+      .select()
+      .from(userRewardsHistory)
+      .where(eq(userRewardsHistory.userId, userId))
+      .orderBy(desc(userRewardsHistory.redeemedAt));
+  }
+
+  // Loyalty System - Campaigns
+  async getActiveCampaigns(): Promise<LoyaltyCampaign[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(loyaltyCampaigns)
+      .where(
+        and(
+          eq(loyaltyCampaigns.isActive, true),
+          lte(loyaltyCampaigns.startAt, now),
+          gte(loyaltyCampaigns.endAt, now)
+        )
+      )
+      .orderBy(loyaltyCampaigns.createdAt);
+  }
+
+  async getApplicableCampaign(action: string, categoryId?: string): Promise<LoyaltyCampaign | undefined> {
+    const now = new Date();
+    const conditions = [
+      eq(loyaltyCampaigns.isActive, true),
+      lte(loyaltyCampaigns.startAt, now),
+      gte(loyaltyCampaigns.endAt, now),
+    ];
+
+    // Check if campaign targets specific action
+    if (action) {
+      conditions.push(
+        or(
+          sql`${loyaltyCampaigns.targetAction} IS NULL`,
+          eq(loyaltyCampaigns.targetAction, action)
+        )!
+      );
+    }
+
+    // Check if campaign targets specific category
+    if (categoryId) {
+      conditions.push(
+        or(
+          sql`${loyaltyCampaigns.targetCategory} IS NULL`,
+          eq(loyaltyCampaigns.targetCategory, categoryId)
+        )!
+      );
+    }
+
+    const [campaign] = await db
+      .select()
+      .from(loyaltyCampaigns)
+      .where(and(...conditions))
+      .orderBy(desc(loyaltyCampaigns.multiplier))
+      .limit(1);
+
+    return campaign;
+  }
+
+  // Loyalty System - Admin
+  async createReward(data: InsertLoyaltyReward): Promise<LoyaltyReward> {
+    const [reward] = await db
+      .insert(loyaltyRewards)
+      .values(data)
+      .returning();
+    return reward;
+  }
+
+  async updateReward(id: string, data: Partial<InsertLoyaltyReward>): Promise<LoyaltyReward> {
+    const [reward] = await db
+      .update(loyaltyRewards)
+      .set(data)
+      .where(eq(loyaltyRewards.id, id))
+      .returning();
+    return reward;
+  }
+
+  async deleteReward(id: string): Promise<void> {
+    await db.delete(loyaltyRewards).where(eq(loyaltyRewards.id, id));
+  }
+
+  async createCampaign(data: InsertLoyaltyCampaign): Promise<LoyaltyCampaign> {
+    const [campaign] = await db
+      .insert(loyaltyCampaigns)
+      .values(data)
+      .returning();
+    return campaign;
+  }
+
+  async updateCampaign(id: string, data: Partial<InsertLoyaltyCampaign>): Promise<LoyaltyCampaign> {
+    const [campaign] = await db
+      .update(loyaltyCampaigns)
+      .set(data)
+      .where(eq(loyaltyCampaigns.id, id))
+      .returning();
+    return campaign;
+  }
+
+  async adjustUserPoints(userId: string, points: number, reason: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      const now = new Date();
+      
+      // 1. Create loyalty event
+      await tx.insert(userLoyaltyEvents).values({
+        userId,
+        action: "ADMIN_ADJUSTMENT",
+        points,
+        source: "admin",
+        metadata: { reason },
+      });
+
+      // 2. Get existing user points
+      const [existingPoints] = await tx
+        .select()
+        .from(userPointsTotal)
+        .where(eq(userPointsTotal.userId, userId));
+
+      // 3. Calculate new totals and rank
+      const newTotalPoints = (existingPoints?.totalPoints || 0) + points;
+      const newLifetimePoints = (existingPoints?.lifetimePoints || 0) + (points > 0 ? points : 0);
+      const newRank = this.calculateRank(newTotalPoints);
+
+      // 4. Update or insert user points
+      if (existingPoints) {
+        await tx
+          .update(userPointsTotal)
+          .set({
+            totalPoints: newTotalPoints,
+            lifetimePoints: newLifetimePoints,
+            currentRank: newRank,
+            lastActivityAt: now,
+            updatedAt: now,
+          })
+          .where(eq(userPointsTotal.userId, userId));
+      } else {
+        await tx.insert(userPointsTotal).values({
+          userId,
+          totalPoints: newTotalPoints,
+          lifetimePoints: newLifetimePoints,
+          currentRank: newRank,
+          lastActivityAt: now,
+        });
+      }
+    });
   }
 }
 
