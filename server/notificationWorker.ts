@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { db } from "./db";
 import { eq, and, lte, isNull, sql } from "drizzle-orm";
-import { notificationQueue, notificationsInbox, notificationMetrics } from "@shared/schema";
+import { notificationQueue, notificationsInbox, notificationMetrics, articles } from "@shared/schema";
 
 async function processNotificationQueue() {
   try {
@@ -154,6 +154,50 @@ async function cleanupOldNotifications() {
   }
 }
 
+async function publishScheduledArticles() {
+  try {
+    console.log("[ScheduledPublisher] Checking for scheduled articles...");
+
+    const now = new Date();
+
+    // Find articles that are scheduled and ready to be published
+    const scheduledArticles = await db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, "scheduled"),
+          lte(articles.publishedAt, now)
+        )
+      );
+
+    console.log(`[ScheduledPublisher] Found ${scheduledArticles.length} articles ready to publish`);
+
+    for (const article of scheduledArticles) {
+      try {
+        await db
+          .update(articles)
+          .set({
+            status: "published",
+            updatedAt: new Date(),
+          })
+          .where(eq(articles.id, article.id));
+
+        console.log(`[ScheduledPublisher] Published article: ${article.id} - ${article.title}`);
+      } catch (error) {
+        console.error(`[ScheduledPublisher] Error publishing article ${article.id}:`, error);
+      }
+    }
+
+    if (scheduledArticles.length > 0) {
+      console.log(`[ScheduledPublisher] Successfully published ${scheduledArticles.length} scheduled articles`);
+    }
+  } catch (error) {
+    console.error("[ScheduledPublisher] Error in scheduled publishing:", error);
+    // Don't throw - just log and continue
+  }
+}
+
 export function startNotificationWorker() {
   try {
     console.log("[NotificationWorker] Starting notification worker...");
@@ -165,6 +209,13 @@ export function startNotificationWorker() {
       });
     });
 
+    // Publish scheduled articles every minute
+    cron.schedule("*/1 * * * *", () => {
+      publishScheduledArticles().catch(error => {
+        console.error("[ScheduledPublisher] Cron job error:", error);
+      });
+    });
+
     // Cleanup old notifications daily at 3 AM
     cron.schedule("0 3 * * *", () => {
       cleanupOldNotifications().catch(error => {
@@ -173,10 +224,16 @@ export function startNotificationWorker() {
     });
 
     console.log("[NotificationWorker] Notification worker started successfully");
+    console.log("[ScheduledPublisher] Scheduled article publisher started successfully");
     
     // Run initial processing in a non-blocking way
     processNotificationQueue().catch(error => {
       console.error("[NotificationWorker] Initial processing error:", error);
+    });
+
+    // Run initial scheduled publishing check
+    publishScheduledArticles().catch(error => {
+      console.error("[ScheduledPublisher] Initial publishing check error:", error);
     });
   } catch (error) {
     console.error("[NotificationWorker] Failed to start notification worker:", error);

@@ -186,7 +186,9 @@ export default function ArticleEditor() {
         newsType,
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? scheduledAt : null,
-        status: publishNow ? "published" : "draft",
+        status: publishNow 
+          ? (publishType === "scheduled" ? "scheduled" : "published")
+          : "draft",
         seo: {
           metaTitle: metaTitle || title,
           metaDescription: metaDescription || excerpt,
@@ -194,8 +196,10 @@ export default function ArticleEditor() {
         },
       };
 
-      if (publishNow) {
+      if (publishNow && publishType === "instant") {
         articleData.publishedAt = new Date().toISOString();
+      } else if (publishNow && publishType === "scheduled" && scheduledAt) {
+        articleData.publishedAt = scheduledAt;
       }
 
       if (isNewArticle) {
