@@ -137,7 +137,68 @@ export function Header({ user, onSearch, onMenuClick }: HeaderProps) {
             <div className="md:hidden flex items-center gap-2">
               <ThemeToggle />
               
-              {!user && (
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="hover-elevate active-elevate-2"
+                      data-testid="button-user-menu-mobile"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage 
+                          src={user.profileImageUrl || ""} 
+                          alt={user.name || user.email || ""}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                          {getInitials(user.name || undefined, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    {(user.role === "editor" || user.role === "admin") && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <a href="/dashboard" className="flex w-full items-center cursor-pointer" data-testid="link-dashboard-mobile">
+                            <LayoutDashboard className="ml-2 h-4 w-4" />
+                            لوحة التحكم
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile-mobile">
+                        <User className="ml-2 h-4 w-4" />
+                        الملف الشخصي
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings-mobile">
+                        <Bell className="ml-2 h-4 w-4" />
+                        إعدادات الإشعارات
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="flex w-full items-center cursor-pointer" 
+                      data-testid="link-logout-mobile"
+                    >
+                      <LogOut className="ml-2 h-4 w-4" />
+                      تسجيل الخروج
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
                 <Button asChild size="icon" variant="ghost" data-testid="button-login-mobile">
                   <a href="/login">
                     <User className="h-5 w-5" />
