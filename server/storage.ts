@@ -150,6 +150,23 @@ export interface IStorage {
   // Behavior tracking operations
   logBehavior(log: InsertBehaviorLog): Promise<void>;
   getUserBehaviorSummary(userId: string, days?: number): Promise<any>;
+  analyzeUserInterestsFromBehavior(userId: string, days?: number): Promise<Array<{
+    categoryId: string;
+    currentWeight: number;
+    suggestedWeight: number;
+    stats: {
+      reads: number;
+      likes: number;
+      comments: number;
+      shares: number;
+      readTimeMinutes: number;
+    };
+  }>>;
+  updateUserInterestsAutomatically(userId: string, days?: number): Promise<{
+    updated: number;
+    added: number;
+    removed: number;
+  }>;
   
   // Sentiment analysis operations
   saveSentimentScore(score: InsertSentimentScore): Promise<void>;
@@ -938,6 +955,222 @@ export class DatabaseStorage implements IStorage {
       searches: searches.slice(-10),
       interactions,
     };
+  }
+
+  async analyzeUserInterestsFromBehavior(userId: string, days: number = 7): Promise<Array<{
+    categoryId: string;
+    currentWeight: number;
+    suggestedWeight: number;
+    stats: {
+      reads: number;
+      likes: number;
+      comments: number;
+      shares: number;
+      readTimeMinutes: number;
+    };
+  }>> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    // Get current user interests
+    const currentInterests = await db
+      .select()
+      .from(userInterests)
+      .where(eq(userInterests.userId, userId));
+
+    const currentWeightMap: Record<string, number> = {};
+    for (const interest of currentInterests) {
+      currentWeightMap[interest.categoryId] = interest.weight;
+    }
+
+    // Aggregate behavior data using SQL
+    const behaviorData = await db.execute(sql`
+      WITH category_stats AS (
+        -- Reading history
+        SELECT 
+          a.category_id,
+          COUNT(DISTINCT rh.id) as reads,
+          COALESCE(SUM(rh.read_duration), 0) as total_read_time
+        FROM reading_history rh
+        INNER JOIN articles a ON rh.article_id = a.id
+        WHERE rh.user_id = ${userId}
+          AND rh.read_at >= ${cutoffDate.toISOString()}
+          AND a.category_id IS NOT NULL
+        GROUP BY a.category_id
+      ),
+      reaction_stats AS (
+        -- Likes/Reactions
+        SELECT 
+          a.category_id,
+          COUNT(*) as likes
+        FROM reactions r
+        INNER JOIN articles a ON r.article_id = a.id
+        WHERE r.user_id = ${userId}
+          AND r.created_at >= ${cutoffDate.toISOString()}
+          AND a.category_id IS NOT NULL
+        GROUP BY a.category_id
+      ),
+      comment_stats AS (
+        -- Comments
+        SELECT 
+          a.category_id,
+          COUNT(*) as comments
+        FROM comments c
+        INNER JOIN articles a ON c.article_id = a.id
+        WHERE c.user_id = ${userId}
+          AND c.created_at >= ${cutoffDate.toISOString()}
+          AND a.category_id IS NOT NULL
+        GROUP BY a.category_id
+      ),
+      share_stats AS (
+        -- Shares from behavior logs
+        SELECT 
+          (metadata->>'categoryId')::varchar as category_id,
+          COUNT(*) as shares
+        FROM behavior_logs
+        WHERE user_id = ${userId}
+          AND event_type = 'article_share'
+          AND created_at >= ${cutoffDate.toISOString()}
+          AND metadata->>'categoryId' IS NOT NULL
+        GROUP BY (metadata->>'categoryId')::varchar
+      ),
+      all_categories AS (
+        SELECT DISTINCT category_id FROM category_stats
+        UNION
+        SELECT DISTINCT category_id FROM reaction_stats
+        UNION
+        SELECT DISTINCT category_id FROM comment_stats
+        UNION
+        SELECT DISTINCT category_id FROM share_stats
+      )
+      SELECT 
+        ac.category_id,
+        COALESCE(cs.reads, 0)::int as reads,
+        COALESCE(rs.likes, 0)::int as likes,
+        COALESCE(cms.comments, 0)::int as comments,
+        COALESCE(ss.shares, 0)::int as shares,
+        COALESCE(cs.total_read_time, 0)::int as total_read_time
+      FROM all_categories ac
+      LEFT JOIN category_stats cs ON ac.category_id = cs.category_id
+      LEFT JOIN reaction_stats rs ON ac.category_id = rs.category_id
+      LEFT JOIN comment_stats cms ON ac.category_id = cms.category_id
+      LEFT JOIN share_stats ss ON ac.category_id = ss.category_id
+      WHERE ac.category_id IS NOT NULL
+    `);
+
+    const results: Array<{
+      categoryId: string;
+      currentWeight: number;
+      suggestedWeight: number;
+      stats: {
+        reads: number;
+        likes: number;
+        comments: number;
+        shares: number;
+        readTimeMinutes: number;
+      };
+    }> = [];
+
+    for (const row of behaviorData.rows as any[]) {
+      const categoryId = row.category_id;
+      const reads = Number(row.reads) || 0;
+      const likes = Number(row.likes) || 0;
+      const comments = Number(row.comments) || 0;
+      const shares = Number(row.shares) || 0;
+      const totalReadTimeSeconds = Number(row.total_read_time) || 0;
+      const readTimeMinutes = Math.round(totalReadTimeSeconds / 60);
+
+      // Calculate suggested weight using the formula
+      const rawWeight = 
+        (reads * 1.0) + 
+        (likes * 0.5) + 
+        (comments * 1.0) + 
+        (shares * 1.5) + 
+        (readTimeMinutes * 0.1);
+
+      // Normalize weight between 0 and 5
+      const suggestedWeight = Math.min(5, Math.max(0, rawWeight));
+
+      results.push({
+        categoryId,
+        currentWeight: currentWeightMap[categoryId] || 0,
+        suggestedWeight: Math.round(suggestedWeight * 10) / 10, // Round to 1 decimal
+        stats: {
+          reads,
+          likes,
+          comments,
+          shares,
+          readTimeMinutes,
+        },
+      });
+    }
+
+    return results;
+  }
+
+  async updateUserInterestsAutomatically(userId: string, days: number = 7): Promise<{
+    updated: number;
+    added: number;
+    removed: number;
+  }> {
+    const analysis = await this.analyzeUserInterestsFromBehavior(userId, days);
+
+    let updated = 0;
+    let added = 0;
+    let removed = 0;
+
+    await db.transaction(async (tx) => {
+      for (const item of analysis) {
+        const { categoryId, currentWeight, suggestedWeight } = item;
+
+        // Check if the interest already exists
+        const [existing] = await tx
+          .select()
+          .from(userInterests)
+          .where(
+            and(
+              eq(userInterests.userId, userId),
+              eq(userInterests.categoryId, categoryId)
+            )
+          );
+
+        if (existing) {
+          // Interest exists
+          if (suggestedWeight < 0.5) {
+            // Remove if weight is too low
+            await tx
+              .delete(userInterests)
+              .where(eq(userInterests.id, existing.id));
+            removed++;
+          } else {
+            // Update the weight
+            await tx
+              .update(userInterests)
+              .set({ 
+                weight: suggestedWeight,
+                updatedAt: new Date()
+              })
+              .where(eq(userInterests.id, existing.id));
+            updated++;
+          }
+        } else {
+          // New interest
+          if (suggestedWeight > 1) {
+            // Add new interest if weight is significant
+            await tx
+              .insert(userInterests)
+              .values({
+                userId,
+                categoryId,
+                weight: suggestedWeight,
+              });
+            added++;
+          }
+        }
+      }
+    });
+
+    return { updated, added, removed };
   }
 
   // Sentiment analysis operations

@@ -559,6 +559,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // SMART INTERESTS ROUTES
+  // ============================================================
+
+  // Analyze user interests from behavior
+  app.get("/api/interests/analyze", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const days = req.query.days ? parseInt(req.query.days as string) : 7;
+
+      // Validate days parameter
+      if (isNaN(days) || days < 1 || days > 365) {
+        return res.status(400).json({ message: "معامل الأيام يجب أن يكون بين 1 و 365" });
+      }
+
+      const analysis = await storage.analyzeUserInterestsFromBehavior(userId, days);
+
+      // Calculate summary statistics
+      const totalCategories = analysis.length;
+      const avgWeight = totalCategories > 0 
+        ? Math.round((analysis.reduce((sum, item) => sum + item.suggestedWeight, 0) / totalCategories) * 10) / 10
+        : 0;
+
+      res.json({
+        analysis,
+        summary: {
+          totalCategories,
+          avgWeight,
+        },
+      });
+    } catch (error) {
+      console.error("Error analyzing user interests:", error);
+      res.status(500).json({ message: "فشل في تحليل الاهتمامات" });
+    }
+  });
+
+  // Update user interests automatically based on behavior
+  app.post("/api/interests/update-weights", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { days } = req.body;
+
+      // Validate days parameter if provided
+      const daysToUse = days !== undefined ? parseInt(days) : 7;
+      if (isNaN(daysToUse) || daysToUse < 1 || daysToUse > 365) {
+        return res.status(400).json({ message: "معامل الأيام يجب أن يكون بين 1 و 365" });
+      }
+
+      const summary = await storage.updateUserInterestsAutomatically(userId, daysToUse);
+
+      res.json({
+        success: true,
+        summary,
+      });
+    } catch (error) {
+      console.error("Error updating user interests:", error);
+      res.status(500).json({ message: "فشل في تحديث الاهتمامات تلقائياً" });
+    }
+  });
+
+  // ============================================================
   // CATEGORY ROUTES (CMS Module 1)
   // ============================================================
 
