@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -104,8 +104,14 @@ export default function UsersManagement() {
   const { toast } = useToast();
 
   // Redirect non-admin users to home
+  useEffect(() => {
+    if (!isUserLoading && user && user.role !== "admin") {
+      setLocation("/");
+    }
+  }, [isUserLoading, user, setLocation]);
+
+  // Don't render for non-admin
   if (!isUserLoading && user && user.role !== "admin") {
-    setLocation("/");
     return null;
   }
 

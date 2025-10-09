@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,8 +44,14 @@ export default function Dashboard() {
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   // Redirect readers to home page - only content creators and admins can access dashboard
+  useEffect(() => {
+    if (!isUserLoading && user && user.role === "reader") {
+      setLocation("/");
+    }
+  }, [isUserLoading, user, setLocation]);
+
+  // Don't render dashboard for readers
   if (!isUserLoading && user && user.role === "reader") {
-    setLocation("/");
     return null;
   }
 
