@@ -142,9 +142,12 @@ export default function ArticleEditor() {
         throw new Error("Failed to upload image");
       }
 
+      // Extract the actual file path without query parameters
+      const fileUrl = uploadData.uploadURL.split('?')[0];
+
       const aclData = await apiRequest("/api/article-images", {
         method: "PUT",
-        body: JSON.stringify({ imageURL: uploadData.uploadURL }),
+        body: JSON.stringify({ imageURL: fileUrl }),
         headers: {
           "Content-Type": "application/json",
         },
