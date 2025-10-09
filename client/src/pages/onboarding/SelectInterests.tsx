@@ -35,14 +35,6 @@ export default function SelectInterests() {
   // Check if editing existing interests
   const isEditingInterests = userInterests.length > 0;
 
-  // Redirect if profile is already complete and NOT editing
-  // Wait until interests are loaded before redirecting
-  useEffect(() => {
-    if (!isUserLoading && !userInterestsLoading && user?.isProfileComplete && !isEditingInterests) {
-      setLocation("/");
-    }
-  }, [isUserLoading, userInterestsLoading, user, setLocation, isEditingInterests]);
-
   // Pre-select user's current interests
   useEffect(() => {
     if (userInterests.length > 0) {
