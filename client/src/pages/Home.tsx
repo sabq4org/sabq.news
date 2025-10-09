@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -19,8 +18,6 @@ interface HomepageData {
 }
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -36,7 +33,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header user={user} onSearch={setSearchQuery} />
+        <Header user={user} />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
           <Skeleton className="w-full h-[400px] md:h-[500px] rounded-lg" />
           <div className="space-y-4">
@@ -55,7 +52,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header user={user} onSearch={setSearchQuery} />
+        <Header user={user} />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-20">
             <p className="text-destructive text-lg mb-4">
@@ -73,7 +70,7 @@ export default function Home() {
   if (!homepage) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header user={user} onSearch={setSearchQuery} />
+        <Header user={user} />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">
@@ -87,7 +84,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} onSearch={setSearchQuery} />
+      <Header user={user} />
 
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         {homepage.hero && homepage.hero.length > 0 && (
@@ -121,29 +118,36 @@ export default function Home() {
                 <h2 className="text-xl font-bold" data-testid="heading-editor-picks">
                   مختارات المحررين
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {homepage.editorPicks.map((article) => (
                     <a
                       key={article.id}
                       href={`/article/${article.slug}`}
-                      className="block p-4 bg-card rounded-lg border hover-elevate active-elevate-2"
+                      className="flex gap-3 p-3 sm:p-4 bg-card rounded-lg border hover-elevate active-elevate-2"
                       data-testid={`card-editor-pick-${article.id}`}
                     >
+                      {/* Image - Smaller on mobile */}
                       {article.imageUrl && (
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-32 object-cover rounded-md mb-3"
-                        />
+                        <div className="flex-shrink-0">
+                          <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-20 h-20 sm:w-24 sm:h-24 lg:w-full lg:h-32 object-cover object-center rounded-md"
+                          />
+                        </div>
                       )}
-                      <h3 className="font-semibold text-sm line-clamp-2 mb-2">
-                        {article.title}
-                      </h3>
-                      {article.category && (
-                        <span className="text-xs text-muted-foreground">
-                          {article.category.nameAr}
-                        </span>
-                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-base line-clamp-2 sm:line-clamp-3 mb-2">
+                          {article.title}
+                        </h3>
+                        {article.category && (
+                          <span className="text-xs text-muted-foreground">
+                            {article.category.nameAr}
+                          </span>
+                        )}
+                      </div>
                     </a>
                   ))}
                 </div>

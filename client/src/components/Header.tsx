@@ -39,11 +39,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     queryKey: ["/api/categories"],
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch?.(searchQuery);
-  };
-
   const handleLogout = async () => {
     try {
       await apiRequest("/api/logout", { method: "POST" });
