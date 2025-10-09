@@ -184,6 +184,7 @@ export default function ArticleEditor() {
         categoryId: categoryId || null,
         imageUrl: imageUrl || "",
         newsType,
+        isFeatured: newsType === "featured",
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? scheduledAt : null,
         status: publishNow 
