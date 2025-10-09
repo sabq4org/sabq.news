@@ -144,6 +144,7 @@ export default function ArticleEditor() {
 
       // Extract the actual file path without query parameters
       const fileUrl = uploadData.uploadURL.split('?')[0];
+      console.log("[Image Upload] File URL:", fileUrl);
 
       const aclData = await apiRequest("/api/article-images", {
         method: "PUT",
@@ -153,11 +154,14 @@ export default function ArticleEditor() {
         },
       }) as { objectPath: string };
 
+      console.log("[Image Upload] ACL Response:", aclData);
+      console.log("[Image Upload] Object Path:", aclData.objectPath);
+
       setImageUrl(aclData.objectPath);
 
       toast({
         title: "تم الرفع بنجاح",
-        description: "تم رفع الصورة بنجاح",
+        description: `الرابط: ${aclData.objectPath.substring(0, 50)}...`,
       });
     } catch (error) {
       console.error("Error uploading image:", error);

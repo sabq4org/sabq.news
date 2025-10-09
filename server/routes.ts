@@ -2509,6 +2509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = req.user?.id;
 
     try {
+      console.log("[Article Image] Received imageURL:", req.body.imageURL);
       const objectStorageService = new ObjectStorageService();
       const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
         req.body.imageURL,
@@ -2518,9 +2519,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
+      console.log("[Article Image] Returning objectPath:", objectPath);
       res.status(200).json({ objectPath });
     } catch (error) {
-      console.error("Error setting article image:", error);
+      console.error("[Article Image] Error setting article image:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
