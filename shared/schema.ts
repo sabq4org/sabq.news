@@ -156,11 +156,11 @@ export const interests = pgTable("interests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// User interests (many-to-many) with weights
+// User interests (many-to-many) with weights - links users to categories they're interested in
 export const userInterests = pgTable("user_interests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  interestId: varchar("interest_id").references(() => interests.id).notNull(),
+  categoryId: varchar("category_id").references(() => categories.id).notNull(),
   weight: real("weight").default(1.0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

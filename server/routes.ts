@@ -233,9 +233,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .returning();
 
-      res.status(201).json({ 
-        message: "تم إنشاء الحساب بنجاح", 
-        user: { id: newUser.id, email: newUser.email } 
+      // Auto-login after registration
+      req.logIn(newUser, (err) => {
+        if (err) {
+          console.error("❌ Session creation error after registration:", err);
+          return res.status(500).json({ message: "تم إنشاء الحساب ولكن فشل تسجيل الدخول التلقائي" });
+        }
+        
+        console.log("✅ User registered and logged in:", newUser.email);
+        res.status(201).json({ 
+          message: "تم إنشاء الحساب بنجاح", 
+          user: { id: newUser.id, email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName } 
+        });
       });
     } catch (error) {
       console.error("Registration error:", error);
