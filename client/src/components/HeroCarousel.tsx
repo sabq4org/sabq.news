@@ -3,7 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Volume2, TrendingUp, Bell, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Volume2, TrendingUp, Bell, Eye } from "lucide-react";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -146,42 +146,30 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
       </div>
 
       {articles.length > 1 && (
-        <>
-          <Button
-            size="icon"
-            variant="outline"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 hover-elevate active-elevate-2"
-            onClick={scrollNext}
-            data-testid="button-carousel-next"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant="outline"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 hover-elevate active-elevate-2"
-            onClick={scrollPrev}
-            data-testid="button-carousel-prev"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-2">
-            {articles.map((_, index) => (
-              <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === selectedIndex
-                    ? "bg-white w-8"
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
-                onClick={() => emblaApi?.scrollTo(index)}
-                data-testid={`button-carousel-dot-${index}`}
-              />
-            ))}
-          </div>
-        </>
+        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-30 flex gap-2 justify-center w-full px-4">
+          {articles.map((article, index) => (
+            <button
+              key={index}
+              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden transition-all border-2 ${
+                index === selectedIndex
+                  ? "border-primary scale-110 shadow-lg"
+                  : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+              onClick={() => emblaApi?.scrollTo(index)}
+              data-testid={`button-carousel-thumbnail-${index}`}
+            >
+              {article.imageUrl ? (
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+              )}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
