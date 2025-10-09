@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           passwordHash,
           firstName: firstName || null,
           lastName: lastName || null,
-          isProfileComplete: !!(firstName && lastName),
+          isProfileComplete: false, // Always false for new users - will be set to true after onboarding
         })
         .returning();
 
