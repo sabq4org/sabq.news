@@ -56,7 +56,7 @@ export function RecommendationsWidget({
                           <img
                             src={article.imageUrl}
                             alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                             loading="lazy"
                           />
                         ) : (

@@ -43,7 +43,7 @@ export function ArticleCard({
               <img
                 src={article.imageUrl}
                 alt={article.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
@@ -75,8 +75,10 @@ export function ArticleCard({
                 </p>
               )}
               <div className="flex items-center gap-4 text-sm text-white/80">
-                {article.author?.name && (
-                  <span className="font-medium">{article.author.name}</span>
+                {article.author && (
+                  <span className="font-medium">
+                    {article.author.firstName} {article.author.lastName}
+                  </span>
                 )}
                 {timeAgo && (
                   <span className="flex items-center gap-1">
@@ -102,7 +104,7 @@ export function ArticleCard({
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-32 h-32 object-cover rounded-md"
+                  className="w-32 h-32 object-cover object-center rounded-md"
                   loading="lazy"
                 />
               ) : (
@@ -190,7 +192,7 @@ export function ArticleCard({
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
           ) : (

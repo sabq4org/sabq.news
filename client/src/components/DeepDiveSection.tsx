@@ -38,7 +38,7 @@ export function DeepDiveSection({ articles }: DeepDiveSectionProps) {
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                   />
                   <div className="absolute top-2 left-2">
                     <Badge variant="default" className="bg-primary">

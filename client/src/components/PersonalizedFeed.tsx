@@ -40,7 +40,7 @@ export function PersonalizedFeed({ articles, title = "لك خصيصًا", showRe
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                   />
                   {article.aiSummary && (
                     <div className="absolute top-2 left-2">
