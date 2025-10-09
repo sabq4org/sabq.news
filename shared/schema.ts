@@ -430,6 +430,7 @@ export const updateUserSchema = z.object({
   bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  isProfileComplete: z.boolean().optional(),
 });
 
 export const adminUpdateUserSchema = z.object({

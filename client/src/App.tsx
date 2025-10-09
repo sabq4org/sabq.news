@@ -25,6 +25,9 @@ import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
 import ThemeManager from "@/pages/ThemeManager";
 import NotificationSettings from "@/pages/NotificationSettings";
+import Welcome from "@/pages/onboarding/Welcome";
+import OnboardingInterests from "@/pages/onboarding/SelectInterests";
+import Personalize from "@/pages/onboarding/Personalize";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -51,6 +54,9 @@ function Router() {
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />
       <Route path="/notification-settings" component={NotificationSettings} />
+      <Route path="/onboarding/welcome" component={Welcome} />
+      <Route path="/onboarding/interests" component={OnboardingInterests} />
+      <Route path="/onboarding/personalize" component={Personalize} />
       <Route component={NotFound} />
     </Switch>
   );

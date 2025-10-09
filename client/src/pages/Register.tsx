@@ -58,8 +58,8 @@ export default function Register() {
         description: "يمكنك الآن تسجيل الدخول",
       });
 
-      // Redirect to login
-      navigate("/login");
+      // Redirect to onboarding welcome page
+      navigate("/onboarding/welcome");
     } catch (error: any) {
       toast({
         title: "فشل إنشاء الحساب",
