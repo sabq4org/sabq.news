@@ -417,6 +417,103 @@ export const notificationMetrics = pgTable("notification_metrics", {
   index("idx_notification_metrics_type").on(table.type),
 ]);
 
+// User Loyalty Events (points earning log)
+export const userLoyaltyEvents = pgTable("user_loyalty_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // READ, LIKE, SHARE, COMMENT, NOTIFICATION_OPEN, etc.
+  points: integer("points").notNull(),
+  source: text("source"), // article_id, comment_id, etc.
+  campaignId: varchar("campaign_id").references(() => loyaltyCampaigns.id), // للربط بالحملة
+  metadata: jsonb("metadata").$type<{
+    articleId?: string;
+    commentId?: string;
+    duration?: number;
+    extraInfo?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_loyalty_events_user_created").on(table.userId, table.createdAt),
+  index("idx_loyalty_events_action").on(table.action),
+]);
+
+// User Points Total (aggregated points and rank)
+export const userPointsTotal = pgTable("user_points_total", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  totalPoints: integer("total_points").default(0).notNull(),
+  currentRank: text("current_rank").default("القارئ الجديد").notNull(), // القارئ الجديد, المتفاعل, العضو الذهبي, سفير سبق
+  lifetimePoints: integer("lifetime_points").default(0).notNull(), // لا ينقص أبداً
+  lastActivityAt: timestamp("last_activity_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Loyalty Rewards (available rewards)
+export const loyaltyRewards = pgTable("loyalty_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nameAr: text("name_ar").notNull(),
+  nameEn: text("name_en").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  pointsCost: integer("points_cost").notNull(),
+  rewardType: text("reward_type").notNull(), // COUPON, BADGE, CONTENT_ACCESS, PARTNER_REWARD
+  partnerName: text("partner_name"), // STC, Jarir, Noon, etc.
+  rewardData: jsonb("reward_data").$type<{
+    couponCode?: string;
+    badgeIcon?: string;
+    partnerApiData?: Record<string, any>;
+  }>(),
+  stock: integer("stock"), // null = unlimited
+  remainingStock: integer("remaining_stock"), // يتناقص مع كل استبدال
+  maxRedemptionsPerUser: integer("max_redemptions_per_user"), // null = unlimited
+  isActive: boolean("is_active").default(true).notNull(),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User Rewards History (reward redemption log)
+export const userRewardsHistory = pgTable("user_rewards_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  rewardId: varchar("reward_id").references(() => loyaltyRewards.id).notNull(),
+  pointsSpent: integer("points_spent").notNull(),
+  status: text("status").default("pending").notNull(), // pending, delivered, expired, cancelled
+  rewardSnapshot: jsonb("reward_snapshot").$type<{
+    nameAr: string;
+    nameEn: string;
+    pointsCost: number;
+    rewardType: string;
+  }>(), // لحفظ تفاصيل الجائزة وقت الاستبدال
+  deliveryData: jsonb("delivery_data").$type<{
+    couponCode?: string;
+    trackingInfo?: string;
+  }>(),
+  redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
+  deliveredAt: timestamp("delivered_at"),
+}, (table) => [
+  index("idx_rewards_history_user").on(table.userId),
+  index("idx_rewards_history_status").on(table.status),
+]);
+
+// Loyalty Campaigns (promotional campaigns)
+export const loyaltyCampaigns = pgTable("loyalty_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nameAr: text("name_ar").notNull(),
+  nameEn: text("name_en").notNull(),
+  description: text("description"),
+  campaignType: text("campaign_type").notNull(), // BONUS_POINTS, MULTIPLIER, SPECIAL_EVENT
+  targetAction: text("target_action"), // READ, SHARE, etc. (null = all actions)
+  multiplier: real("multiplier").default(1.0), // 2.0 = نقاط مضاعفة
+  bonusPoints: integer("bonus_points").default(0),
+  targetCategory: varchar("target_category").references(() => categories.id), // null = all categories
+  isActive: boolean("is_active").default(true).notNull(),
+  startAt: timestamp("start_at").notNull(),
+  endAt: timestamp("end_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_campaigns_active_dates").on(table.isActive, table.startAt, table.endAt),
+]);
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -580,6 +677,32 @@ export const insertNotificationMetricsSchema = createInsertSchema(notificationMe
   openedAt: true,
   clickedAt: true,
   dismissedAt: true,
+});
+
+export const insertUserLoyaltyEventSchema = createInsertSchema(userLoyaltyEvents).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserPointsTotalSchema = createInsertSchema(userPointsTotal).omit({ 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertLoyaltyRewardSchema = createInsertSchema(loyaltyRewards).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserRewardsHistorySchema = createInsertSchema(userRewardsHistory).omit({ 
+  id: true, 
+  redeemedAt: true,
+  deliveredAt: true,
+});
+
+export const insertLoyaltyCampaignSchema = createInsertSchema(loyaltyCampaigns).omit({ 
+  id: true, 
+  createdAt: true 
 });
 
 export const updateArticleSchema = z.object({
@@ -768,3 +891,18 @@ export type UserProfile = User & {
     trendingSentiments: string[];
   };
 };
+
+export type UserLoyaltyEvent = typeof userLoyaltyEvents.$inferSelect;
+export type InsertUserLoyaltyEvent = z.infer<typeof insertUserLoyaltyEventSchema>;
+
+export type UserPointsTotal = typeof userPointsTotal.$inferSelect;
+export type InsertUserPointsTotal = z.infer<typeof insertUserPointsTotalSchema>;
+
+export type LoyaltyReward = typeof loyaltyRewards.$inferSelect;
+export type InsertLoyaltyReward = z.infer<typeof insertLoyaltyRewardSchema>;
+
+export type UserRewardsHistory = typeof userRewardsHistory.$inferSelect;
+export type InsertUserRewardsHistory = z.infer<typeof insertUserRewardsHistorySchema>;
+
+export type LoyaltyCampaign = typeof loyaltyCampaigns.$inferSelect;
+export type InsertLoyaltyCampaign = z.infer<typeof insertLoyaltyCampaignSchema>;
