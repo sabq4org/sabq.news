@@ -216,10 +216,11 @@ export class ObjectStorageService {
       const publicDir = publicPaths[0]; // Use first public path
       
       // Get the relative path (e.g., "uploads/xxx")
-      const relativePath = objectFile.name.replace(`${objectFile.bucket.name}/.private/`, '');
+      // objectFile.name is like ".private/uploads/xxx", we want just "uploads/xxx"
+      const relativePath = objectFile.name.replace('.private/', '');
       
       // Create new public path
-      const newObjectName = `${objectFile.bucket.name}/public/${relativePath}`;
+      const newObjectName = `public/${relativePath}`;
       const newFile = objectStorageClient.bucket(objectFile.bucket.name).file(newObjectName);
       
       console.log("[ObjectStorage] Moving file from private to public:");
