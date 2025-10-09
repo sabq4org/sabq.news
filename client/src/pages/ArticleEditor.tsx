@@ -228,9 +228,10 @@ export default function ArticleEditor() {
         title: variables.publishNow ? "تم النشر بنجاح" : "تم الحفظ بنجاح",
         description: variables.publishNow ? "تم نشر المقال بنجاح" : "تم حفظ المقال كمسودة",
       });
-      if (isNewArticle && data?.id) {
-        navigate(`/dashboard/articles/${data.id}`);
-      }
+      // العودة للصفحة السابقة (لوحة التحكم)
+      setTimeout(() => {
+        navigate("/dashboard/articles");
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
