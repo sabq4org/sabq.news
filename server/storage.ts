@@ -101,6 +101,7 @@ export interface IStorage {
   // Bookmark operations
   toggleBookmark(articleId: string, userId: string): Promise<{ isBookmarked: boolean }>;
   getUserBookmarks(userId: string): Promise<ArticleWithDetails[]>;
+  getUserLikedArticles(userId: string): Promise<ArticleWithDetails[]>;
   
   // Reading history operations
   recordArticleRead(userId: string, articleId: string, duration?: number): Promise<void>;
@@ -528,6 +529,28 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.author || undefined,
       isBookmarked: true,
+    }));
+  }
+
+  async getUserLikedArticles(userId: string): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(reactions)
+      .innerJoin(articles, eq(reactions.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(and(eq(reactions.userId, userId), eq(articles.status, "published")))
+      .orderBy(desc(reactions.createdAt));
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+      hasReacted: true,
     }));
   }
 

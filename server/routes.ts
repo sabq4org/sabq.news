@@ -2218,7 +2218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/profile/liked", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const articles = await storage.getArticles({ status: "published" });
+      const articles = await storage.getUserLikedArticles(userId);
       res.json(articles);
     } catch (error) {
       console.error("Error fetching liked articles:", error);
