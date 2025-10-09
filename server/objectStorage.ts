@@ -208,15 +208,41 @@ export class ObjectStorageService {
     }
 
     const objectFile = await this.getObjectEntityFile(normalizedPath);
-    await setObjectAclPolicy(objectFile, aclPolicy);
     
-    // If visibility is public, return the public HTTPS URL
+    // If visibility is public, move file from .private to public directory
     if (aclPolicy.visibility === "public") {
-      const bucketName = objectFile.bucket.name;
-      const objectName = objectFile.name;
-      return `https://storage.googleapis.com/${bucketName}/${objectName}`;
+      const privateDir = this.getPrivateObjectDir();
+      const publicPaths = this.getPublicObjectSearchPaths();
+      const publicDir = publicPaths[0]; // Use first public path
+      
+      // Get the relative path (e.g., "uploads/xxx")
+      const relativePath = objectFile.name.replace(`${objectFile.bucket.name}/.private/`, '');
+      
+      // Create new public path
+      const newObjectName = `${objectFile.bucket.name}/public/${relativePath}`;
+      const newFile = objectStorageClient.bucket(objectFile.bucket.name).file(newObjectName);
+      
+      console.log("[ObjectStorage] Moving file from private to public:");
+      console.log("  From:", objectFile.name);
+      console.log("  To:", newObjectName);
+      
+      // Copy file to public location
+      await objectFile.copy(newFile);
+      
+      // Set ACL on new file
+      await setObjectAclPolicy(newFile, aclPolicy);
+      
+      // Delete original private file
+      await objectFile.delete();
+      
+      // Return public HTTPS URL
+      const publicUrl = `https://storage.googleapis.com/${objectFile.bucket.name}/public/${relativePath}`;
+      console.log("[ObjectStorage] Returning public URL:", publicUrl);
+      return publicUrl;
     }
     
+    // For private files, just set ACL
+    await setObjectAclPolicy(objectFile, aclPolicy);
     return normalizedPath;
   }
 
