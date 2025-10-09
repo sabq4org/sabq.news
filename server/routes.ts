@@ -1830,6 +1830,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const result = await storage.toggleReaction(req.params.id, userId);
+
+      // إضافة نقطة ولاء عند الإعجاب (ليس عند الإلغاء)
+      if (result.hasReacted) {
+        try {
+          await storage.recordLoyaltyPoints({
+            userId,
+            action: "LIKE",
+            points: 1,
+            source: req.params.id,
+            metadata: { articleId: req.params.id }
+          });
+        } catch (error) {
+          console.error("Error recording loyalty points:", error);
+          // Don't fail the request if loyalty fails
+        }
+      }
+
       res.json(result);
     } catch (error) {
       console.error("Error toggling reaction:", error);
@@ -1868,6 +1885,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const comment = await storage.createComment(parsed.data);
+
+      // إضافة نقطة ولاء للتعليق
+      try {
+        await storage.recordLoyaltyPoints({
+          userId,
+          action: "COMMENT",
+          points: 1,
+          source: article.id,
+          metadata: { articleId: article.id, commentId: comment.id }
+        });
+      } catch (error) {
+        console.error("Error recording loyalty points:", error);
+      }
+
       res.json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -2372,6 +2403,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventType,
         metadata: sanitizedMetadata,
       });
+
+      // إضافة نقاط ولاء بناءً على نوع السلوك
+      try {
+        let loyaltyPoints = 0;
+        let action = "";
+        
+        const meta = sanitizedMetadata as Record<string, any>;
+        
+        switch(eventType) {
+          case "article_view":
+            loyaltyPoints = 2;
+            action = "READ";
+            break;
+          case "article_read":
+            // قراءة أكثر من 60 ثانية
+            if (meta.duration && typeof meta.duration === 'number' && meta.duration >= 60) {
+              loyaltyPoints = 3;
+              action = "READ_DEEP";
+            }
+            break;
+          // يمكن إضافة المزيد لاحقاً
+        }
+        
+        if (loyaltyPoints > 0 && action) {
+          await storage.recordLoyaltyPoints({
+            userId,
+            action,
+            points: loyaltyPoints,
+            source: (meta.articleId || meta.slug) as string | undefined,
+            metadata: meta
+          });
+        }
+      } catch (error) {
+        console.error("Error recording loyalty points:", error);
+      }
 
       res.json({ success: true });
     } catch (error) {
