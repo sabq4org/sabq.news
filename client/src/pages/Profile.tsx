@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
 import type { ArticleWithDetails, User as UserType } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
@@ -286,6 +287,9 @@ export default function Profile() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Smart Interests */}
+            <SmartInterestsBlock userId={user.id} />
 
             {/* Stats */}
             <Card>
