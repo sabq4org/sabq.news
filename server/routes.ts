@@ -13,6 +13,8 @@ import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
+import multer from "multer";
+import { randomUUID } from "crypto";
 import { 
   users, 
   roles, 
@@ -483,6 +485,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile image:", error);
       res.status(500).json({ message: "فشل في تحديث الصورة الشخصية" });
+    }
+  });
+
+  // Simplified avatar upload endpoint - single step upload
+  const avatarUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB max
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مسموح. الأنواع المسموحة: JPG, PNG, WEBP'));
+      }
+    },
+  });
+
+  app.post("/api/profile/upload-avatar", isAuthenticated, avatarUpload.single('avatar'), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم اختيار ملف" });
+      }
+
+      console.log("[Avatar Upload] File received:", {
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      // Extract bucket ID from PRIVATE_OBJECT_DIR environment variable
+      // Format: /objects/<bucket-id>/.private
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
+      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
+
+      if (!bucketId) {
+        throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');
+      }
+
+      // Generate unique filename
+      const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
+      const objectId = randomUUID();
+      
+      // Build object path (simple, no complex directory structure)
+      const objectPath = `uploads/avatars/${objectId}.${fileExtension}`;
+
+      console.log("[Avatar Upload] Uploading to bucket:", bucketId, "path:", objectPath);
+
+      // Upload file directly to GCS with public access
+      const { objectStorageClient } = await import('./objectStorage');
+      const bucket = objectStorageClient.bucket(bucketId);
+      const file = bucket.file(objectPath);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+        predefinedAcl: 'publicRead', // Make it public directly
+      });
+
+      console.log("[Avatar Upload] File uploaded successfully with public access");
+
+      // Build public URL manually
+      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+
+      console.log("[Avatar Upload] Public URL:", publicUrl);
+
+      // Update user profile with the public URL
+      const user = await storage.updateUser(userId, { 
+        profileImageUrl: publicUrl 
+      });
+
+      console.log("[Avatar Upload] User updated with new avatar:", user.profileImageUrl);
+
+      res.json({ 
+        success: true,
+        profileImageUrl: publicUrl,
+        user
+      });
+    } catch (error: any) {
+      console.error("Error uploading avatar:", error);
+      
+      // Handle multer errors
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "الملف كبير جداً. الحد الأقصى 5MB" });
+      }
+      
+      if (error.message?.includes('نوع الملف')) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: "فشل في رفع الصورة" });
     }
   });
 

@@ -39,10 +39,8 @@ import {
   Star,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
-import { ObjectUploader } from "@/components/ObjectUploader";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
 import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
-import type { UploadResult } from "@uppy/core";
 
 const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
@@ -57,6 +55,8 @@ type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 export default function Profile() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("bookmarks");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data: user } = useQuery<UserType>({
     queryKey: ["/api/auth/user"],
@@ -95,6 +95,88 @@ export default function Profile() {
       });
     },
   });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const response = await fetch('/api/profile/upload-avatar', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'فشل في رفع الصورة');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      toast({
+        title: "تم التحديث بنجاح",
+        description: "تم تحديث صورتك الشخصية",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في رفع الصورة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "نوع ملف غير صحيح",
+        description: "الأنواع المسموحة: JPG, PNG, WEBP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "الملف كبير جداً",
+        description: "الحد الأقصى للحجم 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadAvatar = () => {
+    if (selectedFile) {
+      uploadAvatarMutation.mutate(selectedFile);
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
 
   const onSubmit = (data: UpdateUserFormData) => {
     updateMutation.mutate(data);
@@ -223,7 +305,7 @@ export default function Profile() {
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                   <AvatarImage 
-                    src={user.profileImageUrl || ""} 
+                    src={previewUrl || user.profileImageUrl || ""} 
                     alt={getUserDisplayName()}
                     className="object-cover"
                     data-testid="img-profile-avatar"
@@ -233,51 +315,67 @@ export default function Profile() {
                   </AvatarFallback>
                 </Avatar>
                 
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={5242880}
-                  allowedFileTypes={['.jpg', '.jpeg', '.png', '.webp']}
-                  onGetUploadParameters={async () => {
-                    const response = await apiRequest("/api/profile/image/upload", {
-                      method: "POST",
-                    });
-                    return {
-                      method: "PUT" as const,
-                      url: response.uploadURL,
-                    };
-                  }}
-                  onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                    try {
-                      if (result.successful && result.successful[0]) {
-                        const uploadURL = result.successful[0].uploadURL;
-                        
-                        const response = await apiRequest("/api/profile/image", {
-                          method: "PUT",
-                          body: JSON.stringify({ profileImageUrl: uploadURL }),
-                        });
-                        
-                        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                        
-                        toast({
-                          title: "تم التحديث بنجاح",
-                          description: "تم تحديث صورتك الشخصية",
-                        });
-                      }
-                    } catch (error) {
-                      console.error("Error uploading profile image:", error);
-                      toast({
-                        title: "خطأ",
-                        description: "فشل في رفع الصورة. حاول مرة أخرى.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  buttonClassName="absolute bottom-0 right-0 h-10 w-10 rounded-full shadow-lg"
-                >
-                  <Upload className="h-4 w-4" />
-                </ObjectUploader>
+                {!selectedFile ? (
+                  <>
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      data-testid="input-avatar-file"
+                    />
+                    <label htmlFor="avatar-upload">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute bottom-0 right-0 h-10 w-10 rounded-full shadow-lg cursor-pointer"
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        data-testid="button-change-avatar"
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </label>
+                    <p className="absolute -bottom-8 right-0 text-xs text-muted-foreground whitespace-nowrap">
+                      JPG, PNG, WEBP (حتى 5MB)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute bottom-0 right-0 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="icon"
+                        className="h-10 w-10 rounded-full shadow-lg"
+                        onClick={handleUploadAvatar}
+                        disabled={uploadAvatarMutation.isPending}
+                        data-testid="button-upload-avatar"
+                      >
+                        {uploadAvatarMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="h-10 w-10 rounded-full shadow-lg"
+                        onClick={handleCancelUpload}
+                        disabled={uploadAvatarMutation.isPending}
+                        data-testid="button-cancel-avatar"
+                      >
+                        <span className="text-lg">×</span>
+                      </Button>
+                    </div>
+                    <p className="absolute -bottom-8 right-0 text-xs text-primary whitespace-nowrap">
+                      اضغط ✓ للرفع أو × للإلغاء
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="flex-1 space-y-2">

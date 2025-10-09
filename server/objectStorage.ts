@@ -199,6 +199,14 @@ export class ObjectStorageService {
 
     const objectFile = await this.getObjectEntityFile(normalizedPath);
     await setObjectAclPolicy(objectFile, aclPolicy);
+    
+    // If visibility is public, return the public HTTPS URL
+    if (aclPolicy.visibility === "public") {
+      const bucketName = objectFile.bucket.name;
+      const objectName = objectFile.name;
+      return `https://storage.googleapis.com/${bucketName}/${objectName}`;
+    }
+    
     return normalizedPath;
   }
 
