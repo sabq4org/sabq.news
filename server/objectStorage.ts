@@ -230,7 +230,10 @@ export class ObjectStorageService {
       // Copy file to public location
       await objectFile.copy(newFile);
       
-      // Set ACL on new file
+      // Make file publicly readable on GCS
+      await newFile.makePublic();
+      
+      // Set ACL policy in metadata
       await setObjectAclPolicy(newFile, aclPolicy);
       
       // Delete original private file
