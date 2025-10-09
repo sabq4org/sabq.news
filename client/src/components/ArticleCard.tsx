@@ -38,7 +38,7 @@ export function ArticleCard({
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
         <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 border-0 shadow-lg">
-          <div className="relative aspect-[21/9] overflow-hidden">
+          <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             {article.imageUrl ? (
               <img
                 src={article.imageUrl}
@@ -49,32 +49,32 @@ export function ArticleCard({
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
             
-            <div className="absolute top-4 right-4 flex gap-2">
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
               {article.category && (
-                <Badge variant="default" className="shadow-lg" data-testid={`badge-category-${article.id}`}>
+                <Badge variant="default" className="shadow-lg text-xs sm:text-sm" data-testid={`badge-category-${article.id}`}>
                   {article.category.icon} {article.category.nameAr}
                 </Badge>
               )}
               {article.aiGenerated && (
-                <Badge variant="secondary" className="shadow-lg gap-1" data-testid={`badge-ai-${article.id}`}>
+                <Badge variant="secondary" className="shadow-lg gap-1 text-xs sm:text-sm" data-testid={`badge-ai-${article.id}`}>
                   <Sparkles className="h-3 w-3" />
                   ذكاء اصطناعي
                 </Badge>
               )}
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
                 {article.title}
               </h2>
               {article.excerpt && (
-                <p className="text-base sm:text-lg text-white/90 mb-4 line-clamp-2 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 line-clamp-2 leading-relaxed">
                   {article.excerpt}
                 </p>
               )}
-              <div className="flex items-center gap-4 text-sm text-white/80">
+              <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-white/80 flex-wrap">
                 {article.author && (
                   <span className="font-medium">
                     {article.author.firstName} {article.author.lastName}
@@ -82,7 +82,7 @@ export function ArticleCard({
                 )}
                 {timeAgo && (
                   <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                     {timeAgo}
                   </span>
                 )}
