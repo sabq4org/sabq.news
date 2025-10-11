@@ -25,7 +25,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
       </div>
       
       <p className="text-muted-foreground">
-        نشر كل الأخبار المضافة مرتبة من الأقدم إلى الأحدث
+        نشر كل الأخبار المضافة مرتبة من الأحدث إلى الأقدم
       </p>
 
       <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:space-y-0">

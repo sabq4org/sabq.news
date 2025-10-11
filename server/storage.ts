@@ -914,7 +914,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
       .where(eq(articles.status, "published"))
-      .orderBy(asc(articles.publishedAt))
+      .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
