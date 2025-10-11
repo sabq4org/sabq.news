@@ -1882,7 +1882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trendingTopics,
       ] = await Promise.all([
         storage.getHeroArticles(),
-        userId ? storage.getRecommendations(userId) : storage.getBreakingNews(6),
+        storage.getAllPublishedArticles(16),
         storage.getBreakingNews(5),
         storage.getEditorPicks(6),
         storage.getDeepDiveArticles(6),

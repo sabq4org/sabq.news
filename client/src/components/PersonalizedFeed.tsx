@@ -12,7 +12,7 @@ interface PersonalizedFeedProps {
   showReason?: boolean;
 }
 
-export function PersonalizedFeed({ articles, title = "لك خصيصًا", showReason = true }: PersonalizedFeedProps) {
+export function PersonalizedFeed({ articles, title = "جميع الأخبار", showReason = false }: PersonalizedFeedProps) {
   if (!articles || articles.length === 0) return null;
 
   return (
@@ -25,7 +25,7 @@ export function PersonalizedFeed({ articles, title = "لك خصيصًا", showRe
       </div>
       
       <p className="text-muted-foreground">
-        مقالات مختارة بعناية بناءً على اهتماماتك وتفضيلاتك
+        نشر كل الأخبار المضافة مرتبة من الأقدم إلى الأحدث
       </p>
 
       <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:space-y-0">

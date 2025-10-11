@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, sql, and, or, inArray, ne, gte, lte } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte } from "drizzle-orm";
 import {
   users,
   categories,
@@ -133,6 +133,7 @@ export interface IStorage {
   getEditorPicks(limit?: number): Promise<ArticleWithDetails[]>;
   getDeepDiveArticles(limit?: number): Promise<ArticleWithDetails[]>;
   getTrendingTopics(): Promise<Array<{ topic: string; count: number }>>;
+  getAllPublishedArticles(limit?: number): Promise<ArticleWithDetails[]>;
   
   // Dashboard stats
   getDashboardStats(userId: string): Promise<{
@@ -893,6 +894,27 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async getAllPublishedArticles(limit: number = 16): Promise<ArticleWithDetails[]> {
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, "published"))
+      .orderBy(asc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({

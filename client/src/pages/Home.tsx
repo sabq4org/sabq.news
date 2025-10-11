@@ -96,8 +96,8 @@ export default function Home() {
         {homepage.forYou && homepage.forYou.length > 0 && (
           <PersonalizedFeed 
             articles={homepage.forYou}
-            title={user ? "لك خصيصًا" : "مختارات لك"}
-            showReason={!!user}
+            title="جميع الأخبار"
+            showReason={false}
           />
         )}
 
