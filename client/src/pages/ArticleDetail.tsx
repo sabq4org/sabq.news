@@ -345,12 +345,6 @@ export default function ArticleDetail() {
                 {article.title}
               </h1>
 
-              {article.excerpt && (
-                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-                  {article.excerpt}
-                </p>
-              )}
-
               {/* Author & Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 {article.author && (
