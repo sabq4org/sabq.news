@@ -60,32 +60,31 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           {articles.map((article) => (
             <div key={article.id} className="embla__slide relative flex-shrink-0 flex-grow-0" style={{ flexBasis: '100%' }}>
               <Link href={`/article/${article.slug}`}>
-                <div className="relative h-[280px] md:h-[400px] cursor-pointer group flex flex-row">
-                  {/* Image - 65% of width */}
-                  <div className="w-[65%] md:w-1/2 h-full relative overflow-hidden">
-                    {article.imageUrl ? (
+                {/* Mobile: Vertical Layout */}
+                <div className="md:hidden relative cursor-pointer group">
+                  {/* Image */}
+                  {article.imageUrl && (
+                    <div className="relative h-48 overflow-hidden rounded-t-lg">
                       <img
                         src={article.imageUrl}
                         alt={article.title}
                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                         loading="eager"
                       />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
-                    )}
-                  </div>
-
-                  {/* Content - 35% of width */}
-                  <div className={`w-[35%] md:w-1/2 h-full flex flex-col justify-center p-3 md:p-8 lg:p-12 ${
+                    </div>
+                  )}
+                  
+                  {/* Content */}
+                  <div className={`p-4 rounded-b-lg ${
                     article.newsType === "breaking" 
                       ? "bg-destructive/10" 
                       : "bg-card"
                   }`}>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {article.newsType === "breaking" ? (
                         <Badge 
                           variant="destructive" 
-                          className="w-fit"
+                          className="w-fit text-xs"
                           data-testid={`badge-breaking-${article.id}`}
                         >
                           🔴 عاجل
@@ -93,7 +92,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       ) : article.isFeatured ? (
                         <Badge 
                           variant="default" 
-                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 text-xs"
                           data-testid={`badge-featured-${article.id}`}
                         >
                           ⭐ مميز
@@ -101,6 +100,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       ) : article.category && (
                         <Badge 
                           variant="default" 
+                          className="w-fit text-xs"
                           data-testid={`badge-category-${article.id}`}
                         >
                           {article.category.nameAr}
@@ -108,7 +108,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       )}
                       
                       <h1 
-                        className={`text-2xl md:text-3xl lg:text-4xl font-bold line-clamp-3 ${
+                        className={`text-lg font-bold line-clamp-2 ${
                           article.newsType === "breaking"
                             ? "text-destructive"
                             : "text-foreground"
@@ -119,19 +119,99 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       </h1>
                       
                       {article.excerpt && (
-                        <p className="text-muted-foreground text-sm md:text-base line-clamp-2">
+                        <p className="text-muted-foreground text-sm line-clamp-2">
                           {article.excerpt}
                         </p>
                       )}
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3 w-3" />
                           <span>{article.views || 0}</span>
                         </div>
                         {article.publishedAt && (
-                          <span>{formatPublishedDate(article.publishedAt)}</span>
+                          <span className="text-xs">{formatPublishedDate(article.publishedAt)}</span>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop: Horizontal Layout */}
+                <div className="hidden md:block relative h-[400px] cursor-pointer group">
+                  <div className="flex flex-row h-full">
+                    {/* Image - 50% of width */}
+                    <div className="w-1/2 h-full relative overflow-hidden">
+                      {article.imageUrl ? (
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                      )}
+                    </div>
+
+                    {/* Content - 50% of width */}
+                    <div className={`w-1/2 h-full flex flex-col justify-center p-8 lg:p-12 ${
+                      article.newsType === "breaking" 
+                        ? "bg-destructive/10" 
+                        : "bg-card"
+                    }`}>
+                      <div className="space-y-4">
+                        {article.newsType === "breaking" ? (
+                          <Badge 
+                            variant="destructive" 
+                            className="w-fit"
+                            data-testid={`badge-breaking-${article.id}`}
+                          >
+                            🔴 عاجل
+                          </Badge>
+                        ) : article.isFeatured ? (
+                          <Badge 
+                            variant="default" 
+                            className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+                            data-testid={`badge-featured-${article.id}`}
+                          >
+                            ⭐ مميز
+                          </Badge>
+                        ) : article.category && (
+                          <Badge 
+                            variant="default" 
+                            data-testid={`badge-category-${article.id}`}
+                          >
+                            {article.category.nameAr}
+                          </Badge>
+                        )}
+                        
+                        <h1 
+                          className={`text-3xl lg:text-4xl font-bold line-clamp-3 ${
+                            article.newsType === "breaking"
+                              ? "text-destructive"
+                              : "text-foreground"
+                          }`}
+                          data-testid={`heading-hero-title-${article.id}`}
+                        >
+                          {article.title}
+                        </h1>
+                        
+                        {article.excerpt && (
+                          <p className="text-muted-foreground text-base line-clamp-2">
+                            {article.excerpt}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{article.views || 0}</span>
+                          </div>
+                          {article.publishedAt && (
+                            <span>{formatPublishedDate(article.publishedAt)}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
