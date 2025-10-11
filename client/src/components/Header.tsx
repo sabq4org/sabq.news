@@ -21,6 +21,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 import type { Category } from "@shared/schema";
 
@@ -33,6 +34,14 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { theme, appTheme } = useTheme();
+
+  // Determine logo based on theme and active app theme
+  const currentLogo = appTheme?.assets?.logoLight && theme === 'light'
+    ? appTheme.assets.logoLight
+    : appTheme?.assets?.logoDark && theme === 'dark'
+    ? appTheme.assets.logoDark
+    : logoImage;
 
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -80,7 +89,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <Link href="/">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home">
                 <img 
-                  src={logoImage} 
+                  src={currentLogo} 
                   alt="سبق - SABQ" 
                   className="h-10 w-auto object-contain"
                 />
@@ -93,7 +102,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <Link href="/">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile">
                 <img 
-                  src={logoImage} 
+                  src={currentLogo} 
                   alt="سبق - SABQ" 
                   className="h-10 w-auto object-contain"
                 />

@@ -48,13 +48,17 @@ export function ThemeProvider({
 
     if (appTheme.tokens?.colors) {
       Object.entries(appTheme.tokens.colors).forEach(([key, value]) => {
+        // Apply both theme-specific and base CSS variables
         root.style.setProperty(`--theme-${key}`, value);
+        // Also apply to base variables if they match
+        root.style.setProperty(`--${key}`, value);
       });
     }
 
     if (appTheme.tokens?.fonts) {
       Object.entries(appTheme.tokens.fonts).forEach(([key, value]) => {
         root.style.setProperty(`--theme-font-${key}`, value);
+        root.style.setProperty(`--font-${key}`, value);
       });
     }
 
