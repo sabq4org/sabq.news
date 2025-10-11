@@ -129,6 +129,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <div className="md:hidden flex items-center gap-2">
               <ThemeToggle />
               
+              {user && <NotificationBell />}
+
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
