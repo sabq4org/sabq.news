@@ -24,6 +24,7 @@ import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
 import ThemeManager from "@/pages/ThemeManager";
+import ThemeEditor from "@/pages/ThemeEditor";
 import NotificationSettings from "@/pages/NotificationSettings";
 import Welcome from "@/pages/onboarding/Welcome";
 import OnboardingInterests from "@/pages/onboarding/SelectInterests";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
+      <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
