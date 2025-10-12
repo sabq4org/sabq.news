@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,23 +41,8 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Edit,
-  Trash2,
-  Eye,
-  Send,
-  Star,
-  Menu,
-  LogOut,
-  Users,
-  FolderTree,
-  FileText,
-  MessageSquare,
-  Shield,
-  UserCog,
-  ChevronRight,
-} from "lucide-react";
-import { Link } from "wouter";
+import { Edit, Trash2, Eye, Send, Star } from "lucide-react";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 // Update schema for admin
 const updateArticleSchema = z.object({
@@ -108,13 +92,8 @@ type Category = {
 };
 
 export default function ArticlesManagement() {
-  const [location] = useLocation();
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
-
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
 
   // State for dialogs and filters
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
@@ -123,7 +102,6 @@ export default function ArticlesManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Fetch articles with filters
   const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
@@ -301,147 +279,20 @@ export default function ArticlesManagement() {
   };
 
   return (
-    <div className="flex h-screen bg-background" dir="rtl">
-      {/* Sidebar */}
-      <aside
-        className={`bg-card border-l border-border transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0"
-        } overflow-hidden`}
-      >
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">س</span>
-            </div>
-            <span className="font-bold text-lg">سبق الذكية</span>
-          </div>
-
-          <nav className="space-y-1">
-            <Link href="/dashboard/users">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/users" ? "bg-accent" : ""
-                }`}
-                data-testid="link-users"
-              >
-                <Users className="h-5 w-5" />
-                <span>إدارة المستخدمين</span>
-              </a>
-            </Link>
-
-            <Link href="/dashboard/categories">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/categories" ? "bg-accent" : ""
-                }`}
-                data-testid="link-categories"
-              >
-                <FolderTree className="h-5 w-5" />
-                <span>إدارة التصنيفات</span>
-              </a>
-            </Link>
-
-            <Link href="/dashboard/articles">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/articles" ? "bg-accent" : ""
-                }`}
-                data-testid="link-articles"
-              >
-                <FileText className="h-5 w-5" />
-                <span>إدارة الأخبار</span>
-              </a>
-            </Link>
-
-            <Link href="/dashboard/comments">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/comments" ? "bg-accent" : ""
-                }`}
-                data-testid="link-comments"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>إدارة التعليقات</span>
-              </a>
-            </Link>
-
-            <Link href="/dashboard/roles">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/roles" ? "bg-accent" : ""
-                }`}
-                data-testid="link-roles"
-              >
-                <Shield className="h-5 w-5" />
-                <span>الأدوار والصلاحيات</span>
-              </a>
-            </Link>
-
-            <Link href="/dashboard/staff">
-              <a
-                className={`flex items-center gap-3 px-3 py-2 rounded-md hover-elevate active-elevate-2 ${
-                  location === "/dashboard/staff" ? "bg-accent" : ""
-                }`}
-                data-testid="link-staff"
-              >
-                <UserCog className="h-5 w-5" />
-                <span>إدارة الطاقم</span>
-              </a>
-            </Link>
-          </nav>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold" data-testid="heading-title">
+            إدارة الأخبار والمقالات
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            إدارة المحتوى الإخباري والمقالات
+          </p>
         </div>
 
-        <div className="absolute bottom-0 right-0 left-0 p-4 border-t border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>
-                {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {user?.firstName || user?.email}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={handleLogout}
-            data-testid="button-logout"
-          >
-            <LogOut className="h-4 w-4 ml-2" />
-            تسجيل الخروج
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              data-testid="button-toggle-sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold" data-testid="heading-title">
-                إدارة الأخبار والمقالات
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                إدارة المحتوى الإخباري والمقالات
-              </p>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-card rounded-lg border border-border p-4 mb-6">
+        {/* Filters */}
+        <div className="bg-card rounded-lg border border-border p-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <Input
@@ -620,17 +471,16 @@ export default function ArticlesManagement() {
             )}
           </div>
         </div>
-      </main>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingArticle} onOpenChange={() => setEditingArticle(null)}>
-        <DialogContent data-testid="dialog-edit">
-          <DialogHeader>
-            <DialogTitle>تحرير المقال</DialogTitle>
-          </DialogHeader>
+        {/* Edit Dialog */}
+        <Dialog open={!!editingArticle} onOpenChange={() => setEditingArticle(null)}>
+          <DialogContent data-testid="dialog-edit">
+            <DialogHeader>
+              <DialogTitle>تحرير المقال</DialogTitle>
+            </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="title"
@@ -638,7 +488,7 @@ export default function ArticlesManagement() {
                   <FormItem>
                     <FormLabel>العنوان</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-title" />
+                      <Input {...field} value={field.value || ""} data-testid="input-title" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -652,7 +502,7 @@ export default function ArticlesManagement() {
                   <FormItem>
                     <FormLabel>المقتطف</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-excerpt" />
+                      <Input {...field} value={field.value || ""} data-testid="input-excerpt" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -774,6 +624,6 @@ export default function ArticlesManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </DashboardLayout>
   );
 }
