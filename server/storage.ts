@@ -419,14 +419,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createArticle(article: InsertArticle): Promise<Article> {
-    const [created] = await db.insert(articles).values(article).returning();
+    const [created] = await db.insert(articles).values([article as any]).returning();
     return created;
   }
 
   async updateArticle(id: string, articleData: Partial<InsertArticle>): Promise<Article> {
+    const updateData: any = { ...articleData, updatedAt: new Date() };
     const [updated] = await db
       .update(articles)
-      .set({ ...articleData, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(articles.id, id))
       .returning();
     return updated;
@@ -1043,7 +1044,7 @@ export class DatabaseStorage implements IStorage {
         weight: userInterests.weight,
       })
       .from(userInterests)
-      .innerJoin(interests, eq(userInterests.interestId, interests.id))
+      .innerJoin(interests, eq(userInterests.categoryId, interests.id))
       .where(eq(userInterests.userId, userId));
 
     return results.map((r) => ({
@@ -1058,9 +1059,9 @@ export class DatabaseStorage implements IStorage {
 
       if (interestIds.length > 0) {
         await tx.insert(userInterests).values(
-          interestIds.map((interestId) => ({
+          interestIds.map((categoryId) => ({
             userId,
-            interestId,
+            categoryId,
             weight: 1.0,
           }))
         );
@@ -1076,7 +1077,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(userInterests)
       .set({ weight, updatedAt: new Date() })
-      .where(and(eq(userInterests.userId, userId), eq(userInterests.interestId, interestId)));
+      .where(and(eq(userInterests.userId, userId), eq(userInterests.categoryId, interestId)));
   }
 
   // Behavior tracking operations
@@ -1506,12 +1507,18 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Theme not found');
     }
 
+    const updateData: any = { ...themeData };
+    if (updateData.startAt && typeof updateData.startAt === 'string') {
+      updateData.startAt = new Date(updateData.startAt);
+    }
+    if (updateData.endAt && typeof updateData.endAt === 'string') {
+      updateData.endAt = new Date(updateData.endAt);
+    }
+    updateData.updatedAt = new Date();
+
     const updated = await db
       .update(themes)
-      .set({
-        ...themeData,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(themes.id, id))
       .returning();
 
@@ -1617,7 +1624,7 @@ export class DatabaseStorage implements IStorage {
       themeId: id,
       userId,
       action: 'rolled_back',
-      changes: { fromVersion: existing.version, toVersion: existing.version + 1 },
+      changes: { fromVersion: existing.version, toVersion: existing.version + 1 } as any,
       metadata: {
         previousStatus: existing.status,
         newStatus: 'active',
@@ -2071,15 +2078,16 @@ export class DatabaseStorage implements IStorage {
   async createReward(data: InsertLoyaltyReward): Promise<LoyaltyReward> {
     const [reward] = await db
       .insert(loyaltyRewards)
-      .values(data)
+      .values([data as any])
       .returning();
     return reward;
   }
 
   async updateReward(id: string, data: Partial<InsertLoyaltyReward>): Promise<LoyaltyReward> {
+    const updateData: any = { ...data };
     const [reward] = await db
       .update(loyaltyRewards)
-      .set(data)
+      .set(updateData)
       .where(eq(loyaltyRewards.id, id))
       .returning();
     return reward;
@@ -2111,13 +2119,13 @@ export class DatabaseStorage implements IStorage {
       const now = new Date();
       
       // 1. Create loyalty event
-      await tx.insert(userLoyaltyEvents).values({
+      await tx.insert(userLoyaltyEvents).values([{
         userId,
         action: "ADMIN_ADJUSTMENT",
         points,
         source: "admin",
-        metadata: { reason },
-      });
+        metadata: { extraInfo: reason } as any,
+      }]);
 
       // 2. Get existing user points
       const [existingPoints] = await tx
