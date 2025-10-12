@@ -760,6 +760,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get daily brief - personalized news summary for today/yesterday
+  app.get("/api/daily-brief", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Get user interests with category details
+      const userInterestsList = await db
+        .select({
+          categoryId: userInterests.categoryId,
+          weight: userInterests.weight,
+          categoryNameAr: categories.nameAr,
+          categoryNameEn: categories.nameEn,
+          categorySlug: categories.slug,
+        })
+        .from(userInterests)
+        .innerJoin(categories, eq(userInterests.categoryId, categories.id))
+        .where(eq(userInterests.userId, userId));
+
+      // If user has no interests, return empty brief
+      if (userInterestsList.length === 0) {
+        return res.json({
+          hasInterests: false,
+          categories: [],
+          totalArticles: 0,
+        });
+      }
+
+      // Calculate yesterday and today date range
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // Fetch articles for each category from today or yesterday
+      const briefByCategory = await Promise.all(
+        userInterestsList.map(async (interest) => {
+          const categoryArticles = await db
+            .select({
+              id: articles.id,
+              title: articles.title,
+              slug: articles.slug,
+              excerpt: articles.excerpt,
+              content: articles.content,
+              imageUrl: articles.imageUrl,
+              publishedAt: articles.publishedAt,
+              categoryId: articles.categoryId,
+            })
+            .from(articles)
+            .where(
+              and(
+                eq(articles.categoryId, interest.categoryId),
+                eq(articles.status, "published"),
+                sql`${articles.publishedAt} >= ${yesterday}`
+              )
+            )
+            .orderBy(desc(articles.publishedAt))
+            .limit(5);
+
+          return {
+            categoryId: interest.categoryId,
+            categoryNameAr: interest.categoryNameAr,
+            categoryNameEn: interest.categoryNameEn,
+            categorySlug: interest.categorySlug,
+            weight: interest.weight,
+            articles: categoryArticles,
+            articleCount: categoryArticles.length,
+          };
+        })
+      );
+
+      // Calculate total articles and estimated reading time
+      const totalArticles = briefByCategory.reduce((sum, cat) => sum + cat.articleCount, 0);
+      const estimatedReadingTime = Math.ceil(totalArticles * 2); // 2 minutes per article average
+
+      res.json({
+        hasInterests: true,
+        categories: briefByCategory,
+        totalArticles,
+        estimatedReadingTime,
+        dateRange: {
+          from: yesterday.toISOString(),
+          to: today.toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error("Error getting daily brief:", error);
+      res.status(500).json({ message: "فشل في جلب الملخص اليومي" });
+    }
+  });
+
   // ============================================================
   // CATEGORY ROUTES (CMS Module 1)
   // ============================================================
