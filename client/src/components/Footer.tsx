@@ -7,23 +7,23 @@ export function Footer() {
 
   const sections = {
     about: [
-      { label: "من نحن", href: "#" },
-      { label: "اتصل بنا", href: "#" },
-      { label: "الشروط والأحكام", href: "#" },
-      { label: "سياسة الخصوصية", href: "#" },
+      { label: "من نحن", href: "#about" },
+      { label: "اتصل بنا", href: "#contact" },
+      { label: "الشروط والأحكام", href: "#terms" },
+      { label: "سياسة الخصوصية", href: "#privacy" },
     ],
     categories: [
-      { label: "سياسة", href: "#" },
-      { label: "اقتصاد", href: "#" },
-      { label: "رياضة", href: "#" },
-      { label: "تقنية", href: "#" },
-      { label: "ثقافة وفن", href: "#" },
+      { label: "سياسة", href: "#politics" },
+      { label: "اقتصاد", href: "#economy" },
+      { label: "رياضة", href: "#sports" },
+      { label: "تقنية", href: "#tech" },
+      { label: "ثقافة وفن", href: "#culture" },
     ],
     services: [
       { label: "مُقترب", href: "/muqtarib" },
-      { label: "جميع التصنيفات", href: "#" },
+      { label: "جميع التصنيفات", href: "#categories" },
       { label: "الأخبار", href: "/" },
-      { label: "تطبيق الجوال", href: "#" },
+      { label: "تطبيق الجوال", href: "#app" },
     ],
   };
 

@@ -61,10 +61,19 @@ export function ThemeProvider({
 
     if (appTheme.tokens?.colors) {
       Object.entries(appTheme.tokens.colors).forEach(([key, value]) => {
-        // Apply both theme-specific and base CSS variables
+        // Apply theme-specific variables
         root.style.setProperty(`--theme-${key}`, value);
-        // Also apply to base variables if they match
-        root.style.setProperty(`--${key}`, value);
+        
+        // Apply mode-specific colors to base variables
+        const suffix = theme === 'dark' ? '-dark' : '-light';
+        if (key.endsWith(suffix)) {
+          // Extract base variable name (e.g., "background-dark" -> "background")
+          const baseKey = key.replace(suffix, '');
+          root.style.setProperty(`--${baseKey}`, value);
+        } else if (!key.includes('-light') && !key.includes('-dark')) {
+          // If no suffix, apply to base variable
+          root.style.setProperty(`--${key}`, value);
+        }
       });
     }
 
@@ -93,7 +102,7 @@ export function ThemeProvider({
         favicon.href = appTheme.assets.favicon;
       }
     }
-  }, [appTheme]);
+  }, [appTheme, theme]);
 
   return (
     <ThemeProviderContext.Provider value={{ theme, setTheme, appTheme: appTheme || null, isLoadingAppTheme }}>
