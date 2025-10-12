@@ -51,6 +51,10 @@ export async function seedRBAC() {
     { code: "system.manage_settings", label: "Manage Settings", labelAr: "إدارة الإعدادات", module: "system" },
     { code: "system.view_logs", label: "View Activity Logs", labelAr: "عرض سجلات النشاط", module: "system" },
     { code: "system.manage_themes", label: "Manage Themes", labelAr: "إدارة الثيمات", module: "system" },
+
+    // Muqtarib permissions
+    { code: "muqtarib.manage", label: "Manage Muqtarib Angles", labelAr: "إدارة زوايا مُقترب", module: "muqtarib" },
+    { code: "muqtarib.publish", label: "Publish Muqtarib Angles", labelAr: "نشر زوايا مُقترب", module: "muqtarib" },
   ];
 
   const insertedPermissions = await db
@@ -127,6 +131,7 @@ export async function seedRBAC() {
       "comments.view", "comments.approve", "comments.reject", "comments.delete",
       "staff.view", "staff.create", "staff.update", "staff.delete",
       "system.view_logs", "system.manage_themes",
+      "muqtarib.manage", "muqtarib.publish",
     ],
     
     editor: [
@@ -136,6 +141,7 @@ export async function seedRBAC() {
       "users.view",
       "comments.view", "comments.approve", "comments.reject",
       "staff.view",
+      "muqtarib.manage", "muqtarib.publish",
     ],
     
     reporter: [

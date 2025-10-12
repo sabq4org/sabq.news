@@ -2,6 +2,7 @@ import type { NeonDatabase } from "drizzle-orm/neon-serverless";
 import * as schema from "../../shared/schema.js";
 import { seedRBAC } from "../seedRBAC.js";
 import { bootstrapAdmin } from "./bootstrapAdmin.js";
+import { seedMuqtarib } from "./seedMuqtarib.js";
 
 export async function seedProductionData(db: NeonDatabase<typeof schema>) {
   console.log("🌱 Seeding production data...");
@@ -12,8 +13,12 @@ export async function seedProductionData(db: NeonDatabase<typeof schema>) {
     const { allRoles, allPermissions } = await seedRBAC();
     console.log(`✅ Created ${allRoles.length} roles and ${allPermissions.length} permissions`);
 
-    // Step 2: Seed Categories
-    console.log("\n📁 Step 2: Seeding categories...");
+    // Step 2: Seed Muqtarib (Sections & Angles)
+    console.log("\n📐 Step 2: Seeding Muqtarib...");
+    await seedMuqtarib();
+
+    // Step 3: Seed Categories
+    console.log("\n📁 Step 3: Seeding categories...");
     const categoriesData = [
       { nameAr: "سياسة", nameEn: "Politics", slug: "politics", color: "#e74c3c", icon: "⚖️", displayOrder: 1 },
       { nameAr: "اقتصاد", nameEn: "Economy", slug: "economy", color: "#3498db", icon: "💼", displayOrder: 2 },
@@ -38,8 +43,8 @@ export async function seedProductionData(db: NeonDatabase<typeof schema>) {
     }
     console.log(`✅ Created ${categoriesData.length} categories`);
 
-    // Step 3: Create admin user
-    console.log("\n👤 Step 3: Creating admin user...");
+    // Step 4: Create admin user
+    console.log("\n👤 Step 4: Creating admin user...");
     const adminResult = await bootstrapAdmin(db);
     console.log(`✅ Admin user created: ${adminResult.email}`);
 

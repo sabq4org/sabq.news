@@ -22,6 +22,9 @@ import {
   loyaltyRewards,
   userRewardsHistory,
   loyaltyCampaigns,
+  angles,
+  articleAngles,
+  sections,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -63,6 +66,10 @@ import {
   type InsertUserRewardsHistory,
   type LoyaltyCampaign,
   type InsertLoyaltyCampaign,
+  type Angle,
+  type InsertAngle,
+  type ArticleAngle,
+  type InsertArticleAngle,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -126,6 +133,18 @@ export interface IStorage {
   getUserPreferences(userId: string): Promise<string[]>;
   getRecommendations(userId: string): Promise<ArticleWithDetails[]>;
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
+  
+  // Muqtarib Angles operations
+  getAllAngles(activeOnly?: boolean): Promise<Angle[]>;
+  getAngleBySlug(slug: string): Promise<Angle | undefined>;
+  getAngleById(id: string): Promise<Angle | undefined>;
+  createAngle(angle: InsertAngle): Promise<Angle>;
+  updateAngle(id: string, angle: Partial<InsertAngle>): Promise<Angle>;
+  deleteAngle(id: string): Promise<void>;
+  getArticlesByAngle(angleSlug: string, limit?: number): Promise<ArticleWithDetails[]>;
+  linkArticleToAngle(articleId: string, angleId: string): Promise<void>;
+  unlinkArticleFromAngle(articleId: string, angleId: string): Promise<void>;
+  getArticleAngles(articleId: string): Promise<Angle[]>;
   
   // Homepage operations
   getHeroArticles(): Promise<ArticleWithDetails[]>;
@@ -2160,6 +2179,132 @@ export class DatabaseStorage implements IStorage {
         });
       }
     });
+  }
+
+  // Muqtarib Angles operations
+  async getAllAngles(activeOnly?: boolean): Promise<Angle[]> {
+    const conditions = [];
+    
+    if (activeOnly) {
+      conditions.push(eq(angles.isActive, true));
+    }
+
+    return await db
+      .select()
+      .from(angles)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(angles.sortOrder, angles.nameAr);
+  }
+
+  async getAngleBySlug(slug: string): Promise<Angle | undefined> {
+    const [angle] = await db
+      .select()
+      .from(angles)
+      .where(eq(angles.slug, slug));
+    return angle;
+  }
+
+  async getAngleById(id: string): Promise<Angle | undefined> {
+    const [angle] = await db
+      .select()
+      .from(angles)
+      .where(eq(angles.id, id));
+    return angle;
+  }
+
+  async createAngle(angle: InsertAngle): Promise<Angle> {
+    const [created] = await db
+      .insert(angles)
+      .values(angle)
+      .returning();
+    return created;
+  }
+
+  async updateAngle(id: string, angleData: Partial<InsertAngle>): Promise<Angle> {
+    const updateData: any = { ...angleData, updatedAt: new Date() };
+    const [updated] = await db
+      .update(angles)
+      .set(updateData)
+      .where(eq(angles.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAngle(id: string): Promise<void> {
+    await db.delete(angles).where(eq(angles.id, id));
+  }
+
+  async getArticlesByAngle(angleSlug: string, limit?: number): Promise<ArticleWithDetails[]> {
+    // First, get the angle by slug
+    const angle = await this.getAngleBySlug(angleSlug);
+    if (!angle) {
+      return [];
+    }
+
+    // Build query to get articles by angle
+    let query = db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articleAngles)
+      .innerJoin(articles, eq(articleAngles.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(
+        and(
+          eq(articleAngles.angleId, angle.id),
+          eq(articles.status, "published")
+        )
+      )
+      .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
+
+    if (limit) {
+      query = query.limit(limit) as any;
+    }
+
+    const results = await query;
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+  }
+
+  async linkArticleToAngle(articleId: string, angleId: string): Promise<void> {
+    await db
+      .insert(articleAngles)
+      .values({
+        articleId,
+        angleId,
+      })
+      .onConflictDoNothing();
+  }
+
+  async unlinkArticleFromAngle(articleId: string, angleId: string): Promise<void> {
+    await db
+      .delete(articleAngles)
+      .where(
+        and(
+          eq(articleAngles.articleId, articleId),
+          eq(articleAngles.angleId, angleId)
+        )
+      );
+  }
+
+  async getArticleAngles(articleId: string): Promise<Angle[]> {
+    const results = await db
+      .select({
+        angle: angles,
+      })
+      .from(articleAngles)
+      .innerJoin(angles, eq(articleAngles.angleId, angles.id))
+      .where(eq(articleAngles.articleId, articleId))
+      .orderBy(angles.sortOrder, angles.nameAr);
+
+    return results.map((r) => r.angle);
   }
 }
 

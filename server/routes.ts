@@ -53,6 +53,7 @@ import {
   updateUserNotificationPrefsSchema,
   insertNotificationQueueSchema,
   insertNotificationsInboxSchema,
+  insertAngleSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -3101,6 +3102,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // ============================================================
+  // MUQTARIB PUBLIC ROUTES
+  // ============================================================
+
+  // Get all angles (with optional active filter)
+  app.get("/api/muqtarib/angles", async (req, res) => {
+    try {
+      const activeOnly = req.query.active === "1" || req.query.active === "true";
+      const angles = await storage.getAllAngles(activeOnly);
+      res.json(angles);
+    } catch (error) {
+      console.error("Error fetching angles:", error);
+      res.status(500).json({ message: "Failed to fetch angles" });
+    }
+  });
+
+  // Get angle by slug with latest articles
+  app.get("/api/muqtarib/angles/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const limit = parseInt(req.query.limit as string) || 12;
+      
+      const angle = await storage.getAngleBySlug(slug);
+      if (!angle) {
+        return res.status(404).json({ message: "Angle not found" });
+      }
+      
+      const articles = await storage.getArticlesByAngle(slug, limit);
+      res.json({ ...angle, articles });
+    } catch (error) {
+      console.error("Error fetching angle:", error);
+      res.status(500).json({ message: "Failed to fetch angle" });
+    }
+  });
+
+  // ============================================================
+  // MUQTARIB ADMIN ROUTES (RBAC Protected)
+  // ============================================================
+
+  // Create angle
+  app.post("/api/admin/muqtarib/angles", requirePermission("muqtarib.manage"), async (req: any, res) => {
+    try {
+      const parsed = insertAngleSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: parsed.error.errors 
+        });
+      }
+      
+      const angle = await storage.createAngle(parsed.data);
+      await logActivity({
+        userId: req.user.id,
+        action: "create",
+        entityType: "angle",
+        entityId: angle.id,
+        newValue: { angleId: angle.id, slug: angle.slug },
+      });
+      res.json(angle);
+    } catch (error) {
+      console.error("Error creating angle:", error);
+      res.status(500).json({ message: "فشل في إنشاء الزاوية" });
+    }
+  });
+
+  // Update angle
+  app.put("/api/admin/muqtarib/angles/:id", requirePermission("muqtarib.manage"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const parsed = insertAngleSchema.partial().safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: parsed.error.errors 
+        });
+      }
+      
+      const angle = await storage.updateAngle(id, parsed.data);
+      await logActivity({
+        userId: req.user.id,
+        action: "update",
+        entityType: "angle",
+        entityId: id,
+        newValue: parsed.data,
+      });
+      res.json(angle);
+    } catch (error) {
+      console.error("Error updating angle:", error);
+      res.status(500).json({ message: "فشل في تحديث الزاوية" });
+    }
+  });
+
+  // Delete angle
+  app.delete("/api/admin/muqtarib/angles/:id", requirePermission("muqtarib.manage"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAngle(id);
+      await logActivity({
+        userId: req.user.id,
+        action: "delete",
+        entityType: "angle",
+        entityId: id,
+      });
+      res.json({ message: "تم حذف الزاوية بنجاح" });
+    } catch (error) {
+      console.error("Error deleting angle:", error);
+      res.status(500).json({ message: "فشل في حذف الزاوية" });
+    }
+  });
+
+  // Link article to angle
+  app.post("/api/admin/articles/:articleId/angles", requirePermission("muqtarib.manage"), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const { angleId } = req.body;
+      
+      if (!angleId) {
+        return res.status(400).json({ message: "معرف الزاوية مطلوب" });
+      }
+      
+      await storage.linkArticleToAngle(articleId, angleId);
+      await logActivity({
+        userId: req.user.id,
+        action: "link",
+        entityType: "article_angle",
+        entityId: articleId,
+        newValue: { articleId, angleId },
+      });
+      res.json({ message: "تم ربط المقال بالزاوية بنجاح" });
+    } catch (error) {
+      console.error("Error linking article to angle:", error);
+      res.status(500).json({ message: "فشل في ربط المقال" });
+    }
+  });
+
+  // Unlink article from angle
+  app.delete("/api/admin/articles/:articleId/angles/:angleId", requirePermission("muqtarib.manage"), async (req: any, res) => {
+    try {
+      const { articleId, angleId } = req.params;
+      await storage.unlinkArticleFromAngle(articleId, angleId);
+      await logActivity({
+        userId: req.user.id,
+        action: "unlink",
+        entityType: "article_angle",
+        entityId: articleId,
+        oldValue: { articleId, angleId },
+      });
+      res.json({ message: "تم إلغاء ربط المقال بنجاح" });
+    } catch (error) {
+      console.error("Error unlinking article:", error);
+      res.status(500).json({ message: "فشل في إلغاء الربط" });
+    }
+  });
+
+  // Get article's angles
+  app.get("/api/admin/articles/:articleId/angles", requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const angles = await storage.getArticleAngles(articleId);
+      res.json(angles);
+    } catch (error) {
+      console.error("Error fetching article angles:", error);
+      res.status(500).json({ message: "Failed to fetch article angles" });
     }
   });
 

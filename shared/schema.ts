@@ -1,5 +1,5 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real } from "drizzle-orm/pg-core";
+import { sql, relations } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -514,6 +514,58 @@ export const loyaltyCampaigns = pgTable("loyalty_campaigns", {
   index("idx_campaigns_active_dates").on(table.isActive, table.startAt, table.endAt),
 ]);
 
+// Sections table (for organizing angles)
+export const sections = pgTable("sections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Angles table (زوايا - thematic perspectives)
+export const angles = pgTable("angles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sectionId: varchar("section_id").references(() => sections.id).notNull(),
+  nameAr: text("name_ar").notNull(),
+  nameEn: text("name_en"),
+  slug: text("slug").notNull().unique(),
+  colorHex: text("color_hex").notNull(), // #RRGGBB format
+  iconKey: text("icon_key").notNull(), // Lucide icon name
+  coverImageUrl: text("cover_image_url"),
+  shortDesc: text("short_desc"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_angles_active").on(table.isActive),
+  index("idx_angles_sort").on(table.sortOrder),
+]);
+
+// Junction table for article-angle many-to-many
+export const articleAngles = pgTable("article_angles", {
+  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  angleId: varchar("angle_id").references(() => angles.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.articleId, table.angleId] }),
+  articleIdx: index("idx_article_angles_article").on(table.articleId),
+  angleIdx: index("idx_article_angles_angle").on(table.angleId),
+}));
+
+// Image assets table for managing uploads
+export const imageAssets = pgTable("image_assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fileName: text("file_name").notNull(),
+  url: text("url").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  mimeType: text("mime_type"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -701,6 +753,26 @@ export const insertUserRewardsHistorySchema = createInsertSchema(userRewardsHist
 });
 
 export const insertLoyaltyCampaignSchema = createInsertSchema(loyaltyCampaigns).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertSectionSchema = createInsertSchema(sections).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertAngleSchema = createInsertSchema(angles).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertArticleAngleSchema = createInsertSchema(articleAngles).omit({ 
+  createdAt: true 
+});
+
+export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({ 
   id: true, 
   createdAt: true 
 });
@@ -906,3 +978,43 @@ export type InsertUserRewardsHistory = z.infer<typeof insertUserRewardsHistorySc
 
 export type LoyaltyCampaign = typeof loyaltyCampaigns.$inferSelect;
 export type InsertLoyaltyCampaign = z.infer<typeof insertLoyaltyCampaignSchema>;
+
+export type Section = typeof sections.$inferSelect;
+export type InsertSection = z.infer<typeof insertSectionSchema>;
+
+export type Angle = typeof angles.$inferSelect;
+export type InsertAngle = z.infer<typeof insertAngleSchema>;
+
+export type ArticleAngle = typeof articleAngles.$inferSelect;
+export type InsertArticleAngle = z.infer<typeof insertArticleAngleSchema>;
+
+export type ImageAsset = typeof imageAssets.$inferSelect;
+export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
+
+// Drizzle Relations
+export const sectionsRelations = relations(sections, ({ many }) => ({
+  angles: many(angles),
+}));
+
+export const anglesRelations = relations(angles, ({ one, many }) => ({
+  section: one(sections, {
+    fields: [angles.sectionId],
+    references: [sections.id],
+  }),
+  articleAngles: many(articleAngles),
+}));
+
+export const articlesRelations = relations(articles, ({ many }) => ({
+  articleAngles: many(articleAngles),
+}));
+
+export const articleAnglesRelations = relations(articleAngles, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleAngles.articleId],
+    references: [articles.id],
+  }),
+  angle: one(angles, {
+    fields: [articleAngles.angleId],
+    references: [angles.id],
+  }),
+}));
