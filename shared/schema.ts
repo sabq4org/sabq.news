@@ -578,8 +578,8 @@ export const updateThemeSchema = z.object({
   isDefault: z.boolean().optional(),
   priority: z.number().int().min(0).max(9999).optional(),
   status: z.enum(["draft", "review", "scheduled", "active", "expired", "disabled"]).optional(),
-  startAt: z.string().datetime().optional().or(z.null()),
-  endAt: z.string().datetime().optional().or(z.null()),
+  startAt: z.union([z.string().datetime(), z.null()]).optional(),
+  endAt: z.union([z.string().datetime(), z.null()]).optional(),
   assets: z.object({
     logoLight: z.string().url().optional(),
     logoDark: z.string().url().optional(),
@@ -594,8 +594,8 @@ export const updateThemeSchema = z.object({
     borderRadius: z.record(z.string()).optional(),
   }).optional(),
   applyTo: z.array(z.string()).optional(),
-  approvedBy: z.string().optional().or(z.null()),
-  publishedBy: z.string().optional().or(z.null()),
+  approvedBy: z.union([z.string(), z.null()]).optional(),
+  publishedBy: z.union([z.string(), z.null()]).optional(),
 });
 export const insertThemeAuditLogSchema = createInsertSchema(themeAuditLog).omit({ id: true, createdAt: true });
 
