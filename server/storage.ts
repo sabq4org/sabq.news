@@ -70,6 +70,8 @@ import {
   type InsertAngle,
   type ArticleAngle,
   type InsertArticleAngle,
+  type Section,
+  type InsertSection,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -135,6 +137,7 @@ export interface IStorage {
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   
   // Muqtarib Angles operations
+  getSectionBySlug(slug: string): Promise<Section | undefined>;
   getAllAngles(activeOnly?: boolean): Promise<Angle[]>;
   getAngleBySlug(slug: string): Promise<Angle | undefined>;
   getAngleById(id: string): Promise<Angle | undefined>;
@@ -2182,6 +2185,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Muqtarib Angles operations
+  async getSectionBySlug(slug: string): Promise<Section | undefined> {
+    const [section] = await db
+      .select()
+      .from(sections)
+      .where(eq(sections.slug, slug))
+      .limit(1);
+    return section;
+  }
+
   async getAllAngles(activeOnly?: boolean): Promise<Angle[]> {
     const conditions = [];
     

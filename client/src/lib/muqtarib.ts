@@ -1,0 +1,82 @@
+import { useQuery } from "@tanstack/react-query";
+import type { 
+  sections, 
+  angles, 
+  articleAngles, 
+  imageAssets,
+  articles 
+} from "@shared/schema";
+
+// Export types from schema
+export type Section = typeof sections.$inferSelect;
+export type Angle = typeof angles.$inferSelect;
+export type ArticleAngle = typeof articleAngles.$inferSelect;
+export type ImageAsset = typeof imageAssets.$inferSelect;
+
+// Extended types for API responses
+export type AngleWithArticles = Angle & {
+  articles?: (typeof articles.$inferSelect)[];
+  articleCount?: number;
+};
+
+// Query key constants for TanStack Query
+export const MUQTARIB_QUERY_KEYS = {
+  sections: () => ["/api/muqtarib/section"] as const,
+  angles: (sectionSlug: string, activeOnly = true) => {
+    const queryParams = activeOnly ? "?active=true" : "";
+    return [`/api/muqtarib/angles${queryParams}`] as const;
+  },
+  angleDetail: (angleSlug: string) => [`/api/muqtarib/angles/${angleSlug}`] as const,
+  angleArticles: (angleSlug: string) => [`/api/muqtarib/angles/${angleSlug}/articles`] as const,
+};
+
+/**
+ * جلب جميع الزوايا (النشطة فقط افتراضياً)
+ * @param sectionSlug - معرف القسم (slug) - محفوظ للاستخدام المستقبلي
+ * @param activeOnly - جلب الزوايا النشطة فقط (افتراضي: true)
+ * @returns قائمة الزوايا مع حالة التحميل والأخطاء
+ */
+export function useMuqtaribAngles(sectionSlug: string, activeOnly = true) {
+  return useQuery<Angle[]>({
+    queryKey: MUQTARIB_QUERY_KEYS.angles(sectionSlug, activeOnly),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!sectionSlug,
+  });
+}
+
+/**
+ * جلب تفاصيل زاوية محددة
+ * @param angleSlug - معرف الزاوية (slug)
+ * @returns تفاصيل الزاوية مع حالة التحميل والأخطاء
+ */
+export function useAngleDetail(angleSlug: string) {
+  return useQuery<Angle>({
+    queryKey: MUQTARIB_QUERY_KEYS.angleDetail(angleSlug),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!angleSlug,
+  });
+}
+
+/**
+ * جلب المقالات المرتبطة بزاوية معينة
+ * @param angleSlug - معرف الزاوية (slug)
+ * @returns قائمة المقالات مع حالة التحميل والأخطاء
+ */
+export function useAngleArticles(angleSlug: string) {
+  return useQuery<(typeof articles.$inferSelect)[]>({
+    queryKey: MUQTARIB_QUERY_KEYS.angleArticles(angleSlug),
+    staleTime: 2 * 60 * 1000, // 2 minutes (articles change more frequently)
+    enabled: !!angleSlug,
+  });
+}
+
+/**
+ * جلب قسم مُقترب
+ * @returns قسم مُقترب مع حالة التحميل والأخطاء
+ */
+export function useMuqtaribSection() {
+  return useQuery<Section>({
+    queryKey: MUQTARIB_QUERY_KEYS.sections(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (sections rarely change)
+  });
+}

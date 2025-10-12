@@ -29,6 +29,9 @@ import NotificationSettings from "@/pages/NotificationSettings";
 import Welcome from "@/pages/onboarding/Welcome";
 import OnboardingInterests from "@/pages/onboarding/SelectInterests";
 import Personalize from "@/pages/onboarding/Personalize";
+import Muqtarib from "@/pages/Muqtarib";
+import MuqtaribDetail from "@/pages/MuqtaribDetail";
+import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -43,7 +46,10 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/keyword/:keyword" component={KeywordPage} />
+      <Route path="/muqtarib/:slug" component={MuqtaribDetail} />
+      <Route path="/muqtarib" component={Muqtarib} />
       <Route path="/article/:slug" component={ArticleDetail} />
+      <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />

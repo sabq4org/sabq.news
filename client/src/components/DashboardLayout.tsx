@@ -83,12 +83,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     pathname: location
   });
 
-  // Debug logging
-  console.log('[DashboardLayout] User:', user);
-  console.log('[DashboardLayout] Role:', role);
-  console.log('[DashboardLayout] TreeFiltered:', treeFiltered);
-  console.log('[DashboardLayout] TreeFiltered length:', treeFiltered.length);
-
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups(prev => ({
       ...prev,

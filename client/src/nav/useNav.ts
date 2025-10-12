@@ -127,12 +127,8 @@ export function useNav(context: NavContext): NavState {
     const flags = context.flags;
     const currentPath = context.pathname;
 
-    console.log('[useNav] Computing with:', { role, flags, pathname: currentPath });
-
     // Filter tree
     const treeFiltered = filterNavTree(navConfig, role, flags);
-
-    console.log('[useNav] TreeFiltered result:', treeFiltered.length, 'items');
 
     // Find active item
     const activeItem = findActiveItem(treeFiltered, currentPath);

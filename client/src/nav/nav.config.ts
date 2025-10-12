@@ -29,6 +29,7 @@ import {
   Bell,
   User,
   Flame,
+  Boxes,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -94,6 +95,14 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/comments",
         icon: MessageSquare,
         roles: ["admin", "editor", "reviewer"],
+      },
+      {
+        id: "muqtarib",
+        labelKey: "nav.muqtarib",
+        labelAr: "مُقترب",
+        path: "/dashboard/muqtarib",
+        icon: Boxes,
+        roles: ["admin", "editor"],
       },
     ],
   },

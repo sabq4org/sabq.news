@@ -3124,6 +3124,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // MUQTARIB PUBLIC ROUTES
   // ============================================================
 
+  // Get muqtarib section
+  app.get("/api/muqtarib/section", async (req, res) => {
+    try {
+      const section = await storage.getSectionBySlug("muqtarib");
+      if (!section) {
+        return res.status(404).json({ message: "Muqtarib section not found" });
+      }
+      res.json(section);
+    } catch (error) {
+      console.error("Error fetching muqtarib section:", error);
+      res.status(500).json({ message: "Failed to fetch section" });
+    }
+  });
+
   // Get all angles (with optional active filter)
   app.get("/api/muqtarib/angles", async (req, res) => {
     try {

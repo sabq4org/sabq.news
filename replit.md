@@ -50,6 +50,7 @@ File storage is handled by Google Cloud Storage via Replit Object Storage, with 
 - **Categories Management:** UI for hierarchical content organization with full CRUD, RBAC, and hero image support.
 - **Keyword Navigation:** Interactive keyword system with dedicated pages showing all articles tagged with specific keywords. Keywords are clickable with smooth hover animations.
 - **Advanced Article Editor:** Professional article creation interface with subtitle support, news type classification (breaking/featured/regular), instant/scheduled publishing, comprehensive SEO management with Google preview, and AI-powered title/summary generation. Features a two-column layout (70% content, 30% settings) with rich text editing capabilities.
+- **Muqtarib (مُقترب) Section:** Thematic angles (زوايا) system for presenting articles from different perspectives (Digital Publishing, Economy, Thought). Features public angle browsing (/muqtarib), detailed angle pages with linked articles (/muqtarib/:slug), and admin CRUD management (/dashboard/muqtarib) with RBAC protection. Includes AngleCard component, comprehensive hooks for data fetching (useMuqtaribAngles, useAngleDetail, useAngleArticles), and full SEO implementation.
 
 ## External Dependencies
 
