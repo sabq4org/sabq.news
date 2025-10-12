@@ -32,6 +32,7 @@ import Personalize from "@/pages/onboarding/Personalize";
 import Muqtarib from "@/pages/Muqtarib";
 import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
+import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -65,6 +66,27 @@ function Router() {
       <Route path="/onboarding/welcome" component={Welcome} />
       <Route path="/onboarding/interests" component={OnboardingInterests} />
       <Route path="/onboarding/personalize" component={Personalize} />
+      
+      {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
+      <Route path="/dashboard/articles/new" component={ComingSoon} />
+      <Route path="/dashboard/tags" component={ComingSoon} />
+      <Route path="/dashboard/comments" component={ComingSoon} />
+      <Route path="/dashboard/ai/summaries" component={ComingSoon} />
+      <Route path="/dashboard/ai/deep" component={ComingSoon} />
+      <Route path="/dashboard/ai/headlines" component={ComingSoon} />
+      <Route path="/dashboard/permissions" component={ComingSoon} />
+      <Route path="/dashboard/templates" component={ComingSoon} />
+      <Route path="/dashboard/analytics" component={ComingSoon} />
+      <Route path="/dashboard/analytics/trending" component={ComingSoon} />
+      <Route path="/dashboard/analytics/behavior" component={ComingSoon} />
+      <Route path="/dashboard/analytics/ab-tests" component={ComingSoon} />
+      <Route path="/dashboard/rss-feeds" component={ComingSoon} />
+      <Route path="/dashboard/integrations" component={ComingSoon} />
+      <Route path="/dashboard/storage" component={ComingSoon} />
+      <Route path="/dashboard/audit-logs" component={ComingSoon} />
+      <Route path="/dashboard/profile" component={ComingSoon} />
+      <Route path="/dashboard/notifications" component={ComingSoon} />
+      
       <Route component={NotFound} />
     </Switch>
   );
