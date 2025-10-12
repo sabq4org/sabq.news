@@ -652,13 +652,13 @@ export const insertThemeSchema = createInsertSchema(themes).omit({
   updatedAt: true,
   version: true,
 }).extend({
-  // Override assets to accept empty strings or null values
+  // Override assets to accept empty strings, null, or valid URLs
   assets: z.object({
-    logoLight: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    logoDark: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    favicon: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    banner: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    ogImage: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    logoLight: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    logoDark: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    favicon: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    banner: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    ogImage: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
   }).optional().nullable(),
 });
 export const updateThemeSchema = z.object({
@@ -670,11 +670,11 @@ export const updateThemeSchema = z.object({
   startAt: z.union([z.string().datetime(), z.null()]).optional(),
   endAt: z.union([z.string().datetime(), z.null()]).optional(),
   assets: z.object({
-    logoLight: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    logoDark: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    favicon: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    banner: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
-    ogImage: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    logoLight: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    logoDark: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    favicon: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    banner: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    ogImage: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
   }).optional().nullable(),
   tokens: z.object({
     colors: z.record(z.string()).optional(),
