@@ -120,18 +120,12 @@ function findParents(items: NavItem[], activeItem: NavItem | null): NavItem[] {
  * هوك للحصول على حالة التنقل المفلترة
  * Hook to get filtered navigation state
  */
-export function useNav(context?: Partial<NavContext>): NavState {
-  const [pathname] = useLocation();
-
+export function useNav(context: NavContext): NavState {
   const navState = useMemo<NavState>(() => {
-    // Default context
-    const role = context?.role || ("guest" as UserRole);
-    const flags = context?.flags || {
-      aiDeepAnalysis: false,
-      smartThemes: true, // Enabled by default for themes
-      audioSummaries: false,
-    };
-    const currentPath = context?.pathname || pathname;
+    // Use provided context
+    const role = context.role;
+    const flags = context.flags;
+    const currentPath = context.pathname;
 
     // Filter tree
     const treeFiltered = filterNavTree(navConfig, role, flags);
@@ -151,7 +145,7 @@ export function useNav(context?: Partial<NavContext>): NavState {
       parents,
       flat,
     };
-  }, [context?.role, context?.flags, context?.pathname, pathname]);
+  }, [context.role, context.flags, context.pathname]);
 
   return navState;
 }

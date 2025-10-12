@@ -83,7 +83,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  // Get navigation state
+  // Get navigation state with current location
   const role = (user.role || "guest") as UserRole;
   const flags = {
     aiDeepAnalysis: false, // يمكن تفعيلها من الإعدادات
@@ -91,7 +91,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     audioSummaries: false,
   };
   
-  const { treeFiltered, activeItem } = useNav({ role, flags });
+  const { treeFiltered, activeItem } = useNav({ 
+    role, 
+    flags,
+    pathname: location
+  });
 
   const handleLogout = async () => {
     try {

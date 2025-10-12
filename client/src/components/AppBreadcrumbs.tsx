@@ -1,12 +1,12 @@
 import { Fragment } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { ChevronLeft, Home } from "lucide-react";
 import { useNav } from "@/nav/useNav";
 import type { UserRole } from "@/nav/types";
 
 interface AppBreadcrumbsProps {
-  role?: UserRole;
-  flags?: Record<string, boolean>;
+  role: UserRole;
+  flags: Record<string, boolean>;
 }
 
 /**
@@ -14,7 +14,8 @@ interface AppBreadcrumbsProps {
  * Breadcrumbs component synchronized with navigation tree
  */
 export function AppBreadcrumbs({ role, flags }: AppBreadcrumbsProps) {
-  const { activeItem, parents } = useNav({ role, flags });
+  const [pathname] = useLocation();
+  const { activeItem, parents } = useNav({ role, flags, pathname });
 
   // لا تعرض شيء إذا لم يكن هناك عنصر نشط
   // Don't show anything if no active item
