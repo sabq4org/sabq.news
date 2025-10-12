@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -16,12 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -31,33 +23,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit, Trash2, Eye, Send, Star } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-
-// Update schema for admin
-const updateArticleSchema = z.object({
-  title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
-  excerpt: z.string().optional(),
-  categoryId: z.union([
-    z.string().uuid("معرف التصنيف غير صحيح"),
-    z.literal(""),
-    z.literal("none")
-  ]).optional(),
-  articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
-  status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
-});
-
-type ArticleFormValues = z.infer<typeof updateArticleSchema>;
 
 type Article = {
   id: string;
@@ -94,9 +63,9 @@ type Category = {
 export default function ArticlesManagement() {
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // State for dialogs and filters
-  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -127,54 +96,6 @@ export default function ArticlesManagement() {
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     enabled: !!user,
-  });
-
-  // Form for editing
-  const form = useForm<ArticleFormValues>({
-    resolver: zodResolver(updateArticleSchema),
-    defaultValues: {
-      title: "",
-      excerpt: "",
-      categoryId: "",
-      articleType: "news",
-      status: "draft",
-    },
-  });
-
-  // Update article mutation
-  const updateMutation = useMutation({
-    mutationFn: async (data: { id: string; values: ArticleFormValues }) => {
-      // Convert "none" to empty string for API (backend expects UUID | "" | null)
-      const { categoryId, ...rest } = data.values;
-      const payload = {
-        ...rest,
-        categoryId: categoryId === "none" || categoryId === undefined ? "" : categoryId,
-      };
-      return await apiRequest(`/api/admin/articles/${data.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث المقال بنجاح",
-      });
-      // Close dialog after a brief delay to show toast
-      setTimeout(() => {
-        setEditingArticle(null);
-        form.reset();
-      }, 300);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "خطأ",
-        description: error.message || "فشل تحديث المقال",
-        variant: "destructive",
-      });
-    },
   });
 
   // Publish mutation
@@ -243,19 +164,7 @@ export default function ArticlesManagement() {
   });
 
   const handleEdit = (article: Article) => {
-    setEditingArticle(article);
-    form.reset({
-      title: article.title,
-      excerpt: article.excerpt || "",
-      categoryId: article.category?.id || "none",
-      articleType: article.articleType as any,
-      status: article.status as any,
-    });
-  };
-
-  const handleSubmit = (values: ArticleFormValues) => {
-    if (!editingArticle) return;
-    updateMutation.mutate({ id: editingArticle.id, values });
+    setLocation(`/dashboard/articles/${article.id}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -471,138 +380,6 @@ export default function ArticlesManagement() {
             )}
           </div>
         </div>
-
-        {/* Edit Dialog */}
-        <Dialog open={!!editingArticle} onOpenChange={() => setEditingArticle(null)}>
-          <DialogContent data-testid="dialog-edit">
-            <DialogHeader>
-              <DialogTitle>تحرير المقال</DialogTitle>
-            </DialogHeader>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>العنوان</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value || ""} data-testid="input-title" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="excerpt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>المقتطف</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value || ""} data-testid="input-excerpt" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>التصنيف</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value || "none"}
-                    >
-                      <FormControl>
-                        <SelectTrigger data-testid="select-category">
-                          <SelectValue placeholder="اختر التصنيف" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">بدون تصنيف</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.nameAr}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="articleType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>النوع</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-type">
-                          <SelectValue placeholder="اختر النوع" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="news">خبر</SelectItem>
-                        <SelectItem value="opinion">رأي</SelectItem>
-                        <SelectItem value="analysis">تحليل</SelectItem>
-                        <SelectItem value="column">عمود</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الحالة</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-status">
-                          <SelectValue placeholder="اختر الحالة" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">مسودة</SelectItem>
-                        <SelectItem value="scheduled">مجدول</SelectItem>
-                        <SelectItem value="published">منشور</SelectItem>
-                        <SelectItem value="archived">مؤرشف</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditingArticle(null)}
-                  data-testid="button-cancel"
-                >
-                  إلغاء
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending} data-testid="button-submit">
-                  {updateMutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingArticle} onOpenChange={() => setDeletingArticle(null)}>
