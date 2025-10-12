@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { useArticleReadTracking } from "@/hooks/useArticleReadTracking";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import {
@@ -21,8 +22,8 @@ import {
   Eye,
   Sparkles,
   ChevronRight,
-  Loader2,
-  Pause,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -36,10 +37,11 @@ export default function ArticleDetail() {
   const { logBehavior } = useBehaviorTracking();
   const [, setLocation] = useLocation();
   
-  // Audio player state
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Text-to-speech hook
+  const { speak, cancel, isSpeaking, isSupported } = useTextToSpeech({
+    lang: 'ar-SA',
+    rate: 0.9,
+  });
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -184,54 +186,55 @@ export default function ArticleDetail() {
     commentMutation.mutate({ content, parentId });
   };
 
-  const handlePlayAudio = async () => {
-    if (!article?.excerpt) return;
+  // Extract text for audio summary
+  const getAudioText = () => {
+    if (!article) return '';
+    
+    // Priority 1: aiSummary
+    if (article.aiSummary) {
+      return article.aiSummary;
+    }
+    
+    // Priority 2: excerpt
+    if (article.excerpt) {
+      return article.excerpt;
+    }
+    
+    // Priority 3: First 200 words from content
+    if (article.content) {
+      // Remove HTML tags
+      const textContent = article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const words = textContent.split(' ');
+      return words.slice(0, 200).join(' ') + (words.length > 200 ? '...' : '');
+    }
+    
+    return '';
+  };
 
-    // If already playing, pause it
-    if (isPlayingAudio && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlayingAudio(false);
+  const handlePlayAudio = () => {
+    if (!isSupported) {
+      toast({
+        title: "غير مدعوم",
+        description: "متصفحك لا يدعم ميزة القراءة الصوتية",
+        variant: "destructive",
+      });
       return;
     }
 
-    try {
-      setIsLoadingAudio(true);
-
-      const response = await fetch("/api/ai/text-to-speech", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: article.excerpt }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate audio");
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Create or reuse audio element
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-        audioRef.current.onended = () => {
-          setIsPlayingAudio(false);
-        };
-      }
-
-      audioRef.current.src = audioUrl;
-      await audioRef.current.play();
-      setIsPlayingAudio(true);
-    } catch (error) {
-      console.error("Error playing audio:", error);
+    const audioText = getAudioText();
+    if (!audioText) {
       toast({
-        title: "خطأ",
-        description: "فشل في تشغيل الصوت",
+        title: "لا يوجد محتوى",
+        description: "لا يوجد نص متاح للقراءة الصوتية",
         variant: "destructive",
       });
-    } finally {
-      setIsLoadingAudio(false);
+      return;
+    }
+
+    if (isSpeaking) {
+      cancel();
+    } else {
+      speak(audioText);
     }
   };
 
@@ -400,7 +403,7 @@ export default function ArticleDetail() {
             )}
 
             {/* Smart Summary */}
-            {article.excerpt && (
+            {(article.aiSummary || article.excerpt) && (
               <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -408,29 +411,22 @@ export default function ArticleDetail() {
                     <h3 className="font-bold text-lg text-primary">الموجز الذكي</h3>
                   </div>
                   <Button
-                    variant="outline"
+                    variant={isSpeaking ? "default" : "outline"}
                     size="sm"
                     className="gap-2"
                     onClick={handlePlayAudio}
-                    disabled={isLoadingAudio}
                     data-testid="button-listen-summary"
                   >
-                    {isLoadingAudio ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : isPlayingAudio ? (
-                      <Pause className="h-4 w-4" />
+                    {isSpeaking ? (
+                      <VolumeX className="h-4 w-4" />
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                      </svg>
+                      <Volume2 className="h-4 w-4" />
                     )}
-                    {isPlayingAudio ? "إيقاف" : "استمع"}
+                    {isSpeaking ? "إيقاف" : "استمع للملخص"}
                   </Button>
                 </div>
                 <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
-                  {article.excerpt}
+                  {article.aiSummary || article.excerpt}
                 </p>
               </div>
             )}
