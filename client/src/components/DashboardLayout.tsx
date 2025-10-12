@@ -42,7 +42,7 @@ const STORAGE_KEY = "sabq.sidebar.v1";
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
-  const { user } = useAuth({ redirectToLogin: true });
+  const { user, isLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
   
   // Load collapsed state from localStorage
@@ -71,8 +71,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }));
   };
 
+  // عرض شاشة تحميل أثناء التحقق من المصادقة
+  if (isLoading || !user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Get navigation state
-  const role = (user?.role || "guest") as UserRole;
+  const role = (user.role || "guest") as UserRole;
   const flags = {
     aiDeepAnalysis: false, // يمكن تفعيلها من الإعدادات
     smartThemes: true,     // مفعلة افتراضياً

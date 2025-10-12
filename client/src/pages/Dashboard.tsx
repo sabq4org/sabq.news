@@ -22,6 +22,22 @@ export default function Dashboard() {
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
+  // Always call hooks before any conditional returns
+  const { data: stats } = useQuery<{
+    totalArticles: number;
+    publishedArticles: number;
+    draftArticles: number;
+    totalViews: number;
+  }>({
+    queryKey: ["/api/dashboard/stats"],
+    enabled: !!user && user.role !== "reader", // Only fetch if not a reader
+  });
+
+  const { data: myArticles = [] } = useQuery<ArticleWithDetails[]>({
+    queryKey: ["/api/dashboard/articles"],
+    enabled: !!user && user.role !== "reader", // Only fetch if not a reader
+  });
+
   // Redirect readers to home page - only content creators and admins can access dashboard
   useEffect(() => {
     if (!isUserLoading && user && user.role === "reader") {
@@ -33,19 +49,6 @@ export default function Dashboard() {
   if (!isUserLoading && user && user.role === "reader") {
     return null;
   }
-
-  const { data: stats } = useQuery<{
-    totalArticles: number;
-    publishedArticles: number;
-    draftArticles: number;
-    totalViews: number;
-  }>({
-    queryKey: ["/api/dashboard/stats"],
-  });
-
-  const { data: myArticles = [] } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/dashboard/articles"],
-  });
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
