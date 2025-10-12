@@ -15,15 +15,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Eye, Edit, Trash2, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import type { Theme } from "@shared/schema";
 
 export default function ThemeManager() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
 
   const { data: themes, isLoading } = useQuery<Theme[]>({
     queryKey: ["/api/themes"],
+  });
+
+  const { data: activeTheme } = useQuery<Theme>({
+    queryKey: ["/api/themes/active?scope=site_full"],
   });
 
   const publishMutation = useMutation({
@@ -76,8 +92,10 @@ export default function ThemeManager() {
       queryClient.invalidateQueries({ queryKey: ["/api/themes"] });
       toast({
         title: "تم الحذف",
-        description: "تم حذف السمة بنجاح",
+        description: "تم حذف السمة بنجاح. سيعود الموقع للسمة الافتراضية.",
       });
+      setDeleteDialogOpen(false);
+      setThemeToDelete(null);
     },
     onError: () => {
       toast({
@@ -87,6 +105,17 @@ export default function ThemeManager() {
       });
     },
   });
+
+  const handleDeleteClick = (theme: Theme) => {
+    setThemeToDelete(theme);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (themeToDelete) {
+      deleteMutation.mutate(themeToDelete.id);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -144,11 +173,41 @@ export default function ThemeManager() {
           </Button>
         </div>
 
+        {/* Active Theme Indicator */}
+        {activeTheme && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                السمة النشطة حالياً
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold" data-testid="text-active-theme-name">
+                    {activeTheme.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {activeTheme.isDefault ? "السمة الافتراضية للموقع" : "سمة مؤقتة"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {activeTheme.isDefault && (
+                    <Badge variant="outline" className="bg-background">افتراضية</Badge>
+                  )}
+                  {getStatusBadge(activeTheme.status)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
-            <CardTitle>السمات المتاحة</CardTitle>
+            <CardTitle>جميع السمات</CardTitle>
             <CardDescription>
-              قائمة بجميع السمات المتاحة في النظام
+              قائمة بجميع السمات المتاحة في النظام. السمة الافتراضية تظهر دائماً عند عدم وجود سمة نشطة أخرى.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -171,80 +230,130 @@ export default function ThemeManager() {
                     <TableHead>الاسم</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>الأولوية</TableHead>
-                    <TableHead>افتراضية</TableHead>
+                    <TableHead>النوع</TableHead>
                     <TableHead>النطاق</TableHead>
-                    <TableHead>الإجراءات</TableHead>
+                    <TableHead className="text-left">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {themes.map((theme) => (
-                    <TableRow key={theme.id} data-testid={`row-theme-${theme.id}`}>
-                      <TableCell className="font-medium" data-testid={`text-theme-name-${theme.id}`}>
-                        {theme.name}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(theme.status)}</TableCell>
-                      <TableCell data-testid={`text-priority-${theme.id}`}>{theme.priority}</TableCell>
-                      <TableCell>
-                        {theme.isDefault ? (
-                          <Badge variant="outline" data-testid={`badge-default-${theme.id}`}>افتراضية</Badge>
-                        ) : null}
-                      </TableCell>
-                      <TableCell data-testid={`text-scope-${theme.id}`}>
-                        {theme.applyTo?.join(", ") || "الكل"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setLocation(`/dashboard/themes/${theme.id}`)}
-                            data-testid={`button-edit-${theme.id}`}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {theme.status === "draft" || theme.status === "review" ? (
+                  {themes.map((theme) => {
+                    const isCurrentlyActive = activeTheme?.id === theme.id;
+                    return (
+                      <TableRow 
+                        key={theme.id} 
+                        data-testid={`row-theme-${theme.id}`}
+                        className={isCurrentlyActive ? "bg-primary/5" : ""}
+                      >
+                        <TableCell className="font-medium" data-testid={`text-theme-name-${theme.id}`}>
+                          <div className="flex items-center gap-2">
+                            {theme.name}
+                            {isCurrentlyActive && (
+                              <Sparkles className="h-4 w-4 text-primary" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(theme.status)}</TableCell>
+                        <TableCell data-testid={`text-priority-${theme.id}`}>{theme.priority}</TableCell>
+                        <TableCell>
+                          {theme.isDefault ? (
+                            <Badge variant="outline" data-testid={`badge-default-${theme.id}`}>
+                              افتراضية
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" data-testid={`badge-temporary-${theme.id}`}>
+                              مؤقتة
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell data-testid={`text-scope-${theme.id}`}>
+                          {theme.applyTo?.join(", ") || "الكل"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 justify-start">
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => publishMutation.mutate(theme.id)}
-                              disabled={publishMutation.isPending}
-                              data-testid={`button-publish-${theme.id}`}
+                              onClick={() => setLocation(`/dashboard/themes/${theme.id}`)}
+                              data-testid={`button-edit-${theme.id}`}
                             >
-                              <CheckCircle className="h-4 w-4" />
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          ) : null}
-                          {theme.status === "active" ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => expireMutation.mutate(theme.id)}
-                              disabled={expireMutation.isPending}
-                              data-testid={`button-expire-${theme.id}`}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          ) : null}
-                          {!theme.isDefault && theme.status === "draft" ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteMutation.mutate(theme.id)}
-                              disabled={deleteMutation.isPending}
-                              data-testid={`button-delete-${theme.id}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {theme.status === "draft" || theme.status === "review" ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => publishMutation.mutate(theme.id)}
+                                disabled={publishMutation.isPending}
+                                data-testid={`button-publish-${theme.id}`}
+                                title="نشر السمة"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                            ) : null}
+                            {theme.status === "active" && !theme.isDefault ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => expireMutation.mutate(theme.id)}
+                                disabled={expireMutation.isPending}
+                                data-testid={`button-expire-${theme.id}`}
+                                title="إنهاء السمة"
+                              >
+                                <XCircle className="h-4 w-4 text-orange-600" />
+                              </Button>
+                            ) : null}
+                            {!theme.isDefault && (theme.status === "draft" || theme.status === "expired") ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteClick(theme)}
+                                disabled={deleteMutation.isPending}
+                                data-testid={`button-delete-${theme.id}`}
+                                title="حذف السمة"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف السمة "{themeToDelete?.name}"؟
+              <br />
+              <br />
+              <span className="font-semibold text-foreground">
+                {activeTheme?.isDefault 
+                  ? `سيعود الموقع تلقائياً إلى السمة الافتراضية "${activeTheme.name}".`
+                  : "لا يمكن التراجع عن هذا الإجراء."}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
