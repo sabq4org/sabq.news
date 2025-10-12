@@ -197,7 +197,7 @@ export default function TagsManagement() {
       slug: tag.slug,
       description: tag.description || "",
       color: tag.color || "#3b82f6",
-      status: tag.status || "active",
+      status: (tag.status || "active") as "active" | "inactive",
     });
   };
 
