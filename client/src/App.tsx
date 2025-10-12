@@ -32,6 +32,7 @@ import Personalize from "@/pages/onboarding/Personalize";
 import Muqtarib from "@/pages/Muqtarib";
 import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
+import TagsManagement from "@/pages/TagsManagement";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 
@@ -69,7 +70,7 @@ function Router() {
       
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
       <Route path="/dashboard/articles/new" component={ComingSoon} />
-      <Route path="/dashboard/tags" component={ComingSoon} />
+      <Route path="/dashboard/tags" component={TagsManagement} />
       <Route path="/dashboard/comments" component={ComingSoon} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={ComingSoon} />
