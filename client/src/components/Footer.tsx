@@ -36,7 +36,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-card border-t border-border mt-auto">
+    <footer className="bg-card/50 dark:bg-card border-t border-border/50 dark:border-border mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Logo and Description */}
@@ -47,7 +47,7 @@ export function Footer() {
                   س
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">سبق الذكية</h3>
+                  <h3 className="text-xl font-bold text-foreground">سبق الذكية</h3>
                   <p className="text-xs text-muted-foreground">منصة الأخبار الذكية</p>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export function Footer() {
 
           {/* About Section */}
           <div>
-            <h4 className="font-semibold mb-4">عن الموقع</h4>
+            <h4 className="font-semibold mb-4 text-foreground">عن الموقع</h4>
             <ul className="space-y-2">
               {sections.about.map((item) => (
                 <li key={item.href}>
@@ -96,7 +96,7 @@ export function Footer() {
 
           {/* Categories Section */}
           <div>
-            <h4 className="font-semibold mb-4">الأقسام</h4>
+            <h4 className="font-semibold mb-4 text-foreground">الأقسام</h4>
             <ul className="space-y-2">
               {sections.categories.map((item) => (
                 <li key={item.href}>
@@ -114,7 +114,7 @@ export function Footer() {
 
           {/* Services Section */}
           <div>
-            <h4 className="font-semibold mb-4">الخدمات</h4>
+            <h4 className="font-semibold mb-4 text-foreground">الخدمات</h4>
             <ul className="space-y-2">
               {sections.services.map((item) => (
                 <li key={item.href}>
@@ -131,7 +131,7 @@ export function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8" />
+        <Separator className="my-8 opacity-50" />
 
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -152,7 +152,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-2 rounded-lg bg-muted hover-elevate active-elevate-2 transition-colors ${social.color}`}
+                  className={`p-2 rounded-lg bg-muted/60 dark:bg-muted hover-elevate active-elevate-2 transition-colors ${social.color}`}
                   aria-label={social.name}
                   data-testid={`footer-social-${social.name.toLowerCase()}`}
                 >
