@@ -72,8 +72,17 @@ export default function NewsPage() {
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
+                      {article.category && (
+                        <Badge 
+                          variant="default" 
+                          className="absolute top-3 right-3 shadow-md" 
+                          data-testid={`badge-category-${article.id}`}
+                        >
+                          {article.category.icon} {article.category.nameAr}
+                        </Badge>
+                      )}
                       {article.aiSummary && (
-                        <div className="absolute top-2 left-2">
+                        <div className="absolute top-3 left-3">
                           <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
                             <Sparkles className="h-3 w-3 ml-1" />
                             ذكاء اصطناعي
@@ -84,11 +93,6 @@ export default function NewsPage() {
                   )}
                   
                   <CardContent className="p-4 space-y-3">
-                    {article.category && (
-                      <Badge variant="outline" data-testid={`badge-category-${article.id}`}>
-                        {article.category.nameAr}
-                      </Badge>
-                    )}
                     
                     <h3 
                       className="font-bold text-lg line-clamp-2 text-foreground"
