@@ -130,3 +130,56 @@ ${articlesContext}
     throw new Error("Failed to process chat message");
   }
 }
+
+export async function analyzeCredibility(
+  articleContent: string,
+  title: string
+): Promise<{
+  score: number;
+  factors: { name: string; score: number; note: string }[];
+  summary: string;
+}> {
+  try {
+    const systemPrompt = `أنت خبير في تحليل مصداقية المحتوى الصحفي. قم بتحليل المقال بناءً على المعايير الصحفية التالية:
+
+1. **المصادر**: وجود مصادر موثوقة ومتنوعة
+2. **الوضوح**: وضوح المعلومات والحقائق المقدمة
+3. **التوازن**: التوازن في عرض وجهات النظر المختلفة
+4. **الدقة اللغوية**: الدقة اللغوية والنحوية والإملائية
+
+أعد النتيجة بصيغة JSON فقط مع الحقول التالية:
+- score: رقم من 0 إلى 100 (إجمالي المصداقية)
+- factors: مصفوفة من الكائنات، كل كائن يحتوي على:
+  - name: اسم المعيار (المصادر، الوضوح، التوازن، الدقة اللغوية)
+  - score: درجة من 0 إلى 100
+  - note: ملاحظة قصيرة (جملة واحدة)
+- summary: ملخص شامل للتحليل (2-3 جمل)`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `العنوان: ${title}\n\nالمحتوى:\n${articleContent.substring(0, 3000)}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1024,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    return {
+      score: result.score || 0,
+      factors: result.factors || [],
+      summary: result.summary || "لم يتم التحليل",
+    };
+  } catch (error) {
+    console.error("Error analyzing credibility:", error);
+    throw new Error("Failed to analyze article credibility");
+  }
+}

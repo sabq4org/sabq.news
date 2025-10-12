@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
@@ -2064,6 +2064,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       res.status(500).json({ message: "Failed to toggle bookmark" });
+    }
+  });
+
+  app.post("/api/articles/:id/analyze-credibility", isAuthenticated, async (req: any, res) => {
+    try {
+      const articleId = req.params.id;
+      
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      const analysisResult = await analyzeCredibility(article.content, article.title);
+
+      await db
+        .update(articles)
+        .set({
+          credibilityScore: analysisResult.score,
+          credibilityAnalysis: JSON.stringify(analysisResult),
+          credibilityLastUpdated: new Date(),
+        })
+        .where(eq(articles.id, articleId));
+
+      res.json(analysisResult);
+    } catch (error) {
+      console.error("Error analyzing credibility:", error);
+      res.status(500).json({ message: "فشل تحليل المصداقية" });
     }
   });
 

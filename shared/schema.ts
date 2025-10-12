@@ -80,6 +80,9 @@ export const articles = pgTable("articles", {
     metaDescription?: string;
     keywords?: string[];
   }>(),
+  credibilityScore: integer("credibility_score"),
+  credibilityAnalysis: text("credibility_analysis"),
+  credibilityLastUpdated: timestamp("credibility_last_updated"),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -623,6 +626,9 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   updatedAt: true,
   views: true,
   aiGenerated: true,
+  credibilityScore: true,
+  credibilityAnalysis: true,
+  credibilityLastUpdated: true,
 });
 export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({ 
   id: true, 
