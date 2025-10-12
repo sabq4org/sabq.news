@@ -1,7 +1,18 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered Arabic news platform built with Next.js 15, Express, and PostgreSQL. It aims to provide intelligent article summarization, personalized recommendations, and comprehensive content management. The platform supports RTL-first Arabic language design and draws inspiration from leading news outlets like Al Jazeera, The Guardian, and Medium. Key capabilities include dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver a cutting-edge news consumption experience, leveraging AI for personalization and content enrichment, targeting the Arabic-speaking market.
+Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. It aims to provide intelligent article summarization, personalized recommendations, and comprehensive content management. The platform supports RTL-first Arabic language design and draws inspiration from leading news outlets like Al Jazeera, The Guardian, and Medium. Key capabilities include dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver a cutting-edge news consumption experience, leveraging AI for personalization and content enrichment, targeting the Arabic-speaking market.
+
+## Recent Critical Fixes (Oct 2025)
+
+### Navigation System Fixes
+**Issue**: Sidebar showing empty in dashboard due to React Hooks errors and incorrect role detection
+**Solutions Applied**:
+1. **React Hooks Error**: Fixed hook ordering in DashboardLayout - all hooks now called before any conditional returns
+2. **Role Detection Bug**: Fixed `/api/auth/user` endpoint to use `user.role` from users table as fallback when RBAC userRoles table has no entry
+3. **Navigation State**: Removed problematic reader redirect in Dashboard.tsx that was causing unexpected behavior
+
+**Impact**: Dashboard sidebar now displays correctly for all authenticated users with proper role-based menu filtering.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

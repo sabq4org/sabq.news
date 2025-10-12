@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Get user's role from RBAC system
+      // Get user's role from RBAC system, fallback to user.role from users table
       const userRolesResult = await db
         .select({ roleName: roles.name })
         .from(userRoles)
@@ -408,7 +408,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(userRoles.userId, userId))
         .limit(1);
 
-      const role = userRolesResult.length > 0 ? userRolesResult[0].roleName : "reader";
+      // Use RBAC role if exists, otherwise use user.role from users table
+      const role = userRolesResult.length > 0 
+        ? userRolesResult[0].roleName 
+        : (user.role || "reader");
 
       res.json({ ...user, role });
     } catch (error) {
