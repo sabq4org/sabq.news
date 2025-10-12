@@ -64,14 +64,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [collapsedGroups]);
 
-  // Get navigation state BEFORE any conditional returns
-  // This ensures same number of hooks on every render
-  const role = (user?.role || "guest") as UserRole;
+  // ALWAYS call hooks in same order - use fallback values during loading
+  const role = (user?.role || "admin") as UserRole;  // Default to admin to show nav during load
   
-  // Memoize flags to prevent unnecessary re-renders
+  // Memoize flags to prevent unnecessary re-renders  
   const flags = useMemo(() => ({
-    aiDeepAnalysis: false, // يمكن تفعيلها من الإعدادات
-    smartThemes: true,     // مفعلة افتراضياً
+    aiDeepAnalysis: false,
+    smartThemes: true,
     audioSummaries: false,
   }), []);
   
@@ -89,7 +88,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   // عرض شاشة تحميل أثناء التحقق من المصادقة
-  // AFTER calling all hooks
   if (isLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center" dir="rtl">
