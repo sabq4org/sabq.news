@@ -11,8 +11,6 @@ import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
 export default function NewsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -25,7 +23,7 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} onSearch={setSearchQuery} />
+      <Header user={user} />
 
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

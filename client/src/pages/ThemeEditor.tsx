@@ -73,6 +73,118 @@ const themeFormSchema = z.object({
 
 type ThemeFormData = z.infer<typeof themeFormSchema>;
 
+// Utility functions for HSL/Hex conversion
+function hexToHsl(hex: string): string {
+  if (!hex || hex.length !== 7) return "";
+  
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function hslToHex(hsl: string): string {
+  if (!hsl) return "#000000";
+  
+  const parts = hsl.match(/(\d+)\s+(\d+)%\s+(\d+)%/);
+  if (!parts) return "#000000";
+  
+  const h = parseInt(parts[1]) / 360;
+  const s = parseInt(parts[2]) / 100;
+  const l = parseInt(parts[3]) / 100;
+  
+  // HSL to RGB conversion
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  
+  const r = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+  const g = Math.round(hue2rgb(p, q, h) * 255);
+  const b = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+  
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// ColorPickerField component
+function ColorPickerField({ 
+  value, 
+  onChange, 
+  label, 
+  placeholder,
+  testId 
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  placeholder: string;
+  testId: string;
+}) {
+  const [hexValue, setHexValue] = useState(hslToHex(value));
+  
+  useEffect(() => {
+    setHexValue(hslToHex(value));
+  }, [value]);
+  
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hex = e.target.value;
+    setHexValue(hex);
+    onChange(hexToHsl(hex));
+  };
+  
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hsl = e.target.value;
+    onChange(hsl);
+    setHexValue(hslToHex(hsl));
+  };
+  
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          value={value || ""}
+          onChange={handleTextChange}
+          placeholder={placeholder}
+          className="flex-1"
+          data-testid={testId}
+        />
+        <Input
+          type="color"
+          value={hexValue}
+          onChange={handleColorChange}
+          className="w-[60px] h-10 p-1 cursor-pointer"
+          data-testid={`${testId}-picker`}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function ThemeEditor() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -566,14 +678,13 @@ export default function ThemeEditor() {
                         name="colors.primary"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>اللون الأساسي</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="150 100% 22%"
-                                {...field}
-                                data-testid="input-color-primary"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="اللون الأساسي"
+                              placeholder="150 100% 22%"
+                              testId="input-color-primary"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -584,14 +695,13 @@ export default function ThemeEditor() {
                         name="colors.primaryForeground"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون النص الأساسي</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="0 0% 100%"
-                                {...field}
-                                data-testid="input-color-primary-foreground"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون النص الأساسي"
+                              placeholder="0 0% 100%"
+                              testId="input-color-primary-foreground"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -602,14 +712,13 @@ export default function ThemeEditor() {
                         name="colors.secondary"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>اللون الثانوي</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="210 40% 96%"
-                                {...field}
-                                data-testid="input-color-secondary"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="اللون الثانوي"
+                              placeholder="210 40% 96%"
+                              testId="input-color-secondary"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -620,14 +729,13 @@ export default function ThemeEditor() {
                         name="colors.secondaryForeground"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون النص الثانوي</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="222 47% 11%"
-                                {...field}
-                                data-testid="input-color-secondary-foreground"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون النص الثانوي"
+                              placeholder="222 47% 11%"
+                              testId="input-color-secondary-foreground"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -638,14 +746,13 @@ export default function ThemeEditor() {
                         name="colors.background"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون الخلفية</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="0 0% 100%"
-                                {...field}
-                                data-testid="input-color-background"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون الخلفية"
+                              placeholder="0 0% 100%"
+                              testId="input-color-background"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -656,14 +763,13 @@ export default function ThemeEditor() {
                         name="colors.foreground"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون النص الرئيسي</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="222 47% 11%"
-                                {...field}
-                                data-testid="input-color-foreground"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون النص الرئيسي"
+                              placeholder="222 47% 11%"
+                              testId="input-color-foreground"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -674,14 +780,13 @@ export default function ThemeEditor() {
                         name="colors.accent"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون التأكيد</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="210 40% 96%"
-                                {...field}
-                                data-testid="input-color-accent"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون التأكيد"
+                              placeholder="210 40% 96%"
+                              testId="input-color-accent"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
@@ -692,14 +797,13 @@ export default function ThemeEditor() {
                         name="colors.accentForeground"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>لون نص التأكيد</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="222 47% 11%"
-                                {...field}
-                                data-testid="input-color-accent-foreground"
-                              />
-                            </FormControl>
+                            <ColorPickerField
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              label="لون نص التأكيد"
+                              placeholder="222 47% 11%"
+                              testId="input-color-accent-foreground"
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
