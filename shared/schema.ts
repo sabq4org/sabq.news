@@ -652,16 +652,16 @@ export const insertThemeSchema = createInsertSchema(themes).omit({
   updatedAt: true,
   version: true,
 }).extend({
-  // Override dates to accept empty strings, null, undefined, or valid datetime
-  startAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
-  endAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
-  // Override assets to accept empty strings, null, undefined, or valid URLs
+  // Override dates to accept null, empty strings, undefined, or valid datetime
+  startAt: z.union([z.null(), z.literal(''), z.undefined(), z.string().datetime()]).optional(),
+  endAt: z.union([z.null(), z.literal(''), z.undefined(), z.string().datetime()]).optional(),
+  // Override assets to accept null, empty strings, undefined, or valid URLs
   assets: z.object({
-    logoLight: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
-    logoDark: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
-    favicon: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
-    banner: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
-    ogImage: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    logoLight: z.union([z.null(), z.literal(''), z.undefined(), z.string().url()]).optional(),
+    logoDark: z.union([z.null(), z.literal(''), z.undefined(), z.string().url()]).optional(),
+    favicon: z.union([z.null(), z.literal(''), z.undefined(), z.string().url()]).optional(),
+    banner: z.union([z.null(), z.literal(''), z.undefined(), z.string().url()]).optional(),
+    ogImage: z.union([z.null(), z.literal(''), z.undefined(), z.string().url()]).optional(),
   }).optional().nullable(),
 });
 export const updateThemeSchema = z.object({
