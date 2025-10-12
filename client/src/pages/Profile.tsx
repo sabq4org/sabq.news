@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Form,
   FormControl,
@@ -37,6 +40,7 @@ import {
   Trophy,
   Coins,
   Star,
+  ChevronDown,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -57,6 +61,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("bookmarks");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: user } = useQuery<UserType>({
     queryKey: ["/api/auth/user"],
@@ -182,17 +187,17 @@ export default function Profile() {
     updateMutation.mutate(data);
   };
 
-  const { data: likedArticles = [] } = useQuery<ArticleWithDetails[]>({
+  const { data: likedArticles = [], isLoading: isLoadingLiked } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/profile/liked"],
     enabled: !!user,
   });
 
-  const { data: bookmarkedArticles = [] } = useQuery<ArticleWithDetails[]>({
+  const { data: bookmarkedArticles = [], isLoading: isLoadingBookmarks } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/profile/bookmarks"],
     enabled: !!user,
   });
 
-  const { data: readingHistory = [] } = useQuery<ArticleWithDetails[]>({
+  const { data: readingHistory = [], isLoading: isLoadingHistory } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/profile/history"],
     enabled: !!user,
   });
@@ -454,12 +459,93 @@ export default function Profile() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
           {/* Sidebar */}
-          <aside className="space-y-6">
-            {/* Smart Interests */}
-            <SmartInterestsBlock userId={user.id} />
+          <aside className="space-y-4 lg:space-y-6">
+            {/* Smart Interests - Mobile Collapsible */}
+            <div className="lg:block">
+              <Collapsible defaultOpen={false} className="lg:hidden">
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover-elevate p-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">اهتماماتك</CardTitle>
+                        <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 pb-4">
+                      <SmartInterestsBlock userId={user.id} />
+                    </div>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+              
+              {/* Desktop - Always visible */}
+              <div className="hidden lg:block">
+                <SmartInterestsBlock userId={user.id} />
+              </div>
+            </div>
 
-            {/* Loyalty Program */}
-            <Card className={`bg-gradient-to-br ${getRankColor(loyaltyPoints?.currentRank)} border`}>
+            {/* Loyalty Program - Mobile Collapsible */}
+            <Collapsible defaultOpen={false} className="lg:hidden">
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover-elevate p-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        {getRankIcon(loyaltyPoints?.currentRank)}
+                        برنامج الولاء
+                      </CardTitle>
+                      <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-3 p-4 pt-0">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-muted-foreground">رتبتك الحالية</span>
+                      </div>
+                      <div className="font-semibold text-lg" data-testid="text-loyalty-rank-mobile">
+                        {loyaltyPoints?.currentRank || "القارئ الجديد"}
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">النقاط الكلية</span>
+                        <span className="font-semibold">
+                          {loyaltyPoints?.lifetimePoints || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">النقاط المتاحة</span>
+                        <span className="font-semibold text-primary">
+                          {loyaltyPoints?.totalPoints || 0}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      variant="default"
+                      className="w-full gap-2"
+                      asChild
+                      data-testid="button-view-rewards-mobile"
+                    >
+                      <a href="/loyalty">
+                        <Trophy className="h-4 w-4" />
+                        استبدل النقاط
+                      </a>
+                    </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Desktop Loyalty Program - Always visible */}
+            <Card className={`hidden lg:block bg-gradient-to-br ${getRankColor(loyaltyPoints?.currentRank)} border`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -513,8 +599,71 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
+            {/* Quick Actions - Mobile Collapsible */}
+            <Collapsible defaultOpen={false} className="lg:hidden">
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover-elevate p-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">إجراءات سريعة</CardTitle>
+                      <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 p-4 pt-0">
+                {(user.role === "editor" || user.role === "admin") && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                    asChild
+                    data-testid="button-go-to-dashboard"
+                  >
+                    <Link href="/dashboard">
+                      <a className="flex items-center gap-2 w-full">
+                        <LayoutDashboard className="h-4 w-4" />
+                        لوحة التحكم
+                      </a>
+                    </Link>
+                  </Button>
+                )}
+                
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
+                  data-testid="button-settings"
+                >
+                  <Settings className="h-4 w-4" />
+                  الإعدادات
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
+                  data-testid="button-notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                  إعدادات الإشعارات
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setActiveTab("settings")}
+                  data-testid="button-privacy"
+                >
+                  <Shield className="h-4 w-4" />
+                  الخصوصية والأمان
+                </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Desktop Quick Actions - Always visible */}
+            <Card className="hidden lg:block">
               <CardHeader>
                 <CardTitle className="text-base">إجراءات سريعة</CardTitle>
               </CardHeader>
@@ -567,26 +716,57 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            {/* Contact Info (if available) */}
+            {/* Contact Info (if available) - Mobile Collapsible */}
             {(user.phoneNumber || user.firstName || user.lastName) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">معلومات الاتصال</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {user.phoneNumber && (
+              <>
+                <Collapsible defaultOpen={false} className="lg:hidden">
+                  <Card>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="cursor-pointer hover-elevate p-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">معلومات الاتصال</CardTitle>
+                          <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="space-y-3 p-4 pt-0">
+                        {user.phoneNumber && (
+                          <div className="text-sm">
+                            <p className="text-muted-foreground mb-1">رقم الهاتف</p>
+                            <p className="font-medium">{user.phoneNumber}</p>
+                          </div>
+                        )}
+                        <Separator />
+                        <div className="text-sm">
+                          <p className="text-muted-foreground mb-1">البريد الإلكتروني</p>
+                          <p className="font-medium break-all">{user.email}</p>
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+
+                {/* Desktop Contact Info - Always visible */}
+                <Card className="hidden lg:block">
+                  <CardHeader>
+                    <CardTitle className="text-base">معلومات الاتصال</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {user.phoneNumber && (
+                      <div className="text-sm">
+                        <p className="text-muted-foreground mb-1">رقم الهاتف</p>
+                        <p className="font-medium">{user.phoneNumber}</p>
+                      </div>
+                    )}
+                    <Separator />
                     <div className="text-sm">
-                      <p className="text-muted-foreground mb-1">رقم الهاتف</p>
-                      <p className="font-medium">{user.phoneNumber}</p>
+                      <p className="text-muted-foreground mb-1">البريد الإلكتروني</p>
+                      <p className="font-medium break-all">{user.email}</p>
                     </div>
-                  )}
-                  <Separator />
-                  <div className="text-sm">
-                    <p className="text-muted-foreground mb-1">البريد الإلكتروني</p>
-                    <p className="font-medium break-all">{user.email}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </aside>
 
@@ -626,19 +806,49 @@ export default function Profile() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="bookmarks" className="space-y-4">
-                    {bookmarkedArticles.length > 0 ? (
-                      <div className="space-y-4">
-                        {bookmarkedArticles.map((article) => (
-                          <ArticleCard
-                            key={article.id}
-                            article={article}
-                            variant="list"
-                          />
+                  <TabsContent value="bookmarks">
+                    {isLoadingBookmarks ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="space-y-3">
+                            <Skeleton className="aspect-[16/9] w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-2/3" />
+                          </div>
                         ))}
                       </div>
+                    ) : bookmarkedArticles.length > 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                      >
+                        <AnimatePresence>
+                          {bookmarkedArticles.map((article, index) => (
+                            <motion.div
+                              key={article.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                              <ArticleCard
+                                article={article}
+                                variant="grid"
+                              />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
                     ) : (
-                      <div className="text-center py-16">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center py-16"
+                      >
                         <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                           <Bookmark className="h-10 w-10 text-muted-foreground" />
                         </div>
@@ -646,28 +856,58 @@ export default function Profile() {
                         <p className="text-muted-foreground mb-6">
                           احفظ المقالات المفضلة لديك للوصول إليها بسهولة لاحقاً
                         </p>
-                        <Button asChild>
+                        <Button asChild data-testid="button-browse-articles">
                           <Link href="/">
                             <a>تصفح المقالات</a>
                           </Link>
                         </Button>
-                      </div>
+                      </motion.div>
                     )}
                   </TabsContent>
 
-                  <TabsContent value="liked" className="space-y-4">
-                    {likedArticles.length > 0 ? (
-                      <div className="space-y-4">
-                        {likedArticles.map((article) => (
-                          <ArticleCard
-                            key={article.id}
-                            article={article}
-                            variant="list"
-                          />
+                  <TabsContent value="liked">
+                    {isLoadingLiked ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="space-y-3">
+                            <Skeleton className="aspect-[16/9] w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-2/3" />
+                          </div>
                         ))}
                       </div>
+                    ) : likedArticles.length > 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                      >
+                        <AnimatePresence>
+                          {likedArticles.map((article, index) => (
+                            <motion.div
+                              key={article.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                              <ArticleCard
+                                article={article}
+                                variant="grid"
+                              />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
                     ) : (
-                      <div className="text-center py-16">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center py-16"
+                      >
                         <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                           <Heart className="h-10 w-10 text-muted-foreground" />
                         </div>
@@ -675,28 +915,58 @@ export default function Profile() {
                         <p className="text-muted-foreground mb-6">
                           اكتشف المقالات المميزة وأظهر إعجابك بها
                         </p>
-                        <Button asChild>
+                        <Button asChild data-testid="button-browse-articles-liked">
                           <Link href="/">
                             <a>تصفح المقالات</a>
                           </Link>
                         </Button>
-                      </div>
+                      </motion.div>
                     )}
                   </TabsContent>
 
-                  <TabsContent value="history" className="space-y-4">
-                    {readingHistory.length > 0 ? (
-                      <div className="space-y-4">
-                        {readingHistory.map((article) => (
-                          <ArticleCard
-                            key={article.id}
-                            article={article}
-                            variant="list"
-                          />
+                  <TabsContent value="history">
+                    {isLoadingHistory ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="space-y-3">
+                            <Skeleton className="aspect-[16/9] w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-2/3" />
+                          </div>
                         ))}
                       </div>
+                    ) : readingHistory.length > 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                      >
+                        <AnimatePresence>
+                          {readingHistory.map((article, index) => (
+                            <motion.div
+                              key={article.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                              <ArticleCard
+                                article={article}
+                                variant="grid"
+                              />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
                     ) : (
-                      <div className="text-center py-16">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center py-16"
+                      >
                         <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                           <FileText className="h-10 w-10 text-muted-foreground" />
                         </div>
@@ -704,12 +974,12 @@ export default function Profile() {
                         <p className="text-muted-foreground mb-6">
                           ابدأ القراءة وسيظهر سجل قراءتك هنا
                         </p>
-                        <Button asChild>
+                        <Button asChild data-testid="button-browse-articles-history">
                           <Link href="/">
                             <a>تصفح المقالات</a>
                           </Link>
                         </Button>
-                      </div>
+                      </motion.div>
                     )}
                   </TabsContent>
 
