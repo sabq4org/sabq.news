@@ -1,0 +1,279 @@
+🎯 برومنت تنفيذي متكامل: إنشاء قسم «مُقترب» وزواياه (Digital Publishing, Economy, Thought) في Sabq Smart
+
+هذا البرومنت موجّه لوكيل/مساعد ذكاء اصطناعي خبير بالبرمجة والتصميم ضمن بيئة Sabq Smart (React 18 + Vite + TypeScript + Wouter + Tailwind + shadcn/ui + Radix UI، Backend: Express.js + TypeScript + PostgreSQL/Neon + Drizzle ORM + Passport + Sessions، تخزين صور عبر Google Cloud Storage).
+
+1) الدور والهدف
+	•	الدور: أنت مهندس Full‑Stack + مصمم UI/UX ينفّذ قسمًا جديدًا اسمه «مُقترب» يحتوي على عدة زوايا (مثال: «النشر الرقمي»، «الاقتصاد»، «الفكر»).
+	•	الهدف:
+	1.	صفحة رئيسية لقسم «مُقترب» تُظهر كل الزوايا كبطاقات ملوّنة مع صورة تعريفية وأيقونة.
+	2.	صفحة لكل زاوية تعرض تعريفها وأحدث المقالات المرتبطة بها.
+	3.	تكامل كامل مع لوحة التحكم (CRUD): إضافة/تعديل/حذف «زاوية»، إدارة الصور التعريفية والأيقونات والألوان، ربط المقالات بالزاوية، وعمليات النشر.
+	4.	بلوك واجهة يظهر آخر مقالات الزوايا كبطاقات يمكن وضعه في الصفحات/الهوم.
+	5.	جاهزية SEO، الأداء، وإمكانية الوصول، مع RBAC.
+
+2) المتطلبات الوظيفية
+	•	إنشاء كيان Section باسم ثابت «مُقترب» (slug: muqtarib).
+	•	كل زاوية لها: اسم عربي، اسم إنجليزي اختياري، slug فريد، لون أساسي (hex)، أيقونة (من Lucide أو asset)، صورة تعريفية (GCS)، وصف قصير، ترتيب عرض، حالة (نشطة/مخفية).
+	•	كل مقال يمكن ربطه بزاوية واحدة أو أكثر (many‑to‑many).
+	•	الهيدر: عنصر Menu «مُقترب» يفتح صفحة grid لبطاقات الزوايا.
+	•	صفحات عامة:
+	•	/muqtarib : قائمة الزوايا.
+	•	/muqtarib/:angleSlug : صفحة الزاوية + تبويبات (أحدث، مختارات، الأكثر قراءة).
+	•	لوحة التحكم (Admin):
+	•	إدارة الزوايا: قائمة + إنشاء/تعديل/حذف + رفع صورة + اختيار أيقونة + اختيار لون.
+	•	ربط المقالات بالزاوية داخل نموذج المقال.
+	•	مولد صورة تعريفية بالذكاء الاصطناعي (اختياري): prompt + توليد + رفع تلقائي لـ GCS.
+	•	البلوك: MuqtaribLatestBlock يقبل props (زاوية محددة أو كل الزوايا، عدد البطاقات، فرز).
+
+3) نموذج البيانات (ERD مختصر)
+
+Section( id PK, name, slug, description, created_at )
+Angle( id PK, section_id FK->Section, name_ar, name_en?, slug UNIQUE, color_hex, icon_key, cover_image_url, short_desc, sort_order, is_active, created_at, updated_at )
+Article( id PK, title, slug, ... )
+ArticleAngle( article_id FK->Article, angle_id FK->Angle, PRIMARY KEY(article_id, angle_id) )
+ImageAsset( id PK, file_name, url, width, height, mime, created_by, created_at )
+
+4) مخطط قاعدة البيانات (Drizzle ORM / PostgreSQL)
+
+// drizzle/schema/muqtarib.ts
+import { pgTable, serial, varchar, boolean, integer, timestamp, text } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+export const sections = pgTable("sections", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const angles = pgTable("angles", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").notNull().references(() => sections.id),
+  nameAr: varchar("name_ar", { length: 120 }).notNull(),
+  nameEn: varchar("name_en", { length: 120 }),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  colorHex: varchar("color_hex", { length: 9 }).notNull(),
+  iconKey: varchar("icon_key", { length: 80 }).notNull(),
+  coverImageUrl: varchar("cover_image_url", { length: 512 }),
+  shortDesc: varchar("short_desc", { length: 220 }),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const articles = pgTable("articles", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 240 }).notNull(),
+  slug: varchar("slug", { length: 260 }).notNull().unique(),
+  // ... باقي الحقول القائمة
+});
+
+export const articleAngles = pgTable("article_angles", {
+  articleId: integer("article_id").notNull().references(() => articles.id),
+  angleId: integer("angle_id").notNull().references(() => angles.id),
+}, (t) => ({
+  pk: { columns: [t.articleId, t.angleId] },
+}));
+
+export const images = pgTable("image_assets", {
+  id: serial("id").primaryKey(),
+  fileName: varchar("file_name", { length: 260 }).notNull(),
+  url: varchar("url", { length: 512 }).notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  mime: varchar("mime", { length: 60 }),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const sectionsRelations = relations(sections, ({ many }) => ({
+  angles: many(angles),
+}));
+
+export const anglesRelations = relations(angles, ({ many, one }) => ({
+  section: one(sections, { fields: [angles.sectionId], references: [sections.id] }),
+  articleAngles: many(articleAngles),
+}));
+
+export const articlesRelations = relations(articles, ({ many }) => ({
+  articleAngles: many(articleAngles),
+}));
+
+5) تهيئة بيانات أولية (Seed)
+	•	Section «مُقترب» (slug: muqtarib).
+	•	Angles:
+	•	النشر الرقمي: color #0ea5e9, icon Newspaper, cover placeholder.
+	•	الاقتصاد: color #22c55e, icon LineChart, cover placeholder.
+	•	الفكر: color #a855f7, icon BookOpenCheck, cover placeholder.
+
+6) واجهات API (Express.js)
+
+المسارات العامة
+	•	GET /api/muqtarib/angles?active=1 — قائمة الزوايا.
+	•	GET /api/muqtarib/angles/:slug — تفاصيل زاوية + آخر المقالات (مع pagination).
+	•	GET /api/muqtarib/articles?angle=:slug&limit=12&cursor= — مقالات الزاوية.
+
+لوحة التحكم (يتطلب RBAC: perms.muqtarib.manage)
+	•	POST /api/admin/muqtarib/angles — إنشاء.
+	•	PUT /api/admin/muqtarib/angles/:id — تعديل.
+	•	DELETE /api/admin/muqtarib/angles/:id — حذف (softDelete اختياري).
+	•	POST /api/admin/muqtarib/angles/:id/cover — رفع صورة غلاف إلى GCS وإرجاع URL.
+	•	POST /api/admin/muqtarib/angles/:id/ai-cover — توليد صورة بالذكاء الاصطناعي (إن مفعّل) ثم رفع.
+	•	POST /api/admin/articles/:articleId/angles — ربط مقال بزوايا.
+	•	DELETE /api/admin/articles/:articleId/angles/:angleId — إلغاء الربط.
+
+نماذج الطلب/الاستجابة
+
+// POST /api/admin/muqtarib/angles
+{
+  "nameAr": "الاقتصاد",
+  "nameEn": "Economy",
+  "slug": "economy",
+  "colorHex": "#22c55e",
+  "iconKey": "LineChart",
+  "shortDesc": "قراءات وتحليلات اقتصادية مبسطة",
+  "isActive": true,
+  "sortOrder": 10
+}
+
+// response
+{
+  "id": 3,
+  "slug": "economy",
+  "coverImageUrl": null
+}
+
+7) RBAC والصلاحيات
+	•	أضف Permission: muqtarib.manage (إدارة الزوايا والصور والربط).
+	•	أضف Permission: muqtarib.publish (تحكم بنشر/إخفاء زاوية).
+	•	أدوار مقترحة: Admin, Editor, Author:
+	•	Admin: الكل.
+	•	Editor: manage + publish + ربط المقالات.
+	•	Author: ربط مقالاته فقط.
+
+8) الواجهة الأمامية (React + Wouter + shadcn/ui)
+
+المسارات
+	•	/muqtarib (AnglesGridPage)
+	•	/muqtarib/:angleSlug (AnglePage)
+
+المكونات
+	•	MuqtaribAnglesGrid : يعرض بطاقات الزوايا (Card من shadcn)
+	•	AngleCard :
+	•	خلفية متدرجة من اللون الأساسي.
+	•	أيقونة Lucide (حسب iconKey).
+	•	صورة غلاف شفافة في الزاوية (object-cover, rounded‑2xl).
+	•	اسم الزاوية + وصف قصير.
+	•	AngleHeader : شارة لون + أيقونة + وصف.
+	•	ArticlesMasonry : شبكة بطاقات مقالات (3-4 أعمدة Responsive).
+	•	MuqtaribLatestBlock : بلوك يمكن استعماله في أي صفحة.
+
+تصميم وتفاصيل بصرية
+	•	RTL افتراضي، خط IBM Plex Sans Arabic.
+	•	ألوان الزوايا تُستخدم كـ CSS vars لكل صفحة زاوية: --angle-accent.
+	•	دعم Dark/Light تلقائي.
+	•	Hover states واضحة، ظلال ناعمة، زوايا مستديرة 2xl.
+
+مثال JSX للبطاقة (تبسيط)
+
+<Card className="group overflow-hidden rounded-2xl border-0 shadow-md bg-gradient-to-br from-[--angle-accent]/20 to-background">
+  <CardContent className="p-4 flex items-center gap-4">
+    <div className="size-12 rounded-xl bg-[--angle-accent] grid place-items-center">
+      <Icon name={iconKey} className="size-6 text-white" />
+    </div>
+    <div className="flex-1">
+      <h3 className="text-xl font-bold">{nameAr}</h3>
+      <p className="text-sm text-muted-foreground line-clamp-2">{shortDesc}</p>
+    </div>
+    {coverImageUrl && (
+      <img src={coverImageUrl} alt="" className="size-20 object-cover rounded-xl" />
+    )}
+  </CardContent>
+</Card>
+
+9) لوحة التحكم (UI/UX)
+	•	قائمة الزوايا بجدول: الاسم، slug، اللون، الأيقونة، الحالة، الترتيب، آخر تحديث، إجراءات.
+	•	نموذج إنشاء/تعديل:
+	•	الاسم العربي/الإنجليزي، slug (auto, قابل للتعديل)، color picker، أيقونة (Autocomplete من قائمة Lucide)، وصف قصير، رفع صورة.
+	•	زر توليد صورة تعريفية: يفتح Dialog لإدخال برومنت + توليد + معاينة + حفظ.
+	•	ضمن نموذج المقال: حقل اختيار الزوايا (Multi‑select)، مع البحث والـ chips.
+
+10) التخزين والوسائط (GCS)
+	•	مجلد muqtarib/covers/{angleSlug}/{uuid}.jpg.
+	•	توليد أحجام تلقائية (og:1200x630, thumb:320x180) باستخدام خدمة الصور لديك.
+	•	حفظ الـ URL النهائي في angles.coverImageUrl.
+
+11) SEO & Routing
+	•	صفحات الزوايا: title = مُقترب — {اسم الزاوية}، description من shortDesc.
+	•	OG Image: استخدم coverImageUrl أو مولد OG.
+	•	Sitemap:
+	•	/muqtarib
+	•	/muqtarib/:angleSlug
+	•	Breadcrumbs: الرئيسية / مُقترب / اسم الزاوية.
+
+12) الأداء والتخزين المؤقت
+	•	Cache للواجهات العامة (angles list, angle detail + latest articles) 60s–300s.
+	•	مفاتيح TanStack Query ذكية: ['muqtarib','angles'], ['muqtarib','angle',slug].
+	•	إعادة توليد الكاش عند تعديل زاوية أو ربط مقال.
+
+13) التحليلات والأحداث (Events)
+	•	muqtarib.view (عرض صفحة القسم)
+	•	muqtarib.angle.view مع { angleSlug }
+	•	muqtarib.block.view مع { angleSlug?, count }
+	•	قياس CTR من بطاقات الزوايا والمقالات.
+
+14) قابلية الوصول (a11y)
+	•	أسماء ARIA للأيقونات والصور.
+	•	تباين ألوان اللون الأساسي مقابل النص ≥ 4.5:1.
+	•	دعم لوحة المفاتيح للتبويبات والبطاقات.
+
+15) الاختبارات وقبول العمل
+	•	Unit + Integration للـ API (إنشاء/تعديل/حذف زاوية، رفع صورة، ربط ArticleAngle).
+	•	E2E بسيط لرحلة: الذهاب لـ /muqtarib → فتح زاوية → فتح مقال.
+	•	تحقق من: RTL، الوضع الليلي، الأداء Lighthouse ≥ 90 (Performance/Best Practices/SEO)، عدم كسر RBAC.
+
+16) تسليمات مطلوبة
+	•	مهاجرات Drizzle + سكريبت Seed.
+	•	Routes الواجهة الأمامية + مكونات جاهزة.
+	•	صفحات لوحة التحكم + الحمايات.
+	•	خدمات GCS للرفع والتحقق من النوع والحجم.
+	•	توثيق قصير لكيفية الإضافة والتعديل.
+
+17) مثال Seed (TypeScript)
+
+await db.insert(sections).values({ name: "مُقترب", slug: "muqtarib", description: "قسم زوايا تحليلية وانتقائية" });
+const s = await db.query.sections.findFirst({ where: (t, { eq }) => eq(t.slug, "muqtarib") });
+await db.insert(angles).values([
+  { sectionId: s!.id, nameAr: "النشر الرقمي", slug: "digital-publishing", colorHex: "#0ea5e9", iconKey: "Newspaper", shortDesc: "اتجاهات وتقنيات النشر الرقمي" },
+  { sectionId: s!.id, nameAr: "الاقتصاد", slug: "economy", colorHex: "#22c55e", iconKey: "LineChart", shortDesc: "قراءات اقتصادية مبسطة" },
+  { sectionId: s!.id, nameAr: "الفكر", slug: "thought", colorHex: "#a855f7", iconKey: "BookOpenCheck", shortDesc: "مقالات وتأملات فكرية" },
+]);
+
+18) برومنت مولد صورة تعريفية للزاوية (اختياري)
+
+Prompt للذكاء الاصطناعي: «ولّد صورة غلاف لزاوية {اسم الزاوية} بأسلوب صحفي حديث، ألوان رئيسية متوافقة مع {colorHex}، مساحة آمنة للنص أعلى اليسار، نسبة 16:9، تفاصيل تقنية واضحة، بدون نصوص داخلية، تناسب OG 1200×630.»
+
+19) معايير القبول النهائية (Checklist)
+	•	/muqtarib يعمل ويعرض بطاقات جميع الزوايا.
+	•	صفحة كل زاوية تعمل وتعرض أحدث المقالات + تبويبات.
+	•	CRUD للزوايا في لوحة التحكم مع رفع صورة وأيقونة ولون.
+	•	ربط المقالات بالزوايا من نموذج المقال.
+	•	بلوك MuqtaribLatestBlock قابل لإعادة الاستخدام.
+	•	RBAC مطبق بدقة.
+	•	SEO وSitemap وOG متكاملة.
+	•	أداء جيد + a11y.
+
+⸻
+
+تعليمات التنفيذ للمساعد البرمجي
+	1.	أنشئ جداول Drizzle والمهاجرات حسب المخطط أعلاه.
+	2.	أضف Seed لقسم «مُقترب» وثلاث زوايا.
+	3.	نفّذ Endpoints وService للرفع إلى GCS.
+	4.	ابنِ صفحات React والمكوّنات المحددة.
+	5.	فعّل RBAC والأذونات.
+	6.	أضف البلوك وادخله في الصفحة الرئيسية.
+	7.	أجرِ اختبارات القبول وسلّم التوثيق.
+
+عند الانتهاء، أعطني: روابط الملفات/الموديولات، مقتطفات التغييرات الرئيسية، ولقطات شاشة للصفحات الثلاث (القائمة، صفحة زاوية، لوحة تحكم إنشاء).
