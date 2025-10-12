@@ -667,8 +667,8 @@ export const updateThemeSchema = z.object({
   isDefault: z.boolean().optional(),
   priority: z.number().int().min(0).max(9999).optional(),
   status: z.enum(["draft", "review", "scheduled", "active", "expired", "disabled"]).optional(),
-  startAt: z.union([z.string().datetime(), z.null()]).optional(),
-  endAt: z.union([z.string().datetime(), z.null()]).optional(),
+  startAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
+  endAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
   assets: z.object({
     logoLight: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
     logoDark: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
