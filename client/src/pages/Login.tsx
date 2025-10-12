@@ -44,8 +44,8 @@ export default function Login() {
         description: "مرحباً بك في سبق الذكية",
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      // Force full page reload to ensure session cookie is properly set
+      window.location.href = "/dashboard";
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",
