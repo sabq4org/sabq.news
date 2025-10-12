@@ -3,7 +3,8 @@ import { useParams, Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Eye, Heart, Tag } from "lucide-react";
+import { Clock, Heart, Tag } from "lucide-react";
+import { ViewsCount } from "@/components/ViewsCount";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails } from "@shared/schema";
@@ -115,10 +116,10 @@ export default function KeywordPage() {
                               {timeAgo}
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </span>
+                          <ViewsCount 
+                            views={article.views || 0}
+                            iconClassName="h-3 w-3"
+                          />
                           <span className="flex items-center gap-1">
                             <Heart className="h-3 w-3" />
                             {article.reactionsCount || 0}

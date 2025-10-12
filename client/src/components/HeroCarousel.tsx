@@ -3,7 +3,8 @@ import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Volume2, TrendingUp, Bell, Eye } from "lucide-react";
+import { Volume2, TrendingUp, Bell } from "lucide-react";
+import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -125,10 +126,10 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       )}
 
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>{article.views || 0}</span>
-                        </div>
+                        <ViewsCount 
+                          views={article.views || 0}
+                          iconClassName="h-3 w-3"
+                        />
                         {article.publishedAt && (
                           <span className="text-xs">{formatPublishedDate(article.publishedAt)}</span>
                         )}
@@ -204,10 +205,10 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         )}
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2">
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            <span>{article.views || 0}</span>
-                          </div>
+                          <ViewsCount 
+                            views={article.views || 0}
+                            iconClassName="h-4 w-4"
+                          />
                           {article.publishedAt && (
                             <span>{formatPublishedDate(article.publishedAt)}</span>
                           )}

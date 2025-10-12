@@ -4,7 +4,8 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Clock, Sparkles } from "lucide-react";
+import { Clock, Sparkles } from "lucide-react";
+import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -118,10 +119,10 @@ export default function NewsPage() {
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        <span>{article.views || 0}</span>
-                      </div>
+                      <ViewsCount 
+                        views={article.views || 0}
+                        iconClassName="h-3 w-3"
+                      />
                     </div>
                   </CardContent>
                 </Card>

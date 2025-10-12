@@ -1,7 +1,8 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Clock, Eye } from "lucide-react";
+import { Sparkles, Clock } from "lucide-react";
+import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -82,10 +83,10 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      <span>{article.views || 0}</span>
-                    </div>
+                    <ViewsCount 
+                      views={article.views || 0}
+                      iconClassName="h-3 w-3"
+                    />
                   </div>
                 </div>
               </div>
@@ -143,10 +144,10 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      <span>{article.views || 0}</span>
-                    </div>
+                    <ViewsCount 
+                      views={article.views || 0}
+                      iconClassName="h-3 w-3"
+                    />
                   </div>
 
                   {showReason && article.category && (

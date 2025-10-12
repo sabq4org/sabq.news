@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Eye, Clock, MessageSquare } from "lucide-react";
+import { Sparkles, Clock, MessageSquare } from "lucide-react";
+import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -99,10 +100,10 @@ export function RecommendationsWidget({
                               {timeAgo}
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </span>
+                          <ViewsCount 
+                            views={article.views || 0}
+                            iconClassName="h-3 w-3"
+                          />
                           {(article.commentsCount ?? 0) > 0 && (
                             <span className="flex items-center gap-1">
                               <MessageSquare className="h-3 w-3" />
