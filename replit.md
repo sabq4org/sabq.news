@@ -5,14 +5,19 @@ Sabq Smart is an AI-powered Arabic news platform built with React, Express, and 
 
 ## Recent Critical Fixes (Oct 2025)
 
-### Navigation System Fixes
-**Issue**: Sidebar showing empty in dashboard due to React Hooks errors and incorrect role detection
+### Navigation & Routing Fixes
+**Issue**: Multiple dashboard pages had broken navigation - sidebar showing empty, categories page redirecting to homepage, missing route handlers causing 404 errors
 **Solutions Applied**:
 1. **React Hooks Error**: Fixed hook ordering in DashboardLayout - all hooks now called before any conditional returns
 2. **Role Detection Bug**: Fixed `/api/auth/user` endpoint to use `user.role` from users table as fallback when RBAC userRoles table has no entry
 3. **Navigation State**: Removed problematic reader redirect in Dashboard.tsx that was causing unexpected behavior
+4. **Categories Page Migration**: Migrated CategoriesManagement.tsx from old custom sidebar to unified DashboardLayout, removed restrictive admin-only redirect
+5. **Missing Routes**: Added "Coming Soon" placeholder page for all nav.config.ts routes not yet implemented (18 routes: tags, comments, AI features, analytics, settings, etc.)
 
-**Impact**: Dashboard sidebar now displays correctly for all authenticated users with proper role-based menu filtering.
+**Impact**: 
+- Dashboard sidebar now displays correctly for all authenticated users with proper role-based menu filtering
+- Categories page works correctly for admin and editor roles without homepage redirect
+- All navigation links now resolve (no more 404 errors) with clear "قريباً" messaging for pending features
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
