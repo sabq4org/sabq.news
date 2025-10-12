@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Save,
   Send,
@@ -31,7 +30,7 @@ import {
   Calendar,
   Hash,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -336,57 +335,51 @@ export default function ArticleEditor() {
   const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-lg">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                data-testid="button-back"
-              >
-                <Link href="/dashboard">
-                  <a className="gap-2">
-                    <ArrowRight className="h-4 w-4" />
-                    العودة
-                  </a>
-                </Link>
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <h1 className="text-lg font-semibold">
-                {isNewArticle ? "مقال جديد" : "تحرير المقال"}
-              </h1>
-            </div>
+    <DashboardLayout>
+      <div className="container mx-auto px-4 py-6">
+        {/* Page Header with Actions */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              data-testid="button-back"
+            >
+              <Link href="/dashboard/articles">
+                <a className="gap-2">
+                  <ArrowRight className="h-4 w-4" />
+                  العودة
+                </a>
+              </Link>
+            </Button>
+            <h1 className="text-2xl font-bold">
+              {isNewArticle ? "مقال جديد" : "تحرير المقال"}
+            </h1>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleSave(false)}
-                disabled={isSaving}
-                className="gap-2"
-                data-testid="button-save-draft"
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                حفظ كمسودة
-              </Button>
-              <Button
-                onClick={() => handleSave(true)}
-                disabled={isSaving}
-                className="gap-2"
-                data-testid="button-publish"
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                نشر
-              </Button>
-              <ThemeToggle />
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleSave(false)}
+              disabled={isSaving}
+              className="gap-2"
+              data-testid="button-save-draft"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              حفظ كمسودة
+            </Button>
+            <Button
+              onClick={() => handleSave(true)}
+              disabled={isSaving}
+              className="gap-2"
+              data-testid="button-publish"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              نشر
+            </Button>
           </div>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           {/* Main Content Area - 70% */}
           <div className="lg:col-span-7 space-y-6">
@@ -729,7 +722,7 @@ export default function ArticleEditor() {
             </Card>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
