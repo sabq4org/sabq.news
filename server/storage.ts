@@ -1446,7 +1446,14 @@ export class DatabaseStorage implements IStorage {
     const defaultTheme = await db
       .select()
       .from(themes)
-      .where(eq(themes.isDefault, true))
+      .where(
+        and(
+          eq(themes.isDefault, true),
+          sql`${themes.startAt} IS NULL OR ${themes.startAt} <= ${now.toISOString()}`,
+          sql`${themes.endAt} IS NULL OR ${themes.endAt} >= ${now.toISOString()}`,
+          sql`${scope} = ANY(${themes.applyTo}) OR array_length(${themes.applyTo}, 1) = 0 OR array_length(${themes.applyTo}, 1) IS NULL`
+        )
+      )
       .limit(1);
 
     return defaultTheme[0];

@@ -279,8 +279,8 @@ export default function ThemeEditor() {
         status: data.status,
         isDefault: data.isDefault,
         applyTo: data.applyTo,
-        startAt: data.startAt || null,
-        endAt: data.endAt || null,
+        startAt: data.startAt && data.startAt.trim() !== '' ? data.startAt : null,
+        endAt: data.endAt && data.endAt.trim() !== '' ? data.endAt : null,
         tokens: {
           colors: {
             primary: data.colors?.primary || undefined,
@@ -331,8 +331,8 @@ export default function ThemeEditor() {
         status: data.status,
         isDefault: data.isDefault,
         applyTo: data.applyTo,
-        startAt: data.startAt || null,
-        endAt: data.endAt || null,
+        startAt: data.startAt && data.startAt.trim() !== '' ? data.startAt : null,
+        endAt: data.endAt && data.endAt.trim() !== '' ? data.endAt : null,
         tokens: {
           colors: {
             primary: data.colors?.primary || undefined,

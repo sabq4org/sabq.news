@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import type { Theme as AppTheme } from "@shared/schema";
 
 type Theme = "light" | "dark";
@@ -27,9 +28,21 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
   );
+  const [location] = useLocation();
+
+  const scope = (() => {
+    if (location === "/") return "homepage_only";
+    if (location.startsWith("/dashboard")) return "dashboard";
+    return "site_full";
+  })();
 
   const { data: appTheme, isLoading: isLoadingAppTheme } = useQuery<AppTheme | null>({
-    queryKey: ["/api/themes/active?scope=site_full"],
+    queryKey: ["/api/themes/active", scope],
+    queryFn: async () => {
+      const res = await fetch(`/api/themes/active?scope=${scope}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
     staleTime: 60000,
     refetchInterval: 60000,
   });
