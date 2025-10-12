@@ -39,16 +39,12 @@ export default function Dashboard() {
   });
 
   // Redirect readers to home page - only content creators and admins can access dashboard
-  useEffect(() => {
-    if (!isUserLoading && user && user.role === "reader") {
-      setLocation("/");
-    }
-  }, [isUserLoading, user, setLocation]);
-
-  // Don't render dashboard for readers
-  if (!isUserLoading && user && user.role === "reader") {
-    return null;
-  }
+  // REMOVED: This was causing issues when user data loads slowly
+  // useEffect(() => {
+  //   if (!isUserLoading && user && user.role === "reader") {
+  //     setLocation("/");
+  //   }
+  // }, [isUserLoading, user, setLocation]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
