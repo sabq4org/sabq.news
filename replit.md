@@ -5,19 +5,33 @@ Sabq Smart is an AI-powered Arabic news platform built with React, Express, and 
 
 ## Recent Critical Fixes (Oct 2025)
 
-### Navigation & Routing Fixes
+### Navigation & Routing Fixes (Oct 12, 2025)
 **Issue**: Multiple dashboard pages had broken navigation - sidebar showing empty, categories page redirecting to homepage, missing route handlers causing 404 errors
 **Solutions Applied**:
 1. **React Hooks Error**: Fixed hook ordering in DashboardLayout - all hooks now called before any conditional returns
 2. **Role Detection Bug**: Fixed `/api/auth/user` endpoint to use `user.role` from users table as fallback when RBAC userRoles table has no entry
 3. **Navigation State**: Removed problematic reader redirect in Dashboard.tsx that was causing unexpected behavior
-4. **Categories Page Migration**: Migrated CategoriesManagement.tsx from old custom sidebar to unified DashboardLayout, removed restrictive admin-only redirect
-5. **Missing Routes**: Added "Coming Soon" placeholder page for all nav.config.ts routes not yet implemented (18 routes: tags, comments, AI features, analytics, settings, etc.)
+4. **Dashboard Pages Migration**: Migrated CategoriesManagement, ArticlesManagement, RolesManagement, and ArticleEditor to unified DashboardLayout
+5. **Missing Routes**: Added "Coming Soon" placeholder page for all nav.config.ts routes not yet implemented (18 routes)
 
 **Impact**: 
-- Dashboard sidebar now displays correctly for all authenticated users with proper role-based menu filtering
-- Categories page works correctly for admin and editor roles without homepage redirect
-- All navigation links now resolve (no more 404 errors) with clear "قريباً" messaging for pending features
+- Dashboard sidebar now displays correctly across all pages with consistent navigation
+- All management pages (Categories, Articles, Roles, Editor) use unified DashboardLayout
+- All navigation links now resolve (no more 404 errors) with clear "قريباً" messaging
+
+### Dark Mode Enhancement (Oct 12, 2025)
+**Issue**: Dark mode colors had insufficient contrast making text and UI elements hard to read
+**Solutions Applied**:
+- Increased background darkness (6% instead of 8%) for better contrast
+- Enhanced text clarity (98% instead of 95%) for improved readability
+- Improved border visibility (20% instead of 18%) for better element separation
+- Optimized card backgrounds and borders for clearer visual hierarchy
+- Brightened primary colors (65% instead of 60%) for better visibility
+- Enhanced muted text (75% instead of 70%) for secondary content
+- Strengthened shadows for better depth perception
+- Improved hover/active interactions for clearer user feedback
+
+**Impact**: Dark mode now provides excellent contrast and readability across the entire platform
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
