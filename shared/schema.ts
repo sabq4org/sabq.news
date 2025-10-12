@@ -566,6 +566,34 @@ export const imageAssets = pgTable("image_assets", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Tags table (الوسوم)
+export const tags = pgTable("tags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nameAr: text("name_ar").notNull(),
+  nameEn: text("name_en").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  usageCount: integer("usage_count").default(0).notNull(),
+  color: text("color"),
+  status: text("status").default("active").notNull(), // active, inactive
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_tags_slug").on(table.slug),
+  index("idx_tags_status").on(table.status),
+]);
+
+// Junction table for article-tag many-to-many
+export const articleTags = pgTable("article_tags", {
+  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  tagId: varchar("tag_id").references(() => tags.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.articleId, table.tagId] }),
+  articleIdx: index("idx_article_tags_article").on(table.articleId),
+  tagIdx: index("idx_article_tags_tag").on(table.tagId),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -774,6 +802,26 @@ export const insertArticleAngleSchema = createInsertSchema(articleAngles).omit({
 
 export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({ 
   id: true, 
+  createdAt: true 
+});
+
+export const insertTagSchema = createInsertSchema(tags).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  usageCount: true,
+});
+
+export const updateTagSchema = z.object({
+  nameAr: z.string().min(2, "الاسم بالعربية يجب أن يكون حرفين على الأقل").optional(),
+  nameEn: z.string().min(2, "الاسم بالإنجليزية يجب أن يكون حرفين على الأقل").optional(),
+  slug: z.string().min(2).optional(),
+  description: z.string().optional().or(z.literal("")),
+  color: z.string().optional().or(z.literal("")),
+  status: z.enum(["active", "inactive"]).optional(),
+});
+
+export const insertArticleTagSchema = createInsertSchema(articleTags).omit({ 
   createdAt: true 
 });
 
@@ -991,6 +1039,13 @@ export type InsertArticleAngle = z.infer<typeof insertArticleAngleSchema>;
 export type ImageAsset = typeof imageAssets.$inferSelect;
 export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
 
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = z.infer<typeof insertTagSchema>;
+export type UpdateTag = z.infer<typeof updateTagSchema>;
+
+export type ArticleTag = typeof articleTags.$inferSelect;
+export type InsertArticleTag = z.infer<typeof insertArticleTagSchema>;
+
 // Drizzle Relations
 export const sectionsRelations = relations(sections, ({ many }) => ({
   angles: many(angles),
@@ -1006,6 +1061,7 @@ export const anglesRelations = relations(angles, ({ one, many }) => ({
 
 export const articlesRelations = relations(articles, ({ many }) => ({
   articleAngles: many(articleAngles),
+  articleTags: many(articleTags),
 }));
 
 export const articleAnglesRelations = relations(articleAngles, ({ one }) => ({
@@ -1016,5 +1072,20 @@ export const articleAnglesRelations = relations(articleAngles, ({ one }) => ({
   angle: one(angles, {
     fields: [articleAngles.angleId],
     references: [angles.id],
+  }),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  articleTags: many(articleTags),
+}));
+
+export const articleTagsRelations = relations(articleTags, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleTags.articleId],
+    references: [articles.id],
+  }),
+  tag: one(tags, {
+    fields: [articleTags.tagId],
+    references: [tags.id],
   }),
 }));
