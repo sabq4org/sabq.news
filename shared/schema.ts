@@ -652,13 +652,13 @@ export const insertThemeSchema = createInsertSchema(themes).omit({
   updatedAt: true,
   version: true,
 }).extend({
-  // Override assets to accept empty strings, null, or valid URLs
+  // Override assets to accept empty strings, null, undefined, or valid URLs
   assets: z.object({
-    logoLight: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    logoDark: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    favicon: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    banner: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    ogImage: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    logoLight: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    logoDark: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    favicon: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    banner: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    ogImage: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
   }).optional().nullable(),
 });
 export const updateThemeSchema = z.object({
@@ -670,11 +670,11 @@ export const updateThemeSchema = z.object({
   startAt: z.union([z.string().datetime(), z.null()]).optional(),
   endAt: z.union([z.string().datetime(), z.null()]).optional(),
   assets: z.object({
-    logoLight: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    logoDark: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    favicon: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    banner: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
-    ogImage: z.union([z.literal(''), z.null(), z.string().url()]).optional(),
+    logoLight: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    logoDark: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    favicon: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    banner: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
+    ogImage: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
   }).optional().nullable(),
   tokens: z.object({
     colors: z.record(z.string()).optional(),
