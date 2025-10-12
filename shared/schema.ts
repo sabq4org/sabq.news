@@ -651,6 +651,15 @@ export const insertThemeSchema = createInsertSchema(themes).omit({
   createdAt: true, 
   updatedAt: true,
   version: true,
+}).extend({
+  // Override assets to accept empty strings or null values
+  assets: z.object({
+    logoLight: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    logoDark: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    favicon: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    banner: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    ogImage: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  }).optional().nullable(),
 });
 export const updateThemeSchema = z.object({
   name: z.string().min(2).optional(),
