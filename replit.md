@@ -17,7 +17,18 @@ The backend uses Express.js with TypeScript, implementing RESTful APIs. Authenti
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, RSS Feeds, Reading History, User Interests (linking users to categories), Behavior Logs, Sentiment Scores, and Themes.
 The API architecture provides authenticated and RBAC-protected endpoints for user management, interest management, behavior tracking, homepage content aggregation, and comprehensive theme management.
 AI integration leverages OpenAI GPT-5 for Arabic text summarization, AI-powered title generation, and planned sentiment analysis, with fallback handling for service failures.
-The "نبض (Pulse)" Intelligent Membership System tracks user behavior and interests for personalized experiences. An advanced Theme Management System supports dynamic theme resolution, lifecycle management, scheduled activation, and an audit trail with rollback capabilities. File storage is handled by Google Cloud Storage via Replit Object Storage, with a custom ACL system. A Content Import System parses RSS feeds, performs duplicate detection, and uses AI for summarization.
+The "نبض (Pulse)" Intelligent Membership System tracks user behavior and interests for personalized experiences. 
+
+**Advanced Theme Management System** with comprehensive scope-aware functionality:
+- **Scope-Based Application**: Themes can target specific pages (homepage_only, dashboard) or apply site-wide (site_full)
+- **Dynamic Theme Resolution**: ThemeProvider automatically detects current page and requests appropriate scoped theme
+- **Expiration Handling**: Themes with startAt/endAt dates are automatically validated; expired themes revert to default or none
+- **Default Theme Logic**: Default themes respect scope restrictions and date validation; won't apply outside their designated pages
+- **Lifecycle Management**: Scheduled activation, audit trail, rollback capabilities, and theme versioning
+- **Visual Theme Editor**: Hex color picker with HSL conversion, live preview, and comprehensive asset management
+- **Date Validation**: Empty datetime fields properly normalized to null; no validation errors when toggling default status
+
+File storage is handled by Google Cloud Storage via Replit Object Storage, with a custom ACL system. A Content Import System parses RSS feeds, performs duplicate detection, and uses AI for summarization.
 
 ### Core Modules
 - **Authentication System:** Migrated to traditional email/password with bcrypt hashing, session management, and auto-login after registration.
