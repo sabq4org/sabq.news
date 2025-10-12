@@ -65,7 +65,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [collapsedGroups]);
 
   // ALWAYS call hooks in same order - use fallback values during loading
-  const role = (user?.role || "admin") as UserRole;  // Default to admin to show nav during load
+  // Map system_admin to admin for nav filtering
+  let rawRole = user?.role || "admin";
+  if (rawRole === "system_admin") rawRole = "admin";
+  const role = rawRole as UserRole;
   
   // Memoize flags to prevent unnecessary re-renders  
   const flags = useMemo(() => ({
@@ -79,6 +82,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     flags,
     pathname: location
   });
+
+  // Debug logging
+  console.log('[DashboardLayout] User:', user);
+  console.log('[DashboardLayout] Role:', role);
+  console.log('[DashboardLayout] TreeFiltered:', treeFiltered);
+  console.log('[DashboardLayout] TreeFiltered length:', treeFiltered.length);
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups(prev => ({

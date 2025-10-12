@@ -189,8 +189,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("❌ Session error:", err);
           return res.status(500).json({ message: "خطأ في إنشاء الجلسة" });
         }
-        console.log("✅ Login successful:", user.email);
-        res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+        
+        // Explicitly save session before sending response
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("❌ Session save error:", saveErr);
+            return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
+          }
+          console.log("✅ Login successful:", user.email);
+          res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+        });
       });
     })(req, res, next);
   });
@@ -391,6 +399,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user
   app.get("/api/auth/user", async (req: any, res) => {
     try {
+      console.log('🔍 /api/auth/user check:', {
+        isAuthenticated: req.isAuthenticated(),
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        sessionID: req.sessionID
+      });
+      
       if (!req.isAuthenticated() || !req.user?.id) {
         return res.status(401).json({ message: "Unauthorized" });
       }

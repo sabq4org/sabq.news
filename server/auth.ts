@@ -26,6 +26,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: sessionTtl,
     },
   });
@@ -88,17 +89,22 @@ export async function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user: any, done) => {
+    console.log('🔹 SerializeUser:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log('🔸 DeserializeUser called with id:', id);
       const user = await storage.getUser(id);
       if (!user) {
+        console.log('❌ DeserializeUser: User not found for id:', id);
         return done(null, false);
       }
+      console.log('✅ DeserializeUser: User found:', user.email);
       done(null, { id: user.id, email: user.email });
     } catch (error) {
+      console.error('❌ DeserializeUser error:', error);
       done(error);
     }
   });
