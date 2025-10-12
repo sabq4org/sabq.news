@@ -1,0 +1,305 @@
+import {
+  LayoutDashboard,
+  FileText,
+  FolderOpen,
+  Users,
+  PlusCircle,
+  Shield,
+  Palette,
+  Rss,
+  MessageSquare,
+  Tag,
+  Sparkles,
+  AudioLines,
+  Brain,
+  Type,
+  ShieldCheck,
+  KeyRound,
+  UserCircle,
+  SquareStack,
+  PieChart,
+  Activity,
+  MousePointer,
+  SplitSquareHorizontal,
+  Settings,
+  Plug,
+  Cloud,
+  ListChecks,
+  Newspaper,
+  Bell,
+  User,
+  Flame,
+} from "lucide-react";
+import type { NavItem } from "./types";
+
+/**
+ * مصدر الحقيقة الواحد لجميع عناصر القائمة الجانبية
+ * Single Source of Truth for all navigation items
+ */
+export const navConfig: NavItem[] = [
+  {
+    id: "dashboard",
+    labelKey: "nav.dashboard",
+    labelAr: "نظرة عامة",
+    path: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    meta: { exact: true },
+  },
+
+  // ===== المحتوى / Content =====
+  {
+    id: "content",
+    labelKey: "nav.content",
+    labelAr: "المحتوى",
+    icon: Newspaper,
+    roles: ["admin", "editor", "author", "reviewer"],
+    children: [
+      {
+        id: "articles",
+        labelKey: "nav.articles",
+        labelAr: "المقالات",
+        path: "/dashboard/articles",
+        icon: FileText,
+        roles: ["admin", "editor", "author", "reviewer"],
+      },
+      {
+        id: "new_article",
+        labelKey: "nav.new_article",
+        labelAr: "مقال جديد",
+        path: "/dashboard/articles/new",
+        icon: PlusCircle,
+        roles: ["admin", "editor", "author"],
+      },
+      {
+        id: "categories",
+        labelKey: "nav.categories",
+        labelAr: "التصنيفات",
+        path: "/dashboard/categories",
+        icon: FolderOpen,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "tags",
+        labelKey: "nav.tags",
+        labelAr: "الوسوم",
+        path: "/dashboard/tags",
+        icon: Tag,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "comments",
+        labelKey: "nav.comments",
+        labelAr: "التعليقات",
+        path: "/dashboard/comments",
+        icon: MessageSquare,
+        roles: ["admin", "editor", "reviewer"],
+      },
+    ],
+  },
+
+  // ===== الذكاء الاصطناعي / AI =====
+  {
+    id: "ai",
+    labelKey: "nav.ai",
+    labelAr: "الذكاء الاصطناعي",
+    icon: Sparkles,
+    roles: ["admin", "editor", "analyst"],
+    featureFlags: ["aiDeepAnalysis"],
+    children: [
+      {
+        id: "ai_summaries",
+        labelKey: "nav.ai_summaries",
+        labelAr: "الملخصات الصوتية",
+        path: "/dashboard/ai/summaries",
+        icon: AudioLines,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "ai_deep",
+        labelKey: "nav.ai_deep_analysis",
+        labelAr: "التحليل العميق",
+        path: "/dashboard/ai/deep",
+        icon: Brain,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "ai_headlines",
+        labelKey: "nav.ai_headlines",
+        labelAr: "العناوين الذكية",
+        path: "/dashboard/ai/headlines",
+        icon: Type,
+        roles: ["admin", "editor"],
+      },
+    ],
+  },
+
+  // ===== المستخدمون والأدوار / Users & Roles =====
+  {
+    id: "users",
+    labelKey: "nav.users_and_roles",
+    labelAr: "المستخدمون والأدوار",
+    icon: Users,
+    roles: ["admin"],
+    children: [
+      {
+        id: "users_mgmt",
+        labelKey: "nav.users",
+        labelAr: "المستخدمون",
+        path: "/dashboard/users",
+        icon: UserCircle,
+        roles: ["admin"],
+      },
+      {
+        id: "roles",
+        labelKey: "nav.roles",
+        labelAr: "الأدوار والصلاحيات",
+        path: "/dashboard/roles",
+        icon: ShieldCheck,
+        roles: ["admin"],
+      },
+      {
+        id: "permissions",
+        labelKey: "nav.permissions",
+        labelAr: "الصلاحيات",
+        path: "/dashboard/permissions",
+        icon: KeyRound,
+        roles: ["admin"],
+      },
+    ],
+  },
+
+  // ===== المظهر / Appearance =====
+  {
+    id: "appearance",
+    labelKey: "nav.appearance",
+    labelAr: "المظهر",
+    icon: Palette,
+    roles: ["admin", "editor"],
+    featureFlags: ["smartThemes"],
+    children: [
+      {
+        id: "themes",
+        labelKey: "nav.themes",
+        labelAr: "السمات",
+        path: "/dashboard/themes",
+        icon: Palette,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "templates",
+        labelKey: "nav.templates",
+        labelAr: "القوالب",
+        path: "/dashboard/templates",
+        icon: SquareStack,
+        roles: ["admin", "editor"],
+      },
+    ],
+  },
+
+  // ===== التحليلات / Analytics =====
+  {
+    id: "analytics",
+    labelKey: "nav.analytics",
+    labelAr: "التحليلات",
+    icon: PieChart,
+    roles: ["admin", "analyst"],
+    children: [
+      {
+        id: "dashboards",
+        labelKey: "nav.analytics_dashboards",
+        labelAr: "لوحات التحليلات",
+        path: "/dashboard/analytics",
+        icon: Activity,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "trending",
+        labelKey: "nav.trending",
+        labelAr: "الرائج",
+        path: "/dashboard/analytics/trending",
+        icon: Flame,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "behavior",
+        labelKey: "nav.user_behavior",
+        labelAr: "سلوك المستخدمين",
+        path: "/dashboard/analytics/behavior",
+        icon: MousePointer,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "abTests",
+        labelKey: "nav.ab_tests",
+        labelAr: "اختبارات A/B",
+        path: "/dashboard/analytics/ab-tests",
+        icon: SplitSquareHorizontal,
+        roles: ["admin", "analyst"],
+      },
+    ],
+  },
+
+  // ===== الإعدادات / Settings =====
+  {
+    id: "settings",
+    labelKey: "nav.settings",
+    labelAr: "الإعدادات",
+    icon: Settings,
+    roles: ["admin"],
+    children: [
+      {
+        id: "rss_feeds",
+        labelKey: "nav.rss_feeds",
+        labelAr: "مصادر RSS",
+        path: "/dashboard/rss-feeds",
+        icon: Rss,
+        roles: ["admin"],
+      },
+      {
+        id: "integrations",
+        labelKey: "nav.integrations",
+        labelAr: "التكاملات",
+        path: "/dashboard/integrations",
+        icon: Plug,
+        roles: ["admin"],
+      },
+      {
+        id: "storage",
+        labelKey: "nav.storage",
+        labelAr: "التخزين",
+        path: "/dashboard/storage",
+        icon: Cloud,
+        roles: ["admin"],
+      },
+      {
+        id: "audits",
+        labelKey: "nav.audit_logs",
+        labelAr: "سجلات النشاط",
+        path: "/dashboard/audit-logs",
+        icon: ListChecks,
+        roles: ["admin"],
+      },
+    ],
+  },
+
+  // ===== الملف الشخصي / Profile (Divider before) =====
+  {
+    id: "profile",
+    labelKey: "nav.profile",
+    labelAr: "الملف الشخصي",
+    path: "/dashboard/profile",
+    icon: User,
+    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    divider: true,
+  },
+
+  {
+    id: "notifications",
+    labelKey: "nav.notifications",
+    labelAr: "الإشعارات",
+    path: "/dashboard/notifications",
+    icon: Bell,
+    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+  },
+];
