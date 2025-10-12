@@ -7,22 +7,22 @@ export function Footer() {
 
   const sections = {
     about: [
-      { label: "من نحن", href: "/about" },
-      { label: "اتصل بنا", href: "/contact" },
-      { label: "الشروط والأحكام", href: "/terms" },
-      { label: "سياسة الخصوصية", href: "/privacy" },
+      { label: "من نحن", href: "#" },
+      { label: "اتصل بنا", href: "#" },
+      { label: "الشروط والأحكام", href: "#" },
+      { label: "سياسة الخصوصية", href: "#" },
     ],
     categories: [
-      { label: "سياسة", href: "/category/politics" },
-      { label: "اقتصاد", href: "/category/economy" },
-      { label: "رياضة", href: "/category/sports" },
-      { label: "تقنية", href: "/category/technology" },
-      { label: "ثقافة وفن", href: "/category/culture" },
+      { label: "سياسة", href: "#" },
+      { label: "اقتصاد", href: "#" },
+      { label: "رياضة", href: "#" },
+      { label: "تقنية", href: "#" },
+      { label: "ثقافة وفن", href: "#" },
     ],
     services: [
       { label: "مُقترب", href: "/muqtarib" },
-      { label: "جميع التصنيفات", href: "/categories" },
-      { label: "الأخبار", href: "/news" },
+      { label: "جميع التصنيفات", href: "#" },
+      { label: "الأخبار", href: "/" },
       { label: "تطبيق الجوال", href: "#" },
     ],
   };
@@ -41,8 +41,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Logo and Description */}
           <div className="lg:col-span-2">
-            <Link href="/">
-              <a className="flex items-center gap-3 mb-4 group" data-testid="footer-logo">
+            <Link href="/" data-testid="footer-logo">
+              <div className="flex items-center gap-3 mb-4 group cursor-pointer">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl transition-transform group-hover:scale-105">
                   س
                 </div>
@@ -50,7 +50,7 @@ export function Footer() {
                   <h3 className="text-xl font-bold">سبق الذكية</h3>
                   <p className="text-xs text-muted-foreground">منصة الأخبار الذكية</p>
                 </div>
-              </a>
+              </div>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               منصة إخبارية عربية ذكية تقدم أحدث الأخبار والتحليلات المدعومة بالذكاء الاصطناعي. 
@@ -82,13 +82,12 @@ export function Footer() {
             <ul className="space-y-2">
               {sections.about.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href}>
-                    <a 
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      data-testid={`footer-link-${item.href.replace('/', '')}`}
-                    >
-                      {item.label}
-                    </a>
+                  <Link 
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    data-testid={`footer-link-${item.href.replace('/', '')}`}
+                  >
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -101,13 +100,12 @@ export function Footer() {
             <ul className="space-y-2">
               {sections.categories.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href}>
-                    <a 
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      data-testid={`footer-category-${item.href.split('/').pop()}`}
-                    >
-                      {item.label}
-                    </a>
+                  <Link 
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    data-testid={`footer-category-${item.href.split('/').pop()}`}
+                  >
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -120,13 +118,12 @@ export function Footer() {
             <ul className="space-y-2">
               {sections.services.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href}>
-                    <a 
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      data-testid={`footer-service-${item.href.replace('/', '').replace('#', 'app')}`}
-                    >
-                      {item.label}
-                    </a>
+                  <Link 
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    data-testid={`footer-service-${item.href.replace('/', '').replace('#', 'app')}`}
+                  >
+                    {item.label}
                   </Link>
                 </li>
               ))}
