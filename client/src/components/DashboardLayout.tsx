@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut, ChevronDown } from "lucide-react";
@@ -64,6 +64,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [collapsedGroups]);
 
+  // Get navigation state BEFORE any conditional returns
+  // This ensures same number of hooks on every render
+  const role = (user?.role || "guest") as UserRole;
+  
+  // Memoize flags to prevent unnecessary re-renders
+  const flags = useMemo(() => ({
+    aiDeepAnalysis: false, // يمكن تفعيلها من الإعدادات
+    smartThemes: true,     // مفعلة افتراضياً
+    audioSummaries: false,
+  }), []);
+  
+  const { treeFiltered, activeItem } = useNav({ 
+    role, 
+    flags,
+    pathname: location
+  });
+
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups(prev => ({
       ...prev,
@@ -72,6 +89,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   // عرض شاشة تحميل أثناء التحقق من المصادقة
+  // AFTER calling all hooks
   if (isLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center" dir="rtl">
@@ -82,20 +100,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     );
   }
-
-  // Get navigation state with current location
-  const role = (user.role || "guest") as UserRole;
-  const flags = {
-    aiDeepAnalysis: false, // يمكن تفعيلها من الإعدادات
-    smartThemes: true,     // مفعلة افتراضياً
-    audioSummaries: false,
-  };
-  
-  const { treeFiltered, activeItem } = useNav({ 
-    role, 
-    flags,
-    pathname: location
-  });
 
   const handleLogout = async () => {
     try {
