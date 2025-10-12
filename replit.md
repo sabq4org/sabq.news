@@ -96,6 +96,80 @@ File storage is handled by Google Cloud Storage via Replit Object Storage, with 
 - **Advanced Article Editor:** Professional article creation interface with subtitle support, news type classification (breaking/featured/regular), instant/scheduled publishing, comprehensive SEO management with Google preview, and AI-powered title/summary generation. Features a two-column layout (70% content, 30% settings) with rich text editing capabilities.
 - **Muqtarib (مُقترب) Section:** Thematic angles (زوايا) system for presenting articles from different perspectives (Digital Publishing, Economy, Thought). Features public angle browsing (/muqtarib), detailed angle pages with linked articles (/muqtarib/:slug), and admin CRUD management (/dashboard/muqtarib) with RBAC protection. Includes AngleCard component, comprehensive hooks for data fetching (useMuqtaribAngles, useAngleDetail, useAngleArticles), and full SEO implementation.
 
+## AI-Powered Features (Oct 12, 2025)
+
+### 1. AI ChatBot Assistant
+**Implementation**: Floating chat interface powered by OpenAI GPT-5
+- **Frontend Component**: `AIChatBot.tsx` with Radix UI Dialog
+- **Backend**: `/api/ai/chat` endpoint with context-aware responses
+- **Features**:
+  - Floating button in bottom-left corner (RTL)
+  - Context from last 10 published articles
+  - Quick suggestion badges for common queries
+  - System prompt optimized for Arabic news assistance
+  - Full RTL support with responsive design
+
+### 2. Audio Summary (Text-to-Speech)
+**Implementation**: Web Speech API for article summarization
+- **Custom Hook**: `useTextToSpeech.ts` for browser TTS
+- **Integration**: ArticleDetail page with play/stop controls
+- **Features**:
+  - Reads aiSummary or first 200 words of content
+  - Arabic language support (ar-SA)
+  - Visual indicators during playback
+  - No API costs (browser-native)
+  - Volume2/VolumeX icons from lucide-react
+
+### 3. Credibility Score Analysis
+**Implementation**: AI-powered article credibility assessment
+- **Database Schema**: Added `credibilityScore`, `credibilityAnalysis`, `credibilityLastUpdated` to articles table
+- **OpenAI Function**: `analyzeCredibility()` evaluates based on 4 criteria (المصادر، الوضوح، التوازن، الدقة اللغوية)
+- **Backend**: `/api/articles/:id/analyze-credibility` endpoint
+- **Frontend Component**: `CredibilityIndicator.tsx` with:
+  - Progress bar with color coding (green >80, yellow 60-80, red <60)
+  - Shield icons (ShieldCheck, AlertTriangle, ShieldX)
+  - Dialog showing detailed factor analysis
+  - Full RTL and responsive design
+
+### 4. Daily Brief (الملخص اليومي)
+**Implementation**: Personalized daily news summary based on user interests
+- **Page**: `/daily-brief` (DailyBrief.tsx)
+- **Backend**: `/api/daily-brief` fetches articles from user's interested categories
+- **Features**:
+  - Welcome header with current date in Arabic
+  - Estimated reading time calculation
+  - Categorized article sections
+  - Compact article cards with images and excerpts
+  - Empty state with call-to-action for interest selection
+  - Refresh button for latest updates
+  - Navigation link in user dropdown menu
+
+### 5. Interest Management
+**Implementation**: Dedicated page for updating user interests
+- **Page**: `/interests/edit` (EditInterests.tsx)
+- **Features**:
+  - Grid layout (3 cols desktop, 2 tablet, 1 mobile)
+  - Visual category cards with selection state
+  - Minimum 3 categories validation
+  - Progress indicator
+  - Toast notifications for success/error
+  - Framer-motion animations
+  - Linked from Profile and SmartInterestsBlock
+
+### 6. Enhanced Profile Page
+**Implementation**: Responsive redesign with article display
+- **Article Tabs**: Shows liked articles, bookmarks, and reading history
+- **Responsive Layout**:
+  - Desktop: 30% sidebar + 70% content, 3-column article grid
+  - Tablet: Single column, 2-column article grid
+  - Mobile: Single column, 1-column article grid
+- **Mobile Optimizations**:
+  - Collapsible sidebar sections (Interests, Loyalty, Contact)
+  - ArticleCard "grid" variant for compact display
+  - Skeleton loaders for each tab
+  - Framer-motion staggered entrance animations
+- **APIs Used**: `/api/profile/liked`, `/api/profile/bookmarks`, `/api/profile/history`
+
 ## External Dependencies
 
 **Authentication & Identity**

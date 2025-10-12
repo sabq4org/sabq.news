@@ -52,38 +52,63 @@ export function useTextToSpeech(
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.volume = volume;
+    // Wait for voices to be loaded (Chrome workaround)
+    const speakWithVoices = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      utterance.volume = volume;
 
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setIsPaused(false);
+      // Try to find an Arabic voice, fallback to default
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find(voice => voice.lang.startsWith('ar'));
+      if (arabicVoice) {
+        utterance.voice = arabicVoice;
+      }
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setIsPaused(false);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsSpeaking(false);
+        setIsPaused(false);
+      };
+
+      utterance.onpause = () => {
+        setIsPaused(true);
+      };
+
+      utterance.onresume = () => {
+        setIsPaused(false);
+      };
+
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
     };
 
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-      setIsSpeaking(false);
-      setIsPaused(false);
-    };
-
-    utterance.onpause = () => {
-      setIsPaused(true);
-    };
-
-    utterance.onresume = () => {
-      setIsPaused(false);
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    // Check if voices are already loaded
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      speakWithVoices();
+    } else {
+      // Wait for voices to load (Chrome/Edge requirement)
+      window.speechSynthesis.onvoiceschanged = () => {
+        speakWithVoices();
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+      
+      // Fallback: try anyway after a short delay
+      setTimeout(speakWithVoices, 100);
+    }
   };
 
   const pause = () => {
