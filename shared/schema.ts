@@ -670,12 +670,12 @@ export const updateThemeSchema = z.object({
   startAt: z.union([z.string().datetime(), z.null()]).optional(),
   endAt: z.union([z.string().datetime(), z.null()]).optional(),
   assets: z.object({
-    logoLight: z.string().url().optional(),
-    logoDark: z.string().url().optional(),
-    favicon: z.string().url().optional(),
-    banner: z.string().url().optional(),
-    ogImage: z.string().url().optional(),
-  }).optional(),
+    logoLight: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    logoDark: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    favicon: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    banner: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    ogImage: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  }).optional().nullable(),
   tokens: z.object({
     colors: z.record(z.string()).optional(),
     fonts: z.record(z.string()).optional(),
