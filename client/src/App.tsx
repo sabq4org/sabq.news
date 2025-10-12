@@ -24,6 +24,7 @@ import RolesManagement from "@/pages/RolesManagement";
 import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
+import EditInterests from "@/pages/EditInterests";
 import ThemeManager from "@/pages/ThemeManager";
 import ThemeEditor from "@/pages/ThemeEditor";
 import NotificationSettings from "@/pages/NotificationSettings";
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />
+      <Route path="/interests/edit" component={EditInterests} />
       <Route path="/notification-settings" component={NotificationSettings} />
       <Route path="/onboarding/welcome" component={Welcome} />
       <Route path="/onboarding/interests" component={OnboardingInterests} />

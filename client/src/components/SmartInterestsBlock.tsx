@@ -26,7 +26,7 @@ export function SmartInterestsBlock({ userId }: SmartInterestsBlockProps) {
   });
 
   const handleNavigateToInterests = () => {
-    navigate("/onboarding/interests");
+    navigate("/interests/edit");
   };
 
   if (interests.length === 0) {
