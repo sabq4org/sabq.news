@@ -2705,6 +2705,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export all themes (must be before :id route)
+  app.get("/api/themes/export", requireRole("admin"), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Get all themes from database
+      const allThemes = await db
+        .select()
+        .from(themes)
+        .orderBy(themes.createdAt);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "export",
+        entityType: "themes",
+        entityId: "all",
+        newValue: { count: allThemes.length },
+      });
+
+      // Format response with metadata
+      const exportData = {
+        version: "1.0",
+        exportedAt: new Date().toISOString(),
+        themes: allThemes,
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      console.error("Error exporting themes:", error);
+      res.status(500).json({ message: "فشل في تصدير السمات" });
+    }
+  });
+
+  // Import themes (must be before :id route)
+  app.post("/api/themes/import", requireRole("admin"), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { version, themes: importThemes, mode = "merge" } = req.body;
+
+      // Validate request body
+      if (!version || !importThemes || !Array.isArray(importThemes)) {
+        return res.status(400).json({ 
+          message: "بيانات الاستيراد غير صحيحة. يجب توفير version و themes" 
+        });
+      }
+
+      // Validate each theme
+      for (const theme of importThemes) {
+        if (!theme.name || !theme.tokens) {
+          return res.status(400).json({ 
+            message: "كل سمة يجب أن تحتوي على name و tokens" 
+          });
+        }
+      }
+
+      let imported = 0;
+      let updated = 0;
+      let created = 0;
+
+      // Use transaction for safety
+      await db.transaction(async (tx) => {
+        // If mode is replace, delete all existing themes first
+        if (mode === "replace") {
+          await tx.delete(themes);
+        }
+
+        // Process each theme
+        for (const importTheme of importThemes) {
+          const themeId = importTheme.id;
+
+          // Check if theme exists
+          const [existingTheme] = themeId 
+            ? await tx
+                .select()
+                .from(themes)
+                .where(eq(themes.id, themeId))
+                .limit(1)
+            : [];
+
+          if (existingTheme) {
+            // Update existing theme
+            await tx
+              .update(themes)
+              .set({
+                name: importTheme.name,
+                slug: importTheme.slug || importTheme.name.toLowerCase().replace(/\s+/g, '-'),
+                isDefault: importTheme.isDefault || false,
+                priority: importTheme.priority || 0,
+                status: importTheme.status || "draft",
+                startAt: importTheme.startAt ? new Date(importTheme.startAt) : null,
+                endAt: importTheme.endAt ? new Date(importTheme.endAt) : null,
+                assets: importTheme.assets || null,
+                tokens: importTheme.tokens,
+                applyTo: importTheme.applyTo || [],
+                updatedAt: new Date(),
+              })
+              .where(eq(themes.id, themeId));
+            
+            updated++;
+          } else {
+            // Create new theme with new ID
+            await tx
+              .insert(themes)
+              .values({
+                name: importTheme.name,
+                slug: importTheme.slug || importTheme.name.toLowerCase().replace(/\s+/g, '-'),
+                isDefault: importTheme.isDefault || false,
+                priority: importTheme.priority || 0,
+                status: importTheme.status || "draft",
+                startAt: importTheme.startAt ? new Date(importTheme.startAt) : null,
+                endAt: importTheme.endAt ? new Date(importTheme.endAt) : null,
+                assets: importTheme.assets || null,
+                tokens: importTheme.tokens,
+                applyTo: importTheme.applyTo || [],
+                createdBy: userId,
+              });
+            
+            created++;
+          }
+          
+          imported++;
+        }
+
+        // Ensure only one default theme exists
+        const defaultThemes = await tx
+          .select()
+          .from(themes)
+          .where(eq(themes.isDefault, true));
+
+        if (defaultThemes.length > 1) {
+          // Keep only the first one as default
+          for (let i = 1; i < defaultThemes.length; i++) {
+            await tx
+              .update(themes)
+              .set({ isDefault: false })
+              .where(eq(themes.id, defaultThemes[i].id));
+          }
+        }
+      });
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "import",
+        entityType: "themes",
+        entityId: "bulk",
+        newValue: { mode, imported, updated, created },
+      });
+
+      res.json({
+        message: "تم استيراد السمات بنجاح",
+        imported,
+        updated,
+        created,
+      });
+    } catch (error) {
+      console.error("Error importing themes:", error);
+      res.status(500).json({ message: "فشل في استيراد السمات" });
+    }
+  });
+
   app.get("/api/themes/:id", isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.id);
@@ -2864,185 +3026,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error initializing default theme:", error);
       res.status(500).json({ message: "Failed to initialize default theme" });
-    }
-  });
-
-  // Export all themes
-  app.get("/api/themes/export", requireRole("admin"), async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-
-      // Get all themes from database
-      const allThemes = await db
-        .select()
-        .from(themes)
-        .orderBy(themes.createdAt);
-
-      // Log activity
-      await logActivity({
-        userId,
-        action: "export",
-        entityType: "themes",
-        entityId: "all",
-        newValue: { count: allThemes.length },
-      });
-
-      // Format response with metadata
-      const exportData = {
-        version: "1.0",
-        exportedAt: new Date().toISOString(),
-        themes: allThemes,
-      };
-
-      res.json(exportData);
-    } catch (error) {
-      console.error("Error exporting themes:", error);
-      res.status(500).json({ message: "فشل في تصدير السمات" });
-    }
-  });
-
-  // Import themes
-  app.post("/api/themes/import", requireRole("admin"), async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const { version, themes: importThemes, mode = "merge" } = req.body;
-
-      // Validate request body
-      if (!version || !importThemes || !Array.isArray(importThemes)) {
-        return res.status(400).json({ 
-          message: "بيانات الاستيراد غير صحيحة. يجب توفير version و themes" 
-        });
-      }
-
-      // Validate each theme
-      for (const theme of importThemes) {
-        if (!theme.name || !theme.tokens) {
-          return res.status(400).json({ 
-            message: "كل سمة يجب أن تحتوي على name و tokens" 
-          });
-        }
-      }
-
-      let imported = 0;
-      let updated = 0;
-      let created = 0;
-
-      // Use transaction for safety
-      await db.transaction(async (tx) => {
-        // If mode is replace, delete all existing themes first
-        if (mode === "replace") {
-          await tx.delete(themes);
-        }
-
-        // Process each theme
-        for (const importTheme of importThemes) {
-          const themeId = importTheme.id;
-
-          // Check if theme exists
-          const [existingTheme] = themeId 
-            ? await tx
-                .select()
-                .from(themes)
-                .where(eq(themes.id, themeId))
-                .limit(1)
-            : [];
-
-          if (existingTheme) {
-            // Update existing theme
-            await tx
-              .update(themes)
-              .set({
-                name: importTheme.name,
-                slug: importTheme.slug || importTheme.name.toLowerCase().replace(/\s+/g, '-'),
-                isDefault: importTheme.isDefault || false,
-                priority: importTheme.priority || 0,
-                status: importTheme.status || "draft",
-                startAt: importTheme.startAt ? new Date(importTheme.startAt) : null,
-                endAt: importTheme.endAt ? new Date(importTheme.endAt) : null,
-                assets: importTheme.assets || null,
-                tokens: importTheme.tokens,
-                applyTo: importTheme.applyTo || [],
-                updatedAt: new Date(),
-              })
-              .where(eq(themes.id, themeId));
-            
-            updated++;
-          } else {
-            // Create new theme with new ID
-            await tx
-              .insert(themes)
-              .values({
-                name: importTheme.name,
-                slug: importTheme.slug || importTheme.name.toLowerCase().replace(/\s+/g, '-'),
-                isDefault: importTheme.isDefault || false,
-                priority: importTheme.priority || 0,
-                status: importTheme.status || "draft",
-                startAt: importTheme.startAt ? new Date(importTheme.startAt) : null,
-                endAt: importTheme.endAt ? new Date(importTheme.endAt) : null,
-                assets: importTheme.assets || null,
-                tokens: importTheme.tokens,
-                applyTo: importTheme.applyTo || [],
-                createdBy: userId,
-              });
-            
-            created++;
-          }
-          
-          imported++;
-        }
-
-        // Ensure only one default theme exists
-        const defaultThemes = await tx
-          .select()
-          .from(themes)
-          .where(eq(themes.isDefault, true));
-
-        if (defaultThemes.length > 1) {
-          // Keep only the first default theme
-          const [firstDefault, ...rest] = defaultThemes;
-          for (const theme of rest) {
-            await tx
-              .update(themes)
-              .set({ isDefault: false })
-              .where(eq(themes.id, theme.id));
-          }
-        }
-      });
-
-      // Log activity
-      await logActivity({
-        userId,
-        action: "import",
-        entityType: "themes",
-        entityId: "bulk",
-        newValue: { 
-          mode, 
-          imported, 
-          updated, 
-          created 
-        },
-      });
-
-      res.json({
-        message: "تم استيراد السمات بنجاح",
-        imported,
-        updated,
-        created,
-      });
-    } catch (error: any) {
-      console.error("Error importing themes:", error);
-      
-      // Handle specific errors
-      if (error.code === '23505') { // Unique constraint violation
-        return res.status(400).json({ 
-          message: "خطأ: اسم أو رمز السمة مكرر" 
-        });
-      }
-
-      res.status(500).json({ 
-        message: "فشل في استيراد السمات",
-        error: error.message 
-      });
     }
   });
 

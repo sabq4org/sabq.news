@@ -159,7 +159,7 @@ export function requireRole(...roleNames: string[]) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Get user's roles
+    // Get user's roles from RBAC system
     const userRolesResult = await db
       .select({ roleName: roles.name })
       .from(userRoles)
@@ -167,6 +167,20 @@ export function requireRole(...roleNames: string[]) {
       .where(eq(userRoles.userId, userId));
 
     const userRoleNames = userRolesResult.map(r => r.roleName);
+
+    // Fallback: Check user.role from users table if no RBAC roles
+    if (userRoleNames.length === 0) {
+      const { users } = await import("@shared/schema");
+      const [user] = await db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (user?.role) {
+        userRoleNames.push(user.role);
+      }
+    }
 
     // Check if user has any of the required roles
     const hasRole = roleNames.some(roleName => userRoleNames.includes(roleName));
