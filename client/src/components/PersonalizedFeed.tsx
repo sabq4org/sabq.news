@@ -33,7 +33,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
+              className="cursor-pointer h-full overflow-hidden rounded-none border-[#f0f0ef]"
               data-testid={`card-article-${article.id}`}
             >
               {/* Mobile: Horizontal Layout */}
@@ -98,7 +98,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     <img
                       src={article.imageUrl}
                       alt={article.title}
-                      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover object-center"
                     />
                     {article.aiSummary && (
                       <div className="absolute top-2 left-2">
