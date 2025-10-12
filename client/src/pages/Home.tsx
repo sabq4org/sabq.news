@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { BreakingNews } from "@/components/BreakingNews";
@@ -32,9 +33,9 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background" dir="rtl">
+      <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-1">
           <Skeleton className="w-full h-[400px] md:h-[500px] rounded-lg" />
           <div className="space-y-4">
             <Skeleton className="h-8 w-48" />
@@ -45,15 +46,16 @@ export default function Home() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background" dir="rtl">
+      <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
             <p className="text-destructive text-lg mb-4">
               حدث خطأ في تحميل الصفحة الرئيسية
@@ -63,30 +65,32 @@ export default function Home() {
             </p>
           </div>
         </main>
+        <Footer />
       </div>
     );
   }
 
   if (!homepage) {
     return (
-      <div className="min-h-screen bg-background" dir="rtl">
+      <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">
               لا توجد بيانات متاحة حالياً
             </p>
           </div>
         </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       <Header user={user} />
 
-      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-1">
         {homepage.hero && homepage.hero.length > 0 && (
           <div className="mb-20">
             <HeroCarousel articles={homepage.hero} />
