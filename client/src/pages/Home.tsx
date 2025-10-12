@@ -3,7 +3,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
-import { BreakingNews } from "@/components/BreakingNews";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,57 +106,12 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-12">
-            {homepage.breaking && homepage.breaking.length > 0 && (
-              <BreakingNews articles={homepage.breaking} />
-            )}
-
             {homepage.deepDive && homepage.deepDive.length > 0 && (
               <DeepDiveSection articles={homepage.deepDive} />
             )}
           </div>
 
           <div className="space-y-8">
-            {homepage.editorPicks && homepage.editorPicks.length > 0 && (
-              <section className="space-y-4">
-                <h2 className="text-xl font-bold" data-testid="heading-editor-picks">
-                  مختارات المحررين
-                </h2>
-                <div className="space-y-3">
-                  {homepage.editorPicks.map((article) => (
-                    <a
-                      key={article.id}
-                      href={`/article/${article.slug}`}
-                      className="flex gap-3 p-3 sm:p-4 bg-card rounded-lg border hover-elevate active-elevate-2"
-                      data-testid={`card-editor-pick-${article.id}`}
-                    >
-                      {/* Image - Smaller on mobile */}
-                      {article.imageUrl && (
-                        <div className="flex-shrink-0">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-20 h-20 sm:w-24 sm:h-24 lg:w-full lg:h-32 object-cover object-center rounded-md"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col justify-between min-w-0">
-                        <h3 className="font-semibold text-sm sm:text-base line-clamp-2 sm:line-clamp-3 mb-2">
-                          {article.title}
-                        </h3>
-                        {article.category && (
-                          <span className="text-xs text-muted-foreground">
-                            {article.category.nameAr}
-                          </span>
-                        )}
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {homepage.trending && homepage.trending.length > 0 && (
               <TrendingTopics topics={homepage.trending} />
             )}
