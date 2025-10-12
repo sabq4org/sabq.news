@@ -652,6 +652,9 @@ export const insertThemeSchema = createInsertSchema(themes).omit({
   updatedAt: true,
   version: true,
 }).extend({
+  // Override dates to accept empty strings, null, undefined, or valid datetime
+  startAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
+  endAt: z.union([z.literal(''), z.null(), z.undefined(), z.string().datetime()]).optional(),
   // Override assets to accept empty strings, null, undefined, or valid URLs
   assets: z.object({
     logoLight: z.union([z.literal(''), z.null(), z.undefined(), z.string().url()]).optional(),
