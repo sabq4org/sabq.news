@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
@@ -2375,6 +2375,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating speech:", error);
       res.status(500).json({ message: "Failed to generate speech" });
+    }
+  });
+
+  // AI Chat Assistant (Public)
+  app.post("/api/ai/chat", async (req: any, res) => {
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "الرسالة مطلوبة" });
+      }
+
+      // Get last 10 published articles for context
+      const recentArticles = await db
+        .select({
+          title: articles.title,
+          summary: articles.aiSummary,
+          categoryNameAr: categories.nameAr,
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .where(eq(articles.status, "published"))
+        .orderBy(desc(articles.publishedAt))
+        .limit(10);
+
+      const articlesForContext = recentArticles.map(article => ({
+        title: article.title,
+        summary: article.summary || undefined,
+        categoryNameAr: article.categoryNameAr || undefined,
+      }));
+
+      const aiResponse = await chatWithAssistant(message, articlesForContext);
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error("Error in AI chat:", error);
+      res.status(500).json({ message: "فشل في معالجة الرسالة" });
     }
   });
 

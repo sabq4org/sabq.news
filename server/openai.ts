@@ -90,3 +90,43 @@ export async function getArticleRecommendations(
     return [];
   }
 }
+
+export async function chatWithAssistant(
+  message: string,
+  recentArticles: { title: string; summary?: string; categoryNameAr?: string }[]
+): Promise<string> {
+  try {
+    const articlesContext = recentArticles
+      .map((article, index) => 
+        `${index + 1}. ${article.title}${article.categoryNameAr ? ` (${article.categoryNameAr})` : ''}${article.summary ? `\n   ملخص: ${article.summary}` : ''}`
+      )
+      .join('\n');
+
+    const systemPrompt = `أنت مساعد أخبار ذكي لصحيفة سبق. ساعد القراء في العثور على الأخبار والمعلومات. أجب بالعربية دائماً.
+
+آخر الأخبار المنشورة:
+${articlesContext}
+
+استخدم هذه الأخبار للإجابة على أسئلة القارئ عندما يكون ذلك مناسباً.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      max_completion_tokens: 512,
+    });
+
+    return response.choices[0].message.content || "عذراً، لم أتمكن من معالجة طلبك.";
+  } catch (error) {
+    console.error("Error in AI chat:", error);
+    throw new Error("Failed to process chat message");
+  }
+}
