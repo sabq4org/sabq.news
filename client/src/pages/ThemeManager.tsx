@@ -25,14 +25,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Sparkles } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Sparkles, Download, Upload } from "lucide-react";
 import type { Theme } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ThemeManager() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
+  
+  // Import/Export state
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importMode, setImportMode] = useState<"merge" | "replace">("merge");
 
   const { data: themes, isLoading } = useQuery<Theme[]>({
     queryKey: ["/api/themes"],
@@ -106,6 +128,73 @@ export default function ThemeManager() {
     },
   });
 
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/themes/export", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("فشل في تصدير السمات");
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      // Create JSON blob and download
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `sabq-themes-${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "تم التصدير",
+        description: `تم تصدير ${data.themes.length} سمة بنجاح`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تصدير السمات",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async (data: { version: string; themes: any[]; mode: string }) => {
+      return await apiRequest("/api/themes/import", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/themes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/themes/active?scope=site_full"] });
+      toast({
+        title: "تم الاستيراد",
+        description: `تم استيراد ${data.imported} سمة بنجاح. تم إنشاء ${data.created} وتحديث ${data.updated}`,
+      });
+      setIsImportDialogOpen(false);
+      setSelectedFile(null);
+      setImportMode("merge");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في استيراد السمات",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDeleteClick = (theme: Theme) => {
     setThemeToDelete(theme);
     setDeleteDialogOpen(true);
@@ -114,6 +203,52 @@ export default function ThemeManager() {
   const confirmDelete = () => {
     if (themeToDelete) {
       deleteMutation.mutate(themeToDelete.id);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء اختيار ملف للاستيراد",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const text = await selectedFile.text();
+      const data = JSON.parse(text);
+
+      // Validate JSON structure
+      if (!data.version || !data.themes || !Array.isArray(data.themes)) {
+        toast({
+          title: "خطأ",
+          description: "بنية الملف غير صحيحة. يجب أن يحتوي على version و themes",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Import themes
+      importMutation.mutate({
+        version: data.version,
+        themes: data.themes,
+        mode: importMode,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "الملف المحدد ليس JSON صحيح",
+        variant: "destructive",
+      });
     }
   };
 
@@ -164,13 +299,32 @@ export default function ThemeManager() {
               إدارة السمات والهويات البصرية للمنصة
             </p>
           </div>
-          <Button 
-            onClick={() => setLocation("/dashboard/themes/new")}
-            data-testid="button-create-theme"
-          >
-            <Plus className="h-4 w-4 ml-2" />
-            سمة جديدة
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => exportMutation.mutate()}
+              disabled={exportMutation.isPending}
+              data-testid="button-export-themes"
+            >
+              <Download className="h-4 w-4 ml-2" />
+              {exportMutation.isPending ? "جاري التصدير..." : "تصدير السمات"}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              data-testid="button-import-themes"
+            >
+              <Upload className="h-4 w-4 ml-2" />
+              استيراد السمات
+            </Button>
+            <Button 
+              onClick={() => setLocation("/dashboard/themes/new")}
+              data-testid="button-create-theme"
+            >
+              <Plus className="h-4 w-4 ml-2" />
+              سمة جديدة
+            </Button>
+          </div>
         </div>
 
         {/* Active Theme Indicator */}
@@ -354,6 +508,83 @@ export default function ThemeManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>استيراد السمات</DialogTitle>
+            <DialogDescription>
+              قم برفع ملف JSON يحتوي على السمات المراد استيرادها
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="file-upload">ملف JSON</Label>
+              <Input
+                id="file-upload"
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                data-testid="input-import-file"
+              />
+              {selectedFile && (
+                <p className="text-sm text-muted-foreground" data-testid="text-selected-file">
+                  الملف المحدد: {selectedFile.name}
+                </p>
+              )}
+            </div>
+
+            {/* Import Mode Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="import-mode">نمط الاستيراد</Label>
+              <Select
+                value={importMode}
+                onValueChange={(value: "merge" | "replace") => setImportMode(value)}
+              >
+                <SelectTrigger id="import-mode" data-testid="select-import-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="merge">دمج مع السمات الحالية</SelectItem>
+                  <SelectItem value="replace">استبدال جميع السمات</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Warning for Replace Mode */}
+            {importMode === "replace" && (
+              <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm" data-testid="warning-replace-mode">
+                ⚠️ سيتم حذف جميع السمات الحالية!
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsImportDialogOpen(false);
+                setSelectedFile(null);
+                setImportMode("merge");
+              }}
+              disabled={importMutation.isPending}
+              data-testid="button-cancel-import"
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleImport}
+              disabled={importMutation.isPending || !selectedFile}
+              data-testid="button-confirm-import"
+            >
+              {importMutation.isPending ? "جاري الاستيراد..." : "استيراد"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
