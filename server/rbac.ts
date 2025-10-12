@@ -147,6 +147,41 @@ export function requireAllPermissions(...permissionCodes: PermissionCode[]) {
   };
 }
 
+// Middleware: Require specific role(s)
+export function requireRole(...roleNames: string[]) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Get user's roles
+    const userRolesResult = await db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+
+    const userRoleNames = userRolesResult.map(r => r.roleName);
+
+    // Check if user has any of the required roles
+    const hasRole = roleNames.some(roleName => userRoleNames.includes(roleName));
+
+    if (!hasRole) {
+      return res.status(403).json({ 
+        message: "Forbidden - Insufficient permissions",
+        required: roleNames 
+      });
+    }
+
+    next();
+  };
+}
+
 // Helper: Log activity to activity_logs table
 export async function logActivity(params: {
   userId: string;

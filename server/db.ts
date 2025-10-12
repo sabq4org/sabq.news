@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint
 import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
@@ -8,7 +8,7 @@ neonConfig.webSocketConstructor = ws;
 
 // Graceful database connection with error handling
 let pool: Pool;
-let db: ReturnType<typeof drizzle>;
+let db: NeonDatabase<typeof schema>;
 
 try {
   if (!process.env.DATABASE_URL) {
