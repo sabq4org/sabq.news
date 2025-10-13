@@ -2023,9 +2023,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/ai-insights", async (req, res) => {
     try {
-      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // Changed from 24 hours to 7 days for better data availability
+      const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-      // 1. Most Viewed (last 24h)
+      // 1. Most Viewed (last 7 days)
       const [mostViewed] = await db
         .select({
           id: articles.id,
@@ -2038,7 +2039,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            sql`${articles.publishedAt} >= ${last24Hours}`
+            sql`${articles.publishedAt} >= ${last7Days}`
           )
         )
         .orderBy(desc(articles.views))
@@ -2047,7 +2048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const viewsCount = mostViewed?.views || 0;
       const viewsTrend = viewsCount > 0 ? `+${Math.round((viewsCount / 1000) * 18)}%` : "+0%";
 
-      // 2. Most Commented (last 24h)
+      // 2. Most Commented (last 7 days)
       const mostCommented = await db
         .select({
           id: articles.id,
@@ -2061,7 +2062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            sql`${articles.publishedAt} >= ${last24Hours}`
+            sql`${articles.publishedAt} >= ${last7Days}`
           )
         )
         .groupBy(articles.id)
@@ -2087,8 +2088,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            sql`${articles.publishedAt} >= ${last24Hours}`,
-            sql`${articles.views} > 100` // Minimum threshold
+            sql`${articles.publishedAt} >= ${last7Days}`,
+            sql`${articles.views} > 10` // Lowered threshold from 100 to 10
           )
         )
         .groupBy(articles.id)
@@ -2117,16 +2118,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            sql`${articles.publishedAt} >= ${last24Hours}`,
-            sql`${articles.views} > 50`
+            sql`${articles.publishedAt} >= ${last7Days}`,
+            sql`${articles.views} > 5` // Lowered threshold from 50 to 5
           )
         )
         .groupBy(articles.id)
         .orderBy(desc(sql`count(${reactions.id})`))
         .limit(1);
 
-      const positiveRate = Math.round(mostLiked[0]?.positiveRate || 0);
-      const positiveTrend = positiveRate > 0 ? `+${Math.round(positiveRate / 10)}%` : "+0%";
+      const positiveRate = mostLiked[0]?.positiveRate || 0;
+      const positiveRateDisplay = positiveRate > 0 && positiveRate < 1 
+        ? positiveRate.toFixed(1)  // Show decimal for small values
+        : Math.round(positiveRate);
+      const positiveTrend = positiveRate > 0 ? `+${Math.ceil(positiveRate)}%` : "+0%";
 
       // 5. AI Pick (highest engagement score: views + comments*5 + likes*3)
       const aiPick = await db
@@ -2146,7 +2150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            sql`${articles.publishedAt} >= ${last24Hours}`
+            sql`${articles.publishedAt} >= ${last7Days}`
           )
         )
         .groupBy(articles.id)
@@ -2175,7 +2179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         mostPositive: {
           article: mostLiked[0] || null,
-          positiveRate: `${positiveRate}٪`,
+          positiveRate: `${positiveRateDisplay}٪`,
           trend: positiveTrend,
         },
         aiPick: {

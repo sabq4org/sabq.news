@@ -124,10 +124,10 @@ export function AIInsightsBlock() {
         </div>
         <div>
           <h2 className="text-2xl font-bold" data-testid="insights-title">
-            مؤشرات ذكية
+            مؤشرات الأسبوع
           </h2>
           <p className="text-sm text-muted-foreground" data-testid="insights-subtitle">
-            نظرة ذكية على تفاعل القراء خلال آخر ٢٤ ساعة
+            نظرة ذكية على تفاعل القراء خلال آخر 7 أيام
           </p>
         </div>
       </div>

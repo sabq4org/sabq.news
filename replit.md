@@ -30,7 +30,7 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - **Daily Brief (الملخص اليومي):** A personalized daily news summary based on user interests, featuring categorized articles and estimated reading times.
 - **Interest Management:** A dedicated page for users to easily update their category interests.
 - **Enhanced Profile Page:** Redesigned user profile with responsive layout, displaying liked articles, bookmarks, and reading history.
-- **AI Insights Block (مؤشرات ذكية):** A real-time intelligent analytics dashboard on the homepage, showcasing metrics like Most Viewed, Most Commented, Most Controversial, Most Positive, and AI Pick based on advanced SQL analytics and engagement scoring.
+- **AI Insights Block (مؤشرات الأسبوع):** A real-time intelligent analytics dashboard on the homepage showing 5 metrics over the last 7 days: Most Viewed (الأكثر تداولاً), Most Commented (الأكثر تعليقاً), Most Controversial (الأكثر جدلاً - comment/view ratio), Most Positive (الأكثر إيجابية - like rate with decimal precision), and AI Pick (اختيار الذكاء - engagement score formula: views + comments×5 + likes×3). Features color-coded cards, trend indicators, clickable article links, and smart thresholds (views >10 for controversial, >5 for positive).
 
 ## External Dependencies
 
