@@ -38,6 +38,7 @@ import TagsManagement from "@/pages/TagsManagement";
 import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
+import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -93,7 +94,8 @@ function Router() {
       <Route path="/dashboard/storage" component={ComingSoon} />
       <Route path="/dashboard/audit-logs" component={ComingSoon} />
       <Route path="/dashboard/profile" component={ComingSoon} />
-      <Route path="/dashboard/notifications" component={ComingSoon} />
+      <Route path="/dashboard/notifications" component={Notifications} />
+      <Route path="/notifications" component={Notifications} />
       
       <Route component={NotFound} />
     </Switch>
