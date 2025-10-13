@@ -2267,7 +2267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           kind: row.target_kind,
           title: row.target_title,
           slug: row.target_slug || undefined,
-          url: row.target_kind === 'article' && row.target_slug ? `/news/${row.target_slug}` : 
+          url: row.target_kind === 'article' && row.target_slug ? `/article/${row.target_slug}` : 
                row.target_kind === 'category' && row.target_slug ? `/category/${row.target_slug}` :
                row.target_kind === 'tag' && row.target_slug ? `/tag/${row.target_slug}` : undefined,
           imageUrl: row.target_image || undefined,
