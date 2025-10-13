@@ -36,6 +36,7 @@ interface Category {
 
 interface UserInterest {
   id: string;
+  categoryId: string;
   nameAr: string;
   nameEn: string;
   slug: string;
@@ -137,7 +138,7 @@ export default function NotificationAdmin() {
 
   // Filter out categories that are already interests
   const availableCategories = categories.filter(
-    cat => !userInterests.some(interest => interest.id === cat.id)
+    cat => !userInterests.some(interest => interest.categoryId === cat.id)
   );
 
   return (

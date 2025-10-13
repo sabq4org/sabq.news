@@ -636,6 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userInterestsList = await db
         .select({
           id: categories.id,
+          categoryId: categories.id,
           nameAr: categories.nameAr,
           nameEn: categories.nameEn,
           slug: categories.slug,
@@ -3900,7 +3901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Fix notification settings for all users
-  app.post("/api/admin/fix-notification-settings", requireAuth, async (req: any, res) => {
+  app.post("/api/admin/fix-notification-settings", requireRole('admin'), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -3927,7 +3928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           interest: true,
           likedUpdates: true,
           mostRead: true,
-        });
+        }).onConflictDoNothing({ target: userNotificationPrefs.userId });
         createdCount++;
       }
 
@@ -3944,7 +3945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Add interest to current user
-  app.post("/api/admin/add-my-interest", requireAuth, async (req: any, res) => {
+  app.post("/api/admin/add-my-interest", requireRole('admin'), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -3994,7 +3995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Get notification system status
-  app.get("/api/admin/notification-status", requireAuth, async (req: any, res) => {
+  app.get("/api/admin/notification-status", requireRole('admin'), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
