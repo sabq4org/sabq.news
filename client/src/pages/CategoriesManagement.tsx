@@ -224,9 +224,15 @@ export default function CategoriesManagement() {
         throw new Error("فشل رفع الصورة");
       }
 
-      // Step 3: Get the public URL
-      const publicUrl = uploadResponse.url.split("?")[0];
-      form.setValue("heroImageUrl", publicUrl);
+      // Step 3: Set ACL policy to make image public
+      const imageURL = uploadResponse.url.split("?")[0];
+      const aclResponse = await apiRequest("/api/article-images", {
+        method: "PUT",
+        body: JSON.stringify({ imageURL }),
+      }) as { objectPath: string };
+
+      // Step 4: Set the public URL
+      form.setValue("heroImageUrl", aclResponse.objectPath);
 
       toast({
         title: "تم رفع الصورة",
