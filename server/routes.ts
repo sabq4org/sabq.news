@@ -3899,6 +3899,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Fix notification settings for all users
+  app.post("/api/admin/fix-notification-settings", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      // Get all users without notification preferences
+      const usersWithoutPrefs = await db
+        .select({ id: users.id, email: users.email })
+        .from(users)
+        .leftJoin(userNotificationPrefs, eq(users.id, userNotificationPrefs.userId))
+        .where(sql`${userNotificationPrefs.userId} IS NULL`);
+
+      let createdCount = 0;
+      for (const userRecord of usersWithoutPrefs) {
+        await db.insert(userNotificationPrefs).values({
+          userId: userRecord.id,
+          breaking: true,
+          interest: true,
+          likedUpdates: true,
+          mostRead: true,
+        });
+        createdCount++;
+      }
+
+      res.json({ 
+        success: true,
+        message: `تم إنشاء إعدادات إشعارات لـ ${createdCount} مستخدم`,
+        createdCount,
+        totalUsersFixed: usersWithoutPrefs.length
+      });
+    } catch (error) {
+      console.error("Error fixing notification settings:", error);
+      res.status(500).json({ message: "فشل إصلاح إعدادات الإشعارات" });
+    }
+  });
+
+  // Admin: Add interest to current user
+  app.post("/api/admin/add-my-interest", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { categoryId } = req.body;
+      if (!categoryId) {
+        return res.status(400).json({ message: "categoryId is required" });
+      }
+
+      // Check if interest already exists
+      const [existing] = await db
+        .select()
+        .from(userInterests)
+        .where(
+          and(
+            eq(userInterests.userId, userId),
+            eq(userInterests.categoryId, categoryId)
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        return res.json({ 
+          success: true,
+          message: "الاهتمام موجود مسبقاً",
+          alreadyExists: true
+        });
+      }
+
+      // Add new interest
+      await db.insert(userInterests).values({
+        userId,
+        categoryId,
+      });
+
+      res.json({ 
+        success: true,
+        message: "تم إضافة الاهتمام بنجاح",
+        alreadyExists: false
+      });
+    } catch (error) {
+      console.error("Error adding interest:", error);
+      res.status(500).json({ message: "فشل إضافة الاهتمام" });
+    }
+  });
+
+  // Admin: Get notification system status
+  app.get("/api/admin/notification-status", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      // Get counts
+      const [totalUsersResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users);
+      
+      const [usersWithPrefsResult] = await db
+        .select({ count: sql<number>`count(distinct ${userNotificationPrefs.userId})` })
+        .from(userNotificationPrefs);
+
+      const [usersWithInterestsResult] = await db
+        .select({ count: sql<number>`count(distinct ${userInterests.userId})` })
+        .from(userInterests);
+
+      const [totalNotificationsResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(notificationsInbox);
+
+      const totalUsers = Number(totalUsersResult?.count || 0);
+      const usersWithPrefs = Number(usersWithPrefsResult?.count || 0);
+      const usersWithInterests = Number(usersWithInterestsResult?.count || 0);
+      const totalNotifications = Number(totalNotificationsResult?.count || 0);
+
+      res.json({
+        totalUsers,
+        usersWithPrefs,
+        usersWithInterests,
+        usersWithoutPrefs: totalUsers - usersWithPrefs,
+        totalNotifications,
+        systemHealth: usersWithPrefs === totalUsers ? 'healthy' : 'needs_fix'
+      });
+    } catch (error) {
+      console.error("Error getting notification status:", error);
+      res.status(500).json({ message: "فشل تحميل حالة النظام" });
+    }
+  });
+
   // Internal API: Enqueue notification (system use only)
   app.post("/internal/notify/enqueue", async (req, res) => {
     try {

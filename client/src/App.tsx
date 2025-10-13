@@ -39,6 +39,7 @@ import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
 import Notifications from "@/pages/Notifications";
+import NotificationAdmin from "@/pages/NotificationAdmin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -95,6 +96,7 @@ function Router() {
       <Route path="/dashboard/audit-logs" component={ComingSoon} />
       <Route path="/dashboard/profile" component={ComingSoon} />
       <Route path="/dashboard/notifications" component={Notifications} />
+      <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
       <Route path="/notifications" component={Notifications} />
       
       <Route component={NotFound} />
