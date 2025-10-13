@@ -170,6 +170,30 @@ File storage is handled by Google Cloud Storage via Replit Object Storage, with 
   - Framer-motion staggered entrance animations
 - **APIs Used**: `/api/profile/liked`, `/api/profile/bookmarks`, `/api/profile/history`
 
+### 7. AI Insights Block (مؤشرات ذكية) - Oct 13, 2025
+**Implementation**: Real-time intelligent analytics dashboard on homepage
+- **Component**: `AIInsightsBlock.tsx` - 5-card grid layout with smart metrics
+- **Backend**: `/api/ai-insights` endpoint with advanced SQL analytics
+- **Analytics Provided** (last 24 hours):
+  1. **Most Viewed** (🔥): Top article by views with trend percentage
+  2. **Most Commented** (💬): Article with highest engagement in comments
+  3. **Most Controversial** (⚡): Highest comment-to-view ratio with AI analysis
+  4. **Most Positive** (❤️): Best positive reaction rate from readers
+  5. **AI Pick** (🧠): Smart selection based on engagement score (views + comments×5 + likes×3)
+- **Features**:
+  - Color-coded cards (orange, blue, yellow, pink, purple) with dark mode support
+  - Live trend indicators with percentage changes
+  - Clickable cards linking to featured articles
+  - AI-generated analysis messages in Arabic
+  - Auto-refresh every 6 hours
+  - Responsive grid (5 cols desktop, 2 cols tablet, 1 col mobile)
+  - Skeleton loaders during data fetch
+- **Display Location**: Homepage, immediately after Hero Carousel
+- **Smart Calculations**:
+  - Engagement Score Formula: `views + (comments × 5) + (likes × 3)`
+  - Controversy Ratio: `comments / views` for articles with >100 views
+  - Positive Rate: `(likes / views) × 100` for articles with >50 views
+
 ## External Dependencies
 
 **Authentication & Identity**
