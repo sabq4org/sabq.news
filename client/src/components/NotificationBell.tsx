@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Bell, AlertCircle, Star, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -14,6 +14,8 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Notification {
   id: string;
@@ -36,6 +38,9 @@ interface NotificationsResponse {
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications"],
@@ -48,8 +53,67 @@ export function NotificationBell() {
       }
       return response.json();
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // SSE connection for real-time notifications
+  useEffect(() => {
+    if (!user) return;
+
+    console.log("📡 Connecting to notification stream...");
+
+    const eventSource = new EventSource("/api/notifications/stream", {
+      withCredentials: true,
+    });
+
+    eventSource.onopen = () => {
+      console.log("📡 SSE connection established");
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const notification = JSON.parse(event.data);
+        console.log("📩 New notification received:", notification);
+
+        // Invalidate queries to refresh notifications
+        queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+
+        // Show toast for breaking news only
+        if (notification.type === "BreakingNews") {
+          toast({
+            title: notification.title,
+            description: notification.body,
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing SSE message:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("📡 SSE connection error:", error);
+      eventSource.close();
+      
+      // Retry connection after 5 seconds
+      setTimeout(() => {
+        console.log("📡 Retrying SSE connection...");
+        if (eventSourceRef.current === eventSource) {
+          const newEventSource = new EventSource("/api/notifications/stream", {
+            withCredentials: true,
+          });
+          eventSourceRef.current = newEventSource;
+        }
+      }, 5000);
+    };
+
+    eventSourceRef.current = eventSource;
+
+    return () => {
+      console.log("📡 Closing SSE connection");
+      eventSource.close();
+    };
+  }, [user, toast]);
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
@@ -197,6 +261,8 @@ function NotificationContent({ notification }: { notification: Notification }) {
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       BreakingNews: "عاجل",
+      ArticlePublished: "جديد",
+      FeaturedArticle: "مميز",
       InterestMatch: "قد يهمك",
       LikedStoryUpdate: "تحديث",
       MostReadTodayForYou: "الأكثر قراءة",
@@ -206,16 +272,29 @@ function NotificationContent({ notification }: { notification: Notification }) {
 
   const getTypeBadgeVariant = (type: string): "destructive" | "default" | "secondary" => {
     if (type === "BreakingNews") return "destructive";
-    if (type === "InterestMatch") return "default";
+    if (type === "FeaturedArticle" || type === "InterestMatch") return "default";
     return "secondary";
+  };
+
+  const getTypeIcon = (type: string) => {
+    const icons: Record<string, JSX.Element> = {
+      BreakingNews: <AlertCircle className="h-4 w-4" />,
+      FeaturedArticle: <Star className="h-4 w-4" />,
+      ArticlePublished: <Newspaper className="h-4 w-4" />,
+      InterestMatch: <Bell className="h-4 w-4" />,
+    };
+    return icons[type] || <Bell className="h-4 w-4" />;
   };
 
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-2">
-        <Badge variant={getTypeBadgeVariant(notification.type)}>
-          {getTypeLabel(notification.type)}
-        </Badge>
+        <div className="flex items-center gap-1">
+          {getTypeIcon(notification.type)}
+          <Badge variant={getTypeBadgeVariant(notification.type)}>
+            {getTypeLabel(notification.type)}
+          </Badge>
+        </div>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           {formatDistanceToNow(new Date(notification.createdAt), {
             addSuffix: true,

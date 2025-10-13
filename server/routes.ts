@@ -9,6 +9,8 @@ import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility 
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
+import { notificationBus } from "./notificationBus";
+import { sendArticleNotification } from "./notificationService";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -1786,6 +1788,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Trigger notification if article was just published
       if (updatedArticle.status === "published" && existingArticle.status !== "published") {
         try {
+          // Determine notification type based on article properties
+          let notificationType: 'published' | 'breaking' | 'featured';
+          
+          if (updatedArticle.newsType === "breaking") {
+            notificationType = 'breaking';
+          } else if (updatedArticle.isFeatured) {
+            notificationType = 'featured';
+          } else {
+            notificationType = 'published';
+          }
+
+          // Send smart notifications via new service
+          await sendArticleNotification(updatedArticle, notificationType);
+
+          // Keep existing notification system for backward compatibility
           await createNotification({
             type: updatedArticle.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
             data: {
@@ -1855,6 +1872,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Trigger notification for published article
       try {
+        // Determine notification type based on article properties
+        let notificationType: 'published' | 'breaking' | 'featured';
+        
+        if (updatedArticle.newsType === "breaking") {
+          notificationType = 'breaking';
+        } else if (updatedArticle.isFeatured) {
+          notificationType = 'featured';
+        } else {
+          notificationType = 'published';
+        }
+
+        // Send smart notifications via new service
+        await sendArticleNotification(updatedArticle, notificationType);
+
+        // Keep existing notification system for backward compatibility
         await createNotification({
           type: updatedArticle.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
           data: {
@@ -3734,6 +3766,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error marking all notifications as read:", error);
       res.status(500).json({ message: "فشل تحديث الإشعارات" });
     }
+  });
+
+  // SSE endpoint for real-time notifications
+  app.get("/api/notifications/stream", isAuthenticated, (req: any, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    const userId = req.user.id;
+    console.log(`📡 SSE connection opened for user: ${userId}`);
+    
+    // Send heartbeat every 30 seconds to keep connection alive
+    const heartbeat = setInterval(() => {
+      res.write(`:heartbeat\n\n`);
+    }, 30000);
+
+    // Subscribe to notifications for this user
+    const listener = (notification: any) => {
+      res.write(`data: ${JSON.stringify(notification)}\n\n`);
+    };
+    
+    notificationBus.subscribe(userId, listener);
+
+    // Cleanup on disconnect
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      notificationBus.unsubscribe(userId, listener);
+      console.log(`📡 SSE connection closed for user: ${userId}`);
+    });
   });
 
   // Get user notification preferences

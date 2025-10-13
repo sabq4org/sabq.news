@@ -1,7 +1,8 @@
 import { db } from "./db";
 import { 
   users, 
-  articles, 
+  articles,
+  categories,
   userNotificationPrefs,
   userInterests,
   interests,
@@ -293,19 +294,18 @@ export async function notifyInterestMatch(articleId: string): Promise<void> {
       return;
     }
 
-    // Find users with matching interests
+    // Find users with matching interests (via categories)
     const matchingUsers = await db
       .select({
         userId: userInterests.userId,
-        interestSlug: interests.slug,
-        interestNameAr: interests.nameAr,
+        categoryName: categories.nameAr,
       })
       .from(userInterests)
-      .innerJoin(interests, eq(userInterests.interestId, interests.id))
+      .innerJoin(categories, eq(userInterests.categoryId, categories.id))
       .innerJoin(userNotificationPrefs, eq(userInterests.userId, userNotificationPrefs.userId))
       .where(
         and(
-          inArray(interests.slug, articleKeywords),
+          eq(userInterests.categoryId, article.categoryId || ''),
           eq(userNotificationPrefs.interest, true)
         )
       );
@@ -314,9 +314,9 @@ export async function notifyInterestMatch(articleId: string): Promise<void> {
 
     // Group by user to avoid duplicates
     const userMap = new Map<string, string>();
-    for (const { userId, interestNameAr } of matchingUsers) {
+    for (const { userId, categoryName } of matchingUsers) {
       if (!userMap.has(userId)) {
-        userMap.set(userId, interestNameAr);
+        userMap.set(userId, categoryName);
       }
     }
 
@@ -411,11 +411,11 @@ export async function notifyMostReadToday(): Promise<void> {
       .where(eq(userNotificationPrefs.mostRead, true));
 
     for (const { userId } of enabledUsers) {
-      // Get user interests
+      // Get user interests (via categories)
       const userInterestsList = await db
-        .select({ slug: interests.slug })
+        .select({ slug: categories.slug })
         .from(userInterests)
-        .innerJoin(interests, eq(userInterests.interestId, interests.id))
+        .innerJoin(categories, eq(userInterests.categoryId, categories.id))
         .where(eq(userInterests.userId, userId));
 
       const userInterestSlugs = userInterestsList.map((i) => i.slug);
