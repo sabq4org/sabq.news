@@ -251,6 +251,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .returning();
 
+      // Create default notification preferences for new user
+      await db
+        .insert(userNotificationPrefs)
+        .values({
+          userId: newUser.id,
+          breaking: true,
+          interest: true,
+          likedUpdates: true,
+          mostRead: true,
+          webPush: false,
+          dailyDigest: false,
+        })
+        .catch((error) => {
+          console.error("Error creating notification preferences:", error);
+          // Don't fail registration if notification prefs fail
+        });
+
       // Auto-login after registration
       req.logIn(newUser, (err) => {
         if (err) {
@@ -1693,6 +1710,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Send notifications if article is published
+      if (newArticle.status === 'published') {
+        try {
+          // Determine notification type based on newsType
+          let notificationType: 'published' | 'breaking' | 'featured' = 'published';
+          if (newArticle.newsType === 'breaking') {
+            notificationType = 'breaking';
+          } else if (newArticle.newsType === 'featured') {
+            notificationType = 'featured';
+          }
+
+          // Send smart notifications via notification service
+          await sendArticleNotification(newArticle, notificationType);
+
+          console.log(`✅ Notifications sent for new article: ${newArticle.title}`);
+        } catch (notificationError) {
+          console.error("Error sending notifications for new article:", notificationError);
+          // Don't fail the creation operation if notification fails
+        }
+      }
 
       res.status(201).json(newArticle);
     } catch (error) {
