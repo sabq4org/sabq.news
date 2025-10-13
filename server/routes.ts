@@ -2018,6 +2018,280 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // ACTIVITIES ROUTE (Moment by Moment)
+  // ============================================================
+
+  app.get("/api/activities", async (req, res) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+      const cursor = req.query.cursor as string | undefined;
+      const typeFilter = req.query.type ? (Array.isArray(req.query.type) ? req.query.type : [req.query.type]) : undefined;
+      const importanceFilter = req.query.importance as string | undefined;
+      const fromDate = req.query.from as string | undefined;
+      const toDate = req.query.to as string | undefined;
+      const targetKind = req.query.targetKind as string | undefined;
+
+      // Build the unified activities query using UNION ALL
+      const activitiesQuery = `
+        WITH all_activities AS (
+          -- Article Published
+          SELECT 
+            a.id as activity_id,
+            'article_published' as type,
+            a.published_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            CASE 
+              WHEN a.news_type = 'breaking' THEN 'urgent'
+              WHEN a.news_type = 'featured' THEN 'high'
+              ELSE 'normal'
+            END as importance,
+            'تم نشر: ' || a.title as summary
+          FROM articles a
+          LEFT JOIN users u ON a.author_id = u.id
+          WHERE a.status = 'published' AND a.published_at IS NOT NULL
+
+          UNION ALL
+
+          -- Article Updated
+          SELECT 
+            a.id as activity_id,
+            'article_updated' as type,
+            a.updated_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            'normal' as importance,
+            'تم تحديث: ' || a.title as summary
+          FROM articles a
+          LEFT JOIN users u ON a.author_id = u.id
+          WHERE a.status = 'published' AND a.updated_at > a.created_at
+
+          UNION ALL
+
+          -- Breaking News
+          SELECT 
+            a.id as activity_id,
+            'breaking_news' as type,
+            a.published_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            'urgent' as importance,
+            'عاجل: ' || a.title as summary
+          FROM articles a
+          LEFT JOIN users u ON a.author_id = u.id
+          WHERE a.news_type = 'breaking' AND a.status = 'published' AND a.published_at IS NOT NULL
+
+          UNION ALL
+
+          -- Comment Added
+          SELECT 
+            c.id as activity_id,
+            'comment_added' as type,
+            c.created_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            'low' as importance,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) || ' علق على: ' || a.title as summary
+          FROM comments c
+          LEFT JOIN users u ON c.user_id = u.id
+          LEFT JOIN articles a ON c.article_id = a.id
+          WHERE c.status = 'approved'
+
+          UNION ALL
+
+          -- Reaction Added
+          SELECT 
+            r.id as activity_id,
+            'reaction_added' as type,
+            r.created_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            'low' as importance,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) || ' أعجب بـ: ' || a.title as summary
+          FROM reactions r
+          LEFT JOIN users u ON r.user_id = u.id
+          LEFT JOIN articles a ON r.article_id = a.id
+
+          UNION ALL
+
+          -- Bookmark Added
+          SELECT 
+            b.id as activity_id,
+            'bookmark_added' as type,
+            b.created_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            a.id as target_id,
+            'article' as target_kind,
+            a.title as target_title,
+            a.slug as target_slug,
+            a.image_url as target_image,
+            'low' as importance,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) || ' حفظ: ' || a.title as summary
+          FROM bookmarks b
+          LEFT JOIN users u ON b.user_id = u.id
+          LEFT JOIN articles a ON b.article_id = a.id
+
+          UNION ALL
+
+          -- Category Created
+          SELECT 
+            c.id as activity_id,
+            'category_created' as type,
+            c.created_at as occurred_at,
+            NULL as actor_id,
+            NULL as actor_name,
+            NULL as actor_avatar,
+            c.id as target_id,
+            'category' as target_kind,
+            c.name_ar as target_title,
+            c.slug as target_slug,
+            c.hero_image_url as target_image,
+            'normal' as importance,
+            'تم إنشاء تصنيف: ' || c.name_ar as summary
+          FROM categories c
+          WHERE c.status = 'active'
+
+          UNION ALL
+
+          -- Tag Created
+          SELECT 
+            t.id as activity_id,
+            'tag_created' as type,
+            t.created_at as occurred_at,
+            NULL as actor_id,
+            NULL as actor_name,
+            NULL as actor_avatar,
+            t.id as target_id,
+            'tag' as target_kind,
+            t.name_ar as target_title,
+            t.slug as target_slug,
+            NULL as target_image,
+            'low' as importance,
+            'تم إنشاء وسم: ' || t.name_ar as summary
+          FROM tags t
+          WHERE t.status = 'active'
+
+          UNION ALL
+
+          -- User Registered
+          SELECT 
+            u.id as activity_id,
+            'user_registered' as type,
+            u.created_at as occurred_at,
+            u.id as actor_id,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as actor_name,
+            u.profile_image_url as actor_avatar,
+            u.id as target_id,
+            'user' as target_kind,
+            COALESCE(u.first_name || ' ' || u.last_name, u.email) as target_title,
+            NULL as target_slug,
+            u.profile_image_url as target_image,
+            'low' as importance,
+            'مستخدم جديد: ' || COALESCE(u.first_name || ' ' || u.last_name, u.email) as summary
+          FROM users u
+          WHERE u.status = 'active'
+        )
+        SELECT * FROM all_activities
+        WHERE 1=1
+          ${typeFilter ? `AND type = ANY($1)` : ''}
+          ${importanceFilter ? `AND importance = $${typeFilter ? 2 : 1}` : ''}
+          ${fromDate ? `AND occurred_at >= $${typeFilter && importanceFilter ? 3 : typeFilter || importanceFilter ? 2 : 1}::timestamp` : ''}
+          ${toDate ? `AND occurred_at <= $${[typeFilter, importanceFilter, fromDate].filter(Boolean).length + 1}::timestamp` : ''}
+          ${targetKind ? `AND target_kind = $${[typeFilter, importanceFilter, fromDate, toDate].filter(Boolean).length + 1}` : ''}
+          ${cursor ? `AND occurred_at < $${[typeFilter, importanceFilter, fromDate, toDate, targetKind].filter(Boolean).length + 1}::timestamp` : ''}
+        ORDER BY occurred_at DESC
+        LIMIT $${[typeFilter, importanceFilter, fromDate, toDate, targetKind, cursor].filter(Boolean).length + 1}
+      `;
+
+      // Build query parameters array
+      const params: any[] = [];
+      if (typeFilter) params.push(typeFilter);
+      if (importanceFilter) params.push(importanceFilter);
+      if (fromDate) params.push(fromDate);
+      if (toDate) params.push(toDate);
+      if (targetKind) params.push(targetKind);
+      if (cursor) params.push(cursor);
+      params.push(limit + 1); // Fetch one extra to determine if there's a next page
+
+      const result = await pool.query(activitiesQuery, params);
+      const rows = result.rows as any[];
+
+      // Check if there's a next page
+      const hasMore = rows.length > limit;
+      const activities = rows.slice(0, limit);
+      
+      // Format activities according to ActivitySchema
+      const formattedActivities = activities.map((row: any) => ({
+        id: row.activity_id,
+        type: row.type,
+        occurredAt: row.occurred_at?.toISOString(),
+        actor: row.actor_id ? {
+          id: row.actor_id,
+          name: row.actor_name,
+          avatarUrl: row.actor_avatar || undefined,
+        } : undefined,
+        target: row.target_id ? {
+          id: row.target_id,
+          kind: row.target_kind,
+          title: row.target_title,
+          slug: row.target_slug || undefined,
+          url: row.target_kind === 'article' && row.target_slug ? `/news/${row.target_slug}` : 
+               row.target_kind === 'category' && row.target_slug ? `/category/${row.target_slug}` :
+               row.target_kind === 'tag' && row.target_slug ? `/tag/${row.target_slug}` : undefined,
+          imageUrl: row.target_image || undefined,
+        } : undefined,
+        importance: row.importance,
+        summary: row.summary,
+      }));
+
+      // Calculate next cursor
+      const nextCursor = hasMore && activities.length > 0 
+        ? activities[activities.length - 1].occurred_at?.toISOString()
+        : null;
+
+      res.json({
+        items: formattedActivities,
+        nextCursor,
+      });
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ message: "Failed to fetch activities" });
+    }
+  });
+
+  // ============================================================
   // AI INSIGHTS ROUTE
   // ============================================================
 

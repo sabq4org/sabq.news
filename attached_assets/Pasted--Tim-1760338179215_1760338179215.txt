@@ -1,0 +1,371 @@
+تمام يا علي 👌 — جهّزت لك برومنت نصّي متكامل تبنيه فوق ستاك “سبق الذكية” عشان صفحة «لحظة بلحظة» (Timeline موحّد). البرومنت مصاغ كطلب تنفيذي واضح لخبير برمجة/تصميم + يولّد لك الهياكل والـUI والمخرجات مباشرة.
+
+⸻
+
+برومنت نصّي جاهز للاستخدام
+
+الدور:
+أنت خبير Full-Stack + UI/UX في منصة «سبق الذكية» (React 18 + TypeScript + Vite + Tailwind + shadcn/ui + Radix UI + TanStack Query + React Hook Form + Zod + date-fns ar-SA). التصميم RTL-First وخفيف وسريع.
+
+المهمة:
+ابنِ صفحة موحّدة اسمها «لحظة بلحظة» تعرض كل الأنشطة (أخبار/مقالات منشورة ومحدّثة، تعليقات، تصنيفات/وسوم مضافة، تعديلات صلاحيات، تفاعلات، إشعارات عاجلة، وسائط،… إلخ) ضمن خط زمني رأسي بواجهة احترافية وسلسة، بحيث يقدر الزائر يشوف كل الجديد من مكان واحد بدون التنقّل بين الأقسام.
+
+⸻
+
+المتطلبات الوظيفية (Functional)
+	1.	مصدر البيانات (Unified Activity Feed)
+	•	اجلب أنشطة موحّدة عبر endpoint واحد مثل:
+GET /api/activities?cursor=<id>&limit=30&filters=...
+	•	الترتيب تنازليًا حسب occurredAt.
+	•	دعم Pagination بنمط cursor + Infinite Scroll (وضع Live اختياري عبر WebSocket/SSE).
+	•	كل عنصر Activity يحتوي:
+
+type Activity = {
+  id: string;
+  type:
+    | "article_published" | "article_updated" | "breaking_news"
+    | "comment_added" | "reaction_added" | "bookmark_added"
+    | "category_created" | "tag_created"
+    | "media_uploaded" | "user_registered"
+    | "role_changed" | "system_notice"
+    | "live_update";
+  occurredAt: string; // ISO
+  actor?: { id: string; name: string; avatarUrl?: string };
+  target?: {
+    id?: string;
+    kind?: "article" | "category" | "tag" | "user" | "media";
+    title?: string;
+    slug?: string;
+    url?: string;
+    imageUrl?: string;
+  };
+  meta?: Record<string, unknown>; // تفاصيل إضافية حسب النوع
+  importance?: "low" | "normal" | "high" | "urgent";
+  summary?: string; // ملخص قصير (يُولّد آلياً عند الحاجة)
+}
+
+
+	•	التجميع الزمني الذكي: قسّم اليوم إلى مجموعات (اليوم، أمس، آخر 7 أيام،…)، مع رؤوس لاصقة Sticky headers.
+
+	2.	الفلاتر والبحث السريع
+	•	فلاتر: النوع (Type)، المدى الزمني، الأهمية، كيان الهدف (مقال/تصنيف/وسم)، الكاتب/المستخدم.
+	•	شريط بحث نصي فوري (Debounced) على العنوان/الملخص/الوسوم.
+	3.	قواعد العرض والدمج
+	•	دمج تحديثات متتالية لنفس المقال خلال 15 دقيقة في Thread Collapsible (يظهر آخر تحديث كبطاقة رئيسية).
+	•	كشف التكرار (De-dup) لنفس الحدث لو وصل عبر قناتين.
+	•	إبراز Breaking/عاجل بعلامة ولون واهتزاز طفيف (Motion) عند وضع Live.
+	4.	الأيقونات حسب النوع (Lucide/Radix)
+	•	article_published: Newspaper
+	•	article_updated: Edit3
+	•	breaking_news: AlertTriangle
+	•	comment_added: MessageSquare
+	•	reaction_added: Heart
+	•	bookmark_added: Bookmark
+	•	category_created: FolderPlus
+	•	tag_created: Tag
+	•	media_uploaded: Image
+	•	user_registered: UserPlus
+	•	role_changed: ShieldCheck
+	•	system_notice: Info
+	•	live_update: Radio
+	5.	حالات التحميل والفراغ والأخطاء
+	•	Skeletons رشيقة لبطاقات التايملاين.
+	•	حالة فراغ بعبارة: «لا جديد حتى الآن — تابعنا، التحديثات تصل لحظيًا ✨».
+	•	استرجاع (Retry) للأخطاء مع إشعار غير مزعج.
+	6.	الوضع الحي (اختياري)
+	•	زر “تحديثات مباشرة” يُفعّل قناة SSE/WebSocket:
+	•	عند وصول دفعة جديدة، يظهر شريط علوي: «وصلت X تحديثات — عرض الآن».
+	7.	إتاحة (A11y) ودعم عربي
+	•	RTL كامل، مفاتيح لوحة مفاتيح، ARIA roles للتايملاين (role="feed").
+	•	تنسيقات تاريخ عربية date-fns/locale/arSA (مثلاً: “الإثنين، 13 أكتوبر 2025 • 09:30 ص”).
+	8.	الأداء
+	•	Virtualized list عند > 300 عنصر (react-virtual).
+	•	صور Lazy + <img loading="lazy">.
+	•	TanStack Query: Cache/Prefetch، مفاتيح تعتمد على الفلاتر.
+	9.	RBAC
+	•	أحداث حساسة (role_changed، system_notice) لا تظهر إلا لمن يملك صلاحيات (Editor/Admin).
+	10.	التحليلات
+	•	لقط أحداث UI: filter_applied, item_opened, live_enabled, new_batch_viewed.
+
+⸻
+
+المتطلبات الشكلية (UI/UX)
+	1.	تايملاين رأسي
+	•	عمود يسار (RTL) خط عمودي خافت مع دوائر تمثل الأحداث.
+	•	على يمينه بطاقة shadcn/ui لكل حدث.
+	•	تدرّج خفيف على الخط، وتوهّج بسيط للدائرة عند “عاجل”.
+	2.	بطاقة الحدث (Card)
+	•	رأس: أيقونة + نوع الحدث + وقت نسبي (قبل 5 دقائق) + وقت مطوّل Tooltip.
+	•	عنوان مختصر + وصف/ملخص (سطرين max مع clamp).
+	•	صورة مصغّرة إن وجدت (للأخبار/الصور).
+	•	أزرار: “عرض الخبر”، “نسخ الرابط”، “المزيد” (قائمة ثانوية).
+	•	شارة أهمية: urgent بالـBadge.
+	3.	التجميع اليومي
+	•	فواصل معنونة: “اليوم”، “أمس”، “الأسبوع الحالي”، “الشهر الحالي”.
+	4.	لوحة فلاتر علوية
+	•	Select للنوع، DateRange، Toggle للوضع الحي، حقل بحث.
+	5.	حركات خفيفة
+	•	دخول البطاقات بـFramer Motion (fade+slide بمدة 120–180ms).
+
+⸻
+
+مخرجات مطلوبة من النموذج (Deliverables)
+	1.	مخطط الواجهة (JSX): مكوّن MomentByMomentPage مع:
+	•	FiltersBar, Timeline, TimelineItem, DateGroupHeader, LiveToggle.
+	2.	نموذج بيانات TypeScript (كما أعلاه).
+	3.	هوك TanStack Query:
+	•	useActivities({ filters, cursor }) + infinite scroll.
+	4.	دالة تجميع Grouping حسب اليوم/الأسبوع.
+	5.	خريطة الأيقونات.
+	6.	حالات التحميل/الفراغ/الخطأ.
+	7.	اختبارات أساسية (Zod schema + render tests).
+	8.	نصوص واجهة (i18n) جاهزة بالعربية.
+
+⸻
+
+عقود التحقق (Zod)
+
+import { z } from "zod";
+
+export const ActivitySchema = z.object({
+  id: z.string().min(1),
+  type: z.enum([
+    "article_published","article_updated","breaking_news",
+    "comment_added","reaction_added","bookmark_added",
+    "category_created","tag_created",
+    "media_uploaded","user_registered",
+    "role_changed","system_notice","live_update"
+  ]),
+  occurredAt: z.string().datetime(),
+  actor: z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    avatarUrl: z.string().url().optional()
+  }).optional(),
+  target: z.object({
+    id: z.string().optional(),
+    kind: z.enum(["article","category","tag","user","media"]).optional(),
+    title: z.string().optional(),
+    slug: z.string().optional(),
+    url: z.string().url().optional(),
+    imageUrl: z.string().url().optional()
+  }).optional(),
+  meta: z.record(z.unknown()).optional(),
+  importance: z.enum(["low","normal","high","urgent"]).default("normal"),
+  summary: z.string().optional()
+});
+export type Activity = z.infer<typeof ActivitySchema>;
+
+
+⸻
+
+واجهة API مقترحة
+	•	GET /api/activities
+	•	Query: cursor, limit, type[], importance, q, from, to, targetKind, actorId
+	•	Response:
+
+{
+  "items": [/* Activity[] */],
+  "nextCursor": "string|null",
+  "serverTime": "2025-10-13T06:30:00.000Z"
+}
+
+
+
+⸻
+
+نصوص واجهة جاهزة (Microcopy)
+	•	العنوان: لحظة بلحظة
+	•	الوصف: كل ما يخص سبق الذكية في صفحة واحدة — تحديثات حية وسريعة.
+	•	الأزرار:
+	•	“تحديثات مباشرة” / “إيقاف البث”
+	•	“عرض الخبر” / “المزيد”
+	•	حالات:
+	•	فراغ: لا جديد حتى الآن. ابقَ على الصفحة؛ سنحدّثك فورًا.
+	•	خطأ: تعذّر تحميل التحديثات. حاول مرة أخرى.
+
+⸻
+
+معايير القبول (Acceptance Criteria)
+	•	تحميل أولي ≤ 1.2s على اتصال عادي.
+	•	تمرير لا نهائي سلس حتى 1000 عنصر مع Virtualization.
+	•	فلاتر تعمل دون إعادة تحميل الصفحة، وتحفظ الحالة في URL.
+	•	RTL صحيح، Sticky للتواريخ، وحالات Skeleton/Empty/Error متقنة.
+	•	أيقونات صحيحة حسب النوع، وBadge “عاجل” واضحة.
+	•	احترام RBAC بإخفاء الأحداث الحساسة.
+	•	اختبارات Zod تفشل عند أي شكل غير متوافق.
+
+⸻
+
+مقتطف واجهة (Skeleton React/TS) — اختياري للبدء السريع
+
+انسخه لمشروعك؛ يعتمد Tailwind + shadcn/ui + TanStack Query.
+
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useRef } from "react";
+import { Activity } from "@/lib/types";
+import { format, formatDistanceToNow } from "date-fns";
+import { arSA } from "date-fns/locale";
+
+export default function MomentByMomentPage() {
+  // TODO: wire filters state (URL) + queryFn
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery({
+      queryKey: ["activities"],
+      queryFn: async ({ pageParam }) => {
+        const url = new URL("/api/activities", window.location.origin);
+        if (pageParam) url.searchParams.set("cursor", pageParam);
+        const res = await fetch(url);
+        const json = await res.json();
+        return json as { items: Activity[]; nextCursor?: string | null };
+      },
+      getNextPageParam: (last) => last.nextCursor ?? undefined,
+      initialPageParam: undefined
+    });
+
+  const items = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data]
+  );
+
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    });
+    io.observe(sentinelRef.current);
+    return () => io.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (status === "pending") return <TimelineSkeleton />;
+  if (status === "error") return <EmptyState title="تعذّر التحميل" subtitle="حاول مجددًا." />;
+
+  return (
+    <div dir="rtl" className="container mx-auto max-w-3xl py-6">
+      <header className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">لحظة بلحظة</h1>
+          <p className="text-sm text-muted-foreground">
+            كل التحديثات في صفحة واحدة — تحديثات حية وسريعة.
+          </p>
+        </div>
+        <Button variant="outline">تحديثات مباشرة</Button>
+      </header>
+
+      <div className="relative pl-4">
+        {/* خط التايملاين (يسار في RTL) */}
+        <span className="absolute right-0 top-0 h-full w-px bg-border" aria-hidden />
+
+        <ul className="space-y-4">
+          {items.map((a) => (
+            <li key={a.id} className="relative pr-5">
+              {/* النقطة */}
+              <span className="absolute -right-[6px] mt-3 inline-block h-3 w-3 rounded-full bg-primary shadow" aria-hidden />
+              <ActivityCard a={a} />
+            </li>
+          ))}
+        </ul>
+
+        <div ref={sentinelRef} className="h-10" />
+        {isFetchingNextPage && <TimelineSkeleton count={3} />}
+        {!hasNextPage && items.length > 0 && (
+          <p className="mt-6 text-center text-sm text-muted-foreground">لا مزيد من العناصر</p>
+        )}
+        {items.length === 0 && <EmptyState title="لا جديد" subtitle="تابعنا؛ التحديثات تصل فورًا ✨" />}
+      </div>
+    </div>
+  );
+}
+
+function ActivityCard({ a }: { a: Activity }) {
+  const timeAbs = format(new Date(a.occurredAt), "EEEE, d MMMM yyyy • h:mm a", { locale: arSA });
+  const timeRel = formatDistanceToNow(new Date(a.occurredAt), { addSuffix: true, locale: arSA });
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{labelOf(a.type)}</span>
+            {a.importance === "urgent" && <Badge variant="destructive">عاجل</Badge>}
+            <span className="text-xs text-muted-foreground" title={timeAbs}>{timeRel}</span>
+          </div>
+          <div className="text-sm">
+            {a.target?.title ?? a.summary ?? "—"}
+          </div>
+        </div>
+        {a.target?.imageUrl && (
+          <img src={a.target.imageUrl} alt="" className="h-14 w-20 rounded object-cover" loading="lazy" />
+        )}
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        {a.target?.url && <Button size="sm" asChild><a href={a.target.url}>عرض</a></Button>}
+        <Button size="sm" variant="ghost">المزيد</Button>
+      </div>
+    </Card>
+  );
+}
+
+function labelOf(t: Activity["type"]) {
+  const map: Record<Activity["type"], string> = {
+    article_published: "نشر خبر",
+    article_updated: "تحديث خبر",
+    breaking_news: "خبر عاجل",
+    comment_added: "إضافة تعليق",
+    reaction_added: "تفاعل",
+    bookmark_added: "إشارة مرجعية",
+    category_created: "إضافة تصنيف",
+    tag_created: "إضافة وسم",
+    media_uploaded: "رفع وسائط",
+    user_registered: "مستخدم جديد",
+    role_changed: "تغيير صلاحية",
+    system_notice: "تنبيه نظام",
+    live_update: "تحديث لحظي",
+  };
+  return map[t] ?? t;
+}
+
+function TimelineSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <ul className="space-y-4 animate-pulse">
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className="relative pr-5">
+          <span className="absolute -right-[6px] mt-3 inline-block h-3 w-3 rounded-full bg-muted-foreground/30" />
+          <Card className="p-4">
+            <div className="h-4 w-40 bg-muted rounded mb-2" />
+            <div className="h-3 w-64 bg-muted rounded" />
+          </Card>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function EmptyState({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="py-12 text-center">
+      <h3 className="text-lg font-semibold">{title}</h3>
+      {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+    </div>
+  );
+}
+
+
+⸻
+
+ملاحظات تنفيذية سريعة
+	•	اربط الفلاتر بـURL عبر useSearchParams (مثلاً مع Wouter) عشان المشاركة سهلة.
+	•	للتجميع الزمني: أنشئ دالة تُرجع { label, items[] } لكل يوم.
+	•	لو بتفعل Live: عند وصول دفعة جديدة خزنها مؤقتًا وأظهر شريط “عرض X تحديثات” بدل ما تدفها مباشرة للتايملاين (تجربة ألطف).
+	•	أيقونات Lucide: أضفها لاحقًا حسب مكتبتك المفضلة؛ الماب جاهز.
+
+⸻
+
+إذا ودّك، أحوّل هذا البرومنت لملف Prompt JSON داخلي للفريق التحريري/التقني، أو أركّب لك نسخة “mini-PRD” مع مهام Jira.

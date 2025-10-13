@@ -888,6 +888,35 @@ export const updateRolePermissionsSchema = z.object({
   permissionIds: z.array(z.string().uuid("معرف الصلاحية غير صحيح")),
 });
 
+// Activity type for unified timeline
+export const ActivitySchema = z.object({
+  id: z.string().min(1),
+  type: z.enum([
+    "article_published","article_updated","breaking_news",
+    "comment_added","reaction_added","bookmark_added",
+    "category_created","tag_created",
+    "user_registered","role_changed"
+  ]),
+  occurredAt: z.string().datetime(),
+  actor: z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    avatarUrl: z.string().url().optional()
+  }).optional(),
+  target: z.object({
+    id: z.string().optional(),
+    kind: z.enum(["article","category","tag","user"]).optional(),
+    title: z.string().optional(),
+    slug: z.string().optional(),
+    url: z.string().url().optional(),
+    imageUrl: z.string().url().optional()
+  }).optional(),
+  importance: z.enum(["low","normal","high","urgent"]).default("normal"),
+  summary: z.string().optional()
+});
+
+export type Activity = z.infer<typeof ActivitySchema>;
+
 // TypeScript types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
