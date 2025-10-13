@@ -1,0 +1,340 @@
+تمام يا أبو محمد! جهّزت لك برومنت تنفيذي جاهز كوبي-بيست لتفعيل “الإشعارات الذكية” على ستاك سبق الذكية (Express + Drizzle + Postgres + React + shadcn/ui + TanStack Query). يشمل المنطق، السكيمات، الـ APIs، والواجهة، مع ألوان/أيقونات للحالات (عاجل/مميز/…)، وقواعد التوجيه حسب الاهتمامات. استخدمه مع أي Agent مطوّر عندك أو نفّذه مباشرة.
+
+⸻
+
+برومنت تفعيل الإشعارات الذكية (تنفيذي)
+
+الدور المطلوب من الـAgent: كبير مطوّرين Full-Stack لبيئة: React 18 + TypeScript + Vite + Tailwind + shadcn/ui + TanStack Query + Wouter (FRONT) — وExpress + TypeScript + Drizzle ORM + PostgreSQL (Neon) + express-session + Passport (BACK). تفعيل مكوّن الإشعارات الموجود في الـHeader بحيث يستقبل أحداث النظام فورياً ويعرضها بذكاء للمستخدم العربي (RTL).
+
+الهدف
+	•	عند نشر خبر (وخاصة إذا كان عاجل أو مميز) أو تحقق “إشارة ذكية” (الأكثر قراءة، الأكثر تعليقاً، يثير الجدل)، تصل إشعارات فورية إلى المستخدمين المعنيين بحسب اهتماماتهم وتاريخ تفاعلهم.
+	•	الإشعارات تظهر في قائمة الجرس بالهيدر + Toast اختياري، مع Badge للعدد غير المقروء، وحالات لونية/أيقونية واضحة.
+	•	دعم SSE أو WebSocket (اختر SSE كبداية لبساطته)، مع REST لإدارة القراءة/التأشير كـ read/all.
+
+⸻
+
+أنواع الأحداث (Events) وقواعد الإرسال
+	1.	article.published
+	•	الشرط: تطابق تصنيف/وسم المقال مع Interests للمستخدم.
+	•	أولوية: medium، ما لم يكن breaking=true أو featured=true.
+	2.	article.breaking
+	•	من حقل isBreaking=true.
+	•	أولوية: high، لون أحمر، Toast فوري.
+	3.	article.featured
+	•	من حقل isFeatured=true.
+	•	أولوية: high، شارة “مميّز”.
+	4.	comments.spike
+	•	المقال ضمن Top commented آخر X دقائق.
+	•	أولوية: medium، يظهر كـ “يزداد نقاشه”.
+	5.	reads.top
+	•	المقال ضمن Top read آخر 24 ساعة.
+	•	أولوية: low إلى medium.
+	6.	user.activity.reply
+	•	ردود على تعليق المستخدم.
+	•	أولوية: high للمطابقة الشخصية.
+
+التخصيص:
+	•	لا ترسل إشعارًا لنفس المستخدم أكثر من مرة عن نفس المقال/النمط خلال 60 دقيقة (Dedup).
+	•	احترم تفضيلات المستخدم (تشغيل/تعطيل لكل نوع + لكل أولوية).
+
+⸻
+
+مخطط قاعدة البيانات (Drizzle)
+
+// drizzle/schema/notifications.ts
+import { pgTable, serial, varchar, boolean, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().index(),
+  type: varchar("type", { length: 64 }).notNull(), // article.published / article.breaking / ...
+  title: varchar("title", { length: 200 }).notNull(), // نص قصير
+  body: varchar("body", { length: 400 }).notNull(),  // سطر شارح
+  link: varchar("link", { length: 300 }).notNull(),  // رابط الخبر/المورد
+  icon: varchar("icon", { length: 40 }).notNull(),   // bell/flash/star/message-circle/flame...
+  color: varchar("color", { length: 24 }).notNull(), // red/amber/violet/sky/slate...
+  priority: varchar("priority", { length: 16 }).notNull(), // high/medium/low
+  meta: jsonb("meta").$type<Record<string, any>>().default({}),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const userNotificationPrefs = pgTable("user_notification_prefs", {
+  userId: integer("user_id").primaryKey(),
+  // تمكين حسب النوع
+  articlePublished: boolean("article_published").default(true),
+  breaking: boolean("breaking").default(true),
+  featured: boolean("featured").default(true),
+  topCommented: boolean("top_commented").default(true),
+  topRead: boolean("top_read").default(true),
+  replies: boolean("replies").default(true),
+  // حد أقصى/ساعة لتجنّب الإزعاج
+  throttlePerHour: integer("throttle_per_hour").default(8),
+});
+
+
+⸻
+
+خرائط العرض (أيقونة/لون/نص)
+
+// server/notifications/maps.ts
+export const typeMap = {
+  "article.breaking": {
+    icon: "flash",      // lucide-react: <Zap />
+    color: "red",
+    titleTpl: "خبر عاجل",
+    bodyTpl: (a: {title: string; category: string}) => `عاجل في ${a.category}: ${a.title}`,
+    priority: "high",
+  },
+  "article.featured": {
+    icon: "star",
+    color: "violet",
+    titleTpl: "خبر مميّز",
+    bodyTpl: (a: {title: string}) => `مختار لك: ${a.title}`,
+    priority: "high",
+  },
+  "article.published": {
+    icon: "bell",
+    color: "sky",
+    titleTpl: "خبر جديد",
+    bodyTpl: (a: {title: string; category: string}) => `نُشر قبل قليل في ${a.category}: ${a.title}`,
+    priority: "medium",
+  },
+  "comments.spike": {
+    icon: "message-circle",
+    color: "amber",
+    titleTpl: "يزداد نقاشه",
+    bodyTpl: (a: {title: string}) => `التعليقات تتزايد على: ${a.title}`,
+    priority: "medium",
+  },
+  "reads.top": {
+    icon: "flame",
+    color: "orange",
+    titleTpl: "الأكثر تداولًا",
+    bodyTpl: (a: {title: string}) => `ضمن الأكثر قراءة: ${a.title}`,
+    priority: "low",
+  },
+  "user.reply": {
+    icon: "reply",
+    color: "emerald",
+    titleTpl: "رد جديد",
+    bodyTpl: (a: {articleTitle: string}) => `تم الرد على تعليقك في: ${a.articleTitle}`,
+    priority: "high",
+  },
+} as const;
+
+
+⸻
+
+واجهة برمجية (Express)
+
+// server/routes/notifications.ts
+import { Router } from "express";
+import { db } from "../drizzle";
+import { notifications } from "../drizzle/schema/notifications";
+
+export const notificationsRouter = Router();
+
+// الحصول على الإشعارات
+notificationsRouter.get("/", async (req, res) => {
+  const userId = req.user!.id;
+  const rows = await db.query.notifications.findMany({
+    where: (n, { eq }) => eq(n.userId, userId),
+    orderBy: (n, { desc }) => [desc(n.createdAt)],
+    limit: 30,
+  });
+  res.json(rows);
+});
+
+// عدّاد غير المقروء
+notificationsRouter.get("/unread-count", async (req, res) => {
+  const userId = req.user!.id;
+  const [{ count }] = await db.execute<{count: number}>(`SELECT COUNT(*)::int as count FROM notifications WHERE user_id=$1 AND is_read=false`, [userId]);
+  res.json({ count });
+});
+
+// تعليم كمقروء
+notificationsRouter.patch("/:id/read", async (req, res) => {
+  const userId = req.user!.id;
+  const id = Number(req.params.id);
+  await db.update(notifications).set({ isRead: true }).where((n, { and, eq }) => and(eq(n.id, id), eq(n.userId, userId)));
+  res.sendStatus(204);
+});
+
+// تعليم الكل كمقروء
+notificationsRouter.post("/read-all", async (req, res) => {
+  const userId = req.user!.id;
+  await db.execute(`UPDATE notifications SET is_read=true WHERE user_id=$1 AND is_read=false`, [userId]);
+  res.sendStatus(204);
+});
+
+// SSE للبث الفوري
+notificationsRouter.get("/stream", async (req, res) => {
+  const userId = req.user!.id;
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const unsub = globalThis.notificationBus.subscribe(userId, (payload) => {
+    res.write(`event: notify\ndata:${JSON.stringify(payload)}\n\n`);
+  });
+
+  req.on("close", () => unsub());
+});
+
+مُصدّر أحداث مركزي:
+	•	أنشئ notificationBus بسيط (Map<userId, Set>) أو استخدم Redis Pub/Sub لاحقاً.
+	•	دالة emitNotification(userId, payload) تحفظ في DB وتبث عبر SSE.
+
+نقطة إدخال للأحداث من النظام التحريري:
+
+// server/services/notifyEvents.ts
+export async function onArticlePublished(article) {
+  // استرجاع المستخدمين المهتمين بـ category/keywords
+  const users = await getMatchedUsers(article.categoryId, article.tags);
+  for (const u of users) {
+    const payload = buildPayload("article.published", { title: article.title, category: article.categoryName, articleId: article.id });
+    await saveAndEmit(u.id, payload, `/article/${article.slug}`);
+  }
+  if (article.isBreaking) { /* أرسل article.breaking بأولوية أعلى */ }
+  if (article.isFeatured) { /* أرسل article.featured */ }
+}
+
+
+⸻
+
+الواجهة الأمامية (React)
+
+حالة الاستريم + TanStack Query:
+
+// src/features/notifications/useNotifications.ts
+import { useEffect } from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+
+export function useNotifications() {
+  const qc = useQueryClient();
+  const list = useQuery({ queryKey: ["notifications"], queryFn: () => fetch("/api/notifications").then(r=>r.json())});
+  const unread = useQuery({ queryKey: ["notifications","unread-count"], queryFn: () => fetch("/api/notifications/unread-count").then(r=>r.json())});
+
+  useEffect(() => {
+    const ev = new EventSource("/api/notifications/stream");
+    ev.addEventListener("notify", e => {
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["notifications","unread-count"] });
+      // اختيارياً: أظهر Toast
+      // showToast(JSON.parse((e as MessageEvent).data))
+    });
+    return () => ev.close();
+  }, [qc]);
+
+  return { list, unread };
+}
+
+مكوّن قائمة الجرس بالهيدر (shadcn/ui + lucide-react):
+
+// src/components/HeaderBell.tsx
+import { Bell, Zap, Star, MessageCircle, Flame, Reply } from "lucide-react";
+import { useNotifications } from "@/features/notifications/useNotifications";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
+const iconMap = { flash: Zap, star: Star, "message-circle": MessageCircle, flame: Flame, reply: Reply, bell: Bell };
+
+export default function HeaderBell() {
+  const { list, unread } = useNotifications();
+  const count = unread.data?.count ?? 0;
+
+  return (
+    <div className="relative">
+      <button className="relative">
+        <Bell className="size-5" />
+        {count > 0 && <span className="absolute -top-1 -right-1 text-xs bg-red-600 text-white rounded-full px-1">{count}</span>}
+      </button>
+
+      <div className="absolute mt-3 w-[420px] right-0 bg-white shadow-xl rounded-2xl p-3 border border-slate-100">
+        <div className="font-medium mb-2">الإشعارات</div>
+        {(!list.data || list.data.length === 0) ? (
+          <div className="text-center text-slate-500 py-8">لا توجد إشعارات</div>
+        ) : list.data.map((n: any) => {
+          const Icon = iconMap[n.icon as keyof typeof iconMap] ?? Bell;
+          return (
+            <Card key={n.id} className={`mb-2 p-3 rounded-2xl cursor-pointer hover:bg-slate-50 rtl ${n.isRead ? "" : "border-2"}`}
+                  onClick={() => { fetch(`/api/notifications/${n.id}/read`, { method: "PATCH" }); location.href = n.link; }}>
+              <div className="flex items-start gap-3">
+                <div className={`mt-1`}>
+                  <Icon className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-semibold">{n.title}</div>
+                    {n.priority === "high" && <Badge variant="destructive">عاجل</Badge>}
+                    {n.type === "article.featured" && <Badge className="bg-violet-600">مميّز</Badge>}
+                  </div>
+                  <div className="text-sm text-slate-600">{n.body}</div>
+                </div>
+                {!n.isRead && <span className="text-[10px] text-emerald-600">جديد</span>}
+              </div>
+            </Card>
+          );
+        })}
+        {list.data?.length > 0 && (
+          <button className="w-full text-sm text-slate-600 hover:text-slate-900 mt-2"
+                  onClick={() => fetch("/api/notifications/read-all", { method: "POST" }).then(()=>location.reload())}>
+            تعليم الكل كمقروء
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+المنطق الذكي (قواعد مختصرة)
+	•	Routing بالاهتمامات: اجلب user_interests وطبّق مطابقة على category_id وtags.
+	•	الأولوية والعرض:
+	•	breaking: أحمر + Toast + أعلى القائمة.
+	•	featured: بنفسجي + شارة “مميّز”.
+	•	comments.spike: أصفر/كهرماني.
+	•	reads.top: برتقالي.
+	•	article.published: سماوي.
+	•	Dedup & Throttle: مفتاح تجزئة userId:type:articleId خلال 60 دقيقة. لا تتجاوز throttlePerHour.
+	•	خصوصية/RBAC: لا تُرسِل أحداث تخص مستخدمًا (رد على تعليق) إلا لصاحبها. احترم جلسة Passport.
+
+⸻
+
+عبارات عربية جاهزة (قوالب)
+	•	عاجل: عاجل في {category}: {title}
+	•	مميّز: مختار لك: {title}
+	•	خبر جديد: نُشر قبل قليل في {category}: {title}
+	•	يزداد نقاشه: التعليقات تتزايد على: {title}
+	•	الأكثر تداولاً: ضمن الأكثر قراءة: {title}
+	•	رد على تعليقك: تم الرد على تعليقك في: {articleTitle}
+
+⸻
+
+حالات اختبار (قبول)
+	1.	عند نشر خبر “محليات” ومستخدم اهتمامه “محليات” ⇒ إشعار article.published يصل خلال ≤2 ثوانٍ إلى الهيدر مع Badge محدث.
+	2.	عند نشر خبر عاجل isBreaking=true ⇒ يظهر باللون الأحمر + شارة “عاجل” + Toast.
+	3.	تفعيل “مميّز” ⇒ شارة “مميّز” بنفسجية.
+	4.	عند تخطي الحد/ساعة ⇒ لا إرسال إضافي (throttle).
+	5.	الضغط على الإشعار ⇒ توجيه للرابط + تعليم كـ مقروء.
+	6.	“تعليم الكل كمقروء” يخفض الـBadge إلى 0.
+	7.	RTL صحيح، النصوص عربية، لا التباس بصري في الوضع الليلي/النهاري.
+
+⸻
+
+ما يلزم تنفيذه فورًا (Check-list)
+	•	إنشاء جداول notifications وuser_notification_prefs عبر Drizzle + migrations.
+	•	بناء notificationBus وواجهة SSE /api/notifications/stream.
+	•	REST: GET /notifications, GET /notifications/unread-count, PATCH /notifications/:id/read, POST /notifications/read-all.
+	•	Hooks على أحداث المقال (publish/breaking/featured) + وظائف analytics (top read/commented).
+	•	ربط الواجهة (HeaderBell) وتغذية TanStack Query + Toast.
+	•	خرائط الأيقونات/الألوان + قوالب الرسائل.
+	•	اختبارات قبول اليدوية المذكورة أعلاه.
+
+⸻
+
+لو تحب، أقدر أطلع لك نسخة مصغرة Mock ببيانات وهمية لتجربة الهيدر مباشرة، أو أضيف Toast عربي خفيف. تريدني أجهّز لك سطر الأوامر لتوليد الـmigration والأندبوينتات؟ 👌
