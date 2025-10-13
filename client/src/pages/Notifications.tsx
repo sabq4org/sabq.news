@@ -41,16 +41,7 @@ export default function Notifications() {
   const [filter, setFilter] = useState<FilterType>("all");
 
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
-    queryKey: ["/api/me/notifications"],
-    queryFn: async () => {
-      const response = await fetch("/api/me/notifications?limit=100", {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("فشل تحميل الإشعارات");
-      }
-      return response.json();
-    },
+    queryKey: ["/api/me/notifications?limit=100"],
   });
 
   const markAsReadMutation = useMutation({
@@ -60,7 +51,7 @@ export default function Notifications() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications?limit=100"] });
     },
   });
 
@@ -71,7 +62,7 @@ export default function Notifications() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications?limit=100"] });
       toast({
         title: "تم تحديث الإشعارات",
         description: "تم تمييز جميع الإشعارات كمقروءة",
@@ -173,7 +164,7 @@ export default function Notifications() {
             <TabsTrigger value="all" data-testid="tab-all">
               الكل
               {data && filter === "all" && (
-                <Badge variant="secondary" className="mr-2">
+                <Badge variant="secondary" className="mr-2" data-testid="badge-count-all">
                   {data.notifications.length}
                 </Badge>
               )}
@@ -181,7 +172,7 @@ export default function Notifications() {
             <TabsTrigger value="ArticlePublished" data-testid="tab-article-published">
               مقالات جديدة
               {data && (
-                <Badge variant="secondary" className="mr-2">
+                <Badge variant="secondary" className="mr-2" data-testid="badge-count-article-published">
                   {data.notifications.filter((n) => n.type === "ArticlePublished").length}
                 </Badge>
               )}
@@ -189,7 +180,7 @@ export default function Notifications() {
             <TabsTrigger value="BreakingNews" data-testid="tab-breaking-news">
               أخبار عاجلة
               {data && (
-                <Badge variant="secondary" className="mr-2">
+                <Badge variant="secondary" className="mr-2" data-testid="badge-count-breaking-news">
                   {data.notifications.filter((n) => n.type === "BreakingNews").length}
                 </Badge>
               )}
@@ -197,7 +188,7 @@ export default function Notifications() {
             <TabsTrigger value="FeaturedArticle" data-testid="tab-featured-article">
               مقالات مميزة
               {data && (
-                <Badge variant="secondary" className="mr-2">
+                <Badge variant="secondary" className="mr-2" data-testid="badge-count-featured-article">
                   {data.notifications.filter((n) => n.type === "FeaturedArticle").length}
                 </Badge>
               )}
