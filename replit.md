@@ -32,6 +32,10 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - **Enhanced Profile Page:** Redesigned user profile with responsive layout, displaying liked articles, bookmarks, and reading history.
 - **AI Insights Block (مؤشرات الأسبوع):** A real-time intelligent analytics dashboard on the homepage showing 5 metrics over the last 7 days: Most Viewed (الأكثر تداولاً), Most Commented (الأكثر تعليقاً), Most Controversial (الأكثر جدلاً - comment/view ratio), Most Positive (الأكثر إيجابية - like rate with decimal precision), and AI Pick (اختيار الذكاء - engagement score formula: views + comments×5 + likes×3). Features color-coded cards, trend indicators, clickable article links, and smart thresholds (views >10 for controversial, >5 for positive).
 
+### Real-Time Features
+- **Moment by Moment (لحظة بلحظة):** A comprehensive timeline page displaying all platform activities with 13 activity types (ArticlePublished, ArticleUpdated, CommentAdded, ReactionAdded, UserJoined, CategoryCreated, TagCreated, etc.). Features cursor-based pagination with infinite scroll, RTL-first design, date grouping with sticky headers, and filters by activity type. All article links properly use `/article/[slug]` format.
+- **Smart Notifications System:** Intelligent notification engine with throttling (max 3 per 12 hours, min 1 per 20 minutes), deduplication (60-min window), and Server-Sent Events (SSE) for real-time push notifications. Supports 3 notification types: ArticlePublished (interest-based), BreakingNews (all users), and FeaturedArticle (category-based). Automatic notification preferences creation for new users with configurable settings per user. Visual notification bell with unread count, toast notifications for breaking news, and colored icons by notification type.
+
 ## External Dependencies
 
 **Authentication & Identity**
