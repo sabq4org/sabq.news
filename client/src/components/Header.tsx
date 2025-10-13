@@ -77,7 +77,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "عمق", href: "/omq" },
     { name: "مقترب", href: "/moqtareb" },
     { name: "مقالات", href: "/articles" },
-    { name: "لحظة بلحظة", href: "/live" },
+    { name: "لحظة بلحظة", href: "/moment-by-moment" },
   ];
 
   return (

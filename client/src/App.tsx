@@ -36,6 +36,7 @@ import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
 import TagsManagement from "@/pages/TagsManagement";
 import DailyBrief from "@/pages/DailyBrief";
+import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/onboarding/interests" component={OnboardingInterests} />
       <Route path="/onboarding/personalize" component={Personalize} />
       <Route path="/daily-brief" component={DailyBrief} />
+      <Route path="/moment-by-moment" component={MomentByMoment} />
       
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
       <Route path="/dashboard/articles/new" component={ComingSoon} />
