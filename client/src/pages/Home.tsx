@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { AIInsightsBlock } from "@/components/AIInsightsBlock";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
@@ -95,6 +96,9 @@ export default function Home() {
             <HeroCarousel articles={homepage.hero} />
           </div>
         )}
+
+        {/* AI Insights Block */}
+        <AIInsightsBlock />
 
         {homepage.forYou && homepage.forYou.length > 0 && (
           <PersonalizedFeed 
