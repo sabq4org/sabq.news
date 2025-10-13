@@ -37,40 +37,40 @@ export function Footer() {
 
   return (
     <footer className="bg-card/50 dark:bg-card border-t border-border/50 dark:border-border mt-auto">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-5">
           {/* Logo and Description */}
           <div className="lg:col-span-2">
             <Link href="/" data-testid="footer-logo">
-              <div className="flex items-center gap-3 mb-4 group cursor-pointer">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl transition-transform group-hover:scale-105">
+              <div className="flex items-center gap-2 mb-3 group cursor-pointer">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg transition-transform group-hover:scale-105">
                   س
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">سبق الذكية</h3>
+                  <h3 className="text-lg font-bold text-foreground">سبق الذكية</h3>
                   <p className="text-xs text-muted-foreground">منصة الأخبار الذكية</p>
                 </div>
               </div>
             </Link>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
               منصة إخبارية عربية ذكية تقدم أحدث الأخبار والتحليلات المدعومة بالذكاء الاصطناعي. 
               نسعى لتقديم تجربة إخبارية فريدة ومخصصة لكل قارئ.
             </p>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <a 
                 href="mailto:info@sabq.sa" 
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
                 data-testid="footer-email"
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-3.5 w-3.5" />
                 info@sabq.sa
               </a>
               <a 
                 href="tel:+966123456789" 
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
                 data-testid="footer-phone"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="h-3.5 w-3.5" />
                 966123456789+
               </a>
             </div>
@@ -78,13 +78,13 @@ export function Footer() {
 
           {/* About Section */}
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">عن الموقع</h4>
-            <ul className="space-y-2">
+            <h4 className="font-semibold text-sm mb-3 text-foreground">عن الموقع</h4>
+            <ul className="space-y-1.5">
               {sections.about.map((item) => (
                 <li key={item.href}>
                   <Link 
                     href={item.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
                     data-testid={`footer-link-${item.href.replace('/', '')}`}
                   >
                     {item.label}
@@ -96,13 +96,13 @@ export function Footer() {
 
           {/* Categories Section */}
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">الأقسام</h4>
-            <ul className="space-y-2">
+            <h4 className="font-semibold text-sm mb-3 text-foreground">الأقسام</h4>
+            <ul className="space-y-1.5">
               {sections.categories.map((item) => (
                 <li key={item.href}>
                   <Link 
                     href={item.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
                     data-testid={`footer-category-${item.href.split('/').pop()}`}
                   >
                     {item.label}
@@ -114,13 +114,13 @@ export function Footer() {
 
           {/* Services Section */}
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">الخدمات</h4>
-            <ul className="space-y-2">
+            <h4 className="font-semibold text-sm mb-3 text-foreground">الخدمات</h4>
+            <ul className="space-y-1.5">
               {sections.services.map((item) => (
                 <li key={item.href}>
                   <Link 
                     href={item.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
                     data-testid={`footer-service-${item.href.replace('/', '').replace('#', 'app')}`}
                   >
                     {item.label}
@@ -131,32 +131,32 @@ export function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8 opacity-50" />
+        <Separator className="my-4 opacity-50" />
 
         {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Copyright */}
-          <div className="text-sm text-muted-foreground text-center md:text-right">
+          <div className="text-xs text-muted-foreground text-center md:text-right">
             <p data-testid="footer-copyright">
               © {currentYear} سبق الذكية. جميع الحقوق محفوظة.
             </p>
           </div>
 
           {/* Social Media */}
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden md:inline">تابعنا:</span>
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground hidden md:inline">تابعنا:</span>
+            <div className="flex items-center gap-2">
               {socialMedia.map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-2 rounded-lg bg-muted/60 dark:bg-muted hover-elevate active-elevate-2 transition-colors ${social.color}`}
+                  className={`p-1.5 rounded-lg bg-muted/60 dark:bg-muted hover-elevate active-elevate-2 transition-colors ${social.color}`}
                   aria-label={social.name}
                   data-testid={`footer-social-${social.name.toLowerCase()}`}
                 >
-                  <social.icon className="h-4 w-4" />
+                  <social.icon className="h-3.5 w-3.5" />
                 </a>
               ))}
             </div>
