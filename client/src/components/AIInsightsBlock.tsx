@@ -46,14 +46,14 @@ export function AIInsightsBlock() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <Skeleton className="h-4 w-32" />
         </div>
-        <div className="grid md:grid-cols-5 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-2xl" />
+            <Skeleton key={i} className="h-20 sm:h-24 rounded-xl" />
           ))}
         </div>
       </div>
@@ -116,24 +116,24 @@ export function AIInsightsBlock() {
   ];
 
   return (
-    <div className="space-y-4" data-testid="ai-insights-block">
+    <div className="space-y-3" data-testid="ai-insights-block">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500">
-          <Brain className="h-4 w-4 text-white" />
+        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500">
+          <Brain className="h-3.5 w-3.5 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold" data-testid="insights-title">
+          <h2 className="text-base sm:text-lg font-bold" data-testid="insights-title">
             مؤشرات الأسبوع
           </h2>
-          <p className="text-xs text-muted-foreground" data-testid="insights-subtitle">
-            نظرة ذكية على تفاعل القراء خلال آخر 7 أيام
+          <p className="text-[10px] sm:text-xs text-muted-foreground" data-testid="insights-subtitle">
+            نظرة ذكية على تفاعل القراء
           </p>
         </div>
       </div>
 
       {/* Insights Grid */}
-      <div className="grid md:grid-cols-5 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
         {insightsData.map((insight, index) => {
           const IconComponent = insight.icon;
           const articleLink = insight.article ? `/article/${insight.article.slug}` : "#";
@@ -145,35 +145,37 @@ export function AIInsightsBlock() {
               className={insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-2xl p-3 shadow-sm hover:shadow-lg transition-all group ${
+                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 sm:p-3 shadow-sm hover:shadow-lg transition-all group ${
                   insight.article ? "hover-elevate" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
               >
-                {/* Icon */}
-                <div className="flex items-center justify-center w-9 h-9 mb-2">
-                  <IconComponent className={`h-6 w-6 ${insight.iconColor}`} />
+                {/* Icon and Title Row for Mobile */}
+                <div className="flex items-start gap-2 mb-1.5">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
+                    <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${insight.iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-sm sm:text-base leading-tight" data-testid={`insight-title-${insight.testId}`}>
+                      {insight.title}
+                    </h3>
+                  </div>
                 </div>
 
-                {/* Title */}
-                <h3 className="font-bold text-base mb-1.5 leading-tight" data-testid={`insight-title-${insight.testId}`}>
-                  {insight.title}
-                </h3>
-
                 {/* Subtitle */}
-                <p className="text-xs text-muted-foreground mb-2 min-h-[28px] line-clamp-2" data-testid={`insight-subtitle-${insight.testId}`}>
+                <p className="text-xs text-muted-foreground mb-1.5 sm:mb-2 min-h-[20px] sm:min-h-[24px] line-clamp-2" data-testid={`insight-subtitle-${insight.testId}`}>
                   {insight.subtitle}
                 </p>
 
                 {/* Trend */}
                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium" data-testid={`insight-trend-${insight.testId}`}>
                   <TrendingUp className="h-3 w-3" />
-                  <span>{insight.trend}</span>
+                  <span className="text-xs">{insight.trend}</span>
                 </div>
 
-                {/* Article Title (on hover) */}
+                {/* Article Title (on hover) - Hidden on mobile */}
                 {insight.article && (
-                  <p className="mt-2 text-xs text-foreground/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`insight-article-${insight.testId}`}>
+                  <p className="mt-2 text-xs text-foreground/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" data-testid={`insight-article-${insight.testId}`}>
                     {insight.article.title}
                   </p>
                 )}
