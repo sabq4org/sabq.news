@@ -291,7 +291,46 @@ export default function Notifications() {
             ))}
           </div>
         )}
+    </div>
+  );
+
+  if (error) {
+    const errorContent = (
+      <div className="flex flex-col items-center justify-center h-[400px] text-center">
+        <AlertCircle className="h-16 w-16 text-destructive mb-4" />
+        <h2 className="text-2xl font-bold mb-2">حدث خطأ</h2>
+        <p className="text-muted-foreground" data-testid="text-error">
+          فشل تحميل الإشعارات. يرجى المحاولة مرة أخرى.
+        </p>
       </div>
-    </DashboardLayout>
+    );
+
+    return isDashboard ? (
+      <DashboardLayout>{errorContent}</DashboardLayout>
+    ) : (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background py-8">
+          <div className="container max-w-4xl mx-auto px-4">
+            {errorContent}
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  return isDashboard ? (
+    <DashboardLayout>{contentJSX}</DashboardLayout>
+  ) : (
+    <>
+      <Header />
+      <main className="min-h-screen bg-background py-8">
+        <div className="container max-w-4xl mx-auto px-4">
+          {contentJSX}
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

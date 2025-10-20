@@ -41,6 +41,8 @@ import ComingSoon from "@/pages/ComingSoon";
 import Notifications from "@/pages/Notifications";
 import NotificationAdmin from "@/pages/NotificationAdmin";
 import RecommendationSettings from "@/pages/recommendation-settings";
+import UserNotifications from "@/pages/UserNotifications";
+import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -98,9 +100,8 @@ function Router() {
       <Route path="/dashboard/profile" component={ComingSoon} />
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
-      <Route path="/dashboard/recommendation-settings" component={RecommendationSettings} />
-      <Route path="/notifications" component={Notifications} />
-      <Route path="/recommendation-settings" component={RecommendationSettings} />
+      <Route path="/notifications" component={UserNotifications} />
+      <Route path="/recommendation-settings" component={UserRecommendationSettings} />
       
       <Route component={NotFound} />
     </Switch>
