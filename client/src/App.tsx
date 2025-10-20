@@ -40,6 +40,7 @@ import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
 import Notifications from "@/pages/Notifications";
 import NotificationAdmin from "@/pages/NotificationAdmin";
+import RecommendationSettings from "@/pages/recommendation-settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -98,6 +99,7 @@ function Router() {
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/recommendation-settings" component={RecommendationSettings} />
       
       <Route component={NotFound} />
     </Switch>
