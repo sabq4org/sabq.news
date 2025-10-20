@@ -4986,13 +4986,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/events/track", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { eventType, targetId, targetType, metadata } = req.body;
+      const { eventType, articleId, metadata } = req.body;
 
-      if (!eventType || !targetId || !targetType) {
+      if (!eventType || !articleId) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      await trackUserEvent(userId, eventType, targetId, targetType, metadata);
+      await trackUserEvent({
+        userId,
+        articleId,
+        eventType,
+        metadata,
+      });
 
       res.json({ success: true });
     } catch (error) {
