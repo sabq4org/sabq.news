@@ -77,12 +77,17 @@ export default function ArticlesManagement() {
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   // Fetch metrics
-  const { data: metrics } = useQuery({
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
     queryKey: ["/api/admin/articles/metrics"],
     queryFn: async () => {
       const response = await fetch("/api/admin/articles/metrics", { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch metrics");
-      return response.json();
+      if (!response.ok) {
+        console.error("Metrics fetch failed:", response.status, response.statusText);
+        throw new Error("Failed to fetch metrics");
+      }
+      const data = await response.json();
+      console.log("Metrics loaded:", data);
+      return data;
     },
     enabled: !!user,
   });
@@ -238,12 +243,22 @@ export default function ArticlesManagement() {
         </div>
 
         {/* Status Cards */}
-        {metrics && (
+        {metricsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : metrics ? (
           <StatusCards
             metrics={metrics}
             activeStatus={activeStatus}
             onSelect={setActiveStatus}
           />
+        ) : (
+          <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+            خطأ في تحميل الإحصائيات: {metricsError?.message || "غير معروف"}
+          </div>
         )}
 
         {/* Filters */}
