@@ -6272,6 +6272,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/admin/stories/link-existing - ربط المقالات الموجودة بقصص (للإدمن فقط)
+  app.post("/api/admin/stories/link-existing", requireAuth, requireRole("admin"), async (req: any, res) => {
+    try {
+      console.log("[ADMIN] Starting to link existing articles to stories...");
+      
+      // جلب جميع المقالات المنشورة
+      const publishedArticles = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.status, 'published'))
+        .orderBy(desc(articles.publishedAt));
+
+      console.log(`[ADMIN] Found ${publishedArticles.length} published articles`);
+
+      const { matchAndLinkArticle } = await import("./storyMatcher");
+      let successCount = 0;
+      let errorCount = 0;
+
+      // ربط كل مقال بقصة
+      for (const article of publishedArticles) {
+        try {
+          console.log(`[ADMIN] Processing article: ${article.title}`);
+          await matchAndLinkArticle(article.id);
+          successCount++;
+        } catch (error) {
+          console.error(`[ADMIN] Error linking article ${article.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      console.log(`[ADMIN] Finished! Success: ${successCount}, Errors: ${errorCount}`);
+
+      res.json({
+        success: true,
+        message: `تم ربط ${successCount} مقال بقصص بنجاح`,
+        stats: {
+          total: publishedArticles.length,
+          success: successCount,
+          errors: errorCount
+        }
+      });
+    } catch (error) {
+      console.error("[ADMIN] Error in link-existing:", error);
+      res.status(500).json({ message: "فشل في ربط المقالات بالقصص" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
