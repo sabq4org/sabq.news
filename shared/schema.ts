@@ -1285,6 +1285,8 @@ export type ArticleWithDetails = Article & {
   reactionsCount?: number;
   isBookmarked?: boolean;
   hasReacted?: boolean;
+  storyId?: string;
+  storyTitle?: string;
 };
 
 export type CommentWithUser = Comment & {

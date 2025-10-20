@@ -5,6 +5,8 @@ import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { CredibilityIndicator } from "@/components/CredibilityIndicator";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
+import StoryTimeline from "@/components/StoryTimeline";
+import FollowStoryButton from "@/components/FollowStoryButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -532,6 +534,23 @@ export default function ArticleDetail() {
             </div>
 
             <Separator />
+
+            {/* Story Timeline */}
+            {article.storyId && (
+              <>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">تطور القصة</h2>
+                    <FollowStoryButton 
+                      storyId={article.storyId} 
+                      storyTitle={article.storyTitle || article.title}
+                    />
+                  </div>
+                  <StoryTimeline storyId={article.storyId} />
+                </div>
+                <Separator />
+              </>
+            )}
 
             {/* Comments */}
             <CommentSection
