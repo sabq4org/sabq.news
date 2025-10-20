@@ -326,12 +326,15 @@ export async function sendRecommendationNotification(
     // Fetch details of the first recommended article to include in notification
     const { articles } = await import('@shared/schema');
     const firstArticle = await db.query.articles.findFirst({
-      where: eq(articles.id, articleIds[0]),
+      where: and(
+        eq(articles.id, articleIds[0]),
+        eq(articles.status, 'published') // Only published articles
+      ),
     });
 
     if (!firstArticle) {
-      console.error(`❌ [REC NOTIFICATION] First article ${articleIds[0]} not found`);
-      return { success: false, reason: 'Article not found' };
+      console.error(`❌ [REC NOTIFICATION] First article ${articleIds[0]} not found or not published`);
+      return { success: false, reason: 'Article not found or not published' };
     }
 
     console.log(`📧 [REC NOTIFICATION] Preparing notification for article: ${firstArticle.slug} (${firstArticle.id})`);
