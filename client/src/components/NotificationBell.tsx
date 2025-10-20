@@ -59,59 +59,79 @@ export function NotificationBell() {
   useEffect(() => {
     if (!user) return;
 
-    console.log("📡 Connecting to notification stream...");
+    let currentEventSource: EventSource | null = null;
+    let retryTimeout: NodeJS.Timeout | null = null;
+    let isCleanedUp = false;
 
-    const eventSource = new EventSource("/api/notifications/stream", {
-      withCredentials: true,
-    });
+    const setupEventSource = () => {
+      if (isCleanedUp) return;
 
-    eventSource.onopen = () => {
-      console.log("📡 SSE connection established");
-    };
+      console.log("📡 Connecting to notification stream...");
 
-    eventSource.onmessage = (event) => {
-      try {
-        const notification = JSON.parse(event.data);
-        console.log("📩 New notification received:", notification);
+      currentEventSource = new EventSource("/api/notifications/stream", {
+        withCredentials: true,
+      });
 
-        // Invalidate queries to refresh notifications
-        queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+      currentEventSource.onopen = () => {
+        console.log("📡 SSE connection established");
+      };
 
-        // Show toast for breaking news only
-        if (notification.type === "BreakingNews") {
-          toast({
-            title: notification.title,
-            description: notification.body,
-            variant: "destructive",
-            duration: 5000,
-          });
+      currentEventSource.onmessage = (event) => {
+        try {
+          const notification = JSON.parse(event.data);
+          console.log("📩 New notification received:", notification);
+
+          // Invalidate queries to refresh notifications
+          queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+
+          // Show toast for breaking news only
+          if (notification.type === "BreakingNews") {
+            toast({
+              title: notification.title,
+              description: notification.body,
+              variant: "destructive",
+              duration: 5000,
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing SSE message:", error);
         }
-      } catch (error) {
-        console.error("Error parsing SSE message:", error);
-      }
-    };
+      };
 
-    eventSource.onerror = (error) => {
-      console.error("📡 SSE connection error:", error);
-      eventSource.close();
-      
-      // Retry connection after 5 seconds
-      setTimeout(() => {
-        console.log("📡 Retrying SSE connection...");
-        if (eventSourceRef.current === eventSource) {
-          const newEventSource = new EventSource("/api/notifications/stream", {
-            withCredentials: true,
-          });
-          eventSourceRef.current = newEventSource;
+      currentEventSource.onerror = (error) => {
+        console.error("📡 SSE connection error:", error);
+        
+        if (currentEventSource) {
+          currentEventSource.close();
         }
-      }, 5000);
+        
+        // Retry connection after 5 seconds if not cleaned up
+        if (!isCleanedUp) {
+          console.log("📡 Scheduling reconnection in 5 seconds...");
+          retryTimeout = setTimeout(() => {
+            setupEventSource();
+          }, 5000);
+        }
+      };
+
+      eventSourceRef.current = currentEventSource;
     };
 
-    eventSourceRef.current = eventSource;
+    setupEventSource();
 
     return () => {
-      console.log("📡 Closing SSE connection");
-      eventSource.close();
+      console.log("📡 Cleaning up SSE connection");
+      isCleanedUp = true;
+      
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+      
+      if (currentEventSource) {
+        currentEventSource.close();
+      }
+      
+      eventSourceRef.current = null;
     };
   }, [user, toast]);
 
