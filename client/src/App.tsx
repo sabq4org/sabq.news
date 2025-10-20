@@ -98,6 +98,7 @@ function Router() {
       <Route path="/dashboard/profile" component={ComingSoon} />
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
+      <Route path="/dashboard/recommendation-settings" component={RecommendationSettings} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/recommendation-settings" component={RecommendationSettings} />
       
