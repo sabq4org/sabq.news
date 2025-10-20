@@ -26,6 +26,11 @@ import {
   Sparkles,
   Eye,
   Zap,
+  Brain,
+  Crosshair,
+  Search,
+  Gauge,
+  TargetIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -97,14 +102,14 @@ export default function DailyBrief() {
 
   const todayInArabic = format(new Date(), 'EEEE، d MMMM yyyy', { locale: ar });
 
-  const getMoodEmoji = (mood: string) => {
-    const moods: Record<string, string> = {
-      "تحليلي": "🧠",
-      "فضولي": "🔍",
-      "سريع": "⚡",
-      "نقدي": "🎯",
+  const getMoodIcon = (mood: string) => {
+    const moods: Record<string, JSX.Element> = {
+      "تحليلي": <Brain className="h-12 w-12 text-primary" />,
+      "فضولي": <Search className="h-12 w-12 text-primary" />,
+      "سريع": <Zap className="h-12 w-12 text-primary" />,
+      "نقدي": <Crosshair className="h-12 w-12 text-primary" />,
     };
-    return moods[mood] || "📖";
+    return moods[mood] || <BookOpen className="h-12 w-12 text-primary" />;
   };
 
   const getChangeIcon = (change: number) => {
@@ -129,8 +134,10 @@ export default function DailyBrief() {
             <Card data-testid="card-no-activity">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Eye className="h-16 w-16 text-muted-foreground mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">لا توجد بيانات كافية</h2>
-                <p className="text-muted-foreground mb-6">
+                <h2 className="text-2xl font-semibold mb-2" data-testid="text-no-activity-title">
+                  لا توجد بيانات كافية
+                </h2>
+                <p className="text-muted-foreground mb-6" data-testid="text-no-activity-description">
                   لم نتمكن من العثور على نشاط قرائي خلال آخر 24 ساعة
                 </p>
                 <Button asChild data-testid="button-explore-news">
@@ -185,7 +192,7 @@ export default function DailyBrief() {
 
           {/* Loading State */}
           {isLoading && (
-            <div className="space-y-6">
+            <div className="space-y-6" data-testid="loading-state">
               <Card>
                 <CardHeader>
                   <Skeleton className="h-8 w-3/4" />
@@ -208,29 +215,30 @@ export default function DailyBrief() {
           {!isLoading && summary && (
             <div className="space-y-8" dir="rtl">
               {/* Personalized Greeting Card */}
-              <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20" data-testid="card-greeting">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="text-6xl">{getMoodEmoji(summary.personalizedGreeting.readingMood)}</div>
+                    <div data-testid="icon-reading-mood">
+                      {getMoodIcon(summary.personalizedGreeting.readingMood)}
+                    </div>
                     <div className="flex-1">
                       <p className="text-lg leading-relaxed" data-testid="text-greeting-summary">
-                        قرأت أمس <strong>{summary.personalizedGreeting.articlesReadToday}</strong> مقال خلال{' '}
-                        <strong>{summary.personalizedGreeting.readingTimeMinutes}</strong> دقيقة
+                        قرأت أمس <strong data-testid="value-articles-today">{summary.personalizedGreeting.articlesReadToday}</strong> مقال خلال{' '}
+                        <strong data-testid="value-reading-minutes">{summary.personalizedGreeting.readingTimeMinutes}</strong> دقيقة
                         {summary.personalizedGreeting.topCategories.length > 0 && (
                           <>
                             {' '}— منها عن{' '}
                             {summary.personalizedGreeting.topCategories.map((cat, idx) => (
-                              <span key={idx}>
+                              <span key={idx} data-testid={`text-top-category-${idx}`}>
                                 <strong>{cat}</strong>
                                 {idx < summary.personalizedGreeting.topCategories.length - 1 && ' و'}
                               </span>
                             ))}
                           </>
                         )}
-                        . 👀
                       </p>
-                      <p className="text-muted-foreground mt-2">
-                        مزاجك القرائي اليوم <strong>"{summary.personalizedGreeting.readingMood}"</strong> حسب تفاعلك مع المقالات.
+                      <p className="text-muted-foreground mt-2" data-testid="text-mood-description">
+                        مزاجك القرائي اليوم <strong data-testid="value-reading-mood">"{summary.personalizedGreeting.readingMood}"</strong> حسب تفاعلك مع المقالات.
                       </p>
                     </div>
                   </div>
@@ -239,7 +247,7 @@ export default function DailyBrief() {
 
               {/* Performance Metrics */}
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" data-testid="heading-performance-metrics">
                   <BarChart3 className="h-6 w-6 text-primary" />
                   مؤشرات الأداء الشخصي
                 </h2>
@@ -249,13 +257,13 @@ export default function DailyBrief() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">المقالات المقروءة</span>
+                          <span className="text-sm text-muted-foreground" data-testid="label-articles-read">المقالات المقروءة</span>
                         </div>
-                        {getChangeIcon(summary.metrics.percentChangeFromYesterday)}
+                        <span data-testid="icon-change-articles">{getChangeIcon(summary.metrics.percentChangeFromYesterday)}</span>
                       </div>
-                      <div className="text-3xl font-bold">{summary.metrics.articlesRead}</div>
+                      <div className="text-3xl font-bold" data-testid="value-articles-read">{summary.metrics.articlesRead}</div>
                       {summary.metrics.percentChangeFromYesterday !== 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1" data-testid="text-change-articles">
                           {summary.metrics.percentChangeFromYesterday > 0 ? 'بزيادة' : 'بانخفاض'}{' '}
                           {Math.abs(summary.metrics.percentChangeFromYesterday)}% عن أمس
                         </p>
@@ -267,10 +275,10 @@ export default function DailyBrief() {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground">وقت القراءة الإجمالي</span>
+                        <span className="text-sm text-muted-foreground" data-testid="label-reading-time">وقت القراءة الإجمالي</span>
                       </div>
-                      <div className="text-3xl font-bold">{summary.metrics.readingTimeMinutes} دقيقة</div>
-                      <p className="text-xs text-muted-foreground mt-1">تركيز ممتاز 👍</p>
+                      <div className="text-3xl font-bold" data-testid="value-reading-time">{summary.metrics.readingTimeMinutes} دقيقة</div>
+                      <p className="text-xs text-muted-foreground mt-1" data-testid="text-focus-feedback">تركيز ممتاز</p>
                     </CardContent>
                   </Card>
 
@@ -278,10 +286,10 @@ export default function DailyBrief() {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Target className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground">معدل إكمال القراءة</span>
+                        <span className="text-sm text-muted-foreground" data-testid="label-completion-rate">معدل إكمال القراءة</span>
                       </div>
-                      <div className="text-3xl font-bold">{Math.round(summary.metrics.completionRate)}%</div>
-                      <Progress value={summary.metrics.completionRate} className="mt-2" />
+                      <div className="text-3xl font-bold" data-testid="value-completion-rate">{Math.round(summary.metrics.completionRate)}%</div>
+                      <Progress value={summary.metrics.completionRate} className="mt-2" data-testid="progress-completion-rate" />
                     </CardContent>
                   </Card>
 
@@ -289,11 +297,11 @@ export default function DailyBrief() {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Bookmark className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground">المقالات المحفوظة</span>
+                        <span className="text-sm text-muted-foreground" data-testid="label-bookmarks">المقالات المحفوظة</span>
                       </div>
-                      <div className="text-3xl font-bold">{summary.metrics.articlesBookmarked}</div>
+                      <div className="text-3xl font-bold" data-testid="value-bookmarks">{summary.metrics.articlesBookmarked}</div>
                       {summary.interestAnalysis.topCategories[0] && (
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1" data-testid="text-bookmark-category">
                           أغلبها عن {summary.interestAnalysis.topCategories[0].name}
                         </p>
                       )}
@@ -304,9 +312,9 @@ export default function DailyBrief() {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Heart className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground">الإعجابات</span>
+                        <span className="text-sm text-muted-foreground" data-testid="label-likes">الإعجابات</span>
                       </div>
-                      <div className="text-3xl font-bold">{summary.metrics.articlesLiked}</div>
+                      <div className="text-3xl font-bold" data-testid="value-likes">{summary.metrics.articlesLiked}</div>
                     </CardContent>
                   </Card>
 
@@ -314,29 +322,35 @@ export default function DailyBrief() {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageSquare className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground">التعليقات</span>
+                        <span className="text-sm text-muted-foreground" data-testid="label-comments">التعليقات</span>
                       </div>
-                      <div className="text-3xl font-bold">{summary.metrics.commentsPosted}</div>
+                      <div className="text-3xl font-bold" data-testid="value-comments">{summary.metrics.commentsPosted}</div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
 
               {/* Interest Analysis */}
-              <Card>
+              <Card data-testid="card-interest-analysis">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2" data-testid="heading-interest-analysis">
                     <Sparkles className="h-6 w-6 text-primary" />
                     تحليل الاهتمامات (AI Insights)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="font-semibold mb-2">اهتمامك اليوم:</h3>
+                    <h3 className="font-semibold mb-2" data-testid="label-today-interest">اهتمامك اليوم:</h3>
                     <div className="flex flex-wrap gap-2">
                       {summary.interestAnalysis.topCategories.map((cat, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-base px-3 py-1">
-                          {cat.name} ({cat.count})
+                        <Badge 
+                          key={idx} 
+                          variant="secondary" 
+                          className="text-base px-3 py-1"
+                          data-testid={`badge-category-${idx}`}
+                        >
+                          <span data-testid={`text-category-name-${idx}`}>{cat.name}</span>
+                          {' '}(<span data-testid={`value-category-count-${idx}`}>{cat.count}</span>)
                         </Badge>
                       ))}
                     </div>
@@ -344,10 +358,14 @@ export default function DailyBrief() {
 
                   {summary.interestAnalysis.topicsThatCatchAttention.length > 0 && (
                     <div>
-                      <h3 className="font-semibold mb-2">المواضيع التي تثير انتباهك:</h3>
+                      <h3 className="font-semibold mb-2" data-testid="label-topics-attention">المواضيع التي تثير انتباهك:</h3>
                       <div className="flex flex-wrap gap-2">
                         {summary.interestAnalysis.topicsThatCatchAttention.map((topic, idx) => (
-                          <Badge key={idx} variant="outline">
+                          <Badge 
+                            key={idx} 
+                            variant="outline"
+                            data-testid={`badge-topic-${idx}`}
+                          >
                             {topic}
                           </Badge>
                         ))}
@@ -357,14 +375,29 @@ export default function DailyBrief() {
 
                   {summary.interestAnalysis.suggestedArticles.length > 0 && (
                     <div>
-                      <h3 className="font-semibold mb-3">يقترح النظام:</h3>
+                      <h3 className="font-semibold mb-3" data-testid="label-system-suggestions">يقترح النظام:</h3>
                       <div className="grid gap-3 md:grid-cols-3">
-                        {summary.interestAnalysis.suggestedArticles.map((article) => (
-                          <Link key={article.id} href={`/article/${article.slug}`}>
+                        {summary.interestAnalysis.suggestedArticles.map((article, idx) => (
+                          <Link 
+                            key={article.id} 
+                            href={`/article/${article.slug}`}
+                            data-testid={`link-suggested-article-${idx}`}
+                          >
                             <Card className="hover-elevate transition-all cursor-pointer h-full">
                               <CardContent className="p-4">
-                                <Badge variant="secondary" className="mb-2">{article.categoryName}</Badge>
-                                <h4 className="font-semibold text-sm line-clamp-2">{article.title}</h4>
+                                <Badge 
+                                  variant="secondary" 
+                                  className="mb-2"
+                                  data-testid={`badge-suggestion-category-${idx}`}
+                                >
+                                  {article.categoryName}
+                                </Badge>
+                                <h4 
+                                  className="font-semibold text-sm line-clamp-2"
+                                  data-testid={`text-suggestion-title-${idx}`}
+                                >
+                                  {article.title}
+                                </h4>
                               </CardContent>
                             </Card>
                           </Link>
@@ -376,31 +409,36 @@ export default function DailyBrief() {
               </Card>
 
               {/* Time Activity Chart */}
-              <Card>
+              <Card data-testid="card-time-activity">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2" data-testid="heading-time-activity">
                     <Zap className="h-6 w-6 text-primary" />
                     نشاطك الزمني
                   </CardTitle>
-                  <CardDescription>
-                    أكثر أوقات قراءتك: <strong>{formatHour(summary.timeActivity.peakReadingTime)}</strong>
-                    {' '}• أقل فترات التفاعل: <strong>{formatHour(summary.timeActivity.lowActivityPeriod)}</strong>
+                  <CardDescription data-testid="text-activity-summary">
+                    أكثر أوقات قراءتك: <strong data-testid="value-peak-time">{formatHour(summary.timeActivity.peakReadingTime)}</strong>
+                    {' '}• أقل فترات التفاعل: <strong data-testid="value-low-time">{formatHour(summary.timeActivity.lowActivityPeriod)}</strong>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 w-full">
+                  <div className="h-64 w-full" data-testid="chart-hourly-activity">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={summary.timeActivity.hourlyBreakdown}>
+                      <AreaChart 
+                        data={summary.timeActivity.hourlyBreakdown}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="hour" 
                           tickFormatter={formatHour}
                           reversed
+                          style={{ direction: 'rtl' }}
                         />
                         <YAxis />
                         <Tooltip 
                           labelFormatter={(hour) => `الساعة ${formatHour(Number(hour))}`}
                           formatter={(value) => [`${value} مقال`, 'عدد المقالات']}
+                          contentStyle={{ direction: 'rtl', textAlign: 'right' }}
                         />
                         <Area 
                           type="monotone" 
@@ -411,11 +449,12 @@ export default function DailyBrief() {
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="mt-4 p-4 bg-primary/5 rounded-lg">
+                  <div className="mt-4 p-4 bg-primary/5 rounded-lg" data-testid="box-ai-suggestion">
                     <div className="flex items-start gap-2">
                       <Lightbulb className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <p className="text-sm">
-                        <strong>اقتراح AI:</strong> {summary.timeActivity.aiSuggestion}
+                        <strong>اقتراح AI:</strong>{' '}
+                        <span data-testid="text-ai-suggestion">{summary.timeActivity.aiSuggestion}</span>
                       </p>
                     </div>
                   </div>
@@ -423,42 +462,55 @@ export default function DailyBrief() {
               </Card>
 
               {/* AI Insights */}
-              <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+              <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20" data-testid="card-ai-insights">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2" data-testid="heading-ai-touches">
                     <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                     لمسات الذكاء الاصطناعي
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div>
+                    <div data-testid="box-reading-mood-report">
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        🧠 تقرير مزاجك القرائي
+                        <Brain className="h-5 w-5" />
+                        تقرير مزاجك القرائي
                       </h3>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      <p 
+                        className="text-2xl font-bold text-purple-600 dark:text-purple-400"
+                        data-testid="value-ai-reading-mood"
+                      >
                         {summary.aiInsights.readingMood}
                       </p>
                     </div>
 
-                    <div>
+                    <div data-testid="box-focus-score">
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        📊 نسبة تركيزك اليوم
+                        <Gauge className="h-5 w-5" />
+                        نسبة تركيزك اليوم
                       </h3>
                       <div className="flex items-center gap-3">
-                        <Progress value={summary.aiInsights.focusScore} className="flex-1" />
-                        <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        <Progress 
+                          value={summary.aiInsights.focusScore} 
+                          className="flex-1"
+                          data-testid="progress-focus-score"
+                        />
+                        <span 
+                          className="text-2xl font-bold text-purple-600 dark:text-purple-400"
+                          data-testid="value-focus-score"
+                        >
                           {summary.aiInsights.focusScore}%
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-purple-500/10 rounded-lg">
+                  <div className="p-4 bg-purple-500/10 rounded-lg" data-testid="box-daily-goal">
                     <h3 className="font-semibold mb-2 flex items-center gap-2">
-                      🎯 اقتراح هدف اليوم
+                      <TargetIcon className="h-5 w-5" />
+                      اقتراح هدف اليوم
                     </h3>
-                    <p>{summary.aiInsights.dailyGoal}</p>
+                    <p data-testid="text-daily-goal">{summary.aiInsights.dailyGoal}</p>
                   </div>
                 </CardContent>
               </Card>
