@@ -41,6 +41,12 @@ export default function UserNotifications() {
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>("all");
 
+  // Fetch user for header
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string; profileImageUrl?: string | null }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
     retry: false, // Don't retry on 401
@@ -126,7 +132,7 @@ export default function UserNotifications() {
   if (error) {
     return (
       <>
-        <Header />
+        <Header user={user} />
         <main className="min-h-screen bg-background py-8">
           <div className="container max-w-4xl mx-auto px-4">
             <div className="flex flex-col items-center justify-center h-[400px] text-center">
@@ -145,7 +151,7 @@ export default function UserNotifications() {
 
   return (
     <>
-      <Header />
+      <Header user={user} />
       <main className="min-h-screen bg-background py-8">
         <div className="container max-w-4xl mx-auto px-4">
           <div className="space-y-6" dir="rtl">
