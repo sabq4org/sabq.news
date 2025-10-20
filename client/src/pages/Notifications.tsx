@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, AlertCircle, Star, Newspaper, CheckCheck } from "lucide-react";
+import { Bell, AlertCircle, Star, Newspaper, CheckCheck, Settings } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
@@ -36,9 +38,12 @@ interface NotificationsResponse {
 type FilterType = "all" | "ArticlePublished" | "BreakingNews" | "FeaturedArticle";
 
 export default function Notifications() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>("all");
+  
+  // Check if we're in dashboard or user view
+  const isDashboard = location.startsWith("/dashboard");
 
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
@@ -116,23 +121,8 @@ export default function Notifications() {
 
   const unreadCount = data?.unreadCount || 0;
 
-  if (error) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-[400px] text-center">
-          <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-          <h2 className="text-2xl font-bold mb-2">حدث خطأ</h2>
-          <p className="text-muted-foreground" data-testid="text-error">
-            فشل تحميل الإشعارات. يرجى المحاولة مرة أخرى.
-          </p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-6" dir="rtl">
+  const contentJSX = (
+    <div className="space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -146,16 +136,28 @@ export default function Notifications() {
             )}
           </div>
 
-          {unreadCount > 0 && !isLoading && (
-            <Button
-              onClick={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
-              data-testid="button-mark-all-read"
-            >
-              <CheckCheck className="h-4 w-4 ml-2" />
-              تمييز الكل كمقروء
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <Link href="/recommendation-settings">
+              <Button
+                variant="outline"
+                data-testid="button-recommendation-settings"
+              >
+                <Settings className="h-4 w-4 ml-2" />
+                إعدادات التوصيات
+              </Button>
+            </Link>
+            
+            {unreadCount > 0 && !isLoading && (
+              <Button
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+                data-testid="button-mark-all-read"
+              >
+                <CheckCheck className="h-4 w-4 ml-2" />
+                تمييز الكل كمقروء
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filter Tabs */}

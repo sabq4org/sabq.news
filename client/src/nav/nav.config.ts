@@ -312,13 +312,4 @@ export const navConfig: NavItem[] = [
     icon: Bell,
     roles: ["admin", "editor", "author", "reviewer", "analyst"],
   },
-
-  {
-    id: "recommendation-settings",
-    labelKey: "nav.recommendation_settings",
-    labelAr: "إعدادات التوصيات",
-    path: "/dashboard/recommendation-settings",
-    icon: Lightbulb,
-    roles: ["admin", "editor", "author", "reviewer", "analyst"],
-  },
 ];

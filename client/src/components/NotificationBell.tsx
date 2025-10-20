@@ -247,7 +247,7 @@ export function NotificationBell() {
                 onClick={() => setOpen(false)}
                 data-testid="link-view-all-notifications"
               >
-                عرض كل الإشعارات
+                مشاهدة كل الإشعارات
               </a>
             </Link>
           </>
