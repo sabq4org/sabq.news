@@ -15,7 +15,7 @@ import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { db } from "./db";
-import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
+import { eq, and, or, desc, ilike, sql, inArray, gte } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -2692,6 +2692,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
   // AI INSIGHTS ROUTE
   // ============================================================
+
+  // Personal Smart Summary (Today's Knowledge Snapshot)
+  app.get("/api/ai/insights/today", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get user info
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      // 1. Reading time and articles read today
+      const readingHistoryToday = await db
+        .select({
+          articleId: readingHistory.articleId,
+          readAt: readingHistory.readAt,
+        })
+        .from(readingHistory)
+        .where(and(
+          eq(readingHistory.userId, userId),
+          sql`${readingHistory.readAt} >= ${startOfDay}`
+        ));
+
+      const articlesReadToday = readingHistoryToday.length;
+      
+      // Calculate reading time (estimate 3 minutes per article)
+      const readingTimeMinutes = articlesReadToday * 3;
+
+      // 2. Likes today
+      const likesToday = await db
+        .select()
+        .from(reactions)
+        .where(and(
+          eq(reactions.userId, userId),
+          eq(reactions.type, "like"),
+          sql`${reactions.createdAt} >= ${startOfDay}`
+        ));
+      
+      const likesCount = likesToday.length;
+
+      // 3. Comments today
+      const commentsToday = await db
+        .select()
+        .from(comments)
+        .where(and(
+          eq(comments.userId, userId),
+          sql`${comments.createdAt} >= ${startOfDay}`
+        ));
+      
+      const commentsCount = commentsToday.length;
+
+      // 4. Top interests today (categories) - aggregated by frequency
+      const articleIds = readingHistoryToday.map(r => r.articleId);
+      let topInterests: string[] = [];
+      
+      if (articleIds.length > 0) {
+        const articlesWithCategories = await db
+          .select({
+            categoryId: articles.categoryId,
+          })
+          .from(articles)
+          .where(inArray(articles.id, articleIds));
+
+        // Count category frequencies
+        const categoryFrequency = new Map<string, number>();
+        articlesWithCategories.forEach(a => {
+          if (a.categoryId) {
+            categoryFrequency.set(a.categoryId, (categoryFrequency.get(a.categoryId) || 0) + 1);
+          }
+        });
+
+        // Sort by frequency and get top 3
+        const topCategoryIds = Array.from(categoryFrequency.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([id]) => id);
+
+        if (topCategoryIds.length > 0) {
+          const categoriesList = await db
+            .select({
+              id: categories.id,
+              nameAr: categories.nameAr,
+            })
+            .from(categories)
+            .where(inArray(categories.id, topCategoryIds));
+
+          // Maintain frequency order
+          topInterests = topCategoryIds
+            .map(id => categoriesList.find(c => c.id === id)?.nameAr)
+            .filter((name): name is string => name !== undefined);
+        }
+      }
+
+      // 5. Completion rate (estimate based on time spent)
+      const completionRate = articlesReadToday > 0 ? Math.min(100, 65 + (articlesReadToday * 5)) : 0;
+
+      // 6. AI-generated encouragement (no emojis)
+      let aiPhrase = "ابدأ رحلتك المعرفية اليوم";
+      if (articlesReadToday === 0) {
+        aiPhrase = "لم تقرأ أي مقال بعد اليوم، ابدأ الآن";
+      } else if (articlesReadToday >= 1 && articlesReadToday <= 3) {
+        aiPhrase = "بداية جيدة! استمر في القراءة";
+      } else if (articlesReadToday >= 4 && articlesReadToday <= 7) {
+        aiPhrase = "ممتاز! ذكاؤك القرائي يرتفع يوماً بعد يوم";
+      } else {
+        aiPhrase = "رائع! أنت قارئ متميز اليوم";
+      }
+
+      // Greeting based on time of day
+      const hour = new Date().getHours();
+      let greeting = "مساء الخير";
+      if (hour < 12) greeting = "صباح الخير";
+      else if (hour < 18) greeting = "مساء الخير";
+      else greeting = "مساء الخير";
+
+      const firstName = user.firstName || user.email?.split('@')[0] || "عزيزي";
+
+      res.json({
+        greeting: `${greeting} يا ${firstName}`,
+        metrics: {
+          readingTime: readingTimeMinutes,
+          completionRate,
+          likes: likesCount,
+          comments: commentsCount,
+          articlesRead: articlesReadToday,
+        },
+        topInterests,
+        aiPhrase,
+        quickSummary: articlesReadToday > 0 
+          ? `قرأت ${articlesReadToday} ${articlesReadToday === 1 ? 'مقال' : 'مقالات'} اليوم بإجمالي ${readingTimeMinutes} دقيقة.`
+          : "لم تقرأ أي مقال اليوم بعد.",
+      });
+    } catch (error) {
+      console.error("Error fetching today's insights:", error);
+      res.status(500).json({ message: "Failed to fetch insights" });
+    }
+  });
 
   app.get("/api/ai-insights", async (req, res) => {
     try {
