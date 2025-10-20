@@ -49,6 +49,10 @@ import {
   recommendationMetrics,
   userEvents,
   readingHistory,
+  stories,
+  storyLinks,
+  storyFollows,
+  storyNotifications,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -68,6 +72,9 @@ import {
   insertTagSchema,
   updateTagSchema,
   insertArticleTagSchema,
+  insertStorySchema,
+  insertStoryLinkSchema,
+  insertStoryFollowSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -6046,6 +6053,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting recommendation analytics:", error);
       res.status(500).json({ message: "فشل في جلب إحصائيات التوصيات" });
+    }
+  });
+
+  // ============================================================
+  // STORY MANAGEMENT ROUTES
+  // ============================================================
+
+  // GET /api/stories - جلب جميع القصص
+  app.get("/api/stories", async (req, res) => {
+    try {
+      const stories = await storage.getAllStories({ status: 'active' });
+      res.json(stories);
+    } catch (error) {
+      console.error("Error getting stories:", error);
+      res.status(500).json({ message: "فشل في جلب القصص" });
+    }
+  });
+
+  // GET /api/stories/:slug - جلب قصة واحدة
+  app.get("/api/stories/:slug", async (req, res) => {
+    try {
+      const story = await storage.getStoryBySlug(req.params.slug);
+      if (!story) return res.status(404).json({ message: "القصة غير موجودة" });
+      res.json(story);
+    } catch (error) {
+      console.error("Error getting story:", error);
+      res.status(500).json({ message: "فشل في جلب القصة" });
+    }
+  });
+
+  // POST /api/stories - إنشاء قصة (للمشرفين)
+  app.post("/api/stories", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+    try {
+      const data = insertStorySchema.parse(req.body);
+      const story = await storage.createStory(data);
+      await logActivity(req.user!.id, 'StoryCreated', 'Story', story.id, {});
+      res.json(story);
+    } catch (error) {
+      console.error("Error creating story:", error);
+      res.status(500).json({ message: "فشل في إنشاء القصة" });
+    }
+  });
+
+  // PUT /api/stories/:id - تحديث قصة
+  app.put("/api/stories/:id", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+    try {
+      const story = await storage.updateStory(req.params.id, req.body);
+      await logActivity(req.user!.id, 'StoryUpdated', 'Story', req.params.id, {});
+      res.json(story);
+    } catch (error) {
+      console.error("Error updating story:", error);
+      res.status(500).json({ message: "فشل في تحديث القصة" });
+    }
+  });
+
+  // DELETE /api/stories/:id - حذف قصة
+  app.delete("/api/stories/:id", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+    try {
+      await storage.deleteStory(req.params.id);
+      await logActivity(req.user!.id, 'StoryDeleted', 'Story', req.params.id, {});
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      res.status(500).json({ message: "فشل في حذف القصة" });
+    }
+  });
+
+  // ============================================================
+  // STORY TIMELINE ROUTES
+  // ============================================================
+
+  // GET /api/stories/:storyId/timeline - الأخبار المرتبطة بالقصة
+  app.get("/api/stories/:storyId/timeline", async (req, res) => {
+    try {
+      const links = await storage.getStoryLinks(req.params.storyId);
+      res.json(links);
+    } catch (error) {
+      console.error("Error getting story timeline:", error);
+      res.status(500).json({ message: "فشل في جلب الأخبار المرتبطة" });
+    }
+  });
+
+  // POST /api/stories/:storyId/links - ربط خبر بقصة (للمشرفين)
+  app.post("/api/stories/:storyId/links", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+    try {
+      const data = insertStoryLinkSchema.parse({
+        ...req.body,
+        storyId: req.params.storyId
+      });
+      const link = await storage.createStoryLink(data);
+      res.json(link);
+    } catch (error) {
+      console.error("Error creating story link:", error);
+      res.status(500).json({ message: "فشل في ربط الخبر بالقصة" });
+    }
+  });
+
+  // DELETE /api/stories/links/:linkId - إزالة ربط
+  app.delete("/api/stories/links/:linkId", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+    try {
+      await storage.deleteStoryLink(req.params.linkId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting story link:", error);
+      res.status(500).json({ message: "فشل في إزالة الربط" });
+    }
+  });
+
+  // ============================================================
+  // STORY FOLLOWING ROUTES
+  // ============================================================
+
+  // POST /api/stories/:storyId/follow - متابعة قصة
+  app.post("/api/stories/:storyId/follow", requireAuth, async (req, res) => {
+    try {
+      const follow = await storage.followStory({
+        userId: req.user!.id,
+        storyId: req.params.storyId,
+        level: req.body.level || 'all',
+        channels: req.body.channels || ['inapp'],
+      });
+      await logActivity(req.user!.id, 'StoryFollowed', 'Story', req.params.storyId, {});
+      res.json(follow);
+    } catch (error) {
+      console.error("Error following story:", error);
+      res.status(500).json({ message: "فشل في متابعة القصة" });
+    }
+  });
+
+  // DELETE /api/stories/:storyId/follow - إلغاء متابعة قصة
+  app.delete("/api/stories/:storyId/follow", requireAuth, async (req, res) => {
+    try {
+      await storage.unfollowStory(req.user!.id, req.params.storyId);
+      await logActivity(req.user!.id, 'StoryUnfollowed', 'Story', req.params.storyId, {});
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unfollowing story:", error);
+      res.status(500).json({ message: "فشل في إلغاء متابعة القصة" });
+    }
+  });
+
+  // GET /api/stories/my-follows - قصصي المتابعة
+  app.get("/api/stories/my-follows", requireAuth, async (req, res) => {
+    try {
+      const follows = await storage.getStoryFollows(req.user!.id);
+      res.json(follows);
+    } catch (error) {
+      console.error("Error getting user story follows:", error);
+      res.status(500).json({ message: "فشل في جلب القصص المتابعة" });
+    }
+  });
+
+  // PUT /api/stories/follows/:storyId - تحديث إعدادات المتابعة
+  app.put("/api/stories/follows/:storyId", requireAuth, async (req, res) => {
+    try {
+      const follow = await storage.updateStoryFollow(req.user!.id, req.params.storyId, req.body);
+      res.json(follow);
+    } catch (error) {
+      console.error("Error updating story follow settings:", error);
+      res.status(500).json({ message: "فشل في تحديث إعدادات المتابعة" });
+    }
+  });
+
+  // GET /api/stories/:storyId/is-following - هل أتابع هذه القصة؟
+  app.get("/api/stories/:storyId/is-following", requireAuth, async (req, res) => {
+    try {
+      const isFollowing = await storage.isFollowingStory(req.user!.id, req.params.storyId);
+      res.json({ isFollowing });
+    } catch (error) {
+      console.error("Error checking story follow status:", error);
+      res.status(500).json({ message: "فشل في التحقق من حالة المتابعة" });
     }
   });
 
