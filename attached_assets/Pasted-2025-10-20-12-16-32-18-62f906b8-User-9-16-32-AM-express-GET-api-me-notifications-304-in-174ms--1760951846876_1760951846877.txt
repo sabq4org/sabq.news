@@ -1,0 +1,112 @@
+2025-10-20 12:16:32.18
+62f906b8
+User
+9:16:32 AM [express] GET /api/me/notifications 304 in 174ms :: {"notifications":[{"id":"5c2d6557-685…
+2025-10-20 12:16:32.24
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:32.26
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:32.26
+62f906b8
+User
+📡 SSE connection opened for user: admin-sabq
+2025-10-20 12:16:32.26
+62f906b8
+User
+📡 User admin-sabq subscribed to notification stream
+2025-10-20 12:16:32.28
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:32.28
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:32.30
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:32.31
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:32.45
+62f906b8
+User
+9:16:32 AM [express] GET /api/ai-insights 200 in 185ms :: {"mostViewed":{"article":{"id":"71c75248-8…
+2025-10-20 12:16:41.84
+62f906b8
+User
+🔸 DeserializeUser called with id: user-1760951577797-iw4w6rx9i
+2025-10-20 12:16:41.86
+62f906b8
+User
+✅ DeserializeUser: User found: ali@ism.com
+2025-10-20 12:16:41.91
+62f906b8
+User
+9:16:41 AM [express] GET /api/themes/active 304 in 94ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-10-20 12:16:42.21
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:42.22
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:42.23
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:42.24
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:42.24
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:42.26
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:42.30
+62f906b8
+User
+9:16:42 AM [express] GET /api/me/notifications 200 in 110ms :: {"notifications":[{"id":"5c2d6557-685…
+2025-10-20 12:16:42.30
+62f906b8
+User
+9:16:42 AM [express] GET /api/themes/active 304 in 87ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-10-20 12:16:57.70
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:57.73
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:57.74
+62f906b8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 12:16:57.76
+62f906b8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 12:16:57.80
+62f906b8
+User
+9:16:57 AM [express] GET /api/recommendations/preferences 304 in 220ms :: {"preferences":{"id":"5653…
+2025-10-20 12:17:00.01
+62f906b8
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-20 12:17:00.01
+62f906b8
+User
+[NotificationWorker] Starting queue processing...
