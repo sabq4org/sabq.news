@@ -2793,8 +2793,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // 5. Completion rate (estimate based on time spent)
-      const completionRate = articlesReadToday > 0 ? Math.min(100, 65 + (articlesReadToday * 5)) : 0;
+      // 5. Completion rate (based on realistic daily reading goal of 3 articles)
+      const DAILY_READING_GOAL = 3;
+      const completionRate = articlesReadToday > 0 
+        ? Math.min(100, Math.round((articlesReadToday / DAILY_READING_GOAL) * 100)) 
+        : 0;
 
       // 6. AI-generated encouragement (no emojis)
       let aiPhrase = "ابدأ رحلتك المعرفية اليوم";
