@@ -46,6 +46,8 @@ import {
   articleTags,
   recommendationLog,
   recommendationMetrics,
+  userEvents,
+  readingHistory,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -871,6 +873,303 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting daily brief:", error);
       res.status(500).json({ message: "فشل في جلب الملخص اليومي" });
+    }
+  });
+
+  // AI Daily Summary - Comprehensive 24h activity analysis
+  app.get("/api/ai/daily-summary", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get user info
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Define time ranges
+      const now = new Date();
+      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const previous24h = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+      // Query user events for last 24 hours
+      const todayEvents = await db
+        .select({
+          id: userEvents.id,
+          articleId: userEvents.articleId,
+          eventType: userEvents.eventType,
+          eventValue: userEvents.eventValue,
+          metadata: userEvents.metadata,
+          createdAt: userEvents.createdAt,
+          categoryId: articles.categoryId,
+          categoryNameAr: categories.nameAr,
+          articleTitle: articles.title,
+          articleSlug: articles.slug,
+        })
+        .from(userEvents)
+        .leftJoin(articles, eq(userEvents.articleId, articles.id))
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .where(
+          and(
+            eq(userEvents.userId, userId),
+            sql`${userEvents.createdAt} >= ${last24h.toISOString()}`
+          )
+        )
+        .orderBy(desc(userEvents.createdAt));
+
+      // Check if user has activity
+      if (todayEvents.length === 0) {
+        return res.status(404).json({ 
+          message: "لا توجد نشاطات في آخر 24 ساعة",
+          hasActivity: false 
+        });
+      }
+
+      // Query previous 24h for comparison
+      const yesterdayEvents = await db
+        .select({
+          eventType: userEvents.eventType,
+          articleId: userEvents.articleId,
+        })
+        .from(userEvents)
+        .where(
+          and(
+            eq(userEvents.userId, userId),
+            sql`${userEvents.createdAt} >= ${previous24h.toISOString()}`,
+            sql`${userEvents.createdAt} < ${last24h.toISOString()}`
+          )
+        );
+
+      // ============================================================
+      // 1. GREETING & SUMMARY
+      // ============================================================
+
+      const readEvents = todayEvents.filter(e => e.eventType === 'read');
+      const uniqueArticlesRead = new Set(readEvents.map(e => e.articleId)).size;
+      
+      const totalReadingTimeSeconds = readEvents.reduce((sum, event) => {
+        const duration = (event.metadata as any)?.readDuration || 0;
+        return sum + duration;
+      }, 0);
+      const totalReadingTimeMinutes = Math.round(totalReadingTimeSeconds / 60);
+
+      // Calculate top categories
+      const categoryCounts = todayEvents.reduce((acc, event) => {
+        if (event.categoryNameAr) {
+          acc[event.categoryNameAr] = (acc[event.categoryNameAr] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+
+      const topCategories = Object.entries(categoryCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 2)
+        .map(([name]) => name);
+
+      // Determine reading mood based on scrollDepth and duration
+      const avgScrollDepth = readEvents.reduce((sum, event) => {
+        const scrollDepth = (event.metadata as any)?.scrollDepth || 0;
+        return sum + scrollDepth;
+      }, 0) / (readEvents.length || 1);
+
+      const avgReadDuration = totalReadingTimeSeconds / (readEvents.length || 1);
+
+      let readingMood = "فضولي";
+      if (avgScrollDepth > 80 && avgReadDuration > 120) {
+        readingMood = "تحليلي";
+      } else if (avgScrollDepth < 40 && avgReadDuration < 60) {
+        readingMood = "سريع";
+      } else if (avgScrollDepth > 60 && todayEvents.filter(e => e.eventType === 'comment').length > 2) {
+        readingMood = "نقدي";
+      }
+
+      const personalizedGreeting = {
+        userName: user.firstName || user.email.split('@')[0],
+        articlesReadToday: uniqueArticlesRead,
+        readingTimeMinutes: totalReadingTimeMinutes,
+        topCategories,
+        readingMood,
+      };
+
+      // ============================================================
+      // 2. PERFORMANCE METRICS
+      // ============================================================
+
+      const articlesBookmarked = todayEvents.filter(e => e.eventType === 'save').length;
+      const articlesLiked = todayEvents.filter(e => e.eventType === 'like').length;
+      const commentsPosted = todayEvents.filter(e => e.eventType === 'comment').length;
+
+      const completionRate = Math.round(avgScrollDepth);
+
+      // Compare with yesterday
+      const yesterdayReadCount = new Set(
+        yesterdayEvents.filter(e => e.eventType === 'read').map(e => e.articleId)
+      ).size;
+      
+      const percentChangeFromYesterday = yesterdayReadCount > 0
+        ? Math.round(((uniqueArticlesRead - yesterdayReadCount) / yesterdayReadCount) * 100)
+        : 100;
+
+      const metrics = {
+        articlesRead: uniqueArticlesRead,
+        readingTimeMinutes: totalReadingTimeMinutes,
+        completionRate,
+        articlesBookmarked,
+        articlesLiked,
+        commentsPosted,
+        percentChangeFromYesterday,
+      };
+
+      // ============================================================
+      // 3. INTEREST ANALYSIS
+      // ============================================================
+
+      const categoryAnalysis = Object.entries(categoryCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([name, count]) => ({
+          name,
+          count,
+        }));
+
+      // Extract common topics from article titles
+      const allTitles = todayEvents
+        .filter(e => e.articleTitle)
+        .map(e => e.articleTitle!);
+      
+      const topicWords = allTitles
+        .join(' ')
+        .split(/\s+/)
+        .filter(word => word.length > 4)
+        .reduce((acc, word) => {
+          acc[word] = (acc[word] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+      const topicsThatCatchAttention = Object.entries(topicWords)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([word]) => word);
+
+      // Get suggested articles based on user's reading patterns
+      const userCategoryIds = Array.from(new Set(
+        todayEvents.filter(e => e.categoryId).map(e => e.categoryId!)
+      ));
+
+      const suggestedArticlesData = userCategoryIds.length > 0
+        ? await db
+            .select({
+              id: articles.id,
+              title: articles.title,
+              slug: articles.slug,
+              categoryNameAr: categories.nameAr,
+              imageUrl: articles.imageUrl,
+            })
+            .from(articles)
+            .leftJoin(categories, eq(articles.categoryId, categories.id))
+            .where(
+              and(
+                eq(articles.status, 'published'),
+                sql`${articles.categoryId} IN (${sql.join(userCategoryIds, sql`, `)})`
+              )
+            )
+            .orderBy(desc(articles.publishedAt))
+            .limit(3)
+        : [];
+
+      const suggestedArticles = suggestedArticlesData.map(article => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        category: article.categoryNameAr || '',
+        imageUrl: article.imageUrl,
+      }));
+
+      const interestAnalysis = {
+        topCategories: categoryAnalysis,
+        topicsThatCatchAttention,
+        suggestedArticles,
+      };
+
+      // ============================================================
+      // 4. TIME-BASED ACTIVITY
+      // ============================================================
+
+      const hourlyActivity = new Array(24).fill(0);
+      todayEvents.forEach(event => {
+        const hour = new Date(event.createdAt).getHours();
+        hourlyActivity[hour]++;
+      });
+
+      const hourlyBreakdown = hourlyActivity.map((count, hour) => ({
+        hour,
+        count,
+      }));
+
+      const peakReadingTime = hourlyActivity.indexOf(Math.max(...hourlyActivity));
+      const nonZeroHours = hourlyActivity.filter(count => count > 0);
+      const lowActivityPeriod = nonZeroHours.length > 0
+        ? hourlyActivity.indexOf(Math.min(...nonZeroHours.filter(h => h > 0)))
+        : 0;
+
+      let aiSuggestion = "استمر في القراءة المنتظمة!";
+      if (peakReadingTime >= 20 || peakReadingTime <= 5) {
+        aiSuggestion = "تفضل القراءة ليلاً، جرّب القراءة في الصباح لتنوع أكثر";
+      } else if (uniqueArticlesRead < 3) {
+        aiSuggestion = "حاول قراءة 3 مقالات يومياً لتحسين معرفتك";
+      } else if (topCategories.length < 2) {
+        aiSuggestion = "جرّب قراءة مقالات من تصنيفات جديدة لتوسيع اهتماماتك";
+      }
+
+      const timeActivity = {
+        hourlyBreakdown,
+        peakReadingTime,
+        lowActivityPeriod,
+        aiSuggestion,
+      };
+
+      // ============================================================
+      // 5. AI INSIGHTS
+      // ============================================================
+
+      let dailyGoal = "اقرأ 3 مقالات من تصنيف لم تزره منذ أسبوع";
+      
+      if (uniqueArticlesRead >= 5) {
+        dailyGoal = "أنت قارئ نشط! جرّب التعليق على مقال لمشاركة رأيك";
+      } else if (articlesBookmarked > articlesLiked) {
+        dailyGoal = "لديك الكثير من المقالات المحفوظة، خصص وقتاً لقراءتها";
+      }
+
+      const focusScore = Math.round(
+        (completionRate * 0.6) + (Math.min(avgReadDuration / 180, 1) * 40)
+      );
+
+      const aiInsights = {
+        readingMood,
+        dailyGoal,
+        focusScore,
+      };
+
+      // ============================================================
+      // FINAL RESPONSE
+      // ============================================================
+
+      res.json({
+        hasActivity: true,
+        personalizedGreeting,
+        metrics,
+        interestAnalysis,
+        timeActivity,
+        aiInsights,
+        generatedAt: now.toISOString(),
+      });
+
+    } catch (error) {
+      console.error("Error generating daily summary:", error);
+      res.status(500).json({ message: "فشل في إنشاء الملخص اليومي" });
     }
   });
 
