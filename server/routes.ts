@@ -3023,10 +3023,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await trackUserEvent({
             userId,
             articleId: req.params.id,
-            eventType: 'save',
+            eventType: 'bookmark',
           });
         } catch (error) {
-          console.error("Error tracking save event:", error);
+          console.error("Error tracking bookmark event:", error);
         }
       }
 
