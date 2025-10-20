@@ -5085,6 +5085,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updates = req.body;
       const { userRecommendationPrefs } = await import('@shared/schema');
 
+      // Filter only allowed fields to update (exclude id, userId, createdAt, updatedAt)
+      const allowedFields = [
+        'enableRecommendations',
+        'enableDailyDigest',
+        'digestTime',
+        'minSimilarityScore',
+        'enableCrossCategory',
+        'enableTrending',
+        'enablePersonalized',
+        'maxNotificationsPerDay',
+        'quietHoursStart',
+        'quietHoursEnd'
+      ];
+
+      const filteredUpdates: any = {};
+      for (const field of allowedFields) {
+        if (field in updates) {
+          filteredUpdates[field] = updates[field];
+        }
+      }
+
       // Check if preferences exist
       const existing = await db.query.userRecommendationPrefs.findFirst({
         where: eq(userRecommendationPrefs.userId, userId),
@@ -5094,7 +5115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create with updates
         const [newPrefs] = await db.insert(userRecommendationPrefs).values({
           userId,
-          ...updates,
+          ...filteredUpdates,
         }).returning();
         return res.json({ preferences: newPrefs });
       }
@@ -5102,7 +5123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update existing
       const [updated] = await db
         .update(userRecommendationPrefs)
-        .set(updates)
+        .set(filteredUpdates)
         .where(eq(userRecommendationPrefs.userId, userId))
         .returning();
 
