@@ -31,7 +31,7 @@ export function DeepDiveSection({ articles }: DeepDiveSectionProps) {
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden border-primary/20"
+              className="cursor-pointer h-full overflow-hidden border border-card-border"
               data-testid={`card-deep-dive-${article.id}`}
             >
               {article.imageUrl && (

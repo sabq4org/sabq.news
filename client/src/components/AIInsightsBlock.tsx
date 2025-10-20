@@ -145,8 +145,8 @@ export function AIInsightsBlock() {
               className={insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 sm:p-3 shadow-sm hover:shadow-lg transition-all group flex flex-col min-h-[140px] sm:min-h-[160px] ${
-                  insight.article ? "hover-elevate" : "opacity-60"
+                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 sm:p-3 group flex flex-col min-h-[140px] sm:min-h-[160px] ${
+                  insight.article ? "" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
               >

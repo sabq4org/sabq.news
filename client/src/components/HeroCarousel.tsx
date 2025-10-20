@@ -69,7 +69,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       <img
                         src={article.imageUrl}
                         alt={article.title}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-center"
                         loading="eager"
                       />
                     </div>
@@ -147,7 +147,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         <img
                           src={article.imageUrl}
                           alt={article.title}
-                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover object-center"
                           loading="eager"
                         />
                       ) : (
@@ -228,9 +228,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           {articles.map((article, index) => (
             <button
               key={index}
-              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden transition-all border-2 ${
+              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden border-2 ${
                 index === selectedIndex
-                  ? "border-primary scale-110 shadow-lg"
+                  ? "border-primary"
                   : "border-transparent opacity-60 hover:opacity-100"
               }`}
               onClick={() => emblaApi?.scrollTo(index)}
