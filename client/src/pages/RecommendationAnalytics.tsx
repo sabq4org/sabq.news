@@ -82,7 +82,7 @@ export default function RecommendationAnalytics() {
   const [period, setPeriod] = useState<"7" | "30" | "90">("7");
 
   const { data, isLoading, error } = useQuery<RecommendationAnalytics>({
-    queryKey: ["/api/admin/recommendations/analytics", { days: period }],
+    queryKey: [`/api/admin/recommendations/analytics?days=${period}`],
   });
 
   if (error) {
