@@ -15,6 +15,7 @@ import {
   userInterests,
   behaviorLogs,
   sentimentScores,
+  systemSettings,
   themes,
   themeAuditLog,
   userLoyaltyEvents,
@@ -289,6 +290,10 @@ export interface IStorage {
   // Story notification operations
   createStoryNotification(notification: InsertStoryNotification): Promise<StoryNotification>;
   getStoryNotifications(storyId: string): Promise<StoryNotification[]>;
+
+  // System settings operations
+  getSystemSetting(key: string): Promise<any | undefined>;
+  upsertSystemSetting(key: string, value: any, category?: string, isPublic?: boolean): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2818,6 +2823,38 @@ export class DatabaseStorage implements IStorage {
       .from(storyNotifications)
       .where(eq(storyNotifications.storyId, storyId))
       .orderBy(desc(storyNotifications.createdAt));
+  }
+
+  // System settings operations
+  async getSystemSetting(key: string): Promise<any | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key));
+    return setting?.value;
+  }
+
+  async upsertSystemSetting(key: string, value: any, category: string = "system", isPublic: boolean = false): Promise<void> {
+    const existing = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key));
+
+    if (existing.length > 0) {
+      await db
+        .update(systemSettings)
+        .set({ 
+          value, 
+          category, 
+          isPublic, 
+          updatedAt: new Date() 
+        })
+        .where(eq(systemSettings.key, key));
+    } else {
+      await db
+        .insert(systemSettings)
+        .values({ key, value, category, isPublic });
+    }
   }
 }
 

@@ -28,6 +28,7 @@ import {
   categories, 
   comments,
   rssFeeds,
+  systemSettings,
   themes,
   themeAuditLog,
   activityLogs,
@@ -1178,6 +1179,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating daily summary:", error);
       res.status(500).json({ message: "فشل في إنشاء الملخص اليومي" });
+    }
+  });
+
+  // ============================================================
+  // SYSTEM ANNOUNCEMENT ROUTES
+  // ============================================================
+
+  // Get system announcement (public)
+  app.get("/api/system/announcement", async (req, res) => {
+    try {
+      const announcement = await storage.getSystemSetting("announcement");
+      
+      if (!announcement) {
+        return res.json({ isActive: false, message: "", type: "info" });
+      }
+      
+      res.json(announcement);
+    } catch (error) {
+      console.error("Error fetching announcement:", error);
+      res.status(500).json({ message: "Failed to fetch announcement" });
+    }
+  });
+
+  // Update system announcement (admin only)
+  app.post("/api/system/announcement", requireAuth, requirePermission("system.manage_settings"), async (req: any, res) => {
+    try {
+      const { message, type, isActive } = req.body;
+      
+      const announcementData = {
+        message: message || "",
+        type: type || "info",
+        isActive: isActive !== undefined ? isActive : false,
+      };
+      
+      await storage.upsertSystemSetting("announcement", announcementData, "system", true);
+      
+      res.json({ success: true, announcement: announcementData });
+    } catch (error) {
+      console.error("Error updating announcement:", error);
+      res.status(500).json({ message: "Failed to update announcement" });
     }
   });
 

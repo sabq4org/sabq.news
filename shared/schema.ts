@@ -255,6 +255,17 @@ export const themeAuditLog = pgTable("theme_audit_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// System settings for configurable application settings
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: jsonb("value").notNull(),
+  category: text("category").default("system").notNull(),
+  isPublic: boolean("is_public").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Roles for RBAC
 export const roles = pgTable("roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -841,6 +852,11 @@ export const insertUserInterestSchema = createInsertSchema(userInterests).omit({
 });
 export const insertBehaviorLogSchema = createInsertSchema(behaviorLogs).omit({ id: true, createdAt: true });
 export const insertSentimentScoreSchema = createInsertSchema(sentimentScores).omit({ id: true, createdAt: true });
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
 export const insertThemeSchema = createInsertSchema(themes).omit({ 
   id: true, 
   createdAt: true, 
@@ -1213,6 +1229,9 @@ export type InsertBehaviorLog = z.infer<typeof insertBehaviorLogSchema>;
 
 export type SentimentScore = typeof sentimentScores.$inferSelect;
 export type InsertSentimentScore = z.infer<typeof insertSentimentScoreSchema>;
+
+export type SystemSetting = typeof systemSettings.$inferSelect;
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
 
 export type Theme = typeof themes.$inferSelect;
 export type InsertTheme = z.infer<typeof insertThemeSchema>;
