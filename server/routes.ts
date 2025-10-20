@@ -1932,6 +1932,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get articles metrics
+  app.get("/api/admin/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const metrics = await storage.getArticlesMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching articles metrics:", error);
+      res.status(500).json({ message: "Failed to fetch articles metrics" });
+    }
+  });
+
   // Get article by ID for editing (admin only)
   app.get("/api/admin/articles/:id", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
     try {
@@ -2330,17 +2341,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error featuring article:", error);
       res.status(500).json({ message: "Failed to feature article" });
-    }
-  });
-
-  // Get articles metrics
-  app.get("/api/admin/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
-    try {
-      const metrics = await storage.getArticlesMetrics();
-      res.json(metrics);
-    } catch (error) {
-      console.error("Error fetching articles metrics:", error);
-      res.status(500).json({ message: "Failed to fetch articles metrics" });
     }
   });
 
