@@ -726,6 +726,64 @@ export const recommendationMetrics = pgTable("recommendation_metrics", {
   index("idx_recommendation_metrics_muted").on(table.muted),
 ]);
 
+// ============================================
+// Story Following/Tracking Tables
+// ============================================
+
+// Stories (news clusters)
+export const stories = pgTable("stories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  rootArticleId: varchar("root_article_id").references(() => articles.id).notNull(),
+  entities: jsonb("entities").$type<Record<string, any>>(),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`).notNull(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Story links (linking articles to stories)
+export const storyLinks = pgTable("story_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").references(() => stories.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  relation: text("relation").notNull(), // 'root' or 'followup'
+  confidence: real("confidence"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_story_links_story").on(table.storyId),
+  index("idx_story_links_article").on(table.articleId),
+]);
+
+// Story follows (user subscriptions)
+export const storyFollows = pgTable("story_follows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  storyId: varchar("story_id").references(() => stories.id).notNull(),
+  level: text("level").default("all").notNull(), // 'all', 'breaking', 'analysis', 'official'
+  channels: text("channels").array().default(sql`ARRAY['inapp']::text[]`).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_story_follows_user").on(table.userId),
+  index("idx_story_follows_story").on(table.storyId),
+]);
+
+// Story notifications (notification log)
+export const storyNotifications = pgTable("story_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").references(() => stories.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id),
+  deliveredTo: text("delivered_to").array().default(sql`ARRAY[]::text[]`).notNull(),
+  channel: text("channel").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_story_notifications_story").on(table.storyId),
+  index("idx_story_notifications_article").on(table.articleId),
+]);
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -1018,6 +1076,28 @@ export const insertRecommendationMetricsSchema = createInsertSchema(recommendati
   readAt: true,
 });
 
+// Story tracking schemas
+export const insertStorySchema = createInsertSchema(stories).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertStoryLinkSchema = createInsertSchema(storyLinks).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertStoryFollowSchema = createInsertSchema(storyFollows).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStoryNotificationSchema = createInsertSchema(storyNotifications).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
 export const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
   subtitle: z.string().max(120, "العنوان الفرعي يجب ألا يتجاوز 120 حرف").optional(),
@@ -1227,6 +1307,17 @@ export type InterestWithWeight = Interest & {
   weight: number;
 };
 
+export type StoryWithDetails = Story & {
+  rootArticle?: Article;
+  articlesCount?: number;
+  followersCount?: number;
+  isFollowing?: boolean;
+};
+
+export type StoryLinkWithArticle = StoryLink & {
+  article?: ArticleWithDetails;
+};
+
 export type UserProfile = User & {
   interests?: InterestWithWeight[];
   behaviorSummary?: {
@@ -1287,6 +1378,19 @@ export type UpdateTag = z.infer<typeof updateTagSchema>;
 
 export type ArticleTag = typeof articleTags.$inferSelect;
 export type InsertArticleTag = z.infer<typeof insertArticleTagSchema>;
+
+// Story tracking types
+export type Story = typeof stories.$inferSelect;
+export type InsertStory = z.infer<typeof insertStorySchema>;
+
+export type StoryLink = typeof storyLinks.$inferSelect;
+export type InsertStoryLink = z.infer<typeof insertStoryLinkSchema>;
+
+export type StoryFollow = typeof storyFollows.$inferSelect;
+export type InsertStoryFollow = z.infer<typeof insertStoryFollowSchema>;
+
+export type StoryNotification = typeof storyNotifications.$inferSelect;
+export type InsertStoryNotification = z.infer<typeof insertStoryNotificationSchema>;
 
 // Drizzle Relations
 export const sectionsRelations = relations(sections, ({ many }) => ({
