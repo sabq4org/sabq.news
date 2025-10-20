@@ -115,7 +115,8 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications"],
     queryFn: async () => {
-      const response = await fetch("/api/me/notifications?limit=20", {
+      // القائمة المنسدلة تعرض فقط غير المقروءة - للأرشيف الكامل اذهب لصفحة الإشعارات
+      const response = await fetch("/api/me/notifications?limit=20&unreadOnly=true", {
         credentials: "include",
       });
       if (!response.ok) {

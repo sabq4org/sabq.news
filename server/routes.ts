@@ -4189,11 +4189,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const limit = parseInt(req.query.limit as string) || 20;
+      const unreadOnly = req.query.unreadOnly === 'true'; // القائمة المنسدلة تطلب فقط غير المقروءة
+      
+      // بناء شروط الاستعلام
+      const conditions = unreadOnly 
+        ? and(
+            eq(notificationsInbox.userId, userId),
+            eq(notificationsInbox.read, false) // فقط غير المقروءة للقائمة المنسدلة
+          )
+        : eq(notificationsInbox.userId, userId); // كل الإشعارات لصفحة الأرشيف
       
       const notifications = await db
         .select()
         .from(notificationsInbox)
-        .where(eq(notificationsInbox.userId, userId))
+        .where(conditions)
         .orderBy(desc(notificationsInbox.createdAt))
         .limit(limit);
 
