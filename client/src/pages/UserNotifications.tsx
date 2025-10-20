@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Header } from "@/components/Header";
@@ -7,8 +7,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, AlertCircle, Star, Newspaper, CheckCheck, Settings } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { 
+  Bell, 
+  AlertCircle, 
+  Star, 
+  Newspaper, 
+  CheckCheck, 
+  Settings,
+  Bot,
+  Sparkles,
+  Zap,
+  MessageCircle,
+  Heart
+} from "lucide-react";
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +37,7 @@ interface Notification {
     articleId?: string;
     imageUrl?: string;
     categorySlug?: string;
+    recommendationType?: string;
   } | null;
   createdAt: string;
 }
@@ -34,7 +47,88 @@ interface NotificationsResponse {
   unreadCount: number;
 }
 
-type FilterType = "all" | "ArticlePublished" | "BreakingNews" | "FeaturedArticle";
+type FilterType = "all" | "ArticlePublished" | "BreakingNews" | "FeaturedArticle" | "recommendation";
+
+// تصنيف الإشعارات حسب النوع مع ألوان وأيقونات مميزة
+const notificationStyles = {
+  recommendation: {
+    icon: Bot,
+    label: "توصية ذكية",
+    color: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50",
+    badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    dotColor: "bg-blue-500",
+    hasAI: true,
+  },
+  ArticlePublished: {
+    icon: Newspaper,
+    label: "مقال جديد",
+    color: "bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800/50",
+    badgeColor: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    iconColor: "text-gray-600 dark:text-gray-400",
+    dotColor: "bg-gray-500",
+    hasAI: false,
+  },
+  BreakingNews: {
+    icon: AlertCircle,
+    label: "خبر عاجل",
+    color: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50",
+    badgeColor: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    iconColor: "text-red-600 dark:text-red-400",
+    dotColor: "bg-red-500",
+    hasAI: false,
+  },
+  FeaturedArticle: {
+    icon: Star,
+    label: "محتوى مميز",
+    color: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900/50",
+    badgeColor: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+    iconColor: "text-yellow-600 dark:text-yellow-400",
+    dotColor: "bg-yellow-500",
+    hasAI: false,
+  },
+  InterestMatch: {
+    icon: Heart,
+    label: "قد يهمك",
+    color: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900/50",
+    badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    iconColor: "text-purple-600 dark:text-purple-400",
+    dotColor: "bg-purple-500",
+    hasAI: false,
+  },
+  default: {
+    icon: Bell,
+    label: "إشعار",
+    color: "bg-muted/30 dark:bg-muted/10 border-border/50",
+    badgeColor: "bg-muted text-muted-foreground",
+    iconColor: "text-muted-foreground",
+    dotColor: "bg-muted-foreground",
+    hasAI: false,
+  },
+};
+
+// تجميع الإشعارات حسب الوقت
+function groupNotificationsByTime(notifications: Notification[]) {
+  const today: Notification[] = [];
+  const yesterday: Notification[] = [];
+  const thisWeek: Notification[] = [];
+  const older: Notification[] = [];
+
+  notifications.forEach(notification => {
+    const date = new Date(notification.createdAt);
+    if (isToday(date)) {
+      today.push(notification);
+    } else if (isYesterday(date)) {
+      yesterday.push(notification);
+    } else if (isThisWeek(date)) {
+      thisWeek.push(notification);
+    } else {
+      older.push(notification);
+    }
+  });
+
+  return { today, yesterday, thisWeek, older };
+}
 
 export default function UserNotifications() {
   const [location, navigate] = useLocation();
@@ -49,7 +143,7 @@ export default function UserNotifications() {
 
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
-    retry: false, // Don't retry on 401
+    retry: false,
   });
 
   // Redirect to login if unauthorized
@@ -95,34 +189,8 @@ export default function UserNotifications() {
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "ArticlePublished":
-        return <Bell className="h-5 w-5 text-blue-500" />;
-      case "BreakingNews":
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case "FeaturedArticle":
-        return <Star className="h-5 w-5 text-yellow-500" />;
-      case "InterestMatch":
-        return <Bell className="h-5 w-5 text-primary" />;
-      case "recommendation":
-        return <Star className="h-5 w-5 text-purple-500" />;
-      default:
-        return <Newspaper className="h-5 w-5 text-muted-foreground" />;
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      ArticlePublished: "مقال جديد",
-      BreakingNews: "أخبار عاجلة",
-      FeaturedArticle: "مقال مميز",
-      InterestMatch: "قد يهمك",
-      LikedStoryUpdate: "تحديث",
-      MostReadTodayForYou: "الأكثر قراءة",
-      recommendation: "توصية",
-    };
-    return labels[type] || type;
+  const getNotificationStyle = (type: string) => {
+    return notificationStyles[type as keyof typeof notificationStyles] || notificationStyles.default;
   };
 
   const filteredNotifications =
@@ -130,7 +198,134 @@ export default function UserNotifications() {
       ? data?.notifications || []
       : data?.notifications.filter((n) => n.type === filter) || [];
 
+  const groupedNotifications = useMemo(() => {
+    return groupNotificationsByTime(filteredNotifications);
+  }, [filteredNotifications]);
+
   const unreadCount = data?.unreadCount || 0;
+
+  // Render notification card
+  const renderNotificationCard = (notification: Notification) => {
+    const style = getNotificationStyle(notification.type);
+    const Icon = style.icon;
+
+    return (
+      <Card
+        key={notification.id}
+        className={`
+          group relative overflow-hidden transition-all duration-300
+          hover:-translate-y-0.5 hover:shadow-lg
+          cursor-pointer
+          ${!notification.read ? style.color : ""}
+          ${!notification.read ? "border-l-4" : ""}
+          backdrop-blur-sm
+        `}
+        onClick={() => handleNotificationClick(notification)}
+        data-testid={`card-notification-${notification.id}`}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-start gap-4">
+            {/* أيقونة أو صورة المقال */}
+            {notification.metadata?.imageUrl ? (
+              <div className="relative flex-shrink-0">
+                <img
+                  src={notification.metadata.imageUrl}
+                  alt={notification.title}
+                  className="w-16 h-16 object-cover rounded-lg ring-2 ring-offset-2 ring-offset-background ring-border/50"
+                  data-testid={`image-article-${notification.id}`}
+                />
+                {style.hasAI && (
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-1">
+                    <Sparkles className="h-3 w-3 text-white" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={`flex-shrink-0 p-3 rounded-lg ${style.badgeColor} relative`}>
+                <Icon className={`h-5 w-5 ${style.iconColor}`} />
+                {style.hasAI && (
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-0.5">
+                    <Sparkles className="h-2.5 w-2.5 text-white" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex-1 min-w-0 space-y-2">
+              {/* الشريط العلوي: نوع الإشعار + الوقت */}
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="secondary" className={`${style.badgeColor} border-none`} data-testid={`badge-type-${notification.id}`}>
+                  {style.hasAI && <Zap className="h-3 w-3 mr-1" />}
+                  {style.label}
+                </Badge>
+                <span
+                  className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1"
+                  data-testid={`text-time-${notification.id}`}
+                >
+                  {formatDistanceToNow(new Date(notification.createdAt), {
+                    addSuffix: true,
+                    locale: arSA,
+                  })}
+                </span>
+              </div>
+
+              {/* العنوان */}
+              <h3
+                className="font-bold text-base leading-tight group-hover:text-primary transition-colors"
+                data-testid={`text-title-${notification.id}`}
+              >
+                {notification.title}
+              </h3>
+
+              {/* الوصف */}
+              <p
+                className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
+                data-testid={`text-body-${notification.id}`}
+              >
+                {notification.body}
+              </p>
+
+              {/* مؤشر غير مقروء */}
+              {!notification.read && (
+                <div className="flex items-center gap-2 pt-1">
+                  <div
+                    className={`h-2 w-2 rounded-full ${style.dotColor} animate-pulse`}
+                    data-testid={`indicator-unread-${notification.id}`}
+                  />
+                  <span className={`text-xs font-medium ${style.iconColor}`}>
+                    جديد
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+
+        {/* خط تزييني */}
+        {!notification.read && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+        )}
+      </Card>
+    );
+  };
+
+  // Render notification group
+  const renderNotificationGroup = (title: string, notifications: Notification[]) => {
+    if (notifications.length === 0) return null;
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-2">
+          <div className="h-px flex-1 bg-border" />
+          <h2 className="text-sm font-semibold text-muted-foreground px-3">{title}</h2>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <div className="space-y-3">
+          {notifications.map(notification => renderNotificationCard(notification))}
+        </div>
+      </div>
+    );
+  };
 
   if (error) {
     return (
@@ -159,14 +354,20 @@ export default function UserNotifications() {
         <div className="container max-w-4xl mx-auto px-4">
           <div className="space-y-6" dir="rtl">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-3xl font-bold" data-testid="text-page-title">
-                  الإشعارات
+                <h1 className="text-3xl font-bold flex items-center gap-3" data-testid="text-page-title">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Bell className="h-7 w-7 text-primary" />
+                  </div>
+                  مركز الإشعارات
                 </h1>
                 {unreadCount > 0 && (
-                  <p className="text-muted-foreground mt-1" data-testid="text-unread-count">
-                    لديك {unreadCount} إشعار غير مقروء
+                  <p className="text-muted-foreground mt-2 flex items-center gap-2" data-testid="text-unread-count">
+                    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                      {unreadCount}
+                    </span>
+                    إشعار غير مقروء
                   </p>
                 )}
               </div>
@@ -175,10 +376,11 @@ export default function UserNotifications() {
                 <Link href="/recommendation-settings">
                   <Button
                     variant="outline"
+                    className="gap-2"
                     data-testid="button-recommendation-settings"
                   >
-                    <Settings className="h-4 w-4 ml-2" />
-                    إعدادات التوصيات
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden sm:inline">إعدادات التوصيات</span>
                   </Button>
                 </Link>
                 
@@ -186,10 +388,11 @@ export default function UserNotifications() {
                   <Button
                     onClick={() => markAllAsReadMutation.mutate()}
                     disabled={markAllAsReadMutation.isPending}
+                    className="gap-2"
                     data-testid="button-mark-all-read"
                   >
-                    <CheckCheck className="h-4 w-4 ml-2" />
-                    تمييز الكل كمقروء
+                    <CheckCheck className="h-4 w-4" />
+                    <span className="hidden sm:inline">تمييز الكل كمقروء</span>
                   </Button>
                 )}
               </div>
@@ -197,35 +400,48 @@ export default function UserNotifications() {
 
             {/* Filter Tabs */}
             <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
-              <TabsList className="w-full justify-start" data-testid="tabs-filter">
-                <TabsTrigger value="all" data-testid="tab-all">
+              <TabsList className="w-full justify-start overflow-x-auto" data-testid="tabs-filter">
+                <TabsTrigger value="all" data-testid="tab-all" className="gap-2">
+                  <Bell className="h-4 w-4" />
                   الكل
                   {data && filter === "all" && (
-                    <Badge variant="secondary" className="mr-2" data-testid="badge-count-all">
+                    <Badge variant="secondary" className="mr-1" data-testid="badge-count-all">
                       {data.notifications.length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="ArticlePublished" data-testid="tab-article-published">
+                <TabsTrigger value="recommendation" data-testid="tab-recommendation" className="gap-2">
+                  <Bot className="h-4 w-4" />
+                  توصيات ذكية
+                  {data && (
+                    <Badge variant="secondary" className="mr-1">
+                      {data.notifications.filter((n) => n.type === "recommendation").length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="ArticlePublished" data-testid="tab-article-published" className="gap-2">
+                  <Newspaper className="h-4 w-4" />
                   مقالات جديدة
                   {data && (
-                    <Badge variant="secondary" className="mr-2" data-testid="badge-count-article-published">
+                    <Badge variant="secondary" className="mr-1" data-testid="badge-count-article-published">
                       {data.notifications.filter((n) => n.type === "ArticlePublished").length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="BreakingNews" data-testid="tab-breaking-news">
+                <TabsTrigger value="BreakingNews" data-testid="tab-breaking-news" className="gap-2">
+                  <AlertCircle className="h-4 w-4" />
                   أخبار عاجلة
                   {data && (
-                    <Badge variant="secondary" className="mr-2" data-testid="badge-count-breaking-news">
+                    <Badge variant="secondary" className="mr-1" data-testid="badge-count-breaking-news">
                       {data.notifications.filter((n) => n.type === "BreakingNews").length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="FeaturedArticle" data-testid="tab-featured-article">
+                <TabsTrigger value="FeaturedArticle" data-testid="tab-featured-article" className="gap-2">
+                  <Star className="h-4 w-4" />
                   مقالات مميزة
                   {data && (
-                    <Badge variant="secondary" className="mr-2" data-testid="badge-count-featured-article">
+                    <Badge variant="secondary" className="mr-1" data-testid="badge-count-featured-article">
                       {data.notifications.filter((n) => n.type === "FeaturedArticle").length}
                     </Badge>
                   )}
@@ -236,100 +452,35 @@ export default function UserNotifications() {
             {/* Loading State */}
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                <p className="text-muted-foreground" data-testid="text-loading">
-                  جاري تحميل الإشعارات...
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <Bot className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+                </div>
+                <p className="text-muted-foreground mt-4" data-testid="text-loading">
+                  جاري تحميل الإشعارات الذكية...
                 </p>
               </div>
             ) : filteredNotifications.length === 0 ? (
               /* Empty State */
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Bell className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />
+                  <Bell className="relative h-20 w-20 text-muted-foreground opacity-30" />
+                </div>
                 <h2 className="text-xl font-semibold mb-2">لا توجد إشعارات</h2>
-                <p className="text-muted-foreground" data-testid="text-no-notifications">
+                <p className="text-muted-foreground max-w-sm" data-testid="text-no-notifications">
                   {filter === "all"
-                    ? "لم تتلق أي إشعارات بعد"
-                    : `لا توجد إشعارات من نوع ${getTypeLabel(filter)}`}
+                    ? "ستظهر هنا جميع إشعاراتك الذكية عندما تكون متاحة"
+                    : `لا توجد إشعارات من نوع "${getNotificationStyle(filter).label}"`}
                 </p>
               </div>
             ) : (
-              /* Notifications List */
-              <div className="space-y-3">
-                {filteredNotifications.map((notification) => (
-                  <Card
-                    key={notification.id}
-                    className={`transition-all hover-elevate active-elevate-2 cursor-pointer ${
-                      !notification.read
-                        ? "bg-primary/5 border-primary/20"
-                        : ""
-                    }`}
-                    onClick={() => handleNotificationClick(notification)}
-                    data-testid={`card-notification-${notification.id}`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        {/* Article Image (if available in metadata) */}
-                        {notification.metadata?.imageUrl ? (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={notification.metadata.imageUrl}
-                              alt={notification.title}
-                              className="w-20 h-20 object-cover rounded-md"
-                              data-testid={`image-article-${notification.id}`}
-                            />
-                          </div>
-                        ) : (
-                          <div className="mt-1 flex-shrink-0">
-                            {getTypeIcon(notification.type)}
-                          </div>
-                        )}
-
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <Badge variant="secondary" data-testid={`badge-type-${notification.id}`}>
-                              {getTypeLabel(notification.type)}
-                            </Badge>
-                            <span
-                              className="text-xs text-muted-foreground whitespace-nowrap"
-                              data-testid={`text-time-${notification.id}`}
-                            >
-                              {formatDistanceToNow(new Date(notification.createdAt), {
-                                addSuffix: true,
-                                locale: arSA,
-                              })}
-                            </span>
-                          </div>
-
-                          <h3
-                            className="font-semibold text-lg leading-tight"
-                            data-testid={`text-title-${notification.id}`}
-                          >
-                            {notification.title}
-                          </h3>
-
-                          <p
-                            className="text-muted-foreground leading-relaxed line-clamp-2"
-                            data-testid={`text-body-${notification.id}`}
-                          >
-                            {notification.body}
-                          </p>
-
-                          {!notification.read && (
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="h-2 w-2 rounded-full bg-blue-500"
-                                data-testid={`indicator-unread-${notification.id}`}
-                              />
-                              <span className="text-xs text-blue-600 font-medium">
-                                جديد
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              /* Notifications List with Time Grouping */
+              <div className="space-y-8">
+                {renderNotificationGroup("اليوم", groupedNotifications.today)}
+                {renderNotificationGroup("أمس", groupedNotifications.yesterday)}
+                {renderNotificationGroup("هذا الأسبوع", groupedNotifications.thisWeek)}
+                {renderNotificationGroup("أقدم", groupedNotifications.older)}
               </div>
             )}
           </div>
