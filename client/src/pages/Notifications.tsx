@@ -45,6 +45,12 @@ export default function Notifications() {
   // Check if we're in dashboard or user view
   const isDashboard = location.startsWith("/dashboard");
 
+  // Fetch user for header
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string; profileImageUrl?: string | null }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
   });
@@ -309,7 +315,7 @@ export default function Notifications() {
       <DashboardLayout>{errorContent}</DashboardLayout>
     ) : (
       <>
-        <Header />
+        <Header user={user} />
         <main className="min-h-screen bg-background py-8">
           <div className="container max-w-4xl mx-auto px-4">
             {errorContent}
@@ -324,7 +330,7 @@ export default function Notifications() {
     <DashboardLayout>{contentJSX}</DashboardLayout>
   ) : (
     <>
-      <Header />
+      <Header user={user} />
       <main className="min-h-screen bg-background py-8">
         <div className="container max-w-4xl mx-auto px-4">
           {contentJSX}
