@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { CredibilityIndicator } from "@/components/CredibilityIndicator";
+import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -563,6 +564,9 @@ export default function ArticleDetail() {
                 </Button>
               )
             )}
+
+            {/* AI-Powered Smart Recommendations */}
+            <AIRecommendationsBlock articleSlug={slug} />
 
             {relatedArticles.length > 0 && (
               <RecommendationsWidget

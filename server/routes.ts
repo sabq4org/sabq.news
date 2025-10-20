@@ -2955,6 +2955,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get AI-powered smart recommendations for an article
+  app.get("/api/articles/:slug/ai-recommendations", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Get personalized recommendations using similarity engine
+      const similarArticles = await findSimilarArticles(article.id, { limit: 5 });
+      
+      // Get personalized recommendations if user is logged in
+      let personalizedRecommendations: any[] = [];
+      if (userId) {
+        try {
+          personalizedRecommendations = await getPersonalizedRecommendations(userId, { limit: 3 });
+        } catch (error) {
+          console.error("Error getting personalized recommendations:", error);
+        }
+      }
+
+      // Combine and deduplicate
+      const combinedRecommendations = [
+        ...personalizedRecommendations,
+        ...similarArticles.filter(sa => 
+          !personalizedRecommendations.find(pr => pr.id === sa.id)
+        )
+      ].slice(0, 5);
+
+      // Enhance with AI reasoning
+      const enhancedRecommendations = combinedRecommendations.map((rec, index) => {
+        let reason = "";
+        let icon = "Newspaper";
+        
+        // Determine reason based on recommendation source
+        if (personalizedRecommendations.find(pr => pr.id === rec.id)) {
+          reason = "مختار خصيصًا لك بناءً على اهتماماتك";
+          icon = "Brain";
+        } else if (rec.categoryId === article.categoryId) {
+          reason = "مشابه في التصنيف والموضوع";
+          icon = "Sparkles";
+        } else {
+          reason = "قد يثير اهتمامك أيضًا";
+          icon = "Compass";
+        }
+
+        return {
+          ...rec,
+          aiMetadata: {
+            reason,
+            icon,
+            aiLabel: "اقتراح من الذكاء الاصطناعي",
+            relevanceScore: Math.max(70, 100 - (index * 10)), // Decrease score for lower ranked items
+          }
+        };
+      });
+
+      res.json(enhancedRecommendations);
+    } catch (error) {
+      console.error("Error fetching AI recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch AI recommendations" });
+    }
+  });
+
   // Get articles by keyword
   app.get("/api/keyword/:keyword", async (req, res) => {
     try {
