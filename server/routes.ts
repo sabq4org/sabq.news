@@ -1713,7 +1713,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send notifications if article is published
+      console.log(`🔍 [CREATE ARTICLE] Article created with status: ${newArticle.status}`);
+      console.log(`🔍 [CREATE ARTICLE] Article ID: ${newArticle.id}, Title: ${newArticle.title}`);
+      
       if (newArticle.status === 'published') {
+        console.log(`🔔 [CREATE ARTICLE] Article is PUBLISHED - sending notifications...`);
         try {
           // Determine notification type based on newsType
           let notificationType: 'published' | 'breaking' | 'featured' = 'published';
@@ -1723,14 +1727,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notificationType = 'featured';
           }
 
+          console.log(`🔔 [CREATE ARTICLE] Calling sendArticleNotification with type: ${notificationType}`);
+          
           // Send smart notifications via notification service
           await sendArticleNotification(newArticle, notificationType);
 
-          console.log(`✅ Notifications sent for new article: ${newArticle.title}`);
+          console.log(`✅ [CREATE ARTICLE] Notifications sent for new article: ${newArticle.title}`);
         } catch (notificationError) {
-          console.error("Error sending notifications for new article:", notificationError);
+          console.error("❌ [CREATE ARTICLE] Error sending notifications for new article:", notificationError);
           // Don't fail the creation operation if notification fails
         }
+      } else {
+        console.log(`⏸️ [CREATE ARTICLE] Article is NOT published (status: ${newArticle.status}) - skipping notifications`);
       }
 
       res.status(201).json(newArticle);
@@ -1825,7 +1833,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Trigger notification if article was just published
+      console.log(`🔍 [UPDATE ARTICLE] Article updated - Old status: ${existingArticle.status}, New status: ${updatedArticle.status}`);
+      console.log(`🔍 [UPDATE ARTICLE] Article ID: ${updatedArticle.id}, Title: ${updatedArticle.title}`);
+      
       if (updatedArticle.status === "published" && existingArticle.status !== "published") {
+        console.log(`🔔 [UPDATE ARTICLE] Status changed to PUBLISHED - sending notifications...`);
         try {
           // Determine notification type based on article properties
           let notificationType: 'published' | 'breaking' | 'featured';
@@ -1838,8 +1850,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notificationType = 'published';
           }
 
+          console.log(`🔔 [UPDATE ARTICLE] Calling sendArticleNotification with type: ${notificationType}`);
+
           // Send smart notifications via new service
           await sendArticleNotification(updatedArticle, notificationType);
+
+          console.log(`✅ [UPDATE ARTICLE] Notifications sent successfully`);
 
           // Keep existing notification system for backward compatibility
           await createNotification({
@@ -1853,9 +1869,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
         } catch (notificationError) {
-          console.error("Error creating notification:", notificationError);
+          console.error("❌ [UPDATE ARTICLE] Error creating notification:", notificationError);
           // Don't fail the update operation if notification fails
         }
+      } else {
+        console.log(`⏸️ [UPDATE ARTICLE] No notification sent - Status unchanged or not published`);
       }
 
       res.json(updatedArticle);
@@ -1910,6 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Trigger notification for published article
+      console.log(`🔔 [PUBLISH ARTICLE] Publishing article - ID: ${updatedArticle.id}, Title: ${updatedArticle.title}`);
       try {
         // Determine notification type based on article properties
         let notificationType: 'published' | 'breaking' | 'featured';
@@ -1922,8 +1941,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notificationType = 'published';
         }
 
+        console.log(`🔔 [PUBLISH ARTICLE] Calling sendArticleNotification with type: ${notificationType}`);
+
         // Send smart notifications via new service
         await sendArticleNotification(updatedArticle, notificationType);
+
+        console.log(`✅ [PUBLISH ARTICLE] Notifications sent successfully`);
 
         // Keep existing notification system for backward compatibility
         await createNotification({
@@ -1937,7 +1960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         });
       } catch (notificationError) {
-        console.error("Error creating notification:", notificationError);
+        console.error("❌ [PUBLISH ARTICLE] Error creating notification:", notificationError);
         // Don't fail the publish operation if notification fails
       }
 
