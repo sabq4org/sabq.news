@@ -30,23 +30,19 @@ export default function UserRecommendationSettings() {
   const { toast } = useToast();
   const [localPrefs, setLocalPrefs] = useState<NotificationPreferences | null>(null);
 
-  // Check if user is authenticated
-  const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string }>({
-    queryKey: ["/api/auth/user"],
-  });
-
-  useEffect(() => {
-    if (!userLoading && !user) {
-      navigate("/login?redirect=" + encodeURIComponent(location));
-    }
-  }, [user, userLoading, navigate, location]);
-
   const { data, isLoading, error } = useQuery<{ preferences: NotificationPreferences }>({
     queryKey: ["/api/recommendations/preferences"],
-    enabled: !!user,
+    retry: false, // Don't retry on 401
   });
 
   const preferences = data?.preferences;
+
+  // Redirect to login if unauthorized
+  useEffect(() => {
+    if (error && (error as any).status === 401) {
+      navigate("/login?redirect=" + encodeURIComponent(location));
+    }
+  }, [error, navigate, location]);
 
   useEffect(() => {
     if (preferences) {

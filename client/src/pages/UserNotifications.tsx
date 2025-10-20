@@ -41,21 +41,17 @@ export default function UserNotifications() {
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>("all");
 
-  // Check if user is authenticated
-  const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string }>({
-    queryKey: ["/api/auth/user"],
-  });
-
-  useEffect(() => {
-    if (!userLoading && !user) {
-      navigate("/login?redirect=" + encodeURIComponent(location));
-    }
-  }, [user, userLoading, navigate, location]);
-
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
-    enabled: !!user,
+    retry: false, // Don't retry on 401
   });
+
+  // Redirect to login if unauthorized
+  useEffect(() => {
+    if (error && (error as any).status === 401) {
+      navigate("/login?redirect=" + encodeURIComponent(location));
+    }
+  }, [error, navigate, location]);
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
