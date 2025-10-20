@@ -44,6 +44,7 @@ import RecommendationSettings from "@/pages/recommendation-settings";
 import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
+import DashboardComments from "@/pages/DashboardComments";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -84,7 +85,7 @@ function Router() {
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
       <Route path="/dashboard/articles/new" component={ComingSoon} />
       <Route path="/dashboard/tags" component={TagsManagement} />
-      <Route path="/dashboard/comments" component={ComingSoon} />
+      <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={ComingSoon} />
       <Route path="/dashboard/ai/headlines" component={ComingSoon} />

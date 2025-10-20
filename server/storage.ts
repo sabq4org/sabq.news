@@ -115,8 +115,11 @@ export interface IStorage {
   updateRssFeedLastFetch(id: string): Promise<void>;
   
   // Comment operations
-  getCommentsByArticle(articleId: string): Promise<CommentWithUser[]>;
+  getCommentsByArticle(articleId: string, showPending?: boolean): Promise<CommentWithUser[]>;
   createComment(comment: InsertComment): Promise<Comment>;
+  getAllComments(filters?: { status?: string; articleId?: string }): Promise<CommentWithUser[]>;
+  approveComment(commentId: string, moderatorId: string): Promise<Comment>;
+  rejectComment(commentId: string, moderatorId: string, reason?: string): Promise<Comment>;
   
   // Reaction operations
   toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }>;
@@ -547,7 +550,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Comment operations
-  async getCommentsByArticle(articleId: string): Promise<CommentWithUser[]> {
+  async getCommentsByArticle(articleId: string, showPending: boolean = false): Promise<CommentWithUser[]> {
+    const conditions = [eq(comments.articleId, articleId)];
+    
+    if (!showPending) {
+      conditions.push(eq(comments.status, 'approved'));
+    }
+    
     const results = await db
       .select({
         comment: comments,
@@ -555,7 +564,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
-      .where(eq(comments.articleId, articleId))
+      .where(and(...conditions))
       .orderBy(comments.createdAt);
 
     return results.map((r) => ({
@@ -567,6 +576,62 @@ export class DatabaseStorage implements IStorage {
   async createComment(comment: InsertComment): Promise<Comment> {
     const [created] = await db.insert(comments).values(comment).returning();
     return created;
+  }
+
+  async getAllComments(filters?: { status?: string; articleId?: string }): Promise<CommentWithUser[]> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(comments.status, filters.status));
+    }
+    
+    if (filters?.articleId) {
+      conditions.push(eq(comments.articleId, filters.articleId));
+    }
+    
+    const results = await db
+      .select({
+        comment: comments,
+        user: users,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(comments.createdAt));
+
+    return results.map((r) => ({
+      ...r.comment,
+      user: r.user!,
+    }));
+  }
+
+  async approveComment(commentId: string, moderatorId: string): Promise<Comment> {
+    const [updated] = await db
+      .update(comments)
+      .set({
+        status: 'approved',
+        moderatedBy: moderatorId,
+        moderatedAt: new Date(),
+      })
+      .where(eq(comments.id, commentId))
+      .returning();
+    
+    return updated;
+  }
+
+  async rejectComment(commentId: string, moderatorId: string, reason?: string): Promise<Comment> {
+    const [updated] = await db
+      .update(comments)
+      .set({
+        status: 'rejected',
+        moderatedBy: moderatorId,
+        moderatedAt: new Date(),
+        moderationReason: reason,
+      })
+      .where(eq(comments.id, commentId))
+      .returning();
+    
+    return updated;
   }
 
   // Reaction operations

@@ -3079,7 +3079,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Article not found" });
       }
 
-      const comments = await storage.getCommentsByArticle(article.id);
+      // For admins and editors, show all comments (including pending)
+      // For regular users, show only approved comments
+      const showPending = userRole === 'admin' || userRole === 'editor';
+      const comments = await storage.getCommentsByArticle(article.id, showPending);
       res.json(comments);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -3591,6 +3594,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting article:", error);
       res.status(500).json({ message: "Failed to delete article" });
+    }
+  });
+
+  // ============================================================
+  // COMMENT MODERATION ROUTES (Editors & Admins)
+  // ============================================================
+
+  app.get("/api/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+      const filters: { status?: string; articleId?: string } = {};
+      
+      if (status) {
+        filters.status = status as string;
+      }
+      
+      if (articleId) {
+        filters.articleId = articleId as string;
+      }
+
+      const comments = await storage.getAllComments(filters);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const approved = await storage.approveComment(commentId, userId);
+      res.json({ message: "Comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ message: "Failed to approve comment" });
+    }
+  });
+
+  app.post("/api/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+      const rejected = await storage.rejectComment(commentId, userId, reason);
+      res.json({ message: "Comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting comment:", error);
+      res.status(500).json({ message: "Failed to reject comment" });
     }
   });
 
