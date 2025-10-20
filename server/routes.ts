@@ -2992,6 +2992,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Error recording loyalty points:", error);
           // Don't fail the request if loyalty fails
         }
+
+        // Track user event for daily summary analytics
+        try {
+          await trackUserEvent({
+            userId,
+            articleId: req.params.id,
+            eventType: 'like',
+          });
+        } catch (error) {
+          console.error("Error tracking like event:", error);
+        }
       }
 
       res.json(result);
@@ -3005,6 +3016,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const result = await storage.toggleBookmark(req.params.id, userId);
+
+      // Track user event for daily summary analytics (when bookmarking, not unbookmarking)
+      if (result.isBookmarked) {
+        try {
+          await trackUserEvent({
+            userId,
+            articleId: req.params.id,
+            eventType: 'save',
+          });
+        } catch (error) {
+          console.error("Error tracking save event:", error);
+        }
+      }
+
       res.json(result);
     } catch (error) {
       console.error("Error toggling bookmark:", error);
@@ -3077,6 +3102,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error) {
         console.error("Error recording loyalty points:", error);
+      }
+
+      // Track user event for daily summary analytics
+      try {
+        await trackUserEvent({
+          userId,
+          articleId: article.id,
+          eventType: 'comment',
+        });
+      } catch (error) {
+        console.error("Error tracking comment event:", error);
       }
 
       res.json(comment);
