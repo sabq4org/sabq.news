@@ -8,19 +8,29 @@ const openai = new OpenAI({
 });
 
 // ============================================
+// Constants
+// ============================================
+
+/**
+ * Embedding dimensions for OpenAI text-embedding-3-large model
+ * Used consistently across all vector operations
+ */
+export const EMBEDDING_DIMENSIONS = 1536;
+
+// ============================================
 // Embedding Generation
 // ============================================
 
 /**
  * Generate embedding vector for text using OpenAI text-embedding-3-large
- * Supports Arabic and returns 1024-dimensional vector
+ * Supports Arabic and returns 1536-dimensional vector
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-large',
       input: text,
-      dimensions: 1024, // Use 1024 dimensions for better quality
+      dimensions: EMBEDDING_DIMENSIONS,
     });
 
     return response.data[0].embedding;
@@ -125,20 +135,30 @@ export async function extractEntities(title: string, content: string): Promise<s
 /**
  * Calculate cosine similarity between two vectors
  * Returns value between 0 and 1 (1 = identical, 0 = completely different)
+ * Handles vectors of different lengths by padding with zeros (graceful degradation for migration)
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
+  // Handle length mismatch gracefully (for backward compatibility during migration)
+  let vecA = a;
+  let vecB = b;
+  
   if (a.length !== b.length) {
-    throw new Error('Vectors must have the same length');
+    const maxLen = Math.max(a.length, b.length);
+    vecA = a.length < maxLen ? [...a, ...new Array(maxLen - a.length).fill(0)] : a;
+    vecB = b.length < maxLen ? [...b, ...new Array(maxLen - b.length).fill(0)] : b;
+    
+    // Log warning for monitoring
+    console.warn(`[EMBEDDINGS] Vector length mismatch: ${a.length} vs ${b.length}, padded to ${maxLen}`);
   }
 
   let dotProduct = 0;
   let normA = 0;
   let normB = 0;
 
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
   }
 
   normA = Math.sqrt(normA);

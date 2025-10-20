@@ -10,7 +10,7 @@ import {
   readingHistory
 } from '@shared/schema';
 import { eq, desc, and, sql, inArray } from 'drizzle-orm';
-import { cosineSimilarity, jaccardSimilarity } from './embeddingsService';
+import { cosineSimilarity, jaccardSimilarity, EMBEDDING_DIMENSIONS } from './embeddingsService';
 
 // ============================================
 // User Profile Building
@@ -41,7 +41,7 @@ export async function buildUserProfileEmbedding(userId: string): Promise<{
   if (interactions.length === 0) {
     // No interactions yet - return empty profile
     return {
-      embedding: new Array(1024).fill(0),
+      embedding: new Array(EMBEDDING_DIMENSIONS).fill(0),
       topTags: [],
       topEntities: [],
     };
@@ -56,7 +56,7 @@ export async function buildUserProfileEmbedding(userId: string): Promise<{
 
   if (vectors.length === 0) {
     return {
-      embedding: new Array(1024).fill(0),
+      embedding: new Array(EMBEDDING_DIMENSIONS).fill(0),
       topTags: [],
       topEntities: [],
     };
@@ -69,7 +69,7 @@ export async function buildUserProfileEmbedding(userId: string): Promise<{
   });
 
   // Calculate weighted average embedding
-  const embedding = new Array(1024).fill(0);
+  const embedding = new Array(EMBEDDING_DIMENSIONS).fill(0);
   let totalWeight = 0;
 
   const allTags: string[] = [];
