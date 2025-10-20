@@ -46,7 +46,7 @@ const iconMap: Record<string, any> = {
 };
 
 export function AIRecommendationsBlock({ articleSlug }: AIRecommendationsBlockProps) {
-  const { data: recommendations = [], isLoading } = useQuery<AIRecommendation[]>({
+  const { data: recommendations = [], isLoading, error } = useQuery<AIRecommendation[]>({
     queryKey: ["/api/articles", articleSlug, "ai-recommendations"],
   });
 
@@ -72,6 +72,10 @@ export function AIRecommendationsBlock({ articleSlug }: AIRecommendationsBlockPr
         </CardContent>
       </Card>
     );
+  }
+
+  if (error) {
+    return null;
   }
 
   if (recommendations.length === 0) {
