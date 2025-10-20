@@ -1,21 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Archive, Undo2, Upload, MoreVertical, Send } from "lucide-react";
+import { Edit, Star, Archive, Trash2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface RowActionsProps {
   articleId: string;
   status: string;
+  onEdit: () => void;
+  isFeatured: boolean;
+  onDelete: () => void;
 }
 
-export function RowActions({ articleId, status }: RowActionsProps) {
+export function RowActions({ articleId, status, onEdit, isFeatured, onDelete }: RowActionsProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,31 +34,6 @@ export function RowActions({ articleId, status }: RowActionsProps) {
       toast({
         title: "خطأ",
         description: error.message || "فشلت عملية الأرشفة",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRestore = async () => {
-    setIsLoading(true);
-    try {
-      await apiRequest(`/api/admin/articles/${articleId}/restore`, {
-        method: "POST",
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles/metrics"] });
-      
-      toast({
-        title: "تم الاسترجاع",
-        description: "تم استرجاع المقال بنجاح",
-      });
-    } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message || "فشلت عملية الاسترجاع",
         variant: "destructive",
       });
     } finally {
@@ -94,67 +66,113 @@ export function RowActions({ articleId, status }: RowActionsProps) {
     }
   };
 
+  const handleFeature = async () => {
+    setIsLoading(true);
+    try {
+      await apiRequest(`/api/admin/articles/${articleId}/feature`, {
+        method: "POST",
+        body: JSON.stringify({ featured: !isFeatured }),
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      
+      toast({
+        title: isFeatured ? "تم إلغاء التمييز" : "تم التمييز",
+        description: isFeatured ? "تم إلغاء تمييز المقال بنجاح" : "تم تمييز المقال بنجاح",
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل تحديث حالة التمييز",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // للمقالات المؤرشفة: تعديل - مميز - نشر
   if (status === "archived") {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex gap-1">
         <Button
-          variant="destructive"
-          size="sm"
-          onClick={handlePublish}
+          variant="ghost"
+          size="icon"
+          onClick={onEdit}
           disabled={isLoading}
-          data-testid={`button-action-publish-${articleId}`}
+          data-testid={`button-action-edit-${articleId}`}
+          title="تعديل"
         >
-          <Upload className="w-4 h-4 ml-2" />
-          نشر
+          <Edit className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleRestore}
+          onClick={handleFeature}
           disabled={isLoading}
-          data-testid={`button-action-restore-${articleId}`}
+          data-testid={`button-action-feature-${articleId}`}
+          title={isFeatured ? "إلغاء التمييز" : "تمييز"}
         >
-          <Undo2 className="w-4 h-4" />
+          <Star className={`w-4 h-4 ${isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePublish}
+          disabled={isLoading}
+          data-testid={`button-action-publish-${articleId}`}
+          title="نشر"
+        >
+          <Send className="w-4 h-4" />
         </Button>
       </div>
     );
   }
 
+  // للمقالات النشطة (منشور/مسودة/مجدول): تعديل - مميز - أرشفة - حذف
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onEdit}
+        disabled={isLoading}
+        data-testid={`button-action-edit-${articleId}`}
+        title="تعديل"
+      >
+        <Edit className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleFeature}
+        disabled={isLoading}
+        data-testid={`button-action-feature-${articleId}`}
+        title={isFeatured ? "إلغاء التمييز" : "تمييز"}
+      >
+        <Star className={`w-4 h-4 ${isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+      </Button>
       <Button
         variant="ghost"
         size="icon"
         onClick={handleArchive}
         disabled={isLoading}
         data-testid={`button-action-archive-${articleId}`}
+        title="أرشفة"
       >
         <Archive className="w-4 h-4" />
       </Button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" data-testid={`button-action-menu-${articleId}`}>
-            <MoreVertical className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handlePublish} disabled={isLoading}>
-            <Send className="w-4 h-4 ml-2" />
-            نشر الآن
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleArchive} disabled={isLoading}>
-            <Archive className="w-4 h-4 ml-2" />
-            أرشفة
-          </DropdownMenuItem>
-          {status === "archived" && (
-            <DropdownMenuItem onClick={handleRestore} disabled={isLoading}>
-              <Undo2 className="w-4 h-4 ml-2" />
-              استرجاع
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+        disabled={isLoading}
+        data-testid={`button-action-delete-${articleId}`}
+        title="حذف"
+      >
+        <Trash2 className="w-4 h-4 text-destructive" />
+      </Button>
     </div>
   );
 }

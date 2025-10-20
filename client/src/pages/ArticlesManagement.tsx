@@ -310,7 +310,7 @@ export default function ArticlesManagement() {
                       <th className="text-right py-3 px-4 font-medium">الكاتب</th>
                       <th className="text-right py-3 px-4 font-medium">التصنيف</th>
                       <th className="text-right py-3 px-4 font-medium">عاجل</th>
-                      <th className="text-right py-3 px-4 font-medium">الحالة</th>
+                      <th className="text-right py-3 px-4 font-medium">مميز</th>
                       <th className="text-right py-3 px-4 font-medium">المشاهدات</th>
                       <th className="text-right py-3 px-4 font-medium">الإجراءات</th>
                     </tr>
@@ -323,12 +323,7 @@ export default function ArticlesManagement() {
                         data-testid={`row-article-${article.id}`}
                       >
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            {article.isFeatured && (
-                              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            )}
-                            <span className="font-medium">{article.title}</span>
-                          </div>
+                          <span className="font-medium">{article.title}</span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -352,7 +347,17 @@ export default function ArticlesManagement() {
                             initialValue={article.newsType === "breaking"}
                           />
                         </td>
-                        <td className="py-3 px-4">{getStatusBadge(article.status)}</td>
+                        <td className="py-3 px-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
+                            disabled={featureMutation.isPending}
+                            data-testid={`button-feature-${article.id}`}
+                          >
+                            <Star className={`h-4 w-4 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}`} />
+                          </Button>
+                        </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1">
                             <Eye className="h-4 w-4 text-muted-foreground" />
@@ -360,20 +365,13 @@ export default function ArticlesManagement() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(article)}
-                              data-testid={`button-edit-${article.id}`}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <RowActions 
-                              articleId={article.id}
-                              status={article.status}
-                            />
-                          </div>
+                          <RowActions 
+                            articleId={article.id}
+                            status={article.status}
+                            onEdit={() => handleEdit(article)}
+                            isFeatured={article.isFeatured}
+                            onDelete={() => setDeletingArticle(article)}
+                          />
                         </td>
                       </tr>
                     ))}
