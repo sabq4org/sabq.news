@@ -9,7 +9,7 @@ import {
   reactions,
   bookmarks,
 } from '@shared/schema';
-import { eq, and, desc, sql, gt } from 'drizzle-orm';
+import { eq, and, desc, sql, gt, inArray } from 'drizzle-orm';
 import {
   findSimilarArticles,
   getPersonalizedRecommendations,
