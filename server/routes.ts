@@ -3730,12 +3730,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: sanitizedMetadata,
       });
 
+      const meta = sanitizedMetadata as Record<string, any>;
+
+      // Track events in userEvents table for daily summary analytics
+      if (meta.articleId) {
+        try {
+          // Map behavior event types to userEvent types for daily summary
+          if (eventType === "article_read") {
+            await trackUserEvent({
+              userId,
+              articleId: meta.articleId,
+              eventType: 'read',
+              metadata: {
+                readDuration: meta.readTime || meta.duration,
+                scrollDepth: meta.scrollDepth,
+              },
+            });
+          } else if (eventType === "article_view") {
+            await trackUserEvent({
+              userId,
+              articleId: meta.articleId,
+              eventType: 'view',
+              metadata: {
+                scrollDepth: meta.scrollDepth,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Error tracking user event:", error);
+        }
+      }
+
       // إضافة نقاط ولاء بناءً على نوع السلوك
       try {
         let loyaltyPoints = 0;
         let action = "";
-        
-        const meta = sanitizedMetadata as Record<string, any>;
         
         switch(eventType) {
           case "article_view":
