@@ -167,7 +167,7 @@ async function publishScheduledArticles() {
       .where(
         and(
           eq(articles.status, "scheduled"),
-          lte(articles.publishedAt, now)
+          lte(articles.scheduledAt, now)
         )
       );
 
@@ -175,26 +175,63 @@ async function publishScheduledArticles() {
 
     for (const article of scheduledArticles) {
       try {
+        const publishTime = new Date();
+        
+        // Update article status and publishedAt
         await db
           .update(articles)
           .set({
             status: "published",
-            updatedAt: new Date(),
+            publishedAt: publishTime,
+            updatedAt: publishTime,
           })
           .where(eq(articles.id, article.id));
 
-        console.log(`[ScheduledPublisher] Published article: ${article.id} - ${article.title}`);
+        console.log(`[ScheduledPublisher] ✅ Published article: ${article.id} - ${article.title}`);
+
+        // Link article to story
+        try {
+          const { matchAndLinkArticle } = await import("./storyMatcher");
+          await matchAndLinkArticle(article.id);
+          console.log(`[ScheduledPublisher] ✅ Linked article to story: ${article.id}`);
+        } catch (error) {
+          console.error(`[ScheduledPublisher] ⚠️ Error linking article to story ${article.id}:`, error);
+        }
+
+        // Send notifications based on news type
+        try {
+          const { sendArticleNotification } = await import("./notificationService");
+          const notificationType = article.newsType === 'breaking' ? 'breaking' : 
+                                   article.isFeatured ? 'featured' : 'published';
+          await sendArticleNotification(article, notificationType);
+          console.log(`[ScheduledPublisher] ✅ Sent ${notificationType} notifications for article: ${article.id}`);
+        } catch (error) {
+          console.error(`[ScheduledPublisher] ⚠️ Error sending notifications for article ${article.id}:`, error);
+        }
+
+        // Log activity
+        try {
+          const { logActivity } = await import("./rbac");
+          await logActivity({
+            userId: article.authorId,
+            action: 'ArticlePublished',
+            entityType: 'Article',
+            entityId: article.id,
+          });
+        } catch (error) {
+          console.error(`[ScheduledPublisher] ⚠️ Error logging activity for article ${article.id}:`, error);
+        }
+
       } catch (error) {
-        console.error(`[ScheduledPublisher] Error publishing article ${article.id}:`, error);
+        console.error(`[ScheduledPublisher] ❌ Error publishing article ${article.id}:`, error);
       }
     }
 
     if (scheduledArticles.length > 0) {
-      console.log(`[ScheduledPublisher] Successfully published ${scheduledArticles.length} scheduled articles`);
+      console.log(`[ScheduledPublisher] ✅ Successfully published ${scheduledArticles.length} scheduled articles`);
     }
   } catch (error) {
-    console.error("[ScheduledPublisher] Error in scheduled publishing:", error);
-    // Don't throw - just log and continue
+    console.error("[ScheduledPublisher] ❌ Error in scheduled publishing:", error);
   }
 }
 
