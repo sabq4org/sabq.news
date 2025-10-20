@@ -3,7 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Volume2, TrendingUp, Bell } from "lucide-react";
+import { Volume2, TrendingUp, Bell, Zap, Star } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -85,18 +85,20 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       {article.newsType === "breaking" ? (
                         <Badge 
                           variant="destructive" 
-                          className="w-fit text-xs"
+                          className="w-fit text-xs gap-1"
                           data-testid={`badge-breaking-${article.id}`}
                         >
-                          🔴 عاجل
+                          <Zap className="h-3 w-3" />
+                          عاجل
                         </Badge>
                       ) : article.isFeatured ? (
                         <Badge 
                           variant="default" 
-                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 text-xs"
+                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 text-xs gap-1"
                           data-testid={`badge-featured-${article.id}`}
                         >
-                          ⭐ مميز
+                          <Star className="h-3 w-3 fill-current" />
+                          مميز
                         </Badge>
                       ) : article.category && (
                         <Badge 
@@ -165,18 +167,20 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         {article.newsType === "breaking" ? (
                           <Badge 
                             variant="destructive" 
-                            className="w-fit"
+                            className="w-fit gap-1"
                             data-testid={`badge-breaking-${article.id}`}
                           >
-                            🔴 عاجل
+                            <Zap className="h-3 w-3" />
+                            عاجل
                           </Badge>
                         ) : article.isFeatured ? (
                           <Badge 
                             variant="default" 
-                            className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+                            className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 gap-1"
                             data-testid={`badge-featured-${article.id}`}
                           >
-                            ⭐ مميز
+                            <Star className="h-3 w-3 fill-current" />
+                            مميز
                           </Badge>
                         ) : article.category && (
                           <Badge 

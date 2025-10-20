@@ -35,7 +35,7 @@ export function TrendingTopics({ topics }: TrendingTopicsProps) {
           <Badge
             key={index}
             variant="secondary"
-            className={`hover-elevate cursor-pointer transition-all ${getSizeClass(topic.count)}`}
+            className={`cursor-pointer ${getSizeClass(topic.count)}`}
             data-testid={`badge-topic-${index}`}
           >
             {topic.topic}

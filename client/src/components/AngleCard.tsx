@@ -33,7 +33,7 @@ export function AngleCard({ angle, articleCount, onClick }: AngleCardProps) {
       data-testid={`link-angle-${angle.id}`}
     >
       <Card 
-        className="group relative overflow-hidden hover-elevate active-elevate-2 transition-all h-full"
+        className="group relative overflow-hidden border border-card-border h-full"
         data-testid={`card-angle-${angle.id}`}
       >
         <div 

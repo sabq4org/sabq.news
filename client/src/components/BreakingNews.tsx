@@ -25,7 +25,7 @@ export function BreakingNews({ articles }: BreakingNewsProps) {
         {articles.map((article, index) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <div 
-              className="flex gap-4 p-4 bg-card rounded-lg border-r-4 border-destructive hover-elevate active-elevate-2 cursor-pointer"
+              className="flex gap-4 p-4 bg-card rounded-lg border-r-4 border-destructive cursor-pointer"
               data-testid={`item-breaking-${article.id}`}
             >
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
