@@ -145,12 +145,12 @@ export function AIInsightsBlock() {
               className={insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 sm:p-3 shadow-sm hover:shadow-lg transition-all group ${
+                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 sm:p-3 shadow-sm hover:shadow-lg transition-all group flex flex-col min-h-[140px] sm:min-h-[160px] ${
                   insight.article ? "hover-elevate" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
               >
-                {/* Icon and Title Row for Mobile */}
+                {/* Icon and Title Row */}
                 <div className="flex items-start gap-2 mb-1.5">
                   <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
                     <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${insight.iconColor}`} />
@@ -168,14 +168,14 @@ export function AIInsightsBlock() {
                 </p>
 
                 {/* Trend */}
-                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium" data-testid={`insight-trend-${insight.testId}`}>
+                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium mb-2" data-testid={`insight-trend-${insight.testId}`}>
                   <TrendingUp className="h-3 w-3" />
                   <span className="text-xs">{insight.trend}</span>
                 </div>
 
-                {/* Article Title (on hover) - Hidden on mobile */}
+                {/* Article Title - Always visible */}
                 {insight.article && (
-                  <p className="mt-2 text-xs text-foreground/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" data-testid={`insight-article-${insight.testId}`}>
+                  <p className="mt-auto pt-2 text-xs text-foreground/80 line-clamp-2 border-t border-gray-200 dark:border-gray-700" data-testid={`insight-article-${insight.testId}`}>
                     {insight.article.title}
                   </p>
                 )}
