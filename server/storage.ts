@@ -1001,10 +1001,14 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        storyLink: storyLinks,
+        story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
+      .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(
         and(
           eq(articles.status, "published"),
@@ -1021,6 +1025,8 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      storyId: r.story?.id || undefined,
+      storyTitle: r.story?.title || undefined,
     }));
   }
 
@@ -1030,10 +1036,14 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        storyLink: storyLinks,
+        story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
+      .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
@@ -1042,6 +1052,8 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      storyId: r.story?.id || undefined,
+      storyTitle: r.story?.title || undefined,
     }));
   }
 
@@ -1051,10 +1063,14 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        storyLink: storyLinks,
+        story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
+      .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
@@ -1063,6 +1079,8 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      storyId: r.story?.id || undefined,
+      storyTitle: r.story?.title || undefined,
     }));
   }
 
@@ -1072,10 +1090,14 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        storyLink: storyLinks,
+        story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
+      .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.views), desc(articles.publishedAt))
       .limit(limit);
@@ -1084,6 +1106,8 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      storyId: r.story?.id || undefined,
+      storyTitle: r.story?.title || undefined,
     }));
   }
 
@@ -1093,10 +1117,14 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        storyLink: storyLinks,
+        story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
+      .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(and(
         eq(articles.status, "published"),
         sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`
@@ -1108,6 +1136,8 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      storyId: r.story?.id || undefined,
+      storyTitle: r.story?.title || undefined,
     }));
   }
 

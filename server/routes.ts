@@ -3445,67 +3445,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const article = await storage.createArticle(parsed.data);
 
-      // Send notifications if article is published
       console.log(`🔍 [DASHBOARD CREATE] Article created with status: ${article.status}`);
       console.log(`🔍 [DASHBOARD CREATE] Article ID: ${article.id}, Title: ${article.title}`);
       
+      // Return response immediately to user
+      res.json(article);
+
+      // Process async operations in background (non-blocking)
       if (article.status === "published") {
-        console.log(`🔔 [DASHBOARD CREATE] Article is PUBLISHED - sending notifications...`);
-        try {
-          // Determine notification type based on newsType
-          let notificationType: 'published' | 'breaking' | 'featured' = 'published';
-          if (article.newsType === 'breaking') {
-            notificationType = 'breaking';
-          } else if (article.newsType === 'featured') {
-            notificationType = 'featured';
-          }
-
-          console.log(`🔔 [DASHBOARD CREATE] Calling sendArticleNotification with type: ${notificationType}`);
-          
-          // Send smart notifications via notification service
-          await sendArticleNotification(article, notificationType);
-
-          console.log(`✅ [DASHBOARD CREATE] Notifications sent for new article: ${article.title}`);
-
-          // Generate article embeddings for recommendation system
+        console.log(`🔔 [DASHBOARD CREATE] Article is PUBLISHED - processing notifications in background...`);
+        
+        // Run async operations without blocking the response
+        setImmediate(async () => {
           try {
-            await vectorizeArticle(article.id);
-            console.log(`✅ [DASHBOARD CREATE] Article vectorized for recommendations: ${article.title}`);
-          } catch (vectorizationError) {
-            console.error("❌ [DASHBOARD CREATE] Error vectorizing article:", vectorizationError);
-            // Don't fail the article creation if vectorization fails
-          }
+            // Determine notification type based on newsType
+            let notificationType: 'published' | 'breaking' | 'featured' = 'published';
+            if (article.newsType === 'breaking') {
+              notificationType = 'breaking';
+            } else if (article.newsType === 'featured') {
+              notificationType = 'featured';
+            }
 
-          // Auto-link article to story using AI
-          try {
-            const { matchAndLinkArticle } = await import("./storyMatcher");
-            await matchAndLinkArticle(article.id);
-            console.log(`✅ [DASHBOARD CREATE] Article auto-linked to story: ${article.title}`);
-          } catch (storyMatchError) {
-            console.error("❌ [DASHBOARD CREATE] Error linking article to story:", storyMatchError);
-            // Don't fail the article creation if story matching fails
-          }
+            console.log(`🔔 [DASHBOARD CREATE] Calling sendArticleNotification with type: ${notificationType}`);
+            
+            // Send smart notifications via notification service
+            await sendArticleNotification(article, notificationType);
 
-          // Keep old system for backward compatibility
-          await createNotification({
-            type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
-            data: {
-              articleId: article.id,
-              articleTitle: article.title,
-              articleSlug: article.slug,
-              categoryId: article.categoryId,
-              newsType: article.newsType,
-            },
-          });
-        } catch (notificationError) {
-          console.error("❌ [DASHBOARD CREATE] Error creating notification:", notificationError);
-          // Don't fail the article creation if notification fails
-        }
+            console.log(`✅ [DASHBOARD CREATE] Notifications sent for new article: ${article.title}`);
+
+            // Generate article embeddings for recommendation system
+            try {
+              await vectorizeArticle(article.id);
+              console.log(`✅ [DASHBOARD CREATE] Article vectorized for recommendations: ${article.title}`);
+            } catch (vectorizationError) {
+              console.error("❌ [DASHBOARD CREATE] Error vectorizing article:", vectorizationError);
+              // Don't fail the article creation if vectorization fails
+            }
+
+            // Auto-link article to story using AI
+            try {
+              const { matchAndLinkArticle } = await import("./storyMatcher");
+              await matchAndLinkArticle(article.id);
+              console.log(`✅ [DASHBOARD CREATE] Article auto-linked to story: ${article.title}`);
+            } catch (storyMatchError) {
+              console.error("❌ [DASHBOARD CREATE] Error linking article to story:", storyMatchError);
+              // Don't fail the article creation if story matching fails
+            }
+
+            // Keep old system for backward compatibility
+            await createNotification({
+              type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
+              data: {
+                articleId: article.id,
+                articleTitle: article.title,
+                articleSlug: article.slug,
+                categoryId: article.categoryId,
+                newsType: article.newsType,
+              },
+            });
+          } catch (notificationError) {
+            console.error("❌ [DASHBOARD CREATE] Error creating notification:", notificationError);
+            // Don't fail the article creation if notification fails
+          }
+        });
       } else {
         console.log(`⏸️ [DASHBOARD CREATE] Article is NOT published (status: ${article.status}) - skipping notifications`);
       }
-
-      res.json(article);
     } catch (error) {
       console.error("Error creating article:", error);
       res.status(500).json({ message: "Failed to create article" });
@@ -3539,58 +3544,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateArticle(req.params.id, articleData);
 
-      // Trigger notification if article was just published
       console.log(`🔍 [DASHBOARD UPDATE] Article updated - Old status: ${article.status}, New status: ${updated.status}`);
       console.log(`🔍 [DASHBOARD UPDATE] Article ID: ${updated.id}, Title: ${updated.title}`);
       
+      // Return response immediately to user
+      res.json(updated);
+
+      // Process async operations in background (non-blocking)
       if (updated.status === "published" && article.status !== "published") {
-        console.log(`🔔 [DASHBOARD UPDATE] Status changed to PUBLISHED - sending notifications...`);
-        try {
-          // Determine notification type based on article properties
-          let notificationType: 'published' | 'breaking' | 'featured';
-          
-          if (updated.newsType === "breaking") {
-            notificationType = 'breaking';
-          } else if (updated.newsType === 'featured') {
-            notificationType = 'featured';
-          } else {
-            notificationType = 'published';
-          }
-
-          console.log(`🔔 [DASHBOARD UPDATE] Calling sendArticleNotification with type: ${notificationType}`);
-
-          // Send smart notifications via new service
-          await sendArticleNotification(updated, notificationType);
-
-          console.log(`✅ [DASHBOARD UPDATE] Notifications sent successfully`);
-
-          // Generate article embeddings for recommendation system
+        console.log(`🔔 [DASHBOARD UPDATE] Status changed to PUBLISHED - processing notifications in background...`);
+        
+        // Run async operations without blocking the response
+        setImmediate(async () => {
           try {
-            await vectorizeArticle(updated.id);
-            console.log(`✅ [DASHBOARD UPDATE] Article vectorized for recommendations: ${updated.title}`);
-          } catch (vectorizationError) {
-            console.error("❌ [DASHBOARD UPDATE] Error vectorizing article:", vectorizationError);
-            // Don't fail the update operation if vectorization fails
-          }
+            // Determine notification type based on article properties
+            let notificationType: 'published' | 'breaking' | 'featured';
+            
+            if (updated.newsType === "breaking") {
+              notificationType = 'breaking';
+            } else if (updated.newsType === 'featured') {
+              notificationType = 'featured';
+            } else {
+              notificationType = 'published';
+            }
 
-          // Auto-link article to story using AI
-          try {
-            const { matchAndLinkArticle } = await import("./storyMatcher");
-            await matchAndLinkArticle(updated.id);
-            console.log(`✅ [DASHBOARD UPDATE] Article auto-linked to story: ${updated.title}`);
-          } catch (storyMatchError) {
-            console.error("❌ [DASHBOARD UPDATE] Error linking article to story:", storyMatchError);
-            // Don't fail the update operation if story matching fails
+            console.log(`🔔 [DASHBOARD UPDATE] Calling sendArticleNotification with type: ${notificationType}`);
+
+            // Send smart notifications via new service
+            await sendArticleNotification(updated, notificationType);
+
+            console.log(`✅ [DASHBOARD UPDATE] Notifications sent successfully`);
+
+            // Generate article embeddings for recommendation system
+            try {
+              await vectorizeArticle(updated.id);
+              console.log(`✅ [DASHBOARD UPDATE] Article vectorized for recommendations: ${updated.title}`);
+            } catch (vectorizationError) {
+              console.error("❌ [DASHBOARD UPDATE] Error vectorizing article:", vectorizationError);
+              // Don't fail the update operation if vectorization fails
+            }
+
+            // Auto-link article to story using AI
+            try {
+              const { matchAndLinkArticle } = await import("./storyMatcher");
+              await matchAndLinkArticle(updated.id);
+              console.log(`✅ [DASHBOARD UPDATE] Article auto-linked to story: ${updated.title}`);
+            } catch (storyMatchError) {
+              console.error("❌ [DASHBOARD UPDATE] Error linking article to story:", storyMatchError);
+              // Don't fail the update operation if story matching fails
+            }
+          } catch (notificationError) {
+            console.error("❌ [DASHBOARD UPDATE] Error creating notification:", notificationError);
+            // Don't fail the update operation if notification fails
           }
-        } catch (notificationError) {
-          console.error("❌ [DASHBOARD UPDATE] Error creating notification:", notificationError);
-          // Don't fail the update operation if notification fails
-        }
+        });
       } else {
         console.log(`⏸️ [DASHBOARD UPDATE] No notification sent - Status unchanged or not published`);
       }
-
-      res.json(updated);
     } catch (error) {
       console.error("Error updating article:", error);
       res.status(500).json({ message: "Failed to update article" });

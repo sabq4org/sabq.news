@@ -1,0 +1,108 @@
+2025-10-20 20:20:07.13
+e42e4944
+User
+5:20:07 PM [express] GET /api/me/notifications 304 in 108ms :: {"notifications":[{"id":"d4460b0e-3f3…
+2025-10-20 20:20:09.48
+e42e4944
+User
+✅ [VECTORIZATION] Created vector for article: انطلاق المنتدى التجاري بمنطقة عسير2025 بغرفة أبها
+2025-10-20 20:20:09.48
+e42e4944
+User
+✅ [DASHBOARD CREATE] Article vectorized for recommendations: انطلاق المنتدى التجاري بمنطقة عسير2025 بغرفة أبها
+2025-10-20 20:20:09.48
+e42e4944
+User
+[STORY MATCHER] Starting story matching for article: caa7d13e-bb10-4ac9-97be-a4c87847d66c
+2025-10-20 20:20:10.42
+e42e4944
+User
+[STORY MATCHER] No matching story found, creating new story...
+2025-10-20 20:20:10.45
+e42e4944
+User
+[STORY MATCHER] ✅ Created new story: e920f0b7-1383-4982-a196-97efe9519459
+2025-10-20 20:20:10.48
+e42e4944
+User
+[STORY MATCHER] ✅ Article linked to new story as root
+2025-10-20 20:20:10.48
+e42e4944
+User
+✅ [DASHBOARD CREATE] Article auto-linked to story: انطلاق المنتدى التجاري بمنطقة عسير2025 بغرفة أبها
+2025-10-20 20:20:10.53
+e42e4944
+User
+5:20:10 PM [express] POST /api/dashboard/articles 200 in 4618ms :: {"id":"caa7d13e-bb10-4ac9-97be-a4…
+2025-10-20 20:20:16.91
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:16.94
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.35
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:17.38
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.50
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:17.52
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.89
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:17.89
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:17.91
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.91
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.91
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:17.94
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:17.97
+e42e4944
+User
+5:20:17 PM [express] GET /api/themes/active 200 in 102ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-10-20 20:20:18.02
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:18.03
+e42e4944
+User
+5:20:18 PM [express] GET /api/homepage 200 in 143ms :: {"hero":[{"id":"5b052376-80cc-4d62-9f19-597f6…
+2025-10-20 20:20:18.04
+e42e4944
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-20 20:20:18.04
+e42e4944
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:20:18.04
+e42e4944
+User
+🔍 /api/auth/user check: {

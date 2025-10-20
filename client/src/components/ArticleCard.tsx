@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
+import FollowStoryButton from "./FollowStoryButton";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
@@ -127,6 +128,15 @@ export function ArticleCard({
                 </h3>
               </Link>
 
+              {article.storyId && article.storyTitle && (
+                <div className="mb-3" onClick={(e) => e.preventDefault()}>
+                  <FollowStoryButton 
+                    storyId={article.storyId} 
+                    storyTitle={article.storyTitle}
+                  />
+                </div>
+              )}
+
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   {timeAgo && <span>{timeAgo}</span>}
@@ -216,6 +226,15 @@ export function ArticleCard({
             {article.title}
           </h3>
         </Link>
+
+        {article.storyId && article.storyTitle && (
+          <div className="mb-3" onClick={(e) => e.preventDefault()}>
+            <FollowStoryButton 
+              storyId={article.storyId} 
+              storyTitle={article.storyTitle}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-3 border-t">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
