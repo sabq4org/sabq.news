@@ -5160,6 +5160,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // DAILY DIGEST APIs
+  // ============================================================
+
+  // Get daily digest preview for user
+  app.get("/api/digest/preview", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { getDigestPreview } = await import('./digestService');
+      
+      const digest = await getDigestPreview(userId);
+      
+      if (!digest) {
+        return res.status(404).json({ message: "لا توجد مقالات جديدة في اهتماماتك" });
+      }
+
+      res.json({ digest });
+    } catch (error) {
+      console.error("Error getting digest preview:", error);
+      res.status(500).json({ message: "فشل في جلب الملخص اليومي" });
+    }
+  });
+
+  // Send daily digest manually (admin/testing)
+  app.post("/api/admin/digest/send/:userId", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { sendDailyDigest } = await import('./digestService');
+      
+      const sent = await sendDailyDigest(userId);
+      
+      if (!sent) {
+        return res.status(404).json({ message: "لا يمكن إرسال الملخص اليومي" });
+      }
+
+      res.json({ success: true, message: "تم إرسال الملخص اليومي بنجاح" });
+    } catch (error) {
+      console.error("Error sending digest:", error);
+      res.status(500).json({ message: "فشل في إرسال الملخص اليومي" });
+    }
+  });
+
+  // Process all daily digests (admin/testing)
+  app.post("/api/admin/digest/process-all", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+      const { processDailyDigests } = await import('./digestService');
+      
+      // Run in background
+      processDailyDigests().catch(err => {
+        console.error("Error in background digest processing:", err);
+      });
+
+      res.json({ success: true, message: "بدأت معالجة الملخصات اليومية" });
+    } catch (error) {
+      console.error("Error processing digests:", error);
+      res.status(500).json({ message: "فشل في معالجة الملخصات اليومية" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

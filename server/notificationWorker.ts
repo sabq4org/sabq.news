@@ -198,6 +198,16 @@ async function publishScheduledArticles() {
   }
 }
 
+// Daily digest processor
+async function processDailyDigestsWorker() {
+  try {
+    const { processDailyDigests } = await import('./digestService');
+    await processDailyDigests();
+  } catch (error) {
+    console.error("[DigestWorker] Error processing daily digests:", error);
+  }
+}
+
 export function startNotificationWorker() {
   try {
     console.log("[NotificationWorker] Starting notification worker...");
@@ -223,8 +233,16 @@ export function startNotificationWorker() {
       });
     });
 
+    // Process daily digests every hour (users have 30-minute delivery windows)
+    cron.schedule("0 * * * *", () => {
+      processDailyDigestsWorker().catch(error => {
+        console.error("[DigestWorker] Cron job error:", error);
+      });
+    });
+
     console.log("[NotificationWorker] Notification worker started successfully");
     console.log("[ScheduledPublisher] Scheduled article publisher started successfully");
+    console.log("[DigestWorker] Daily digest worker started successfully");
     
     // Run initial processing in a non-blocking way
     processNotificationQueue().catch(error => {
