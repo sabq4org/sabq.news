@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { TagInput } from "@/components/TagInput";
 
 export default function ArticleEditor() {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +52,7 @@ export default function ArticleEditor() {
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   
   // New fields
   const [newsType, setNewsType] = useState<"breaking" | "featured" | "regular">("regular");
@@ -95,7 +96,7 @@ export default function ArticleEditor() {
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
       setMetaTitle(article.seo?.metaTitle || "");
       setMetaDescription(article.seo?.metaDescription || "");
-      setKeywords(article.seo?.keywords?.join(", ") || "");
+      setKeywords(article.seo?.keywords || []);
       setStatus(article.status as any);
     }
   }, [article, isNewArticle]);
@@ -176,11 +177,6 @@ export default function ArticleEditor() {
 
   const saveArticleMutation = useMutation({
     mutationFn: async ({ publishNow }: { publishNow: boolean }) => {
-      const keywordsArray = keywords
-        .split(",")
-        .map((k) => k.trim())
-        .filter(Boolean);
-
       const articleData: any = {
         title,
         subtitle,
@@ -199,7 +195,7 @@ export default function ArticleEditor() {
         seo: {
           metaTitle: metaTitle || title,
           metaDescription: metaDescription || excerpt,
-          keywords: keywordsArray,
+          keywords: keywords,
         },
       };
 
@@ -701,18 +697,13 @@ export default function ArticleEditor() {
                       </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>الكلمات المفتاحية</Label>
-                      <Input
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        placeholder="كلمة1, كلمة2, كلمة3"
-                        data-testid="input-keywords"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        افصل بين الكلمات بفاصلة
-                      </p>
-                    </div>
+                    <TagInput
+                      label="الكلمات المفتاحية"
+                      tags={keywords}
+                      onTagsChange={setKeywords}
+                      placeholder="اكتب كلمة واضغط Enter..."
+                      testId="input-keywords"
+                    />
                   </TabsContent>
 
                   <TabsContent value="preview">
