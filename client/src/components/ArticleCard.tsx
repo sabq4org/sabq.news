@@ -69,11 +69,6 @@ export function ArticleCard({
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
                 {article.title}
               </h2>
-              {article.excerpt && (
-                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 line-clamp-2 leading-relaxed">
-                  {article.excerpt}
-                </p>
-              )}
               <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-white/80 flex-wrap">
                 {article.author && (
                   <span className="font-medium">
@@ -127,16 +122,10 @@ export function ArticleCard({
               </div>
 
               <Link href={`/article/${article.slug}`}>
-                <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+                <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
                   {article.title}
                 </h3>
               </Link>
-
-              {article.excerpt && (
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {article.excerpt}
-                </p>
-              )}
 
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -223,16 +212,10 @@ export function ArticleCard({
 
       <CardContent className="p-4">
         <Link href={`/article/${article.slug}`}>
-          <h3 className="text-lg font-semibold mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+          <h3 className="text-lg font-semibold mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
             {article.title}
           </h3>
         </Link>
-        
-        {article.excerpt && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
-            {article.excerpt}
-          </p>
-        )}
 
         <div className="flex items-center justify-between pt-3 border-t">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
