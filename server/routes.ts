@@ -2720,7 +2720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(readingHistory)
         .where(and(
           eq(readingHistory.userId, userId),
-          sql`${readingHistory.readAt} >= ${startOfDay}`
+          gte(readingHistory.readAt, startOfDay)
         ));
 
       const articlesReadToday = readingHistoryToday.length;
@@ -2735,7 +2735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(and(
           eq(reactions.userId, userId),
           eq(reactions.type, "like"),
-          sql`${reactions.createdAt} >= ${startOfDay}`
+          gte(reactions.createdAt, startOfDay)
         ));
       
       const likesCount = likesToday.length;
@@ -2746,7 +2746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(comments)
         .where(and(
           eq(comments.userId, userId),
-          sql`${comments.createdAt} >= ${startOfDay}`
+          gte(comments.createdAt, startOfDay)
         ));
       
       const commentsCount = commentsToday.length;
