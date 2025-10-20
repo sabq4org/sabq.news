@@ -212,11 +212,21 @@ export async function findSimilarArticles(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+  // Join with articles table to filter only published articles
   const candidateVectors = await db
-    .select()
+    .select({
+      articleId: contentVectors.articleId,
+      embedding: contentVectors.embedding,
+      tags: contentVectors.tags,
+      entities: contentVectors.entities,
+      title: contentVectors.title,
+      publishedAt: contentVectors.publishedAt,
+    })
     .from(contentVectors)
+    .innerJoin(articles, eq(contentVectors.articleId, articles.id))
     .where(
       and(
+        eq(articles.status, 'published'), // Only published articles
         sql`${contentVectors.publishedAt} > ${thirtyDaysAgo}`,
         sql`${contentVectors.articleId} != ${referenceArticleId}`
       )
@@ -294,10 +304,24 @@ export async function getPersonalizedRecommendations(
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+  // Join with articles table to filter only published articles
   const candidates = await db
-    .select()
+    .select({
+      articleId: contentVectors.articleId,
+      embedding: contentVectors.embedding,
+      tags: contentVectors.tags,
+      entities: contentVectors.entities,
+      title: contentVectors.title,
+      publishedAt: contentVectors.publishedAt,
+    })
     .from(contentVectors)
-    .where(sql`${contentVectors.publishedAt} > ${sevenDaysAgo}`)
+    .innerJoin(articles, eq(contentVectors.articleId, articles.id))
+    .where(
+      and(
+        eq(articles.status, 'published'), // Only published articles
+        sql`${contentVectors.publishedAt} > ${sevenDaysAgo}`
+      )
+    )
     .limit(100);
 
   // Score each candidate
