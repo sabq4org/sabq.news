@@ -4779,6 +4779,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // TEST ENDPOINTS - FOR DEVELOPMENT ONLY
+  // ============================================================
+  
+  // Test notification sending for a specific article
+  app.post("/api/test/send-notifications/:articleId", async (req, res) => {
+    try {
+      const { articleId } = req.params;
+      
+      // Get article details
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+      
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+      
+      console.log(`🧪 TEST: Sending notifications for article: ${article.title}`);
+      
+      // Determine notification type
+      let notificationType: 'published' | 'breaking' | 'featured' = 'published';
+      if (article.newsType === 'breaking') {
+        notificationType = 'breaking';
+      } else if (article.newsType === 'featured') {
+        notificationType = 'featured';
+      }
+      
+      // Send notifications
+      await sendArticleNotification(article, notificationType);
+      
+      res.json({
+        success: true,
+        message: `Notifications sent for article: ${article.title}`,
+        articleId: article.id,
+        notificationType
+      });
+    } catch (error) {
+      console.error("Error in test notification endpoint:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to send notifications",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
