@@ -50,9 +50,15 @@ export default function DashboardComments() {
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Fetch comments based on status
-  const { data: comments, isLoading } = useQuery<Comment[]>({
-    queryKey: ["/api/dashboard/comments", { status: activeTab === "all" ? undefined : activeTab }],
+  // Fetch ALL comments once - we'll filter in the UI
+  const { data: allComments, isLoading } = useQuery<Comment[]>({
+    queryKey: ["/api/dashboard/comments"],
+  });
+
+  // Filter comments based on active tab
+  const comments = allComments?.filter(c => {
+    if (activeTab === "all") return true;
+    return c.status === activeTab;
   });
 
   // Fetch articles to show titles
@@ -167,9 +173,10 @@ export default function DashboardComments() {
     );
   }
 
-  const pendingCount = comments?.filter(c => c.status === "pending").length || 0;
-  const approvedCount = comments?.filter(c => c.status === "approved").length || 0;
-  const rejectedCount = comments?.filter(c => c.status === "rejected").length || 0;
+  // Calculate counts from ALL comments, not just filtered ones
+  const pendingCount = allComments?.filter(c => c.status === "pending").length || 0;
+  const approvedCount = allComments?.filter(c => c.status === "approved").length || 0;
+  const rejectedCount = allComments?.filter(c => c.status === "rejected").length || 0;
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6" dir="rtl">
@@ -235,7 +242,7 @@ export default function DashboardComments() {
             مرفوض ({rejectedCount})
           </TabsTrigger>
           <TabsTrigger value="all" data-testid="tab-all">
-            الكل ({comments?.length || 0})
+            الكل ({allComments?.length || 0})
           </TabsTrigger>
         </TabsList>
 
