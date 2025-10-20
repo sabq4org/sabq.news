@@ -597,6 +597,130 @@ export const articleTags = pgTable("article_tags", {
   tagIdx: index("idx_article_tags_tag").on(table.tagId),
 }));
 
+// ============================================
+// Smart Recommendations & Personalization Tables
+// ============================================
+
+// User events tracking (unified interaction tracking)
+export const userEvents = pgTable("user_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  eventType: text("event_type").notNull(), // 'like', 'save', 'read', 'share', 'comment'
+  eventValue: integer("event_value").default(1).notNull(), // weight for scoring (like=3, save=2, read=1, share=4)
+  metadata: jsonb("metadata").$type<{
+    readDuration?: number; // seconds
+    scrollDepth?: number; // percentage 0-100
+    referrer?: string;
+    deviceType?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_user_events_user").on(table.userId),
+  index("idx_user_events_article").on(table.articleId),
+  index("idx_user_events_type").on(table.eventType),
+  index("idx_user_events_created").on(table.createdAt),
+]);
+
+// User affinities (derived preferences - updated periodically)
+export const userAffinities = pgTable("user_affinities", {
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  tag: text("tag").notNull(), // tag name, category slug, entity name
+  tagType: text("tag_type").notNull(), // 'tag', 'category', 'entity', 'topic'
+  score: real("score").notNull(), // 0.0 - 1.0
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.tag] }),
+  userIdx: index("idx_user_affinities_user").on(table.userId),
+  scoreIdx: index("idx_user_affinities_score").on(table.score),
+}));
+
+// Content vectors (embeddings for similarity matching)
+export const contentVectors = pgTable("content_vectors", {
+  articleId: varchar("article_id").primaryKey().references(() => articles.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  excerpt: text("excerpt"),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`).notNull(), // tag slugs
+  entities: text("entities").array().default(sql`ARRAY[]::text[]`).notNull(), // extracted entities (people, places, organizations)
+  embedding: jsonb("embedding").$type<number[]>(), // 1024-dim embedding vector (from OpenAI text-embedding-3-large)
+  embeddingModel: text("embedding_model").default("text-embedding-3-large"), // track which model was used
+  publishedAt: timestamp("published_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_content_vectors_published").on(table.publishedAt),
+]);
+
+// Recommendation log (track sent recommendations to prevent spam/duplicates)
+export const recommendationLog = pgTable("recommendation_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  reason: text("reason").notNull(), // 'because_you_liked', 'similar_to_saved', 'within_reads', 'trending_for_you'
+  score: real("score").notNull(), // similarity score that triggered the recommendation
+  channel: text("channel").notNull(), // 'notification', 'feed', 'email', 'digest'
+  metadata: jsonb("metadata").$type<{
+    similarToArticleId?: string; // reference article that triggered this recommendation
+    triggerEvent?: string; // what event triggered this (e.g., 'article_published')
+    abTestVariant?: string; // for A/B testing
+  }>(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_recommendation_log_user").on(table.userId),
+  index("idx_recommendation_log_article").on(table.articleId),
+  index("idx_recommendation_log_sent").on(table.sentAt),
+  index("idx_recommendation_log_reason").on(table.reason),
+]);
+
+// User recommendation preferences (enhanced notification preferences for recommendations)
+export const userRecommendationPrefs = pgTable("user_recommendation_prefs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  // Notification types
+  becauseYouLiked: boolean("because_you_liked").default(true).notNull(),
+  similarToSaved: boolean("similar_to_saved").default(true).notNull(),
+  withinReads: boolean("within_reads").default(true).notNull(),
+  trendingForYou: boolean("trending_for_you").default(true).notNull(),
+  // Digest preferences
+  dailyDigest: boolean("daily_digest").default(false).notNull(),
+  digestTime: text("digest_time").default("20:30"), // 8:30 PM
+  // Frequency limits
+  maxDailyPersonal: integer("max_daily_personal").default(3).notNull(), // max personal recommendations per day
+  cooldownHours: integer("cooldown_hours").default(6).notNull(), // hours between similar notifications
+  // A/B testing
+  abTestGroup: text("ab_test_group").default("control"), // for experiments
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Recommendation metrics (for analytics and A/B testing)
+export const recommendationMetrics = pgTable("recommendation_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recommendationId: varchar("recommendation_id").references(() => recommendationLog.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  // Engagement tracking
+  viewed: boolean("viewed").default(false).notNull(),
+  clicked: boolean("clicked").default(false).notNull(),
+  read: boolean("read").default(false).notNull(), // stayed >30s or >40% scroll
+  liked: boolean("liked").default(false).notNull(),
+  saved: boolean("saved").default(false).notNull(),
+  shared: boolean("shared").default(false).notNull(),
+  muted: boolean("muted").default(false).notNull(), // user muted this type of recommendation
+  // Timing
+  viewedAt: timestamp("viewed_at"),
+  clickedAt: timestamp("clicked_at"),
+  readAt: timestamp("read_at"),
+  timeToClick: integer("time_to_click"), // seconds from notification to click
+  readDuration: integer("read_duration"), // seconds spent reading
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_recommendation_metrics_user").on(table.userId),
+  index("idx_recommendation_metrics_article").on(table.articleId),
+  index("idx_recommendation_metrics_clicked").on(table.clicked),
+  index("idx_recommendation_metrics_muted").on(table.muted),
+]);
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -843,6 +967,52 @@ export const insertArticleTagSchema = createInsertSchema(articleTags).omit({
   createdAt: true 
 });
 
+// Recommendation system schemas
+export const insertUserEventSchema = createInsertSchema(userEvents).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserAffinitySchema = createInsertSchema(userAffinities).omit({ 
+  updatedAt: true 
+});
+
+export const insertContentVectorSchema = createInsertSchema(contentVectors).omit({ 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertRecommendationLogSchema = createInsertSchema(recommendationLog).omit({ 
+  id: true, 
+  sentAt: true 
+});
+
+export const insertUserRecommendationPrefsSchema = createInsertSchema(userRecommendationPrefs).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const updateUserRecommendationPrefsSchema = z.object({
+  becauseYouLiked: z.boolean().optional(),
+  similarToSaved: z.boolean().optional(),
+  withinReads: z.boolean().optional(),
+  trendingForYou: z.boolean().optional(),
+  dailyDigest: z.boolean().optional(),
+  digestTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "صيغة الوقت غير صحيحة").optional(),
+  maxDailyPersonal: z.number().int().min(0).max(10).optional(),
+  cooldownHours: z.number().int().min(1).max(24).optional(),
+  abTestGroup: z.string().optional(),
+});
+
+export const insertRecommendationMetricsSchema = createInsertSchema(recommendationMetrics).omit({ 
+  id: true, 
+  createdAt: true,
+  viewedAt: true,
+  clickedAt: true,
+  readAt: true,
+});
+
 export const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
   subtitle: z.string().max(120, "العنوان الفرعي يجب ألا يتجاوز 120 حرف").optional(),
@@ -998,6 +1168,26 @@ export type InsertNotificationsInbox = z.infer<typeof insertNotificationsInboxSc
 
 export type NotificationMetrics = typeof notificationMetrics.$inferSelect;
 export type InsertNotificationMetrics = z.infer<typeof insertNotificationMetricsSchema>;
+
+// Recommendation system types
+export type UserEvent = typeof userEvents.$inferSelect;
+export type InsertUserEvent = z.infer<typeof insertUserEventSchema>;
+
+export type UserAffinity = typeof userAffinities.$inferSelect;
+export type InsertUserAffinity = z.infer<typeof insertUserAffinitySchema>;
+
+export type ContentVector = typeof contentVectors.$inferSelect;
+export type InsertContentVector = z.infer<typeof insertContentVectorSchema>;
+
+export type RecommendationLog = typeof recommendationLog.$inferSelect;
+export type InsertRecommendationLog = z.infer<typeof insertRecommendationLogSchema>;
+
+export type UserRecommendationPrefs = typeof userRecommendationPrefs.$inferSelect;
+export type InsertUserRecommendationPrefs = z.infer<typeof insertUserRecommendationPrefsSchema>;
+export type UpdateUserRecommendationPrefs = z.infer<typeof updateUserRecommendationPrefsSchema>;
+
+export type RecommendationMetrics = typeof recommendationMetrics.$inferSelect;
+export type InsertRecommendationMetrics = z.infer<typeof insertRecommendationMetricsSchema>;
 
 export type UpdateCommentStatus = z.infer<typeof updateCommentStatusSchema>;
 export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
