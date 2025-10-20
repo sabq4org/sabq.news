@@ -113,8 +113,8 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="breaking-news"
-                checked={prefs?.enableBreakingNews ?? true}
-                onCheckedChange={(checked) => handleToggle("enableBreakingNews", checked)}
+                checked={prefs?.breaking ?? true}
+                onCheckedChange={(checked) => handleToggle("breaking", checked)}
                 data-testid="switch-breaking-news"
               />
             </div>
@@ -134,8 +134,8 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="interest-match"
-                checked={prefs?.enableInterestMatch ?? true}
-                onCheckedChange={(checked) => handleToggle("enableInterestMatch", checked)}
+                checked={prefs?.interest ?? true}
+                onCheckedChange={(checked) => handleToggle("interest", checked)}
                 data-testid="switch-interest-match"
               />
             </div>
@@ -155,8 +155,8 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="liked-updates"
-                checked={prefs?.enableLikedUpdates ?? true}
-                onCheckedChange={(checked) => handleToggle("enableLikedUpdates", checked)}
+                checked={prefs?.likedUpdates ?? true}
+                onCheckedChange={(checked) => handleToggle("likedUpdates", checked)}
                 data-testid="switch-liked-updates"
               />
             </div>
@@ -176,8 +176,8 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="most-read"
-                checked={prefs?.enableMostRead ?? true}
-                onCheckedChange={(checked) => handleToggle("enableMostRead", checked)}
+                checked={prefs?.mostRead ?? true}
+                onCheckedChange={(checked) => handleToggle("mostRead", checked)}
                 data-testid="switch-most-read"
               />
             </div>
