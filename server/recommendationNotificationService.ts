@@ -323,29 +323,41 @@ export async function sendRecommendationNotification(
       return { success: false, reason: 'No articles to recommend' };
     }
 
-    // Fetch details of the first recommended article to include in notification
+    // Verify ALL recommended articles are still published (prevent recommending deleted articles)
     const { articles } = await import('@shared/schema');
-    const firstArticle = await db.query.articles.findFirst({
-      where: and(
-        eq(articles.id, articleIds[0]),
-        eq(articles.status, 'published') // Only published articles
-      ),
-    });
+    const validArticles = await db
+      .select({ id: articles.id, title: articles.title, slug: articles.slug, imageUrl: articles.imageUrl })
+      .from(articles)
+      .where(
+        and(
+          inArray(articles.id, articleIds),
+          eq(articles.status, 'published') // Only published articles
+        )
+      );
 
-    if (!firstArticle) {
-      console.error(`❌ [REC NOTIFICATION] First article ${articleIds[0]} not found or not published`);
-      return { success: false, reason: 'Article not found or not published' };
+    if (validArticles.length === 0) {
+      console.error(`❌ [REC NOTIFICATION] None of the recommended articles are published anymore`);
+      return { success: false, reason: 'No valid published articles to recommend' };
+    }
+
+    // Use first valid article for notification
+    const firstArticle = validArticles[0];
+    const validArticleIds = validArticles.map(a => a.id);
+
+    if (validArticles.length < articleIds.length) {
+      console.warn(`⚠️ [REC NOTIFICATION] Some articles were filtered out (${articleIds.length - validArticles.length} unpublished)`);
     }
 
     console.log(`📧 [REC NOTIFICATION] Preparing notification for article: ${firstArticle.slug} (${firstArticle.id})`);
 
-    // Log each recommended article separately (as per schema)
-    for (let i = 0; i < articleIds.length; i++) {
+    // Log each VALID recommended article separately (as per schema)
+    for (let i = 0; i < validArticleIds.length; i++) {
+      const originalIndex = articleIds.indexOf(validArticleIds[i]);
       await db.insert(recommendationLog).values({
         userId,
-        articleId: articleIds[i],
+        articleId: validArticleIds[i],
         reason: recommendationType,
-        score: scores[i] || 0.5,
+        score: scores[originalIndex] || 0.5,
         channel: 'notification',
         metadata: metadata || {},
       });
@@ -384,14 +396,14 @@ export async function sendRecommendationNotification(
         articleId: firstArticle.id,
         articleSlug: firstArticle.slug,
         imageUrl: firstArticle.imageUrl || undefined,
-        articleIds, // Keep all IDs for reference
+        articleIds: validArticleIds, // Only valid published articles
         recommendationType,
         ...metadata,
       },
       read: false,
     });
 
-    console.log(`✅ [REC NOTIFICATION] Sent ${recommendationType} to user ${userId}: ${articleIds.length} articles`);
+    console.log(`✅ [REC NOTIFICATION] Sent ${recommendationType} to user ${userId}: ${validArticleIds.length} valid articles (${articleIds.length} original)`);
 
     return { success: true };
   } catch (error) {
