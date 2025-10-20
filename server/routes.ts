@@ -2867,9 +2867,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const article = await storage.createArticle(parsed.data);
 
-      // If article is published, create notification
+      // Send notifications if article is published
+      console.log(`🔍 [DASHBOARD CREATE] Article created with status: ${article.status}`);
+      console.log(`🔍 [DASHBOARD CREATE] Article ID: ${article.id}, Title: ${article.title}`);
+      
       if (article.status === "published") {
+        console.log(`🔔 [DASHBOARD CREATE] Article is PUBLISHED - sending notifications...`);
         try {
+          // Determine notification type based on newsType
+          let notificationType: 'published' | 'breaking' | 'featured' = 'published';
+          if (article.newsType === 'breaking') {
+            notificationType = 'breaking';
+          } else if (article.newsType === 'featured') {
+            notificationType = 'featured';
+          }
+
+          console.log(`🔔 [DASHBOARD CREATE] Calling sendArticleNotification with type: ${notificationType}`);
+          
+          // Send smart notifications via notification service
+          await sendArticleNotification(article, notificationType);
+
+          console.log(`✅ [DASHBOARD CREATE] Notifications sent for new article: ${article.title}`);
+
+          // Keep old system for backward compatibility
           await createNotification({
             type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
             data: {
@@ -2881,9 +2901,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
         } catch (notificationError) {
-          console.error("Error creating notification:", notificationError);
+          console.error("❌ [DASHBOARD CREATE] Error creating notification:", notificationError);
           // Don't fail the article creation if notification fails
         }
+      } else {
+        console.log(`⏸️ [DASHBOARD CREATE] Article is NOT published (status: ${article.status}) - skipping notifications`);
       }
 
       res.json(article);
@@ -2919,6 +2941,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updated = await storage.updateArticle(req.params.id, articleData);
+
+      // Trigger notification if article was just published
+      console.log(`🔍 [DASHBOARD UPDATE] Article updated - Old status: ${article.status}, New status: ${updated.status}`);
+      console.log(`🔍 [DASHBOARD UPDATE] Article ID: ${updated.id}, Title: ${updated.title}`);
+      
+      if (updated.status === "published" && article.status !== "published") {
+        console.log(`🔔 [DASHBOARD UPDATE] Status changed to PUBLISHED - sending notifications...`);
+        try {
+          // Determine notification type based on article properties
+          let notificationType: 'published' | 'breaking' | 'featured';
+          
+          if (updated.newsType === "breaking") {
+            notificationType = 'breaking';
+          } else if (updated.newsType === 'featured') {
+            notificationType = 'featured';
+          } else {
+            notificationType = 'published';
+          }
+
+          console.log(`🔔 [DASHBOARD UPDATE] Calling sendArticleNotification with type: ${notificationType}`);
+
+          // Send smart notifications via new service
+          await sendArticleNotification(updated, notificationType);
+
+          console.log(`✅ [DASHBOARD UPDATE] Notifications sent successfully`);
+        } catch (notificationError) {
+          console.error("❌ [DASHBOARD UPDATE] Error creating notification:", notificationError);
+          // Don't fail the update operation if notification fails
+        }
+      } else {
+        console.log(`⏸️ [DASHBOARD UPDATE] No notification sent - Status unchanged or not published`);
+      }
+
       res.json(updated);
     } catch (error) {
       console.error("Error updating article:", error);
