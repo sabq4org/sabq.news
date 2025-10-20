@@ -43,6 +43,7 @@ import NotificationAdmin from "@/pages/NotificationAdmin";
 import RecommendationSettings from "@/pages/recommendation-settings";
 import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
+import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/dashboard/analytics/trending" component={ComingSoon} />
       <Route path="/dashboard/analytics/behavior" component={ComingSoon} />
       <Route path="/dashboard/analytics/ab-tests" component={ComingSoon} />
+      <Route path="/dashboard/analytics/recommendations" component={RecommendationAnalytics} />
       <Route path="/dashboard/rss-feeds" component={ComingSoon} />
       <Route path="/dashboard/integrations" component={ComingSoon} />
       <Route path="/dashboard/storage" component={ComingSoon} />

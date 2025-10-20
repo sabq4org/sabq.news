@@ -247,6 +247,14 @@ export const navConfig: NavItem[] = [
         icon: SplitSquareHorizontal,
         roles: ["admin", "analyst"],
       },
+      {
+        id: "recommendation-analytics",
+        labelKey: "nav.recommendation_analytics",
+        labelAr: "إحصائيات التوصيات",
+        path: "/dashboard/analytics/recommendations",
+        icon: Lightbulb,
+        roles: ["admin", "analyst"],
+      },
     ],
   },
 
