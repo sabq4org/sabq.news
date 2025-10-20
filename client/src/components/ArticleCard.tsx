@@ -38,13 +38,13 @@ export function ArticleCard({
   if (variant === "featured") {
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
-        <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 border-0 shadow-lg">
+        <Card className="group overflow-hidden border border-card-border">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             {article.imageUrl ? (
               <img
                 src={article.imageUrl}
                 alt={article.title}
-                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover object-center"
                 loading="lazy"
               />
             ) : (
@@ -54,12 +54,12 @@ export function ArticleCard({
             
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
               {article.category && (
-                <Badge variant="default" className="shadow-lg text-xs sm:text-sm" data-testid={`badge-category-${article.id}`}>
+                <Badge variant="default" className="text-xs sm:text-sm" data-testid={`badge-category-${article.id}`}>
                   {article.category.icon} {article.category.nameAr}
                 </Badge>
               )}
               {article.aiGenerated && (
-                <Badge variant="secondary" className="shadow-lg gap-1 text-xs sm:text-sm" data-testid={`badge-ai-${article.id}`}>
+                <Badge variant="secondary" className="gap-1 text-xs sm:text-sm" data-testid={`badge-ai-${article.id}`}>
                   <Sparkles className="h-3 w-3" />
                   ذكاء اصطناعي
                 </Badge>
@@ -92,7 +92,7 @@ export function ArticleCard({
 
   if (variant === "list") {
     return (
-      <Card className="group hover-elevate active-elevate-2 transition-all">
+      <Card className="group border border-card-border">
         <CardContent className="p-4">
           <div className="flex gap-4">
             <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
@@ -184,14 +184,14 @@ export function ArticleCard({
 
   // Grid variant (default)
   return (
-    <Card className="group overflow-hidden hover-elevate active-elevate-2 transition-all" data-testid={`card-article-${article.id}`}>
+    <Card className="group overflow-hidden border border-card-border" data-testid={`card-article-${article.id}`}>
       <Link href={`/article/${article.slug}`}>
         <div className="relative aspect-[16/9] overflow-hidden">
           {article.imageUrl ? (
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover object-center"
               loading="lazy"
             />
           ) : (
@@ -202,7 +202,7 @@ export function ArticleCard({
           {article.category && (
             <Badge 
               variant="default" 
-              className="absolute top-3 right-3 shadow-md" 
+              className="absolute top-3 right-3" 
               data-testid={`badge-category-${article.id}`}
             >
               {article.category.icon} {article.category.nameAr}
@@ -211,7 +211,7 @@ export function ArticleCard({
           {article.aiGenerated && (
             <Badge 
               variant="secondary" 
-              className="absolute top-3 left-3 shadow-md gap-1" 
+              className="absolute top-3 left-3 gap-1" 
               data-testid={`badge-ai-${article.id}`}
             >
               <Sparkles className="h-3 w-3" />

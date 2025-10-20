@@ -33,7 +33,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
+              className="cursor-pointer h-full overflow-hidden border border-card-border"
               data-testid={`card-article-${article.id}`}
             >
               {article.imageUrl && (
@@ -41,12 +41,12 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
                   {article.category && (
                     <Badge 
                       variant="default" 
-                      className="absolute top-3 right-3 shadow-md" 
+                      className="absolute top-3 right-3" 
                       data-testid={`badge-category-${article.id}`}
                     >
                       {article.category.icon} {article.category.nameAr}

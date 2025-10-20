@@ -1,0 +1,276 @@
+تمام يا أبو محمد! هذا بالضبط اللي نحتاجه عشان “إدارة الأخبار والمقالات” تصير عملية وخفيفة. تحت هنا حل عملي كامل — من الـDB للـAPI للواجهة — مطابق لمعايير “سبق الذكية”.
+
+ما سنضيفه سريعًا
+	1.	بطاقات حالة أعلى الجدول (default = المنشورة):
+
+	•	منشورة، مجدولة، مسودّة، مُؤرشفة (محذوفة). كل بطاقة تعرض العدّاد + فلتر عند الضغط.
+
+	2.	أزرار إجراءات ذكية داخل الصف:
+
+	•	إذا كانت مُؤرشفة: يظهر زر “نشر” مباشر بدون فتح التفاصيل.
+	•	زر “أرشفة/استرجاع” بدلاً من “حذف”.
+	•	قائمة ثلاث نقاط لباقي الإجراءات.
+
+	3.	عمود “عاجل” بدل عمود “النوع”:
+
+	•	سويتش: On=أحمر (#ef4444), Off=رمادي. يحدث الحقل فورًا (optimistic UI).
+
+⸻
+
+1) تحديث الـSchema (Prisma)
+
+enum ArticleStatus {
+  draft
+  scheduled
+  published
+  archived  // بدل الحذف الفعلي
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  content       String
+  authorId      String
+  categoryId    Int
+  status        ArticleStatus @default(draft)
+  isBreaking    Boolean       @default(false)  // 🔥 العاجل
+  scheduledAt   DateTime?                     // للنشر المجدول
+  publishedAt   DateTime?
+  isDeleted     Boolean       @default(false)  // احتياطي للتوافق
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+ملاحظة: لو عندك بيانات قديمة بعلمتي is_deleted, خَلّها مرحليًا لكن اعتمد status=archived.
+
+فهارس مقترحة:
+
+CREATE INDEX idx_articles_status_time ON "Article"(status, COALESCE("publishedAt","scheduledAt") DESC);
+CREATE INDEX idx_articles_isBreaking ON "Article"("isBreaking") WHERE status = 'published';
+
+
+⸻
+
+2) نقاط API مقترحة (Next.js App Router)
+
+المقاييس للبطاقات:
+	•	GET /api/admin/articles/metrics
+	•	response:
+
+{ "published": 0, "scheduled": 0, "draft": 0, "archived": 0 }
+
+
+
+أفعال سريعة:
+	•	POST /api/admin/articles/:id/archive → يغيّر status إلى archived
+	•	POST /api/admin/articles/:id/restore → يعيد للحالة السابقة (أو draft)
+	•	POST /api/admin/articles/:id/publish → يغيّر إلى published ويضبط publishedAt=now()
+	•	POST /api/admin/articles/:id/toggle-breaking → يقلب isBreaking
+
+كل هذه تنفّذ تحقق صلاحيات RBAC: editor للنشر، admin/system_admin للأرشفة/الاسترجاع.
+
+⸻
+
+3) واجهة البطاقات (React + Tailwind + shadcn)
+
+// components/admin/articles/StatusCards.tsx
+"use client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Newspaper, Clock, FilePenLine, Archive } from "lucide-react";
+
+type Metrics = { published: number; scheduled: number; draft: number; archived: number; };
+const items = (m: Metrics) => ([
+  { key: "published", label: "منشورة", icon: Newspaper, color: "bg-emerald-50 text-emerald-700", count: m.published },
+  { key: "scheduled", label: "مجدولة", icon: Clock, color: "bg-indigo-50 text-indigo-700", count: m.scheduled },
+  { key: "draft",     label: "مسودّة", icon: FilePenLine, color: "bg-amber-50 text-amber-700", count: m.draft },
+  { key: "archived",  label: "مؤرشفة", icon: Archive, color: "bg-slate-50 text-slate-700", count: m.archived },
+]);
+
+export default function StatusCards({
+  metrics, loading, active, onSelect,
+}:{
+  metrics?: Metrics; loading?: boolean; active: string; onSelect:(k:string)=>void;
+}) {
+  if (loading || !metrics) {
+    return <div className="grid grid-cols-1 md:grid-cols-4 gap-3"><Loader2 className="animate-spin"/></div>;
+  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      {items(metrics).map(({key,label,icon:Icon,color,count})=>(
+        <Card key={key}
+          onClick={()=>onSelect(key)}
+          className={`cursor-pointer border ${active===key ? "ring-2 ring-primary" : ""}`}>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className={`rounded-xl px-3 py-2 ${color} flex items-center gap-2`}>
+              <Icon className="w-5 h-5" /><span className="font-medium">{label}</span>
+            </div>
+            <span className="text-2xl font-bold tabular-nums">{count}</span>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+دمجها أعلى الجدول:
+	•	اجلب /metrics في useEffect، وخزّن الفلتر النشط في state، ومرّره لاستعلام جدول المقالات.
+
+⸻
+
+4) عمود “عاجل” كسويتش (بديل “النوع”)
+
+// components/admin/articles/BreakingSwitch.tsx
+"use client";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+
+export function BreakingSwitch({ id, initial }:{ id:string; initial:boolean }) {
+  const [on, setOn] = useState(initial);
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    try {
+      setBusy(true);
+      setOn(v=>!v); // Optimistic
+      const r = await fetch(`/api/admin/articles/${id}/toggle-breaking`, { method: "POST" });
+      if (!r.ok) throw new Error();
+      toast.success(on ? "تم إيقاف العاجل" : "تم تفعيل العاجل");
+    } catch {
+      setOn(v=>!v); toast.error("تعذّر التحديث");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Switch checked={on} onCheckedChange={toggle}
+      disabled={busy}
+      className={on ? "data-[state=checked]:bg-red-600" : ""}
+      thumbClassName={on ? "bg-white" : ""}
+      aria-label="تبديل العاجل"
+    />
+  );
+}
+
+التصميم: حالة On خلفية السويتش حمراء (#ef4444) والthumb أبيض. Off رمادي افتراضي.
+
+⸻
+
+5) عمود الإجراءات (زر “نشر” السريع + أرشفة/استرجاع)
+
+// components/admin/articles/RowActions.tsx
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Archive, Undo2, Upload, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+
+export function RowActions({ id, status }:{ id:string; status:"draft"|"scheduled"|"published"|"archived" }) {
+  const [busy, setBusy] = useState(false);
+
+  async function act(path:string, okMsg:string) {
+    setBusy(true);
+    const r = await fetch(`/api/admin/articles/${id}/${path}`, { method: "POST" });
+    if (r.ok) toast.success(okMsg); else toast.error("فشلت العملية");
+    setBusy(false);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {status === "archived" && (
+        <Button size="sm" variant="destructive" disabled={busy}
+          onClick={()=>act("publish","نُشر الخبر فورًا")}>
+          <Upload className="w-4 h-4 mr-1" /> نشر
+        </Button>
+      )}
+      {status !== "archived" ? (
+        <Button size="icon" variant="ghost" title="أرشفة" onClick={()=>act("archive","أُرشِف الخبر")}>
+          <Archive className="w-4 h-4" />
+        </Button>
+      ) : (
+        <Button size="icon" variant="ghost" title="استرجاع" onClick={()=>act("restore","تم الاسترجاع")}>
+          <Undo2 className="w-4 h-4" />
+        </Button>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost"><MoreHorizontal className="w-4 h-4" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-40">
+          <DropdownMenuItem onClick={()=>act("publish","تم النشر")}>
+            <Upload className="w-4 h-4 ml-2" /> نشر الآن
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={()=>act("archive","أُرشِف الخبر")}>
+            <Archive className="w-4 h-4 ml-2" /> أرشفة
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+سلوك الجدول:
+	•	إذا status=archived بدّل Badges إلى “مؤرشفة” باللون الرمادي.
+	•	زر “نشر” الأحمر يظهر فقط في المؤرشفة/المسودّة (حسب ما تفضّل).
+	•	لا نستخدم “حذف نهائي” إلا داخل شاشة منفصلة (إجراءات خطيرة).
+
+⸻
+
+6) فلترة الجدول بالبطاقات
+	•	عند الضغط على بطاقة “مجدولة” نمرّر ?status=scheduled لعنوان الـURL (searchParams) ونحمّل البيانات وفقًا لذلك.
+	•	البطاقات تعمل كـtabs عليا، مع مؤشرات نشطة.
+
+مثال فلترة بسيطة في الخادم:
+
+// app/api/admin/articles/list/route.ts
+import { prisma } from "@/lib/prisma";
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status") as any; // optional
+  const where = status ? { status } : {};
+  const data = await prisma.article.findMany({
+    where, orderBy: [{ publishedAt: "desc" }, { scheduledAt: "desc" }, { createdAt: "desc" }],
+    select: { id:true, title:true, status:true, isBreaking:true, /* ... */ }
+  });
+  return Response.json({ data });
+}
+
+
+⸻
+
+7) UX/UI لمسات مهمة
+	•	المسافات العلوية: ضع البطاقات داخل container مع gap-3 ومسافة mb-4 قبل الجدول.
+	•	الألوان:
+	•	منشورة: أخضر فاتح،
+	•	مجدولة: بنفسجي/نيلي فاتح،
+	•	مسودة: عنبري،
+	•	مؤرشفة: رمادي.
+	•	الأيقونات: Lucide (Newspaper, Clock, FilePenLine, Archive).
+	•	إمكانية الوصول: أزرار لها aria-label، والسويتش يحمل aria-checked.
+	•	حالة التحميل: skeleton بسيط للبطاقات والجدول.
+	•	توست نجاح/فشل عبر sonner.
+
+⸻
+
+8) صلاحيات وتدقيق
+	•	publish يتطلب: editor فأعلى.
+	•	archive/restore يتطلب: admin فأعلى.
+	•	اسجّل كل إجراء في activity_logs مع user_id, entity_id, action.
+
+⸻
+
+9) حالات حافّة
+	•	مجدول → عند حلول scheduledAt ينتقل تلقائيًا إلى published (Cron أو Scheduled Functions).
+	•	إذا كان isBreaking=true وstatus تغيّر إلى archived، عطّل isBreaking تلقائيًا.
+	•	منع “نشر” لو المقال ينقصه حقول إلزامية (عنوان، تصنيف، صورة بارزة — حسب قواعدكم).
+
+⸻
+
+10) هداية سريعة للفريق
+	•	فرونت: أضف StatusCards فوق الجدول، وبدّل عمود “النوع” بـ BreakingSwitch, واستبدل عمود “الإجراءات” بـ RowActions.
+	•	باك: أنشئ مسارات الـAPI المذكورة، وأضف الاستعلامات والفهارس.
+	•	DB: نفّذ Migration لتحديث status وisBreaking.
+
+لو ودّك أعطيك PR جاهز (مجلد components + api routes + migration)، أجهزه بصيغة نسخ/لصق على مشروع Next.js 15 الحالي تبعكم.
