@@ -25,6 +25,10 @@ import {
   angles,
   articleAngles,
   sections,
+  stories,
+  storyLinks,
+  storyFollows,
+  storyNotifications,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -72,6 +76,16 @@ import {
   type InsertArticleAngle,
   type Section,
   type InsertSection,
+  type Story,
+  type InsertStory,
+  type StoryLink,
+  type InsertStoryLink,
+  type StoryFollow,
+  type InsertStoryFollow,
+  type StoryNotification,
+  type InsertStoryNotification,
+  type StoryWithDetails,
+  type StoryLinkWithArticle,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -246,6 +260,30 @@ export interface IStorage {
   createCampaign(data: InsertLoyaltyCampaign): Promise<LoyaltyCampaign>;
   updateCampaign(id: string, data: Partial<InsertLoyaltyCampaign>): Promise<LoyaltyCampaign>;
   adjustUserPoints(userId: string, points: number, reason: string): Promise<void>;
+
+  // Story operations
+  createStory(story: InsertStory): Promise<Story>;
+  getStoryById(id: string): Promise<Story | undefined>;
+  getStoryBySlug(slug: string): Promise<StoryWithDetails | undefined>;
+  getAllStories(filters?: { status?: string }): Promise<StoryWithDetails[]>;
+  updateStory(id: string, data: Partial<InsertStory>): Promise<Story>;
+  deleteStory(id: string): Promise<void>;
+
+  // Story link operations
+  createStoryLink(link: InsertStoryLink): Promise<StoryLink>;
+  getStoryLinks(storyId: string): Promise<StoryLinkWithArticle[]>;
+  deleteStoryLink(id: string): Promise<void>;
+
+  // Story follow operations
+  followStory(follow: InsertStoryFollow): Promise<StoryFollow>;
+  unfollowStory(userId: string, storyId: string): Promise<void>;
+  getStoryFollows(userId: string): Promise<(StoryFollow & { story: StoryWithDetails })[]>;
+  isFollowingStory(userId: string, storyId: string): Promise<boolean>;
+  updateStoryFollow(userId: string, storyId: string, data: Partial<InsertStoryFollow>): Promise<StoryFollow>;
+
+  // Story notification operations
+  createStoryNotification(notification: InsertStoryNotification): Promise<StoryNotification>;
+  getStoryNotifications(storyId: string): Promise<StoryNotification[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2397,6 +2435,263 @@ export class DatabaseStorage implements IStorage {
       .orderBy(angles.sortOrder, angles.nameAr);
 
     return results.map((r) => r.angle);
+  }
+
+  // Story operations
+  async createStory(story: InsertStory): Promise<Story> {
+    const [created] = await db
+      .insert(stories)
+      .values(story)
+      .returning();
+    return created;
+  }
+
+  async getStoryById(id: string): Promise<Story | undefined> {
+    const [story] = await db
+      .select()
+      .from(stories)
+      .where(eq(stories.id, id));
+    return story;
+  }
+
+  async getStoryBySlug(slug: string): Promise<StoryWithDetails | undefined> {
+    const results = await db
+      .select({
+        story: stories,
+        rootArticle: articles,
+      })
+      .from(stories)
+      .leftJoin(articles, eq(stories.rootArticleId, articles.id))
+      .where(eq(stories.slug, slug));
+
+    if (results.length === 0) return undefined;
+
+    const result = results[0];
+
+    // Get articles count
+    const [{ count: articlesCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(storyLinks)
+      .where(eq(storyLinks.storyId, result.story.id));
+
+    // Get followers count
+    const [{ count: followersCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(storyFollows)
+      .where(and(
+        eq(storyFollows.storyId, result.story.id),
+        eq(storyFollows.isActive, true)
+      ));
+
+    return {
+      ...result.story,
+      rootArticle: result.rootArticle || undefined,
+      articlesCount: Number(articlesCount),
+      followersCount: Number(followersCount),
+    };
+  }
+
+  async getAllStories(filters?: { status?: string }): Promise<StoryWithDetails[]> {
+    const conditions = [];
+
+    if (filters?.status) {
+      conditions.push(eq(stories.status, filters.status));
+    }
+
+    const results = await db
+      .select({
+        story: stories,
+        rootArticle: articles,
+      })
+      .from(stories)
+      .leftJoin(articles, eq(stories.rootArticleId, articles.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(stories.createdAt));
+
+    // Get counts for each story
+    const storiesWithDetails = await Promise.all(
+      results.map(async (result) => {
+        const [{ count: articlesCount }] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(storyLinks)
+          .where(eq(storyLinks.storyId, result.story.id));
+
+        const [{ count: followersCount }] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(storyFollows)
+          .where(and(
+            eq(storyFollows.storyId, result.story.id),
+            eq(storyFollows.isActive, true)
+          ));
+
+        return {
+          ...result.story,
+          rootArticle: result.rootArticle || undefined,
+          articlesCount: Number(articlesCount),
+          followersCount: Number(followersCount),
+        };
+      })
+    );
+
+    return storiesWithDetails;
+  }
+
+  async updateStory(id: string, data: Partial<InsertStory>): Promise<Story> {
+    const [updated] = await db
+      .update(stories)
+      .set(data)
+      .where(eq(stories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStory(id: string): Promise<void> {
+    await db.delete(stories).where(eq(stories.id, id));
+  }
+
+  // Story link operations
+  async createStoryLink(link: InsertStoryLink): Promise<StoryLink> {
+    const [created] = await db
+      .insert(storyLinks)
+      .values(link)
+      .returning();
+    return created;
+  }
+
+  async getStoryLinks(storyId: string): Promise<StoryLinkWithArticle[]> {
+    const results = await db
+      .select({
+        storyLink: storyLinks,
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(storyLinks)
+      .leftJoin(articles, eq(storyLinks.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(storyLinks.storyId, storyId))
+      .orderBy(desc(storyLinks.createdAt));
+
+    return results.map((r) => ({
+      ...r.storyLink,
+      article: r.article ? {
+        ...r.article,
+        category: r.category || undefined,
+        author: r.author || undefined,
+      } : undefined,
+    }));
+  }
+
+  async deleteStoryLink(id: string): Promise<void> {
+    await db.delete(storyLinks).where(eq(storyLinks.id, id));
+  }
+
+  // Story follow operations
+  async followStory(follow: InsertStoryFollow): Promise<StoryFollow> {
+    const [created] = await db
+      .insert(storyFollows)
+      .values(follow)
+      .returning();
+    return created;
+  }
+
+  async unfollowStory(userId: string, storyId: string): Promise<void> {
+    await db
+      .delete(storyFollows)
+      .where(and(
+        eq(storyFollows.userId, userId),
+        eq(storyFollows.storyId, storyId)
+      ));
+  }
+
+  async getStoryFollows(userId: string): Promise<(StoryFollow & { story: StoryWithDetails })[]> {
+    const results = await db
+      .select({
+        storyFollow: storyFollows,
+        story: stories,
+        rootArticle: articles,
+      })
+      .from(storyFollows)
+      .innerJoin(stories, eq(storyFollows.storyId, stories.id))
+      .leftJoin(articles, eq(stories.rootArticleId, articles.id))
+      .where(and(
+        eq(storyFollows.userId, userId),
+        eq(storyFollows.isActive, true)
+      ))
+      .orderBy(desc(storyFollows.createdAt));
+
+    // Get counts for each story
+    const followsWithDetails = await Promise.all(
+      results.map(async (result) => {
+        const [{ count: articlesCount }] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(storyLinks)
+          .where(eq(storyLinks.storyId, result.story.id));
+
+        const [{ count: followersCount }] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(storyFollows)
+          .where(and(
+            eq(storyFollows.storyId, result.story.id),
+            eq(storyFollows.isActive, true)
+          ));
+
+        return {
+          ...result.storyFollow,
+          story: {
+            ...result.story,
+            rootArticle: result.rootArticle || undefined,
+            articlesCount: Number(articlesCount),
+            followersCount: Number(followersCount),
+          },
+        };
+      })
+    );
+
+    return followsWithDetails;
+  }
+
+  async isFollowingStory(userId: string, storyId: string): Promise<boolean> {
+    const [follow] = await db
+      .select()
+      .from(storyFollows)
+      .where(and(
+        eq(storyFollows.userId, userId),
+        eq(storyFollows.storyId, storyId),
+        eq(storyFollows.isActive, true)
+      ));
+    return !!follow;
+  }
+
+  async updateStoryFollow(userId: string, storyId: string, data: Partial<InsertStoryFollow>): Promise<StoryFollow> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const [updated] = await db
+      .update(storyFollows)
+      .set(updateData)
+      .where(and(
+        eq(storyFollows.userId, userId),
+        eq(storyFollows.storyId, storyId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  // Story notification operations
+  async createStoryNotification(notification: InsertStoryNotification): Promise<StoryNotification> {
+    const [created] = await db
+      .insert(storyNotifications)
+      .values(notification)
+      .returning();
+    return created;
+  }
+
+  async getStoryNotifications(storyId: string): Promise<StoryNotification[]> {
+    return await db
+      .select()
+      .from(storyNotifications)
+      .where(eq(storyNotifications.storyId, storyId))
+      .orderBy(desc(storyNotifications.createdAt));
   }
 }
 
