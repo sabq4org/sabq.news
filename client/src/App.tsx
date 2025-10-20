@@ -45,6 +45,7 @@ import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import DashboardComments from "@/pages/DashboardComments";
+import MyFollows from "@/pages/MyFollows";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -105,6 +106,7 @@ function Router() {
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
       <Route path="/notifications" component={UserNotifications} />
       <Route path="/recommendation-settings" component={UserRecommendationSettings} />
+      <Route path="/my-follows" component={MyFollows} />
       
       <Route component={NotFound} />
     </Switch>

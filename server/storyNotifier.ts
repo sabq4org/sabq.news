@@ -82,15 +82,10 @@ export async function notifyStoryFollowers(storyId: string, articleId: string): 
 
     // تسجيل الإشعار في سجل story_notifications
     if (deliveredTo.length > 0) {
-      // Only create if we have at least one recipient
-      const recipientList: [string, ...string[]] = deliveredTo.length === 1 
-        ? [deliveredTo[0]] 
-        : [deliveredTo[0], ...deliveredTo.slice(1)];
-        
       await storage.createStoryNotification({
         storyId,
         articleId,
-        deliveredTo: recipientList,
+        deliveredTo: deliveredTo,
         channel: 'inapp',
         metadata: {
           articleTitle: article.title,
