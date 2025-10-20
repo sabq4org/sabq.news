@@ -108,6 +108,21 @@ export default function DailyBrief() {
 
   const todayInArabic = format(new Date(), 'EEEE، d MMMM yyyy', { locale: ar });
 
+  // Get greeting based on local time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    
+    if (hour >= 5 && hour < 12) {
+      return "صباح الخير";
+    } else if (hour >= 12 && hour < 18) {
+      return "مساء الخير";
+    } else if (hour >= 18 && hour < 22) {
+      return "مساء الخير";
+    } else {
+      return "مساء الخير";
+    }
+  };
+
   const getMoodIcon = (mood: string) => {
     const moods: Record<string, JSX.Element> = {
       "تحليلي": <Brain className="h-12 w-12 text-primary" />,
@@ -172,7 +187,7 @@ export default function DailyBrief() {
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3" data-testid="text-daily-brief-title">
                   <Sun className="h-8 w-8 text-yellow-500" />
-                  {isLoading ? "جاري التحميل..." : `صباح الخير ${summary?.personalizedGreeting.userName || ""}!`}
+                  {isLoading ? "جاري التحميل..." : `${getGreeting()} ${summary?.personalizedGreeting.userName || ""}!`}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2" data-testid="text-current-date">
@@ -229,7 +244,7 @@ export default function DailyBrief() {
                     </div>
                     <div className="flex-1">
                       <p className="text-lg leading-relaxed" data-testid="text-greeting-summary">
-                        قرأت أمس <strong data-testid="value-articles-today">{summary.personalizedGreeting.articlesReadToday}</strong> مقال خلال{' '}
+                        قرأت خلال آخر 24 ساعة <strong data-testid="value-articles-today">{summary.personalizedGreeting.articlesReadToday}</strong> مقال خلال{' '}
                         <strong data-testid="value-reading-minutes">{summary.personalizedGreeting.readingTimeMinutes}</strong> دقيقة
                         {summary.personalizedGreeting.topCategories.length > 0 && (
                           <>
