@@ -6084,11 +6084,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/stories - إنشاء قصة (للمشرفين)
-  app.post("/api/stories", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+  app.post("/api/stories", requireAuth, requireRole('admin', 'editor'), async (req: any, res) => {
     try {
       const data = insertStorySchema.parse(req.body);
       const story = await storage.createStory(data);
-      await logActivity(req.user!.id, 'StoryCreated', 'Story', story.id, {});
+      await logActivity({
+        userId: req.user?.id,
+        action: 'StoryCreated',
+        entityType: 'Story',
+        entityId: story.id,
+      });
       res.json(story);
     } catch (error) {
       console.error("Error creating story:", error);
@@ -6097,10 +6102,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/stories/:id - تحديث قصة
-  app.put("/api/stories/:id", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+  app.put("/api/stories/:id", requireAuth, requireRole('admin', 'editor'), async (req: any, res) => {
     try {
       const story = await storage.updateStory(req.params.id, req.body);
-      await logActivity(req.user!.id, 'StoryUpdated', 'Story', req.params.id, {});
+      await logActivity({
+        userId: req.user?.id,
+        action: 'StoryUpdated',
+        entityType: 'Story',
+        entityId: req.params.id,
+      });
       res.json(story);
     } catch (error) {
       console.error("Error updating story:", error);
@@ -6109,10 +6119,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/stories/:id - حذف قصة
-  app.delete("/api/stories/:id", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+  app.delete("/api/stories/:id", requireAuth, requireRole('admin', 'editor'), async (req: any, res) => {
     try {
       await storage.deleteStory(req.params.id);
-      await logActivity(req.user!.id, 'StoryDeleted', 'Story', req.params.id, {});
+      await logActivity({
+        userId: req.user?.id,
+        action: 'StoryDeleted',
+        entityType: 'Story',
+        entityId: req.params.id,
+      });
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting story:", error);
@@ -6136,7 +6151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/stories/:storyId/links - ربط خبر بقصة (للمشرفين)
-  app.post("/api/stories/:storyId/links", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+  app.post("/api/stories/:storyId/links", requireAuth, requireRole('admin', 'editor'), async (req, res) => {
     try {
       const data = insertStoryLinkSchema.parse({
         ...req.body,
@@ -6151,7 +6166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/stories/links/:linkId - إزالة ربط
-  app.delete("/api/stories/links/:linkId", requireAuth, requireRole(['admin', 'editor']), async (req, res) => {
+  app.delete("/api/stories/links/:linkId", requireAuth, requireRole('admin', 'editor'), async (req, res) => {
     try {
       await storage.deleteStoryLink(req.params.linkId);
       res.json({ success: true });
@@ -6166,15 +6181,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
 
   // POST /api/stories/:storyId/follow - متابعة قصة
-  app.post("/api/stories/:storyId/follow", requireAuth, async (req, res) => {
+  app.post("/api/stories/:storyId/follow", requireAuth, async (req: any, res) => {
     try {
       const follow = await storage.followStory({
-        userId: req.user!.id,
+        userId: req.user?.id,
         storyId: req.params.storyId,
         level: req.body.level || 'all',
         channels: req.body.channels || ['inapp'],
       });
-      await logActivity(req.user!.id, 'StoryFollowed', 'Story', req.params.storyId, {});
+      await logActivity({
+        userId: req.user?.id,
+        action: 'StoryFollowed',
+        entityType: 'Story',
+        entityId: req.params.storyId,
+      });
       res.json(follow);
     } catch (error) {
       console.error("Error following story:", error);
@@ -6183,10 +6203,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/stories/:storyId/follow - إلغاء متابعة قصة
-  app.delete("/api/stories/:storyId/follow", requireAuth, async (req, res) => {
+  app.delete("/api/stories/:storyId/follow", requireAuth, async (req: any, res) => {
     try {
-      await storage.unfollowStory(req.user!.id, req.params.storyId);
-      await logActivity(req.user!.id, 'StoryUnfollowed', 'Story', req.params.storyId, {});
+      await storage.unfollowStory(req.user?.id, req.params.storyId);
+      await logActivity({
+        userId: req.user?.id,
+        action: 'StoryUnfollowed',
+        entityType: 'Story',
+        entityId: req.params.storyId,
+      });
       res.json({ success: true });
     } catch (error) {
       console.error("Error unfollowing story:", error);
@@ -6195,9 +6220,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/stories/my-follows - قصصي المتابعة
-  app.get("/api/stories/my-follows", requireAuth, async (req, res) => {
+  app.get("/api/stories/my-follows", requireAuth, async (req: any, res) => {
     try {
-      const follows = await storage.getStoryFollows(req.user!.id);
+      const follows = await storage.getStoryFollows(req.user?.id);
       res.json(follows);
     } catch (error) {
       console.error("Error getting user story follows:", error);
@@ -6206,9 +6231,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/stories/follows/:storyId - تحديث إعدادات المتابعة
-  app.put("/api/stories/follows/:storyId", requireAuth, async (req, res) => {
+  app.put("/api/stories/follows/:storyId", requireAuth, async (req: any, res) => {
     try {
-      const follow = await storage.updateStoryFollow(req.user!.id, req.params.storyId, req.body);
+      const follow = await storage.updateStoryFollow(req.user?.id, req.params.storyId, req.body);
       res.json(follow);
     } catch (error) {
       console.error("Error updating story follow settings:", error);
@@ -6217,9 +6242,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/stories/:storyId/is-following - هل أتابع هذه القصة؟
-  app.get("/api/stories/:storyId/is-following", requireAuth, async (req, res) => {
+  app.get("/api/stories/:storyId/is-following", requireAuth, async (req: any, res) => {
     try {
-      const isFollowing = await storage.isFollowingStory(req.user!.id, req.params.storyId);
+      const isFollowing = await storage.isFollowingStory(req.user?.id, req.params.storyId);
       res.json({ isFollowing });
     } catch (error) {
       console.error("Error checking story follow status:", error);
