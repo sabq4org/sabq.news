@@ -105,6 +105,8 @@ export default function UserNotifications() {
         return <Star className="h-5 w-5 text-yellow-500" />;
       case "InterestMatch":
         return <Bell className="h-5 w-5 text-primary" />;
+      case "recommendation":
+        return <Star className="h-5 w-5 text-purple-500" />;
       default:
         return <Newspaper className="h-5 w-5 text-muted-foreground" />;
     }
@@ -118,6 +120,7 @@ export default function UserNotifications() {
       InterestMatch: "قد يهمك",
       LikedStoryUpdate: "تحديث",
       MostReadTodayForYou: "الأكثر قراءة",
+      recommendation: "توصية",
     };
     return labels[type] || type;
   };
@@ -265,9 +268,21 @@ export default function UserNotifications() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
-                        <div className="mt-1 flex-shrink-0">
-                          {getTypeIcon(notification.type)}
-                        </div>
+                        {/* Article Image (if available in metadata) */}
+                        {notification.metadata?.imageUrl ? (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={notification.metadata.imageUrl}
+                              alt={notification.title}
+                              className="w-20 h-20 object-cover rounded-md"
+                              data-testid={`image-article-${notification.id}`}
+                            />
+                          </div>
+                        ) : (
+                          <div className="mt-1 flex-shrink-0">
+                            {getTypeIcon(notification.type)}
+                          </div>
+                        )}
 
                         <div className="flex-1 min-w-0 space-y-2">
                           <div className="flex items-center justify-between gap-2">
@@ -293,7 +308,7 @@ export default function UserNotifications() {
                           </h3>
 
                           <p
-                            className="text-muted-foreground leading-relaxed"
+                            className="text-muted-foreground leading-relaxed line-clamp-2"
                             data-testid={`text-body-${notification.id}`}
                           >
                             {notification.body}

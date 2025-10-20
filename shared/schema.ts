@@ -394,8 +394,13 @@ export const notificationsInbox = pgTable("notifications_inbox", {
   read: boolean("read").default(false).notNull(),
   metadata: jsonb("metadata").$type<{
     articleId?: string;
+    articleSlug?: string;
     imageUrl?: string;
     categorySlug?: string;
+    articleIds?: string[];
+    recommendationType?: string;
+    similarToArticleId?: string;
+    [key: string]: any; // Allow additional metadata fields
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [

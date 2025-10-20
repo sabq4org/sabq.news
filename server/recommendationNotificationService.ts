@@ -317,6 +317,25 @@ export async function sendRecommendationNotification(
   }
 
   try {
+    // Validate articleIds array
+    if (!articleIds || articleIds.length === 0) {
+      console.error(`❌ [REC NOTIFICATION] No article IDs provided for recommendation`);
+      return { success: false, reason: 'No articles to recommend' };
+    }
+
+    // Fetch details of the first recommended article to include in notification
+    const { articles } = await import('@shared/schema');
+    const firstArticle = await db.query.articles.findFirst({
+      where: eq(articles.id, articleIds[0]),
+    });
+
+    if (!firstArticle) {
+      console.error(`❌ [REC NOTIFICATION] First article ${articleIds[0]} not found`);
+      return { success: false, reason: 'Article not found' };
+    }
+
+    console.log(`📧 [REC NOTIFICATION] Preparing notification for article: ${firstArticle.slug} (${firstArticle.id})`);
+
     // Log each recommended article separately (as per schema)
     for (let i = 0; i < articleIds.length; i++) {
       await db.insert(recommendationLog).values({
@@ -329,26 +348,26 @@ export async function sendRecommendationNotification(
       });
     }
 
-    // Create notification in inbox
+    // Create notification in inbox with article details
     let title = '';
     let message = '';
 
     switch (recommendationType) {
       case 'because_you_liked':
         title = 'قد يعجبك أيضاً';
-        message = 'وجدنا مقالات مشابهة لما أعجبك';
+        message = firstArticle.title;
         break;
       case 'similar_to_saved':
         title = 'مشابه لما حفظت';
-        message = 'مقالات جديدة قد تهمك';
+        message = firstArticle.title;
         break;
       case 'within_your_reads':
         title = 'مقترح لك';
-        message = 'بناءً على قراءاتك الأخيرة';
+        message = firstArticle.title;
         break;
       case 'trending_for_you':
         title = 'رائج في اهتماماتك';
-        message = 'المقالات الأكثر قراءة';
+        message = firstArticle.title;
         break;
     }
 
@@ -357,8 +376,12 @@ export async function sendRecommendationNotification(
       type: 'recommendation',
       title,
       body: message,
+      deeplink: `/article/${firstArticle.slug}`,
       metadata: {
-        articleIds,
+        articleId: firstArticle.id,
+        articleSlug: firstArticle.slug,
+        imageUrl: firstArticle.imageUrl || undefined,
+        articleIds, // Keep all IDs for reference
         recommendationType,
         ...metadata,
       },
