@@ -92,8 +92,8 @@ export async function calculateUserAffinities(userId: string): Promise<void> {
     const existing = await db.query.userAffinities.findFirst({
       where: and(
         eq(userAffinities.userId, userId),
-        eq(userAffinities.affinityType, 'category'),
-        eq(userAffinities.targetId, categoryId)
+        eq(userAffinities.tagType, 'category'),
+        eq(userAffinities.tag, categoryId)
       ),
     });
 
@@ -101,19 +101,20 @@ export async function calculateUserAffinities(userId: string): Promise<void> {
       // Update existing
       await db.update(userAffinities)
         .set({
-          affinityScore: normalizedScore,
-          eventCount: sql`${userAffinities.eventCount} + 1`,
+          score: normalizedScore,
           updatedAt: new Date(),
         })
-        .where(eq(userAffinities.id, existing.id));
+        .where(and(
+          eq(userAffinities.userId, userId),
+          eq(userAffinities.tag, categoryId)
+        ));
     } else {
       // Insert new
       await db.insert(userAffinities).values({
         userId,
-        affinityType: 'category',
-        targetId: categoryId,
-        affinityScore: normalizedScore,
-        eventCount: 1,
+        tagType: 'category',
+        tag: categoryId,
+        score: normalizedScore,
       });
     }
   }
@@ -129,26 +130,27 @@ export async function calculateUserAffinities(userId: string): Promise<void> {
     const existing = await db.query.userAffinities.findFirst({
       where: and(
         eq(userAffinities.userId, userId),
-        eq(userAffinities.affinityType, 'tag'),
-        eq(userAffinities.targetId, tagSlug)
+        eq(userAffinities.tagType, 'tag'),
+        eq(userAffinities.tag, tagSlug)
       ),
     });
 
     if (existing) {
       await db.update(userAffinities)
         .set({
-          affinityScore: normalizedScore,
-          eventCount: sql`${userAffinities.eventCount} + 1`,
+          score: normalizedScore,
           updatedAt: new Date(),
         })
-        .where(eq(userAffinities.id, existing.id));
+        .where(and(
+          eq(userAffinities.userId, userId),
+          eq(userAffinities.tag, tagSlug)
+        ));
     } else {
       await db.insert(userAffinities).values({
         userId,
-        affinityType: 'tag',
-        targetId: tagSlug,
-        affinityScore: normalizedScore,
-        eventCount: 1,
+        tagType: 'tag',
+        tag: tagSlug,
+        score: normalizedScore,
       });
     }
   }
@@ -164,9 +166,8 @@ export async function getUserAffinities(
   affinityType: 'category' | 'tag' | 'entity',
   limit: number = 10
 ): Promise<Array<{
-  targetId: string;
-  affinityScore: number;
-  eventCount: number;
+  tag: string;
+  score: number;
 }>> {
   const affinities = await db
     .select()
@@ -174,16 +175,15 @@ export async function getUserAffinities(
     .where(
       and(
         eq(userAffinities.userId, userId),
-        eq(userAffinities.affinityType, affinityType)
+        eq(userAffinities.tagType, affinityType)
       )
     )
-    .orderBy(desc(userAffinities.affinityScore))
+    .orderBy(desc(userAffinities.score))
     .limit(limit);
 
   return affinities.map(a => ({
-    targetId: a.targetId,
-    affinityScore: a.affinityScore,
-    eventCount: a.eventCount,
+    tag: a.tag,
+    score: a.score,
   }));
 }
 
@@ -222,7 +222,7 @@ export async function decayAffinities(decayFactor: number = 0.9): Promise<void> 
   await db
     .update(userAffinities)
     .set({
-      affinityScore: sql`${userAffinities.affinityScore} * ${decayFactor}`,
+      score: sql`${userAffinities.score} * ${decayFactor}`,
       updatedAt: new Date(),
     })
     .where(sql`${userAffinities.updatedAt} < ${thirtyDaysAgo}`);
@@ -239,7 +239,7 @@ export async function pruneWeakAffinities(threshold: number = 0.1): Promise<void
 
   await db
     .delete(userAffinities)
-    .where(sql`${userAffinities.affinityScore} < ${threshold}`);
+    .where(sql`${userAffinities.score} < ${threshold}`);
 
   console.log(`✅ [AFFINITY] Weak affinities pruned`);
 }

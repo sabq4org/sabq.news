@@ -11,6 +11,8 @@ import { requireAuth, requirePermission, requireRole, logActivity, getUserPermis
 import { createNotification } from "./notificationEngine";
 import { notificationBus } from "./notificationBus";
 import { sendArticleNotification } from "./notificationService";
+import { vectorizeArticle } from "./embeddingsService";
+import { trackUserEvent } from "./eventTrackingService";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -2889,6 +2891,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`✅ [DASHBOARD CREATE] Notifications sent for new article: ${article.title}`);
 
+          // Generate article embeddings for recommendation system
+          try {
+            await vectorizeArticle(article.id);
+            console.log(`✅ [DASHBOARD CREATE] Article vectorized for recommendations: ${article.title}`);
+          } catch (vectorizationError) {
+            console.error("❌ [DASHBOARD CREATE] Error vectorizing article:", vectorizationError);
+            // Don't fail the article creation if vectorization fails
+          }
+
           // Keep old system for backward compatibility
           await createNotification({
             type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
@@ -2966,6 +2977,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await sendArticleNotification(updated, notificationType);
 
           console.log(`✅ [DASHBOARD UPDATE] Notifications sent successfully`);
+
+          // Generate article embeddings for recommendation system
+          try {
+            await vectorizeArticle(updated.id);
+            console.log(`✅ [DASHBOARD UPDATE] Article vectorized for recommendations: ${updated.title}`);
+          } catch (vectorizationError) {
+            console.error("❌ [DASHBOARD UPDATE] Error vectorizing article:", vectorizationError);
+            // Don't fail the update operation if vectorization fails
+          }
         } catch (notificationError) {
           console.error("❌ [DASHBOARD UPDATE] Error creating notification:", notificationError);
           // Don't fail the update operation if notification fails
