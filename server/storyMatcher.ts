@@ -149,6 +149,71 @@ export async function autoLinkArticleToStory(articleId: string): Promise<boolean
 }
 
 /**
+ * ربط مقال بقصة أو إنشاء قصة جديدة - هذه الدالة المطلوبة من routes.ts
+ */
+export async function matchAndLinkArticle(articleId: string): Promise<void> {
+  try {
+    console.log(`[STORY MATCHER] Starting story matching for article: ${articleId}`);
+    
+    const article = await storage.getArticleById(articleId);
+    if (!article) {
+      console.error(`[STORY MATCHER] Article not found: ${articleId}`);
+      return;
+    }
+
+    // البحث عن قصص مطابقة
+    const matches = await findMatchingStories(article);
+    
+    if (matches.length > 0 && matches[0].confidence >= 0.75) {
+      // وجدنا قصة مطابقة - نربط المقال بها
+      const bestMatch = matches[0];
+      
+      await storage.createStoryLink({
+        storyId: bestMatch.storyId,
+        articleId: article.id,
+        relation: 'followup',
+        confidence: bestMatch.confidence,
+      });
+
+      console.log(`[STORY MATCHER] ✅ Article linked to existing story (confidence: ${bestMatch.confidence})`);
+      
+      // إرسال إشعارات للمتابعين
+      const { notifyStoryFollowers } = await import("./storyNotifier");
+      await notifyStoryFollowers(bestMatch.storyId, article.id);
+      
+      return;
+    }
+
+    // لم نجد قصة مطابقة - ننشئ قصة جديدة
+    console.log(`[STORY MATCHER] No matching story found, creating new story...`);
+    
+    const newStory = await storage.createStory({
+      slug: `story-${article.slug}`,
+      title: article.title,
+      rootArticleId: article.id,
+      entities: {},
+      tags: [],
+      status: 'active',
+    });
+
+    console.log(`[STORY MATCHER] ✅ Created new story: ${newStory.id}`);
+
+    // ربط المقال بالقصة الجديدة
+    await storage.createStoryLink({
+      storyId: newStory.id,
+      articleId: article.id,
+      relation: 'root',
+      confidence: 1.0,
+    });
+
+    console.log(`[STORY MATCHER] ✅ Article linked to new story as root`);
+  } catch (error) {
+    console.error("[STORY MATCHER] ❌ Error in matchAndLinkArticle:", error);
+    throw error;
+  }
+}
+
+/**
  * إنشاء قصة جديدة من مقال
  */
 export async function createStoryFromArticle(article: Article, entities?: Record<string, any>, tags?: string[]): Promise<Story | null> {
