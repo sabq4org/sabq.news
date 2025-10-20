@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +26,27 @@ interface NotificationPreferences {
 }
 
 export default function UserRecommendationSettings() {
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [localPrefs, setLocalPrefs] = useState<NotificationPreferences | null>(null);
 
-  const { data: preferences, isLoading, error } = useQuery<NotificationPreferences>({
-    queryKey: ["/api/me/notification-preferences"],
+  // Check if user is authenticated
+  const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string }>({
+    queryKey: ["/api/auth/user"],
   });
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      navigate("/login?redirect=" + encodeURIComponent(location));
+    }
+  }, [user, userLoading, navigate, location]);
+
+  const { data, isLoading, error } = useQuery<{ preferences: NotificationPreferences }>({
+    queryKey: ["/api/recommendations/preferences"],
+    enabled: !!user,
+  });
+
+  const preferences = data?.preferences;
 
   useEffect(() => {
     if (preferences) {
@@ -40,7 +56,7 @@ export default function UserRecommendationSettings() {
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<NotificationPreferences>) => {
-      return await apiRequest("/api/me/notification-preferences", {
+      return await apiRequest("/api/recommendations/preferences", {
         method: "PATCH",
         body: JSON.stringify(updates),
         headers: {
@@ -49,7 +65,7 @@ export default function UserRecommendationSettings() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/notification-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/recommendations/preferences"] });
       toast({
         title: "تم الحفظ",
         description: "تم حفظ إعدادات التوصيات بنجاح",

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation, Link } from "wouter";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +11,6 @@ import { Bell, AlertCircle, Star, Newspaper, CheckCheck, Settings } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
@@ -37,12 +37,24 @@ interface NotificationsResponse {
 type FilterType = "all" | "ArticlePublished" | "BreakingNews" | "FeaturedArticle";
 
 export default function UserNotifications() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>("all");
 
+  // Check if user is authenticated
+  const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string }>({
+    queryKey: ["/api/auth/user"],
+  });
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      navigate("/login?redirect=" + encodeURIComponent(location));
+    }
+  }, [user, userLoading, navigate, location]);
+
   const { data, isLoading, error } = useQuery<NotificationsResponse>({
     queryKey: ["/api/me/notifications?limit=100"],
+    enabled: !!user,
   });
 
   const markAsReadMutation = useMutation({
