@@ -44,6 +44,8 @@ import {
   passwordResetTokens,
   tags,
   articleTags,
+  recommendationLog,
+  recommendationMetrics,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -5216,6 +5218,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing digests:", error);
       res.status(500).json({ message: "فشل في معالجة الملخصات اليومية" });
+    }
+  });
+
+  // ============================================================
+  // RECOMMENDATION ANALYTICS APIs
+  // ============================================================
+
+  // Get recommendation analytics (admin only)
+  app.get("/api/admin/recommendations/analytics", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+      const { days = 7 } = req.query;
+      const daysNum = parseInt(days as string, 10);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysNum);
+
+      // Get total recommendations sent in the period
+      const totalRecommendations = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(recommendationLog)
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`);
+
+      // Get daily recommendations count
+      const dailyRecommendations = await db
+        .select({
+          date: sql<string>`DATE(${recommendationLog.sentAt})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(recommendationLog)
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`)
+        .groupBy(sql`DATE(${recommendationLog.sentAt})`)
+        .orderBy(sql`DATE(${recommendationLog.sentAt})`);
+
+      // Get recommendations by type/reason
+      const byReason = await db
+        .select({
+          reason: recommendationLog.reason,
+          count: sql<number>`count(*)::int`,
+          avgScore: sql<number>`avg(${recommendationLog.score})::float`,
+        })
+        .from(recommendationLog)
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`)
+        .groupBy(recommendationLog.reason);
+
+      // Get top recommended articles
+      const topArticles = await db
+        .select({
+          articleId: recommendationLog.articleId,
+          title: articles.title,
+          count: sql<number>`count(*)::int`,
+          avgScore: sql<number>`avg(${recommendationLog.score})::float`,
+        })
+        .from(recommendationLog)
+        .leftJoin(articles, eq(recommendationLog.articleId, articles.id))
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`)
+        .groupBy(recommendationLog.articleId, articles.title)
+        .orderBy(sql`count(*) DESC`)
+        .limit(10);
+
+      // Get engagement metrics (CTR)
+      const engagementMetrics = await db
+        .select({
+          totalSent: sql<number>`count(DISTINCT ${recommendationLog.id})::int`,
+          totalViewed: sql<number>`count(DISTINCT CASE WHEN ${recommendationMetrics.viewed} = true THEN ${recommendationMetrics.recommendationId} END)::int`,
+          totalClicked: sql<number>`count(DISTINCT CASE WHEN ${recommendationMetrics.clicked} = true THEN ${recommendationMetrics.recommendationId} END)::int`,
+        })
+        .from(recommendationLog)
+        .leftJoin(recommendationMetrics, eq(recommendationLog.id, recommendationMetrics.recommendationId))
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`);
+
+      // Calculate CTR (Click-Through Rate)
+      const engagement = engagementMetrics[0];
+      const ctr = engagement.totalSent > 0 
+        ? ((engagement.totalClicked / engagement.totalSent) * 100).toFixed(2)
+        : "0.00";
+      const viewRate = engagement.totalSent > 0 
+        ? ((engagement.totalViewed / engagement.totalSent) * 100).toFixed(2)
+        : "0.00";
+
+      // Get engagement by reason
+      const engagementByReason = await db
+        .select({
+          reason: recommendationLog.reason,
+          totalSent: sql<number>`count(DISTINCT ${recommendationLog.id})::int`,
+          totalClicked: sql<number>`count(DISTINCT CASE WHEN ${recommendationMetrics.clicked} = true THEN ${recommendationMetrics.recommendationId} END)::int`,
+          ctr: sql<number>`CASE WHEN count(DISTINCT ${recommendationLog.id}) > 0 THEN (count(DISTINCT CASE WHEN ${recommendationMetrics.clicked} = true THEN ${recommendationMetrics.recommendationId} END)::float / count(DISTINCT ${recommendationLog.id})::float * 100) ELSE 0 END::float`,
+        })
+        .from(recommendationLog)
+        .leftJoin(recommendationMetrics, eq(recommendationLog.id, recommendationMetrics.recommendationId))
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`)
+        .groupBy(recommendationLog.reason);
+
+      // Get unique users who received recommendations
+      const uniqueUsers = await db
+        .select({ count: sql<number>`count(DISTINCT ${recommendationLog.userId})::int` })
+        .from(recommendationLog)
+        .where(sql`${recommendationLog.sentAt} >= ${startDate}`);
+
+      res.json({
+        period: {
+          days: daysNum,
+          startDate: startDate.toISOString(),
+          endDate: new Date().toISOString(),
+        },
+        overview: {
+          totalRecommendations: totalRecommendations[0].count,
+          uniqueUsers: uniqueUsers[0].count,
+          clickThroughRate: parseFloat(ctr),
+          viewRate: parseFloat(viewRate),
+          totalViewed: engagement.totalViewed,
+          totalClicked: engagement.totalClicked,
+        },
+        dailyTrend: dailyRecommendations,
+        byReason: byReason.map(r => ({
+          ...r,
+          avgScore: r.avgScore ? parseFloat(r.avgScore.toFixed(2)) : 0,
+        })),
+        topArticles: topArticles.map(a => ({
+          ...a,
+          avgScore: a.avgScore ? parseFloat(a.avgScore.toFixed(2)) : 0,
+        })),
+        engagementByReason: engagementByReason.map(e => ({
+          ...e,
+          ctr: parseFloat(e.ctr.toFixed(2)),
+        })),
+      });
+    } catch (error) {
+      console.error("Error getting recommendation analytics:", error);
+      res.status(500).json({ message: "فشل في جلب إحصائيات التوصيات" });
     }
   });
 
