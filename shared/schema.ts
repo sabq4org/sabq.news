@@ -816,6 +816,8 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   credibilityScore: true,
   credibilityAnalysis: true,
   credibilityLastUpdated: true,
+}).extend({
+  slug: z.string().max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف"),
 });
 export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({ 
   id: true, 
@@ -1101,7 +1103,7 @@ export const insertStoryNotificationSchema = createInsertSchema(storyNotificatio
 export const updateArticleSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").optional(),
   subtitle: z.string().max(120, "العنوان الفرعي يجب ألا يتجاوز 120 حرف").optional(),
-  slug: z.string().min(3).optional(),
+  slug: z.string().min(3).max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف").optional(),
   content: z.string().min(10, "المحتوى يجب أن يكون 10 أحرف على الأقل").optional(),
   excerpt: z.string().optional(),
   imageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),

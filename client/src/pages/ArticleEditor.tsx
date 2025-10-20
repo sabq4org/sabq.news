@@ -296,7 +296,8 @@ export default function ArticleEditor() {
       .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
-      .trim();
+      .trim()
+      .substring(0, 150); // Limit to 150 characters to prevent database index overflow
   };
 
   const handleTitleChange = (value: string) => {
@@ -692,8 +693,12 @@ export default function ArticleEditor() {
                         onChange={(e) => setSlug(e.target.value)}
                         placeholder="article-slug"
                         dir="ltr"
+                        maxLength={150}
                         data-testid="input-slug"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        {slug.length}/150 حرف
+                      </p>
                     </div>
 
                     <div className="space-y-2">

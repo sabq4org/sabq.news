@@ -1,0 +1,112 @@
+2025-10-20 20:48:31.27
+7d1c2c1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+Error creating article: error: index row size 3792 exceeds btree version 4 maximum 2704 for index "articles_slug_unique"
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+at async DatabaseStorage.createArticle (file:///home/runner/workspace/dist/index.js:1357:27)
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+at async file:///home/runner/workspace/dist/index.js:8170:23 {
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+length: 398,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+severity: 'ERROR',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+code: '54000',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+detail: 'Index row references tuple (12,7) in relation "articles".',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+hint: 'Values larger than 1/3 of a buffer page cannot be indexed.\n' +
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+'Consider a function index of an MD5 hash of the value, or use full text indexing.',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+position: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+internalPosition: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+internalQuery: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+where: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+schema: 'public',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+table: 'articles',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+column: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+dataType: undefined,
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+constraint: 'articles_slug_unique',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+file: 'nbtutils.c',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+line: '2675',
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+routine: '_bt_check_third_page'
+2025-10-20 20:48:31.34
+7d1c2c1e
+User
+}
+2025-10-20 20:48:31.36
+7d1c2c1e
+User
+5:48:31 PM [express] POST /api/dashboard/articles 500 in 136ms :: {"message":"Failed to create artic…
+2025-10-20 20:48:44.30
+7d1c2c1e
+User
+🔸 DeserializeUser called with id: user-1760950807037-09p6vtnwf
