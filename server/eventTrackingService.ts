@@ -97,6 +97,19 @@ export async function trackUserEvent(params: {
       .set({ views: sql`${articles.views} + 1` })
       .where(eq(articles.id, articleId));
   }
+
+  // Trigger recommendation processing for high-value events (non-blocking)
+  if (['like', 'bookmark', 'share'].includes(eventType)) {
+    // Run in background without blocking
+    (async () => {
+      try {
+        const { processUserRecommendations } = await import('./recommendationNotificationService');
+        await processUserRecommendations(userId);
+      } catch (error) {
+        console.error(`❌ [RECOMMENDATION TRIGGER] Error processing recommendations for user ${userId}:`, error);
+      }
+    })();
+  }
 }
 
 /**

@@ -208,6 +208,44 @@ async function processDailyDigestsWorker() {
   }
 }
 
+// Smart recommendation processor
+async function processRecommendationsWorker() {
+  try {
+    console.log("🤖 [REC WORKER] Starting recommendation processing...");
+    
+    const { userEvents } = await import('@shared/schema');
+    const { processUserRecommendations } = await import('./recommendationNotificationService');
+    
+    // Get active users (those who had activity in last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const activeUsers = await db
+      .selectDistinct({ userId: userEvents.userId })
+      .from(userEvents)
+      .where(sql`${userEvents.createdAt} > ${oneDayAgo}`)
+      .limit(50); // Process 50 users per run
+    
+    console.log(`🤖 [REC WORKER] Found ${activeUsers.length} active users`);
+    
+    let processed = 0;
+    let successful = 0;
+    
+    for (const { userId } of activeUsers) {
+      try {
+        await processUserRecommendations(userId);
+        successful++;
+      } catch (error) {
+        console.error(`❌ [REC WORKER] Error for user ${userId}:`, error);
+      }
+      processed++;
+    }
+    
+    console.log(`✅ [REC WORKER] Processed ${processed} users, ${successful} successful`);
+  } catch (error) {
+    console.error("[REC WORKER] Error in recommendation processing:", error);
+  }
+}
+
 export function startNotificationWorker() {
   try {
     console.log("[NotificationWorker] Starting notification worker...");
@@ -240,9 +278,17 @@ export function startNotificationWorker() {
       });
     });
 
+    // Process smart recommendations every 2 hours
+    cron.schedule("0 */2 * * *", () => {
+      processRecommendationsWorker().catch(error => {
+        console.error("[REC WORKER] Cron job error:", error);
+      });
+    });
+
     console.log("[NotificationWorker] Notification worker started successfully");
     console.log("[ScheduledPublisher] Scheduled article publisher started successfully");
     console.log("[DigestWorker] Daily digest worker started successfully");
+    console.log("[REC WORKER] Smart recommendation worker started successfully");
     
     // Run initial processing in a non-blocking way
     processNotificationQueue().catch(error => {
