@@ -2901,7 +2901,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/articles/:slug", async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const article = await storage.getArticleBySlug(req.params.slug, userId);
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
 
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
@@ -2920,9 +2921,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/articles/:slug/comments", async (req, res) => {
+  app.get("/api/articles/:slug/comments", async (req: any, res) => {
     try {
-      const article = await storage.getArticleBySlug(req.params.slug);
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
       }
@@ -2935,9 +2938,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/articles/:slug/related", async (req, res) => {
+  app.get("/api/articles/:slug/related", async (req: any, res) => {
     try {
-      const article = await storage.getArticleBySlug(req.params.slug);
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
       }
@@ -3042,7 +3047,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/articles/:slug/comments", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const article = await storage.getArticleBySlug(req.params.slug);
+      const userRole = req.user.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
 
       if (!article) {
         return res.status(404).json({ message: "Article not found" });

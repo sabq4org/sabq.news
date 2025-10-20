@@ -100,7 +100,7 @@ export interface IStorage {
     authorId?: string;
     searchQuery?: string;
   }): Promise<ArticleWithDetails[]>;
-  getArticleBySlug(slug: string, userId?: string): Promise<ArticleWithDetails | undefined>;
+  getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined>;
   getArticleById(id: string): Promise<Article | undefined>;
   createArticle(article: InsertArticle): Promise<Article>;
   updateArticle(id: string, article: Partial<InsertArticle>): Promise<Article>;
@@ -380,7 +380,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getArticleBySlug(slug: string, userId?: string): Promise<ArticleWithDetails | undefined> {
+  async getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined> {
     const results = await db
       .select({
         article: articles,
@@ -396,6 +396,14 @@ export class DatabaseStorage implements IStorage {
 
     const result = results[0];
     const article = result.article;
+
+    // Security: Prevent access to archived articles for non-admin/editor users
+    if (article.status === 'archived') {
+      const isAuthorized = userRole === 'admin' || userRole === 'editor';
+      if (!isAuthorized) {
+        return undefined; // Hide archived articles from regular users
+      }
+    }
 
     let isBookmarked = false;
     let hasReacted = false;
@@ -758,6 +766,9 @@ export class DatabaseStorage implements IStorage {
           a.published_at,
           a.created_at,
           a.updated_at,
+          a.credibility_score,
+          a.credibility_analysis,
+          a.credibility_last_updated,
           COALESCE(ui.weight, 0) as category_weight,
           COALESCE(
             CASE 
@@ -846,6 +857,9 @@ export class DatabaseStorage implements IStorage {
       publishedAt: row.published_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      credibilityScore: row.credibility_score,
+      credibilityAnalysis: row.credibility_analysis,
+      credibilityLastUpdated: row.credibility_last_updated,
       category: row.category_id ? {
         id: row.category_id,
         nameAr: row.category_name_ar,
