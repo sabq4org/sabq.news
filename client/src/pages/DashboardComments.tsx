@@ -20,6 +20,7 @@ import { arSA } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 interface Comment {
   id: string;
@@ -164,12 +165,12 @@ export default function DashboardComments() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8" dir="rtl">
+      <DashboardLayout>
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -179,18 +180,19 @@ export default function DashboardComments() {
   const rejectedCount = allComments?.filter(c => c.status === "rejected").length || 0;
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">إدارة التعليقات</h1>
-          <p className="text-muted-foreground">
-            مراجعة واعتماد تعليقات المستخدمين
-          </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">إدارة التعليقات</h1>
+            <p className="text-muted-foreground">
+              مراجعة واعتماد تعليقات المستخدمين
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-8 w-8 text-primary" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-8 w-8 text-primary" />
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -361,6 +363,7 @@ export default function DashboardComments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
