@@ -2122,10 +2122,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (updateData.publishedAt) {
         updateData.publishedAt = new Date(updateData.publishedAt);
       }
-      // Set publishedAt when publishing if not already set
-      if (parsed.data.status === "published" && !existingArticle.publishedAt && !updateData.publishedAt) {
+      
+      // Handle republish feature
+      if (req.body.republish === true) {
+        // User wants to republish with current timestamp
+        updateData.publishedAt = new Date();
+      } else if (parsed.data.status === "published" && existingArticle.status !== "published" && !updateData.publishedAt) {
+        // Only set publishedAt automatically when publishing for the first time
         updateData.publishedAt = new Date();
       }
+      // If republish is false or not present, keep the original publishedAt (don't update it)
+      
       // Convert empty categoryId to null
       if (updateData.categoryId === "") {
         updateData.categoryId = null;
@@ -3661,10 +3668,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      // Convert publishedAt from ISO string to Date if present
+      // Prepare article data for update
       const articleData = { ...req.body };
-      if (articleData.publishedAt && typeof articleData.publishedAt === 'string') {
-        articleData.publishedAt = new Date(articleData.publishedAt);
+      
+      // Remove republish flag from data (it's only for control logic)
+      const shouldRepublish = articleData.republish === true;
+      delete articleData.republish;
+      
+      // Handle publishedAt timestamp logic
+      if (shouldRepublish) {
+        // Explicitly requested to update publish time
+        articleData.publishedAt = new Date();
+        console.log(`🔄 [DASHBOARD UPDATE] Republishing article with new timestamp`);
+      } else {
+        // Check if this is the first time publishing (transitioning to published status)
+        const isFirstTimePublishing = articleData.status === "published" && article.status !== "published";
+        
+        if (isFirstTimePublishing && !article.publishedAt) {
+          // First time publishing - set publishedAt
+          articleData.publishedAt = new Date();
+          console.log(`🆕 [DASHBOARD UPDATE] First time publishing - setting publishedAt`);
+        } else {
+          // Preserve original publishedAt (don't update it)
+          // Remove it from update data to ensure it's not changed
+          delete articleData.publishedAt;
+          console.log(`✅ [DASHBOARD UPDATE] Preserving original publishedAt`);
+        }
       }
 
       const updated = await storage.updateArticle(req.params.id, articleData);

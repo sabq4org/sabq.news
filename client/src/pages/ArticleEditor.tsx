@@ -64,6 +64,7 @@ export default function ArticleEditor() {
   const [metaDescription, setMetaDescription] = useState("");
   
   const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [republish, setRepublish] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -199,10 +200,17 @@ export default function ArticleEditor() {
         },
       };
 
-      if (publishNow && publishType === "instant") {
-        articleData.publishedAt = new Date().toISOString();
-      } else if (publishNow && publishType === "scheduled" && scheduledAt) {
-        articleData.publishedAt = scheduledAt;
+      // For new articles, set publishedAt based on publish settings
+      if (isNewArticle) {
+        if (publishNow && publishType === "instant") {
+          articleData.publishedAt = new Date().toISOString();
+        } else if (publishNow && publishType === "scheduled" && scheduledAt) {
+          articleData.publishedAt = scheduledAt;
+        }
+      } else {
+        // For updates, include republish flag
+        // Backend will handle publishedAt based on this flag
+        articleData.republish = republish;
       }
 
       if (isNewArticle) {
@@ -622,6 +630,26 @@ export default function ArticleEditor() {
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <AlertCircle className="h-4 w-4" />
                     سيتم النشر فوراً
+                  </div>
+                )}
+
+                {/* Republish Switch - Only show when editing a published article */}
+                {!isNewArticle && article?.status === "published" && (
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="republish" className="cursor-pointer">
+                        إعادة النشر بالتوقيت الحالي
+                      </Label>
+                      <Switch
+                        id="republish"
+                        checked={republish}
+                        onCheckedChange={setRepublish}
+                        data-testid="switch-republish"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      عند التفعيل، سيتم تحديث وقت النشر وسيظهر المقال في أعلى القائمة
+                    </p>
                   </div>
                 )}
               </CardContent>
