@@ -194,8 +194,8 @@ export default function DashboardComments() {
           </div>
         </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -229,10 +229,10 @@ export default function DashboardComments() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full md:w-auto grid-cols-4 gap-2">
           <TabsTrigger value="pending" data-testid="tab-pending">
             بانتظار المراجعة ({pendingCount})
@@ -326,10 +326,10 @@ export default function DashboardComments() {
             </div>
           )}
         </TabsContent>
-      </Tabs>
+        </Tabs>
 
-      {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        {/* Reject Dialog */}
+        <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent dir="rtl">
           <DialogHeader>
             <DialogTitle>رفض التعليق</DialogTitle>
@@ -362,7 +362,7 @@ export default function DashboardComments() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
