@@ -17,7 +17,6 @@ export async function notifyStoryFollowers(storyId: string, articleId: string): 
     }
 
     // جلب معلومات القصة
-    const story = await storage.getStoryBySlug(''); // سنحصل عليها من storyId مباشرة
     const storyData = await storage.getStoryById(storyId);
     if (!storyData) {
       console.error("Story not found:", storyId);
@@ -25,7 +24,7 @@ export async function notifyStoryFollowers(storyId: string, articleId: string): 
     }
 
     // جلب جميع متابعي القصة النشطين
-    const allFollowers = await storage.getStoryFollows(''); // سنحتاج دالة للحصول على جميع المتابعين للقصة
+    const allFollowers = await storage.getStoryFollowersByStoryId(storyId);
     
     // لكل متابع، نحدد إذا كان يجب إرساله حسب مستوى المتابعة
     const deliveredTo: string[] = [];
@@ -113,7 +112,7 @@ export async function sendCustomStoryNotification(
   }
 ): Promise<number> {
   try {
-    const allFollowers = await storage.getStoryFollows('');
+    const allFollowers = await storage.getStoryFollowersByStoryId(storyId);
     let notifiedCount = 0;
 
     for (const follow of allFollowers) {

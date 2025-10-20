@@ -3476,6 +3476,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail the article creation if vectorization fails
           }
 
+          // Auto-link article to story using AI
+          try {
+            const { matchAndLinkArticle } = await import("./storyMatcher");
+            await matchAndLinkArticle(article.id);
+            console.log(`✅ [DASHBOARD CREATE] Article auto-linked to story: ${article.title}`);
+          } catch (storyMatchError) {
+            console.error("❌ [DASHBOARD CREATE] Error linking article to story:", storyMatchError);
+            // Don't fail the article creation if story matching fails
+          }
+
           // Keep old system for backward compatibility
           await createNotification({
             type: article.newsType === "breaking" ? "BREAKING_NEWS" : "NEW_ARTICLE",
@@ -3561,6 +3571,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (vectorizationError) {
             console.error("❌ [DASHBOARD UPDATE] Error vectorizing article:", vectorizationError);
             // Don't fail the update operation if vectorization fails
+          }
+
+          // Auto-link article to story using AI
+          try {
+            const { matchAndLinkArticle } = await import("./storyMatcher");
+            await matchAndLinkArticle(updated.id);
+            console.log(`✅ [DASHBOARD UPDATE] Article auto-linked to story: ${updated.title}`);
+          } catch (storyMatchError) {
+            console.error("❌ [DASHBOARD UPDATE] Error linking article to story:", storyMatchError);
+            // Don't fail the update operation if story matching fails
           }
         } catch (notificationError) {
           console.error("❌ [DASHBOARD UPDATE] Error creating notification:", notificationError);

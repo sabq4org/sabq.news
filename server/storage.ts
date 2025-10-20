@@ -278,6 +278,7 @@ export interface IStorage {
   followStory(follow: InsertStoryFollow): Promise<StoryFollow>;
   unfollowStory(userId: string, storyId: string): Promise<void>;
   getStoryFollows(userId: string): Promise<(StoryFollow & { story: StoryWithDetails })[]>;
+  getStoryFollowersByStoryId(storyId: string): Promise<StoryFollow[]>;
   isFollowingStory(userId: string, storyId: string): Promise<boolean>;
   updateStoryFollow(userId: string, storyId: string, data: Partial<InsertStoryFollow>): Promise<StoryFollow>;
 
@@ -2650,6 +2651,17 @@ export class DatabaseStorage implements IStorage {
     );
 
     return followsWithDetails;
+  }
+
+  async getStoryFollowersByStoryId(storyId: string): Promise<StoryFollow[]> {
+    return await db
+      .select()
+      .from(storyFollows)
+      .where(and(
+        eq(storyFollows.storyId, storyId),
+        eq(storyFollows.isActive, true)
+      ))
+      .orderBy(desc(storyFollows.createdAt));
   }
 
   async isFollowingStory(userId: string, storyId: string): Promise<boolean> {
