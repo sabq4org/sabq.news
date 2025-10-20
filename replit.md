@@ -20,7 +20,7 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - **Roles & Permissions Management (RBAC):** Ensures secure access control for APIs and features.
 - **Content Management:** Comprehensive article, news, user, and category lifecycle management with multi-filter UIs.
 - **Keyword Navigation:** Interactive system allowing users to browse articles by keywords.
-- **Advanced Article Editor:** A professional interface for article creation, featuring subtitle support, news type classification, SEO management with Google preview, and AI-powered title/summary generation.
+- **Advanced Article Editor:** A professional interface for article creation, featuring subtitle support, news type classification, SEO management with Google preview, AI-powered title/summary generation, and an intuitive tag-based keyword input system. The keyword input supports multiple entry methods (Enter, Tab, comma, Arabic comma), duplicate prevention, and accessible badge-based display with one-click removal.
 - **Muqtarib (مُقترب) Section:** A thematic system for presenting articles from different perspectives, with dedicated browsing and management interfaces.
 
 ### AI-Powered Features
