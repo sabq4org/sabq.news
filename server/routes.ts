@@ -13,6 +13,7 @@ import { notificationBus } from "./notificationBus";
 import { sendArticleNotification } from "./notificationService";
 import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
+import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -2966,13 +2967,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get personalized recommendations using similarity engine
-      const similarArticles = await findSimilarArticles(article.id, { limit: 5 });
+      const similarArticles = await findSimilarArticles(article.id, 5, []);
       
       // Get personalized recommendations if user is logged in
       let personalizedRecommendations: any[] = [];
       if (userId) {
         try {
-          personalizedRecommendations = await getPersonalizedRecommendations(userId, { limit: 3 });
+          personalizedRecommendations = await getPersonalizedRecommendations(userId, 3, [article.id]);
         } catch (error) {
           console.error("Error getting personalized recommendations:", error);
         }
@@ -2981,18 +2982,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Combine and deduplicate
       const combinedRecommendations = [
         ...personalizedRecommendations,
-        ...similarArticles.filter(sa => 
-          !personalizedRecommendations.find(pr => pr.id === sa.id)
+        ...similarArticles.filter((sa: any) => 
+          !personalizedRecommendations.find((pr: any) => pr.articleId === sa.articleId)
         )
       ].slice(0, 5);
 
+      // Get full article details for each recommendation
+      const articleIds = combinedRecommendations.map((r: any) => r.articleId);
+      const fullArticles = await storage.getArticles({ 
+        status: "published",
+      });
+      
+      const recommendedArticles = fullArticles.filter((a: any) => articleIds.includes(a.id));
+
       // Enhance with AI reasoning
-      const enhancedRecommendations = combinedRecommendations.map((rec, index) => {
+      const enhancedRecommendations = recommendedArticles.map((rec: any, index: number) => {
         let reason = "";
         let icon = "Newspaper";
         
         // Determine reason based on recommendation source
-        if (personalizedRecommendations.find(pr => pr.id === rec.id)) {
+        if (personalizedRecommendations.find((pr: any) => pr.articleId === rec.id)) {
           reason = "مختار خصيصًا لك بناءً على اهتماماتك";
           icon = "Brain";
         } else if (rec.categoryId === article.categoryId) {
@@ -3009,7 +3018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             reason,
             icon,
             aiLabel: "اقتراح من الذكاء الاصطناعي",
-            relevanceScore: Math.max(70, 100 - (index * 10)), // Decrease score for lower ranked items
+            relevanceScore: Math.max(70, 100 - (index * 10)),
           }
         };
       });
