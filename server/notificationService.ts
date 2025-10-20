@@ -89,53 +89,71 @@ export async function sendArticleNotification(
     let notifType: string;
     let eligibleUsers: Array<{ userId: string }> = [];
 
-    // DIAGNOSTIC MODE: Remove ALL restrictions - send to ALL users
-    console.log(`📢 [NOTIFICATION] DIAGNOSTIC MODE: Fetching ALL users (no restrictions)`);
-    
-    const allUsers = await db
-      .select({ userId: userNotificationPrefs.userId })
-      .from(userNotificationPrefs);
-    
-    console.log(`📢 [NOTIFICATION] Total users with notification prefs: ${allUsers.length}`);
-
     if (notificationType === 'breaking') {
+      // Breaking news: send to all users with breaking enabled
       template = templates.breaking_news(article, categoryName);
       notifType = "BreakingNews";
-      eligibleUsers = allUsers; // ALL USERS
+      
+      eligibleUsers = await db
+        .select({ userId: userNotificationPrefs.userId })
+        .from(userNotificationPrefs)
+        .where(eq(userNotificationPrefs.breaking, true));
 
     } else if (notificationType === 'featured') {
+      // Featured article: send to users interested in this category
       template = templates.featured_article(article);
       notifType = "FeaturedArticle";
-      eligibleUsers = allUsers; // ALL USERS
+      
+      if (article.categoryId) {
+        eligibleUsers = await db
+          .select({ userId: userInterests.userId })
+          .from(userInterests)
+          .innerJoin(
+            userNotificationPrefs,
+            eq(userInterests.userId, userNotificationPrefs.userId)
+          )
+          .where(
+            and(
+              eq(userInterests.categoryId, article.categoryId),
+              eq(userNotificationPrefs.interest, true)
+            )
+          );
+      }
 
     } else {
+      // Published article: send to users interested in this category
       template = templates.article_published(article, categoryName);
       notifType = "ArticlePublished";
-      eligibleUsers = allUsers; // ALL USERS
+      
+      if (article.categoryId) {
+        eligibleUsers = await db
+          .select({ userId: userInterests.userId })
+          .from(userInterests)
+          .innerJoin(
+            userNotificationPrefs,
+            eq(userInterests.userId, userNotificationPrefs.userId)
+          )
+          .where(
+            and(
+              eq(userInterests.categoryId, article.categoryId),
+              eq(userNotificationPrefs.interest, true)
+            )
+          );
+      }
     }
 
-    console.log(`📢 [NOTIFICATION] Sending to ${eligibleUsers.length} users (ALL users - no filtering)`);
+    console.log(`📢 [NOTIFICATION] Found ${eligibleUsers.length} eligible users for ${notificationType} notification`);
 
     // Send notification to each eligible user
     let sentCount = 0;
-    let skippedCount = 0;
-    let errorCount = 0;
-    
-    console.log(`📢 [NOTIFICATION] Starting to send notifications...`);
-    
     for (const { userId } of eligibleUsers) {
       try {
-        console.log(`📢 [NOTIFICATION] Processing user: ${userId}`);
-        
-        // DIAGNOSTIC: Skip deduplication check temporarily
-        // const isDupe = await isDuplicate(userId, article.id, notifType);
-        // if (isDupe) {
-        //   console.log(`🔁 [NOTIFICATION] Duplicate notification prevented for user ${userId}`);
-        //   skippedCount++;
-        //   continue;
-        // }
-        
-        console.log(`📢 [NOTIFICATION] Creating notification for user ${userId}`);
+        // Check deduplication (60 minutes)
+        const isDupe = await isDuplicate(userId, article.id, notifType);
+        if (isDupe) {
+          console.log(`🔁 Duplicate notification prevented for user ${userId}`);
+          continue;
+        }
 
         // Create notification in inbox
         const [notification] = await db
@@ -155,8 +173,6 @@ export async function sendArticleNotification(
           })
           .returning();
 
-        console.log(`📢 [NOTIFICATION] Notification created in DB for user ${userId}, ID: ${notification.id}`);
-
         // Broadcast via SSE if user is connected
         notificationBus.emit(userId, {
           id: notification.id,
@@ -170,16 +186,14 @@ export async function sendArticleNotification(
         });
 
         sentCount++;
-        console.log(`✅ [NOTIFICATION] Notification sent to user ${userId} via inbox + SSE`);
+        console.log(`✅ Notification sent to user ${userId}`);
 
       } catch (error) {
-        errorCount++;
-        console.error(`❌ [NOTIFICATION] Failed to send notification to user ${userId}:`, error);
+        console.error(`❌ Failed to send notification to user ${userId}:`, error);
       }
     }
 
-    console.log(`📢 [NOTIFICATION] SUMMARY: Total=${eligibleUsers.length}, Sent=${sentCount}, Skipped=${skippedCount}, Errors=${errorCount}`);
-    console.log(`📢 [NOTIFICATION] Successfully completed for article: ${article.title}`);
+    console.log(`📢 Successfully sent ${sentCount} notifications for article: ${article.title}`);
 
   } catch (error) {
     console.error("Error in sendArticleNotification:", error);
