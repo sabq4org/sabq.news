@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 interface NotificationPrefs {
   id: string;
   userId: string;
-  enableBreakingNews: boolean;
-  enableInterestMatch: boolean;
-  enableLikedUpdates: boolean;
-  enableMostRead: boolean;
+  breaking: boolean;
+  interest: boolean;
+  likedUpdates: boolean;
+  mostRead: boolean;
+  webPush: boolean;
+  dailyDigest: boolean;
   quietHoursStart?: string | null;
   quietHoursEnd?: string | null;
+  updatedAt?: string;
 }
 
 export default function NotificationSettings() {
