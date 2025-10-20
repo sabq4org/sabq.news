@@ -90,6 +90,12 @@ interface DailySummary {
 export default function DailyBrief() {
   const [location, navigate] = useLocation();
 
+  // Fetch user for header
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string; profileImageUrl?: string | null }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const { data: summary, isLoading, error, refetch } = useQuery<DailySummary>({
     queryKey: ["/api/ai/daily-summary"],
     retry: false,
@@ -128,7 +134,7 @@ export default function DailyBrief() {
   if (error) {
     return (
       <>
-        <Header />
+        <Header user={user} />
         <main className="min-h-screen bg-background py-8">
           <div className="container max-w-6xl mx-auto px-4">
             <Card data-testid="card-no-activity">
@@ -157,7 +163,7 @@ export default function DailyBrief() {
 
   return (
     <>
-      <Header />
+      <Header user={user} />
       <main className="min-h-screen bg-background py-8">
         <div className="container max-w-7xl mx-auto px-4">
           {/* Header Section */}
