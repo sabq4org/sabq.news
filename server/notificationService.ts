@@ -50,28 +50,10 @@ async function isDuplicate(userId: string, articleId: string, type: string): Pro
   return !!existing;
 }
 
-/**
- * Check throttle limit (respect userNotificationPrefs.throttlePerHour)
- * Note: Currently using default limit of 3 per hour if not set in prefs
- */
-async function canSendToUser(userId: string): Promise<boolean> {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  
-  const [count] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(notificationsInbox)
-    .where(
-      and(
-        eq(notificationsInbox.userId, userId),
-        gt(notificationsInbox.createdAt, oneHourAgo)
-      )
-    );
-
-  const notificationCount = Number(count?.count || 0);
-  const throttleLimit = 3; // Default limit per hour
-  
-  return notificationCount < throttleLimit;
-}
+// Throttle removed - User controls notification volume via preferences
+// If user wants notifications, they get them all
+// If user doesn't want them, they turn them off in settings
+// Deduplication (60 minutes) provides basic protection against spam
 
 /**
  * Send article notification to interested users
@@ -164,17 +146,10 @@ export async function sendArticleNotification(
     let sentCount = 0;
     for (const { userId } of eligibleUsers) {
       try {
-        // Check deduplication (60 minutes)
+        // Check deduplication (60 minutes) - only protection needed
         const isDupe = await isDuplicate(userId, article.id, notifType);
         if (isDupe) {
           console.log(`🔁 Duplicate notification prevented for user ${userId}`);
-          continue;
-        }
-
-        // Check throttle limit
-        const canSend = await canSendToUser(userId);
-        if (!canSend) {
-          console.log(`⏳ Throttled notification for user ${userId}`);
           continue;
         }
 

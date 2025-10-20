@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Eye, Send, Star } from "lucide-react";
+import { Edit, Trash2, Eye, Send, Star, Bell } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
 type Article = {
@@ -158,6 +158,28 @@ export default function ArticlesManagement() {
       toast({
         title: "خطأ",
         description: error.message || "فشلت عملية الأرشفة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Resend notifications mutation
+  const resendNotificationsMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest(`/api/admin/articles/${id}/resend-notification`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "✅ تم إرسال الإشعارات",
+        description: data.message || "تم إرسال الإشعارات بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل إرسال الإشعارات",
         variant: "destructive",
       });
     },
@@ -341,6 +363,18 @@ export default function ArticlesManagement() {
                                 data-testid={`button-publish-${article.id}`}
                               >
                                 <Send className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {article.status === "published" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => resendNotificationsMutation.mutate(article.id)}
+                                disabled={resendNotificationsMutation.isPending}
+                                data-testid={`button-resend-notifications-${article.id}`}
+                                title="إعادة إرسال الإشعارات"
+                              >
+                                <Bell className="h-4 w-4" />
                               </Button>
                             )}
                             <Button

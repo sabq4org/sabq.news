@@ -31,68 +31,9 @@ export const NotificationTypes = {
   MOST_READ_TODAY: "MostReadTodayForYou",
 } as const;
 
-// Throttle settings: max 3 notifications per 12 hours, 1 per 20 minutes
-const THROTTLE_MAX_PER_12H = 3;
-const THROTTLE_MIN_INTERVAL_MINUTES = 20;
-
-/**
- * Check if user can receive a notification based on throttle limits
- */
-async function canSendToUser(userId: string): Promise<boolean> {
-  const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-  const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
-
-  // Check 12-hour limit (both inbox and queue)
-  const [inboxCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(notificationsInbox)
-    .where(
-      and(
-        eq(notificationsInbox.userId, userId),
-        gt(notificationsInbox.createdAt, twelveHoursAgo)
-      )
-    );
-
-  const [queueCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(notificationQueue)
-    .where(
-      and(
-        eq(notificationQueue.userId, userId),
-        gt(notificationQueue.createdAt, twelveHoursAgo)
-      )
-    );
-
-  const totalCount = Number(inboxCount?.count || 0) + Number(queueCount?.count || 0);
-  if (totalCount >= THROTTLE_MAX_PER_12H) {
-    return false;
-  }
-
-  // Check 20-minute interval (both inbox and queue)
-  const [recentInbox] = await db
-    .select()
-    .from(notificationsInbox)
-    .where(
-      and(
-        eq(notificationsInbox.userId, userId),
-        gt(notificationsInbox.createdAt, twentyMinutesAgo)
-      )
-    )
-    .limit(1);
-
-  const [recentQueue] = await db
-    .select()
-    .from(notificationQueue)
-    .where(
-      and(
-        eq(notificationQueue.userId, userId),
-        gt(notificationQueue.createdAt, twentyMinutesAgo)
-      )
-    )
-    .limit(1);
-
-  return !recentInbox && !recentQueue;
-}
+// Throttle settings: REMOVED - User controls via notification preferences
+// If user wants notifications, they get them all
+// If user doesn't want them, they turn them off in settings
 
 /**
  * Check if user is in quiet hours
@@ -177,14 +118,7 @@ async function sendToInbox(
   payload: NotificationPayload
 ): Promise<boolean> {
   try {
-    // Check throttle
-    const canSend = await canSendToUser(userId);
-    if (!canSend) {
-      console.log(`⏳ Throttled notification for user ${userId}`);
-      return false;
-    }
-
-    // Check duplicate
+    // Check duplicate only
     if (payload.articleId) {
       const isDupe = await isDuplicate(userId, payload.articleId, type);
       if (isDupe) {
