@@ -114,10 +114,6 @@ export default function DailyBrief() {
     
     if (hour >= 5 && hour < 12) {
       return "صباح الخير";
-    } else if (hour >= 12 && hour < 18) {
-      return "مساء الخير";
-    } else if (hour >= 18 && hour < 22) {
-      return "مساء الخير";
     } else {
       return "مساء الخير";
     }
