@@ -401,6 +401,7 @@ export class DatabaseStorage implements IStorage {
     if (article.status === 'archived') {
       const isAuthorized = userRole === 'admin' || userRole === 'editor';
       if (!isAuthorized) {
+        console.warn(`[SECURITY] Archived article access denied - Article: ${article.slug}, UserRole: ${userRole || 'unauthenticated'}, UserId: ${userId || 'none'}`);
         return undefined; // Hide archived articles from regular users
       }
     }
