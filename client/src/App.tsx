@@ -66,6 +66,7 @@ function Router() {
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
@@ -85,7 +86,6 @@ function Router() {
       <Route path="/moment-by-moment" component={MomentByMoment} />
       
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
-      <Route path="/dashboard/articles/new" component={ComingSoon} />
       <Route path="/dashboard/tags" component={TagsManagement} />
       <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
