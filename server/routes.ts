@@ -4783,7 +4783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TEST ENDPOINTS - FOR DEVELOPMENT ONLY
   // ============================================================
   
-  // Test notification sending for a specific article
+  // Test notification sending for a specific article (by ID)
   app.post("/api/test/send-notifications/:articleId", async (req, res) => {
     try {
       const { articleId } = req.params;
@@ -4823,6 +4823,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "Failed to send notifications",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Resend notifications for article (for admin use - requires authentication)
+  app.post("/api/admin/articles/:id/resend-notification", requireAuth, requireRole("admin"), async (req: any, res) => {
+    try {
+      const articleId = req.params.id;
+      
+      // Get article details
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+      
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+      
+      if (article.status !== 'published') {
+        return res.status(400).json({ message: "لا يمكن إرسال إشعارات لمقال غير منشور" });
+      }
+      
+      console.log(`📢 Admin: Resending notifications for article: ${article.title}`);
+      
+      // Determine notification type
+      let notificationType: 'published' | 'breaking' | 'featured' = 'published';
+      if (article.newsType === 'breaking') {
+        notificationType = 'breaking';
+      } else if (article.newsType === 'featured') {
+        notificationType = 'featured';
+      }
+      
+      // Send notifications
+      await sendArticleNotification(article, notificationType);
+      
+      res.json({
+        success: true,
+        message: `تم إرسال الإشعارات للمقال: ${article.title}`,
+        articleId: article.id,
+        articleTitle: article.title,
+        notificationType
+      });
+    } catch (error) {
+      console.error("Error resending notifications:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل إرسال الإشعارات",
         error: error instanceof Error ? error.message : String(error)
       });
     }
