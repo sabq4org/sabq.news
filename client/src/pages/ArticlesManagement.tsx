@@ -27,6 +27,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit, Trash2, Eye, Send, Star, Bell } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { StatusCards } from "@/components/admin/StatusCards";
+import { BreakingSwitch } from "@/components/admin/BreakingSwitch";
+import { RowActions } from "@/components/admin/RowActions";
 
 type Article = {
   id: string;
@@ -35,6 +38,7 @@ type Article = {
   excerpt: string | null;
   status: string;
   articleType: string;
+  newsType: string;
   isFeatured: boolean;
   views: number;
   publishedAt: string | null;
@@ -68,17 +72,28 @@ export default function ArticlesManagement() {
   // State for dialogs and filters
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [activeStatus, setActiveStatus] = useState<"published" | "scheduled" | "draft" | "archived">("published");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
+  // Fetch metrics
+  const { data: metrics } = useQuery({
+    queryKey: ["/api/admin/articles/metrics"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/articles/metrics", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch metrics");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
   // Fetch articles with filters
   const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/admin/articles", searchTerm, statusFilter, typeFilter, categoryFilter],
+    queryKey: ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (activeStatus) params.append("status", activeStatus);
       if (typeFilter && typeFilter !== "all") params.append("articleType", typeFilter);
       if (categoryFilter && categoryFilter !== "all") params.append("categoryId", categoryFilter);
       
@@ -222,9 +237,18 @@ export default function ArticlesManagement() {
           </p>
         </div>
 
+        {/* Status Cards */}
+        {metrics && (
+          <StatusCards
+            metrics={metrics}
+            activeStatus={activeStatus}
+            onSelect={setActiveStatus}
+          />
+        )}
+
         {/* Filters */}
         <div className="bg-card rounded-lg border border-border p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Input
                   placeholder="بحث بالعنوان..."
@@ -232,21 +256,6 @@ export default function ArticlesManagement() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   data-testid="input-search"
                 />
-              </div>
-
-              <div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger data-testid="select-status-filter">
-                    <SelectValue placeholder="الحالة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">كل الحالات</SelectItem>
-                    <SelectItem value="draft">مسودة</SelectItem>
-                    <SelectItem value="scheduled">مجدول</SelectItem>
-                    <SelectItem value="published">منشور</SelectItem>
-                    <SelectItem value="archived">مؤرشف</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div>
@@ -300,7 +309,7 @@ export default function ArticlesManagement() {
                       <th className="text-right py-3 px-4 font-medium">العنوان</th>
                       <th className="text-right py-3 px-4 font-medium">الكاتب</th>
                       <th className="text-right py-3 px-4 font-medium">التصنيف</th>
-                      <th className="text-right py-3 px-4 font-medium">النوع</th>
+                      <th className="text-right py-3 px-4 font-medium">عاجل</th>
                       <th className="text-right py-3 px-4 font-medium">الحالة</th>
                       <th className="text-right py-3 px-4 font-medium">المشاهدات</th>
                       <th className="text-right py-3 px-4 font-medium">الإجراءات</th>
@@ -337,7 +346,12 @@ export default function ArticlesManagement() {
                         <td className="py-3 px-4">
                           <span className="text-sm">{article.category?.nameAr || "-"}</span>
                         </td>
-                        <td className="py-3 px-4">{getTypeBadge(article.articleType)}</td>
+                        <td className="py-3 px-4">
+                          <BreakingSwitch 
+                            articleId={article.id}
+                            initialValue={article.newsType === "breaking"}
+                          />
+                        </td>
                         <td className="py-3 px-4">{getStatusBadge(article.status)}</td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1">
@@ -355,55 +369,10 @@ export default function ArticlesManagement() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            {article.status === "draft" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => publishMutation.mutate(article.id)}
-                                data-testid={`button-publish-${article.id}`}
-                              >
-                                <Send className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {article.status === "published" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => resendNotificationsMutation.mutate(article.id)}
-                                disabled={resendNotificationsMutation.isPending}
-                                data-testid={`button-resend-notifications-${article.id}`}
-                                title="إعادة إرسال الإشعارات"
-                              >
-                                <Bell className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                featureMutation.mutate({
-                                  id: article.id,
-                                  featured: !article.isFeatured,
-                                })
-                              }
-                              data-testid={`button-feature-${article.id}`}
-                            >
-                              <Star
-                                className={`h-4 w-4 ${
-                                  article.isFeatured
-                                    ? "text-yellow-500 fill-yellow-500"
-                                    : ""
-                                }`}
-                              />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeletingArticle(article)}
-                              data-testid={`button-delete-${article.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <RowActions 
+                              articleId={article.id}
+                              status={article.status}
+                            />
                           </div>
                         </td>
                       </tr>

@@ -122,6 +122,10 @@ export interface IStorage {
   incrementArticleViews(id: string): Promise<void>;
   getFeaturedArticle(userId?: string): Promise<ArticleWithDetails | undefined>;
   getRelatedArticles(articleId: string, categoryId?: string): Promise<ArticleWithDetails[]>;
+  getArticlesMetrics(): Promise<{ published: number; scheduled: number; draft: number; archived: number }>;
+  archiveArticle(id: string, userId: string): Promise<Article>;
+  restoreArticle(id: string, userId: string): Promise<Article>;
+  toggleArticleBreaking(id: string, userId: string): Promise<Article>;
   
   // RSS Feed operations
   getAllRssFeeds(): Promise<RssFeed[]>;
@@ -569,6 +573,86 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.author || undefined,
     }));
+  }
+
+  async getArticlesMetrics(): Promise<{ published: number; scheduled: number; draft: number; archived: number }> {
+    const now = new Date();
+
+    const [publishedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(articles)
+      .where(eq(articles.status, 'published'));
+
+    const [scheduledResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(articles)
+      .where(and(
+        eq(articles.status, 'scheduled'),
+        gte(articles.scheduledAt, now)
+      ));
+
+    const [draftResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(articles)
+      .where(eq(articles.status, 'draft'));
+
+    const [archivedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(articles)
+      .where(eq(articles.status, 'archived'));
+
+    return {
+      published: Number(publishedResult.count),
+      scheduled: Number(scheduledResult.count),
+      draft: Number(draftResult.count),
+      archived: Number(archivedResult.count),
+    };
+  }
+
+  async archiveArticle(id: string, userId: string): Promise<Article> {
+    const [updated] = await db
+      .update(articles)
+      .set({ 
+        status: 'archived',
+        updatedAt: new Date(),
+      })
+      .where(eq(articles.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async restoreArticle(id: string, userId: string): Promise<Article> {
+    const [updated] = await db
+      .update(articles)
+      .set({ 
+        status: 'draft',
+        updatedAt: new Date(),
+      })
+      .where(eq(articles.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async toggleArticleBreaking(id: string, userId: string): Promise<Article> {
+    const article = await this.getArticleById(id);
+    if (!article) {
+      throw new Error('Article not found');
+    }
+
+    const newNewsType = article.newsType === 'breaking' ? 'regular' : 'breaking';
+    
+    const [updated] = await db
+      .update(articles)
+      .set({ 
+        newsType: newNewsType,
+        updatedAt: new Date(),
+      })
+      .where(eq(articles.id, id))
+      .returning();
+    
+    return updated;
   }
 
   // RSS Feed operations

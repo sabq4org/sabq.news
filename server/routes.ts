@@ -2333,6 +2333,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get articles metrics
+  app.get("/api/admin/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const metrics = await storage.getArticlesMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching articles metrics:", error);
+      res.status(500).json({ message: "Failed to fetch articles metrics" });
+    }
+  });
+
+  // Archive article
+  app.post("/api/admin/articles/:id/archive", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const article = await storage.getArticleById(articleId);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const updatedArticle = await storage.archiveArticle(articleId, userId);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "archived",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error archiving article:", error);
+      res.status(500).json({ message: "Failed to archive article" });
+    }
+  });
+
+  // Restore article
+  app.post("/api/admin/articles/:id/restore", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const article = await storage.getArticleById(articleId);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const updatedArticle = await storage.restoreArticle(articleId, userId);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "restored",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error restoring article:", error);
+      res.status(500).json({ message: "Failed to restore article" });
+    }
+  });
+
+  // Toggle article breaking news status
+  app.post("/api/admin/articles/:id/toggle-breaking", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const article = await storage.getArticleById(articleId);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const updatedArticle = await storage.toggleArticleBreaking(articleId, userId);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "toggle_breaking",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error toggling breaking news:", error);
+      res.status(500).json({ message: "Failed to toggle breaking news" });
+    }
+  });
+
   // Archive article (soft delete)
   app.delete("/api/admin/articles/:id", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
     try {
