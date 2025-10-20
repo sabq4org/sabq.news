@@ -4976,6 +4976,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // RECOMMENDATION & EVENT TRACKING APIs
+  // ============================================================
+
+  // Track user event (view, click, share, etc.)
+  app.post("/api/events/track", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { eventType, targetId, targetType, metadata } = req.body;
+
+      if (!eventType || !targetId || !targetType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      await trackUserEvent(userId, eventType, targetId, targetType, metadata);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking event:", error);
+      res.status(500).json({ message: "فشل في تتبع الحدث" });
+    }
+  });
+
+  // Get personalized recommendations for user
+  app.get("/api/recommendations/personalized", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const { getPersonalizedRecommendations } = await import('./similarityEngine');
+      const recommendations = await getPersonalizedRecommendations(userId, limit);
+
+      res.json({ recommendations });
+    } catch (error) {
+      console.error("Error getting recommendations:", error);
+      res.status(500).json({ message: "فشل في جلب التوصيات" });
+    }
+  });
+
+  // Get recommendations similar to specific article
+  app.get("/api/recommendations/similar/:articleId", async (req, res) => {
+    try {
+      const { articleId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 5;
+
+      const { findSimilarArticles } = await import('./similarityEngine');
+      const similar = await findSimilarArticles(articleId, limit);
+
+      res.json({ similar });
+    } catch (error) {
+      console.error("Error finding similar articles:", error);
+      res.status(500).json({ message: "فشل في جلب المقالات المشابهة" });
+    }
+  });
+
+  // Get trending articles
+  app.get("/api/recommendations/trending", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const { getTrendingArticles } = await import('./similarityEngine');
+      const trending = await getTrendingArticles(limit);
+
+      res.json({ trending });
+    } catch (error) {
+      console.error("Error getting trending articles:", error);
+      res.status(500).json({ message: "فشل في جلب المقالات الرائجة" });
+    }
+  });
+
+  // Get user's recommendation preferences
+  app.get("/api/recommendations/preferences", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { userRecommendationPrefs } = await import('@shared/schema');
+
+      let prefs = await db.query.userRecommendationPrefs.findFirst({
+        where: eq(userRecommendationPrefs.userId, userId),
+      });
+
+      // Create default preferences if not exist
+      if (!prefs) {
+        const [newPrefs] = await db.insert(userRecommendationPrefs).values({
+          userId,
+        }).returning();
+        prefs = newPrefs;
+      }
+
+      res.json({ preferences: prefs });
+    } catch (error) {
+      console.error("Error getting recommendation preferences:", error);
+      res.status(500).json({ message: "فشل في جلب إعدادات التوصيات" });
+    }
+  });
+
+  // Update user's recommendation preferences
+  app.patch("/api/recommendations/preferences", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const updates = req.body;
+      const { userRecommendationPrefs } = await import('@shared/schema');
+
+      // Check if preferences exist
+      const existing = await db.query.userRecommendationPrefs.findFirst({
+        where: eq(userRecommendationPrefs.userId, userId),
+      });
+
+      if (!existing) {
+        // Create with updates
+        const [newPrefs] = await db.insert(userRecommendationPrefs).values({
+          userId,
+          ...updates,
+        }).returning();
+        return res.json({ preferences: newPrefs });
+      }
+
+      // Update existing
+      const [updated] = await db
+        .update(userRecommendationPrefs)
+        .set(updates)
+        .where(eq(userRecommendationPrefs.userId, userId))
+        .returning();
+
+      res.json({ preferences: updated });
+    } catch (error) {
+      console.error("Error updating recommendation preferences:", error);
+      res.status(500).json({ message: "فشل في تحديث إعدادات التوصيات" });
+    }
+  });
+
+  // Get user's recommendation log (what was recommended)
+  app.get("/api/recommendations/log", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const { recommendationLog } = await import('@shared/schema');
+
+      const logs = await db.query.recommendationLog.findMany({
+        where: eq(recommendationLog.userId, userId),
+        orderBy: desc(recommendationLog.sentAt),
+        limit,
+      });
+
+      res.json({ logs });
+    } catch (error) {
+      console.error("Error getting recommendation log:", error);
+      res.status(500).json({ message: "فشل في جلب سجل التوصيات" });
+    }
+  });
+
+  // Trigger recommendation processing for user (admin/testing)
+  app.post("/api/admin/recommendations/process/:userId", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      const { processUserRecommendations } = await import('./recommendationNotificationService');
+      await processUserRecommendations(userId);
+
+      res.json({ success: true, message: "تم معالجة التوصيات بنجاح" });
+    } catch (error) {
+      console.error("Error processing recommendations:", error);
+      res.status(500).json({ message: "فشل في معالجة التوصيات" });
+    }
+  });
+
+  // Get user affinities (what they're interested in)
+  app.get("/api/recommendations/affinities", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { userAffinities } = await import('@shared/schema');
+
+      const affinities = await db.query.userAffinities.findMany({
+        where: eq(userAffinities.userId, userId),
+        orderBy: desc(userAffinities.score),
+        limit: 50,
+      });
+
+      res.json({ affinities });
+    } catch (error) {
+      console.error("Error getting user affinities:", error);
+      res.status(500).json({ message: "فشل في جلب الاهتمامات" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
