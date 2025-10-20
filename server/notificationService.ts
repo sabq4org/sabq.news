@@ -66,7 +66,8 @@ export async function sendArticleNotification(
   notificationType: 'published' | 'breaking' | 'featured'
 ): Promise<void> {
   try {
-    console.log(`📢 Sending ${notificationType} notification for article: ${article.title}`);
+    console.log(`📢 [NOTIFICATION] Sending ${notificationType} notification for article: ${article.title}`);
+    console.log(`📢 [NOTIFICATION] Article ID: ${article.id}, Category: ${article.categoryId}`);
 
     // Get category name
     let categoryName = "سبق";
@@ -79,6 +80,7 @@ export async function sendArticleNotification(
       
       if (category) {
         categoryName = category.nameAr;
+        console.log(`📢 [NOTIFICATION] Category found: ${categoryName}`);
       }
     }
 
@@ -87,71 +89,53 @@ export async function sendArticleNotification(
     let notifType: string;
     let eligibleUsers: Array<{ userId: string }> = [];
 
+    // DIAGNOSTIC MODE: Remove ALL restrictions - send to ALL users
+    console.log(`📢 [NOTIFICATION] DIAGNOSTIC MODE: Fetching ALL users (no restrictions)`);
+    
+    const allUsers = await db
+      .select({ userId: userNotificationPrefs.userId })
+      .from(userNotificationPrefs);
+    
+    console.log(`📢 [NOTIFICATION] Total users with notification prefs: ${allUsers.length}`);
+
     if (notificationType === 'breaking') {
-      // Breaking news: send to all users with breaking enabled
       template = templates.breaking_news(article, categoryName);
       notifType = "BreakingNews";
-      
-      eligibleUsers = await db
-        .select({ userId: userNotificationPrefs.userId })
-        .from(userNotificationPrefs)
-        .where(eq(userNotificationPrefs.breaking, true));
+      eligibleUsers = allUsers; // ALL USERS
 
     } else if (notificationType === 'featured') {
-      // Featured article: send to users interested in this category
       template = templates.featured_article(article);
       notifType = "FeaturedArticle";
-      
-      if (article.categoryId) {
-        eligibleUsers = await db
-          .select({ userId: userInterests.userId })
-          .from(userInterests)
-          .innerJoin(
-            userNotificationPrefs,
-            eq(userInterests.userId, userNotificationPrefs.userId)
-          )
-          .where(
-            and(
-              eq(userInterests.categoryId, article.categoryId),
-              eq(userNotificationPrefs.interest, true)
-            )
-          );
-      }
+      eligibleUsers = allUsers; // ALL USERS
 
     } else {
-      // Published article: send to users interested in this category
       template = templates.article_published(article, categoryName);
       notifType = "ArticlePublished";
-      
-      if (article.categoryId) {
-        eligibleUsers = await db
-          .select({ userId: userInterests.userId })
-          .from(userInterests)
-          .innerJoin(
-            userNotificationPrefs,
-            eq(userInterests.userId, userNotificationPrefs.userId)
-          )
-          .where(
-            and(
-              eq(userInterests.categoryId, article.categoryId),
-              eq(userNotificationPrefs.interest, true)
-            )
-          );
-      }
+      eligibleUsers = allUsers; // ALL USERS
     }
 
-    console.log(`📊 Found ${eligibleUsers.length} eligible users for ${notificationType} notification`);
+    console.log(`📢 [NOTIFICATION] Sending to ${eligibleUsers.length} users (ALL users - no filtering)`);
 
     // Send notification to each eligible user
     let sentCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    
+    console.log(`📢 [NOTIFICATION] Starting to send notifications...`);
+    
     for (const { userId } of eligibleUsers) {
       try {
-        // Check deduplication (60 minutes) - only protection needed
-        const isDupe = await isDuplicate(userId, article.id, notifType);
-        if (isDupe) {
-          console.log(`🔁 Duplicate notification prevented for user ${userId}`);
-          continue;
-        }
+        console.log(`📢 [NOTIFICATION] Processing user: ${userId}`);
+        
+        // DIAGNOSTIC: Skip deduplication check temporarily
+        // const isDupe = await isDuplicate(userId, article.id, notifType);
+        // if (isDupe) {
+        //   console.log(`🔁 [NOTIFICATION] Duplicate notification prevented for user ${userId}`);
+        //   skippedCount++;
+        //   continue;
+        // }
+        
+        console.log(`📢 [NOTIFICATION] Creating notification for user ${userId}`);
 
         // Create notification in inbox
         const [notification] = await db
@@ -171,6 +155,8 @@ export async function sendArticleNotification(
           })
           .returning();
 
+        console.log(`📢 [NOTIFICATION] Notification created in DB for user ${userId}, ID: ${notification.id}`);
+
         // Broadcast via SSE if user is connected
         notificationBus.emit(userId, {
           id: notification.id,
@@ -184,14 +170,16 @@ export async function sendArticleNotification(
         });
 
         sentCount++;
-        console.log(`✅ Notification sent to user ${userId} via inbox + SSE`);
+        console.log(`✅ [NOTIFICATION] Notification sent to user ${userId} via inbox + SSE`);
 
       } catch (error) {
-        console.error(`❌ Failed to send notification to user ${userId}:`, error);
+        errorCount++;
+        console.error(`❌ [NOTIFICATION] Failed to send notification to user ${userId}:`, error);
       }
     }
 
-    console.log(`📢 Successfully sent ${sentCount} notifications for article: ${article.title}`);
+    console.log(`📢 [NOTIFICATION] SUMMARY: Total=${eligibleUsers.length}, Sent=${sentCount}, Skipped=${skippedCount}, Errors=${errorCount}`);
+    console.log(`📢 [NOTIFICATION] Successfully completed for article: ${article.title}`);
 
   } catch (error) {
     console.error("Error in sendArticleNotification:", error);
