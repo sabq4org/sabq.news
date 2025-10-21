@@ -233,13 +233,23 @@ export default function ArticlesManagement() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="heading-title">
-            إدارة الأخبار والمقالات
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            إدارة المحتوى الإخباري والمقالات
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="heading-title">
+              إدارة الأخبار والمقالات
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              إدارة المحتوى الإخباري والمقالات
+            </p>
+          </div>
+          <Button
+            onClick={() => setLocation("/dashboard/articles/new")}
+            className="gap-2"
+            data-testid="button-create-article"
+          >
+            <Plus className="h-4 w-4" />
+            مقال جديد
+          </Button>
         </div>
 
         {/* Status Cards */}

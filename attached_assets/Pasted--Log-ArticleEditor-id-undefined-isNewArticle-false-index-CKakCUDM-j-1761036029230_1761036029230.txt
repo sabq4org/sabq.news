@@ -1,0 +1,158 @@
+عند محاولة نشر خبر [Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924, x2)
+[Warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. (index-CKakCUDM.js, line 7822)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924, x2)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [Image Upload] File URL: – "https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/7a979736-ca17-4f6b-853c-e655589aaa52" (index-CKakCUDM.js, line 7924)
+[Log] [Image Upload] ACL Response: – Object (index-CKakCUDM.js, line 7924)
+Object
+[Log] [Image Upload] Object Path: – "/public-objects/uploads/7a979736-ca17-4f6b-853c-e655589aaa52" (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+> Selected Element
+< <div class="container mx-auto px-4 py-6">…</div>
+[Log] [Save Article] Starting save... – {isNewArticle: false, publishNow: true, title: "برامج حماية الغطاء النباتي تُسهم في انتشار أشجار \"الطلح\" بأودية محافظة تيماء والقليبة", …} (index-CKakCUDM.js, line 7924)
+{isNewArticle: false, publishNow: true, title: "برامج حماية الغطاء النباتي تُسهم في انتشار أشجار \"الطلح\" بأودية محافظة تيماء والقليبة", slug: "برامج-حماية-الغطاء-النباتي-تُسهم-في-انتشار-أشجار-الطلح-بأودية-محافظة-تيماء-والقليبة", content: "<p>أسهمت برامج حماية الغطاء النباتي ومكافحة التصحر"}Object
+[Log] [Save Article] Article data prepared: – {title: "برامج حماية الغطاء النباتي تُسهم في انتشار أشجار \"الطلح\" بأودية محافظة تيماء والقليبة", subtitle: "", slug: "برامج-حماية-الغطاء-النباتي-تُسهم-في-انتشار-أشجار-الطلح-بأودية-محافظة-تيماء-والقليبة", …} (index-CKakCUDM.js, line 7924)
+{title: "برامج حماية الغطاء النباتي تُسهم في انتشار أشجار \"الطلح\" بأودية محافظة تيماء والقليبة", subtitle: "", slug: "برامج-حماية-الغطاء-النباتي-تُسهم-في-انتشار-أشجار-الطلح-بأودية-محافظة-تيماء-والقليبة", content: "<p>أسهمت برامج حماية الغطاء النباتي ومكافحة التصحر…ودعمًا لجودة الحياة للأجيال الحالية والمقبلة.</p>", excerpt: "", …}Object
+[Log] [Save Article] Updating EXISTING article via PUT /api/admin/articles/undefined (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [Save Article] PUT result: – Response {type: "basic", url: "https://sabq.replit.app/api/admin/articles/undefined", redirected: false, …} (index-CKakCUDM.js, line 7924)
+Response {type: "basic", url: "https://sabq.replit.app/api/admin/articles/undefined", redirected: false, status: 200, ok: true, …}Response
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] [ArticleEditor] id: – undefined – "isNewArticle:" – false (index-CKakCUDM.js, line 7924)
+[Log] Metrics loaded: – {published: 44, scheduled: 0, draft: 0, …} (index-CKakCUDM.js, line 7934)
+{published: 44, scheduled: 0, draft: 0, archived: 7}Object    2025-10-21 11:36:20.68
+fec61c16
+User
+8:36:20 AM [express] GET /api/system/announcement 304 in 88ms :: {"type":"warning","message":"يرجى ا…
+2025-10-21 11:36:20.78
+fec61c16
+User
+8:36:20 AM [express] GET /api/dashboard/articles/ 304 in 186ms :: [{"id":"3a51d748-ba28-4f0d-8f1b-04…
+2025-10-21 11:37:00.02
+fec61c16
+User
+[NotificationWorker] Starting queue processing...
+2025-10-21 11:37:00.02
+fec61c16
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-21 11:37:00.12
+fec61c16
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-21 11:37:00.12
+fec61c16
+User
+[NotificationWorker] Queue processing completed
+2025-10-21 11:37:00.13
+fec61c16
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-21 11:37:45.02
+fec61c16
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-21 11:37:45.11
+fec61c16
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-10-21 11:37:45.22
+fec61c16
+User
+8:37:45 AM [express] POST /api/objects/upload 200 in 362ms :: {"uploadURL":"https://storage.googleap…
+2025-10-21 11:37:47.70
+fec61c16
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-21 11:37:47.73
+fec61c16
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-21 11:37:47.73
+fec61c16
+User
+[Article Image] Received imageURL: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:47.73
+fec61c16
+User
+[ObjectStorage] normalizeObjectEntityPath - Input: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:47.73
+fec61c16
+User
+[ObjectStorage] URL pathname: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:47.73
+fec61c16
+User
+[ObjectStorage] Private dir: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private
+
+2025-10-21 11:37:47.73
+fec61c16
+User
+[ObjectStorage] Private dir with slash: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/
+2025-10-21 11:37:47.73
+fec61c16
+User
+[ObjectStorage] Normalized to: /objects/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:47.78
+fec61c16
+User
+[ObjectStorage] Moving file from private to public:
+2025-10-21 11:37:47.78
+fec61c16
+User
+From: .private/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:47.78
+fec61c16
+User
+To: public/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:48.04
+fec61c16
+User
+[ObjectStorage] Returning public path: /public-objects/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:48.04
+fec61c16
+User
+[Article Image] Returning objectPath: /public-objects/uploads/7a979736-ca17-4f6b-853c-e655589aaa52
+2025-10-21 11:37:48.06
+fec61c16
+User
+8:37:48 AM [express] PUT /api/article-images 200 in 381ms :: {"objectPath":"/public-objects/uploads/…
+2025-10-21 11:37:48.42
+fec61c16
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-21 11:37:48.44
+fec61c16
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-21 11:38:00.01
+fec61c16
+User
+[NotificationWorker] Starting queue processing...
+2025-10-21 11:38:00.01
+fec61c16
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-21 11:38:00.03
+fec61c16
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-21 11:38:00.03
+fec61c16
+User
+[NotificationWorker] Queue processing completed
+2025-10-21 11:38:00.10
+fec61c16
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-21 11:38:02.09
+fec61c16
+User
+🔸 DeserializeUser called with id: admin-sabq
