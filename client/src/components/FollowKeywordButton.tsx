@@ -117,7 +117,7 @@ export function FollowKeywordButton({
       className="gap-1.5"
     >
       {isFollowing ? (
-        <BellOff className="h-3.5 w-3.5" />
+        <Bell className="h-3.5 w-3.5 fill-primary text-primary" />
       ) : (
         <Bell className="h-3.5 w-3.5" />
       )}
