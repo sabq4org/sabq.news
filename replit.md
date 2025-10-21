@@ -18,7 +18,7 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - **Authentication System:** Email/password-based with bcrypt and session management.
 - **Onboarding Flow:** Guides users through interest selection to personalize their experience.
 - **Roles & Permissions Management (RBAC):** Ensures secure access control for APIs and features.
-- **Content Management:** Comprehensive article, news, user, and category lifecycle management with multi-filter UIs.
+- **Content Management:** Comprehensive article, news, user, and category lifecycle management with multi-filter UIs. Comment moderation system with status-based workflow (pending/approved/rejected) includes restore functionality allowing rejected comments to be returned to "pending" status for reconsideration.
 - **Keyword Navigation:** Interactive system allowing users to browse articles by keywords.
 - **Advanced Article Editor:** A professional interface for article creation, featuring subtitle support, news type classification, SEO management with Google preview, AI-powered title/summary generation, and an intuitive tag-based keyword input system. The keyword input supports multiple entry methods (Enter, Tab, comma, Arabic comma), duplicate prevention, and accessible badge-based display with one-click removal. When editing published articles, editors can optionally republish with a new timestamp using the "إعادة النشر بالتوقيت الحالي" toggle switch—by default, the original publishedAt timestamp is preserved.
 - **Muqtarib (مُقترب) Section:** A thematic system for presenting articles from different perspectives, with dedicated browsing and management interfaces.
