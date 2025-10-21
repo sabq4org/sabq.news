@@ -968,10 +968,18 @@ export class DatabaseStorage implements IStorage {
         article: articles,
         category: categories,
         author: users,
+        staffMember: {
+          id: staff.id,
+          nameAr: staff.nameAr,
+          slug: staff.slug,
+          profileImage: staff.profileImage,
+          isVerified: staff.isVerified,
+        },
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(staff, eq(staff.userId, users.id))
       .where(eq(articles.slug, slug));
 
     if (results.length === 0) return undefined;
@@ -1019,6 +1027,7 @@ export class DatabaseStorage implements IStorage {
       ...article,
       category: result.category || undefined,
       author: result.author || undefined,
+      staff: result.staffMember?.id ? result.staffMember : undefined,
       isBookmarked,
       hasReacted,
       reactionsCount: Number(reactionsCount),

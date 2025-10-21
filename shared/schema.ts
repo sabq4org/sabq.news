@@ -1373,6 +1373,13 @@ export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
 export type ArticleWithDetails = Article & {
   category?: Category;
   author?: User;
+  staff?: {
+    id: string;
+    nameAr: string;
+    slug: string;
+    profileImage: string | null;
+    isVerified: boolean;
+  };
   commentsCount?: number;
   reactionsCount?: number;
   isBookmarked?: boolean;

@@ -29,6 +29,7 @@ import {
   Volume2,
   VolumeX,
   Shield,
+  CheckCircle2,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -390,24 +391,35 @@ export default function ArticleDetail() {
 
               {/* Author & Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                {article.author && (
+                {(article.staff || article.author) && (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
                       <AvatarImage 
-                        src={article.author.profileImageUrl || ""} 
-                        alt={`${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() || article.author.email || ""}
+                        src={article.staff?.profileImage || article.author?.profileImageUrl || ""} 
+                        alt={article.staff?.nameAr || `${article.author?.firstName || ""} ${article.author?.lastName || ""}`.trim() || article.author?.email || ""}
                         className="object-cover"
                       />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(article.author.firstName, article.author.lastName, article.author.email)}
+                        {article.staff ? article.staff.nameAr.split(' ').map(n => n[0]).join('').slice(0, 2) : getInitials(article.author?.firstName, article.author?.lastName, article.author?.email)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium" data-testid="text-author-name">
-                        {article.author.firstName && article.author.lastName
-                          ? `${article.author.firstName} ${article.author.lastName}`
-                          : article.author.email}
-                      </p>
+                      {article.staff ? (
+                        <Link href={`/reporter/${article.staff.slug}`}>
+                          <p className="font-medium hover:text-primary transition-colors flex items-center gap-1" data-testid="text-author-name">
+                            {article.staff.nameAr}
+                            {article.staff.isVerified && (
+                              <CheckCircle2 className="h-4 w-4 text-primary inline" />
+                            )}
+                          </p>
+                        </Link>
+                      ) : (
+                        <p className="font-medium" data-testid="text-author-name">
+                          {article.author?.firstName && article.author?.lastName
+                            ? `${article.author.firstName} ${article.author.lastName}`
+                            : article.author?.email}
+                        </p>
+                      )}
                       {timeAgo && (
                         <p className="text-muted-foreground text-xs flex items-center gap-1">
                           <Clock className="h-3 w-3" />
