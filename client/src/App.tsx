@@ -47,6 +47,7 @@ import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import DashboardComments from "@/pages/DashboardComments";
 import MyFollows from "@/pages/MyFollows";
 import StoryAdmin from "@/pages/StoryAdmin";
+import SystemSettings from "@/pages/SystemSettings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -109,6 +110,7 @@ function Router() {
       <Route path="/recommendation-settings" component={UserRecommendationSettings} />
       <Route path="/my-follows" component={MyFollows} />
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
+      <Route path="/dashboard/system-settings" component={SystemSettings} />
       
       <Route component={NotFound} />
     </Switch>

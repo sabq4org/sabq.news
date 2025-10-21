@@ -281,7 +281,7 @@ export default function SystemSettings() {
                       border: '1px solid',
                     }}>
                       <TypeIcon className={`h-5 w-5 flex-shrink-0 ${typeConfig[currentType].color}`} />
-                      <p className="text-sm flex-1">{form.watch("message")}</p>
+                      <p className="text-sm flex-1" data-testid="text-preview-message">{form.watch("message")}</p>
                       {currentIsActive && (
                         <Badge variant="default" className="text-xs">نشط</Badge>
                       )}

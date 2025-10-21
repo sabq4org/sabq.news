@@ -99,7 +99,7 @@ export function InternalAnnouncement() {
             <IconComponent className="h-5 w-5" />
           </div>
           
-          <p className={cn("flex-1 text-sm font-medium", config.textClass)}>
+          <p className={cn("flex-1 text-sm font-medium", config.textClass)} data-testid="text-announcement-message">
             {announcement.message}
           </p>
           

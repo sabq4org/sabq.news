@@ -31,6 +31,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNav, trackNavClick } from "@/nav/useNav";
 import { AppBreadcrumbs } from "./AppBreadcrumbs";
+import { InternalAnnouncement } from "./InternalAnnouncement";
 import type { UserRole } from "@/nav/types";
 import type { NavItem } from "@/nav/types";
 
@@ -291,6 +292,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex-1" />
             <ThemeToggle />
           </header>
+          
+          <InternalAnnouncement />
           
           <main className="flex-1 overflow-auto p-6">
             <AppBreadcrumbs role={role} flags={flags} />
