@@ -1634,3 +1634,218 @@ export function getUserStatusMessage(user: User): string | null {
       return null;
   }
 }
+
+// ============================================================================
+// A/B Testing System
+// ============================================================================
+
+// Experiments - تجارب A/B
+export const experiments = pgTable("experiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  
+  // نوع التجربة: headline, image, layout, cta
+  testType: text("test_type").notNull(), // headline, image, layout, cta, mixed
+  
+  // اختياري - إذا كانت التجربة مرتبطة بخبر معين
+  articleId: varchar("article_id").references(() => articles.id),
+  
+  // الحالة: draft, running, paused, completed, archived
+  status: text("status").default("draft").notNull(),
+  
+  // معايير النجاح
+  successMetric: text("success_metric").notNull(), // ctr, read_time, engagement, conversions
+  
+  // الفائز (يتم تحديده تلقائياً أو يدوياً)
+  winnerVariantId: varchar("winner_variant_id"),
+  
+  // التوقيتات
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  
+  // الإحصائيات السريعة (cached)
+  totalExposures: integer("total_exposures").default(0).notNull(),
+  totalConversions: integer("total_conversions").default(0).notNull(),
+  
+  // من أنشأ التجربة
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Experiment Variants - الخيارات المختلفة (A, B, C...)
+export const experimentVariants = pgTable("experiment_variants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentId: varchar("experiment_id").references(() => experiments.id).notNull(),
+  
+  // اسم الـ variant (A, B, C, Control...)
+  name: text("name").notNull(),
+  
+  // هل هذا الـ control variant (الأصلي)
+  isControl: boolean("is_control").default(false).notNull(),
+  
+  // نسبة الزيارات الموجهة لهذا الـ variant (%)
+  trafficAllocation: integer("traffic_allocation").default(50).notNull(),
+  
+  // البيانات المتغيرة (headline, imageUrl, etc.)
+  variantData: jsonb("variant_data").$type<{
+    headline?: string;
+    imageUrl?: string;
+    excerpt?: string;
+    ctaText?: string;
+    layout?: string;
+  }>().notNull(),
+  
+  // إحصائيات سريعة (cached)
+  exposures: integer("exposures").default(0).notNull(),
+  conversions: integer("conversions").default(0).notNull(),
+  conversionRate: real("conversion_rate").default(0).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Experiment Exposures - تتبع من شاف أي variant
+export const experimentExposures = pgTable("experiment_exposures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentId: varchar("experiment_id").references(() => experiments.id).notNull(),
+  variantId: varchar("variant_id").references(() => experimentVariants.id).notNull(),
+  
+  // المستخدم (nullable للزوار الغير مسجلين)
+  userId: varchar("user_id").references(() => users.id),
+  
+  // Session ID للتتبع
+  sessionId: text("session_id").notNull(),
+  
+  // معلومات إضافية
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  
+  exposedAt: timestamp("exposed_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_exposures_experiment").on(table.experimentId),
+  index("idx_exposures_variant").on(table.variantId),
+  index("idx_exposures_user").on(table.userId),
+  index("idx_exposures_session").on(table.sessionId),
+]);
+
+// Experiment Conversions - تتبع التحويلات (clicks, reads, likes, etc.)
+export const experimentConversions = pgTable("experiment_conversions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentId: varchar("experiment_id").references(() => experiments.id).notNull(),
+  variantId: varchar("variant_id").references(() => experimentVariants.id).notNull(),
+  exposureId: varchar("exposure_id").references(() => experimentExposures.id).notNull(),
+  
+  // نوع التحويل: click, read, like, share, comment, bookmark
+  conversionType: text("conversion_type").notNull(),
+  
+  // القيمة (مثلاً: وقت القراءة بالثواني)
+  value: real("value"),
+  
+  // معلومات إضافية
+  metadata: jsonb("metadata").$type<{
+    readDuration?: number;
+    scrollDepth?: number;
+    shareDestination?: string;
+  }>(),
+  
+  convertedAt: timestamp("converted_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_conversions_experiment").on(table.experimentId),
+  index("idx_conversions_variant").on(table.variantId),
+  index("idx_conversions_exposure").on(table.exposureId),
+  index("idx_conversions_type").on(table.conversionType),
+]);
+
+// Relations for A/B Testing
+export const experimentsRelations = relations(experiments, ({ one, many }) => ({
+  article: one(articles, {
+    fields: [experiments.articleId],
+    references: [articles.id],
+  }),
+  creator: one(users, {
+    fields: [experiments.createdBy],
+    references: [users.id],
+  }),
+  variants: many(experimentVariants),
+  exposures: many(experimentExposures),
+  conversions: many(experimentConversions),
+}));
+
+export const experimentVariantsRelations = relations(experimentVariants, ({ one, many }) => ({
+  experiment: one(experiments, {
+    fields: [experimentVariants.experimentId],
+    references: [experiments.id],
+  }),
+  exposures: many(experimentExposures),
+  conversions: many(experimentConversions),
+}));
+
+export const experimentExposuresRelations = relations(experimentExposures, ({ one, many }) => ({
+  experiment: one(experiments, {
+    fields: [experimentExposures.experimentId],
+    references: [experiments.id],
+  }),
+  variant: one(experimentVariants, {
+    fields: [experimentExposures.variantId],
+    references: [experimentVariants.id],
+  }),
+  user: one(users, {
+    fields: [experimentExposures.userId],
+    references: [users.id],
+  }),
+  conversions: many(experimentConversions),
+}));
+
+export const experimentConversionsRelations = relations(experimentConversions, ({ one }) => ({
+  experiment: one(experiments, {
+    fields: [experimentConversions.experimentId],
+    references: [experiments.id],
+  }),
+  variant: one(experimentVariants, {
+    fields: [experimentConversions.variantId],
+    references: [experimentVariants.id],
+  }),
+  exposure: one(experimentExposures, {
+    fields: [experimentConversions.exposureId],
+    references: [experimentExposures.id],
+  }),
+}));
+
+// Types for A/B Testing
+export type Experiment = typeof experiments.$inferSelect;
+export type InsertExperiment = z.infer<typeof insertExperimentSchema>;
+export type ExperimentVariant = typeof experimentVariants.$inferSelect;
+export type InsertExperimentVariant = z.infer<typeof insertExperimentVariantSchema>;
+export type ExperimentExposure = typeof experimentExposures.$inferSelect;
+export type InsertExperimentExposure = z.infer<typeof insertExperimentExposureSchema>;
+export type ExperimentConversion = typeof experimentConversions.$inferSelect;
+export type InsertExperimentConversion = z.infer<typeof insertExperimentConversionSchema>;
+
+// Zod Schemas for A/B Testing
+export const insertExperimentSchema = createInsertSchema(experiments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalExposures: true,
+  totalConversions: true,
+});
+
+export const insertExperimentVariantSchema = createInsertSchema(experimentVariants).omit({
+  id: true,
+  createdAt: true,
+  exposures: true,
+  conversions: true,
+  conversionRate: true,
+});
+
+export const insertExperimentExposureSchema = createInsertSchema(experimentExposures).omit({
+  id: true,
+  exposedAt: true,
+});
+
+export const insertExperimentConversionSchema = createInsertSchema(experimentConversions).omit({
+  id: true,
+  convertedAt: true,
+});

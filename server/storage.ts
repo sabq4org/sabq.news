@@ -30,6 +30,10 @@ import {
   storyLinks,
   storyFollows,
   storyNotifications,
+  experiments,
+  experimentVariants,
+  experimentExposures,
+  experimentConversions,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -73,6 +77,14 @@ import {
   type InsertLoyaltyCampaign,
   type Angle,
   type InsertAngle,
+  type Experiment,
+  type InsertExperiment,
+  type ExperimentVariant,
+  type InsertExperimentVariant,
+  type ExperimentExposure,
+  type InsertExperimentExposure,
+  type ExperimentConversion,
+  type InsertExperimentConversion,
   type ArticleAngle,
   type InsertArticleAngle,
   type Section,
@@ -350,6 +362,53 @@ export interface IStorage {
   // System settings operations
   getSystemSetting(key: string): Promise<any | undefined>;
   upsertSystemSetting(key: string, value: any, category?: string, isPublic?: boolean): Promise<void>;
+
+  // A/B Testing operations
+  createExperiment(experiment: InsertExperiment): Promise<Experiment>;
+  getExperimentById(id: string): Promise<Experiment | undefined>;
+  getAllExperiments(filters?: { status?: string; testType?: string }): Promise<Experiment[]>;
+  updateExperiment(id: string, data: Partial<InsertExperiment>): Promise<Experiment>;
+  deleteExperiment(id: string): Promise<void>;
+  startExperiment(id: string): Promise<Experiment>;
+  pauseExperiment(id: string): Promise<Experiment>;
+  completeExperiment(id: string, winnerVariantId?: string): Promise<Experiment>;
+
+  // Experiment variant operations
+  createExperimentVariant(variant: InsertExperimentVariant): Promise<ExperimentVariant>;
+  getExperimentVariants(experimentId: string): Promise<ExperimentVariant[]>;
+  updateExperimentVariant(id: string, data: Partial<InsertExperimentVariant>): Promise<ExperimentVariant>;
+  deleteExperimentVariant(id: string): Promise<void>;
+
+  // Experiment exposure operations
+  recordExperimentExposure(exposure: InsertExperimentExposure): Promise<ExperimentExposure>;
+  getExperimentExposures(experimentId: string, variantId?: string): Promise<ExperimentExposure[]>;
+
+  // Experiment conversion operations
+  recordExperimentConversion(conversion: InsertExperimentConversion): Promise<ExperimentConversion>;
+  getExperimentConversions(experimentId: string, variantId?: string): Promise<ExperimentConversion[]>;
+
+  // A/B Testing analytics
+  getExperimentAnalytics(experimentId: string): Promise<{
+    experiment: Experiment;
+    variants: Array<ExperimentVariant & {
+      exposureCount: number;
+      conversionCount: number;
+      conversionRate: number;
+      averageReadTime?: number;
+      engagementScore: number;
+    }>;
+    totalExposures: number;
+    totalConversions: number;
+    overallConversionRate: number;
+    winner?: string;
+    confidenceLevel?: number;
+  }>;
+
+  // Get active experiment for article
+  getActiveExperimentForArticle(articleId: string): Promise<Experiment | undefined>;
+
+  // Assign variant to user/session
+  assignExperimentVariant(experimentId: string, userId?: string, sessionId?: string): Promise<ExperimentVariant>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3463,6 +3522,381 @@ export class DatabaseStorage implements IStorage {
       returnRate,
       returningUsersCount: returningUsers.length,
     };
+  }
+
+  // ============================================
+  // A/B Testing Operations
+  // ============================================
+
+  // Experiment Operations
+  async createExperiment(experiment: InsertExperiment): Promise<Experiment> {
+    const [newExperiment] = await db
+      .insert(experiments)
+      .values(experiment)
+      .returning();
+    return newExperiment;
+  }
+
+  async getExperimentById(id: string): Promise<Experiment | undefined> {
+    const [experiment] = await db
+      .select()
+      .from(experiments)
+      .where(eq(experiments.id, id));
+    return experiment;
+  }
+
+  async getAllExperiments(filters?: { status?: string; testType?: string }): Promise<Experiment[]> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(experiments.status, filters.status));
+    }
+    
+    if (filters?.testType) {
+      conditions.push(eq(experiments.testType, filters.testType));
+    }
+
+    const results = await db
+      .select()
+      .from(experiments)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(experiments.createdAt));
+
+    return results;
+  }
+
+  async updateExperiment(id: string, data: Partial<InsertExperiment>): Promise<Experiment> {
+    const [updated] = await db
+      .update(experiments)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(experiments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteExperiment(id: string): Promise<void> {
+    await db.delete(experiments).where(eq(experiments.id, id));
+  }
+
+  async startExperiment(id: string): Promise<Experiment> {
+    const [updated] = await db
+      .update(experiments)
+      .set({ 
+        status: 'running', 
+        startedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(experiments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async pauseExperiment(id: string): Promise<Experiment> {
+    const [updated] = await db
+      .update(experiments)
+      .set({ 
+        status: 'paused',
+        updatedAt: new Date()
+      })
+      .where(eq(experiments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async completeExperiment(id: string, winnerVariantId?: string): Promise<Experiment> {
+    const updateData: any = { 
+      status: 'completed', 
+      endedAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (winnerVariantId) {
+      updateData.winnerVariantId = winnerVariantId;
+    }
+
+    const [updated] = await db
+      .update(experiments)
+      .set(updateData)
+      .where(eq(experiments.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Variant Operations
+  async createExperimentVariant(variant: InsertExperimentVariant): Promise<ExperimentVariant> {
+    const [newVariant] = await db
+      .insert(experimentVariants)
+      .values({
+        ...variant,
+        variantData: variant.variantData as any
+      })
+      .returning();
+    return newVariant;
+  }
+
+  async getExperimentVariants(experimentId: string): Promise<ExperimentVariant[]> {
+    const variants = await db
+      .select()
+      .from(experimentVariants)
+      .where(eq(experimentVariants.experimentId, experimentId))
+      .orderBy(asc(experimentVariants.createdAt));
+    return variants;
+  }
+
+  async updateExperimentVariant(id: string, data: Partial<InsertExperimentVariant>): Promise<ExperimentVariant> {
+    const updateData = data.variantData 
+      ? { ...data, variantData: data.variantData as any }
+      : data;
+    
+    const [updated] = await db
+      .update(experimentVariants)
+      .set(updateData as any)
+      .where(eq(experimentVariants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteExperimentVariant(id: string): Promise<void> {
+    await db.delete(experimentVariants).where(eq(experimentVariants.id, id));
+  }
+
+  // Exposure Operations
+  async recordExperimentExposure(exposure: InsertExperimentExposure): Promise<ExperimentExposure> {
+    const [newExposure] = await db
+      .insert(experimentExposures)
+      .values(exposure)
+      .returning();
+
+    // Update cached exposure count for variant
+    await db
+      .update(experimentVariants)
+      .set({ 
+        exposures: sql`${experimentVariants.exposures} + 1`
+      })
+      .where(eq(experimentVariants.id, exposure.variantId));
+
+    // Update cached total exposures for experiment
+    await db
+      .update(experiments)
+      .set({ 
+        totalExposures: sql`${experiments.totalExposures} + 1`
+      })
+      .where(eq(experiments.id, exposure.experimentId));
+
+    return newExposure;
+  }
+
+  async getExperimentExposures(experimentId: string, variantId?: string): Promise<ExperimentExposure[]> {
+    const conditions = [eq(experimentExposures.experimentId, experimentId)];
+    
+    if (variantId) {
+      conditions.push(eq(experimentExposures.variantId, variantId));
+    }
+
+    const exposures = await db
+      .select()
+      .from(experimentExposures)
+      .where(and(...conditions))
+      .orderBy(desc(experimentExposures.exposedAt));
+
+    return exposures;
+  }
+
+  // Conversion Operations
+  async recordExperimentConversion(conversion: InsertExperimentConversion): Promise<ExperimentConversion> {
+    const [newConversion] = await db
+      .insert(experimentConversions)
+      .values({
+        ...conversion,
+        metadata: conversion.metadata as any
+      })
+      .returning();
+
+    // Update cached conversion count for variant
+    await db
+      .update(experimentVariants)
+      .set({ 
+        conversions: sql`${experimentVariants.conversions} + 1`,
+        conversionRate: sql`CASE WHEN ${experimentVariants.exposures} > 0 THEN (${experimentVariants.conversions} + 1)::float / ${experimentVariants.exposures}::float * 100 ELSE 0 END`
+      })
+      .where(eq(experimentVariants.id, conversion.variantId));
+
+    // Update cached total conversions for experiment
+    await db
+      .update(experiments)
+      .set({ 
+        totalConversions: sql`${experiments.totalConversions} + 1`
+      })
+      .where(eq(experiments.id, conversion.experimentId));
+
+    return newConversion;
+  }
+
+  async getExperimentConversions(experimentId: string, variantId?: string): Promise<ExperimentConversion[]> {
+    const conditions = [eq(experimentConversions.experimentId, experimentId)];
+    
+    if (variantId) {
+      conditions.push(eq(experimentConversions.variantId, variantId));
+    }
+
+    const conversions = await db
+      .select()
+      .from(experimentConversions)
+      .where(and(...conditions))
+      .orderBy(desc(experimentConversions.convertedAt));
+
+    return conversions;
+  }
+
+  // Analytics Operations
+  async getExperimentAnalytics(experimentId: string): Promise<{
+    experiment: Experiment;
+    variants: Array<ExperimentVariant & {
+      exposureCount: number;
+      conversionCount: number;
+      conversionRate: number;
+      averageReadTime?: number;
+      engagementScore: number;
+    }>;
+    totalExposures: number;
+    totalConversions: number;
+    overallConversionRate: number;
+    winner?: string;
+    confidenceLevel?: number;
+  }> {
+    // Get experiment
+    const experiment = await this.getExperimentById(experimentId);
+    if (!experiment) {
+      throw new Error('Experiment not found');
+    }
+
+    // Get all variants with detailed stats
+    const variants = await db
+      .select({
+        variant: experimentVariants,
+        exposureCount: sql<number>`COUNT(DISTINCT ${experimentExposures.id})`,
+        conversionCount: sql<number>`COUNT(DISTINCT ${experimentConversions.id})`,
+        avgReadTime: sql<number>`AVG(CASE WHEN ${experimentConversions.conversionType} = 'read' THEN ${experimentConversions.value} ELSE NULL END)`,
+      })
+      .from(experimentVariants)
+      .leftJoin(experimentExposures, eq(experimentExposures.variantId, experimentVariants.id))
+      .leftJoin(experimentConversions, eq(experimentConversions.variantId, experimentVariants.id))
+      .where(eq(experimentVariants.experimentId, experimentId))
+      .groupBy(experimentVariants.id);
+
+    // Calculate stats for each variant
+    const variantsWithStats = variants.map(v => {
+      const exposureCount = Number(v.exposureCount) || 0;
+      const conversionCount = Number(v.conversionCount) || 0;
+      const conversionRate = exposureCount > 0 ? (conversionCount / exposureCount) * 100 : 0;
+      const engagementScore = exposureCount > 0 ? (conversionCount / exposureCount) * 100 : 0;
+
+      return {
+        ...v.variant,
+        exposureCount,
+        conversionCount,
+        conversionRate,
+        averageReadTime: v.avgReadTime ? Number(v.avgReadTime) : undefined,
+        engagementScore,
+      };
+    });
+
+    // Calculate totals
+    const totalExposures = variantsWithStats.reduce((sum, v) => sum + v.exposureCount, 0);
+    const totalConversions = variantsWithStats.reduce((sum, v) => sum + v.conversionCount, 0);
+    const overallConversionRate = totalExposures > 0 ? (totalConversions / totalExposures) * 100 : 0;
+
+    // Determine winner (highest conversion rate)
+    let winner: string | undefined;
+    if (variantsWithStats.length > 0) {
+      const winnerVariant = variantsWithStats.reduce((best, current) => 
+        current.conversionRate > best.conversionRate ? current : best
+      );
+      winner = winnerVariant.name;
+    }
+
+    return {
+      experiment,
+      variants: variantsWithStats,
+      totalExposures,
+      totalConversions,
+      overallConversionRate,
+      winner,
+    };
+  }
+
+  // Helper Operations
+  async getActiveExperimentForArticle(articleId: string): Promise<Experiment | undefined> {
+    const [experiment] = await db
+      .select()
+      .from(experiments)
+      .where(
+        and(
+          eq(experiments.articleId, articleId),
+          eq(experiments.status, 'running')
+        )
+      )
+      .limit(1);
+    
+    return experiment;
+  }
+
+  async assignExperimentVariant(
+    experimentId: string, 
+    userId?: string, 
+    sessionId?: string
+  ): Promise<ExperimentVariant> {
+    // Get all variants for this experiment
+    const variants = await this.getExperimentVariants(experimentId);
+    
+    if (variants.length === 0) {
+      throw new Error('No variants found for this experiment');
+    }
+
+    // Check if user/session already has an assignment
+    const conditions = [eq(experimentExposures.experimentId, experimentId)];
+    
+    if (userId) {
+      conditions.push(eq(experimentExposures.userId, userId));
+    } else if (sessionId) {
+      conditions.push(eq(experimentExposures.sessionId, sessionId));
+    }
+
+    const [existingExposure] = await db
+      .select()
+      .from(experimentExposures)
+      .where(and(...conditions))
+      .limit(1);
+
+    if (existingExposure) {
+      // Return the existing variant assignment
+      const [variant] = await db
+        .select()
+        .from(experimentVariants)
+        .where(eq(experimentVariants.id, existingExposure.variantId));
+      return variant;
+    }
+
+    // Assign new variant based on traffic allocation
+    // Sort variants to ensure consistent ordering
+    const sortedVariants = [...variants].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    
+    // Calculate cumulative traffic allocation
+    let cumulativeAllocation = 0;
+    const allocations = sortedVariants.map(v => {
+      const start = cumulativeAllocation;
+      cumulativeAllocation += v.trafficAllocation;
+      return { variant: v, start, end: cumulativeAllocation };
+    });
+
+    // Generate random number between 0 and total allocation
+    const random = Math.random() * cumulativeAllocation;
+    
+    // Find which variant this random number falls into
+    const selectedAllocation = allocations.find(a => random >= a.start && random < a.end);
+    const selectedVariant = selectedAllocation?.variant || sortedVariants[0];
+
+    return selectedVariant;
   }
 }
 
