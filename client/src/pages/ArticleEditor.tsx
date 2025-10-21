@@ -295,6 +295,7 @@ export default function ArticleEditor() {
   });
 
   const generateSlug = (text: string) => {
+    if (!text || typeof text !== 'string') return "";
     return text
       .toLowerCase()
       .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "")
@@ -306,7 +307,8 @@ export default function ArticleEditor() {
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    if (isNewArticle && !slug) {
+    // Always auto-generate slug for new articles as user types
+    if (isNewArticle) {
       setSlug(generateSlug(value));
     }
     if (!metaTitle) {
@@ -325,19 +327,31 @@ export default function ArticleEditor() {
   };
 
   const handleSave = async (publishNow = false) => {
-    if (
-      !title || typeof title !== 'string' || !title.trim() || 
-      !slug || typeof slug !== 'string' || !slug.trim() || 
-      !content || typeof content !== 'string' || !content.trim() || 
-      !categoryId
-    ) {
+    // Check required fields
+    const missingFields = [];
+    
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      missingFields.push("العنوان الرئيسي");
+    }
+    if (!slug || typeof slug !== 'string' || !slug.trim()) {
+      missingFields.push("رابط المقال (Slug)");
+    }
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      missingFields.push("محتوى المقال");
+    }
+    if (!categoryId) {
+      missingFields.push("التصنيف");
+    }
+    
+    if (missingFields.length > 0) {
       toast({
         title: "حقول مطلوبة",
-        description: "الرجاء ملء جميع الحقول المطلوبة",
+        description: `الرجاء ملء: ${missingFields.join(" - ")}`,
         variant: "destructive",
       });
       return;
     }
+    
     saveArticleMutation.mutate({ publishNow });
   };
 
