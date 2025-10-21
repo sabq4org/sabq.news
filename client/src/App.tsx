@@ -38,6 +38,7 @@ import TagsManagement from "@/pages/TagsManagement";
 import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
+import UserBehavior from "@/pages/UserBehavior";
 import Notifications from "@/pages/Notifications";
 import NotificationAdmin from "@/pages/NotificationAdmin";
 import RecommendationSettings from "@/pages/recommendation-settings";
@@ -97,7 +98,7 @@ function Router() {
       <Route path="/dashboard/templates" component={ComingSoon} />
       <Route path="/dashboard/analytics" component={ComingSoon} />
       <Route path="/dashboard/analytics/trending" component={ComingSoon} />
-      <Route path="/dashboard/analytics/behavior" component={ComingSoon} />
+      <Route path="/dashboard/analytics/behavior" component={UserBehavior} />
       <Route path="/dashboard/analytics/ab-tests" component={ComingSoon} />
       <Route path="/dashboard/analytics/recommendations" component={RecommendationAnalytics} />
       <Route path="/dashboard/rss-feeds" component={ComingSoon} />

@@ -2859,6 +2859,32 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(storyNotifications.createdAt));
   }
 
+  // User Behavior Analytics
+  getUserBehaviorAnalytics(range?: string): Promise<{
+    totalUsers: number;
+    readingTimeAvg: number;
+    totalReads: number;
+    topCategories: Array<{ name: string; count: number }>;
+    interactionCounts: {
+      likes: number;
+      comments: number;
+      bookmarks: number;
+    };
+    activeHours: {
+      morning: number;
+      noon: number;
+      evening: number;
+      night: number;
+    };
+    deviceDistribution: {
+      mobile: number;
+      desktop: number;
+      tablet: number;
+    };
+    returnRate: number;
+    returningUsersCount: number;
+  }>;
+
   // System settings operations
   async getSystemSetting(key: string): Promise<any | undefined> {
     const [setting] = await db
@@ -2889,6 +2915,120 @@ export class DatabaseStorage implements IStorage {
         .insert(systemSettings)
         .values({ key, value, category, isPublic });
     }
+  }
+
+  // User Behavior Analytics
+  async getUserBehaviorAnalytics(range: string = "7d") {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Total users count
+    const [{ count: totalUsers }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
+
+    // Reading time average from readingHistory
+    const readingStats = await db
+      .select({
+        avgDuration: sql<number>`avg(${readingHistory.readDuration})`,
+        totalReads: sql<number>`count(*)`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate));
+
+    // Interaction counts
+    const [likesCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reactions)
+      .where(gte(reactions.createdAt, startDate));
+
+    const [commentsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(gte(comments.createdAt, startDate));
+
+    const [bookmarksCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookmarks)
+      .where(gte(bookmarks.createdAt, startDate));
+
+    // Top categories from user interactions
+    const topCategories = await db
+      .select({
+        categoryId: articles.categoryId,
+        categoryName: sql<string>`${categories.name}`,
+        count: sql<number>`count(*)`,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(articles.categoryId, sql`${categories.name}`)
+      .orderBy(desc(sql`count(*)`))
+      .limit(5);
+
+    // Active hours analysis from behaviorLogs
+    const activeHours = await db
+      .select({
+        hour: sql<number>`extract(hour from ${behaviorLogs.createdAt})`,
+        count: sql<number>`count(*)`,
+      })
+      .from(behaviorLogs)
+      .where(gte(behaviorLogs.createdAt, startDate))
+      .groupBy(sql`extract(hour from ${behaviorLogs.createdAt})`);
+
+    // Group by time periods
+    const hourDistribution = { morning: 0, noon: 0, evening: 0, night: 0 };
+    activeHours.forEach((h) => {
+      const hour = Number(h.hour);
+      const count = Number(h.count);
+      if (hour >= 6 && hour < 12) hourDistribution.morning += count;
+      else if (hour >= 12 && hour < 17) hourDistribution.noon += count;
+      else if (hour >= 17 && hour < 22) hourDistribution.evening += count;
+      else hourDistribution.night += count;
+    });
+
+    // Device distribution (mock data - would need user agent parsing)
+    const deviceDistribution = {
+      mobile: 65,
+      desktop: 30,
+      tablet: 5,
+    };
+
+    // Return time analysis (users who came back within 7 days)
+    const returningUsers = await db
+      .select({
+        userId: readingHistory.userId,
+        visitDays: sql<number>`count(distinct date(${readingHistory.readAt}))`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(readingHistory.userId)
+      .having(sql`count(distinct date(${readingHistory.readAt})) > 1`);
+
+    const returnRate = totalUsers > 0 
+      ? Math.round((returningUsers.length / Number(totalUsers)) * 100) 
+      : 0;
+
+    return {
+      totalUsers: Number(totalUsers),
+      readingTimeAvg: readingStats[0]?.avgDuration ? Math.round(Number(readingStats[0].avgDuration) / 60) : 0,
+      totalReads: Number(readingStats[0]?.totalReads || 0),
+      topCategories: topCategories.map(c => ({
+        name: c.categoryName || 'غير مصنف',
+        count: Number(c.count),
+      })),
+      interactionCounts: {
+        likes: Number(likesCount.count),
+        comments: Number(commentsCount.count),
+        bookmarks: Number(bookmarksCount.count),
+      },
+      activeHours: hourDistribution,
+      deviceDistribution,
+      returnRate,
+      returningUsersCount: returningUsers.length,
+    };
   }
 }
 

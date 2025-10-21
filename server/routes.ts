@@ -3364,6 +3364,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Behavior Analytics
+  app.get("/api/analytics/user-behavior", async (req, res) => {
+    try {
+      const range = (req.query.range as string) || "7d";
+      const analytics = await storage.getUserBehaviorAnalytics(range);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching user behavior analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   app.get("/api/ai-insights", async (req, res) => {
     try {
       // Changed from 24 hours to 7 days for better data availability
