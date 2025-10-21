@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
 import { TrendingKeywords } from "@/components/TrendingKeywords";
+import { FollowedKeywordsBlock } from "@/components/FollowedKeywordsBlock";
 import { SmartSummaryBlock } from "@/components/SmartSummaryBlock";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
@@ -102,8 +103,11 @@ export default function Home() {
         {/* AI Insights Block */}
         <AIInsightsBlock />
 
-        {/* Trending Keywords Block */}
-        <TrendingKeywords />
+        {/* Keywords Blocks - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TrendingKeywords />
+          <FollowedKeywordsBlock />
+        </div>
 
         {/* Smart Summary Block - Only for authenticated users */}
         {user && <SmartSummaryBlock />}
