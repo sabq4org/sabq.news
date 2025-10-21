@@ -114,14 +114,12 @@ export default function Home() {
           />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-12">
-            {homepage.deepDive && homepage.deepDive.length > 0 && (
-              <DeepDiveSection articles={homepage.deepDive} />
-            )}
-          </div>
+        <div className="space-y-8">
+          {homepage.deepDive && homepage.deepDive.length > 0 && (
+            <DeepDiveSection articles={homepage.deepDive} />
+          )}
 
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {homepage.trending && homepage.trending.length > 0 && (
               <TrendingTopics topics={homepage.trending} />
             )}
