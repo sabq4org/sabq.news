@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Tag } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
