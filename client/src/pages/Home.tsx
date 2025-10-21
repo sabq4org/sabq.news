@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
+import { TrendingKeywords } from "@/components/TrendingKeywords";
 import { SmartSummaryBlock } from "@/components/SmartSummaryBlock";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
@@ -100,6 +101,9 @@ export default function Home() {
 
         {/* AI Insights Block */}
         <AIInsightsBlock />
+
+        {/* Trending Keywords Block */}
+        <TrendingKeywords />
 
         {/* Smart Summary Block - Only for authenticated users */}
         {user && <SmartSummaryBlock />}

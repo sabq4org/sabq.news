@@ -2598,6 +2598,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // TRENDING KEYWORDS ROUTE
+  // ============================================================
+
+  app.get("/api/trending-keywords", async (req, res) => {
+    try {
+      // Fetch published articles from the last 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const recentArticles = await db
+        .select({
+          seo: articles.seo,
+          categoryId: articles.categoryId,
+        })
+        .from(articles)
+        .where(
+          and(
+            eq(articles.status, "published"),
+            gte(articles.publishedAt, sevenDaysAgo)
+          )
+        );
+
+      // Extract and count keywords
+      const keywordMap = new Map<string, { count: number; categoryIds: string[] }>();
+
+      for (const article of recentArticles) {
+        const keywords = article.seo?.keywords;
+        if (!keywords || !Array.isArray(keywords)) continue;
+
+        for (const keyword of keywords) {
+          if (!keyword || typeof keyword !== 'string') continue;
+
+          const trimmedKeyword = keyword.trim();
+          if (!trimmedKeyword) continue;
+
+          const existing = keywordMap.get(trimmedKeyword);
+          if (existing) {
+            existing.count++;
+            if (article.categoryId) {
+              existing.categoryIds.push(article.categoryId);
+            }
+          } else {
+            keywordMap.set(trimmedKeyword, {
+              count: 1,
+              categoryIds: article.categoryId ? [article.categoryId] : [],
+            });
+          }
+        }
+      }
+
+      // Convert to array and find most common category for each keyword
+      const keywordStats = Array.from(keywordMap.entries()).map(([keyword, data]) => {
+        let mostCommonCategoryId: string | null = null;
+
+        if (data.categoryIds.length > 0) {
+          // Count category occurrences
+          const categoryCounts = new Map<string, number>();
+          for (const catId of data.categoryIds) {
+            categoryCounts.set(catId, (categoryCounts.get(catId) || 0) + 1);
+          }
+
+          // Find most common category
+          let maxCount = 0;
+          for (const [catId, count] of Array.from(categoryCounts.entries())) {
+            if (count > maxCount) {
+              maxCount = count;
+              mostCommonCategoryId = catId;
+            }
+          }
+        }
+
+        return {
+          keyword,
+          count: data.count,
+          categoryId: mostCommonCategoryId,
+        };
+      });
+
+      // Sort by count descending
+      keywordStats.sort((a, b) => b.count - a.count);
+
+      // Get top 15
+      const top15 = keywordStats.slice(0, 15);
+
+      // Fetch category names for the top 15
+      // Deduplicate categoryIds to avoid redundant queries
+      const categoryIds = top15
+        .map(k => k.categoryId)
+        .filter((id): id is string => id !== null);
+      
+      const uniqueCategoryIds = Array.from(new Set(categoryIds));
+
+      const categoriesData = uniqueCategoryIds.length > 0
+        ? await db
+            .select({
+              id: categories.id,
+              nameAr: categories.nameAr,
+            })
+            .from(categories)
+            .where(inArray(categories.id, uniqueCategoryIds))
+        : [];
+
+      const categoryMap = new Map(categoriesData.map(c => [c.id, c.nameAr]));
+
+      // Format final response
+      const trendingKeywords = top15.map(item => ({
+        keyword: item.keyword,
+        count: item.count,
+        category: item.categoryId ? categoryMap.get(item.categoryId) : undefined,
+      }));
+
+      res.json(trendingKeywords);
+    } catch (error) {
+      console.error("Error fetching trending keywords:", error);
+      res.status(500).json({ message: "Failed to fetch trending keywords" });
+    }
+  });
+
+  // ============================================================
   // ACTIVITIES ROUTE (Moment by Moment)
   // ============================================================
 
