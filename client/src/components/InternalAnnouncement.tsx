@@ -7,6 +7,7 @@ interface AnnouncementData {
   message: string;
   type: "info" | "success" | "warning" | "danger";
   isActive: boolean;
+  expiresAt?: string | null;
 }
 
 const DISMISSED_KEY = "dismissed-announcement";
@@ -21,6 +22,18 @@ export function InternalAnnouncement() {
 
   useEffect(() => {
     if (announcement?.isActive && announcement?.message) {
+      // التحقق من تاريخ الانتهاء
+      if (announcement.expiresAt) {
+        const expiryDate = new Date(announcement.expiresAt);
+        const now = new Date();
+        
+        if (now > expiryDate) {
+          // الإعلان منتهي الصلاحية
+          setIsDismissed(true);
+          return;
+        }
+      }
+      
       const dismissedTimestamp = localStorage.getItem(DISMISSED_KEY);
       const announcementId = `${announcement.message}-${announcement.type}`;
       

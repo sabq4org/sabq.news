@@ -10,20 +10,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Info, CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
+import { Settings, Info, CheckCircle, AlertTriangle, AlertCircle, Calendar, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface AnnouncementData {
   message: string;
   type: "info" | "success" | "warning" | "danger";
   isActive: boolean;
+  expiresAt?: string | null;
+  durationType?: "1day" | "3days" | "1week" | "custom" | "never";
 }
 
 const announcementSchema = z.object({
   message: z.string().min(1, "الرجاء إدخال نص الإعلان"),
   type: z.enum(["info", "success", "warning", "danger"]),
   isActive: z.boolean(),
+  durationType: z.enum(["1day", "3days", "1week", "custom", "never"]).default("never"),
+  expiresAt: z.string().optional().nullable(),
 });
 
 type AnnouncementFormData = z.infer<typeof announcementSchema>;
@@ -41,11 +48,15 @@ export default function SystemSettings() {
       message: announcement?.message || "",
       type: announcement?.type || "info",
       isActive: announcement?.isActive || false,
+      durationType: announcement?.durationType || "never",
+      expiresAt: announcement?.expiresAt || null,
     },
     values: announcement ? {
       message: announcement.message || "",
       type: announcement.type || "info",
       isActive: announcement.isActive || false,
+      durationType: announcement.durationType || "never",
+      expiresAt: announcement.expiresAt || null,
     } : undefined,
   });
 
@@ -74,7 +85,30 @@ export default function SystemSettings() {
   });
 
   const onSubmit = (data: AnnouncementFormData) => {
-    updateAnnouncementMutation.mutate(data);
+    // حساب تاريخ الانتهاء بناءً على نوع المدة
+    let calculatedExpiresAt: string | null = null;
+    
+    if (data.durationType !== "never") {
+      const now = new Date();
+      
+      if (data.durationType === "1day") {
+        now.setDate(now.getDate() + 1);
+        calculatedExpiresAt = now.toISOString();
+      } else if (data.durationType === "3days") {
+        now.setDate(now.getDate() + 3);
+        calculatedExpiresAt = now.toISOString();
+      } else if (data.durationType === "1week") {
+        now.setDate(now.getDate() + 7);
+        calculatedExpiresAt = now.toISOString();
+      } else if (data.durationType === "custom" && data.expiresAt) {
+        calculatedExpiresAt = data.expiresAt;
+      }
+    }
+    
+    updateAnnouncementMutation.mutate({
+      ...data,
+      expiresAt: calculatedExpiresAt,
+    });
   };
 
   const typeConfig = {
@@ -243,6 +277,70 @@ export default function SystemSettings() {
                     </FormItem>
                   )}
                 />
+
+                {/* Duration Type Field */}
+                <FormField
+                  control={form.control}
+                  name="durationType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        مدة عرض الإعلان
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-announcement-duration">
+                            <SelectValue placeholder="اختر مدة العرض" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="never">بدون انتهاء</SelectItem>
+                          <SelectItem value="1day">يوم واحد</SelectItem>
+                          <SelectItem value="3days">3 أيام</SelectItem>
+                          <SelectItem value="1week">أسبوع</SelectItem>
+                          <SelectItem value="custom">تاريخ محدد</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        بعد انتهاء المدة سيختفي الإعلان تلقائياً
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Custom Date Field */}
+                {form.watch("durationType") === "custom" && (
+                  <FormField
+                    control={form.control}
+                    name="expiresAt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          تاريخ الانتهاء
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="datetime-local"
+                            data-testid="input-announcement-expires"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          حدد التاريخ والوقت الذي سينتهي فيه الإعلان
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Active Switch */}
                 <FormField

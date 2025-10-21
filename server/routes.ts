@@ -1205,12 +1205,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update system announcement (admin only)
   app.post("/api/system/announcement", requireAuth, requirePermission("system.manage_settings"), async (req: any, res) => {
     try {
-      const { message, type, isActive } = req.body;
+      const { message, type, isActive, durationType, expiresAt } = req.body;
       
       const announcementData = {
         message: message || "",
         type: type || "info",
         isActive: isActive !== undefined ? isActive : false,
+        durationType: durationType || "never",
+        expiresAt: expiresAt || null,
       };
       
       await storage.upsertSystemSetting("announcement", announcementData, "system", true);
