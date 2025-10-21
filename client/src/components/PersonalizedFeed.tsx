@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Clock, MessageSquare } from "lucide-react";
+import { Newspaper, Clock, MessageSquare, Sparkles } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -29,7 +29,8 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         نشر كل الأخبار المضافة مرتبة من الأحدث إلى الأقدم
       </p>
 
-      <Card className="overflow-hidden">
+      {/* Mobile View: Vertical List (like RecommendationsWidget) */}
+      <Card className="overflow-hidden lg:hidden">
         <CardContent className="p-0">
           <div className="divide-y">
             {articles.map((article, index) => {
@@ -45,7 +46,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                   <Link href={`/article/${article.slug}`}>
                     <div 
                       className="block group cursor-pointer"
-                      data-testid={`link-article-${article.id}`}
+                      data-testid={`link-article-mobile-${article.id}`}
                     >
                       <div className="p-4 hover-elevate active-elevate-2 transition-all">
                         <div className="flex gap-3">
@@ -61,15 +62,6 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
                             )}
-                            {/* Number Badge */}
-                            <div className="absolute bottom-1 left-1">
-                              <Badge 
-                                variant="secondary" 
-                                className="h-5 px-1.5 text-xs font-bold bg-background/90 backdrop-blur-sm"
-                              >
-                                {index + 1}
-                              </Badge>
-                            </div>
                           </div>
 
                           {/* Content */}
@@ -120,6 +112,80 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
           </div>
         </CardContent>
       </Card>
+
+      {/* Desktop View: Grid with 4 columns (original design) */}
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {articles.map((article) => (
+          <Link key={article.id} href={`/article/${article.slug}`}>
+            <Card 
+              className="cursor-pointer h-full overflow-hidden border border-card-border"
+              data-testid={`card-article-${article.id}`}
+            >
+              {article.imageUrl && (
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={article.imageUrl}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {article.category && (
+                    <Badge 
+                      variant="default" 
+                      className="absolute top-3 right-3" 
+                      data-testid={`badge-category-${article.id}`}
+                    >
+                      {article.category.icon} {article.category.nameAr}
+                    </Badge>
+                  )}
+                  {article.aiSummary && (
+                    <div className="absolute top-3 left-3">
+                      <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                        <Sparkles className="h-3 w-3 ml-1" />
+                        ذكاء اصطناعي
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <CardContent className="p-4 space-y-3">
+                
+                <h3 
+                  className="font-bold text-lg line-clamp-2 text-foreground"
+                  data-testid={`text-article-title-${article.id}`}
+                >
+                  {article.title}
+                </h3>
+                
+                {article.excerpt && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {article.excerpt}
+                  </p>
+                )}
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                  {article.publishedAt && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {formatDistanceToNow(new Date(article.publishedAt), {
+                          addSuffix: true,
+                          locale: arSA,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <ViewsCount 
+                    views={article.views || 0}
+                    iconClassName="h-3 w-3"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </section>
   );
 }

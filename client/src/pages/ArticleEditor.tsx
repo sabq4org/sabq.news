@@ -411,7 +411,7 @@ export default function ArticleEditor() {
                     variant="outline"
                     size="icon"
                     onClick={handleGenerateTitle}
-                    disabled={isGeneratingAI || !content.trim()}
+                    disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
                     title="اقتراح من الذكاء الاصطناعي"
                     data-testid="button-ai-title"
                   >
@@ -515,7 +515,7 @@ export default function ArticleEditor() {
                     variant="outline"
                     size="sm"
                     onClick={handleGenerateSummary}
-                    disabled={isGeneratingAI || !content.trim()}
+                    disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
                     className="gap-2"
                     data-testid="button-ai-summary"
                   >
