@@ -1,46 +1,42 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. It aims to provide intelligent article summarization, personalized recommendations, and comprehensive content management, specifically targeting the Arabic-speaking market. The platform supports RTL-first Arabic language design, offering dynamic content delivery, user profiling, and advanced theme management. Its business vision is to deliver a cutting-edge news consumption experience, leveraging AI for personalization and content enrichment.
+Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. It aims to provide intelligent article summarization, personalized recommendations, and comprehensive content management, specifically targeting the Arabic-speaking market. Its business vision is to deliver a cutting-edge news consumption experience, leveraging AI for personalization and content enrichment. The platform supports RTL-first Arabic language design, offering dynamic content delivery, user profiling, and advanced theme management, with market potential in the Arabic-speaking demographic.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-The frontend utilizes Next.js 15, React 18, and Vite, with Wouter for routing and TypeScript for type safety. It features an RTL-first design system built with Radix UI, Tailwind CSS, shadcn/ui, and custom theming for light/dark modes using Arabic-optimized fonts (IBM Plex Sans Arabic, Tajawal, Inter). State management is handled by TanStack Query for server state. Key features include an intelligent, multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a content creator dashboard with a WYSIWYG editor. Responsive design and authentication-protected routes are standard.
+### UI/UX Decisions
+The platform features an RTL-first design system with custom theming for light/dark modes using Arabic-optimized fonts (IBM Plex Sans Arabic, Tajawal, Inter). It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a content creator dashboard with a WYSIWYG editor. Responsive design is standard.
 
-### Backend Architecture
-The backend is built with Express.js and TypeScript, providing RESTful APIs. Session-based authentication is managed via Passport.js with a local email/password strategy (bcrypt for hashing). PostgreSQL, hosted on Neon serverless, is the database, accessed via Drizzle ORM. Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, AI-powered title generation, and planned sentiment analysis. A comprehensive scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application with a visual editor. File storage uses Google Cloud Storage via Replit Object Storage, and a Content Import System parses RSS feeds with AI for summarization.
+### Technical Implementations
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript. State management is handled by TanStack Query. The backend is built with Express.js and TypeScript, providing RESTful APIs. Session-based authentication uses Passport.js with a local email/password strategy and bcrypt. PostgreSQL, hosted on Neon serverless, is the database, accessed via Drizzle ORM. File storage uses Google Cloud Storage via Replit Object Storage. Real-time features are powered by Server-Sent Events (SSE).
 
-### Core Modules
-- **Authentication System:** Email/password-based with bcrypt and session management.
-- **Onboarding Flow:** Guides users through interest selection to personalize their experience.
-- **Roles & Permissions Management (RBAC):** Ensures secure access control for APIs and features.
-- **Content Management:** Comprehensive article, news, user, and category lifecycle management with multi-filter UIs. Comment moderation system with status-based workflow (pending/approved/rejected) includes restore functionality allowing rejected comments to be returned to "pending" status for reconsideration.
-- **Keyword Navigation:** Interactive system allowing users to browse articles by keywords.
-- **Advanced Article Editor:** A professional interface for article creation, featuring subtitle support, news type classification, SEO management with Google preview, AI-powered title/summary generation, and an intuitive tag-based keyword input system. The keyword input supports multiple entry methods (Enter, Tab, comma, Arabic comma), duplicate prevention, and accessible badge-based display with one-click removal. When editing published articles, editors can optionally republish with a new timestamp using the "إعادة النشر بالتوقيت الحالي" toggle switch—by default, the original publishedAt timestamp is preserved.
-- **Muqtarib (مُقترب) Section:** A thematic system for presenting articles from different perspectives, with dedicated browsing and management interfaces.
-- **Internal Announcement System (نظام الإعلانات الداخلية):** A dashboard-wide announcement banner system for communicating with editorial staff. Features: (1) Persistent banner display at the top of all dashboard pages, (2) Support for 4 announcement types with color-coded styling (info/blue, success/green, warning/yellow, danger/red), (3) Admin-only management interface at `/dashboard/system-settings` with permission-based access control (`system.manage_settings`), accessible via sidebar navigation under Settings section, (4) Dismissible announcements with localStorage persistence to prevent repeated displays, (5) Announcement activation toggle to enable/disable display without deleting content, (6) **Flexible Expiration System** with 5 duration options: Never (no expiration), 1 Day (24 hours), 3 Days (72 hours), 1 Week (7 days), or Custom Date/Time selection for precise control, (7) Automatic expiration handling - announcements automatically disappear after their expiry date without manual intervention, and (8) Live preview of announcement styling in the settings interface. Stored in `systemSettings` table with JSONB value structure containing `{message, type, isActive, durationType, expiresAt}` fields.
+### Feature Specifications
+Key features include:
+- **Authentication & Authorization:** Email/password-based authentication with session management and Roles & Permissions Management (RBAC).
+- **Content Management:** Comprehensive article, news, user, and category lifecycle management with advanced filtering, including a comment moderation system.
+- **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp.
+- **Muqtarib (مُقترب) Section:** Thematic system for presenting articles from different perspectives.
+- **Internal Announcement System:** Dashboard-wide announcement banners with various types, expiration options, and admin management.
+- **A/B Testing System:** Comprehensive platform for content optimization with experiment management, smart variant distribution, real-time tracking, and advanced analytics.
+- **AI-Powered Features:**
+    - AI ChatBot Assistant (OpenAI GPT-5).
+    - Audio Summary (Text-to-Speech).
+    - Credibility Score Analysis.
+    - Daily Brief (الملخص اليومي) for personalized news summaries.
+    - Intelligent Recommendation System: A 3-layer behavioral engine using OpenAI embeddings with multi-signal scoring, smart notifications, and keyword following integration.
+    - Story Tracking & Following System: AI-powered grouping of related articles into evolving narratives with timelines and customizable notifications.
+    - Keyword Following System: Personalized keyword tracking with trending keywords display, one-click follow/unfollow, and smart notifications.
+    - AI Insights Block (مؤشرات الأسبوع): Real-time analytics dashboard on the homepage showing key metrics.
+- **Real-Time Features:**
+    - Moment by Moment (لحظة بلحظة): Timeline displaying all platform activities with pagination and filters.
+    - Smart Notifications System: Intelligent engine with deduplication, quiet hours, SSE for real-time pushes, and an admin panel for management.
 
-### AI-Powered Features
-- **AI ChatBot Assistant:** A floating chat interface powered by OpenAI GPT-5, providing context-aware responses based on recent articles.
-- **Audio Summary (Text-to-Speech):** Browser-native Web Speech API integration for reading article summaries in Arabic.
-- **Credibility Score Analysis:** AI-powered assessment of article credibility based on multiple criteria, displayed with visual indicators and detailed analysis.
-- **Daily Brief (الملخص اليومي):** A personalized daily news summary based on user interests, featuring categorized articles and estimated reading times.
-- **Interest Management:** A dedicated page for users to easily update their category interests.
-- **Enhanced Profile Page:** Redesigned user profile with responsive layout, displaying liked articles, bookmarks, and reading history.
-- **AI Insights Block (مؤشرات الأسبوع):** A real-time intelligent analytics dashboard on the homepage showing 5 metrics over the last 7 days: Most Viewed (الأكثر تداولاً), Most Commented (الأكثر تعليقاً), Most Controversial (الأكثر جدلاً - comment/view ratio), Most Positive (الأكثر إيجابية - like rate with decimal precision), and AI Pick (اختيار الذكاء - engagement score formula: views + comments×5 + likes×3). Features color-coded cards, trend indicators, clickable article links, and smart thresholds (views >10 for controversial, >5 for positive).
-- **Intelligent Recommendation System (نظام التوصيات الذكية):** A comprehensive 3-layer AI-powered behavioral recommendation engine featuring: (1) Event Tracking Service for signal collection (view, like, save, share, comment with weighted scoring), (2) Similarity Engine using OpenAI text-embedding-3-large (1536-dimensional vectors) with multi-signal scoring (content similarity 40%, collaborative 30%, category 20%, recency 10%), and (3) Smart Notification Service with 4 recommendation types (PersonalizedContent, TrendingInInterest, SimilarToRecent, CrossCategory). Includes anti-spam mechanisms (cooldown periods, frequency capping, digest grouping), user affinity calculation with temporal decay, content vectorization on article publish, and automated daily digest delivery via cron job. Features comprehensive settings page at `/dashboard/recommendation-settings` for user customization. Backward-compatible with graceful degradation for legacy 1024-d embeddings during migration period. **Recommendation notifications include article title, thumbnail image (80x80px), and direct deeplinks to recommended articles, displayed with purple star icon and "توصية" label in the notifications UI.** **Enhanced with keyword following integration** - followed keywords are prioritized in user profile building, ensuring personalized recommendations align with explicit user interests.
-- **Story Tracking & Following System (نظام تتبع القصص):** A comprehensive AI-powered story tracking system that automatically groups related articles into evolving narratives. Features: (1) AI-Powered Story Matching using OpenAI embeddings to automatically link new articles to existing stories based on content similarity and temporal proximity, (2) Story Timeline visualization showing the chronological development of news stories with visual indicators for root articles and latest updates, (3) Flexible Follow System allowing users to subscribe to stories with customizable notification levels (all updates, breaking only, analysis only, official sources) and channels (in-app, email), (4) Smart Notifications for story followers when new articles are published, filtered by their preference settings, and (5) My Follows page (`/my-follows`) displaying all tracked stories with quick access to timelines. Database schema includes 4 tables (stories, story_links, story_follows, story_notifications) with 17 storage operations and 13 RESTful API endpoints. Integration with article publishing workflow ensures automatic story classification on publish.
-- **Keyword Following System (نظام متابعة الكلمات المفتاحية):** A personalized keyword tracking system enabling users to follow specific topics of interest. Features: (1) **Trending Keywords Display** on homepage showing top 15 keywords from the last 7 days with category-based color coding (red for politics, green for economy, blue for sports, purple for technology) and animated Framer Motion interactions, (2) **One-Click Follow/Unfollow** via FollowKeywordButton component integrated into trending keywords display and keyword pages, (3) **My Keywords Management Page** at `/my-keywords` for centralized follow management with direct links to keyword articles, (4) **Smart Notifications** - automatic KeywordFollow notifications when new articles matching followed keywords are published, with deduplication and quiet hours support, (5) **Recommendation Engine Integration** - followed keywords are automatically added to user profile topTags with priority, influencing personalized article recommendations, and (6) **Real-time Updates** via TanStack Query with optimistic UI updates and toast feedback. Database schema uses `userFollowedTerms` table with composite unique constraint on (userId, tagId), optional notify flag, and foreign key relationships to users and tags tables. Three RESTful APIs handle follow operations: POST `/api/keywords/follow`, DELETE `/api/keywords/unfollow/:tagId`, and GET `/api/user/followed-keywords`. Fully integrated with existing notification service and similarity engine for seamless personalization.
-
-### Real-Time Features
-- **Moment by Moment (لحظة بلحظة):** A comprehensive timeline page displaying all platform activities with 13 activity types (ArticlePublished, ArticleUpdated, CommentAdded, ReactionAdded, UserJoined, CategoryCreated, TagCreated, etc.). Features cursor-based pagination with infinite scroll, RTL-first design, date grouping with sticky headers, and filters by activity type. All article links properly use `/article/[slug]` format.
-- **Smart Notifications System:** Intelligent notification engine with deduplication (60-minute window for service layer, 24-hour for legacy engine), quiet hours support, and Server-Sent Events (SSE) for real-time push notifications. **No artificial throttling limits** - users control notification volume through their preference settings. Supports 3 notification types: ArticlePublished (interest-based), BreakingNews (preference-based), and FeaturedArticle (category-based). Automatic notification preferences creation for new users with configurable settings per user. Visual notification bell with unread count, toast notifications for breaking news, and colored icons by notification type. Includes manual resend button (🔔) in article management for administrators to resend notifications for any published article. Comprehensive logging system tracks notification delivery through production deployment with detailed diagnostic output.
-- **Notifications Page (صفحة الإشعارات):** A complete notifications management page at `/dashboard/notifications` with filtering by type (all, new articles, breaking news, featured articles), visual indicators for unread notifications (blue dot + highlighted background), relative time display in Arabic, mark as read functionality, and mark all as read button. Features RTL-first design with colored icons per notification type.
-- **Notification Admin Panel:** Administrative tool at `/dashboard/notification-admin` for system health monitoring and maintenance. Displays notification system status (total users, users with/without preferences, total notifications sent), bulk fix functionality to create notification preferences for all users missing them, and interface to manage user interests. Includes visual health indicators and real-time statistics.
+### System Design Choices
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
 
 ## External Dependencies
 
@@ -49,7 +45,7 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - `express-session`, `connect-pg-simple`
 
 **Database & ORM**
-- `@neondatabase/serverless`
+- `@neondatabase/serverless` (PostgreSQL)
 - `drizzle-orm`, `drizzle-kit`
 
 **AI & Machine Learning**
@@ -59,7 +55,7 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - `@google-cloud/storage` (via Replit Object Storage)
 
 **Content Processing**
-- `rss-parser`, `date-fns`
+- `rss-parser`
 
 **Frontend Libraries**
 - `@tanstack/react-query`
@@ -68,4 +64,4 @@ The backend is built with Express.js and TypeScript, providing RESTful APIs. Ses
 - `tailwindcss`, `class-variance-authority`
 
 **Development Tools**
-- `TypeScript`, `Vite`, `tsx`, `esbuild`
+- `TypeScript`
