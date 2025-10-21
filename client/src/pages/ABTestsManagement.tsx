@@ -348,14 +348,13 @@ export default function ABTestsManagement() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>المقال (اختياري)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger data-testid="select-article">
-                              <SelectValue placeholder="اختر مقال..." />
+                              <SelectValue placeholder="اختر مقال (اختياري)..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">بدون مقال محدد</SelectItem>
                             {publishedArticles.map((article: any) => (
                               <SelectItem key={article.id} value={article.id}>
                                 {article.title}
