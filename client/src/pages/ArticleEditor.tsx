@@ -180,6 +180,14 @@ export default function ArticleEditor() {
 
   const saveArticleMutation = useMutation({
     mutationFn: async ({ publishNow }: { publishNow: boolean }) => {
+      console.log('[Save Article] Starting save...', {
+        isNewArticle,
+        publishNow,
+        title,
+        slug,
+        content: content?.substring(0, 50)
+      });
+
       const articleData: any = {
         title,
         subtitle,
@@ -215,16 +223,24 @@ export default function ArticleEditor() {
         articleData.republish = republish;
       }
 
+      console.log('[Save Article] Article data prepared:', articleData);
+
       if (isNewArticle) {
-        return await apiRequest("/api/admin/articles", {
+        console.log('[Save Article] Creating NEW article via POST /api/admin/articles');
+        const result = await apiRequest("/api/admin/articles", {
           method: "POST",
           body: JSON.stringify(articleData),
         });
+        console.log('[Save Article] POST result:', result);
+        return result;
       } else {
-        return await apiRequest(`/api/admin/articles/${id}`, {
+        console.log('[Save Article] Updating EXISTING article via PUT /api/admin/articles/' + id);
+        const result = await apiRequest(`/api/admin/articles/${id}`, {
           method: "PUT",
           body: JSON.stringify(articleData),
         });
+        console.log('[Save Article] PUT result:', result);
+        return result;
       }
     },
     onSuccess: (data, variables) => {
