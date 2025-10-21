@@ -7839,6 +7839,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==========================================
+  // Reporter/Staff Routes
+  // ==========================================
+
+  // GET /api/reporters/:slug - Get reporter profile
+  app.get("/api/reporters/:slug", async (req: any, res) => {
+    try {
+      const { slug } = req.params;
+      const windowDays = parseInt(req.query.windowDays as string) || 90;
+
+      if (!slug) {
+        return res.status(400).json({ message: "معرّف المراسل مطلوب" });
+      }
+
+      const profile = await storage.getReporterProfile(slug, windowDays);
+
+      if (!profile) {
+        return res.status(404).json({ message: "المراسل غير موجود" });
+      }
+
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Error fetching reporter profile:", error);
+      res.status(500).json({ message: "فشل في جلب بيانات المراسل" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
