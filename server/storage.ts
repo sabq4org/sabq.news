@@ -254,6 +254,42 @@ export interface IStorage {
     draftArticles: number;
     totalViews: number;
   }>;
+
+  // Admin Dashboard stats
+  getAdminDashboardStats(): Promise<{
+    articles: {
+      total: number;
+      published: number;
+      draft: number;
+      archived: number;
+      totalViews: number;
+    };
+    users: {
+      total: number;
+      emailVerified: number;
+      active24h: number;
+      newThisWeek: number;
+    };
+    comments: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+    };
+    categories: {
+      total: number;
+    };
+    abTests: {
+      total: number;
+      running: number;
+    };
+    reactions: {
+      total: number;
+    };
+    recentArticles: ArticleWithDetails[];
+    recentComments: CommentWithUser[];
+    topArticles: ArticleWithDetails[];
+  }>;
   
   // Interest operations
   getAllInterests(): Promise<Interest[]>;
@@ -1819,6 +1855,190 @@ export class DatabaseStorage implements IStorage {
       publishedArticles: Number(publishedResult.count),
       draftArticles: Number(draftResult.count),
       totalViews: Number(viewsResult.total || 0),
+    };
+  }
+
+  // Admin Dashboard stats
+  async getAdminDashboardStats(): Promise<{
+    articles: {
+      total: number;
+      published: number;
+      draft: number;
+      archived: number;
+      totalViews: number;
+    };
+    users: {
+      total: number;
+      emailVerified: number;
+      active24h: number;
+      newThisWeek: number;
+    };
+    comments: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+    };
+    categories: {
+      total: number;
+    };
+    abTests: {
+      total: number;
+      running: number;
+    };
+    reactions: {
+      total: number;
+    };
+    recentArticles: ArticleWithDetails[];
+    recentComments: CommentWithUser[];
+    topArticles: ArticleWithDetails[];
+  }> {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Get article stats
+    const [articleStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        published: sql<number>`count(*) filter (where ${articles.status} = 'published')`,
+        draft: sql<number>`count(*) filter (where ${articles.status} = 'draft')`,
+        archived: sql<number>`count(*) filter (where ${articles.status} = 'archived')`,
+        totalViews: sql<number>`coalesce(sum(${articles.views}), 0)`,
+      })
+      .from(articles);
+
+    // Get user stats
+    const [userStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        emailVerified: sql<number>`count(*) filter (where ${users.emailVerified} = true)`,
+        active24h: sql<number>`count(*) filter (where ${users.lastActivityAt} >= ${yesterday})`,
+        newThisWeek: sql<number>`count(*) filter (where ${users.createdAt} >= ${weekAgo})`,
+      })
+      .from(users)
+      .where(isNull(users.deletedAt));
+
+    // Get comment stats
+    const [commentStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        pending: sql<number>`count(*) filter (where ${comments.status} = 'pending')`,
+        approved: sql<number>`count(*) filter (where ${comments.status} = 'approved')`,
+        rejected: sql<number>`count(*) filter (where ${comments.status} = 'rejected')`,
+      })
+      .from(comments);
+
+    // Get categories count
+    const [categoriesStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+      })
+      .from(categories);
+
+    // Get AB tests stats
+    const [abTestsStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        running: sql<number>`count(*) filter (where ${experiments.status} = 'running')`,
+      })
+      .from(experiments);
+
+    // Get reactions count
+    const [reactionsStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+      })
+      .from(reactions);
+
+    // Get recent articles (latest 5)
+    const recentArticlesData = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .orderBy(desc(articles.createdAt))
+      .limit(5);
+
+    const recentArticles = recentArticlesData.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+
+    // Get recent comments (latest 5)
+    const recentCommentsData = await db
+      .select({
+        comment: comments,
+        user: users,
+      })
+      .from(comments)
+      .innerJoin(users, eq(comments.userId, users.id))
+      .orderBy(desc(comments.createdAt))
+      .limit(5);
+
+    const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
+      ...r.comment,
+      user: r.user,
+    }));
+
+    // Get top articles (most viewed, top 5)
+    const topArticlesData = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, "published"))
+      .orderBy(desc(articles.views))
+      .limit(5);
+
+    const topArticles = topArticlesData.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+
+    return {
+      articles: {
+        total: Number(articleStats.total),
+        published: Number(articleStats.published),
+        draft: Number(articleStats.draft),
+        archived: Number(articleStats.archived),
+        totalViews: Number(articleStats.totalViews),
+      },
+      users: {
+        total: Number(userStats.total),
+        emailVerified: Number(userStats.emailVerified),
+        active24h: Number(userStats.active24h),
+        newThisWeek: Number(userStats.newThisWeek),
+      },
+      comments: {
+        total: Number(commentStats.total),
+        pending: Number(commentStats.pending),
+        approved: Number(commentStats.approved),
+        rejected: Number(commentStats.rejected),
+      },
+      categories: {
+        total: Number(categoriesStats.total),
+      },
+      abTests: {
+        total: Number(abTestsStats.total),
+        running: Number(abTestsStats.running),
+      },
+      reactions: {
+        total: Number(reactionsStats.total),
+      },
+      recentArticles,
+      recentComments,
+      topArticles,
     };
   }
 

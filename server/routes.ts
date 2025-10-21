@@ -4016,6 +4016,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin dashboard comprehensive stats
+  app.get("/api/admin/dashboard/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      // Require admin or editor role
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin dashboard stats" });
+    }
+  });
+
   app.get("/api/dashboard/articles", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
