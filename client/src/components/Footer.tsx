@@ -60,7 +60,55 @@ export function Footer() {
     <footer className="relative bg-gradient-to-b from-muted/80 via-muted to-muted/95 border-t border-border/60 mt-auto overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-transparent pointer-events-none" />
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
+      {/* النسخة الخفيفة للموبايل */}
+      <div className="lg:hidden container mx-auto px-4 py-6 relative z-10">
+        {/* Logo فقط */}
+        <div className="text-center mb-4">
+          <Link href="/" data-testid="footer-logo">
+            <div className="inline-flex items-center gap-2 group cursor-pointer">
+              <img 
+                src={sabqLogo} 
+                alt="سبق الذكية" 
+                className="h-8 w-auto transition-all duration-300 group-hover:scale-105 dark:brightness-110"
+              />
+            </div>
+          </Link>
+        </div>
+
+        {/* وصف مختصر */}
+        <p className="text-xs text-muted-foreground text-center mb-4 leading-relaxed">
+          منصة إخبارية عربية ذكية مدعومة بالذكاء الاصطناعي
+        </p>
+
+        {/* Social Media مصغّرة */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          {socialMedia.map((social) => (
+            <a
+              key={social.testId}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`p-1.5 rounded-lg bg-muted/40 hover-elevate transition-all duration-200 ${social.color}`}
+              aria-label={social.name}
+              data-testid={`footer-social-${social.testId}`}
+            >
+              <social.icon className="h-3.5 w-3.5" />
+            </a>
+          ))}
+        </div>
+
+        <Separator className="my-3 opacity-30" />
+
+        {/* Copyright مختصر */}
+        <div className="text-xs text-muted-foreground text-center">
+          <p data-testid="footer-copyright">
+            © {currentYear} سبق الذكية
+          </p>
+        </div>
+      </div>
+
+      {/* النسخة الكاملة للديسكتوب */}
+      <div className="hidden lg:block container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-10 mb-8">
           {/* Logo and Description */}
           <div className="lg:col-span-2">
