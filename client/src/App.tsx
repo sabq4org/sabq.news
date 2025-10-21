@@ -19,7 +19,7 @@ import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
-import UsersManagement from "@/pages/UsersManagement";
+import AdminUsers from "@/pages/AdminUsers";
 import RolesManagement from "@/pages/RolesManagement";
 import Profile from "@/pages/Profile";
 import CompleteProfile from "@/pages/CompleteProfile";
@@ -73,7 +73,7 @@ function Router() {
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
-      <Route path="/dashboard/users" component={UsersManagement} />
+      <Route path="/dashboard/users" component={AdminUsers} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />
