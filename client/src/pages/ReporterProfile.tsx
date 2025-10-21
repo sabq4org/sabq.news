@@ -224,7 +224,7 @@ export default function ReporterProfile() {
                   <Card key={article.id} className="hover-elevate">
                     <CardContent className="p-4">
                       <Link 
-                        href={`/articles/${article.slug}`}
+                        href={`/article/${article.slug}`}
                         data-testid={`link-article-${article.id}`}
                       >
                         <div className="space-y-2">
