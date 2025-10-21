@@ -327,13 +327,20 @@ export default function ArticleEditor() {
   };
 
   const handleTitleChange = (value: string) => {
+    console.log('[handleTitleChange] Called with:', value);
+    console.log('[handleTitleChange] isNewArticle:', isNewArticle);
+    
     setTitle(value);
+    
     // Always auto-generate slug for new articles as user types
     if (isNewArticle) {
       const generatedSlug = generateSlug(value);
       console.log('[Slug Generation] Title:', value, '-> Slug:', generatedSlug);
       setSlug(generatedSlug);
+    } else {
+      console.log('[Slug Generation] SKIPPED - not a new article');
     }
+    
     if (!metaTitle) {
       setMetaTitle(value);
     }
