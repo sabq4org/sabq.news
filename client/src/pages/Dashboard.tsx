@@ -154,16 +154,9 @@ export default function Dashboard() {
     );
   }
 
-  // Debug: Log user data
-  console.log('📊 Dashboard - User data:', { 
-    user, 
-    role: user?.role,
-    isAdmin: user?.role === "admin",
-    isEditor: user?.role === "editor"
-  });
-
   // Check if user has permission to view admin dashboard
-  if (user.role !== "admin" && user.role !== "editor") {
+  const allowedRoles = ["system_admin", "admin", "editor"];
+  if (!user.role || !allowedRoles.includes(user.role)) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -176,11 +169,6 @@ export default function Dashboard() {
                 لا تملك صلاحية الوصول إلى لوحة التحكم الرئيسية.
                 <br />
                 هذه الصفحة متاحة فقط للمحررين والمسؤولين.
-                <br />
-                <br />
-                <span className="text-xs text-muted-foreground">
-                  الدور الحالي: {user.role || "غير محدد"} | البريد: {user.email}
-                </span>
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
