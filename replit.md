@@ -34,6 +34,13 @@ Key features include:
 - **Real-Time Features:**
     - Moment by Moment (لحظة بلحظة): Timeline displaying all platform activities with pagination and filters.
     - Smart Notifications System: Intelligent engine with deduplication, quiet hours, SSE for real-time pushes, and an admin panel for management.
+- **Reporter Profile System:** Comprehensive staff/reporter profile pages linking journalists to their published work with:
+    - Individual reporter pages at `/reporter/:slug` with avatar, bio, verification badges, and specialization tags.
+    - Performance KPIs: total articles, views, likes, average read time, and completion rate.
+    - Latest 5 articles with category badges and engagement metrics.
+    - Top 5 writing categories with article counts and percentage shares.
+    - 90-day activity timeline chart (views and likes).
+    - Clickable reporter links from article detail pages for verified staff members.
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
