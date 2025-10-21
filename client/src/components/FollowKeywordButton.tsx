@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Bell, BellOff } from "lucide-react";
+import { BellRing, Bell } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,9 +117,9 @@ export function FollowKeywordButton({
       className="gap-1.5"
     >
       {isFollowing ? (
-        <Bell className="h-3.5 w-3.5 fill-primary text-primary" />
+        <BellRing className="h-3.5 w-3.5 text-primary" />
       ) : (
-        <Bell className="h-3.5 w-3.5" />
+        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
       )}
       {showText && (
         <span className="text-xs">

@@ -2821,7 +2821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get followed keywords
+  // Get followed keywords (legacy format)
   app.get("/api/keywords/followed", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -2850,6 +2850,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching followed keywords:", error);
       res.status(500).json({ message: "حدث خطأ أثناء جلب الكلمات المتابعة" });
+    }
+  });
+
+  // Get followed keywords (simplified format with article count)
+  app.get("/api/user/followed-keywords", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      const followedTerms = await db
+        .select({
+          tagId: userFollowedTerms.tagId,
+          notify: userFollowedTerms.notify,
+          tagName: tags.nameAr,
+        })
+        .from(userFollowedTerms)
+        .innerJoin(tags, eq(userFollowedTerms.tagId, tags.id))
+        .where(eq(userFollowedTerms.userId, userId))
+        .orderBy(desc(userFollowedTerms.createdAt));
+
+      // Get article count for each keyword
+      const keywordsWithCount = await Promise.all(
+        followedTerms.map(async (term) => {
+          const articleCount = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(articleTags)
+            .innerJoin(articles, eq(articleTags.articleId, articles.id))
+            .where(and(
+              eq(articleTags.tagId, term.tagId),
+              eq(articles.status, 'published')
+            ));
+
+          return {
+            tagId: term.tagId,
+            tagName: term.tagName,
+            notify: term.notify,
+            articleCount: articleCount[0]?.count || 0,
+          };
+        })
+      );
+
+      res.json(keywordsWithCount);
+    } catch (error) {
+      console.error("Error fetching followed keywords:", error);
+      res.status(500).json({ message: "حدث خطأ أثناء جلب الكلمات المتابعة" });
+    }
+  });
+
+  // Unfollow a keyword (DELETE method with path parameter)
+  app.delete("/api/keywords/unfollow/:tagId", requireAuth, async (req: any, res) => {
+    try {
+      const { tagId } = req.params;
+      const userId = req.user.id;
+
+      if (!tagId) {
+        return res.status(400).json({ message: "معرف الكلمة مطلوب" });
+      }
+
+      await db.delete(userFollowedTerms)
+        .where(and(
+          eq(userFollowedTerms.userId, userId),
+          eq(userFollowedTerms.tagId, tagId)
+        ));
+
+      // Decrease usage count
+      const currentTag = await db.query.tags.findFirst({
+        where: eq(tags.id, tagId),
+      });
+      if (currentTag) {
+        const newCount = Math.max(0, (currentTag.usageCount || 0) - 1);
+        await db.update(tags)
+          .set({ usageCount: newCount })
+          .where(eq(tags.id, tagId));
+      }
+
+      await logActivity({
+        userId,
+        action: 'keyword_unfollowed',
+        entityType: 'tag',
+        entityId: tagId,
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unfollowing keyword:", error);
+      res.status(500).json({ message: "حدث خطأ أثناء إلغاء متابعة الكلمة" });
     }
   });
 
