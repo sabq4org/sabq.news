@@ -334,6 +334,7 @@ export const userRoles = pgTable("user_roles", {
 export const staff = pgTable("staff", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
+  slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   nameAr: text("name_ar").notNull(),
   title: text("title"),
@@ -344,8 +345,10 @@ export const staff = pgTable("staff", {
   staffType: text("staff_type").notNull(), // reporter, writer, supervisor
   specializations: text("specializations").array().default(sql`ARRAY[]::text[]`).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  isVerified: boolean("is_verified").default(false).notNull(),
   publishedCount: integer("published_count").default(0).notNull(),
   totalViews: integer("total_views").default(0).notNull(),
+  totalLikes: integer("total_likes").default(0).notNull(),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1392,6 +1395,67 @@ export type RoleWithPermissions = Role & {
 export type StaffWithUser = Staff & {
   user?: User;
   role?: Role;
+};
+
+export type ReporterArticle = {
+  id: string;
+  title: string;
+  slug: string;
+  publishedAt: Date | null;
+  category: {
+    name: string;
+    slug: string;
+    color: string | null;
+    icon: string | null;
+  } | null;
+  isBreaking: boolean;
+  views: number;
+  likes: number;
+  comments: number;
+  readingTime: number;
+};
+
+export type ReporterTopCategory = {
+  name: string;
+  slug: string;
+  color: string | null;
+  articles: number;
+  views: number;
+  sharePct: number;
+};
+
+export type ReporterTimeseries = {
+  date: string;
+  views: number;
+  likes: number;
+};
+
+export type ReporterProfile = {
+  id: string;
+  slug: string;
+  fullName: string;
+  title: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  isVerified: boolean;
+  tags: string[];
+  kpis: {
+    totalArticles: number;
+    totalViews: number;
+    totalLikes: number;
+    avgReadTimeMin: number;
+    avgCompletionRate: number;
+  };
+  lastArticles: ReporterArticle[];
+  topCategories: ReporterTopCategory[];
+  timeseries: {
+    windowDays: number;
+    daily: ReporterTimeseries[];
+  };
+  badges: Array<{
+    key: string;
+    label: string;
+  }>;
 };
 
 export type InterestWithWeight = Interest & {

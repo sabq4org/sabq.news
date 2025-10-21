@@ -1,0 +1,224 @@
+تمام يا أبو محمد! جهّزت لك “برومبت نصّي” متكامل للذكاء الاصطناعي علشان يبني ويملأ صفحة «المراسل» في سبـق الذكية — مع سكيمة JSON واضحة، ونسخة UI/UX جاهزة حسب معاييرنا (Next.js 15 + Tailwind + Radix UI + Lucide). انسخه وحطّه في وكيل الـAI عندك وخلّه يرد بالـJSON المطلوب.
+
+⸻
+
+برومبت ذكاء اصطناعي: صفحة المراسل (Sabq AI CMS)
+
+الدور المطلوب من الذكاء الاصطناعي:
+أنت مساعد تحرير وبيانات لصفحة «بروفايل المراسل» في نظام Sabq الذكية. مهمتك جمع/تلخيص بيانات المراسل وتوليد نصوص واجهة عربية احترافية + مخرجات JSON بالهيكل المحدد أدناه فقط (دون أي شرح خارج JSON).
+
+المدخلات (Inputs)
+	•	reporter_id أو reporter_slug
+	•	نافذة زمنية للإحصاءات: stats_window_days (افتراضي 90)
+	•	عدد آخر المقالات: last_articles_limit (افتراضي 5)
+
+المطلوب (Tasks)
+	1.	ملف المراسل: الاسم الكامل، الصورة، المنصب/المسمى التحريري، النبذة، شارة التوثيق.
+	2.	مؤشرات رئيسية (KPIs):
+	•	إجمالي المقالات المنشورة
+	•	إجمالي المشاهدات لكل المقالات
+	•	إجمالي الإعجابات لكل المقالات
+	•	متوسط زمن القراءة (دقيقة)
+	•	معدل الإكمال (٪) إن توفر
+	3.	آخر المقالات (limit=5): لكل مقال (العنوان، الرابط/الـslug، التاريخ، التصنيف+الوسم اللوني، عدد المشاهدات، الإعجابات، التعليقات، وقت القراءة، حالة «عاجل»).
+	4.	التصنيفات الأعلى للمراسل: أعلى 5 تصنيفات كتب فيها مؤخراً (الاسم، slug، نسبة المساهمة، إجمالي مشاهدات تلك الفئة).
+	5.	سلسلة زمنية خلال stats_window_days: مجموع المشاهدات اليومية، مجموع الإعجابات اليومية (لرسم مخطط بسيط).
+	6.	شارات / Badges (اختياري): مثل “موثق”، “الأكثر نشاطاً هذا الشهر”، “متخصص في (رياضة/اقتصاد/…)” — منطقية وغير مبالغ فيها.
+	7.	نصوص واجهة قصيرة (Arabic RTL، لهجة صحفية احترافية):
+	•	سطر ترحيبي بالمراسل (Headline)
+	•	سطر فرعي يوضح تخصصه ونطاق تغطيته
+	•	CTA موجز: “تابع تغطياته” / “اطلع على آخر تقاريره”
+	8.	حالات عدم توافر بيانات:
+	•	لا توجد مقالات حديثة → اقترح نص بديل محايد + أعد last_articles كمصفوفة فارغة.
+	•	مراسل غير موثق → لا تضف شارة التوثيق.
+	•	حساب غير نشط → اجعل كل القيم 0 وأرسل status: "inactive".
+
+معايير الكتابة والتجربة (UX/UI)
+	•	لغة عربية واضحة، موجزة، دون مبالغة.
+	•	دعم RTL.
+	•	العناوين ≤ 60 حرفاً، الأسطر الفرعية ≤ 120 حرفاً.
+	•	لا تُرجع أكواد أو HTML — أعد JSON فقط.
+
+مخرجات JSON (Output Schema)
+
+أعد JSON مطابقًا تماماً للسكيمة التالية:
+
+{
+  "status": "active | inactive",
+  "reporter": {
+    "id": "string",
+    "slug": "string",
+    "full_name": "string",
+    "title": "string", 
+    "avatar_url": "string",
+    "bio": "string",
+    "is_verified": true,
+    "tags": ["اقتصاد","رياضة"]
+  },
+  "kpis": {
+    "total_articles": 0,
+    "total_views": 0,
+    "total_likes": 0,
+    "avg_read_time_min": 0,
+    "avg_completion_rate": 0
+  },
+  "last_articles": [
+    {
+      "id": "string",
+      "title": "string",
+      "slug": "string",
+      "published_at": "2025-10-21T12:30:00Z",
+      "category": { "name": "رياضة", "slug": "sports", "color": "#EF4444", "icon": "trophy" },
+      "is_breaking": false,
+      "views": 0,
+      "likes": 0,
+      "comments": 0,
+      "reading_time_min": 0
+    }
+  ],
+  "top_categories": [
+    { "name": "اقتصاد", "slug": "economy", "color": "#0EA5E9", "articles": 0, "views": 0, "share_pct": 0 }
+  ],
+  "timeseries": {
+    "window_days": 90,
+    "daily": [
+      { "date": "2025-08-01", "views": 0, "likes": 0 }
+    ]
+  },
+  "ui_copy": {
+    "headline": "string",
+    "subhead": "string",
+    "cta": "string"
+  },
+  "badges": [
+    { "key": "verified", "label": "موثق" }
+  ]
+}
+
+قيود صارمة:
+	•	لا تعيد أي شيء خارج JSON.
+	•	املأ الحقول غير المتوفرة بصفر أو نص قصير مناسب.
+	•	التزم بالعربية في النصوص فقط (الأسماء التقنية مثل slug/keys تبقى لاتينية).
+
+⸻
+
+ملاحظات تنفيذ الواجهة (لك يا فريقنا ✨)
+
+بنية الصفحة (Next.js 15 /app/reporter/[slug]/page.tsx)
+	•	Header: صورة شخصية (Avatar), الاسم, المسمّى, شارة التوثيق (Radix Badge), أزرار متابعة/مشاركة.
+	•	KPI Grid (4–5 بطاقات صغيرة): إجمالي المقالات، إجمالي المشاهدات، إجمالي الإعجابات، متوسط وقت القراءة، معدل الإكمال.
+	•	Section: آخر 5 مقالات (Card list) مع شارة «عاجل» (Badge أحمر) وChip التصنيف.
+	•	Section: التصنيفات الأعلى (Bar mini-cards) مع نسبة المساهمة.
+	•	Section: المخطط الزمني البسيط (Recharts LineChart) للمشاهدات/الإعجابات (toggle).
+
+Tailwind (مقتطف Tokens)
+	•	خلفية داكنة خفيفة على الهيدر: bg-neutral-900 text-white (أو حسب SmartThemeApplicator)
+	•	بطاقات KPIs: rounded-xl border border-neutral-200/60 dark:border-neutral-800 p-4
+	•	شارات:
+	•	verified: bg-emerald-600/10 text-emerald-600
+	•	breaking: bg-red-600 text-white
+	•	Chips التصنيف: inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm
+
+Radix UI + Lucide (اقتراحات)
+	•	Badge, Avatar, Tooltip, Tabs
+	•	Icons: User, BadgeCheck, Eye, Heart, MessageSquare, Flame, BarChart3, Trophy, Newspaper
+
+مثال مكوّن بطاقة مقال (TSX مختصر)
+
+<Card className="flex gap-4 p-4">
+  <div className="flex-1">
+    <div className="flex items-center gap-2">
+      {is_breaking && <Badge className="bg-red-600 text-white">عاجل</Badge>}
+      <span className="text-sm rounded-full px-2 py-0.5" style={{backgroundColor: category.color + '22', color: category.color}}>
+        {category.name}
+      </span>
+    </div>
+    <Link href={`/article/${slug}`} className="block mt-2 text-lg font-semibold leading-snug">{title}</Link>
+    <div className="mt-2 flex gap-4 text-sm text-neutral-500">
+      <span className="flex items-center gap-1"><Eye className="size-4" /> {views.toLocaleString('ar-SA')}</span>
+      <span className="flex items-center gap-1"><Heart className="size-4" /> {likes}</span>
+      <span className="flex items-center gap-1"><MessageSquare className="size-4" /> {comments}</span>
+      <span>{reading_time_min} دقيقة</span>
+    </div>
+  </div>
+</Card>
+
+عقد API المقترح (Server Actions/Route)
+	•	GET /api/reporters/:slug/overview?days=90&limit=5
+	•	يجمع: الملف الشخصي، KPIs، آخر المقالات، التصنيفات الأعلى، timeseries.
+	•	فهارس DB تدعم الاستعلام بسرعة (author_id + published_at DESC، views_count DESC).
+
+Prisma (استعلامات مختصرة توجيهية)
+	•	findUnique(reporter) + join على articles المنشورة خلال النافذة الزمنية.
+	•	groupBy للتصنيفات (count, sum views).
+	•	aggregate للمجاميع (views/likes) ومتوسطات (reading_time).
+
+حالات حافة
+	•	بدون مقالات حديثة: اخفِ مخطط timeseries، وأظهر رسالة هادئة: “لا توجد تغطيات حديثة، اطلع على أرشيف المراسل.”
+	•	غير موثق: لا تُظهر Badge التوثيق.
+	•	غير نشط: عطّل CTA وأظهر تنبيه رمادي صغير.
+
+⸻
+
+مثال مُخرَج JSON (مختصر للتجربة)
+
+جرّب تلصقه في الواجهة للاختبار السريع
+
+{
+  "status": "active",
+  "reporter": {
+    "id": "rep_123",
+    "slug": "fahad-alotaibi",
+    "full_name": "فهد العتيبي",
+    "title": "مراسل - الشأن الرياضي",
+    "avatar_url": "https://cdn.example.com/u/rep_123.jpg",
+    "bio": "يغطي أخبار الأندية السعودية والدوريات الكبرى وتحليلات سوق الانتقالات.",
+    "is_verified": true,
+    "tags": ["رياضة","دوري روشن","مقابلات"]
+  },
+  "kpis": {
+    "total_articles": 128,
+    "total_views": 945230,
+    "total_likes": 18240,
+    "avg_read_time_min": 4,
+    "avg_completion_rate": 62
+  },
+  "last_articles": [
+    {
+      "id": "art_901",
+      "title": "حصريًا: كواليس مفاوضات النادي مع المهاجم الجديد",
+      "slug": "exclusive-transfer-talks",
+      "published_at": "2025-10-21T14:20:00Z",
+      "category": {"name":"رياضة","slug":"sports","color":"#EF4444","icon":"trophy"},
+      "is_breaking": false,
+      "views": 34120,
+      "likes": 620,
+      "comments": 74,
+      "reading_time_min": 5
+    }
+  ],
+  "top_categories": [
+    {"name":"رياضة","slug":"sports","color":"#EF4444","articles":93,"views":782000,"share_pct":83}
+  ],
+  "timeseries": {
+    "window_days": 90,
+    "daily": [
+      {"date":"2025-08-01","views":10230,"likes":220},
+      {"date":"2025-08-02","views":9800,"likes":200}
+    ]
+  },
+  "ui_copy": {
+    "headline": "تغطيات فهد العتيبي",
+    "subhead": "آخر أخبار وتحليلات دوري روشن والأندية السعودية",
+    "cta": "تابع تقاريره أولاً بأول"
+  },
+  "badges": [
+    {"key":"verified","label":"موثق"},
+    {"key":"top_author_month","label":"الأكثر نشاطًا هذا الشهر"}
+  ]
+}
+
+
+⸻
+
+إذا تبغاني أجهز لك مكوّن React كامل للصفحة (Tabs، Cards، Chart) مع Tailwind وRadix وLucide — أعطيك الكود الآن جاهز للنسخ. وهل تفضّل المخطط الزمني يكون LineChart أو AreaChart؟
