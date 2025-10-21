@@ -423,7 +423,7 @@ export default function ArticleEditor() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {title.length}/200 حرف
+                  {(title || "").length}/200 حرف
                 </p>
               </CardContent>
             </Card>
@@ -442,8 +442,8 @@ export default function ArticleEditor() {
                   data-testid="input-subtitle"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  {subtitle.length}/120 حرف
-                  {subtitle.length > 100 && (
+                  {(subtitle || "").length}/120 حرف
+                  {(subtitle || "").length > 100 && (
                     <span className="text-amber-500 mr-2">قريب من الحد الأقصى</span>
                   )}
                 </p>
@@ -686,7 +686,7 @@ export default function ArticleEditor() {
                         data-testid="input-meta-title"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {metaTitle.length}/70 حرف
+                        {(metaTitle || "").length}/70 حرف
                       </p>
                     </div>
 
@@ -701,7 +701,7 @@ export default function ArticleEditor() {
                         data-testid="textarea-meta-description"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {metaDescription.length}/160 حرف
+                        {(metaDescription || "").length}/160 حرف
                       </p>
                     </div>
 
@@ -726,7 +726,7 @@ export default function ArticleEditor() {
                         data-testid="input-slug"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {slug.length}/150 حرف
+                        {(slug || "").length}/150 حرف
                       </p>
                     </div>
 
