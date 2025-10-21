@@ -43,6 +43,8 @@ export default function ArticleEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const isNewArticle = id === "new";
+  
+  console.log('[ArticleEditor] id:', id, 'isNewArticle:', isNewArticle);
 
   // Article fields
   const [title, setTitle] = useState("");
@@ -214,12 +216,12 @@ export default function ArticleEditor() {
       }
 
       if (isNewArticle) {
-        return await apiRequest("/api/dashboard/articles", {
+        return await apiRequest("/api/admin/articles", {
           method: "POST",
           body: JSON.stringify(articleData),
         });
       } else {
-        return await apiRequest(`/api/dashboard/articles/${id}`, {
+        return await apiRequest(`/api/admin/articles/${id}`, {
           method: "PUT",
           body: JSON.stringify(articleData),
         });
