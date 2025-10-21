@@ -41,6 +41,8 @@ import {
   Coins,
   Star,
   ChevronDown,
+  Tag,
+  X,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -205,6 +207,35 @@ export default function Profile() {
   const { data: loyaltyPoints } = useQuery<UserPointsTotal>({
     queryKey: ["/api/loyalty/points"],
     enabled: !!user,
+  });
+
+  const { data: followedKeywords = [], isLoading: isLoadingKeywords } = useQuery<
+    Array<{ tagId: string; tagName: string; notify: boolean; articleCount: number }>
+  >({
+    queryKey: ["/api/user/followed-keywords"],
+    enabled: !!user,
+  });
+
+  const unfollowKeywordMutation = useMutation({
+    mutationFn: async (tagId: string) => {
+      return await apiRequest(`/api/keywords/unfollow/${tagId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/followed-keywords"] });
+      toast({
+        title: "تم إلغاء المتابعة",
+        description: "لن تتلقى إشعارات عن هذه الكلمة",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في إلغاء المتابعة",
+        variant: "destructive",
+      });
+    },
   });
 
   const getInitials = () => {
@@ -485,6 +516,125 @@ export default function Profile() {
                 <SmartInterestsBlock userId={user.id} />
               </div>
             </div>
+
+            {/* Followed Keywords - Mobile Collapsible */}
+            <Collapsible defaultOpen={false} className="lg:hidden">
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover-elevate p-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Tag className="h-4 w-4" />
+                        كلماتي المتابعة
+                      </CardTitle>
+                      <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="p-4 pt-0">
+                    {isLoadingKeywords ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    ) : followedKeywords.length > 0 ? (
+                      <div className="space-y-2">
+                        {followedKeywords.map((keyword) => (
+                          <div
+                            key={keyword.tagId}
+                            className="flex items-center justify-between gap-2 p-2 rounded-md hover-elevate"
+                          >
+                            <Link href={`/keyword/${keyword.tagName}`}>
+                              <span className="flex items-center gap-2 flex-1 cursor-pointer" data-testid={`link-keyword-${keyword.tagId}`}>
+                                <Tag className="h-3.5 w-3.5 text-primary" />
+                                <span className="text-sm font-medium">{keyword.tagName}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {keyword.articleCount}
+                                </Badge>
+                              </span>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0"
+                              onClick={() => unfollowKeywordMutation.mutate(keyword.tagId)}
+                              disabled={unfollowKeywordMutation.isPending}
+                              data-testid={`button-unfollow-keyword-${keyword.tagId}`}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Tag className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          لم تتابع أي كلمات بعد
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Desktop Followed Keywords - Always visible */}
+            <Card className="hidden lg:block">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  كلماتي المتابعة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingKeywords ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : followedKeywords.length > 0 ? (
+                  <div className="space-y-2">
+                    {followedKeywords.map((keyword) => (
+                      <div
+                        key={keyword.tagId}
+                        className="flex items-center justify-between gap-2 p-2 rounded-md hover-elevate"
+                      >
+                        <Link href={`/keyword/${keyword.tagName}`}>
+                          <span className="flex items-center gap-2 flex-1 cursor-pointer" data-testid={`link-keyword-${keyword.tagId}`}>
+                            <Tag className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-sm font-medium">{keyword.tagName}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {keyword.articleCount}
+                            </Badge>
+                          </span>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => unfollowKeywordMutation.mutate(keyword.tagId)}
+                          disabled={unfollowKeywordMutation.isPending}
+                          data-testid={`button-unfollow-keyword-${keyword.tagId}`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Tag className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      لم تتابع أي كلمات بعد
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Loyalty Program - Mobile Collapsible */}
             <Collapsible defaultOpen={false} className="lg:hidden">

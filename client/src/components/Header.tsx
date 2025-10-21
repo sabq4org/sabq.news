@@ -185,12 +185,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <a href="/my-keywords" className="flex w-full items-center cursor-pointer" data-testid="link-my-keywords-mobile">
-                        <Tag className="ml-2 h-4 w-4" />
-                        كلماتي المتابعة
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
                       <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile-mobile">
                         <User className="ml-2 h-4 w-4" />
                         الملف الشخصي
@@ -270,12 +264,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <a href="/daily-brief" className="flex w-full items-center cursor-pointer" data-testid="link-daily-brief">
                         <Newspaper className="ml-2 h-4 w-4" />
                         ملخصي اليومي
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <a href="/my-keywords" className="flex w-full items-center cursor-pointer" data-testid="link-my-keywords">
-                        <Tag className="ml-2 h-4 w-4" />
-                        كلماتي المتابعة
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
