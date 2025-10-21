@@ -34,6 +34,7 @@ import {
   experimentVariants,
   experimentExposures,
   experimentConversions,
+  staff,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -99,6 +100,11 @@ import {
   type InsertStoryNotification,
   type StoryWithDetails,
   type StoryLinkWithArticle,
+  type Staff,
+  type ReporterProfile,
+  type ReporterArticle,
+  type ReporterTopCategory,
+  type ReporterTimeseries,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -445,6 +451,10 @@ export interface IStorage {
 
   // Assign variant to user/session
   assignExperimentVariant(experimentId: string, userId?: string, sessionId?: string): Promise<ExperimentVariant>;
+
+  // Reporter/Staff operations
+  getReporterBySlug(slug: string): Promise<Staff | undefined>;
+  getReporterProfile(slug: string, windowDays?: number): Promise<ReporterProfile | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4117,6 +4127,221 @@ export class DatabaseStorage implements IStorage {
     const selectedVariant = selectedAllocation?.variant || sortedVariants[0];
 
     return selectedVariant;
+  }
+
+  // Reporter/Staff operations
+  async getReporterBySlug(slug: string): Promise<Staff | undefined> {
+    const [reporter] = await db
+      .select()
+      .from(staff)
+      .where(and(eq(staff.slug, slug), eq(staff.isActive, true)))
+      .limit(1);
+    
+    return reporter;
+  }
+
+  async getReporterProfile(slug: string, windowDays: number = 90): Promise<ReporterProfile | undefined> {
+    // Get reporter basic info
+    const reporter = await this.getReporterBySlug(slug);
+    if (!reporter) return undefined;
+
+    const windowDate = new Date();
+    windowDate.setDate(windowDate.getDate() - windowDays);
+
+    // Get reporter's articles with detailed stats
+    const reporterArticles = await db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        publishedAt: articles.publishedAt,
+        newsType: articles.newsType,
+        views: articles.views,
+        categoryId: categories.id,
+        categoryNameAr: categories.nameAr,
+        categorySlug: categories.slug,
+        categoryColor: categories.color,
+        categoryIcon: categories.icon,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(
+        and(
+          eq(articles.authorId, reporter.userId!),
+          eq(articles.status, 'published'),
+          gte(articles.publishedAt, windowDate)
+        )
+      )
+      .orderBy(desc(articles.publishedAt))
+      .execute();
+
+    // Get total stats
+    const totalArticles = reporterArticles.length;
+    const totalViews = reporterArticles.reduce((sum, a) => sum + (a.views || 0), 0);
+
+    // Get likes count for reporter's articles
+    const likesResult = await db
+      .select({
+        totalLikes: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(reactions)
+      .innerJoin(articles, eq(reactions.articleId, articles.id))
+      .where(
+        and(
+          eq(articles.authorId, reporter.userId!),
+          eq(reactions.type, 'like')
+        )
+      )
+      .execute();
+    
+    const totalLikes = likesResult[0]?.totalLikes || 0;
+
+    // Get comments count for last articles
+    const commentsResult = await db
+      .select({
+        articleId: comments.articleId,
+        count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(comments)
+      .where(
+        inArray(
+          comments.articleId,
+          reporterArticles.slice(0, 5).map(a => a.id)
+        )
+      )
+      .groupBy(comments.articleId)
+      .execute();
+
+    const commentsMap = new Map(commentsResult.map(r => [r.articleId, r.count || 0]));
+
+    // Get reading history for completion rate (sample from last 100 reads)
+    const readingStats = await db
+      .select({
+        avgCompletion: sql<number>`CAST(AVG(completion_percentage) AS REAL)`,
+        avgReadTime: sql<number>`CAST(AVG(reading_time_seconds) / 60.0 AS REAL)`,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .where(eq(articles.authorId, reporter.userId!))
+      .execute();
+
+    const avgCompletionRate = Math.round(readingStats[0]?.avgCompletion || 0);
+    const avgReadTimeMin = Math.round(readingStats[0]?.avgReadTime || 4);
+
+    // Prepare last 5 articles with full details
+    const lastArticles: ReporterArticle[] = reporterArticles.slice(0, 5).map(a => ({
+      id: a.id,
+      title: a.title,
+      slug: a.slug,
+      publishedAt: a.publishedAt,
+      category: a.categoryId ? {
+        name: a.categoryNameAr || '',
+        slug: a.categorySlug || '',
+        color: a.categoryColor,
+        icon: a.categoryIcon,
+      } : null,
+      isBreaking: a.newsType === 'breaking',
+      views: a.views || 0,
+      likes: 0, // Will calculate separately if needed
+      comments: commentsMap.get(a.id) || 0,
+      readingTime: avgReadTimeMin,
+    }));
+
+    // Get top categories
+    const categoryStats = reporterArticles.reduce((acc, a) => {
+      if (!a.categoryId || !a.categoryNameAr) return acc;
+      
+      const key = a.categoryId;
+      if (!acc[key]) {
+        acc[key] = {
+          name: a.categoryNameAr,
+          slug: a.categorySlug || '',
+          color: a.categoryColor,
+          articles: 0,
+          views: 0,
+        };
+      }
+      
+      acc[key].articles++;
+      acc[key].views += a.views || 0;
+      
+      return acc;
+    }, {} as Record<string, ReporterTopCategory>);
+
+    const topCategories = Object.values(categoryStats)
+      .sort((a, b) => b.articles - a.articles)
+      .slice(0, 5)
+      .map(cat => ({
+        ...cat,
+        sharePct: totalArticles > 0 ? Math.round((cat.articles / totalArticles) * 100) : 0,
+      }));
+
+    // Generate time series data (simplified - daily aggregates)
+    const timeseries: ReporterTimeseries[] = [];
+    const dailyStats = reporterArticles.reduce((acc, a) => {
+      if (!a.publishedAt) return acc;
+      
+      const dateStr = a.publishedAt.toISOString().split('T')[0];
+      if (!acc[dateStr]) {
+        acc[dateStr] = { views: 0, likes: 0 };
+      }
+      acc[dateStr].views += a.views || 0;
+      
+      return acc;
+    }, {} as Record<string, { views: number; likes: number }>);
+
+    Object.entries(dailyStats).forEach(([date, stats]) => {
+      timeseries.push({
+        date,
+        views: stats.views,
+        likes: stats.likes,
+      });
+    });
+
+    timeseries.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Generate badges
+    const badges: Array<{ key: string; label: string }> = [];
+    
+    if (reporter.isVerified) {
+      badges.push({ key: 'verified', label: 'موثق' });
+    }
+    
+    if (totalArticles >= 20) {
+      badges.push({ key: 'active_contributor', label: 'كاتب نشط' });
+    }
+    
+    if (reporter.specializations.length > 0) {
+      badges.push({ 
+        key: 'specialist', 
+        label: `متخصص في ${reporter.specializations[0]}` 
+      });
+    }
+
+    return {
+      id: reporter.id,
+      slug: reporter.slug,
+      fullName: reporter.nameAr,
+      title: reporter.titleAr,
+      avatarUrl: reporter.profileImage,
+      bio: reporter.bioAr,
+      isVerified: reporter.isVerified,
+      tags: reporter.specializations,
+      kpis: {
+        totalArticles,
+        totalViews,
+        totalLikes,
+        avgReadTimeMin,
+        avgCompletionRate,
+      },
+      lastArticles,
+      topCategories,
+      timeseries: {
+        windowDays,
+        daily: timeseries,
+      },
+      badges,
+    };
   }
 }
 
