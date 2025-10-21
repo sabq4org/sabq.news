@@ -298,6 +298,14 @@ export const navConfig: NavItem[] = [
         icon: ListChecks,
         roles: ["admin"],
       },
+      {
+        id: "system_settings",
+        labelKey: "nav.system_settings",
+        labelAr: "إعدادات النظام",
+        path: "/dashboard/system-settings",
+        icon: Settings,
+        roles: ["admin"],
+      },
     ],
   },
 
