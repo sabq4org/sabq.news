@@ -315,17 +315,22 @@ export default function ArticleEditor() {
   };
 
   const handleGenerateSummary = async () => {
-    if (!content.trim()) return;
+    if (!content || typeof content !== 'string' || !content.trim()) return;
     generateSummaryMutation.mutate();
   };
 
   const handleGenerateTitle = async () => {
-    if (!content.trim()) return;
+    if (!content || typeof content !== 'string' || !content.trim()) return;
     generateTitlesMutation.mutate();
   };
 
   const handleSave = async (publishNow = false) => {
-    if (!title.trim() || !slug.trim() || !content.trim() || !categoryId) {
+    if (
+      !title || typeof title !== 'string' || !title.trim() || 
+      !slug || typeof slug !== 'string' || !slug.trim() || 
+      !content || typeof content !== 'string' || !content.trim() || 
+      !categoryId
+    ) {
       toast({
         title: "حقول مطلوبة",
         description: "الرجاء ملء جميع الحقول المطلوبة",
