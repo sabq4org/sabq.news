@@ -11,20 +11,44 @@ interface TrendingKeyword {
   category?: string;
 }
 
-const getCategoryColor = (category?: string): string => {
-  if (!category) return "bg-primary/80 dark:bg-primary/70";
+const getCategoryStyles = (category?: string): { bg: string; text: string; badge: string } => {
+  if (!category) return {
+    bg: "bg-primary/10 dark:bg-primary/20",
+    text: "text-primary",
+    badge: "bg-primary/20 dark:bg-primary/30"
+  };
   
   switch (category) {
     case "سياسة":
-      return "bg-red-600/90 dark:bg-red-500/80";
+      return {
+        bg: "bg-red-50 dark:bg-red-950/20",
+        text: "text-red-700 dark:text-red-400",
+        badge: "bg-red-100 dark:bg-red-900/40"
+      };
     case "اقتصاد":
-      return "bg-green-600/90 dark:bg-green-500/80";
+      return {
+        bg: "bg-green-50 dark:bg-green-950/20",
+        text: "text-green-700 dark:text-green-400",
+        badge: "bg-green-100 dark:bg-green-900/40"
+      };
     case "رياضة":
-      return "bg-blue-600/90 dark:bg-blue-500/80";
+      return {
+        bg: "bg-blue-50 dark:bg-blue-950/20",
+        text: "text-blue-700 dark:text-blue-400",
+        badge: "bg-blue-100 dark:bg-blue-900/40"
+      };
     case "تقنية":
-      return "bg-purple-600/90 dark:bg-purple-500/80";
+      return {
+        bg: "bg-purple-50 dark:bg-purple-950/20",
+        text: "text-purple-700 dark:text-purple-400",
+        badge: "bg-purple-100 dark:bg-purple-900/40"
+      };
     default:
-      return "bg-primary/80 dark:bg-primary/70";
+      return {
+        bg: "bg-primary/10 dark:bg-primary/20",
+        text: "text-primary",
+        badge: "bg-primary/20 dark:bg-primary/30"
+      };
   }
 };
 
@@ -116,31 +140,35 @@ export function TrendingKeywords() {
       <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
         {keywords
           .filter((item) => item.keyword && typeof item.keyword === 'string' && item.keyword.trim())
-          .map((item) => (
-            <motion.div
-              key={item.keyword}
-              className="flex items-center gap-1"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            >
-              <motion.button
-                onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
-                className="bg-card hover-elevate active-elevate-2 border px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          .map((item) => {
+            const styles = getCategoryStyles(item.category);
+            
+            return (
+              <motion.div
+                key={item.keyword}
+                className="flex items-center gap-1"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                data-testid={`trending-keyword-${item.keyword}`}
-                aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
               >
-                <span className="text-primary font-semibold">#{item.keyword}</span>
-                <span className="bg-primary/10 px-2 py-0.5 rounded-full text-xs font-semibold text-primary">
-                  {item.count}
-                </span>
-              </motion.button>
-              <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
-            </motion.div>
-          ))}
+                <motion.button
+                  onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
+                  className={`${styles.bg} border border-gray-200 dark:border-gray-700 hover-elevate active-elevate-2 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  data-testid={`trending-keyword-${item.keyword}`}
+                  aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
+                >
+                  <span className={`${styles.text} font-semibold`}>#{item.keyword}</span>
+                  <span className={`${styles.badge} px-2 py-0.5 rounded-full text-xs font-semibold ${styles.text}`}>
+                    {item.count}
+                  </span>
+                </motion.button>
+                <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
+              </motion.div>
+            );
+          })}
       </div>
     </section>
   );
