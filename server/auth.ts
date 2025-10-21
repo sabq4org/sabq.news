@@ -6,7 +6,7 @@ import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users, canUserLogin, getUserStatusMessage } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export function getSession() {
@@ -73,9 +73,13 @@ export async function setupAuth(app: Express) {
             return done(null, false, { message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
           }
 
-          if (user.status !== "active") {
-            console.log("❌ LocalStrategy: User not active:", user.status);
-            return done(null, false, { message: "هذا الحساب معطل. يرجى التواصل مع الإدارة" });
+          // Check if user can login (not banned or deleted)
+          if (!canUserLogin(user)) {
+            const statusMessage = getUserStatusMessage(user);
+            console.log("❌ LocalStrategy: User cannot login:", statusMessage);
+            return done(null, false, { 
+              message: statusMessage || "لا يمكنك تسجيل الدخول بسبب حالة حسابك. يرجى التواصل مع الإدارة" 
+            });
           }
 
           console.log("✅ LocalStrategy: Success!");

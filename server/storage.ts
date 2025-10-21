@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, ilike } from "drizzle-orm";
 import {
   users,
   categories,
@@ -100,6 +100,61 @@ export interface IStorage {
     profileImageUrl?: string;
   }): Promise<User>;
   updateUser(id: string, userData: UpdateUser): Promise<User>;
+  
+  // Admin user management operations
+  getUsersWithStats(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    role?: string;
+    verificationBadge?: string;
+    emailVerified?: boolean;
+    searchQuery?: string;
+    hasRejectedComments?: boolean;
+    activityDays?: number;
+  }): Promise<{
+    users: (User & {
+      commentCount: number;
+      articleCount: number;
+      totalPoints: number;
+    })[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+  
+  getUserKPIs(): Promise<{
+    total: number;
+    emailVerified: number;
+    unverified: number;
+    suspended: number;
+    banned: number;
+    newToday: number;
+    newThisWeek: number;
+    active24h: number;
+    trends: {
+      emailVerifiedTrend: number;
+      unverifiedTrend: number;
+      suspendedTrend: number;
+      bannedTrend: number;
+      newUsersTrend: number;
+      activeUsersTrend: number;
+    };
+  }>;
+  
+  suspendUser(userId: string, reason: string, duration?: number): Promise<User>;
+  unsuspendUser(userId: string): Promise<User>;
+  banUser(userId: string, reason: string, isPermanent: boolean, duration?: number): Promise<User>;
+  unbanUser(userId: string): Promise<User>;
+  updateUserRole(userId: string, role: string): Promise<User>;
+  updateVerificationBadge(userId: string, badge: string): Promise<User>;
+  softDeleteUser(userId: string): Promise<User>;
+  restoreUser(userId: string): Promise<User>;
+  
+  bulkSuspendUsers(userIds: string[], reason: string, duration?: number): Promise<{ success: number; failed: number }>;
+  bulkBanUsers(userIds: string[], reason: string, isPermanent: boolean, duration?: number): Promise<{ success: number; failed: number }>;
+  bulkUpdateUserRole(userIds: string[], role: string): Promise<{ success: number; failed: number }>;
   
   // Category operations
   getAllCategories(): Promise<Category[]>;
@@ -354,6 +409,376 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return user;
+  }
+
+  // Admin user management operations
+  async getUsersWithStats(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    role?: string;
+    verificationBadge?: string;
+    emailVerified?: boolean;
+    searchQuery?: string;
+    hasRejectedComments?: boolean;
+    activityDays?: number;
+  }): Promise<{
+    users: (User & {
+      commentCount: number;
+      articleCount: number;
+      totalPoints: number;
+    })[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      role,
+      verificationBadge,
+      emailVerified,
+      searchQuery,
+      hasRejectedComments,
+      activityDays,
+    } = params;
+
+    const conditions = [];
+
+    // Filter by status
+    if (status) {
+      conditions.push(eq(users.status, status));
+    }
+
+    // Filter by role
+    if (role) {
+      conditions.push(eq(users.role, role));
+    }
+
+    // Filter by verification badge
+    if (verificationBadge) {
+      conditions.push(eq(users.verificationBadge, verificationBadge));
+    }
+
+    // Filter by email verified
+    if (emailVerified !== undefined) {
+      conditions.push(eq(users.emailVerified, emailVerified));
+    }
+
+    // Filter by activity
+    if (activityDays) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - activityDays);
+      conditions.push(gte(users.lastActivityAt, cutoffDate));
+    }
+
+    // Exclude soft-deleted users
+    conditions.push(isNull(users.deletedAt));
+
+    // Search query
+    if (searchQuery) {
+      const searchPattern = `%${searchQuery}%`;
+      conditions.push(
+        or(
+          ilike(users.email, searchPattern),
+          ilike(users.firstName, searchPattern),
+          ilike(users.lastName, searchPattern),
+          ilike(users.phoneNumber, searchPattern)
+        )
+      );
+    }
+
+    // Count total
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const total = Number(countResult?.count || 0);
+    const totalPages = Math.ceil(total / limit);
+    const offset = (page - 1) * limit;
+
+    // Get users with stats
+    const userResults = await db
+      .select({
+        user: users,
+        commentCount: sql<number>`count(distinct ${comments.id})`,
+        articleCount: sql<number>`count(distinct ${articles.id})`,
+        totalPoints: sql<number>`coalesce(${userPointsTotal.totalPoints}, 0)`,
+      })
+      .from(users)
+      .leftJoin(comments, eq(comments.userId, users.id))
+      .leftJoin(articles, eq(articles.authorId, users.id))
+      .leftJoin(userPointsTotal, eq(userPointsTotal.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(users.id)
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const usersWithStats = userResults.map((r) => ({
+      ...r.user,
+      commentCount: Number(r.commentCount),
+      articleCount: Number(r.articleCount),
+      totalPoints: Number(r.totalPoints),
+    }));
+
+    return {
+      users: usersWithStats,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  async getUserKPIs(): Promise<{
+    total: number;
+    emailVerified: number;
+    unverified: number;
+    suspended: number;
+    banned: number;
+    newToday: number;
+    newThisWeek: number;
+    active24h: number;
+    trends: {
+      emailVerifiedTrend: number;
+      unverifiedTrend: number;
+      suspendedTrend: number;
+      bannedTrend: number;
+      newUsersTrend: number;
+      activeUsersTrend: number;
+    };
+  }> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+    // Current stats
+    const [stats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        emailVerified: sql<number>`count(*) filter (where ${users.emailVerified} = true)`,
+        unverified: sql<number>`count(*) filter (where ${users.emailVerified} = false)`,
+        suspended: sql<number>`count(*) filter (where ${users.status} = 'suspended')`,
+        banned: sql<number>`count(*) filter (where ${users.status} = 'banned')`,
+        newToday: sql<number>`count(*) filter (where ${users.createdAt} >= ${today})`,
+        newThisWeek: sql<number>`count(*) filter (where ${users.createdAt} >= ${weekAgo})`,
+        active24h: sql<number>`count(*) filter (where ${users.lastActivityAt} >= ${yesterday})`,
+      })
+      .from(users)
+      .where(isNull(users.deletedAt));
+
+    // Previous week stats for trends
+    const [prevWeekStats] = await db
+      .select({
+        emailVerified: sql<number>`count(*) filter (where ${users.emailVerified} = true)`,
+        unverified: sql<number>`count(*) filter (where ${users.emailVerified} = false)`,
+        suspended: sql<number>`count(*) filter (where ${users.status} = 'suspended')`,
+        banned: sql<number>`count(*) filter (where ${users.status} = 'banned')`,
+        newUsers: sql<number>`count(*) filter (where ${users.createdAt} >= ${twoWeeksAgo} and ${users.createdAt} < ${weekAgo})`,
+        activeUsers: sql<number>`count(*) filter (where ${users.lastActivityAt} >= ${twoWeeksAgo} and ${users.lastActivityAt} < ${weekAgo})`,
+      })
+      .from(users)
+      .where(isNull(users.deletedAt));
+
+    // Calculate trends (percentage change)
+    const calculateTrend = (current: number, previous: number) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return ((current - previous) / previous) * 100;
+    };
+
+    return {
+      total: Number(stats.total),
+      emailVerified: Number(stats.emailVerified),
+      unverified: Number(stats.unverified),
+      suspended: Number(stats.suspended),
+      banned: Number(stats.banned),
+      newToday: Number(stats.newToday),
+      newThisWeek: Number(stats.newThisWeek),
+      active24h: Number(stats.active24h),
+      trends: {
+        emailVerifiedTrend: calculateTrend(Number(stats.emailVerified), Number(prevWeekStats.emailVerified)),
+        unverifiedTrend: calculateTrend(Number(stats.unverified), Number(prevWeekStats.unverified)),
+        suspendedTrend: calculateTrend(Number(stats.suspended), Number(prevWeekStats.suspended)),
+        bannedTrend: calculateTrend(Number(stats.banned), Number(prevWeekStats.banned)),
+        newUsersTrend: calculateTrend(Number(stats.newThisWeek), Number(prevWeekStats.newUsers)),
+        activeUsersTrend: calculateTrend(Number(stats.active24h), Number(prevWeekStats.activeUsers)),
+      },
+    };
+  }
+
+  async suspendUser(userId: string, reason: string, duration?: number): Promise<User> {
+    const suspendedUntil = duration
+      ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000)
+      : null;
+
+    const [user] = await db
+      .update(users)
+      .set({
+        status: 'suspended',
+        suspendedUntil,
+        suspensionReason: reason,
+        bannedUntil: null,
+        banReason: null,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async unsuspendUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        status: 'active',
+        suspendedUntil: null,
+        suspensionReason: null,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async banUser(userId: string, reason: string, isPermanent: boolean, duration?: number): Promise<User> {
+    const bannedUntil = isPermanent || !duration
+      ? null
+      : new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
+
+    const [user] = await db
+      .update(users)
+      .set({
+        status: 'banned',
+        bannedUntil,
+        banReason: reason,
+        suspendedUntil: null,
+        suspensionReason: null,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async unbanUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        status: 'active',
+        bannedUntil: null,
+        banReason: null,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ role })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async updateVerificationBadge(userId: string, badge: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ verificationBadge: badge })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async softDeleteUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        deletedAt: new Date(),
+        status: 'deleted',
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async restoreUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        deletedAt: null,
+        status: 'active',
+        suspendedUntil: null,
+        suspensionReason: null,
+        bannedUntil: null,
+        banReason: null,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user;
+  }
+
+  async bulkSuspendUsers(userIds: string[], reason: string, duration?: number): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const userId of userIds) {
+      try {
+        await this.suspendUser(userId, reason, duration);
+        success++;
+      } catch (error) {
+        console.error(`Failed to suspend user ${userId}:`, error);
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
+
+  async bulkBanUsers(userIds: string[], reason: string, isPermanent: boolean, duration?: number): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const userId of userIds) {
+      try {
+        await this.banUser(userId, reason, isPermanent, duration);
+        success++;
+      } catch (error) {
+        console.error(`Failed to ban user ${userId}:`, error);
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
+
+  async bulkUpdateUserRole(userIds: string[], role: string): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const userId of userIds) {
+      try {
+        await this.updateUserRole(userId, role);
+        success++;
+      } catch (error) {
+        console.error(`Failed to update role for user ${userId}:`, error);
+        failed++;
+      }
+    }
+
+    return { success, failed };
   }
 
   // Category operations
@@ -1113,6 +1538,18 @@ export class DatabaseStorage implements IStorage {
         role: row.author_role,
         status: row.author_status,
         isProfileComplete: row.author_is_profile_complete,
+        emailVerified: row.author_email_verified || false,
+        phoneVerified: row.author_phone_verified || false,
+        verificationBadge: row.author_verification_badge || 'none',
+        lastActivityAt: row.author_last_activity_at || null,
+        suspendedUntil: row.author_suspended_until || null,
+        suspensionReason: row.author_suspension_reason || null,
+        bannedUntil: row.author_banned_until || null,
+        banReason: row.author_ban_reason || null,
+        accountLocked: row.author_account_locked || false,
+        lockedUntil: row.author_locked_until || null,
+        failedLoginAttempts: row.author_failed_login_attempts || 0,
+        deletedAt: row.author_deleted_at || null,
         createdAt: row.author_created_at,
       } : undefined,
     }));

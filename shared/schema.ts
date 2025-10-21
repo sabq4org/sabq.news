@@ -25,8 +25,33 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number"),
   profileImageUrl: text("profile_image_url"),
   role: text("role").notNull().default("reader"),
-  status: text("status").default("active").notNull(), // active, suspended, banned
+  status: text("status").default("active").notNull(), // active, pending, suspended, banned, locked, deleted
   isProfileComplete: boolean("is_profile_complete").default(false).notNull(),
+  
+  // Verification fields
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  phoneVerified: boolean("phone_verified").default(false).notNull(),
+  verificationBadge: text("verification_badge").default("none").notNull(), // none, silver, gold
+  
+  // Activity tracking
+  lastActivityAt: timestamp("last_activity_at"),
+  
+  // Suspension fields
+  suspendedUntil: timestamp("suspended_until"),
+  suspensionReason: text("suspension_reason"),
+  
+  // Ban fields
+  bannedUntil: timestamp("banned_until"),
+  banReason: text("ban_reason"),
+  
+  // Security lock fields
+  accountLocked: boolean("account_locked").default(false).notNull(),
+  lockedUntil: timestamp("locked_until"),
+  failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
+  
+  // Soft delete
+  deletedAt: timestamp("deleted_at"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -811,6 +836,18 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
   createdAt: true,
   isProfileComplete: true,
+  lastActivityAt: true,
+  emailVerified: true,
+  phoneVerified: true,
+  verificationBadge: true,
+  suspendedUntil: true,
+  suspensionReason: true,
+  bannedUntil: true,
+  banReason: true,
+  accountLocked: true,
+  lockedUntil: true,
+  failedLoginAttempts: true,
+  deletedAt: true,
 });
 
 export const updateUserSchema = z.object({
@@ -823,10 +860,24 @@ export const updateUserSchema = z.object({
 });
 
 export const adminUpdateUserSchema = z.object({
-  status: z.enum(["active", "suspended", "banned"], {
-    errorMap: () => ({ message: "الحالة يجب أن تكون: نشط، معلق، أو محظور" })
+  status: z.enum(["active", "pending", "suspended", "banned", "locked", "deleted"], {
+    errorMap: () => ({ message: "الحالة يجب أن تكون: نشط، معلق، محظور، أو مقفل" })
   }).optional(),
   roleId: z.string().uuid("معرف الدور غير صحيح").optional(),
+  verificationBadge: z.enum(["none", "silver", "gold"]).optional(),
+  emailVerified: z.boolean().optional(),
+  phoneVerified: z.boolean().optional(),
+});
+
+export const suspendUserSchema = z.object({
+  reason: z.string().min(5, "يجب إدخال سبب التعليق (5 أحرف على الأقل)"),
+  duration: z.number().int().positive().optional(), // in days
+});
+
+export const banUserSchema = z.object({
+  reason: z.string().min(5, "يجب إدخال سبب الحظر (5 أحرف على الأقل)"),
+  isPermanent: z.boolean().default(false),
+  duration: z.number().int().positive().optional(), // in days, only if not permanent
 });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
@@ -1490,3 +1541,96 @@ export const userFollowedTermsRelations = relations(userFollowedTerms, ({ one })
     references: [tags.id],
   }),
 }));
+
+// ============================================================
+// User Status Helper Functions
+// ============================================================
+
+export type UserStatus = "active" | "pending" | "suspended" | "banned" | "locked" | "deleted";
+
+export function getUserEffectiveStatus(user: User): UserStatus {
+  const now = new Date();
+  
+  // Priority 1: Deleted (soft delete)
+  if (user.deletedAt) {
+    return "deleted";
+  }
+  
+  // Priority 2: Banned (permanent or temporary)
+  if (user.status === "banned") {
+    if (user.bannedUntil && user.bannedUntil > now) {
+      return "banned";
+    } else if (!user.bannedUntil) {
+      // Permanent ban
+      return "banned";
+    }
+    // Temporary ban expired - continue checking other statuses
+  }
+  
+  // Priority 3: Suspended (temporary)
+  if (user.status === "suspended") {
+    if (user.suspendedUntil && user.suspendedUntil > now) {
+      return "suspended";
+    }
+    // Suspension expired - continue checking other statuses
+  }
+  
+  // Priority 4: Account locked (security)
+  if (user.accountLocked) {
+    if (user.lockedUntil && user.lockedUntil > now) {
+      return "locked";
+    }
+    // Lock expired - continue checking other statuses
+  }
+  
+  // Priority 5: Pending (email not verified)
+  if (!user.emailVerified) {
+    return "pending";
+  }
+  
+  // Default: Active
+  return "active";
+}
+
+export function canUserInteract(user: User): boolean {
+  const status = getUserEffectiveStatus(user);
+  return status === "active";
+}
+
+export function canUserLogin(user: User): boolean {
+  const status = getUserEffectiveStatus(user);
+  return status !== "banned" && status !== "deleted";
+}
+
+export function getUserStatusMessage(user: User): string | null {
+  const status = getUserEffectiveStatus(user);
+  
+  switch (status) {
+    case "banned":
+      if (user.bannedUntil) {
+        return `حسابك محظور حتى ${user.bannedUntil.toLocaleDateString('ar-SA')}. السبب: ${user.banReason || 'غير محدد'}`;
+      }
+      return `حسابك محظور بشكل دائم. السبب: ${user.banReason || 'غير محدد'}`;
+    
+    case "suspended":
+      if (user.suspendedUntil) {
+        return `حسابك معلق حتى ${user.suspendedUntil.toLocaleDateString('ar-SA')}. السبب: ${user.suspensionReason || 'غير محدد'}`;
+      }
+      return `حسابك معلق. السبب: ${user.suspensionReason || 'غير محدد'}`;
+    
+    case "locked":
+      if (user.lockedUntil) {
+        return `حسابك مقفل مؤقتاً حتى ${user.lockedUntil.toLocaleDateString('ar-SA')} بسبب محاولات دخول فاشلة متعددة.`;
+      }
+      return `حسابك مقفل بسبب محاولات دخول فاشلة متعددة. يرجى التواصل مع الإدارة.`;
+    
+    case "pending":
+      return `يرجى تفعيل حسابك عبر البريد الإلكتروني للوصول الكامل للميزات.`;
+    
+    case "deleted":
+      return `هذا الحساب محذوف.`;
+    
+    default:
+      return null;
+  }
+}

@@ -20,6 +20,7 @@ import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
 import { randomUUID } from "crypto";
+import { checkUserStatus } from "./userStatusMiddleware";
 import { 
   users, 
   roles, 
@@ -64,6 +65,8 @@ import {
   insertRssFeedSchema,
   updateUserSchema,
   adminUpdateUserSchema,
+  suspendUserSchema,
+  banUserSchema,
   insertThemeSchema,
   updateThemeSchema,
   updateRolePermissionsSchema,
@@ -3734,7 +3737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/articles/:id/react", isAuthenticated, async (req: any, res) => {
+  app.post("/api/articles/:id/react", isAuthenticated, checkUserStatus(), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const result = await storage.toggleReaction(req.params.id, userId);
@@ -3773,7 +3776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/articles/:id/bookmark", isAuthenticated, async (req: any, res) => {
+  app.post("/api/articles/:id/bookmark", isAuthenticated, checkUserStatus(), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const result = await storage.toggleBookmark(req.params.id, userId);
@@ -3830,7 +3833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/articles/:slug/comments", isAuthenticated, async (req: any, res) => {
+  app.post("/api/articles/:slug/comments", isAuthenticated, checkUserStatus(), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const userRole = req.user.role;
@@ -4397,6 +4400,275 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in AI chat:", error);
       res.status(500).json({ message: "فشل في معالجة الرسالة" });
+    }
+  });
+
+  // ============================================================
+  // USER MANAGEMENT ROUTES (Admin Dashboard)
+  // ============================================================
+
+  // 1. GET /api/dashboard/users - Get users with pagination and filters
+  app.get("/api/dashboard/users", requireAuth, requirePermission('users.view'), async (req: any, res) => {
+    try {
+      console.log("📋 [USERS] Fetching users with filters:", req.query);
+      
+      const params = {
+        page: req.query.page ? parseInt(req.query.page) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit) : undefined,
+        status: req.query.status,
+        role: req.query.role,
+        verificationBadge: req.query.verificationBadge,
+        emailVerified: req.query.emailVerified === 'true' ? true : req.query.emailVerified === 'false' ? false : undefined,
+        searchQuery: req.query.searchQuery,
+        activityDays: req.query.activityDays ? parseInt(req.query.activityDays) : undefined,
+      };
+
+      const result = await storage.getUsersWithStats(params);
+      console.log("✅ [USERS] Fetched users successfully:", result.total);
+      res.json(result);
+    } catch (error) {
+      console.error("❌ [USERS] Error fetching users:", error);
+      res.status(500).json({ message: "فشل في جلب المستخدمين" });
+    }
+  });
+
+  // 2. GET /api/dashboard/users/kpis - Get user KPIs
+  app.get("/api/dashboard/users/kpis", requireAuth, requirePermission('users.view'), async (req: any, res) => {
+    try {
+      console.log("📊 [USERS KPIs] Fetching user KPIs");
+      const kpis = await storage.getUserKPIs();
+      console.log("✅ [USERS KPIs] Fetched successfully");
+      res.json(kpis);
+    } catch (error) {
+      console.error("❌ [USERS KPIs] Error fetching KPIs:", error);
+      res.status(500).json({ message: "فشل في جلب إحصائيات المستخدمين" });
+    }
+  });
+
+  // 3. POST /api/dashboard/users/:id/suspend - Suspend user
+  app.post("/api/dashboard/users/:id/suspend", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("⏸️ [USER SUSPEND] Suspending user:", userId);
+
+      const parsed = suspendUserSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: parsed.error });
+      }
+
+      const { reason, duration } = parsed.data;
+      const updatedUser = await storage.suspendUser(userId, reason, duration);
+      
+      console.log("✅ [USER SUSPEND] User suspended successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER SUSPEND] Error suspending user:", error);
+      res.status(500).json({ message: "فشل في تعليق المستخدم" });
+    }
+  });
+
+  // 4. POST /api/dashboard/users/:id/unsuspend - Unsuspend user
+  app.post("/api/dashboard/users/:id/unsuspend", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("▶️ [USER UNSUSPEND] Unsuspending user:", userId);
+
+      const updatedUser = await storage.unsuspendUser(userId);
+      
+      console.log("✅ [USER UNSUSPEND] User unsuspended successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER UNSUSPEND] Error unsuspending user:", error);
+      res.status(500).json({ message: "فشل في رفع التعليق عن المستخدم" });
+    }
+  });
+
+  // 5. POST /api/dashboard/users/:id/ban - Ban user
+  app.post("/api/dashboard/users/:id/ban", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("🚫 [USER BAN] Banning user:", userId);
+
+      const parsed = banUserSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: parsed.error });
+      }
+
+      const { reason, isPermanent, duration } = parsed.data;
+      const updatedUser = await storage.banUser(userId, reason, isPermanent, duration);
+      
+      console.log("✅ [USER BAN] User banned successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER BAN] Error banning user:", error);
+      res.status(500).json({ message: "فشل في حظر المستخدم" });
+    }
+  });
+
+  // 6. POST /api/dashboard/users/:id/unban - Unban user
+  app.post("/api/dashboard/users/:id/unban", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("✅ [USER UNBAN] Unbanning user:", userId);
+
+      const updatedUser = await storage.unbanUser(userId);
+      
+      console.log("✅ [USER UNBAN] User unbanned successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER UNBAN] Error unbanning user:", error);
+      res.status(500).json({ message: "فشل في رفع الحظر عن المستخدم" });
+    }
+  });
+
+  // 7. PATCH /api/dashboard/users/:id/role - Update user role
+  app.patch("/api/dashboard/users/:id/role", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const { role } = req.body;
+      
+      console.log("👤 [USER ROLE] Updating user role:", userId, "to", role);
+
+      if (!role) {
+        return res.status(400).json({ message: "الدور مطلوب" });
+      }
+
+      const updatedUser = await storage.updateUserRole(userId, role);
+      
+      console.log("✅ [USER ROLE] User role updated successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER ROLE] Error updating user role:", error);
+      res.status(500).json({ message: "فشل في تحديث دور المستخدم" });
+    }
+  });
+
+  // 8. PATCH /api/dashboard/users/:id/verification-badge - Update verification badge
+  app.patch("/api/dashboard/users/:id/verification-badge", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const { badge } = req.body;
+      
+      console.log("🏅 [USER BADGE] Updating verification badge:", userId, "to", badge);
+
+      if (!badge || !['none', 'silver', 'gold'].includes(badge)) {
+        return res.status(400).json({ message: "علامة التوثيق غير صحيحة" });
+      }
+
+      const updatedUser = await storage.updateVerificationBadge(userId, badge);
+      
+      console.log("✅ [USER BADGE] Verification badge updated successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER BADGE] Error updating verification badge:", error);
+      res.status(500).json({ message: "فشل في تحديث علامة التوثيق" });
+    }
+  });
+
+  // 9. POST /api/dashboard/users/:id/soft-delete - Soft delete user
+  app.post("/api/dashboard/users/:id/soft-delete", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("🗑️ [USER DELETE] Soft deleting user:", userId);
+
+      const updatedUser = await storage.softDeleteUser(userId);
+      
+      console.log("✅ [USER DELETE] User soft deleted successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER DELETE] Error soft deleting user:", error);
+      res.status(500).json({ message: "فشل في حذف المستخدم" });
+    }
+  });
+
+  // 10. POST /api/dashboard/users/:id/restore - Restore deleted user
+  app.post("/api/dashboard/users/:id/restore", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      console.log("♻️ [USER RESTORE] Restoring deleted user:", userId);
+
+      const updatedUser = await storage.restoreUser(userId);
+      
+      console.log("✅ [USER RESTORE] User restored successfully:", userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("❌ [USER RESTORE] Error restoring user:", error);
+      res.status(500).json({ message: "فشل في استعادة المستخدم" });
+    }
+  });
+
+  // 11. POST /api/dashboard/users/bulk/suspend - Bulk suspend users
+  app.post("/api/dashboard/users/bulk/suspend", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const { userIds, reason, duration } = req.body;
+      
+      console.log("⏸️ [BULK SUSPEND] Suspending users:", userIds?.length);
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "قائمة المستخدمين مطلوبة" });
+      }
+
+      if (!reason || reason.length < 5) {
+        return res.status(400).json({ message: "يجب إدخال سبب التعليق (5 أحرف على الأقل)" });
+      }
+
+      const result = await storage.bulkSuspendUsers(userIds, reason, duration);
+      
+      console.log("✅ [BULK SUSPEND] Bulk suspend completed:", result);
+      res.json(result);
+    } catch (error) {
+      console.error("❌ [BULK SUSPEND] Error bulk suspending users:", error);
+      res.status(500).json({ message: "فشل في تعليق المستخدمين" });
+    }
+  });
+
+  // 12. POST /api/dashboard/users/bulk/ban - Bulk ban users
+  app.post("/api/dashboard/users/bulk/ban", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const { userIds, reason, isPermanent, duration } = req.body;
+      
+      console.log("🚫 [BULK BAN] Banning users:", userIds?.length);
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "قائمة المستخدمين مطلوبة" });
+      }
+
+      if (!reason || reason.length < 5) {
+        return res.status(400).json({ message: "يجب إدخال سبب الحظر (5 أحرف على الأقل)" });
+      }
+
+      const result = await storage.bulkBanUsers(userIds, reason, isPermanent || false, duration);
+      
+      console.log("✅ [BULK BAN] Bulk ban completed:", result);
+      res.json(result);
+    } catch (error) {
+      console.error("❌ [BULK BAN] Error bulk banning users:", error);
+      res.status(500).json({ message: "فشل في حظر المستخدمين" });
+    }
+  });
+
+  // 13. POST /api/dashboard/users/bulk/update-role - Bulk update user roles
+  app.post("/api/dashboard/users/bulk/update-role", requireAuth, requirePermission('users.manage'), async (req: any, res) => {
+    try {
+      const { userIds, role } = req.body;
+      
+      console.log("👥 [BULK ROLE] Updating role for users:", userIds?.length, "to", role);
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "قائمة المستخدمين مطلوبة" });
+      }
+
+      if (!role) {
+        return res.status(400).json({ message: "الدور مطلوب" });
+      }
+
+      const result = await storage.bulkUpdateUserRole(userIds, role);
+      
+      console.log("✅ [BULK ROLE] Bulk role update completed:", result);
+      res.json(result);
+    } catch (error) {
+      console.error("❌ [BULK ROLE] Error bulk updating user roles:", error);
+      res.status(500).json({ message: "فشل في تحديث أدوار المستخدمين" });
     }
   });
 
