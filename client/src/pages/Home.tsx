@@ -103,11 +103,8 @@ export default function Home() {
         {/* AI Insights Block */}
         <AIInsightsBlock />
 
-        {/* Keywords Blocks - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TrendingKeywords />
-          <FollowedKeywordsBlock />
-        </div>
+        {/* Trending Keywords Block */}
+        <TrendingKeywords />
 
         {/* Smart Summary Block - Only for authenticated users */}
         {user && <SmartSummaryBlock />}
@@ -131,6 +128,7 @@ export default function Home() {
             {homepage.trending && homepage.trending.length > 0 && (
               <TrendingTopics topics={homepage.trending} />
             )}
+            <FollowedKeywordsBlock />
           </div>
         </div>
       </main>
