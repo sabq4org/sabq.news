@@ -613,6 +613,17 @@ export const articleTags = pgTable("article_tags", {
   tagIdx: index("idx_article_tags_tag").on(table.tagId),
 }));
 
+// User followed terms (for keyword following feature)
+export const userFollowedTerms = pgTable("user_followed_terms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  tagId: varchar("tag_id").references(() => tags.id, { onDelete: "cascade" }).notNull(),
+  notify: boolean("notify").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniq: index("user_followed_terms_user_tag_idx").on(table.userId, table.tagId),
+}));
+
 // ============================================
 // Smart Recommendations & Personalization Tables
 // ============================================
@@ -1048,6 +1059,11 @@ export const insertArticleTagSchema = createInsertSchema(articleTags).omit({
   createdAt: true 
 });
 
+export const insertUserFollowedTermSchema = createInsertSchema(userFollowedTerms).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Recommendation system schemas
 export const insertUserEventSchema = createInsertSchema(userEvents).omit({ 
   id: true, 
@@ -1402,6 +1418,9 @@ export type UpdateTag = z.infer<typeof updateTagSchema>;
 export type ArticleTag = typeof articleTags.$inferSelect;
 export type InsertArticleTag = z.infer<typeof insertArticleTagSchema>;
 
+export type UserFollowedTerm = typeof userFollowedTerms.$inferSelect;
+export type InsertUserFollowedTerm = z.infer<typeof insertUserFollowedTermSchema>;
+
 // Story tracking types
 export type Story = typeof stories.$inferSelect;
 export type InsertStory = z.infer<typeof insertStorySchema>;
@@ -1446,6 +1465,7 @@ export const articleAnglesRelations = relations(articleAngles, ({ one }) => ({
 
 export const tagsRelations = relations(tags, ({ many }) => ({
   articleTags: many(articleTags),
+  userFollowedTerms: many(userFollowedTerms),
 }));
 
 export const articleTagsRelations = relations(articleTags, ({ one }) => ({
@@ -1455,6 +1475,17 @@ export const articleTagsRelations = relations(articleTags, ({ one }) => ({
   }),
   tag: one(tags, {
     fields: [articleTags.tagId],
+    references: [tags.id],
+  }),
+}));
+
+export const userFollowedTermsRelations = relations(userFollowedTerms, ({ one }) => ({
+  user: one(users, {
+    fields: [userFollowedTerms.userId],
+    references: [users.id],
+  }),
+  tag: one(tags, {
+    fields: [userFollowedTerms.tagId],
     references: [tags.id],
   }),
 }));
