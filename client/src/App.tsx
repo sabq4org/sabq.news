@@ -52,6 +52,7 @@ import StoryAdmin from "@/pages/StoryAdmin";
 import SystemSettings from "@/pages/SystemSettings";
 import ABTestsManagement from "@/pages/ABTestsManagement";
 import ABTestDetail from "@/pages/ABTestDetail";
+import ReporterProfile from "@/pages/ReporterProfile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/muqtarib/:slug" component={MuqtaribDetail} />
       <Route path="/muqtarib" component={Muqtarib} />
       <Route path="/article/:slug" component={ArticleDetail} />
+      <Route path="/reporter/:slug" component={ReporterProfile} />
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
