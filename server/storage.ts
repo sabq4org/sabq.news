@@ -2859,32 +2859,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(storyNotifications.createdAt));
   }
 
-  // User Behavior Analytics
-  getUserBehaviorAnalytics(range?: string): Promise<{
-    totalUsers: number;
-    readingTimeAvg: number;
-    totalReads: number;
-    topCategories: Array<{ name: string; count: number }>;
-    interactionCounts: {
-      likes: number;
-      comments: number;
-      bookmarks: number;
-    };
-    activeHours: {
-      morning: number;
-      noon: number;
-      evening: number;
-      night: number;
-    };
-    deviceDistribution: {
-      mobile: number;
-      desktop: number;
-      tablet: number;
-    };
-    returnRate: number;
-    returningUsersCount: number;
-  }>;
-
   // System settings operations
   async getSystemSetting(key: string): Promise<any | undefined> {
     const [setting] = await db
@@ -2957,14 +2931,14 @@ export class DatabaseStorage implements IStorage {
     const topCategories = await db
       .select({
         categoryId: articles.categoryId,
-        categoryName: sql<string>`${categories.name}`,
+        categoryName: sql<string>`COALESCE(${categories.nameAr}, 'غير مصنف')`,
         count: sql<number>`count(*)`,
       })
       .from(readingHistory)
       .innerJoin(articles, eq(readingHistory.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(gte(readingHistory.readAt, startDate))
-      .groupBy(articles.categoryId, sql`${categories.name}`)
+      .groupBy(articles.categoryId, sql`COALESCE(${categories.nameAr}, 'غير مصنف')`)
       .orderBy(desc(sql`count(*)`))
       .limit(5);
 
