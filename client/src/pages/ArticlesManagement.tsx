@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Eye, Send, Star, Bell } from "lucide-react";
+import { Edit, Trash2, Eye, Send, Star, Bell, Plus } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatusCards } from "@/components/admin/StatusCards";
 import { BreakingSwitch } from "@/components/admin/BreakingSwitch";

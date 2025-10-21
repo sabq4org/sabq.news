@@ -40,11 +40,17 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
 
 export default function ArticleEditor() {
-  const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
-  const isNewArticle = id === "new";
+  const params = useParams<{ id: string }>();
+  const [location, navigate] = useLocation();
   
-  console.log('[ArticleEditor] id:', id, 'isNewArticle:', isNewArticle);
+  // Extract id from params or URL directly
+  const id = params.id || location.split('/').pop();
+  const isNewArticle = id === "new" || location.endsWith("/articles/new");
+  
+  console.log('[ArticleEditor] params:', params);
+  console.log('[ArticleEditor] location:', location);
+  console.log('[ArticleEditor] extracted id:', id);
+  console.log('[ArticleEditor] isNewArticle:', isNewArticle);
 
   // Article fields
   const [title, setTitle] = useState("");
