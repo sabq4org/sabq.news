@@ -296,20 +296,25 @@ export default function ArticleEditor() {
 
   const generateSlug = (text: string) => {
     if (!text || typeof text !== 'string') return "";
-    return text
+    
+    const slug = text
       .toLowerCase()
-      .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim()
-      .substring(0, 150); // Limit to 150 characters to prevent database index overflow
+      .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "") // Keep Arabic, English, numbers, spaces, hyphens
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+      .substring(0, 150); // Limit to 150 characters
+    
+    return slug || ""; // Return slug or empty string
   };
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
     // Always auto-generate slug for new articles as user types
     if (isNewArticle) {
-      setSlug(generateSlug(value));
+      const generatedSlug = generateSlug(value);
+      console.log('[Slug Generation] Title:', value, '-> Slug:', generatedSlug);
+      setSlug(generatedSlug);
     }
     if (!metaTitle) {
       setMetaTitle(value);
