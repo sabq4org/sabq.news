@@ -130,7 +130,7 @@ export function FollowedKeywordsBlock() {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 shrink-0"
-                onClick={() => unfollowKeywordMutation.mutate(keyword.tagId)}
+                onClick={() => unfollowMutation.mutate(keyword.tagId)}
                 disabled={unfollowMutation.isPending}
                 data-testid={`button-unfollow-keyword-${keyword.tagId}`}
               >
