@@ -114,31 +114,33 @@ export function TrendingKeywords() {
       </p>
 
       <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
-        {keywords.map((item) => (
-          <motion.div
-            key={item.keyword}
-            className="flex items-center gap-1"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            <motion.button
-              onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
-              className="bg-card hover-elevate active-elevate-2 border px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+        {keywords
+          .filter((item) => item.keyword && typeof item.keyword === 'string' && item.keyword.trim())
+          .map((item) => (
+            <motion.div
+              key={item.keyword}
+              className="flex items-center gap-1"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              data-testid={`trending-keyword-${item.keyword}`}
-              aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
             >
-              <span className="text-primary font-semibold">#{item.keyword}</span>
-              <span className="bg-primary/10 px-2 py-0.5 rounded-full text-xs font-semibold text-primary">
-                {item.count}
-              </span>
-            </motion.button>
-            <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
-          </motion.div>
-        ))}
+              <motion.button
+                onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
+                className="bg-card hover-elevate active-elevate-2 border px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                data-testid={`trending-keyword-${item.keyword}`}
+                aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
+              >
+                <span className="text-primary font-semibold">#{item.keyword}</span>
+                <span className="bg-primary/10 px-2 py-0.5 rounded-full text-xs font-semibold text-primary">
+                  {item.count}
+                </span>
+              </motion.button>
+              <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
+            </motion.div>
+          ))}
       </div>
     </section>
   );

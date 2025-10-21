@@ -22,6 +22,11 @@ export function FollowKeywordButton({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Safety check: return null if keyword is invalid
+  if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
+    return null;
+  }
+
   const { data: followedKeywords = [], isLoading } = useQuery<
     Array<{ tagId: string; tagName: string; notify: boolean }>
   >({
