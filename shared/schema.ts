@@ -838,6 +838,7 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   credibilityScore: true,
   credibilityAnalysis: true,
   credibilityLastUpdated: true,
+  authorId: true, // Backend adds this from req.user.id
 }).extend({
   slug: z.string().max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف"),
 });
