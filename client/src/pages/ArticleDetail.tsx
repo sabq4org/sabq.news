@@ -344,18 +344,14 @@ export default function ArticleDetail() {
       <div className="border-b bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/">
-              <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-home">
-                الرئيسية
-              </a>
+            <Link href="/" className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-home">
+              الرئيسية
             </Link>
             <ChevronRight className="h-4 w-4" />
             {article.category && (
               <>
-                <Link href={`/?category=${article.category.id}`}>
-                  <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-category">
-                    {article.category.nameAr}
-                  </a>
+                <Link href={`/?category=${article.category.id}`} className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-category">
+                  {article.category.nameAr}
                 </Link>
                 <ChevronRight className="h-4 w-4" />
               </>
@@ -405,13 +401,11 @@ export default function ArticleDetail() {
                     </Avatar>
                     <div>
                       {article.staff ? (
-                        <Link href={`/reporter/${article.staff.slug}`}>
-                          <p className="font-medium hover:text-primary transition-colors flex items-center gap-1" data-testid="text-author-name">
-                            {article.staff.nameAr}
-                            {article.staff.isVerified && (
-                              <CheckCircle2 className="h-4 w-4 text-primary inline" />
-                            )}
-                          </p>
+                        <Link href={`/reporter/${article.staff.slug}`} className="font-medium hover:text-primary transition-colors flex items-center gap-1" data-testid="text-author-name">
+                          {article.staff.nameAr}
+                          {article.staff.isVerified && (
+                            <CheckCircle2 className="h-4 w-4 text-primary inline" />
+                          )}
                         </Link>
                       ) : (
                         <p className="font-medium" data-testid="text-author-name">
