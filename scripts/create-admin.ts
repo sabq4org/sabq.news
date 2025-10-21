@@ -25,9 +25,15 @@ async function createAdminUser() {
   const db = drizzle({ client: pool, schema });
 
   try {
-    const adminEmail = "admin@sabq.sa";
-    const adminPassword = "admin123";
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@sabq.sa";
+    const adminPassword = process.env.ADMIN_PASSWORD;
     const adminUserId = "admin-sabq";
+
+    if (!adminPassword) {
+      console.error("❌ ADMIN_PASSWORD environment variable is required for security");
+      console.error("   Set it using: ADMIN_PASSWORD=your_secure_password");
+      process.exit(1);
+    }
 
     console.log(`\n📝 Creating admin user: ${adminEmail}`);
 
