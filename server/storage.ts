@@ -2897,10 +2897,33 @@ export class DatabaseStorage implements IStorage {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Total users count
-    const [{ count: totalUsers }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(users);
+    // Active users count (users who had any activity during the period)
+    const activeUsersResult = await db
+      .select({ userId: readingHistory.userId })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate))
+      .union(
+        db.select({ userId: comments.userId })
+          .from(comments)
+          .where(gte(comments.createdAt, startDate))
+      )
+      .union(
+        db.select({ userId: reactions.userId })
+          .from(reactions)
+          .where(gte(reactions.createdAt, startDate))
+      )
+      .union(
+        db.select({ userId: bookmarks.userId })
+          .from(bookmarks)
+          .where(gte(bookmarks.createdAt, startDate))
+      )
+      .union(
+        db.select({ userId: behaviorLogs.userId })
+          .from(behaviorLogs)
+          .where(gte(behaviorLogs.createdAt, startDate))
+      );
+
+    const totalUsers = new Set(activeUsersResult.map(r => r.userId)).size;
 
     // Reading time average from readingHistory
     const readingStats = await db
