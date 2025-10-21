@@ -57,8 +57,8 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative bg-gradient-to-b from-card/30 via-card/50 to-card border-t border-border/40 mt-auto overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none" />
+    <footer className="relative bg-gradient-to-b from-muted/80 via-muted to-muted/95 border-t border-border/60 mt-auto overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-transparent pointer-events-none" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-10 mb-8">
