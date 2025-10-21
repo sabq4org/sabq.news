@@ -137,7 +137,7 @@ export function TrendingKeywords() {
         الكلمات الأكثر تداولًا خلال الـ 7 أيام الماضية
       </p>
 
-      <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
+      <div className="flex flex-wrap gap-3 p-4 sm:p-6 bg-card rounded-lg border shadow-sm">
         {keywords
           .filter((item) => item.keyword && typeof item.keyword === 'string' && item.keyword.trim())
           .map((item) => {
