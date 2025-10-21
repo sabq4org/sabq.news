@@ -21,6 +21,7 @@ import {
   Activity,
   MousePointer,
   SplitSquareHorizontal,
+  FlaskConical,
   Settings,
   Plug,
   Cloud,
@@ -244,8 +245,8 @@ export const navConfig: NavItem[] = [
         labelKey: "nav.ab_tests",
         labelAr: "اختبارات A/B",
         path: "/dashboard/analytics/ab-tests",
-        icon: SplitSquareHorizontal,
-        roles: ["admin", "analyst"],
+        icon: FlaskConical,
+        roles: ["admin", "editor", "analyst"],
       },
       {
         id: "recommendation-analytics",

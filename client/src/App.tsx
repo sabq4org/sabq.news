@@ -50,6 +50,8 @@ import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
 import StoryAdmin from "@/pages/StoryAdmin";
 import SystemSettings from "@/pages/SystemSettings";
+import ABTestsManagement from "@/pages/ABTestsManagement";
+import ABTestDetail from "@/pages/ABTestDetail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -99,7 +101,8 @@ function Router() {
       <Route path="/dashboard/analytics" component={ComingSoon} />
       <Route path="/dashboard/analytics/trending" component={ComingSoon} />
       <Route path="/dashboard/analytics/behavior" component={UserBehavior} />
-      <Route path="/dashboard/analytics/ab-tests" component={ComingSoon} />
+      <Route path="/dashboard/analytics/ab-tests/:id" component={ABTestDetail} />
+      <Route path="/dashboard/analytics/ab-tests" component={ABTestsManagement} />
       <Route path="/dashboard/analytics/recommendations" component={RecommendationAnalytics} />
       <Route path="/dashboard/rss-feeds" component={ComingSoon} />
       <Route path="/dashboard/integrations" component={ComingSoon} />
