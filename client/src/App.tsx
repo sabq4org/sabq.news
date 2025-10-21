@@ -46,6 +46,7 @@ import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import DashboardComments from "@/pages/DashboardComments";
 import MyFollows from "@/pages/MyFollows";
+import MyKeywords from "@/pages/MyKeywords";
 import StoryAdmin from "@/pages/StoryAdmin";
 import SystemSettings from "@/pages/SystemSettings";
 import NotFound from "@/pages/not-found";
@@ -109,6 +110,7 @@ function Router() {
       <Route path="/notifications" component={UserNotifications} />
       <Route path="/recommendation-settings" component={UserRecommendationSettings} />
       <Route path="/my-follows" component={MyFollows} />
+      <Route path="/my-keywords" component={MyKeywords} />
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
       <Route path="/dashboard/system-settings" component={SystemSettings} />
       

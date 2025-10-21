@@ -7,7 +7,9 @@ import {
   userInterests,
   reactions,
   bookmarks,
-  readingHistory
+  readingHistory,
+  userFollowedTerms,
+  tags
 } from '@shared/schema';
 import { eq, desc, and, sql, inArray } from 'drizzle-orm';
 import { cosineSimilarity, jaccardSimilarity, EMBEDDING_DIMENSIONS } from './embeddingsService';
@@ -99,8 +101,23 @@ export async function buildUserProfileEmbedding(userId: string): Promise<{
   }
 
   // Get top tags and entities by frequency
-  const topTags = getTopItems(allTags, 10);
+  let topTags = getTopItems(allTags, 10);
   const topEntities = getTopItems(allEntities, 10);
+
+  // ENHANCEMENT: Include followed keywords in topTags
+  // This ensures recommended articles match user's explicit interests
+  const followedKeywords = await db
+    .select({
+      tagName: tags.nameAr,
+    })
+    .from(userFollowedTerms)
+    .innerJoin(tags, eq(userFollowedTerms.tagId, tags.id))
+    .where(eq(userFollowedTerms.userId, userId));
+
+  // Add followed keywords to topTags (with higher priority)
+  const followedTagNames = followedKeywords.map(k => k.tagName);
+  const uniqueTags = Array.from(new Set([...followedTagNames, ...topTags]));
+  topTags = uniqueTags.slice(0, 15);
 
   return {
     embedding,

@@ -5,8 +5,11 @@ import {
   userInterests,
   categories,
   articles,
+  userFollowedTerms,
+  articleTags,
+  tags,
 } from "@shared/schema";
-import { eq, and, or, desc, sql, gt } from "drizzle-orm";
+import { eq, and, or, desc, sql, gt, inArray } from "drizzle-orm";
 import { notificationBus } from "./notificationBus";
 
 // Arabic notification templates
@@ -194,6 +197,108 @@ export async function sendArticleNotification(
     }
 
     console.log(`📢 Successfully sent ${sentCount} notifications for article: ${article.title}`);
+
+    // ENHANCEMENT: Send notifications to users following article keywords
+    try {
+      // Get keywords (tags) for this article
+      const articleKeywords = await db
+        .select({
+          tagId: articleTags.tagId,
+          tagName: tags.nameAr,
+        })
+        .from(articleTags)
+        .innerJoin(tags, eq(articleTags.tagId, tags.id))
+        .where(eq(articleTags.articleId, article.id));
+
+      if (articleKeywords.length > 0) {
+        console.log(`📢 [KEYWORD-NOTIFY] Article has ${articleKeywords.length} keywords`);
+
+        // Get users following any of these keywords (with notify enabled)
+        const tagIds = articleKeywords.map(k => k.tagId);
+        const followingUsers = await db
+          .select({
+            userId: userFollowedTerms.userId,
+            tagId: userFollowedTerms.tagId,
+          })
+          .from(userFollowedTerms)
+          .where(
+            and(
+              inArray(userFollowedTerms.tagId, tagIds),
+              eq(userFollowedTerms.notify, true)
+            )
+          );
+
+        console.log(`📢 [KEYWORD-NOTIFY] Found ${followingUsers.length} users following these keywords`);
+
+        // Group by userId to find which keywords they follow
+        const userKeywordMap = new Map<string, string[]>();
+        for (const { userId, tagId } of followingUsers) {
+          if (!userKeywordMap.has(userId)) {
+            userKeywordMap.set(userId, []);
+          }
+          const keyword = articleKeywords.find(k => k.tagId === tagId);
+          if (keyword) {
+            userKeywordMap.get(userId)!.push(keyword.tagName);
+          }
+        }
+
+        // Send notifications
+        let keywordNotifCount = 0;
+        const userKeywordEntries = Array.from(userKeywordMap.entries());
+        for (const [userId, keywords] of userKeywordEntries) {
+          try {
+            // Check deduplication
+            const isDupe = await isDuplicate(userId, article.id, "KeywordFollow");
+            if (isDupe) {
+              console.log(`🔁 [KEYWORD-NOTIFY] Duplicate prevented for user ${userId}`);
+              continue;
+            }
+
+            // Create notification
+            const keywordList = keywords.join("، ");
+            const [notification] = await db
+              .insert(notificationsInbox)
+              .values({
+                userId,
+                type: "KeywordFollow",
+                title: "مقال جديد",
+                body: `مقال جديد عن ${keywordList}: ${article.title}`,
+                deeplink: `/article/${article.slug}`,
+                read: false,
+                metadata: {
+                  articleId: article.id,
+                  imageUrl: article.imageUrl || undefined,
+                  keywords: keywords,
+                },
+              })
+              .returning();
+
+            // Broadcast via SSE
+            notificationBus.emit(userId, {
+              id: notification.id,
+              type: notification.type,
+              title: notification.title,
+              body: notification.body,
+              deeplink: notification.deeplink,
+              read: false,
+              metadata: notification.metadata,
+              createdAt: notification.createdAt,
+            });
+
+            keywordNotifCount++;
+            console.log(`✅ [KEYWORD-NOTIFY] Sent to user ${userId} for keywords: ${keywordList}`);
+
+          } catch (error) {
+            console.error(`❌ [KEYWORD-NOTIFY] Failed for user ${userId}:`, error);
+          }
+        }
+
+        console.log(`📢 [KEYWORD-NOTIFY] Sent ${keywordNotifCount} keyword-based notifications`);
+      }
+    } catch (error) {
+      console.error("❌ [KEYWORD-NOTIFY] Error sending keyword notifications:", error);
+      // Don't throw - this is an enhancement, not critical
+    }
 
   } catch (error) {
     console.error("Error in sendArticleNotification:", error);

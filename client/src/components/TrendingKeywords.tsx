@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Hash, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FollowKeywordButton } from "@/components/FollowKeywordButton";
 
 interface TrendingKeyword {
   keyword: string;
@@ -95,21 +96,29 @@ export function TrendingKeywords() {
       
       <div className="flex flex-wrap gap-2" dir="rtl">
         {keywords.map((item) => (
-          <motion.button
+          <motion.div
             key={item.keyword}
-            onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
-            className={`${getCategoryColor(item.category)} text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border-0 text-sm font-medium`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            data-testid={`trending-keyword-${item.keyword}`}
-            aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
           >
-            <span>#{item.keyword}</span>
-            <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-semibold">
-              {item.count}
-            </span>
-          </motion.button>
+            <motion.button
+              onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
+              className={`${getCategoryColor(item.category)} text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border-0 text-sm font-medium`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              data-testid={`trending-keyword-${item.keyword}`}
+              aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
+            >
+              <span>#{item.keyword}</span>
+              <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-semibold">
+                {item.count}
+              </span>
+            </motion.button>
+            <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
+          </motion.div>
         ))}
       </div>
     </motion.div>
