@@ -139,6 +139,7 @@ export interface IStorage {
   getAllComments(filters?: { status?: string; articleId?: string }): Promise<CommentWithUser[]>;
   approveComment(commentId: string, moderatorId: string): Promise<Comment>;
   rejectComment(commentId: string, moderatorId: string, reason?: string): Promise<Comment>;
+  restoreComment(commentId: string): Promise<Comment>;
   
   // Reaction operations
   toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }>;
@@ -757,6 +758,39 @@ export class DatabaseStorage implements IStorage {
         moderationReason: reason,
       })
       .where(eq(comments.id, commentId))
+      .returning();
+    
+    return updated;
+  }
+
+  async restoreComment(commentId: string): Promise<Comment> {
+    // First check if comment exists and is rejected
+    const [comment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, commentId))
+      .limit(1);
+    
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+    
+    if (comment.status !== 'rejected') {
+      throw new Error('Only rejected comments can be restored');
+    }
+    
+    const [updated] = await db
+      .update(comments)
+      .set({
+        status: 'pending',
+        moderatedBy: null,
+        moderatedAt: null,
+        moderationReason: null,
+      })
+      .where(and(
+        eq(comments.id, commentId),
+        eq(comments.status, 'rejected')
+      ))
       .returning();
     
     return updated;

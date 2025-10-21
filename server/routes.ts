@@ -3900,6 +3900,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/dashboard/comments/:id/restore", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const restored = await storage.restoreComment(commentId);
+      res.json({ message: "Comment restored", comment: restored });
+    } catch (error) {
+      console.error("Error restoring comment:", error);
+      res.status(500).json({ message: "Failed to restore comment" });
+    }
+  });
+
   // ============================================================
   // AI ROUTES (Editors & Admins)
   // ============================================================

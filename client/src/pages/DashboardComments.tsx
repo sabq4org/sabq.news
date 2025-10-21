@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, MessageCircle, User, Calendar, AlertCircle } from "lucide-react";
+import { Check, X, MessageCircle, User, Calendar, AlertCircle, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -125,6 +125,28 @@ export default function DashboardComments() {
     },
   });
 
+  const restoreMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return await apiRequest(`/api/dashboard/comments/${commentId}/restore`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم استرجاع التعليق",
+        description: "تم إعادة التعليق إلى قائمة الانتظار للمراجعة",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل استرجاع التعليق",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleApprove = (comment: Comment) => {
     approveMutation.mutate(comment.id);
   };
@@ -141,6 +163,10 @@ export default function DashboardComments() {
         reason: rejectionReason || undefined,
       });
     }
+  };
+
+  const handleRestore = (comment: Comment) => {
+    restoreMutation.mutate(comment.id);
   };
 
   const getStatusBadge = (status: string) => {
@@ -317,6 +343,21 @@ export default function DashboardComments() {
                         >
                           <X className="h-4 w-4" />
                           رفض
+                        </Button>
+                      </div>
+                    )}
+
+                    {comment.status === "rejected" && (
+                      <div className="flex items-center gap-2 pt-3 border-t">
+                        <Button
+                          size="sm"
+                          onClick={() => handleRestore(comment)}
+                          disabled={restoreMutation.isPending}
+                          className="gap-2"
+                          data-testid={`button-restore-${comment.id}`}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          استرجاع
                         </Button>
                       </div>
                     )}
