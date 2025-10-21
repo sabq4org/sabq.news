@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { useArticleReadTracking } from "@/hooks/useArticleReadTracking";
@@ -393,6 +393,11 @@ export default function ArticleDetail() {
                 {article.author && (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
+                      <AvatarImage 
+                        src={article.author.profileImageUrl || ""} 
+                        alt={`${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() || article.author.email || ""}
+                        className="object-cover"
+                      />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {getInitials(article.author.firstName, article.author.lastName, article.author.email)}
                       </AvatarFallback>

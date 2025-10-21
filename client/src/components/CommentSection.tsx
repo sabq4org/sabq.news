@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Send } from "lucide-react";
 import type { CommentWithUser } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -63,6 +63,11 @@ export function CommentSection({
     >
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 flex-shrink-0">
+          <AvatarImage 
+            src={comment.user.profileImageUrl || ""} 
+            alt={`${comment.user.firstName || ""} ${comment.user.lastName || ""}`.trim() || comment.user.email || ""}
+            className="object-cover"
+          />
           <AvatarFallback className="bg-primary/10 text-primary text-sm">
             {getInitials(comment.user.firstName, comment.user.lastName, comment.user.email)}
           </AvatarFallback>

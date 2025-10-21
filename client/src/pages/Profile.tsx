@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
 
 const updateUserSchema = z.object({
@@ -61,8 +62,6 @@ type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 export default function Profile() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("bookmarks");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: user } = useQuery<UserType>({
@@ -103,86 +102,47 @@ export default function Profile() {
     },
   });
 
-  const uploadAvatarMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      
-      const response = await fetch('/api/profile/upload-avatar', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'فشل في رفع الصورة');
+  const handleAvatarUploadComplete = async (result: any) => {
+    try {
+      const uploadedUrl = result.successful?.[0]?.uploadURL;
+      if (!uploadedUrl) {
+        throw new Error('لم يتم الحصول على رابط الصورة');
       }
 
-      return response.json();
-    },
-    onSuccess: () => {
+      console.log("[Profile] Image uploaded to:", uploadedUrl);
+
+      // Set ACL and save to user profile
+      const response = await apiRequest("/api/profile/image", {
+        method: "PUT",
+        body: JSON.stringify({ profileImageUrl: uploadedUrl }),
+      });
+
+      console.log("[Profile] Image saved to profile:", response);
+
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setSelectedFile(null);
-      setPreviewUrl(null);
+      
       toast({
         title: "تم التحديث بنجاح",
         description: "تم تحديث صورتك الشخصية",
       });
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
+      console.error("[Profile] Error saving image:", error);
       toast({
         title: "خطأ",
-        description: error.message || "فشل في رفع الصورة. حاول مرة أخرى.",
+        description: error.message || "فشل في حفظ الصورة. حاول مرة أخرى.",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "نوع ملف غير صحيح",
-        description: "الأنواع المسموحة: JPG, PNG, WEBP",
-        variant: "destructive",
-      });
-      return;
     }
+  };
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "الملف كبير جداً",
-        description: "الحد الأقصى للحجم 5MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
+  const getUploadUrl = async () => {
+    const response = await apiRequest("/api/profile/image/upload", {
+      method: "POST",
+    });
+    return {
+      method: "PUT" as const,
+      url: response.uploadURL,
     };
-    reader.readAsDataURL(file);
-  };
-
-  const handleUploadAvatar = () => {
-    if (selectedFile) {
-      uploadAvatarMutation.mutate(selectedFile);
-    }
-  };
-
-  const handleCancelUpload = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
   };
 
   const onSubmit = (data: UpdateUserFormData) => {
@@ -341,7 +301,7 @@ export default function Profile() {
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                   <AvatarImage 
-                    src={previewUrl || user.profileImageUrl || ""} 
+                    src={user.profileImageUrl || ""} 
                     alt={getUserDisplayName()}
                     className="object-cover"
                     data-testid="img-profile-avatar"
@@ -351,67 +311,23 @@ export default function Profile() {
                   </AvatarFallback>
                 </Avatar>
                 
-                {!selectedFile ? (
-                  <>
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      data-testid="input-avatar-file"
-                    />
-                    <label htmlFor="avatar-upload">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute bottom-0 right-0 h-10 w-10 rounded-full shadow-lg cursor-pointer"
-                        onClick={() => document.getElementById('avatar-upload')?.click()}
-                        data-testid="button-change-avatar"
-                      >
-                        <Upload className="h-4 w-4" />
-                      </Button>
-                    </label>
-                    <p className="absolute -bottom-8 right-0 text-xs text-muted-foreground whitespace-nowrap">
-                      JPG, PNG, WEBP (حتى 5MB)
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="absolute bottom-0 right-0 flex gap-1">
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-lg"
-                        onClick={handleUploadAvatar}
-                        disabled={uploadAvatarMutation.isPending}
-                        data-testid="button-upload-avatar"
-                      >
-                        {uploadAvatarMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Upload className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-lg"
-                        onClick={handleCancelUpload}
-                        disabled={uploadAvatarMutation.isPending}
-                        data-testid="button-cancel-avatar"
-                      >
-                        <span className="text-lg">×</span>
-                      </Button>
-                    </div>
-                    <p className="absolute -bottom-8 right-0 text-xs text-primary whitespace-nowrap">
-                      اضغط ✓ للرفع أو × للإلغاء
-                    </p>
-                  </>
-                )}
+                <div className="absolute bottom-0 right-0">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={5 * 1024 * 1024}
+                    allowedFileTypes={['.jpg', '.jpeg', '.png', '.webp']}
+                    onGetUploadParameters={getUploadUrl}
+                    onComplete={handleAvatarUploadComplete}
+                    variant="ghost"
+                    size="icon"
+                    buttonClassName="h-10 w-10 rounded-full shadow-lg"
+                  >
+                    <Upload className="h-4 w-4" />
+                  </ObjectUploader>
+                  <p className="absolute -bottom-8 right-0 text-xs text-muted-foreground whitespace-nowrap">
+                    JPG, PNG, WEBP (حتى 5MB)
+                  </p>
+                </div>
               </div>
 
               <div className="flex-1 space-y-2">
