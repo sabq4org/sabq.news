@@ -1,0 +1,147 @@
+[
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "editor",
+    "name_ar": "محرر"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reporter",
+    "name_ar": "مراسل"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "comments_moderator",
+    "name_ar": "مشرف تعليقات"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reader",
+    "name_ar": "قارئ"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "editor",
+    "name_ar": "محرر"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reporter",
+    "name_ar": "مراسل"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "comments_moderator",
+    "name_ar": "مشرف تعليقات"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reader",
+    "name_ar": "قارئ"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "editor",
+    "name_ar": "محرر"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reporter",
+    "name_ar": "مراسل"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "comments_moderator",
+    "name_ar": "مشرف تعليقات"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reader",
+    "name_ar": "قارئ"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "editor",
+    "name_ar": "محرر"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reporter",
+    "name_ar": "مراسل"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "comments_moderator",
+    "name_ar": "مشرف تعليقات"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "reader",
+    "name_ar": "قارئ"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "editor",
+    "name_ar": "محرر"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "system_admin",
+    "name_ar": "مدير النظام"
+  },
+  {
+    "email": "admin@sabq.sa",
+    "name": "admin",
+    "name_ar": "مدير عام"
+  }
+]

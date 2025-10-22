@@ -16,9 +16,21 @@ export type User = {
 // Helper function to check if user has any of the specified roles
 // Accepts any user object with role/roles properties
 export function hasRole(user: { role?: string; roles?: string[] } | null | undefined, ...rolesToCheck: string[]): boolean {
-  if (!user) return false;
+  if (!user) {
+    console.log('🔴 hasRole: user is null/undefined');
+    return false;
+  }
   const userRoles = user.roles || [user.role].filter(Boolean);
-  return rolesToCheck.some(roleToCheck => userRoles.includes(roleToCheck));
+  const result = rolesToCheck.some(roleToCheck => userRoles.includes(roleToCheck));
+  
+  console.log('🔍 hasRole check:', {
+    userEmail: (user as any).email,
+    userRoles,
+    rolesToCheck,
+    result
+  });
+  
+  return result;
 }
 
 export function useAuth(options?: { redirectToLogin?: boolean }) {
