@@ -133,7 +133,8 @@ export default function UsersManagement() {
 
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -143,7 +144,8 @@ export default function UsersManagement() {
     queryFn: async () => {
       const res = await fetch("/api/roles");
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
