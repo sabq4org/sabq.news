@@ -91,10 +91,17 @@ export default function ArticleDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
     },
     onError: (error: Error) => {
+      console.log("React mutation error:", error.message);
       if (isUnauthorizedError(error)) {
         toast({
           title: "تسجيل دخول مطلوب",
           description: "يجب تسجيل الدخول للتفاعل مع المقالات",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.message || "فشل في التفاعل",
           variant: "destructive",
         });
       }
@@ -122,10 +129,17 @@ export default function ArticleDetail() {
       });
     },
     onError: (error: Error) => {
+      console.log("Bookmark mutation error:", error.message);
       if (isUnauthorizedError(error)) {
         toast({
           title: "تسجيل دخول مطلوب",
           description: "يجب تسجيل الدخول لحفظ المقالات",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.message || "فشل في الحفظ",
           variant: "destructive",
         });
       }
