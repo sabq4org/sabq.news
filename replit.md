@@ -27,7 +27,7 @@ Key features include:
     - **API Security:** All RBAC endpoints follow `/api/admin/*` pattern with requirePermission middleware
     - **Password Security:** bcrypt hashing with 10 salt rounds, no credential logging, one-time password display
 - **Content Management:** Comprehensive article, news, user, and category lifecycle management with advanced filtering, including a comment moderation system.
-- **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp.
+- **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp. Includes reporter assignment functionality with searchable combobox (avatar, name, email display), validation to ensure assigned user has reporter role, and smart query handling to always show pre-assigned reporters regardless of pagination.
 - **Muqtarib (مُقترب) Section:** Thematic system for presenting articles from different perspectives.
 - **Internal Announcement System:** Dashboard-wide announcement banners with various types, expiration options, and admin management.
 - **A/B Testing System:** Comprehensive platform for content optimization with experiment management, smart variant distribution, real-time tracking, and advanced analytics.
