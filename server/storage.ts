@@ -4470,7 +4470,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(
         and(
-          eq(articles.authorId, reporter.userId!),
+          eq(articles.reporterId, reporter.userId!),
           eq(articles.status, 'published'),
           gte(articles.publishedAt, windowDate)
         )
@@ -4491,7 +4491,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(articles, eq(reactions.articleId, articles.id))
       .where(
         and(
-          eq(articles.authorId, reporter.userId!),
+          eq(articles.reporterId, reporter.userId!),
           eq(reactions.type, 'like')
         )
       )
@@ -4525,7 +4525,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(readingHistory)
       .innerJoin(articles, eq(readingHistory.articleId, articles.id))
-      .where(eq(articles.authorId, reporter.userId!))
+      .where(eq(articles.reporterId, reporter.userId!))
       .execute();
 
     // Use default values for completion rate (not tracked in reading_history)
