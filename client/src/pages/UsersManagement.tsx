@@ -158,7 +158,9 @@ export default function UsersManagement() {
     queryFn: async () => {
       const res = await fetch(`/api/admin/users${queryString}`);
       if (!res.ok) throw new Error("Failed to fetch users");
-      return res.json();
+      const data = await res.json();
+      // API returns { users: [...], items: [...] } for backward compatibility
+      return data.users || data;
     },
   });
 
