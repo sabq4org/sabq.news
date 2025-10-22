@@ -400,11 +400,28 @@ export default function ArticleDetail() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium" data-testid="text-author-name">
-                        {article.author?.firstName && article.author?.lastName
-                          ? `${article.author.firstName} ${article.author.lastName}`
-                          : article.author?.email}
-                      </p>
+                      {article.staff ? (
+                        <Link 
+                          href={`/reporter/${article.staff.slug}`} 
+                          className="font-medium hover:text-primary transition-colors flex items-center gap-1" 
+                          data-testid="link-reporter-profile"
+                        >
+                          <span data-testid="text-author-name">
+                            {article.author?.firstName && article.author?.lastName
+                              ? `${article.author.firstName} ${article.author.lastName}`
+                              : article.author?.email}
+                          </span>
+                          {article.staff.isVerified && (
+                            <CheckCircle2 className="h-4 w-4 text-primary inline" />
+                          )}
+                        </Link>
+                      ) : (
+                        <p className="font-medium" data-testid="text-author-name">
+                          {article.author?.firstName && article.author?.lastName
+                            ? `${article.author.firstName} ${article.author.lastName}`
+                            : article.author?.email}
+                        </p>
+                      )}
                       {timeAgo && (
                         <p className="text-muted-foreground text-xs flex items-center gap-1">
                           <Clock className="h-3 w-3" />
