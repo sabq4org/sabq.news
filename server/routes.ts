@@ -1464,61 +1464,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, query, roleId, role, status, limit = 20, ids } = req.query;
 
-      // Use DISTINCT ON to prevent duplicate users when they have multiple roles
-      let usersQuery = db
-        .selectDistinctOn([users.id], {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          status: users.status,
-          isProfileComplete: users.isProfileComplete,
-          createdAt: users.createdAt,
-          roleName: roles.name,
-          roleNameAr: roles.nameAr,
-          roleId: roles.id,
-          name: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-        })
-        .from(users)
-        .leftJoin(userRoles, eq(users.id, userRoles.userId))
-        .leftJoin(roles, eq(userRoles.roleId, roles.id))
-        .$dynamic();
-
-      // Apply filters
+      // Build conditions for the main user query
       const conditions = [];
-      
-      // Exclude deleted users
       conditions.push(sql`${users.deletedAt} IS NULL`);
-      
-      // If IDs are provided, fetch specific users by IDs
-      if (ids) {
-        const idArray = Array.isArray(ids) ? ids : [ids];
-        conditions.push(inArray(users.id, idArray));
-        
-        // When querying by IDs, skip other filters
-        usersQuery = usersQuery.where(and(...conditions));
-        
-        const userList = await usersQuery;
-        
-        return res.json({
-          items: userList.map(u => ({
-            id: u.id,
-            name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
-            email: u.email,
-            avatarUrl: u.profileImageUrl,
-            firstName: u.firstName,
-            lastName: u.lastName,
-            status: u.status,
-            roleName: u.roleName,
-            roleNameAr: u.roleNameAr,
-            roleId: u.roleId,
-          })),
-          users: userList,
-        });
-      }
-      
-      // Search by name or email (support both 'search' and 'query' parameters)
+
+      // Search by name or email
       const searchTerm = query || search;
       if (searchTerm) {
         conditions.push(
@@ -1530,34 +1480,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
       }
-      
-      // Filter by role name (new parameter for reporter selection)
-      if (role) {
-        conditions.push(eq(roles.name, role as string));
-      }
-      
-      // Filter by roleId (existing parameter for backward compatibility)
-      if (roleId) {
-        conditions.push(eq(roles.id, roleId as string));
-      }
-      
+
+      // Filter by status
       if (status) {
         conditions.push(eq(users.status, status as string));
       }
 
-      if (conditions.length > 0) {
-        usersQuery = usersQuery.where(and(...conditions));
+      // If IDs are provided, fetch specific users by IDs
+      if (ids) {
+        const idArray = Array.isArray(ids) ? ids : [ids];
+        conditions.push(inArray(users.id, idArray));
       }
 
-      const userList = await usersQuery
+      // Build base query
+      let usersListQuery = db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          status: users.status,
+          isProfileComplete: users.isProfileComplete,
+          createdAt: users.createdAt,
+        })
+        .from(users);
+
+      // Apply filters
+      if (conditions.length > 0) {
+        usersListQuery = usersListQuery.where(and(...conditions)) as any;
+      }
+
+      // Apply role filters if provided - fetch user IDs that have the specified role
+      let filteredUserIds: string[] | null = null;
+      if (roleId || role) {
+        const roleConditions = [];
+        if (roleId) roleConditions.push(eq(roles.id, roleId as string));
+        if (role) roleConditions.push(eq(roles.name, role as string));
+
+        const usersWithRole = await db
+          .select({ userId: userRoles.userId })
+          .from(userRoles)
+          .leftJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(and(...roleConditions));
+
+        filteredUserIds = usersWithRole.map(u => u.userId);
+        
+        // If no users have this role, return empty array
+        if (filteredUserIds.length === 0) {
+          return res.json({ items: [], users: [] });
+        }
+
+        // Add to query conditions
+        usersListQuery = usersListQuery.where(inArray(users.id, filteredUserIds)) as any;
+      }
+
+      // Execute main query
+      const userList = await usersListQuery
         .orderBy(desc(users.createdAt))
         .limit(parseInt(limit as string, 10));
 
+      // For each user, fetch their first role
+      const usersWithRoles = await Promise.all(
+        userList.map(async (user) => {
+          const [firstRole] = await db
+            .select({
+              id: roles.id,
+              name: roles.name,
+              nameAr: roles.nameAr,
+            })
+            .from(userRoles)
+            .leftJoin(roles, eq(userRoles.roleId, roles.id))
+            .where(eq(userRoles.userId, user.id))
+            .limit(1);
+
+          return {
+            ...user,
+            roleName: firstRole?.name || null,
+            roleNameAr: firstRole?.nameAr || null,
+            roleId: firstRole?.id || null,
+          };
+        })
+      );
+
       // Return in both formats for compatibility
       res.json({
-        items: userList.map(u => ({
+        items: usersWithRoles.map(u => ({
           id: u.id,
-          name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+          name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
           email: u.email,
           avatarUrl: u.profileImageUrl,
           firstName: u.firstName,
@@ -1567,7 +1577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           roleNameAr: u.roleNameAr,
           roleId: u.roleId,
         })),
-        users: userList, // Keep original format for backward compatibility
+        users: usersWithRoles,
       });
     } catch (error) {
       console.error("Error fetching users:", error);
