@@ -16,7 +16,16 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 
 ### Feature Specifications
 Key features include:
-- **Authentication & Authorization:** Email/password-based authentication with session management and Roles & Permissions Management (RBAC).
+- **Authentication & Authorization:** Email/password-based authentication with session management and comprehensive Roles & Permissions Management (RBAC):
+    - **Full RBAC System:** Integrated within Users Management page at `/dashboard/users`
+    - **7 System Roles:** system_admin, admin, editor, reporter, comments_moderator, media_manager, reader
+    - **43 Granular Permissions:** Organized across 8 modules (articles, categories, users, comments, analytics, system, tags, media)
+    - **Multi-Role Assignment:** Users can have multiple roles with merged permissions
+    - **Secure User Creation:** Admin-only capability with unique temporary passwords (format: `Temp{nanoid(12)}@{year}`), displayed once via AlertDialog with copy-to-clipboard
+    - **Role Management UI:** RolesPanel component with PermissionMatrix for viewing merged permissions
+    - **Activity Logging:** All user/role changes logged to activityLogs with oldValue/newValue tracking
+    - **API Security:** All RBAC endpoints follow `/api/admin/*` pattern with requirePermission middleware
+    - **Password Security:** bcrypt hashing with 10 salt rounds, no credential logging, one-time password display
 - **Content Management:** Comprehensive article, news, user, and category lifecycle management with advanced filtering, including a comment moderation system.
 - **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp.
 - **Muqtarib (مُقترب) Section:** Thematic system for presenting articles from different perspectives.
