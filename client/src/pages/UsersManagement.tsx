@@ -160,7 +160,10 @@ export default function UsersManagement() {
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
       // API returns { users: [...], items: [...] } for backward compatibility
-      return data.users || data;
+      // Always return an array
+      if (Array.isArray(data)) return data;
+      if (data.users && Array.isArray(data.users)) return data.users;
+      return [];
     },
   });
 
