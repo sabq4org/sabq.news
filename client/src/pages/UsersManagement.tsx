@@ -134,8 +134,10 @@ export default function UsersManagement() {
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) return [];
       const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      // API returns { users: [...], items: [...] }
+      return data.users || data.items || (Array.isArray(data) ? data : []);
     },
+    enabled: !!user,
   });
 
   // Fetch roles
