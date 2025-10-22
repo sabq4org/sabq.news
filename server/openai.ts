@@ -96,6 +96,8 @@ export async function chatWithAssistant(
   recentArticles: { title: string; summary?: string; categoryNameAr?: string }[]
 ): Promise<string> {
   try {
+    console.log("[ChatAssistant] Processing message:", message.substring(0, 100));
+    
     const articlesContext = recentArticles
       .map((article, index) => 
         `${index + 1}. ${article.title}${article.categoryNameAr ? ` (${article.categoryNameAr})` : ''}${article.summary ? `\n   ملخص: ${article.summary}` : ''}`
@@ -109,6 +111,7 @@ ${articlesContext}
 
 استخدم هذه الأخبار للإجابة على أسئلة القارئ عندما يكون ذلك مناسباً.`;
 
+    console.log("[ChatAssistant] Calling OpenAI API...");
     const response = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
@@ -124,10 +127,34 @@ ${articlesContext}
       max_completion_tokens: 512,
     });
 
-    return response.choices[0].message.content || "عذراً، لم أتمكن من معالجة طلبك.";
-  } catch (error) {
-    console.error("Error in AI chat:", error);
-    throw new Error("Failed to process chat message");
+    console.log("[ChatAssistant] OpenAI response received successfully");
+    const content = response.choices[0]?.message?.content;
+    
+    if (!content) {
+      console.warn("[ChatAssistant] Empty response from OpenAI");
+      return "عذراً، لم أتمكن من معالجة طلبك.";
+    }
+    
+    return content;
+  } catch (error: any) {
+    console.error("[ChatAssistant] Error:", error);
+    console.error("[ChatAssistant] Error details:", {
+      message: error.message,
+      status: error.status,
+      type: error.type,
+      code: error.code,
+    });
+    
+    // Return user-friendly error message instead of throwing
+    if (error.status === 401) {
+      return "عذراً، هناك مشكلة في إعدادات المساعد الذكي. يرجى المحاولة لاحقاً.";
+    } else if (error.status === 429) {
+      return "عذراً، تم تجاوز حد الاستخدام. يرجى المحاولة بعد قليل.";
+    } else if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return "عذراً، لا يمكن الاتصال بالمساعد الذكي حالياً. يرجى المحاولة لاحقاً.";
+    }
+    
+    return "عذراً، حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى.";
   }
 }
 
