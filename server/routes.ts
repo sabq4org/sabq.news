@@ -15,7 +15,7 @@ import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { db } from "./db";
-import { eq, and, or, desc, ilike, sql, inArray, gte } from "drizzle-orm";
+import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -2258,6 +2258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, status, articleType, categoryId, authorId, featured } = req.query;
 
+      const reporterAlias = aliasedTable(users, 'reporter');
+
       let query = db
         .select({
           article: articles,
@@ -2269,10 +2271,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             email: users.email,
             profileImageUrl: users.profileImageUrl,
           },
+          reporter: {
+            id: reporterAlias.id,
+            firstName: reporterAlias.firstName,
+            lastName: reporterAlias.lastName,
+            email: reporterAlias.email,
+            profileImageUrl: reporterAlias.profileImageUrl,
+          },
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
         .leftJoin(users, eq(articles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
         .$dynamic();
 
       if (search) {
@@ -2312,7 +2322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const formattedArticles = results.map((row) => ({
         ...row.article,
         category: row.category,
-        author: row.author,
+        author: row.reporter || row.author,
       }));
 
       res.json(formattedArticles);
@@ -2338,6 +2348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const articleId = req.params.id;
 
+      const reporterAlias = aliasedTable(users, 'reporter');
+
       const [result] = await db
         .select({
           article: articles,
@@ -2348,10 +2360,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: users.lastName,
             email: users.email,
           },
+          reporter: {
+            id: reporterAlias.id,
+            firstName: reporterAlias.firstName,
+            lastName: reporterAlias.lastName,
+            email: reporterAlias.email,
+          },
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
         .leftJoin(users, eq(articles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
         .where(eq(articles.id, articleId))
         .limit(1);
 
@@ -2362,7 +2381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         ...result.article,
         category: result.category,
-        author: result.author,
+        author: result.reporter || result.author,
       });
     } catch (error) {
       console.error("Error fetching article:", error);
