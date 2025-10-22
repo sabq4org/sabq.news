@@ -1835,6 +1835,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         roles: userRoles.map(r => r.name)
       });
 
+      // Auto-create staff record if user has reporter role
+      const hasReporterRole = userRoles.some(r => r.name === 'reporter');
+      if (hasReporterRole) {
+        try {
+          console.log("🔍 [AUTO-CREATE STAFF] New user has reporter role, creating staff record");
+          const staffRecord = await storage.ensureReporterStaffRecord(newUser.id);
+          console.log("✅ [AUTO-CREATE STAFF] Staff record created for new reporter", { 
+            userId: newUser.id, 
+            slug: staffRecord.slug 
+          });
+        } catch (staffError) {
+          console.error("❌ [AUTO-CREATE STAFF] FAILED to create staff record:", staffError);
+          return res.status(500).json({ 
+            message: "تم إنشاء المستخدم لكن فشل إنشاء صفحة المراسل. يرجى المحاولة مرة أخرى.",
+            error: staffError instanceof Error ? staffError.message : "Unknown error"
+          });
+        }
+      }
+
       res.status(201).json({
         user: {
           ...newUser,
@@ -1922,6 +1941,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       console.log("✅ [UPDATE USER ROLES] Roles updated successfully", { targetUserId });
+
+      // Auto-create staff record if user has reporter role
+      const [reporterRole] = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.name, 'reporter'))
+        .limit(1);
+      
+      if (reporterRole && parsed.data.roleIds.includes(reporterRole.id)) {
+        try {
+          console.log("🔍 [AUTO-CREATE STAFF] User assigned reporter role, ensuring staff record exists");
+          const staffRecord = await storage.ensureReporterStaffRecord(targetUserId);
+          console.log("✅ [AUTO-CREATE STAFF] Staff record ensured for reporter", { 
+            targetUserId, 
+            slug: staffRecord.slug 
+          });
+        } catch (staffError) {
+          console.error("❌ [AUTO-CREATE STAFF] FAILED to create staff record:", staffError);
+          return res.status(500).json({ 
+            message: "تم تحديث الأدوار لكن فشل إنشاء صفحة المراسل. يرجى المحاولة مرة أخرى.",
+            error: staffError instanceof Error ? staffError.message : "Unknown error"
+          });
+        }
+      }
 
       res.json({ message: "User roles updated successfully" });
     } catch (error) {

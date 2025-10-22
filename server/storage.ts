@@ -491,6 +491,7 @@ export interface IStorage {
   // Reporter/Staff operations
   getReporterBySlug(slug: string): Promise<Staff | undefined>;
   getReporterProfile(slug: string, windowDays?: number): Promise<ReporterProfile | undefined>;
+  ensureReporterStaffRecord(userId: string): Promise<Staff>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4441,6 +4442,100 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return reporter;
+  }
+
+  // Helper function to generate URL-friendly slug from Arabic/English names
+  private generateSlug(firstName: string, lastName: string): string {
+    // Transliteration map for Arabic to English
+    const arabicToEnglish: Record<string, string> = {
+      'ا': 'a', 'أ': 'a', 'إ': 'a', 'آ': 'a',
+      'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j',
+      'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh',
+      'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh',
+      'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'dh',
+      'ع': 'a', 'غ': 'gh', 'ف': 'f', 'ق': 'q',
+      'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
+      'ه': 'h', 'و': 'w', 'ي': 'y', 'ى': 'a',
+      'ة': 'h', 'ئ': 'e', 'ء': 'a',
+      ' ': '-', '_': '-'
+    };
+
+    const transliterate = (text: string): string => {
+      return text
+        .split('')
+        .map(char => arabicToEnglish[char] || char)
+        .join('')
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    };
+
+    const firstSlug = transliterate(firstName || '');
+    const lastSlug = transliterate(lastName || '');
+    
+    return `${firstSlug}-${lastSlug}`.replace(/^-|-$/g, '') || 'reporter';
+  }
+
+  // Ensure reporter has a staff record (auto-create if needed)
+  async ensureReporterStaffRecord(userId: string): Promise<Staff> {
+    // Check if staff record already exists
+    const [existing] = await db
+      .select()
+      .from(staff)
+      .where(eq(staff.userId, userId))
+      .limit(1);
+    
+    if (existing) {
+      return existing;
+    }
+
+    // Get user info
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User ${userId} not found`);
+    }
+
+    // Generate slug from user's name
+    const baseSlug = this.generateSlug(user.firstName || '', user.lastName || '');
+    
+    // Check for slug conflicts and make it unique if needed
+    let slug = baseSlug;
+    let counter = 1;
+    while (true) {
+      const [conflict] = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.slug, slug))
+        .limit(1);
+      
+      if (!conflict) break;
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    // Create staff record
+    const nameAr = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'مراسل';
+    const name = nameAr; // For now, use same name
+
+    const [staffRecord] = await db
+      .insert(staff)
+      .values({
+        userId: userId,
+        slug: slug,
+        name: name,
+        nameAr: nameAr,
+        staffType: 'reporter',
+        isActive: true,
+        isVerified: false,
+        bio: user.bio || undefined,
+        bioAr: user.bio || undefined,
+        profileImage: user.profileImageUrl || undefined,
+      })
+      .returning();
+
+    console.log(`✅ Created staff record for reporter ${userId} with slug: ${slug}`);
+    return staffRecord;
   }
 
   async getReporterProfile(slug: string, windowDays: number = 90): Promise<ReporterProfile | undefined> {
