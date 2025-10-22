@@ -91,6 +91,7 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   categoryId: varchar("category_id").references(() => categories.id),
   authorId: varchar("author_id").references(() => users.id).notNull(),
+  reporterId: varchar("reporter_id").references(() => users.id),
   articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
   newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
