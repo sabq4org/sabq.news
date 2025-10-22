@@ -173,7 +173,12 @@ export default function AdminUsers() {
       const url = `/api/admin/users${query ? `?${query}` : ""}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch users");
-      return res.json();
+      const data = await res.json();
+      // API returns { users: [...], items: [...] } for backward compatibility
+      // Always return an array
+      if (Array.isArray(data)) return data;
+      if (data.users && Array.isArray(data.users)) return data.users;
+      return [];
     },
     enabled: !!user,
   });
