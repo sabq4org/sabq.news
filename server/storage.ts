@@ -1,6 +1,7 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, ilike } from "drizzle-orm";
+import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
 import {
@@ -1166,31 +1167,39 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
 
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
     }));
   }
 
   async getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    const reporterStaffAlias = aliasedTable(staff, 'reporterStaff');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         staffMember: {
           id: staff.id,
           nameAr: staff.nameAr,
@@ -1198,11 +1207,20 @@ export class DatabaseStorage implements IStorage {
           profileImage: staff.profileImage,
           isVerified: staff.isVerified,
         },
+        reporterStaffMember: {
+          id: reporterStaffAlias.id,
+          nameAr: reporterStaffAlias.nameAr,
+          slug: reporterStaffAlias.slug,
+          profileImage: reporterStaffAlias.profileImage,
+          isVerified: reporterStaffAlias.isVerified,
+        },
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(staff, eq(staff.userId, users.id))
+      .leftJoin(reporterStaffAlias, eq(reporterStaffAlias.userId, reporterAlias.id))
       .where(eq(articles.slug, slug));
 
     if (results.length === 0) return undefined;
@@ -1249,8 +1267,8 @@ export class DatabaseStorage implements IStorage {
     return {
       ...article,
       category: result.category || undefined,
-      author: result.author || undefined,
-      staff: result.staffMember?.id ? result.staffMember : undefined,
+      author: result.reporter || result.author || undefined,
+      staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
       isBookmarked,
       hasReacted,
       reactionsCount: Number(reactionsCount),
@@ -1290,15 +1308,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedArticle(userId?: string): Promise<ArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.views), desc(articles.publishedAt))
       .limit(1);
@@ -1309,7 +1331,7 @@ export class DatabaseStorage implements IStorage {
     return {
       ...result.article,
       category: result.category || undefined,
-      author: result.author || undefined,
+      author: result.reporter || result.author || undefined,
     };
   }
 
@@ -1323,15 +1345,19 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(articles.categoryId, categoryId));
     }
 
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(and(...conditions))
       .orderBy(desc(articles.publishedAt))
       .limit(5);
@@ -1339,7 +1365,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
     }));
   }
 
@@ -1599,45 +1625,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserBookmarks(userId: string): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(bookmarks)
       .innerJoin(articles, eq(bookmarks.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(eq(bookmarks.userId, userId))
       .orderBy(desc(bookmarks.createdAt));
 
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       isBookmarked: true,
     }));
   }
 
   async getUserLikedArticles(userId: string): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(reactions)
       .innerJoin(articles, eq(reactions.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(and(eq(reactions.userId, userId), eq(articles.status, "published")))
       .orderBy(desc(reactions.createdAt));
 
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       hasReacted: true,
     }));
   }
@@ -1652,16 +1686,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserReadingHistory(userId: string, limit: number = 20): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(readingHistory)
       .innerJoin(articles, eq(readingHistory.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(eq(readingHistory.userId, userId))
       .orderBy(desc(readingHistory.readAt))
       .limit(limit);
@@ -1669,7 +1707,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
     }));
   }
 
@@ -1697,15 +1735,19 @@ export class DatabaseStorage implements IStorage {
       return await this.getArticles({ status: "published" });
     }
 
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(and(eq(articles.status, "published"), inArray(articles.categoryId, categoryIds)))
       .orderBy(desc(articles.publishedAt))
       .limit(6);
@@ -1713,7 +1755,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
     }));
   }
 
@@ -1834,6 +1876,7 @@ export class DatabaseStorage implements IStorage {
       imageUrl: row.image_url,
       categoryId: row.category_id,
       authorId: row.author_id,
+      reporterId: row.reporter_id,
       articleType: row.article_type,
       newsType: row.news_type,
       publishType: row.publish_type,
@@ -1893,17 +1936,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHeroArticles(): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         storyLink: storyLinks,
         story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(
@@ -1921,24 +1968,28 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       storyId: r.story?.id || undefined,
       storyTitle: r.story?.title || undefined,
     }));
   }
 
   async getBreakingNews(limit: number = 5): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         storyLink: storyLinks,
         story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
@@ -1948,7 +1999,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       storyId: r.story?.id || undefined,
       storyTitle: r.story?.title || undefined,
     }));
@@ -1982,17 +2033,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEditorPicks(limit: number = 6): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         storyLink: storyLinks,
         story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
@@ -2002,7 +2057,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       storyId: r.story?.id || undefined,
       storyTitle: r.story?.title || undefined,
     }));
