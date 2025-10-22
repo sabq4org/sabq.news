@@ -1,8 +1,14 @@
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Eye, FileText, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TrendingTopicsProps {
-  topics: Array<{ topic: string; count: number }>;
+  topics: Array<{ topic: string; count: number; views: number; articles: number; comments: number }>;
 }
 
 export function TrendingTopics({ topics }: TrendingTopicsProps) {
@@ -17,6 +23,13 @@ export function TrendingTopics({ topics }: TrendingTopicsProps) {
     return "text-base font-medium";
   };
 
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
+
   return (
     <section className="space-y-4" dir="rtl">
       <div className="flex items-center gap-2">
@@ -27,21 +40,50 @@ export function TrendingTopics({ topics }: TrendingTopicsProps) {
       </div>
       
       <p className="text-muted-foreground">
-        أكثر المواضيع تداولاً خلال الـ 24 ساعة الماضية
+        أكثر المواضيع تداولاً بناءً على المشاهدات والتفاعل الفعلي
       </p>
 
       <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
-        {topics.map((topic, index) => (
-          <Badge
-            key={index}
-            variant="secondary"
-            className={`cursor-pointer ${getSizeClass(topic.count)}`}
-            data-testid={`badge-topic-${index}`}
-          >
-            {topic.topic}
-            <span className="mr-2 text-xs opacity-70">({topic.count})</span>
-          </Badge>
-        ))}
+        <TooltipProvider>
+          {topics.map((topic, index) => (
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className={`cursor-pointer hover-elevate ${getSizeClass(topic.count)}`}
+                  data-testid={`badge-topic-${index}`}
+                >
+                  {topic.topic}
+                  <span className="mr-2 text-xs opacity-70">
+                    ({formatNumber(topic.views)})
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs" dir="rtl">
+                <div className="space-y-2">
+                  <div className="font-semibold text-sm">{topic.topic}</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-3 w-3" />
+                      <span>{topic.views.toLocaleString('ar')} مشاهدة</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-3 w-3" />
+                      <span>{topic.articles} مقال</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-3 w-3" />
+                      <span>{topic.comments} تعليق</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground border-t pt-1 mt-1">
+                    نقاط التفاعل: {topic.count.toLocaleString('ar')}
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
       </div>
     </section>
   );

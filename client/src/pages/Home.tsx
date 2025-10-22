@@ -18,7 +18,7 @@ interface HomepageData {
   breaking: ArticleWithDetails[];
   editorPicks: ArticleWithDetails[];
   deepDive: ArticleWithDetails[];
-  trending: Array<{ topic: string; count: number }>;
+  trending: Array<{ topic: string; count: number; views: number; articles: number; comments: number }>;
 }
 
 export default function Home() {

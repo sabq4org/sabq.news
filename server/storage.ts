@@ -286,7 +286,7 @@ export interface IStorage {
   getBreakingNews(limit?: number): Promise<ArticleWithDetails[]>;
   getEditorPicks(limit?: number): Promise<ArticleWithDetails[]>;
   getDeepDiveArticles(limit?: number): Promise<ArticleWithDetails[]>;
-  getTrendingTopics(): Promise<Array<{ topic: string; count: number }>>;
+  getTrendingTopics(): Promise<Array<{ topic: string; count: number; views: number; articles: number; comments: number }>>;
   getAllPublishedArticles(limit?: number): Promise<ArticleWithDetails[]>;
   
   // Dashboard stats
@@ -2102,7 +2102,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getTrendingTopics(): Promise<Array<{ topic: string; count: number }>> {
+  async getTrendingTopics(): Promise<Array<{ topic: string; count: number; views: number; articles: number; comments: number }>> {
     const results = await db.execute(sql`
       WITH topic_stats AS (
         SELECT 
@@ -2118,6 +2118,9 @@ export class DatabaseStorage implements IStorage {
       )
       SELECT 
         topic,
+        total_views::int as views,
+        article_count::int as articles,
+        total_comments::int as comments,
         ((total_views + (total_comments * 10) + (article_count * 5)))::int as count
       FROM topic_stats
       WHERE total_views + (total_comments * 10) + (article_count * 5) > 0
@@ -2125,7 +2128,7 @@ export class DatabaseStorage implements IStorage {
       LIMIT 8
     `);
 
-    return (results.rows as Array<{ topic: string; count: number }>)
+    return (results.rows as Array<{ topic: string; count: number; views: number; articles: number; comments: number }>)
       .filter(r => r.topic && r.topic.trim().length > 0);
   }
 
