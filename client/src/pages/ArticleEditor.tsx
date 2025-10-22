@@ -38,6 +38,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
+import { ReporterSelect } from "@/components/ReporterSelect";
 
 export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
@@ -59,6 +60,7 @@ export default function ArticleEditor() {
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [reporterId, setReporterId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   
@@ -99,6 +101,7 @@ export default function ArticleEditor() {
       setContent(article.content);
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
+      setReporterId(article.reporterId || null);
       setImageUrl(article.imageUrl || "");
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
@@ -201,6 +204,7 @@ export default function ArticleEditor() {
         content,
         excerpt,
         categoryId: categoryId || null,
+        reporterId: reporterId || null,
         imageUrl: imageUrl || "",
         newsType,
         isFeatured: newsType === "featured",
@@ -647,6 +651,19 @@ export default function ArticleEditor() {
                     ))}
                   </SelectContent>
                 </Select>
+              </CardContent>
+            </Card>
+
+            {/* Reporter */}
+            <Card>
+              <CardHeader>
+                <CardTitle>المراسل</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReporterSelect
+                  value={reporterId}
+                  onChange={setReporterId}
+                />
               </CardContent>
             </Card>
 

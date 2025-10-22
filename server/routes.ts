@@ -1457,7 +1457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
-      const { search, query, roleId, role, status, limit = 20 } = req.query;
+      const { search, query, roleId, role, status, limit = 20, ids } = req.query;
 
       let usersQuery = db
         .select({
@@ -1484,6 +1484,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Exclude deleted users
       conditions.push(sql`${users.deletedAt} IS NULL`);
+      
+      // If IDs are provided, fetch specific users by IDs
+      if (ids) {
+        const idArray = Array.isArray(ids) ? ids : [ids];
+        conditions.push(inArray(users.id, idArray));
+        
+        // When querying by IDs, skip other filters
+        usersQuery = usersQuery.where(and(...conditions));
+        
+        const userList = await usersQuery;
+        
+        return res.json({
+          items: userList.map(u => ({
+            id: u.id,
+            name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+            email: u.email,
+            avatarUrl: u.profileImageUrl,
+            firstName: u.firstName,
+            lastName: u.lastName,
+            status: u.status,
+            roleName: u.roleName,
+            roleNameAr: u.roleNameAr,
+            roleId: u.roleId,
+          })),
+          users: userList,
+        });
+      }
       
       // Search by name or email (support both 'search' and 'query' parameters)
       const searchTerm = query || search;
