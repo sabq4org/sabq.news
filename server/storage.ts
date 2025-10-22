@@ -2006,17 +2006,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllPublishedArticles(limit: number = 16): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         storyLink: storyLinks,
         story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(eq(articles.status, "published"))
@@ -2026,7 +2030,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       storyId: r.story?.id || undefined,
       storyTitle: r.story?.title || undefined,
     }));
@@ -2064,17 +2068,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDeepDiveArticles(limit: number = 6): Promise<ArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
         storyLink: storyLinks,
         story: stories,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(and(
@@ -2087,7 +2095,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
       storyId: r.story?.id || undefined,
       storyTitle: r.story?.title || undefined,
     }));
@@ -3538,17 +3546,21 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
 
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     // Build query to get articles by angle
     let query = db
       .select({
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(articleAngles)
       .innerJoin(articles, eq(articleAngles.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(
         and(
           eq(articleAngles.angleId, angle.id),
@@ -3566,7 +3578,7 @@ export class DatabaseStorage implements IStorage {
     return results.map((r) => ({
       ...r.article,
       category: r.category || undefined,
-      author: r.author || undefined,
+      author: r.reporter || r.author || undefined,
     }));
   }
 
@@ -3726,17 +3738,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoryLinks(storyId: string): Promise<StoryLinkWithArticle[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     const results = await db
       .select({
         storyLink: storyLinks,
         article: articles,
         category: categories,
         author: users,
+        reporter: reporterAlias,
       })
       .from(storyLinks)
       .leftJoin(articles, eq(storyLinks.articleId, articles.id))
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(eq(storyLinks.storyId, storyId))
       .orderBy(desc(storyLinks.createdAt));
 
@@ -3745,7 +3761,7 @@ export class DatabaseStorage implements IStorage {
       article: r.article ? {
         ...r.article,
         category: r.category || undefined,
-        author: r.author || undefined,
+        author: r.reporter || r.author || undefined,
       } : undefined,
     }));
   }
