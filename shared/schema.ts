@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -329,7 +329,10 @@ export const userRoles = pgTable("user_roles", {
   roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
   assignedBy: varchar("assigned_by").references(() => users.id),
   assignedAt: timestamp("assigned_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  // Prevent duplicate role assignments
+  uniqueUserRole: uniqueIndex("unique_user_role_idx").on(table.userId, table.roleId),
+}));
 
 // Staff (reporters, writers, supervisors)
 export const staff = pgTable("staff", {
