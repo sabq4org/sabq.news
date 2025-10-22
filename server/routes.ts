@@ -69,6 +69,8 @@ import {
   insertRssFeedSchema,
   updateUserSchema,
   adminUpdateUserSchema,
+  adminCreateUserSchema,
+  adminUpdateUserRolesSchema,
   suspendUserSchema,
   banUserSchema,
   insertThemeSchema,
@@ -1452,17 +1454,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USERS MANAGEMENT ROUTES
   // ============================================================
 
-  // Get all roles (for admin dropdown)
-  app.get("/api/roles", requireAuth, async (req: any, res) => {
-    try {
-      const allRoles = await db.select().from(roles).orderBy(roles.name);
-      res.json(allRoles);
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-      res.status(500).json({ message: "Failed to fetch roles" });
-    }
-  });
-
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
@@ -1715,6 +1706,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // ============================================================
+  // RBAC ROUTES - User & Role Management
+  // ============================================================
+
+  // Create new user with roles
+  app.post("/api/admin/users", requireAuth, requirePermission("users.create"), async (req: any, res) => {
+    try {
+      const createdBy = req.user?.id;
+      if (!createdBy) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsed = adminCreateUserSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      console.log("✅ [CREATE USER] Creating new user with roles", {
+        email: parsed.data.email,
+        roleIds: parsed.data.roleIds,
+        createdBy
+      });
+
+      const { user: newUser, temporaryPassword } = await storage.createUserWithRoles(
+        {
+          email: parsed.data.email,
+          firstName: parsed.data.firstName,
+          lastName: parsed.data.lastName,
+          phoneNumber: parsed.data.phoneNumber,
+          roleIds: parsed.data.roleIds,
+          status: parsed.data.status,
+          emailVerified: parsed.data.emailVerified,
+          phoneVerified: parsed.data.phoneVerified,
+        },
+        createdBy
+      );
+
+      // Get user with roles
+      const userRoles = await storage.getUserRoles(newUser.id);
+
+      console.log("✅ [CREATE USER] User created successfully", {
+        userId: newUser.id,
+        email: newUser.email,
+        roles: userRoles.map(r => r.name)
+      });
+
+      res.status(201).json({
+        user: {
+          ...newUser,
+          roles: userRoles
+        },
+        temporaryPassword,
+        message: "تم إنشاء المستخدم بنجاح. كلمة المرور المؤقتة: " + temporaryPassword
+      });
+    } catch (error: any) {
+      console.error("❌ [CREATE USER] Error creating user:", error);
+      
+      if (error.message?.includes("duplicate") || error.code === "23505") {
+        return res.status(409).json({ message: "User with this email already exists" });
+      }
+      
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Get user roles by user ID
+  app.get("/api/admin/users/:id/roles", requireAuth, requirePermission("users.view"), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+
+      console.log("✅ [GET USER ROLES] Fetching roles for user", { userId });
+
+      const userRoles = await storage.getUserRoles(userId);
+
+      console.log("✅ [GET USER ROLES] Found roles", { userId, count: userRoles.length });
+
+      res.json(userRoles);
+    } catch (error) {
+      console.error("❌ [GET USER ROLES] Error fetching user roles:", error);
+      res.status(500).json({ message: "Failed to fetch user roles" });
+    }
+  });
+
+  // Update user roles
+  app.patch("/api/admin/users/:id/roles", requireAuth, requirePermission("users.change_role"), async (req: any, res) => {
+    try {
+      const updatedBy = req.user?.id;
+      if (!updatedBy) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const targetUserId = req.params.id;
+
+      // Prevent self-modification
+      if (targetUserId === updatedBy) {
+        return res.status(403).json({ message: "Cannot modify your own roles" });
+      }
+
+      const parsed = adminUpdateUserRolesSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      console.log("✅ [UPDATE USER ROLES] Updating roles", {
+        targetUserId,
+        roleIds: parsed.data.roleIds,
+        updatedBy,
+        reason: parsed.data.reason
+      });
+
+      // Verify user exists
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await storage.updateUserRoles(
+        targetUserId,
+        parsed.data.roleIds,
+        updatedBy,
+        parsed.data.reason
+      );
+
+      console.log("✅ [UPDATE USER ROLES] Roles updated successfully", { targetUserId });
+
+      res.json({ message: "User roles updated successfully" });
+    } catch (error) {
+      console.error("❌ [UPDATE USER ROLES] Error updating user roles:", error);
+      res.status(500).json({ message: "Failed to update user roles" });
+    }
+  });
+
+  // Get role permissions by role ID
+  app.get("/api/admin/roles/:id/permissions", requireAuth, async (req: any, res) => {
+    try {
+      const roleId = req.params.id;
+
+      console.log("✅ [GET ROLE PERMISSIONS] Fetching permissions for role", { roleId });
+
+      const rolePermissions = await storage.getRolePermissions(roleId);
+
+      console.log("✅ [GET ROLE PERMISSIONS] Found permissions", {
+        roleId,
+        count: rolePermissions.length
+      });
+
+      res.json(rolePermissions);
+    } catch (error) {
+      console.error("❌ [GET ROLE PERMISSIONS] Error fetching role permissions:", error);
+      res.status(500).json({ message: "Failed to fetch role permissions" });
     }
   });
 

@@ -17,6 +17,7 @@ import {
   LogOut,
   FolderOpen,
   Rss,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,8 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { adminUpdateUserSchema } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AddUserDialog } from "@/components/AddUserDialog";
+import { RolesPanel } from "@/components/RolesPanel";
 
 // User type from API
 interface UserListItem {
@@ -127,6 +130,8 @@ export default function UsersManagement() {
   // State for dialogs and filters
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserListItem | null>(null);
+  const [addingUser, setAddingUser] = useState(false);
+  const [editingUserRoles, setEditingUserRoles] = useState<{ userId: string; currentRoles: string[] } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -159,9 +164,9 @@ export default function UsersManagement() {
 
   // Fetch roles
   const { data: roles = [] } = useQuery<Role[]>({
-    queryKey: ["/api/roles"],
+    queryKey: ["/api/admin/roles"],
     queryFn: async () => {
-      const res = await fetch("/api/roles");
+      const res = await fetch("/api/admin/roles");
       if (!res.ok) return [];
       return res.json();
     },
@@ -234,6 +239,25 @@ export default function UsersManagement() {
   const handleDelete = () => {
     if (!deletingUser) return;
     deleteMutation.mutate(deletingUser.id);
+  };
+
+  const handleEditRoles = async (user: UserListItem) => {
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/roles`);
+      if (res.ok) {
+        const roles = await res.json();
+        setEditingUserRoles({
+          userId: user.id,
+          currentRoles: roles.map((r: Role) => r.id),
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في جلب أدوار المستخدم",
+        variant: "destructive",
+      });
+    }
   };
 
   // Status badge
@@ -318,8 +342,12 @@ export default function UsersManagement() {
           <main className="p-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle data-testid="heading-users">المستخدمون</CardTitle>
+                  <Button onClick={() => setAddingUser(true)} data-testid="button-add-user">
+                    <PlusCircle className="ml-2 h-4 w-4" />
+                    إضافة مستخدم
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -407,13 +435,7 @@ export default function UsersManagement() {
                               {user.email}
                             </td>
                             <td className="py-3 px-4">
-                              {user.roleNameAr ? (
-                                <Badge variant="outline" data-testid={`badge-role-${user.id}`}>
-                                  {user.roleNameAr}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground">بدون دور</span>
-                              )}
+                              <UserRoles userId={user.id} />
                             </td>
                             <td className="py-3 px-4">{getStatusBadge(user.status)}</td>
                             <td className="py-3 px-4" data-testid={`text-date-${user.id}`}>
@@ -421,6 +443,15 @@ export default function UsersManagement() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditRoles(user)}
+                                  disabled={user.id === (globalThis as any).__currentUserId}
+                                  data-testid={`button-edit-roles-${user.id}`}
+                                >
+                                  <Users className="h-4 w-4" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -459,7 +490,7 @@ export default function UsersManagement() {
           <DialogHeader>
             <DialogTitle>تعديل المستخدم</DialogTitle>
             <DialogDescription>
-              قم بتعديل حالة المستخدم أو دوره
+              قم بتعديل حالة المستخدم
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -480,30 +511,6 @@ export default function UsersManagement() {
                         <SelectItem value="active">نشط</SelectItem>
                         <SelectItem value="suspended">معلق</SelectItem>
                         <SelectItem value="banned">محظور</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="roleId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الدور</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-role">
-                          <SelectValue placeholder="اختر الدور" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.nameAr}
-                          </SelectItem>
-                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -553,6 +560,51 @@ export default function UsersManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add User Dialog */}
+      <AddUserDialog
+        open={addingUser}
+        onOpenChange={setAddingUser}
+      />
+
+      {/* Roles Panel */}
+      {editingUserRoles && (
+        <RolesPanel
+          userId={editingUserRoles.userId}
+          currentRoles={editingUserRoles.currentRoles}
+          open={true}
+          onClose={() => setEditingUserRoles(null)}
+        />
+      )}
     </SidebarProvider>
+  );
+}
+
+function UserRoles({ userId }: { userId: string }) {
+  const { data: userRoles, isLoading } = useQuery<Role[]>({
+    queryKey: ["/api/admin/users", userId, "roles"],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users/${userId}/roles`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  if (isLoading) {
+    return <span className="text-muted-foreground text-sm" data-testid={`text-roles-loading-${userId}`}>...</span>;
+  }
+
+  if (!userRoles || userRoles.length === 0) {
+    return <span className="text-muted-foreground" data-testid={`text-no-roles-${userId}`}>بدون أدوار</span>;
+  }
+
+  return (
+    <div className="flex gap-1 flex-wrap" data-testid={`div-roles-${userId}`}>
+      {userRoles.map((role) => (
+        <Badge key={role.id} variant="outline" data-testid={`badge-role-${userId}-${role.id}`}>
+          {role.nameAr}
+        </Badge>
+      ))}
+    </div>
   );
 }

@@ -1,6 +1,8 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, ilike } from "drizzle-orm";
+import { nanoid } from 'nanoid';
+import bcrypt from 'bcrypt';
 import {
   users,
   categories,
@@ -35,9 +37,16 @@ import {
   experimentExposures,
   experimentConversions,
   staff,
+  roles,
+  permissions,
+  userRoles,
+  rolePermissions,
+  activityLogs,
   type User,
   type InsertUser,
   type UpdateUser,
+  type AdminCreateUser,
+  type AdminUpdateUserRoles,
   type Category,
   type InsertCategory,
   type Article,
@@ -173,6 +182,32 @@ export interface IStorage {
   bulkSuspendUsers(userIds: string[], reason: string, duration?: number): Promise<{ success: number; failed: number }>;
   bulkBanUsers(userIds: string[], reason: string, isPermanent: boolean, duration?: number): Promise<{ success: number; failed: number }>;
   bulkUpdateUserRole(userIds: string[], role: string): Promise<{ success: number; failed: number }>;
+  
+  // RBAC operations (Role-Based Access Control)
+  createUserWithRoles(userData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    roleIds: string[];
+    status?: string;
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
+  }, createdBy: string): Promise<{ user: User; temporaryPassword: string }>;
+  getUserRoles(userId: string): Promise<Array<{ id: string; name: string; nameAr: string }>>;
+  updateUserRoles(userId: string, roleIds: string[], updatedBy: string, reason?: string): Promise<void>;
+  getAllRoles(): Promise<Array<{ id: string; name: string; nameAr: string; description: string | null; isSystem: boolean }>>;
+  getRolePermissions(roleId: string): Promise<Array<{ code: string; label: string; labelAr: string; module: string }>>;
+  getUserPermissions(userId: string): Promise<string[]>;
+  logActivity(activity: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    oldValue?: Record<string, any>;
+    newValue?: Record<string, any>;
+    metadata?: Record<string, any>;
+  }): Promise<void>;
   
   // Category operations
   getAllCategories(): Promise<Category[]>;
@@ -884,6 +919,194 @@ export class DatabaseStorage implements IStorage {
     }
 
     return { success, failed };
+  }
+
+  // RBAC operations (Role-Based Access Control)
+  async createUserWithRoles(userData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    roleIds: string[];
+    status?: string;
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
+  }, createdBy: string): Promise<{ user: User; temporaryPassword: string }> {
+    const userId = nanoid();
+    // توليد كلمة مرور عشوائية فريدة لكل مستخدم
+    const randomPassword = `Temp${nanoid(12)}@${new Date().getFullYear()}`;
+    const passwordHash = await bcrypt.hash(randomPassword, 10);
+
+    const user = await db.transaction(async (tx) => {
+      const [user] = await tx.insert(users).values({
+        id: userId,
+        email: userData.email,
+        passwordHash,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phoneNumber: userData.phoneNumber,
+        status: userData.status || 'active',
+        emailVerified: userData.emailVerified || false,
+        phoneVerified: userData.phoneVerified || false,
+        role: 'reader',
+        isProfileComplete: true,
+      }).returning();
+
+      if (userData.roleIds && userData.roleIds.length > 0) {
+        await tx.insert(userRoles).values(
+          userData.roleIds.map(roleId => ({
+            id: nanoid(),
+            userId,
+            roleId,
+          }))
+        );
+      }
+
+      await tx.insert(activityLogs).values({
+        id: nanoid(),
+        userId: createdBy,
+        action: 'user_created',
+        entityType: 'user',
+        entityId: userId,
+        newValue: {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          roleIds: userData.roleIds,
+        },
+      });
+
+      return user;
+    });
+
+    return { user, temporaryPassword: randomPassword };
+  }
+
+  async getUserRoles(userId: string): Promise<Array<{ id: string; name: string; nameAr: string }>> {
+    const results = await db
+      .select({
+        id: roles.id,
+        name: roles.name,
+        nameAr: roles.nameAr,
+      })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+
+    return results;
+  }
+
+  async updateUserRoles(userId: string, roleIds: string[], updatedBy: string, reason?: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      const oldRoles = await tx
+        .select({
+          id: roles.id,
+          name: roles.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, userId));
+
+      await tx.delete(userRoles).where(eq(userRoles.userId, userId));
+
+      if (roleIds && roleIds.length > 0) {
+        await tx.insert(userRoles).values(
+          roleIds.map(roleId => ({
+            id: nanoid(),
+            userId,
+            roleId,
+          }))
+        );
+      }
+
+      const newRoles = await tx
+        .select({
+          id: roles.id,
+          name: roles.name,
+        })
+        .from(roles)
+        .where(inArray(roles.id, roleIds));
+
+      await tx.insert(activityLogs).values({
+        id: nanoid(),
+        userId: updatedBy,
+        action: 'roles_updated',
+        entityType: 'user',
+        entityId: userId,
+        oldValue: {
+          roleIds: oldRoles.map(r => r.id),
+          roleNames: oldRoles.map(r => r.name),
+        },
+        newValue: {
+          roleIds: newRoles.map(r => r.id),
+          roleNames: newRoles.map(r => r.name),
+        },
+        metadata: reason ? { reason } : undefined,
+      });
+    });
+  }
+
+  async getAllRoles(): Promise<Array<{ id: string; name: string; nameAr: string; description: string | null; isSystem: boolean }>> {
+    return await db
+      .select({
+        id: roles.id,
+        name: roles.name,
+        nameAr: roles.nameAr,
+        description: roles.description,
+        isSystem: roles.isSystem,
+      })
+      .from(roles)
+      .orderBy(roles.nameAr);
+  }
+
+  async getRolePermissions(roleId: string): Promise<Array<{ code: string; label: string; labelAr: string; module: string }>> {
+    const results = await db
+      .select({
+        code: permissions.code,
+        label: permissions.label,
+        labelAr: permissions.labelAr,
+        module: permissions.module,
+      })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(rolePermissions.roleId, roleId));
+
+    return results;
+  }
+
+  async getUserPermissions(userId: string): Promise<string[]> {
+    const results = await db
+      .select({
+        code: permissions.code,
+      })
+      .from(userRoles)
+      .innerJoin(rolePermissions, eq(userRoles.roleId, rolePermissions.roleId))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(userRoles.userId, userId))
+      .groupBy(permissions.code);
+
+    return results.map(r => r.code);
+  }
+
+  async logActivity(activity: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    oldValue?: Record<string, any>;
+    newValue?: Record<string, any>;
+    metadata?: Record<string, any>;
+  }): Promise<void> {
+    await db.insert(activityLogs).values({
+      id: nanoid(),
+      userId: activity.userId,
+      action: activity.action,
+      entityType: activity.entityType,
+      entityId: activity.entityId,
+      oldValue: activity.oldValue,
+      newValue: activity.newValue,
+      metadata: activity.metadata,
+    });
   }
 
   // Category operations
@@ -4269,6 +4492,7 @@ export class DatabaseStorage implements IStorage {
           color: a.categoryColor,
           articles: 0,
           views: 0,
+          sharePct: 0,
         };
       }
       
