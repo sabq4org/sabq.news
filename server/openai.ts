@@ -183,3 +183,106 @@ export async function analyzeCredibility(
     throw new Error("Failed to analyze article credibility");
   }
 }
+
+export async function generateDailyActivityInsights(
+  activities: Array<{
+    type: string;
+    summary: string;
+    occurredAt: string;
+    importance: string;
+    target?: { title?: string; kind?: string };
+  }>,
+  stats: {
+    activeUsers: number;
+    totalComments: number;
+    totalReactions: number;
+    publishedArticles: number;
+    breakingNews: number;
+  },
+  previousStats?: {
+    activeUsers: number;
+    totalComments: number;
+    totalReactions: number;
+  }
+): Promise<{
+  dailySummary: string;
+  topTopics: Array<{ name: string; score: number }>;
+  activityTrend: string;
+  keyHighlights: string[];
+}> {
+  try {
+    const activitiesText = activities
+      .slice(0, 50)
+      .map((a, i) => `${i + 1}. [${a.type}] ${a.summary} (${a.importance})`)
+      .join("\n");
+
+    const trendInfo = previousStats
+      ? `
+مقارنة مع الفترة السابقة:
+- المستخدمون النشطون: ${stats.activeUsers} (كانوا ${previousStats.activeUsers})
+- التعليقات: ${stats.totalComments} (كانت ${previousStats.totalComments})
+- التفاعلات: ${stats.totalReactions} (كانت ${previousStats.totalReactions})
+`
+      : '';
+
+    const systemPrompt = `أنت محلل ذكي للأنشطة اليومية في منصة إخبارية. مهمتك تحليل نشاط اليوم وتقديم رؤى ذكية بالعربية.
+
+قم بتحليل الأنشطة المذكورة أدناه وأعد نتيجة JSON فقط تحتوي على:
+
+1. **dailySummary**: ملخص ذكي وجذاب للنشاط اليومي (2-3 جمل)
+2. **topTopics**: قائمة بأكثر 5 مواضيع نشاطاً اليوم. كل موضوع يحتوي على:
+   - name: اسم الموضوع
+   - score: نقاط النشاط (عدد)
+3. **activityTrend**: نص يصف اتجاه النشاط (جملة واحدة مثل "نشاط متزايد بنسبة 15%")
+4. **keyHighlights**: قائمة بأهم 3 أحداث اليوم (نصوص قصيرة)
+
+كن إيجابياً ومحفزاً في الوصف. استخدم الأرقام عند الحاجة.`;
+
+    const userPrompt = `
+الإحصائيات اليومية:
+- عدد المستخدمين النشطين: ${stats.activeUsers}
+- عدد التعليقات: ${stats.totalComments}
+- عدد التفاعلات: ${stats.totalReactions}
+- المقالات المنشورة: ${stats.publishedArticles}
+- الأخبار العاجلة: ${stats.breakingNews}
+${trendInfo}
+
+آخر الأنشطة:
+${activitiesText}
+
+قم بتحليل هذه البيانات وإنشاء رؤى ذكية بصيغة JSON.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1024,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    return {
+      dailySummary: result.dailySummary || "لا توجد أنشطة كافية لتحليل اليوم.",
+      topTopics: result.topTopics || [],
+      activityTrend: result.activityTrend || "نشاط مستقر",
+      keyHighlights: result.keyHighlights || [],
+    };
+  } catch (error) {
+    console.error("Error generating daily insights:", error);
+    return {
+      dailySummary: "نشاط معتدل اليوم مع تفاعل جيد من المستخدمين.",
+      topTopics: [],
+      activityTrend: "نشاط مستقر",
+      keyHighlights: [],
+    };
+  }
+}

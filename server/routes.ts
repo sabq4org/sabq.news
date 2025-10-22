@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { requireAuth, requirePermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
@@ -3808,6 +3808,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching today's insights:", error);
       res.status(500).json({ message: "Failed to fetch insights" });
+    }
+  });
+
+  // AI Insights for Moment-by-Moment Page
+  // Cache to avoid excessive OpenAI API calls (cache for 1 minute)
+  let momentInsightsCache: {
+    data: any;
+    timestamp: number;
+  } | null = null;
+
+  app.get("/api/moment/ai-insights", async (req, res) => {
+    try {
+      const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
+      const now = Date.now();
+
+      // Return cached data if still valid
+      if (momentInsightsCache && (now - momentInsightsCache.timestamp) < CACHE_DURATION) {
+        return res.json(momentInsightsCache.data);
+      }
+
+      // Get today's date range
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // 1. Get active users today (users who have any activity)
+      const activeUsersQuery = await db.execute<{ count: number }>(sql`
+        SELECT COUNT(DISTINCT user_id)::int as count
+        FROM (
+          SELECT user_id FROM comments WHERE created_at >= ${startOfDay}
+          UNION
+          SELECT user_id FROM reactions WHERE created_at >= ${startOfDay}
+          UNION
+          SELECT user_id FROM reading_history WHERE read_at >= ${startOfDay}
+        ) as active_users
+      `);
+      const activeUsers = activeUsersQuery.rows[0]?.count || 0;
+
+      // 2. Get total comments today
+      const commentsQuery = await db.execute<{ count: number }>(sql`
+        SELECT COUNT(*)::int as count
+        FROM comments
+        WHERE created_at >= ${startOfDay}
+      `);
+      const totalComments = commentsQuery.rows[0]?.count || 0;
+
+      // 3. Get total reactions today
+      const reactionsQuery = await db.execute<{ count: number }>(sql`
+        SELECT COUNT(*)::int as count
+        FROM reactions
+        WHERE created_at >= ${startOfDay}
+      `);
+      const totalReactions = reactionsQuery.rows[0]?.count || 0;
+
+      // 4. Get published articles today
+      const publishedArticlesQuery = await db.execute<{ count: number }>(sql`
+        SELECT COUNT(*)::int as count
+        FROM articles
+        WHERE published_at >= ${startOfDay} AND status = 'published'
+      `);
+      const publishedArticles = publishedArticlesQuery.rows[0]?.count || 0;
+
+      // 5. Get breaking news count today
+      const breakingNewsQuery = await db.execute<{ count: number }>(sql`
+        SELECT COUNT(*)::int as count
+        FROM articles
+        WHERE published_at >= ${startOfDay} AND status = 'published' AND news_type = 'breaking'
+      `);
+      const breakingNews = breakingNewsQuery.rows[0]?.count || 0;
+
+      // 6. Get recent activities for AI analysis
+      const recentActivitiesQuery = await db.execute<{
+        type: string;
+        summary: string;
+        occurred_at: string;
+        importance: string;
+        target_title: string | null;
+        target_kind: string | null;
+      }>(sql`
+        WITH all_activities AS (
+          SELECT 
+            'article_published' as type,
+            'تم نشر: ' || a.title as summary,
+            a.published_at as occurred_at,
+            CASE 
+              WHEN a.news_type = 'breaking' THEN 'urgent'
+              WHEN a.news_type = 'featured' THEN 'high'
+              ELSE 'normal'
+            END as importance,
+            a.title as target_title,
+            'article' as target_kind
+          FROM articles a
+          WHERE a.status = 'published' AND a.published_at >= ${startOfDay}
+
+          UNION ALL
+
+          SELECT 
+            'comment_added' as type,
+            'تعليق جديد على: ' || a.title as summary,
+            c.created_at as occurred_at,
+            'normal' as importance,
+            a.title as target_title,
+            'article' as target_kind
+          FROM comments c
+          LEFT JOIN articles a ON c.article_id = a.id
+          WHERE c.created_at >= ${startOfDay}
+
+          UNION ALL
+
+          SELECT 
+            'reaction_added' as type,
+            'تفاعل جديد' as summary,
+            r.created_at as occurred_at,
+            'normal' as importance,
+            NULL as target_title,
+            'article' as target_kind
+          FROM reactions r
+          WHERE r.created_at >= ${startOfDay}
+        )
+        SELECT * FROM all_activities
+        ORDER BY occurred_at DESC
+        LIMIT 50
+      `);
+
+      const activities = recentActivitiesQuery.rows.map(row => ({
+        type: row.type,
+        summary: row.summary,
+        occurredAt: row.occurred_at,
+        importance: row.importance,
+        target: row.target_title ? {
+          title: row.target_title,
+          kind: row.target_kind || 'article'
+        } : undefined
+      }));
+
+      // 7. Generate AI insights using OpenAI
+      const aiInsights = await generateDailyActivityInsights(
+        activities,
+        {
+          activeUsers,
+          totalComments,
+          totalReactions,
+          publishedArticles,
+          breakingNews,
+        }
+      );
+
+      const responseData = {
+        dailySummary: aiInsights.dailySummary,
+        topTopics: aiInsights.topTopics,
+        activityTrend: aiInsights.activityTrend,
+        userEngagement: {
+          activeUsers,
+          totalComments,
+          totalReactions,
+        },
+        keyHighlights: aiInsights.keyHighlights,
+      };
+
+      // Update cache
+      momentInsightsCache = {
+        data: responseData,
+        timestamp: now,
+      };
+
+      res.json(responseData);
+    } catch (error) {
+      console.error("Error generating moment insights:", error);
+      res.status(500).json({ 
+        message: "Failed to generate insights",
+        dailySummary: "نشاط معتدل اليوم مع تفاعل جيد من المستخدمين.",
+        topTopics: [],
+        activityTrend: "نشاط مستقر",
+        userEngagement: {
+          activeUsers: 0,
+          totalComments: 0,
+          totalReactions: 0,
+        },
+        keyHighlights: [],
+      });
     }
   });
 

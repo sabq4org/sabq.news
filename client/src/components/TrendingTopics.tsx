@@ -44,22 +44,24 @@ export function TrendingTopics({ topics }: TrendingTopicsProps) {
       </p>
 
       <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
-        <TooltipProvider>
+        <TooltipProvider delayDuration={200}>
           {topics.map((topic, index) => (
             <Tooltip key={index}>
               <TooltipTrigger asChild>
-                <Badge
-                  variant="secondary"
-                  className={`cursor-pointer hover-elevate ${getSizeClass(topic.count)}`}
-                  data-testid={`badge-topic-${index}`}
-                >
-                  {topic.topic}
-                  <span className="mr-2 text-xs opacity-70">
-                    ({formatNumber(topic.views)})
-                  </span>
-                </Badge>
+                <div>
+                  <Badge
+                    variant="secondary"
+                    className={`cursor-pointer hover-elevate ${getSizeClass(topic.count)}`}
+                    data-testid={`badge-topic-${index}`}
+                  >
+                    {topic.topic}
+                    <span className="mr-2 text-xs opacity-70">
+                      ({formatNumber(topic.views)})
+                    </span>
+                  </Badge>
+                </div>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs" dir="rtl">
+              <TooltipContent className="max-w-xs" dir="rtl" side="top">
                 <div className="space-y-2">
                   <div className="font-semibold text-sm">{topic.topic}</div>
                   <div className="space-y-1 text-xs">

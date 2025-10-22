@@ -21,6 +21,7 @@ import {
   Calendar as CalendarIcon,
   Radio,
   X,
+  Waves,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { MomentAIInsights } from "@/components/MomentAIInsights";
 
 // Types
 interface Activity {
@@ -623,6 +625,42 @@ export default function MomentByMoment() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Page Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b"
+      >
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="flex items-center gap-4 mb-3">
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="p-3 bg-primary/10 rounded-full"
+            >
+              <Radio className="h-8 w-8 text-primary" />
+            </motion.div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent" data-testid="text-page-title">
+                لحظة بلحظة
+              </h1>
+              <p className="text-muted-foreground mt-1" data-testid="text-page-subtitle">
+                تابع كل جديد بالموقع في الوقت الفعلي
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* AI Insights Section */}
+      <div className="bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
+          <MomentAIInsights />
+        </div>
+      </div>
+
+      {/* Filters Bar */}
       <FiltersBar
         selectedTypes={selectedTypes}
         onTypesChange={setSelectedTypes}
@@ -632,6 +670,7 @@ export default function MomentByMoment() {
         onSearchChange={setSearchQuery}
       />
 
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         {isLoading && <TimelineSkeleton />}
 
