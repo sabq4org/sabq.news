@@ -41,7 +41,14 @@ Key features include:
     - Keyword Following System: Personalized keyword tracking with trending keywords display, one-click follow/unfollow, and smart notifications.
     - AI Insights Block (مؤشرات الأسبوع): Real-time analytics dashboard on the homepage showing key metrics.
 - **Real-Time Features:**
-    - Moment by Moment (لحظة بلحظة): Timeline displaying all platform activities with pagination and filters.
+    - **Moment by Moment (لحظة بلحظة):** Advanced AI-powered activity timeline at `/moment-by-moment` featuring:
+        - **AI Daily Insights:** OpenAI-powered analysis generating daily activity summaries, trend detection, and key highlights
+        - **Live Statistics Panel:** Real-time engagement metrics (active users, comments, reactions)
+        - **Trending Topics Detection:** AI-driven identification of most active topics with engagement scores
+        - **Smart Activity Grouping:** Chronological timeline with date-based sections (today, yesterday, this week, this month)
+        - **Advanced Filtering:** Search, activity type filters, and date range selection
+        - **API Endpoint:** `/api/moment/ai-insights` with 1-minute caching to optimize OpenAI usage
+        - **Responsive Design:** RTL-first layout with gradient backgrounds and smooth animations
     - Smart Notifications System: Intelligent engine with deduplication, quiet hours, SSE for real-time pushes, and an admin panel for management.
 - **Reporter Profile System:** Comprehensive staff/reporter profile pages linking journalists to their published work with:
     - Individual reporter pages at `/reporter/:slug` with avatar, bio, verification badges, and specialization tags.
