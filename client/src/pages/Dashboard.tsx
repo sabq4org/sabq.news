@@ -155,8 +155,7 @@ export default function Dashboard() {
   }
 
   // Check if user has permission to view admin dashboard
-  const allowedRoles = ["system_admin", "admin", "editor"];
-  if (!user.role || !allowedRoles.includes(user.role)) {
+  if (!hasRole(user, "system_admin", "admin", "editor")) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
