@@ -46,9 +46,15 @@ type FormData = z.infer<typeof adminUpdateUserRolesSchema>;
 export function RolesPanel({ userId, currentRoles, open, onClose }: RolesPanelProps) {
   const { toast } = useToast();
 
-  const { data: roles, isLoading: rolesLoading } = useQuery<Role[]>({
+  const { data: roles = [], isLoading: rolesLoading } = useQuery<Role[]>({
     queryKey: ["/api/admin/roles"],
     enabled: open,
+    queryFn: async () => {
+      const res = await fetch("/api/admin/roles");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const form = useForm<FormData>({

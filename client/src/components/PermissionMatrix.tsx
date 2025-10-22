@@ -18,9 +18,15 @@ interface Role {
 }
 
 export function PermissionMatrix({ selectedRoleIds }: PermissionMatrixProps) {
-  const { data: roles, isLoading } = useQuery<Role[]>({
+  const { data: roles = [], isLoading } = useQuery<Role[]>({
     queryKey: ["/api/admin/roles"],
     enabled: selectedRoleIds.length > 0,
+    queryFn: async () => {
+      const res = await fetch("/api/admin/roles");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   if (isLoading) {

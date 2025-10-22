@@ -57,9 +57,15 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
 
-  const { data: roles, isLoading: rolesLoading } = useQuery<Role[]>({
+  const { data: roles = [], isLoading: rolesLoading } = useQuery<Role[]>({
     queryKey: ["/api/admin/roles"],
     enabled: open,
+    queryFn: async () => {
+      const res = await fetch("/api/admin/roles");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const form = useForm<FormData>({
