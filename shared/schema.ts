@@ -872,6 +872,24 @@ export const adminUpdateUserSchema = z.object({
   phoneVerified: z.boolean().optional(),
 });
 
+// Admin schema for creating new users with roles
+export const adminCreateUserSchema = z.object({
+  email: z.string().email("البريد الإلكتروني غير صحيح"),
+  firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل"),
+  lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل"),
+  phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
+  roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),
+  status: z.enum(["active", "pending", "suspended", "banned", "locked"]).default("active"),
+  emailVerified: z.boolean().default(false),
+  phoneVerified: z.boolean().default(false),
+});
+
+// Admin schema for updating user roles (bulk update)
+export const adminUpdateUserRolesSchema = z.object({
+  roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),
+  reason: z.string().min(5, "يجب إدخال سبب التغيير (5 أحرف على الأقل)").optional(),
+});
+
 export const suspendUserSchema = z.object({
   reason: z.string().min(5, "يجب إدخال سبب التعليق (5 أحرف على الأقل)"),
   duration: z.number().int().positive().optional(), // in days
@@ -1265,6 +1283,9 @@ export type Activity = z.infer<typeof ActivitySchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
+export type AdminCreateUser = z.infer<typeof adminCreateUserSchema>;
+export type AdminUpdateUser = z.infer<typeof adminUpdateUserSchema>;
+export type AdminUpdateUserRoles = z.infer<typeof adminUpdateUserRolesSchema>;
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
