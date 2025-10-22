@@ -1464,8 +1464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, query, roleId, role, status, limit = 20, ids } = req.query;
 
+      // Use DISTINCT ON to prevent duplicate users when they have multiple roles
       let usersQuery = db
-        .select({
+        .selectDistinctOn([users.id], {
           id: users.id,
           email: users.email,
           firstName: users.firstName,
