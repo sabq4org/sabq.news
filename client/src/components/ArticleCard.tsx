@@ -111,7 +111,7 @@ export function ArticleCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2 mb-2">
                 {article.category && (
-                  <Badge variant="secondary" className="text-xs" data-testid={`badge-category-${article.id}`}>
+                  <Badge variant="outline" className="text-xs" data-testid={`badge-category-${article.id}`}>
                     {article.category.nameAr}
                   </Badge>
                 )}
