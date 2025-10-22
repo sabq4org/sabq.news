@@ -3645,6 +3645,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reporter Analytics - عرض إحصائيات المراسل فقط
+  app.get("/api/reporter/analytics", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // التحقق من أن المستخدم مراسل
+      if (user.role !== 'reporter') {
+        return res.status(403).json({ error: "هذا الـ endpoint خاص بالمراسلين فقط" });
+      }
+      
+      // جلب مقالات المراسل
+      const myArticles = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.authorId, user.id));
+      
+      const articleIds = myArticles.map(a => a.id);
+      
+      if (articleIds.length === 0) {
+        return res.json({
+          totalArticles: 0,
+          totalViews: 0,
+          totalLikes: 0,
+          totalComments: 0,
+          articles: [],
+        });
+      }
+      
+      // حساب الإحصائيات
+      const totalViews = myArticles.reduce((sum, a) => sum + (a.views || 0), 0);
+      
+      const likesResult = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(reactions)
+        .where(
+          and(
+            inArray(reactions.articleId, articleIds),
+            eq(reactions.type, 'like')
+          )
+        );
+      
+      const commentsResult = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(inArray(comments.articleId, articleIds));
+      
+      res.json({
+        totalArticles: myArticles.length,
+        totalViews,
+        totalLikes: likesResult[0]?.count || 0,
+        totalComments: commentsResult[0]?.count || 0,
+        articles: myArticles,
+      });
+    } catch (error) {
+      console.error("Error fetching reporter analytics:", error);
+      res.status(500).json({ message: "فشل في جلب الإحصائيات" });
+    }
+  });
+
   app.get("/api/ai-insights", async (req, res) => {
     try {
       // Changed from 24 hours to 7 days for better data availability
@@ -4501,6 +4560,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching comments:", error);
       res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Reporter Comments - عرض التعليقات على مقالات المراسل فقط
+  app.get("/api/reporter/comments", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // التحقق من أن المستخدم مراسل
+      if (user.role !== 'reporter') {
+        return res.status(403).json({ error: "هذا الـ endpoint خاص بالمراسلين فقط" });
+      }
+      
+      // جلب مقالات المراسل
+      const myArticles = await db
+        .select({ id: articles.id })
+        .from(articles)
+        .where(eq(articles.authorId, user.id));
+      
+      const articleIds = myArticles.map(a => a.id);
+      
+      if (articleIds.length === 0) {
+        return res.json([]);
+      }
+      
+      // جلب التعليقات على مقالات المراسل
+      const { status } = req.query;
+      
+      // Build where conditions
+      const whereConditions = [inArray(comments.articleId, articleIds)];
+      
+      if (status) {
+        whereConditions.push(eq(comments.status, status as string));
+      }
+      
+      const myComments = await db
+        .select()
+        .from(comments)
+        .where(and(...whereConditions))
+        .orderBy(desc(comments.createdAt));
+      
+      res.json(myComments);
+    } catch (error) {
+      console.error("Error fetching reporter comments:", error);
+      res.status(500).json({ message: "فشل في جلب التعليقات" });
     }
   });
 

@@ -1,0 +1,230 @@
+تمام يا أبو محمد ✅
+هذا برومبت موجّه للذكاء الاصطناعي يضيف لك حقل اختيار المراسل داخل نموذج الخبر (تحت خانة “التصنيف”)، ويسحب الأسماء مباشرة من جدول المستخدمين الموسومين بدور “مراسل (reporter)”. البرومبت يشمل الـUI، الـAPI، والـDB مع تحققات الأمان والـUX الحديثة.
+
+⸻
+
+برومبت جاهز — حقل “المراسل” في نموذج إنشاء/تحرير الخبر
+
+الدور المطلوب من الذكاء الاصطناعي: خبير Next.js 15 + TypeScript + Tailwind + Radix UI + React Hook Form + Zod + React Query، وخبير RBAC وأمن.
+
+المهمة:
+داخل صفحة إنشاء/تحرير الخبر في لوحة التحكم (نموذج المقال)، وتحديدًا تحت خانة التصنيف، أضف خانة جديدة بعنوان “المراسل” (اختيار من قائمة) تعرض قائمة المستخدمين الذين يملكون دور reporter، مع بحث فوري (Typeahead) وصور أفاتار، وبحيث يتم حفظ المراسل المرتبط بالخبر تحت الحقل reporterId.
+
+⸻
+
+1) معايير التصميم (UI/UX)
+	•	مكان الحقل: بعد “التصنيف” مباشرة ضمن مجموعة حقول “بيانات النشر”.
+	•	المكوّن: Combobox / Command (Radix + Headless) مع:
+	•	بحث فوري بالاسم/الإيميل.
+	•	Avatar صغير + الاسم + البريد تحت الاسم بخط صغير.
+	•	حالة Empty (“لا يوجد نتائج لمراسل…”) + CTA اختياري “إضافة مستخدم بدور مراسل” يفتح Dialog الإضافة السريع.
+	•	يدعم RTL، Keyboard Navigation، وWCAG AA.
+	•	تلميح (Helper text):
+“اختر المراسل المسؤول عن هذا الخبر. سيتم إظهار اسمه في بطاقة الخبر وصفحة التفاصيل (إن لزم).”
+	•	التحقق البصري: إن كان الحقل مطلوبًا في نوع معين من الأخبار (مثلاً “تقارير ميدانية”) أظهر Badge “مطلوب” ورسالة خطأ واضحة.
+
+⸻
+
+2) مخطط قاعدة البيانات (DB)
+
+أضف المرجع في جدول الأخبار:
+
+Prisma (مثال):
+
+model Article {
+  id           String   @id @default(cuid())
+  title        String
+  // ...
+  reporterId   String?  @db.VarChar(36)
+  reporter     User?    @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  // فهارس
+  @@index([reporterId], map: "idx_article_reporter")
+}
+
+Drizzle (Postgres مثال):
+
+export const articles = pgTable("articles", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  title: text("title").notNull(),
+  // ...
+  reporterId: varchar("reporter_id", { length: 36 }),
+}, (t) => ({
+  reporterIdx: index("idx_article_reporter").on(t.reporterId),
+}));
+
+export const users = pgTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  roles: jsonb("roles").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+});
+
+export const articleReporterFk = foreignKey({
+  columns: [articles.reporterId],
+  foreignColumns: [users.id],
+  name: "fk_article_reporter",
+}).onDelete("set null");
+
+تحقق منطقي على الخادم: إذا تم تمرير reporterId، يجب التأكد أن المستخدم المحدد يحمل دور reporter قبل الحفظ.
+
+⸻
+
+3) الـ API
+
+أ) جلب المراسلين (للقائمة المنسدلة)
+
+GET /api/admin/users?role=reporter&query=<search>&limit=20
+
+الاستجابة (مثال):
+
+{
+  "items": [
+    { "id": "u_123", "name": "محمد السبيعي", "email": "m.s@...", "avatarUrl": "..." },
+    { "id": "u_456", "name": "أحمد المطيري", "email": "a.m@...", "avatarUrl": null }
+  ]
+}
+
+	•	يدعم ?query= للبحث بالاسم/الإيميل.
+	•	RBAC: فقط admin/editor المخوّلين بتحرير الخبر يقدرون ينادون هذا الـAPI.
+
+ب) حفظ/تحديث الخبر مع المراسل
+	•	POST /api/admin/articles وPATCH /api/admin/articles/:id
+	•	جسم الطلب يقبل:
+
+{
+  "title": "...",
+  "categoryId": "...",
+  "reporterId": "u_123" // اختياري، يمكن null لإزالة الربط
+}
+
+	•	تحقّق صارم على الخادم:
+	•	إن وُجد reporterId → تحقّق أنه يعود لمستخدم يحمل roles تتضمن "reporter".
+	•	إن لم ينجح التحقق → 422 مع رسالة: “المستخدم المحدد ليس مراسلًا.”
+
+⸻
+
+4) التحققات (Validation)
+
+واجهة (Zod):
+
+const ArticleSchema = z.object({
+  title: z.string().min(5),
+  categoryId: z.string().min(1),
+  reporterId: z.string().uuid().nullable().optional(),
+});
+
+إن كانت سياسة التحرير تفرض وجود مراسل لفئات معيّنة (مثلاً “تقارير”)، طبّق شرطًا ديناميكيًا:
+إذا category.type === 'report' → reporterId مطلوب.
+
+خادم:
+	•	تحقق من ملكية وصلاحيات محرّر العملية (RBAC).
+	•	تحقق من دور المراسل كما ذُكر.
+
+⸻
+
+5) واجهة المستخدم (TSX مختصر للمكوّن)
+
+ملاحظة: هذا مقتطف إرشادي؛ اطلب من الذكاء الاصطناعي توليد المكوّنات كاملة (Combobox + Service + Hook + Styles).
+
+// ReporterSelect.tsx
+export function ReporterSelect({ value, onChange }: {
+  value?: string | null;
+  onChange: (val: string | null) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const { data, isLoading } = useReporters(query); // React Query -> GET /api/admin/users?role=reporter&query=
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium">المراسل</label>
+      <Command dir="rtl">
+        <CommandInput
+          placeholder="ابحث باسم المراسل أو البريد…"
+          value={query}
+          onValueChange={setQuery}
+        />
+        <CommandList>
+          {isLoading ? <CommandLoading>جاري التحميل…</CommandLoading> : null}
+          <CommandEmpty>
+            لا يوجد نتائج.
+            {/* اختيارياً: زر يفتح Dialog لإضافة مستخدم بدور مراسل */}
+          </CommandEmpty>
+          <CommandGroup>
+            {data?.items.map((u) => (
+              <CommandItem
+                key={u.id}
+                onSelect={() => onChange(u.id)}
+              >
+                <img src={u.avatarUrl ?? "/avatar.svg"} className="h-6 w-6 rounded-full ml-2" />
+                <div className="flex flex-col">
+                  <span className="text-sm">{u.name}</span>
+                  <span className="text-xs text-muted-foreground">{u.email}</span>
+                </div>
+                {value === u.id && <Check className="mr-auto h-4 w-4" />}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+      <p className="text-xs text-muted-foreground">اختر المراسل المسؤول عن هذا الخبر.</p>
+      {value && (
+        <button className="text-xs underline" onClick={() => onChange(null)}>
+          إزالة المراسل
+        </button>
+      )}
+    </div>
+  );
+}
+
+وفي نموذج المقال:
+
+<FormField
+  control={form.control}
+  name="reporterId"
+  render={({ field }) => (
+    <ReporterSelect value={field.value ?? null} onChange={field.onChange} />
+  )}
+/>
+
+
+⸻
+
+6) الأداء وسلاسة الاستخدام
+	•	Debounce للبحث (300–400ms).
+	•	Caching مع React Query + paginate إذا زاد العدد.
+	•	Optimistic update عند حفظ المقال.
+	•	Skeleton/Spinner أثناء التحميل.
+
+⸻
+
+7) الأمان وRBAC
+	•	فقط من يملك صلاحية content.edit أو content.publish يستطيع تعيين reporterId.
+	•	تحقّق خادمي يمنع تمرير أي reporterId لمستخدم ليس reporter.
+	•	كل عملية تعديل reporterId تُسجَّل في activity_logs (من، متى، ماذا تغيّر).
+
+⸻
+
+8) حالات طرفية (Edge cases)
+	•	تمّت إزالة دور reporter من المستخدم لاحقًا:
+	•	لا نحذف ربط الأخبار السابقة، لكن نمنع إسناده كمراسل في أخبار جديدة حتى يعود له الدور.
+	•	مراسل محظور/موقوف: أخفِه من نتائج البحث أو علّم اسمه بوسم “موقوف”.
+	•	أخبار قديمة بلا مراسل: الحقل اختياري افتراضيًا إلا إن فرضت السياسة خلاف ذلك.
+
+⸻
+
+9) ما أريده كمخرجات من الذكاء الاصطناعي
+	•	Migration لـ reporterId + فهرس + FK.
+	•	API:
+	•	GET /api/admin/users?role=reporter&query=&limit=20
+	•	تحديث POST/PATCH /api/admin/articles للتحقق من reporterId.
+	•	Hooks/Services: useReporters(query), useSaveArticle().
+	•	مكونات UI: ReporterSelect.tsx + دمجه داخل نموذج المقال.
+	•	اختبارات:
+	1.	تعيين مراسل صحيح → نجاح.
+	2.	تمرير reporterId ليس مراسلًا → فشل 422.
+	3.	بحث عن مراسل بالاسم والبريد → نتائج صحيحة.
+	4.	مستخدم محرر غير مخوّل يحاول التعيين → 403.
+
+⸻
+
+تبغاني أطلع لك الآن الملفات الجاهزة (TSX + API + Migration) بأسماء مسارات مرتّبة لنسخ/لصق مباشر في مشروع Next.js؟ أعطيك الحزمة كاملة فورًا.

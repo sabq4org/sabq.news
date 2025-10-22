@@ -35,7 +35,7 @@ export const ROLE_DESCRIPTIONS_AR = {
   [ROLE_NAMES.SYSTEM_ADMIN]: "صلاحيات كاملة على النظام",
   [ROLE_NAMES.ADMIN]: "إدارة المستخدمين والموافقات التحريرية والإعدادات العامة",
   [ROLE_NAMES.EDITOR]: "إنشاء وتحرير ونشر المحتوى وإدارة الوسائط والتصنيفات",
-  [ROLE_NAMES.REPORTER]: "إنشاء وتحرير المحتوى الخاص فقط ورفع الوسائط",
+  [ROLE_NAMES.REPORTER]: "إنشاء وتحرير المقالات الخاصة فقط دون صلاحيات النشر، مع إمكانية رفع الوسائط ومتابعة التعليقات والإحصائيات على مقالاته",
   [ROLE_NAMES.COMMENTS_MODERATOR]: "إدارة التعليقات: الموافقة والرفض والحظر",
   [ROLE_NAMES.MEDIA_MANAGER]: "إدارة المكتبة الإعلامية والألبومات",
   [ROLE_NAMES.READER]: "مستخدم عادي بدون صلاحيات تحريرية",
@@ -71,6 +71,7 @@ export const PERMISSION_CODES = {
 
   // Comments
   COMMENTS_VIEW: "comments.view",
+  COMMENTS_VIEW_OWN: "comments.view_own",
   COMMENTS_CREATE: "comments.create",
   COMMENTS_APPROVE: "comments.approve",
   COMMENTS_REJECT: "comments.reject",
@@ -89,6 +90,13 @@ export const PERMISSION_CODES = {
 
   // Analytics
   ANALYTICS_VIEW: "analytics.view",
+  ANALYTICS_VIEW_OWN: "analytics.view_own",
+  
+  // Tags
+  TAGS_VIEW: "tags.view",
+  TAGS_CREATE: "tags.create",
+  TAGS_UPDATE: "tags.update",
+  TAGS_DELETE: "tags.delete",
 } as const;
 
 // Role to permissions mapping (for UI display)
@@ -138,6 +146,8 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.ARTICLES_EDIT_OWN,
     PERMISSION_CODES.MEDIA_VIEW,
     PERMISSION_CODES.MEDIA_UPLOAD,
+    PERMISSION_CODES.COMMENTS_VIEW_OWN, // عرض التعليقات على مقالاته فقط
+    PERMISSION_CODES.ANALYTICS_VIEW_OWN, // عرض إحصائيات مقالاته فقط
   ],
   
   [ROLE_NAMES.COMMENTS_MODERATOR]: [
@@ -183,7 +193,8 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.USERS_BAN]: "حظر المستخدمين",
   [PERMISSION_CODES.USERS_CHANGE_ROLE]: "تغيير أدوار المستخدمين",
 
-  [PERMISSION_CODES.COMMENTS_VIEW]: "عرض التعليقات",
+  [PERMISSION_CODES.COMMENTS_VIEW]: "عرض جميع التعليقات",
+  [PERMISSION_CODES.COMMENTS_VIEW_OWN]: "عرض التعليقات على مقالاتي",
   [PERMISSION_CODES.COMMENTS_CREATE]: "إنشاء التعليقات",
   [PERMISSION_CODES.COMMENTS_APPROVE]: "الموافقة على التعليقات",
   [PERMISSION_CODES.COMMENTS_REJECT]: "رفض التعليقات",
@@ -198,7 +209,13 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.SETTINGS_VIEW]: "عرض الإعدادات",
   [PERMISSION_CODES.SETTINGS_UPDATE]: "تحديث الإعدادات",
 
-  [PERMISSION_CODES.ANALYTICS_VIEW]: "عرض التحليلات",
+  [PERMISSION_CODES.ANALYTICS_VIEW]: "عرض جميع التحليلات",
+  [PERMISSION_CODES.ANALYTICS_VIEW_OWN]: "عرض التحليلات الخاصة",
+
+  [PERMISSION_CODES.TAGS_VIEW]: "عرض الوسوم",
+  [PERMISSION_CODES.TAGS_CREATE]: "إنشاء الوسوم",
+  [PERMISSION_CODES.TAGS_UPDATE]: "تعديل الوسوم",
+  [PERMISSION_CODES.TAGS_DELETE]: "حذف الوسوم",
 };
 
 // Helper function to get all permissions for given roles
