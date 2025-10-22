@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2 } from "lucide-react";
+import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, UserCircle } from "lucide-react";
 import { Link } from "wouter";
 import type { ReporterProfile as ReporterProfileType } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { motion } from "framer-motion";
 
 export default function ReporterProfile() {
   const { slug } = useParams<{ slug: string }>();
@@ -65,7 +66,49 @@ export default function ReporterProfile() {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <div className="container max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* Header Section */}
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-xl p-8 sm:p-12"
+          style={{
+            background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 50%, transparent 100%)',
+          }}
+        >
+          <div className="relative z-10 flex items-center gap-4" dir="rtl">
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="rounded-full p-3 sm:p-4"
+              style={{
+                background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
+              }}
+            >
+              <UserCircle className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground" />
+            </motion.div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2" data-testid="page-title">
+                الملف الشخصي للمراسل
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground" data-testid="page-subtitle">
+                استكشف مسيرة وإنجازات المراسل
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/3 rounded-full blur-3xl -z-0" />
+        </motion.div>
+
+        {/* Profile Header Section */}
         <Card>
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row gap-6">
