@@ -1218,6 +1218,7 @@ export const updateArticleSchema = z.object({
     z.literal(""),
     z.null()
   ]).optional(),
+  reporterId: z.string().uuid("معرف المراسل غير صحيح").optional().or(z.null()),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
   newsType: z.enum(["breaking", "featured", "regular"]).optional(),
   publishType: z.enum(["instant", "scheduled"]).optional(),

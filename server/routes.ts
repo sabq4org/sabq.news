@@ -1457,9 +1457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
-      const { search, roleId, status } = req.query;
+      const { search, query, roleId, role, status, limit = 20 } = req.query;
 
-      let query = db
+      let usersQuery = db
         .select({
           id: users.id,
           email: users.email,
@@ -1472,6 +1472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           roleName: roles.name,
           roleNameAr: roles.nameAr,
           roleId: roles.id,
+          name: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
         })
         .from(users)
         .leftJoin(userRoles, eq(users.id, userRoles.userId))
@@ -1480,32 +1481,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Apply filters
       const conditions = [];
-      if (search) {
+      
+      // Exclude deleted users
+      conditions.push(sql`${users.deletedAt} IS NULL`);
+      
+      // Search by name or email (support both 'search' and 'query' parameters)
+      const searchTerm = query || search;
+      if (searchTerm) {
         conditions.push(
           or(
-            ilike(users.email, `%${search}%`),
-            ilike(users.firstName, `%${search}%`),
-            ilike(users.lastName, `%${search}%`)
+            ilike(users.email, `%${searchTerm}%`),
+            ilike(users.firstName, `%${searchTerm}%`),
+            ilike(users.lastName, `%${searchTerm}%`),
+            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE LOWER(${'%' + searchTerm + '%'})`
           )
         );
       }
-      if (roleId) {
-        conditions.push(eq(roles.id, roleId));
+      
+      // Filter by role name (new parameter for reporter selection)
+      if (role) {
+        conditions.push(eq(roles.name, role as string));
       }
+      
+      // Filter by roleId (existing parameter for backward compatibility)
+      if (roleId) {
+        conditions.push(eq(roles.id, roleId as string));
+      }
+      
       if (status) {
-        conditions.push(eq(users.status, status));
+        conditions.push(eq(users.status, status as string));
       }
 
       if (conditions.length > 0) {
-        query = query.where(and(...conditions));
+        usersQuery = usersQuery.where(and(...conditions));
       }
 
-      const userList = await query.orderBy(desc(users.createdAt));
+      const userList = await usersQuery
+        .orderBy(desc(users.createdAt))
+        .limit(parseInt(limit as string, 10));
 
-      res.json(userList);
+      // Return in both formats for compatibility
+      res.json({
+        items: userList.map(u => ({
+          id: u.id,
+          name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+          email: u.email,
+          avatarUrl: u.profileImageUrl,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          status: u.status,
+          roleName: u.roleName,
+          roleNameAr: u.roleNameAr,
+          roleId: u.roleId,
+        })),
+        users: userList, // Keep original format for backward compatibility
+      });
     } catch (error) {
       console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+      res.status(500).json({ message: "فشل في جلب المستخدمين" });
     }
   });
 
@@ -2320,6 +2353,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Validate reporterId if provided
+      if (parsed.data.reporterId) {
+        const reporterData = await db
+          .select({
+            userId: users.id,
+            roleName: roles.name,
+          })
+          .from(users)
+          .leftJoin(userRoles, eq(users.id, userRoles.userId))
+          .leftJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(eq(users.id, parsed.data.reporterId))
+          .limit(1);
+        
+        if (!reporterData[0] || reporterData[0].roleName !== 'reporter') {
+          return res.status(422).json({ 
+            message: "المستخدم المحدد ليس مراسلاً" 
+          });
+        }
+      }
+
       // Add publishedAt automatically if status is published and publishedAt is not set
       const articleData: any = {
         ...parsed.data,
@@ -2421,6 +2474,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Invalid data",
           errors: parsed.error.flatten(),
         });
+      }
+
+      // Validate reporterId if provided
+      if (parsed.data.reporterId) {
+        const reporterData = await db
+          .select({
+            userId: users.id,
+            roleName: roles.name,
+          })
+          .from(users)
+          .leftJoin(userRoles, eq(users.id, userRoles.userId))
+          .leftJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(eq(users.id, parsed.data.reporterId))
+          .limit(1);
+        
+        if (!reporterData[0] || reporterData[0].roleName !== 'reporter') {
+          return res.status(422).json({ 
+            message: "المستخدم المحدد ليس مراسلاً" 
+          });
+        }
       }
 
       // If status is being changed to published, check publish permission
