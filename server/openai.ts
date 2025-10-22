@@ -128,13 +128,26 @@ ${articlesContext}
     });
 
     console.log("[ChatAssistant] OpenAI response received successfully");
-    const content = response.choices[0]?.message?.content;
+    console.log("[ChatAssistant] Response structure:", JSON.stringify({
+      hasChoices: !!response.choices,
+      choicesLength: response.choices?.length,
+      firstChoice: response.choices?.[0] ? {
+        hasMessage: !!response.choices[0].message,
+        hasContent: !!response.choices[0].message?.content,
+        contentLength: response.choices[0].message?.content?.length,
+        finishReason: response.choices[0].finish_reason,
+      } : null,
+    }));
+    
+    const content = response.choices?.[0]?.message?.content;
     
     if (!content) {
       console.warn("[ChatAssistant] Empty response from OpenAI");
+      console.warn("[ChatAssistant] Full response:", JSON.stringify(response, null, 2));
       return "عذراً، لم أتمكن من معالجة طلبك.";
     }
     
+    console.log("[ChatAssistant] Response content:", content.substring(0, 100));
     return content;
   } catch (error: any) {
     console.error("[ChatAssistant] Error:", error);
