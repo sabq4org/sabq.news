@@ -6,11 +6,20 @@ export type User = {
   id: string;
   email?: string;
   name?: string;
-  role?: string;
+  role?: string; // Primary role (first role for backward compatibility)
+  roles?: string[]; // All user roles from RBAC system
   firstName?: string;
   lastName?: string;
   isProfileComplete?: boolean;
 };
+
+// Helper function to check if user has any of the specified roles
+// Accepts any user object with role/roles properties
+export function hasRole(user: { role?: string; roles?: string[] } | null | undefined, ...rolesToCheck: string[]): boolean {
+  if (!user) return false;
+  const userRoles = user.roles || [user.role].filter(Boolean);
+  return rolesToCheck.some(roleToCheck => userRoles.includes(roleToCheck));
+}
 
 export function useAuth(options?: { redirectToLogin?: boolean }) {
   const redirectToLogin = options?.redirectToLogin ?? false;

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, hasRole } from "@/hooks/useAuth";
 import {
   FileText,
   Users,
@@ -96,7 +96,7 @@ export default function Dashboard() {
 
   const { data: stats, isLoading } = useQuery<AdminDashboardStats>({
     queryKey: ["/api/admin/dashboard/stats"],
-    enabled: !!user && (user.role === "admin" || user.role === "editor"),
+    enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
   const getStatusBadge = (status: string) => {

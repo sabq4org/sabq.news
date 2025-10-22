@@ -48,6 +48,7 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
+import { hasRole } from "@/hooks/useAuth";
 
 const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
@@ -678,7 +679,7 @@ export default function Profile() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-2 p-4 pt-0">
-                {(user.role === "editor" || user.role === "admin") && (
+                {hasRole(user, "editor", "admin", "system_admin") && (
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2"
@@ -734,7 +735,7 @@ export default function Profile() {
                 <CardTitle className="text-base">إجراءات سريعة</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {(user.role === "editor" || user.role === "admin") && (
+                {hasRole(user, "editor", "admin", "system_admin") && (
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2"

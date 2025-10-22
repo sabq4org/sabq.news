@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, hasRole } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,13 +108,13 @@ export default function UsersManagement() {
 
   // Redirect non-admin users to home
   useEffect(() => {
-    if (!isUserLoading && user && user.role !== "admin") {
+    if (!isUserLoading && user && !hasRole(user, "admin", "system_admin")) {
       setLocation("/");
     }
   }, [isUserLoading, user, setLocation]);
 
   // Don't render for non-admin
-  if (!isUserLoading && user && user.role !== "admin") {
+  if (!isUserLoading && user && !hasRole(user, "admin", "system_admin")) {
     return null;
   }
 
