@@ -5583,26 +5583,6 @@ export class DatabaseStorage implements IStorage {
       dateTo?: string;
     }
   ): Promise<Array<any>> {
-    let query = db
-      .select({
-        id: articles.id,
-        title: articles.title,
-        slug: articles.slug,
-        publishedAt: articles.publishedAt,
-        categoryId: articles.categoryId,
-        views: articles.views,
-      })
-      .from(articles)
-      .where(
-        and(
-          eq(articles.status, 'published'),
-          or(
-            ilike(articles.title, `%${keyword}%`),
-            ilike(articles.content, `%${keyword}%`)
-          )
-        )
-      );
-
     const conditions = [eq(articles.status, 'published')];
 
     if (filters?.categories && filters.categories.length > 0) {
