@@ -492,6 +492,88 @@ export interface IStorage {
   getReporterBySlug(slug: string): Promise<Staff | undefined>;
   getReporterProfile(slug: string, windowDays?: number): Promise<ReporterProfile | undefined>;
   ensureReporterStaffRecord(userId: string): Promise<Staff>;
+
+  // Activity Logs operations
+  getActivityLogs(filters?: {
+    userId?: string;
+    action?: string;
+    entityType?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    searchQuery?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    logs: Array<{
+      id: string;
+      userId: string | null;
+      action: string;
+      entityType: string;
+      entityId: string;
+      oldValue: Record<string, any> | null;
+      newValue: Record<string, any> | null;
+      metadata: { ip?: string; userAgent?: string; reason?: string } | null;
+      createdAt: Date;
+      user?: {
+        id: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        profileImageUrl: string | null;
+      } | null;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+
+  getActivityLogById(id: string): Promise<{
+    id: string;
+    userId: string | null;
+    action: string;
+    entityType: string;
+    entityId: string;
+    oldValue: Record<string, any> | null;
+    newValue: Record<string, any> | null;
+    metadata: { ip?: string; userAgent?: string; reason?: string } | null;
+    createdAt: Date;
+    user?: {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      profileImageUrl: string | null;
+    } | null;
+  } | undefined>;
+
+  getActivityLogsAnalytics(): Promise<{
+    topUsers: Array<{
+      userId: string;
+      userName: string;
+      email: string;
+      activityCount: number;
+      profileImageUrl: string | null;
+    }>;
+    topActions: Array<{
+      action: string;
+      count: number;
+    }>;
+    peakHours: Array<{
+      hour: number;
+      count: number;
+    }>;
+    successFailureRate: {
+      successCount: number;
+      failureCount: number;
+      warningCount: number;
+      totalCount: number;
+    };
+    recentActivity: Array<{
+      date: string;
+      count: number;
+    }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4744,6 +4826,351 @@ export class DatabaseStorage implements IStorage {
         daily: timeseries,
       },
       badges,
+    };
+  }
+
+  // Activity Logs operations
+  async getActivityLogs(filters?: {
+    userId?: string;
+    action?: string;
+    entityType?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    searchQuery?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    logs: Array<{
+      id: string;
+      userId: string | null;
+      action: string;
+      entityType: string;
+      entityId: string;
+      oldValue: Record<string, any> | null;
+      newValue: Record<string, any> | null;
+      metadata: { ip?: string; userAgent?: string; reason?: string } | null;
+      createdAt: Date;
+      user?: {
+        id: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        profileImageUrl: string | null;
+      } | null;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 50;
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const conditions: any[] = [];
+
+    if (filters?.userId) {
+      conditions.push(eq(activityLogs.userId, filters.userId));
+    }
+
+    if (filters?.action) {
+      conditions.push(eq(activityLogs.action, filters.action));
+    }
+
+    if (filters?.entityType) {
+      conditions.push(eq(activityLogs.entityType, filters.entityType));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(activityLogs.createdAt, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(activityLogs.createdAt, filters.dateTo));
+    }
+
+    if (filters?.searchQuery) {
+      conditions.push(
+        or(
+          ilike(activityLogs.action, `%${filters.searchQuery}%`),
+          ilike(activityLogs.entityType, `%${filters.searchQuery}%`),
+          ilike(activityLogs.entityId, `%${filters.searchQuery}%`)
+        )
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(activityLogs)
+      .where(whereClause);
+
+    const total = countResult?.count || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get logs with user information
+    const logs = await db
+      .select({
+        id: activityLogs.id,
+        userId: activityLogs.userId,
+        action: activityLogs.action,
+        entityType: activityLogs.entityType,
+        entityId: activityLogs.entityId,
+        oldValue: activityLogs.oldValue,
+        newValue: activityLogs.newValue,
+        metadata: activityLogs.metadata,
+        createdAt: activityLogs.createdAt,
+        userName: users.firstName,
+        userLastName: users.lastName,
+        userEmail: users.email,
+        userProfileImage: users.profileImageUrl,
+      })
+      .from(activityLogs)
+      .leftJoin(users, eq(activityLogs.userId, users.id))
+      .where(whereClause)
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      logs: logs.map((log) => ({
+        id: log.id,
+        userId: log.userId,
+        action: log.action,
+        entityType: log.entityType,
+        entityId: log.entityId,
+        oldValue: log.oldValue,
+        newValue: log.newValue,
+        metadata: log.metadata,
+        createdAt: log.createdAt,
+        user: log.userId
+          ? {
+              id: log.userId,
+              email: log.userEmail || '',
+              firstName: log.userName,
+              lastName: log.userLastName,
+              profileImageUrl: log.userProfileImage,
+            }
+          : null,
+      })),
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  async getActivityLogById(id: string): Promise<{
+    id: string;
+    userId: string | null;
+    action: string;
+    entityType: string;
+    entityId: string;
+    oldValue: Record<string, any> | null;
+    newValue: Record<string, any> | null;
+    metadata: { ip?: string; userAgent?: string; reason?: string } | null;
+    createdAt: Date;
+    user?: {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      profileImageUrl: string | null;
+    } | null;
+  } | undefined> {
+    const [log] = await db
+      .select({
+        id: activityLogs.id,
+        userId: activityLogs.userId,
+        action: activityLogs.action,
+        entityType: activityLogs.entityType,
+        entityId: activityLogs.entityId,
+        oldValue: activityLogs.oldValue,
+        newValue: activityLogs.newValue,
+        metadata: activityLogs.metadata,
+        createdAt: activityLogs.createdAt,
+        userName: users.firstName,
+        userLastName: users.lastName,
+        userEmail: users.email,
+        userProfileImage: users.profileImageUrl,
+      })
+      .from(activityLogs)
+      .leftJoin(users, eq(activityLogs.userId, users.id))
+      .where(eq(activityLogs.id, id))
+      .limit(1);
+
+    if (!log) {
+      return undefined;
+    }
+
+    return {
+      id: log.id,
+      userId: log.userId,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      oldValue: log.oldValue,
+      newValue: log.newValue,
+      metadata: log.metadata,
+      createdAt: log.createdAt,
+      user: log.userId
+        ? {
+            id: log.userId,
+            email: log.userEmail || '',
+            firstName: log.userName,
+            lastName: log.userLastName,
+            profileImageUrl: log.userProfileImage,
+          }
+        : null,
+    };
+  }
+
+  async getActivityLogsAnalytics(): Promise<{
+    topUsers: Array<{
+      userId: string;
+      userName: string;
+      email: string;
+      activityCount: number;
+      profileImageUrl: string | null;
+    }>;
+    topActions: Array<{
+      action: string;
+      count: number;
+    }>;
+    peakHours: Array<{
+      hour: number;
+      count: number;
+    }>;
+    successFailureRate: {
+      successCount: number;
+      failureCount: number;
+      warningCount: number;
+      totalCount: number;
+    };
+    recentActivity: Array<{
+      date: string;
+      count: number;
+    }>;
+  }> {
+    // Get top 5 most active users
+    const topUsersQuery = await db
+      .select({
+        userId: activityLogs.userId,
+        userName: users.firstName,
+        userLastName: users.lastName,
+        email: users.email,
+        profileImageUrl: users.profileImageUrl,
+        activityCount: sql<number>`count(*)::int`,
+      })
+      .from(activityLogs)
+      .innerJoin(users, eq(activityLogs.userId, users.id))
+      .groupBy(
+        activityLogs.userId,
+        users.firstName,
+        users.lastName,
+        users.email,
+        users.profileImageUrl
+      )
+      .orderBy(desc(sql`count(*)`))
+      .limit(5);
+
+    const topUsers = topUsersQuery.map((user) => ({
+      userId: user.userId || '',
+      userName: `${user.userName || ''} ${user.userLastName || ''}`.trim() || user.email || 'مستخدم غير معروف',
+      email: user.email || '',
+      activityCount: user.activityCount,
+      profileImageUrl: user.profileImageUrl,
+    }));
+
+    // Get top actions
+    const topActionsQuery = await db
+      .select({
+        action: activityLogs.action,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(activityLogs)
+      .groupBy(activityLogs.action)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    const topActions = topActionsQuery.map((item) => ({
+      action: item.action,
+      count: item.count,
+    }));
+
+    // Get peak hours (activity by hour of day)
+    const peakHoursQuery = await db
+      .select({
+        hour: sql<number>`EXTRACT(HOUR FROM ${activityLogs.createdAt})::int`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(activityLogs)
+      .groupBy(sql`EXTRACT(HOUR FROM ${activityLogs.createdAt})`)
+      .orderBy(sql`EXTRACT(HOUR FROM ${activityLogs.createdAt})`);
+
+    const peakHours = peakHoursQuery.map((item) => ({
+      hour: item.hour,
+      count: item.count,
+    }));
+
+    // Get success/failure/warning rate (based on action naming convention)
+    const actionsQuery = await db
+      .select({
+        action: activityLogs.action,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(activityLogs)
+      .groupBy(activityLogs.action);
+
+    let successCount = 0;
+    let failureCount = 0;
+    let warningCount = 0;
+    let totalCount = 0;
+
+    actionsQuery.forEach((item) => {
+      totalCount += item.count;
+      const action = item.action.toLowerCase();
+      if (action.includes('success') || action.includes('create') || action.includes('update')) {
+        successCount += item.count;
+      } else if (action.includes('fail') || action.includes('error') || action.includes('delete') || action.includes('ban')) {
+        failureCount += item.count;
+      } else if (action.includes('warn') || action.includes('suspend')) {
+        warningCount += item.count;
+      } else {
+        successCount += item.count; // Default to success
+      }
+    });
+
+    // Get recent activity (last 7 days)
+    const recentActivityQuery = await db
+      .select({
+        date: sql<string>`DATE(${activityLogs.createdAt})::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(activityLogs)
+      .where(gte(activityLogs.createdAt, sql`NOW() - INTERVAL '7 days'`))
+      .groupBy(sql`DATE(${activityLogs.createdAt})`)
+      .orderBy(sql`DATE(${activityLogs.createdAt})`);
+
+    const recentActivity = recentActivityQuery.map((item) => ({
+      date: item.date,
+      count: item.count,
+    }));
+
+    return {
+      topUsers,
+      topActions,
+      peakHours,
+      successFailureRate: {
+        successCount,
+        failureCount,
+        warningCount,
+        totalCount,
+      },
+      recentActivity,
     };
   }
 }

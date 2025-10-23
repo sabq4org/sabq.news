@@ -53,6 +53,7 @@ import SystemSettings from "@/pages/SystemSettings";
 import ABTestsManagement from "@/pages/ABTestsManagement";
 import ABTestDetail from "@/pages/ABTestDetail";
 import ReporterProfile from "@/pages/ReporterProfile";
+import ActivityLogsPage from "@/pages/dashboard/ActivityLogsPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -109,7 +110,7 @@ function Router() {
       <Route path="/dashboard/rss-feeds" component={ComingSoon} />
       <Route path="/dashboard/integrations" component={ComingSoon} />
       <Route path="/dashboard/storage" component={ComingSoon} />
-      <Route path="/dashboard/audit-logs" component={ComingSoon} />
+      <Route path="/dashboard/audit-logs" component={ActivityLogsPage} />
       <Route path="/dashboard/profile" component={ComingSoon} />
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
