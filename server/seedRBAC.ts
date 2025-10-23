@@ -55,6 +55,14 @@ export async function seedRBAC() {
     // Muqtarib permissions
     { code: "muqtarib.manage", label: "Manage Muqtarib Angles", labelAr: "إدارة زوايا مُقترب", module: "muqtarib" },
     { code: "muqtarib.publish", label: "Publish Muqtarib Angles", labelAr: "نشر زوايا مُقترب", module: "muqtarib" },
+
+    // Mirqab permissions (المرقاب - Future Forecasting)
+    { code: "mirqab.view", label: "View Mirqab", labelAr: "عرض المرقاب", module: "mirqab" },
+    { code: "mirqab.create", label: "Create Mirqab Content", labelAr: "إنشاء محتوى المرقاب", module: "mirqab" },
+    { code: "mirqab.edit", label: "Edit Mirqab Content", labelAr: "تعديل محتوى المرقاب", module: "mirqab" },
+    { code: "mirqab.delete", label: "Delete Mirqab Content", labelAr: "حذف محتوى المرقاب", module: "mirqab" },
+    { code: "mirqab.publish", label: "Publish Mirqab Content", labelAr: "نشر محتوى المرقاب", module: "mirqab" },
+    { code: "mirqab.manage_settings", label: "Manage Mirqab Settings", labelAr: "إدارة إعدادات المرقاب", module: "mirqab" },
   ];
 
   const insertedPermissions = await db
@@ -132,6 +140,7 @@ export async function seedRBAC() {
       "staff.view", "staff.create", "staff.update", "staff.delete",
       "system.view_logs", "system.manage_themes",
       "muqtarib.manage", "muqtarib.publish",
+      "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.delete", "mirqab.publish", "mirqab.manage_settings",
     ],
     
     editor: [
@@ -142,6 +151,7 @@ export async function seedRBAC() {
       "comments.view", "comments.approve", "comments.reject",
       "staff.view",
       "muqtarib.manage", "muqtarib.publish",
+      "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
     ],
     
     reporter: [
