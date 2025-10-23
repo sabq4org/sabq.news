@@ -21,6 +21,17 @@ export default function AlgorithmWritesListPage() {
 
   const { data, isLoading } = useQuery<{ entries: MirqabEntryWithDetails[]; total: number }>({
     queryKey: ['/api/mirqab/algorithm-writes', { page, limit, type: filterType }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('limit', limit.toString());
+      if (filterType) {
+        params.append('type', filterType);
+      }
+      const url = `/api/mirqab/algorithm-writes?${params.toString()}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch algorithm articles');
+      return await res.json();
+    },
   });
 
   const entries = data?.entries || [];
