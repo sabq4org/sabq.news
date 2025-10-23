@@ -1946,3 +1946,224 @@ export const insertExperimentConversionSchema = createInsertSchema(experimentCon
   id: true,
   convertedAt: true,
 });
+
+// ============================================================
+// MIRQAB SYSTEM - المرقاب (Observatory/Future Forecasting)
+// ============================================================
+
+// Main Mirqab Entries table - الجدول الرئيسي
+export const mirqabEntries = pgTable("mirqab_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entryType: text("entry_type").notNull(), // sabq_index, next_story, radar, algorithm_article
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
+  visibility: text("visibility").notNull().default("public"), // public, private
+  publishedAt: timestamp("published_at"),
+  scheduledAt: timestamp("scheduled_at"),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  editorId: varchar("editor_id").references(() => users.id),
+  seo: jsonb("seo").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  }>(),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`).notNull(),
+  views: integer("views").default(0).notNull(),
+  featuredImageUrl: text("featured_image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_mirqab_entries_type").on(table.entryType),
+  index("idx_mirqab_entries_status").on(table.status),
+  index("idx_mirqab_entries_author").on(table.authorId),
+]);
+
+// SABQ Index - مؤشر سبق
+export const mirqabSabqIndex = pgTable("mirqab_sabq_index", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entryId: varchar("entry_id").references(() => mirqabEntries.id, { onDelete: "cascade" }).notNull().unique(),
+  indexValue: real("index_value").notNull(), // القيمة الرقمية
+  maxValue: real("max_value").notNull().default(100), // القيمة القصوى
+  trend: text("trend").notNull(), // up, down, stable
+  indexCategory: text("index_category").notNull(), // economic, political, social, technology
+  analysis: text("analysis").notNull(), // التحليل الكامل
+  period: text("period").notNull(), // الفترة الزمنية، مثل "أسبوع"
+  chartData: jsonb("chart_data").$type<Array<{
+    date: string;
+    value: number;
+    label?: string;
+  }>>(),
+  methodology: text("methodology"), // المنهجية المستخدمة
+  dataSources: text("data_sources").array().default(sql`ARRAY[]::text[]`).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_sabq_index_entry").on(table.entryId),
+  index("idx_sabq_index_category").on(table.indexCategory),
+]);
+
+// Next Story - قصة قادمة
+export const mirqabNextStory = pgTable("mirqab_next_story", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entryId: varchar("entry_id").references(() => mirqabEntries.id, { onDelete: "cascade" }).notNull().unique(),
+  executiveSummary: text("executive_summary").notNull(),
+  content: text("content").notNull(), // المحتوى الكامل - rich text
+  confidenceLevel: integer("confidence_level").notNull(), // 0-100
+  expectedTiming: text("expected_timing").notNull(), // week, month, quarter, year
+  expectedDate: timestamp("expected_date"),
+  dataSources: text("data_sources").array().default(sql`ARRAY[]::text[]`).notNull(),
+  keywords: text("keywords").array().default(sql`ARRAY[]::text[]`).notNull(),
+  relatedArticleIds: varchar("related_article_ids").array().default(sql`ARRAY[]::varchar[]`).notNull(),
+  aiAnalysis: text("ai_analysis"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_next_story_entry").on(table.entryId),
+  index("idx_next_story_timing").on(table.expectedTiming),
+  index("idx_next_story_date").on(table.expectedDate),
+]);
+
+// Radar Alerts - الرادار
+export const mirqabRadarAlerts = pgTable("mirqab_radar_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entryId: varchar("entry_id").references(() => mirqabEntries.id, { onDelete: "cascade" }).notNull().unique(),
+  reportDate: timestamp("report_date").notNull(), // تاريخ التقرير
+  alerts: jsonb("alerts").$type<Array<{
+    title: string;
+    description: string;
+    importance: 'high' | 'medium' | 'low';
+    category: string;
+    data?: Record<string, any>;
+  }>>().notNull(),
+  summary: text("summary").notNull(), // ملخص اليوم
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_radar_entry").on(table.entryId),
+  index("idx_radar_date").on(table.reportDate),
+]);
+
+// Algorithm Articles - الخوارزمي يكتب
+export const mirqabAlgorithmArticles = pgTable("mirqab_algorithm_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entryId: varchar("entry_id").references(() => mirqabEntries.id, { onDelete: "cascade" }).notNull().unique(),
+  content: text("content").notNull(), // المحتوى الكامل
+  analysisType: text("analysis_type").notNull(), // opinion, analysis, forecast
+  aiModel: text("ai_model").notNull(), // النموذج المستخدم، مثل "GPT-5"
+  aiPercentage: integer("ai_percentage").notNull().default(100), // نسبة المحتوى المكتوب بواسطة AI
+  humanReviewed: boolean("human_reviewed").default(false).notNull(),
+  reviewerNotes: text("reviewer_notes"),
+  prompt: text("prompt"), // الـ prompt المستخدم
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_algorithm_entry").on(table.entryId),
+  index("idx_algorithm_type").on(table.analysisType),
+]);
+
+// Relations for Mirqab
+export const mirqabEntriesRelations = relations(mirqabEntries, ({ one }) => ({
+  author: one(users, {
+    fields: [mirqabEntries.authorId],
+    references: [users.id],
+  }),
+  editor: one(users, {
+    fields: [mirqabEntries.editorId],
+    references: [users.id],
+  }),
+  sabqIndex: one(mirqabSabqIndex),
+  nextStory: one(mirqabNextStory),
+  radarAlert: one(mirqabRadarAlerts),
+  algorithmArticle: one(mirqabAlgorithmArticles),
+}));
+
+export const mirqabSabqIndexRelations = relations(mirqabSabqIndex, ({ one }) => ({
+  entry: one(mirqabEntries, {
+    fields: [mirqabSabqIndex.entryId],
+    references: [mirqabEntries.id],
+  }),
+}));
+
+export const mirqabNextStoryRelations = relations(mirqabNextStory, ({ one }) => ({
+  entry: one(mirqabEntries, {
+    fields: [mirqabNextStory.entryId],
+    references: [mirqabEntries.id],
+  }),
+}));
+
+export const mirqabRadarAlertsRelations = relations(mirqabRadarAlerts, ({ one }) => ({
+  entry: one(mirqabEntries, {
+    fields: [mirqabRadarAlerts.entryId],
+    references: [mirqabEntries.id],
+  }),
+}));
+
+export const mirqabAlgorithmArticlesRelations = relations(mirqabAlgorithmArticles, ({ one }) => ({
+  entry: one(mirqabEntries, {
+    fields: [mirqabAlgorithmArticles.entryId],
+    references: [mirqabEntries.id],
+  }),
+}));
+
+// Types for Mirqab
+export type MirqabEntry = typeof mirqabEntries.$inferSelect;
+export type InsertMirqabEntry = z.infer<typeof insertMirqabEntrySchema>;
+export type UpdateMirqabEntry = Partial<InsertMirqabEntry>;
+
+export type MirqabSabqIndex = typeof mirqabSabqIndex.$inferSelect;
+export type InsertMirqabSabqIndex = z.infer<typeof insertMirqabSabqIndexSchema>;
+export type UpdateMirqabSabqIndex = Partial<InsertMirqabSabqIndex>;
+
+export type MirqabNextStory = typeof mirqabNextStory.$inferSelect;
+export type InsertMirqabNextStory = z.infer<typeof insertMirqabNextStorySchema>;
+export type UpdateMirqabNextStory = Partial<InsertMirqabNextStory>;
+
+export type MirqabRadarAlert = typeof mirqabRadarAlerts.$inferSelect;
+export type InsertMirqabRadarAlert = z.infer<typeof insertMirqabRadarAlertSchema>;
+export type UpdateMirqabRadarAlert = Partial<InsertMirqabRadarAlert>;
+
+export type MirqabAlgorithmArticle = typeof mirqabAlgorithmArticles.$inferSelect;
+export type InsertMirqabAlgorithmArticle = z.infer<typeof insertMirqabAlgorithmArticleSchema>;
+export type UpdateMirqabAlgorithmArticle = Partial<InsertMirqabAlgorithmArticle>;
+
+// Combined type with details
+export type MirqabEntryWithDetails = MirqabEntry & {
+  author?: User;
+  editor?: User;
+  sabqIndex?: MirqabSabqIndex;
+  nextStory?: MirqabNextStory;
+  radarAlert?: MirqabRadarAlert;
+  algorithmArticle?: MirqabAlgorithmArticle;
+};
+
+// Zod Schemas for Mirqab
+export const insertMirqabEntrySchema = createInsertSchema(mirqabEntries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  views: true,
+});
+
+export const insertMirqabSabqIndexSchema = createInsertSchema(mirqabSabqIndex).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMirqabNextStorySchema = createInsertSchema(mirqabNextStory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMirqabRadarAlertSchema = createInsertSchema(mirqabRadarAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMirqabAlgorithmArticleSchema = createInsertSchema(mirqabAlgorithmArticles).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Update schemas for Mirqab (partial updates)
+export const updateMirqabEntrySchema = insertMirqabEntrySchema.partial();
+export const updateMirqabSabqIndexSchema = insertMirqabSabqIndexSchema.partial();
+export const updateMirqabNextStorySchema = insertMirqabNextStorySchema.partial();
+export const updateMirqabRadarAlertSchema = insertMirqabRadarAlertSchema.partial();
+export const updateMirqabAlgorithmArticleSchema = insertMirqabAlgorithmArticleSchema.partial();

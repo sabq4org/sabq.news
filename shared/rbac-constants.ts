@@ -98,6 +98,14 @@ export const PERMISSION_CODES = {
   TAGS_UPDATE: "tags.update",
   TAGS_DELETE: "tags.delete",
   
+  // Mirqab - المرقاب (Future Forecasting/Observatory)
+  MIRQAB_VIEW: "mirqab.view",
+  MIRQAB_CREATE: "mirqab.create",
+  MIRQAB_EDIT: "mirqab.edit",
+  MIRQAB_DELETE: "mirqab.delete",
+  MIRQAB_PUBLISH: "mirqab.publish",
+  MIRQAB_MANAGE_SETTINGS: "mirqab.manage_settings",
+  
   // System
   SYSTEM_VIEW_AUDIT: "system.view_audit",
 } as const;
@@ -126,6 +134,12 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.SETTINGS_UPDATE,
     PERMISSION_CODES.ANALYTICS_VIEW,
     PERMISSION_CODES.SYSTEM_VIEW_AUDIT,
+    PERMISSION_CODES.MIRQAB_VIEW,
+    PERMISSION_CODES.MIRQAB_CREATE,
+    PERMISSION_CODES.MIRQAB_EDIT,
+    PERMISSION_CODES.MIRQAB_DELETE,
+    PERMISSION_CODES.MIRQAB_PUBLISH,
+    PERMISSION_CODES.MIRQAB_MANAGE_SETTINGS,
   ],
   
   [ROLE_NAMES.EDITOR]: [
@@ -142,6 +156,10 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.CATEGORIES_CREATE,
     PERMISSION_CODES.CATEGORIES_UPDATE,
     PERMISSION_CODES.ANALYTICS_VIEW,
+    PERMISSION_CODES.MIRQAB_VIEW,
+    PERMISSION_CODES.MIRQAB_CREATE,
+    PERMISSION_CODES.MIRQAB_EDIT,
+    PERMISSION_CODES.MIRQAB_PUBLISH,
   ],
   
   [ROLE_NAMES.REPORTER]: [
@@ -220,6 +238,13 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.TAGS_CREATE]: "إنشاء الوسوم",
   [PERMISSION_CODES.TAGS_UPDATE]: "تعديل الوسوم",
   [PERMISSION_CODES.TAGS_DELETE]: "حذف الوسوم",
+  
+  [PERMISSION_CODES.MIRQAB_VIEW]: "عرض المرقاب",
+  [PERMISSION_CODES.MIRQAB_CREATE]: "إنشاء محتوى المرقاب",
+  [PERMISSION_CODES.MIRQAB_EDIT]: "تعديل محتوى المرقاب",
+  [PERMISSION_CODES.MIRQAB_DELETE]: "حذف محتوى المرقاب",
+  [PERMISSION_CODES.MIRQAB_PUBLISH]: "نشر محتوى المرقاب",
+  [PERMISSION_CODES.MIRQAB_MANAGE_SETTINGS]: "إدارة إعدادات المرقاب",
   
   [PERMISSION_CODES.SYSTEM_VIEW_AUDIT]: "عرض سجلات النشاط",
 };

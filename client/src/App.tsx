@@ -57,6 +57,11 @@ import ActivityLogsPage from "@/pages/dashboard/ActivityLogsPage";
 import AboutPage from "@/pages/AboutPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
+import MirqabPage from "@/pages/MirqabPage";
+import SabqIndexListPage from "@/pages/mirqab/SabqIndexListPage";
+import SabqIndexDetailPage from "@/pages/mirqab/SabqIndexDetailPage";
+import MirqabDashboard from "@/pages/dashboard/MirqabDashboard";
+import CreateSabqIndex from "@/pages/dashboard/mirqab/CreateSabqIndex";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -76,8 +81,20 @@ function Router() {
       <Route path="/keyword/:keyword" component={KeywordPage} />
       <Route path="/muqtarib/:slug" component={MuqtaribDetail} />
       <Route path="/muqtarib" component={Muqtarib} />
+      
+      {/* Mirqab public pages */}
+      <Route path="/mirqab" component={MirqabPage} />
+      <Route path="/mirqab/sabq-index" component={SabqIndexListPage} />
+      <Route path="/mirqab/sabq-index/:slug" component={SabqIndexDetailPage} />
+      
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
+      
+      {/* Mirqab dashboard */}
+      <Route path="/dashboard/mirqab" component={MirqabDashboard} />
+      <Route path="/dashboard/mirqab/sabq-index/new" component={CreateSabqIndex} />
+      <Route path="/dashboard/mirqab/sabq-index/:id/edit" component={CreateSabqIndex} />
+      
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
