@@ -54,12 +54,14 @@ import ABTestsManagement from "@/pages/ABTestsManagement";
 import ABTestDetail from "@/pages/ABTestDetail";
 import ReporterProfile from "@/pages/ReporterProfile";
 import ActivityLogsPage from "@/pages/dashboard/ActivityLogsPage";
+import AboutPage from "@/pages/AboutPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/about" component={AboutPage} />
       <Route path="/news" component={NewsPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/login" component={Login} />
