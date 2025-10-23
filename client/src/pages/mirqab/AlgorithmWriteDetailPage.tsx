@@ -134,8 +134,8 @@ export default function AlgorithmWriteDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-background/50 rounded-md">
                 <p className="text-sm text-muted-foreground mb-1">النموذج المستخدم</p>
-                <p className="font-semibold" data-testid="text-model">
-                  {algorithmArticle.modelUsed}
+<p className="font-semibold" data-testid="text-model">
+                  {algorithmArticle.aiModel}
                 </p>
               </div>
               <div className="p-3 bg-background/50 rounded-md">

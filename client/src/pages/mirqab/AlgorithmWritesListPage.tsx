@@ -166,7 +166,7 @@ export default function AlgorithmWritesListPage() {
                             </span>
                           </div>
                           <Badge variant="secondary" className="text-xs" data-testid={`badge-model-${entry.id}`}>
-                            {entry.algorithmArticle.modelUsed}
+                            {entry.algorithmArticle.aiModel}
                           </Badge>
                         </>
                       )}
