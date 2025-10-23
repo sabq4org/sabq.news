@@ -2167,3 +2167,53 @@ export const updateMirqabSabqIndexSchema = insertMirqabSabqIndexSchema.partial()
 export const updateMirqabNextStorySchema = insertMirqabNextStorySchema.partial();
 export const updateMirqabRadarAlertSchema = insertMirqabRadarAlertSchema.partial();
 export const updateMirqabAlgorithmArticleSchema = insertMirqabAlgorithmArticleSchema.partial();
+
+// Smart Blocks (البلوكات الذكية)
+export const smartBlocks = pgTable("smart_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 60 }).notNull(),
+  keyword: varchar("keyword", { length: 100 }).notNull(),
+  color: varchar("color", { length: 20 }).notNull(),
+  placement: varchar("placement", { length: 30 }).notNull(), // below_featured, above_all_news, between_all_and_murqap, above_footer
+  limitCount: integer("limit_count").notNull().default(6),
+  filters: jsonb("filters").$type<{
+    categories?: string[];
+    dateRange?: { from: string; to: string };
+  }>(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_smart_blocks_keyword").on(table.keyword),
+  index("idx_smart_blocks_placement").on(table.placement),
+  index("idx_smart_blocks_active").on(table.isActive),
+]);
+
+// Smart Blocks Relations
+export const smartBlocksRelations = relations(smartBlocks, ({ one }) => ({
+  creator: one(users, {
+    fields: [smartBlocks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Smart Blocks Types
+export type SmartBlock = typeof smartBlocks.$inferSelect;
+export type InsertSmartBlock = z.infer<typeof insertSmartBlockSchema>;
+export type UpdateSmartBlock = Partial<InsertSmartBlock>;
+
+// Smart Blocks Schemas
+export const insertSmartBlockSchema = createInsertSchema(smartBlocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1).max(60),
+  keyword: z.string().min(1).max(100),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  placement: z.enum(['below_featured', 'above_all_news', 'between_all_and_murqap', 'above_footer']),
+  limitCount: z.number().min(1).max(24).default(6),
+});
+
+export const updateSmartBlockSchema = insertSmartBlockSchema.partial();

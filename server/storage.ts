@@ -42,6 +42,7 @@ import {
   mirqabNextStory,
   mirqabRadarAlerts,
   mirqabAlgorithmArticles,
+  smartBlocks,
   staff,
   roles,
   permissions,
@@ -136,6 +137,9 @@ import {
   type InsertMirqabAlgorithmArticle,
   type UpdateMirqabAlgorithmArticle,
   type MirqabEntryWithDetails,
+  type SmartBlock,
+  type InsertSmartBlock,
+  type UpdateSmartBlock,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -639,6 +643,22 @@ export interface IStorage {
   updateAlgorithmArticle(id: string, updates: any): Promise<any>;
   getAlgorithmArticleByEntryId(entryId: string): Promise<any | undefined>;
   getLatestAlgorithmArticles(limit: number): Promise<Array<any>>;
+
+  // ============================================
+  // Smart Blocks Operations - البلوكات الذكية
+  // ============================================
+  
+  createSmartBlock(data: InsertSmartBlock): Promise<SmartBlock>;
+  getSmartBlocks(filters?: { isActive?: boolean; placement?: string }): Promise<SmartBlock[]>;
+  getSmartBlockById(id: string): Promise<SmartBlock | undefined>;
+  getSmartBlocksByPlacement(placement: string): Promise<SmartBlock[]>;
+  updateSmartBlock(id: string, updates: UpdateSmartBlock): Promise<SmartBlock>;
+  deleteSmartBlock(id: string): Promise<void>;
+  queryArticlesByKeyword(keyword: string, limit: number, filters?: {
+    categories?: string[];
+    dateFrom?: string;
+    dateTo?: string;
+  }): Promise<Array<any>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5493,6 +5513,132 @@ export class DatabaseStorage implements IStorage {
       .where(eq(mirqabEntries.status, 'published'))
       .orderBy(desc(mirqabAlgorithmArticles.createdAt))
       .limit(limit);
+    return results;
+  }
+
+  // ============================================
+  // Smart Blocks Operations - البلوكات الذكية
+  // ============================================
+
+  async createSmartBlock(data: InsertSmartBlock): Promise<SmartBlock> {
+    const [block] = await db.insert(smartBlocks).values(data).returning();
+    return block;
+  }
+
+  async getSmartBlocks(filters?: { isActive?: boolean; placement?: string }): Promise<SmartBlock[]> {
+    let query = db.select().from(smartBlocks);
+
+    const conditions = [];
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(smartBlocks.isActive, filters.isActive));
+    }
+    if (filters?.placement) {
+      conditions.push(eq(smartBlocks.placement, filters.placement));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const blocks = await query.orderBy(desc(smartBlocks.createdAt));
+    return blocks;
+  }
+
+  async getSmartBlockById(id: string): Promise<SmartBlock | undefined> {
+    const [block] = await db.select().from(smartBlocks).where(eq(smartBlocks.id, id));
+    return block;
+  }
+
+  async getSmartBlocksByPlacement(placement: string): Promise<SmartBlock[]> {
+    const blocks = await db
+      .select()
+      .from(smartBlocks)
+      .where(and(
+        eq(smartBlocks.placement, placement),
+        eq(smartBlocks.isActive, true)
+      ))
+      .orderBy(desc(smartBlocks.createdAt));
+    return blocks;
+  }
+
+  async updateSmartBlock(id: string, updates: UpdateSmartBlock): Promise<SmartBlock> {
+    const [updated] = await db
+      .update(smartBlocks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(smartBlocks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSmartBlock(id: string): Promise<void> {
+    await db.delete(smartBlocks).where(eq(smartBlocks.id, id));
+  }
+
+  async queryArticlesByKeyword(
+    keyword: string,
+    limit: number,
+    filters?: {
+      categories?: string[];
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): Promise<Array<any>> {
+    let query = db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        publishedAt: articles.publishedAt,
+        categoryId: articles.categoryId,
+        views: articles.views,
+      })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, 'published'),
+          or(
+            ilike(articles.title, `%${keyword}%`),
+            ilike(articles.content, `%${keyword}%`)
+          )
+        )
+      );
+
+    const conditions = [eq(articles.status, 'published')];
+
+    if (filters?.categories && filters.categories.length > 0) {
+      conditions.push(inArray(articles.categoryId, filters.categories));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(articles.publishedAt, new Date(filters.dateFrom)));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(articles.publishedAt, new Date(filters.dateTo)));
+    }
+
+    const results = await db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        publishedAt: articles.publishedAt,
+        categoryId: articles.categoryId,
+        views: articles.views,
+      })
+      .from(articles)
+      .where(
+        and(
+          ...conditions,
+          or(
+            ilike(articles.title, `%${keyword}%`),
+            ilike(articles.content, `%${keyword}%`)
+          )
+        )
+      )
+      .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
     return results;
   }
 }
