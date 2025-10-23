@@ -5320,7 +5320,7 @@ export class DatabaseStorage implements IStorage {
     } else if (entry.entryType === 'radar') {
       const radarAlert = await this.getRadarReportByEntryId(entry.id);
       relatedData = { radarAlert };
-    } else if (entry.entryType === 'algorithm_write') {
+    } else if (entry.entryType === 'algorithm_article') {
       const algorithmArticle = await this.getAlgorithmArticleByEntryId(entry.id);
       relatedData = { algorithmArticle };
     }
