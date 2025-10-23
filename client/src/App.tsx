@@ -71,6 +71,7 @@ import CreateSabqIndex from "@/pages/dashboard/mirqab/CreateSabqIndex";
 import CreateNextStory from "@/pages/dashboard/mirqab/CreateNextStory";
 import CreateRadar from "@/pages/dashboard/mirqab/CreateRadar";
 import CreateAlgorithmWrite from "@/pages/dashboard/mirqab/CreateAlgorithmWrite";
+import SmartBlocksPage from "@/pages/dashboard/SmartBlocksPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -117,6 +118,7 @@ function Router() {
       <Route path="/dashboard/mirqab/algorithm-writes/:id/edit" component={CreateAlgorithmWrite} />
       
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
+      <Route path="/dashboard/smart-blocks" component={SmartBlocksPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />

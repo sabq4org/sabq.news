@@ -10,8 +10,9 @@ import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
+import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ArticleWithDetails } from "@shared/schema";
+import type { ArticleWithDetails, SmartBlock } from "@shared/schema";
 
 interface HomepageData {
   hero: ArticleWithDetails[];
@@ -33,6 +34,51 @@ export default function Home() {
     staleTime: 60000,
     refetchInterval: 120000,
     retry: 3,
+  });
+
+  // Fetch smart blocks for each placement
+  const { data: blocksBelowFeatured } = useQuery<SmartBlock[]>({
+    queryKey: ['/api/smart-blocks', 'below_featured'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'below_featured' });
+      const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: blocksAboveAllNews } = useQuery<SmartBlock[]>({
+    queryKey: ['/api/smart-blocks', 'above_all_news'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'above_all_news' });
+      const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: blocksBetweenAllAndMurqap } = useQuery<SmartBlock[]>({
+    queryKey: ['/api/smart-blocks', 'between_all_and_murqap'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'between_all_and_murqap' });
+      const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: blocksAboveFooter } = useQuery<SmartBlock[]>({
+    queryKey: ['/api/smart-blocks', 'above_footer'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'above_footer' });
+      const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -101,11 +147,21 @@ export default function Home() {
           </div>
         )}
 
+        {/* Smart Blocks: below_featured */}
+        {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
+          <SmartNewsBlock key={block.id} config={block} />
+        ))}
+
         {/* AI Insights Block */}
         <AIInsightsBlock />
 
         {/* Smart Summary Block - Only for authenticated users */}
         {user && <SmartSummaryBlock />}
+
+        {/* Smart Blocks: above_all_news */}
+        {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
+          <SmartNewsBlock key={block.id} config={block} />
+        ))}
 
         {homepage.forYou && homepage.forYou.length > 0 && (
           <PersonalizedFeed 
@@ -114,6 +170,11 @@ export default function Home() {
             showReason={false}
           />
         )}
+
+        {/* Smart Blocks: between_all_and_murqap */}
+        {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
+          <SmartNewsBlock key={block.id} config={block} />
+        ))}
 
         {/* Mirqab Section - Future Forecasting */}
         <MirqabHomeSection />
@@ -130,6 +191,11 @@ export default function Home() {
             <TrendingKeywords />
           </div>
         </div>
+
+        {/* Smart Blocks: above_footer */}
+        {blocksAboveFooter && blocksAboveFooter.map((block) => (
+          <SmartNewsBlock key={block.id} config={block} />
+        ))}
       </main>
       
       <Footer />

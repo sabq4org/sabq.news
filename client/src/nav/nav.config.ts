@@ -33,6 +33,7 @@ import {
   Boxes,
   Lightbulb,
   Telescope,
+  Grid3x3,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -264,6 +265,25 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics/recommendations",
         icon: Lightbulb,
         roles: ["admin", "analyst"],
+      },
+    ],
+  },
+
+  // ===== المحتوى الذكي / Smart Content =====
+  {
+    id: "smart_content",
+    labelKey: "nav.smart_content",
+    labelAr: "المحتوى الذكي",
+    icon: Grid3x3,
+    roles: ["admin", "system_admin"],
+    children: [
+      {
+        id: "smart_blocks",
+        labelKey: "nav.smart_blocks",
+        labelAr: "البلوكات الذكية",
+        path: "/dashboard/smart-blocks",
+        icon: Grid3x3,
+        roles: ["admin", "system_admin"],
       },
     ],
   },
