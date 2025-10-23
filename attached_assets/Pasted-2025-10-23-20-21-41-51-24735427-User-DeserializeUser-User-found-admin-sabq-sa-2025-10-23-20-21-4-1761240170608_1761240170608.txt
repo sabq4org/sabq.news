@@ -1,0 +1,124 @@
+2025-10-23 20:21:41.51
+24735427
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-23 20:21:41.63
+24735427
+User
+5:21:41 PM [express] POST /api/objects/upload 200 in 166ms :: {"uploadURL":"https://storage.googleap…
+2025-10-23 20:21:43.32
+24735427
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-23 20:21:43.34
+24735427
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-23 20:21:43.34
+24735427
+User
+[Article Image] Received imageURL: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.34
+24735427
+User
+[ObjectStorage] normalizeObjectEntityPath - Input: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.34
+24735427
+User
+[ObjectStorage] URL pathname: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.34
+24735427
+User
+[ObjectStorage] Private dir: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private
+2025-10-23 20:21:43.34
+24735427
+User
+[ObjectStorage] Private dir with slash: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/
+2025-10-23 20:21:43.34
+24735427
+User
+[ObjectStorage] Normalized to: /objects/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.45
+24735427
+User
+[ObjectStorage] Moving file from private to public:
+2025-10-23 20:21:43.45
+24735427
+User
+From: .private/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.45
+24735427
+User
+To: public/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.66
+24735427
+User
+[ObjectStorage] Returning public path: /public-objects/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.66
+24735427
+User
+[Article Image] Returning objectPath: /public-objects/uploads/af57a4cf-83e5-4257-a33f-d26270e28f08
+2025-10-23 20:21:43.68
+24735427
+User
+5:21:43 PM [express] PUT /api/article-images 200 in 381ms :: {"objectPath":"/public-objects/uploads/…
+2025-10-23 20:21:44.09
+24735427
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-23 20:21:44.12
+24735427
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-23 20:21:54.52
+24735427
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-23 20:21:54.54
+24735427
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-23 20:21:54.60
+24735427
+User
+Error creating algorithm article: error: duplicate key value violates unique constraint "mirqab_entries_slug_unique"
+2025-10-23 20:21:54.60
+24735427
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-10-23 20:21:54.60
+24735427
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-23 20:21:54.60
+24735427
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-10-23 20:21:54.60
+24735427
+User
+at async DatabaseStorage.createMirqabEntry (file:///home/runner/workspace/dist/index.js:4714:28)
+2025-10-23 20:21:54.60
+24735427
+User
+at async file:///home/runner/workspace/dist/index.js:13929:21 {
+2025-10-23 20:21:54.60
+24735427
+User
+length: 302,
+2025-10-23 20:21:54.60
+24735427
+User
+severity: 'ERROR',
+2025-10-23 20:21:54.60
+24735427
+User
+code: '23505',
+2025-10-23 20:21:54.60
+24735427
+User
+detail: 'Key (slug)=(الخوارزمي-من-رقْمٍ-إلى-خوارزمية-تحكم-العالم) already exists.',
+2025-10-23 20:21:54.60
+24735427
+User
+hint: undefined,

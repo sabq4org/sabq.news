@@ -6825,13 +6825,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to generate slug from Arabic or English text
   function generateSlug(text: string): string {
-    return text
+    const baseSlug = text
       .toLowerCase()
       .trim()
       .replace(/[\s_]+/g, '-')
       .replace(/[^\u0600-\u06FFa-z0-9-]/g, '')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
+    
+    // Add timestamp to ensure uniqueness
+    return `${baseSlug}-${Date.now()}`;
   }
 
   // 1. GET /api/tags - Get all tags with filters and sorting
