@@ -108,6 +108,7 @@ export const PERMISSION_CODES = {
   
   // System
   SYSTEM_VIEW_AUDIT: "system.view_audit",
+  SYSTEM_MANAGE_SETTINGS: "system.manage_settings",
 } as const;
 
 // Role to permissions mapping (for UI display)
@@ -134,6 +135,7 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.SETTINGS_UPDATE,
     PERMISSION_CODES.ANALYTICS_VIEW,
     PERMISSION_CODES.SYSTEM_VIEW_AUDIT,
+    PERMISSION_CODES.SYSTEM_MANAGE_SETTINGS,
     PERMISSION_CODES.MIRQAB_VIEW,
     PERMISSION_CODES.MIRQAB_CREATE,
     PERMISSION_CODES.MIRQAB_EDIT,
@@ -247,6 +249,7 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.MIRQAB_MANAGE_SETTINGS]: "إدارة إعدادات المرقاب",
   
   [PERMISSION_CODES.SYSTEM_VIEW_AUDIT]: "عرض سجلات النشاط",
+  [PERMISSION_CODES.SYSTEM_MANAGE_SETTINGS]: "إدارة إعدادات النظام",
 };
 
 // Helper function to get all permissions for given roles

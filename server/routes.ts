@@ -9176,7 +9176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/smart-blocks - Create new smart block
-  app.post("/api/smart-blocks", requirePermission('system:manage_settings'), async (req: any, res) => {
+  app.post("/api/smart-blocks", requirePermission('system.manage_settings'), async (req: any, res) => {
     try {
       const validatedData = insertSmartBlockSchema.parse({
         ...req.body,
@@ -9220,7 +9220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/smart-blocks/:id - Update smart block
-  app.put("/api/smart-blocks/:id", requirePermission('system:manage_settings'), async (req: any, res) => {
+  app.put("/api/smart-blocks/:id", requirePermission('system.manage_settings'), async (req: any, res) => {
     try {
       const existingBlock = await storage.getSmartBlockById(req.params.id);
       if (!existingBlock) {
@@ -9250,7 +9250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/smart-blocks/:id - Delete smart block
-  app.delete("/api/smart-blocks/:id", requirePermission('system:manage_settings'), async (req: any, res) => {
+  app.delete("/api/smart-blocks/:id", requirePermission('system.manage_settings'), async (req: any, res) => {
     try {
       const existingBlock = await storage.getSmartBlockById(req.params.id);
       if (!existingBlock) {
