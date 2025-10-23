@@ -138,7 +138,7 @@ export default function CreateNextStory() {
         entry: {
           entryType: 'next_story',
           title: data.title,
-          slug: data.title.toLowerCase().replace(/\s+/g, '-'),
+          slug: `${data.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
           status: data.status,
           visibility: 'public',
           scheduledAt: data.scheduledAt || null,

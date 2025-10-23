@@ -145,7 +145,7 @@ export default function CreateSabqIndex() {
         entry: {
           entryType: 'sabq_index',
           title: data.title,
-          slug: data.title.toLowerCase().replace(/\s+/g, '-'),
+          slug: `${data.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
           status: data.status,
           visibility: 'public',
           scheduledAt: data.scheduledAt || null,
