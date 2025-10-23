@@ -8100,7 +8100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/mirqab/sabq-index - Create SABQ Index
-  app.post("/api/mirqab/sabq-index", requireAuth, requirePermission('MIRQAB_CREATE'), async (req: any, res) => {
+  app.post("/api/mirqab/sabq-index", requireAuth, requirePermission('mirqab.create'), async (req: any, res) => {
     try {
       const entryData = insertMirqabEntrySchema.parse({
         ...req.body.entry,
@@ -8134,7 +8134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/mirqab/sabq-index/:id - Update SABQ Index
-  app.put("/api/mirqab/sabq-index/:id", requireAuth, requirePermission('MIRQAB_EDIT'), async (req: any, res) => {
+  app.put("/api/mirqab/sabq-index/:id", requireAuth, requirePermission('mirqab.edit'), async (req: any, res) => {
     try {
       const entry = await storage.getMirqabEntryById(req.params.id);
       if (!entry || entry.entryType !== 'sabq_index') {
@@ -8173,7 +8173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/mirqab/sabq-index/:id - Delete SABQ Index
-  app.delete("/api/mirqab/sabq-index/:id", requireAuth, requirePermission('MIRQAB_DELETE'), async (req: any, res) => {
+  app.delete("/api/mirqab/sabq-index/:id", requireAuth, requirePermission('mirqab.delete'), async (req: any, res) => {
     try {
       await storage.deleteMirqabEntry(req.params.id);
       
@@ -8224,7 +8224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/mirqab/next-stories - Create Next Story
-  app.post("/api/mirqab/next-stories", requireAuth, requirePermission('MIRQAB_CREATE'), async (req: any, res) => {
+  app.post("/api/mirqab/next-stories", requireAuth, requirePermission('mirqab.create'), async (req: any, res) => {
     try {
       const entryData = insertMirqabEntrySchema.parse({
         ...req.body.entry,
@@ -8258,7 +8258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/mirqab/next-stories/:id - Update Next Story
-  app.put("/api/mirqab/next-stories/:id", requireAuth, requirePermission('MIRQAB_EDIT'), async (req: any, res) => {
+  app.put("/api/mirqab/next-stories/:id", requireAuth, requirePermission('mirqab.edit'), async (req: any, res) => {
     try {
       const entry = await storage.getMirqabEntryById(req.params.id);
       if (!entry || entry.entryType !== 'next_story') {
@@ -8297,7 +8297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/mirqab/next-stories/:id - Delete Next Story
-  app.delete("/api/mirqab/next-stories/:id", requireAuth, requirePermission('MIRQAB_DELETE'), async (req: any, res) => {
+  app.delete("/api/mirqab/next-stories/:id", requireAuth, requirePermission('mirqab.delete'), async (req: any, res) => {
     try {
       await storage.deleteMirqabEntry(req.params.id);
       
@@ -8361,7 +8361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/mirqab/radar - Create Radar Report
-  app.post("/api/mirqab/radar", requireAuth, requirePermission('MIRQAB_CREATE'), async (req: any, res) => {
+  app.post("/api/mirqab/radar", requireAuth, requirePermission('mirqab.create'), async (req: any, res) => {
     try {
       const entryData = insertMirqabEntrySchema.parse({
         ...req.body.entry,
@@ -8395,7 +8395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/mirqab/radar/:id - Update Radar Report
-  app.put("/api/mirqab/radar/:id", requireAuth, requirePermission('MIRQAB_EDIT'), async (req: any, res) => {
+  app.put("/api/mirqab/radar/:id", requireAuth, requirePermission('mirqab.edit'), async (req: any, res) => {
     try {
       const entry = await storage.getMirqabEntryById(req.params.id);
       if (!entry || entry.entryType !== 'radar') {
@@ -8434,7 +8434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/mirqab/radar/:id - Delete Radar Report
-  app.delete("/api/mirqab/radar/:id", requireAuth, requirePermission('MIRQAB_DELETE'), async (req: any, res) => {
+  app.delete("/api/mirqab/radar/:id", requireAuth, requirePermission('mirqab.delete'), async (req: any, res) => {
     try {
       await storage.deleteMirqabEntry(req.params.id);
       
@@ -8485,7 +8485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/mirqab/algorithm-writes - Create Algorithm Article
-  app.post("/api/mirqab/algorithm-writes", requireAuth, requirePermission('MIRQAB_CREATE'), async (req: any, res) => {
+  app.post("/api/mirqab/algorithm-writes", requireAuth, requirePermission('mirqab.create'), async (req: any, res) => {
     try {
       const entryData = insertMirqabEntrySchema.parse({
         ...req.body.entry,
@@ -8519,7 +8519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/mirqab/algorithm-writes/:id - Update Algorithm Article
-  app.put("/api/mirqab/algorithm-writes/:id", requireAuth, requirePermission('MIRQAB_EDIT'), async (req: any, res) => {
+  app.put("/api/mirqab/algorithm-writes/:id", requireAuth, requirePermission('mirqab.edit'), async (req: any, res) => {
     try {
       const entry = await storage.getMirqabEntryById(req.params.id);
       if (!entry || entry.entryType !== 'algorithm_article') {
@@ -8558,7 +8558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/mirqab/algorithm-writes/:id - Delete Algorithm Article
-  app.delete("/api/mirqab/algorithm-writes/:id", requireAuth, requirePermission('MIRQAB_DELETE'), async (req: any, res) => {
+  app.delete("/api/mirqab/algorithm-writes/:id", requireAuth, requirePermission('mirqab.delete'), async (req: any, res) => {
     try {
       await storage.deleteMirqabEntry(req.params.id);
       
