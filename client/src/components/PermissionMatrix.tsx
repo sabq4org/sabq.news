@@ -89,6 +89,8 @@ export function PermissionMatrix({ selectedRoleIds }: PermissionMatrixProps) {
     media: "الوسائط",
     settings: "الإعدادات",
     analytics: "التحليلات",
+    tags: "الوسوم",
+    system: "النظام",
   };
 
   return (

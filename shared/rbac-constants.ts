@@ -97,6 +97,9 @@ export const PERMISSION_CODES = {
   TAGS_CREATE: "tags.create",
   TAGS_UPDATE: "tags.update",
   TAGS_DELETE: "tags.delete",
+  
+  // System
+  SYSTEM_VIEW_AUDIT: "system.view_audit",
 } as const;
 
 // Role to permissions mapping (for UI display)
@@ -122,6 +125,7 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.SETTINGS_VIEW,
     PERMISSION_CODES.SETTINGS_UPDATE,
     PERMISSION_CODES.ANALYTICS_VIEW,
+    PERMISSION_CODES.SYSTEM_VIEW_AUDIT,
   ],
   
   [ROLE_NAMES.EDITOR]: [
@@ -216,6 +220,8 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.TAGS_CREATE]: "إنشاء الوسوم",
   [PERMISSION_CODES.TAGS_UPDATE]: "تعديل الوسوم",
   [PERMISSION_CODES.TAGS_DELETE]: "حذف الوسوم",
+  
+  [PERMISSION_CODES.SYSTEM_VIEW_AUDIT]: "عرض سجلات النشاط",
 };
 
 // Helper function to get all permissions for given roles
