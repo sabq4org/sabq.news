@@ -8485,7 +8485,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const articles = await storage.getLatestAlgorithmArticles(
         limit ? parseInt(limit as string) : 10
       );
-      res.json(articles);
+      res.json({
+        entries: articles,
+        total: articles.length
+      });
     } catch (error) {
       console.error("Error fetching algorithm articles:", error);
       res.status(500).json({ message: "فشل في جلب مقالات الخوارزمي" });

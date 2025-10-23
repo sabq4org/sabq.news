@@ -44,7 +44,7 @@ export default function AlgorithmWritesListPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} />
+      <Header user={user || undefined} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 dark:from-green-900 dark:via-emerald-900 dark:to-teal-900 text-white py-16">

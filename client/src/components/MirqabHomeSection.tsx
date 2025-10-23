@@ -33,7 +33,8 @@ export function MirqabHomeSection() {
     queryFn: async () => {
       const res = await fetch('/api/mirqab/algorithm-writes?limit=2&status=published', { credentials: 'include' });
       if (!res.ok) return [];
-      return await res.json();
+      const data = await res.json();
+      return data.entries || [];
     },
   });
 
