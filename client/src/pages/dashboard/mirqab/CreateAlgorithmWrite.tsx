@@ -149,9 +149,9 @@ export default function CreateAlgorithmWrite() {
         articleData: {
           content: data.content,
           analysisType: data.analysisType,
-          modelUsed: data.modelUsed,
+          aiModel: data.modelUsed,
           aiPercentage: data.aiPercentage,
-          aiPrompt: data.aiPrompt || null,
+          prompt: data.aiPrompt || null,
           humanReviewed: data.humanReviewed,
           reviewerNotes: data.reviewerNotes || null,
         },
