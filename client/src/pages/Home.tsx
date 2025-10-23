@@ -9,6 +9,7 @@ import { SmartSummaryBlock } from "@/components/SmartSummaryBlock";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
+import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ArticleWithDetails } from "@shared/schema";
 
@@ -113,6 +114,9 @@ export default function Home() {
             showReason={false}
           />
         )}
+
+        {/* Mirqab Section - Future Forecasting */}
+        <MirqabHomeSection />
 
         <div className="space-y-8">
           {homepage.deepDive && homepage.deepDive.length > 0 && (
