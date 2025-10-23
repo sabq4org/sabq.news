@@ -38,7 +38,18 @@ export default function MirqabDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: entries = [], isLoading } = useQuery<MirqabEntryWithDetails[]>({
-    queryKey: ['/api/mirqab/entries', { type: activeTab, status: statusFilter !== 'all' ? statusFilter : undefined }],
+    queryKey: ['/api/mirqab/entries', activeTab, statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('type', activeTab);
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      const url = `/api/mirqab/entries?${params.toString()}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch entries');
+      return await res.json();
+    },
   });
 
   const deleteMutation = useMutation({
