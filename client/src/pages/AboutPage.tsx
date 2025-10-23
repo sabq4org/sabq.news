@@ -12,14 +12,20 @@ import {
   Clock,
   Award,
   Users,
-  Rocket,
-  ChevronLeft
+  Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
+import { Header } from "@/components/Header";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AboutPage() {
+  // Fetch current user
+  const { data: user } = useQuery<{ name?: string | null; email?: string; role?: string; profileImageUrl?: string | null }>({
+    queryKey: ["/api/auth/user"],
+  });
+
   const timelineEvents = [
     {
       year: "2007",
@@ -135,17 +141,14 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Header */}
+      <Header user={user} />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20 md:py-32">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-6" data-testid="button-back">
-              <ChevronLeft className="w-4 h-4 ml-2" />
-              العودة للرئيسية
-            </Button>
-          </Link>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
