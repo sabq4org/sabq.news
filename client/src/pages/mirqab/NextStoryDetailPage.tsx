@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,7 @@ import { ar } from "date-fns/locale";
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function NextStoryDetailPage() {
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
+  const { user } = useAuth();
 
   const [, params] = useRoute("/mirqab/next-stories/:slug");
   const slug = params?.slug;

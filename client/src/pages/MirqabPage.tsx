@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +12,7 @@ import { ar } from "date-fns/locale";
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function MirqabPage() {
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
+  const { user } = useAuth();
 
   const { data: sabqIndexes = [], isLoading: loadingSabq } = useQuery<MirqabEntryWithDetails[]>({
     queryKey: ['/api/mirqab/sabq-index', { limit: 3 }],

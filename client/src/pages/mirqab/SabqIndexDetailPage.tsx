@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function SabqIndexDetailPage() {
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
+  const { user } = useAuth();
 
   const [, params] = useRoute("/mirqab/sabq-index/:slug");
   const slug = params?.slug;
