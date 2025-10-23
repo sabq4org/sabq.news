@@ -5330,11 +5330,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLatestSabqIndexes(limit: number): Promise<any[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: mirqabEntries.id,
+        title: mirqabEntries.title,
+        slug: mirqabEntries.slug,
+        status: mirqabEntries.status,
+        publishedAt: mirqabEntries.publishedAt,
+        views: mirqabEntries.views,
+        createdAt: mirqabEntries.createdAt,
+        indexValue: mirqabSabqIndex.indexValue,
+        maxValue: mirqabSabqIndex.maxValue,
+        trend: mirqabSabqIndex.trend,
+        indexCategory: mirqabSabqIndex.indexCategory,
+      })
       .from(mirqabSabqIndex)
+      .leftJoin(mirqabEntries, eq(mirqabSabqIndex.entryId, mirqabEntries.id))
+      .where(eq(mirqabEntries.status, 'published'))
       .orderBy(desc(mirqabSabqIndex.createdAt))
       .limit(limit);
+    return results;
   }
 
   // Next Story operations
@@ -5361,11 +5376,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUpcomingNextStories(limit: number): Promise<any[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: mirqabEntries.id,
+        title: mirqabEntries.title,
+        slug: mirqabEntries.slug,
+        status: mirqabEntries.status,
+        publishedAt: mirqabEntries.publishedAt,
+        views: mirqabEntries.views,
+        createdAt: mirqabEntries.createdAt,
+        executiveSummary: mirqabNextStory.executiveSummary,
+        confidenceLevel: mirqabNextStory.confidenceLevel,
+        expectedTiming: mirqabNextStory.expectedTiming,
+        expectedDate: mirqabNextStory.expectedDate,
+      })
       .from(mirqabNextStory)
+      .leftJoin(mirqabEntries, eq(mirqabNextStory.entryId, mirqabEntries.id))
+      .where(eq(mirqabEntries.status, 'published'))
       .orderBy(asc(mirqabNextStory.expectedDate))
       .limit(limit);
+    return results;
   }
 
   // Radar Alert operations
@@ -5400,11 +5430,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLatestRadarReports(limit: number): Promise<any[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: mirqabEntries.id,
+        title: mirqabEntries.title,
+        slug: mirqabEntries.slug,
+        status: mirqabEntries.status,
+        publishedAt: mirqabEntries.publishedAt,
+        views: mirqabEntries.views,
+        createdAt: mirqabEntries.createdAt,
+        reportDate: mirqabRadarAlerts.reportDate,
+        alerts: mirqabRadarAlerts.alerts,
+        summary: mirqabRadarAlerts.summary,
+      })
       .from(mirqabRadarAlerts)
+      .leftJoin(mirqabEntries, eq(mirqabRadarAlerts.entryId, mirqabEntries.id))
+      .where(eq(mirqabEntries.status, 'published'))
       .orderBy(desc(mirqabRadarAlerts.reportDate))
       .limit(limit);
+    return results;
   }
 
   // Algorithm Article operations
@@ -5431,11 +5475,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLatestAlgorithmArticles(limit: number): Promise<any[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: mirqabEntries.id,
+        title: mirqabEntries.title,
+        slug: mirqabEntries.slug,
+        status: mirqabEntries.status,
+        publishedAt: mirqabEntries.publishedAt,
+        views: mirqabEntries.views,
+        createdAt: mirqabEntries.createdAt,
+        analysisType: mirqabAlgorithmArticles.analysisType,
+        aiPercentage: mirqabAlgorithmArticles.aiPercentage,
+        humanReviewed: mirqabAlgorithmArticles.humanReviewed,
+      })
       .from(mirqabAlgorithmArticles)
+      .leftJoin(mirqabEntries, eq(mirqabAlgorithmArticles.entryId, mirqabEntries.id))
+      .where(eq(mirqabEntries.status, 'published'))
       .orderBy(desc(mirqabAlgorithmArticles.createdAt))
       .limit(limit);
+    return results;
   }
 }
 

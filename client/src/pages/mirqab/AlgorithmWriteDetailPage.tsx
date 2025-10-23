@@ -50,7 +50,7 @@ export default function AlgorithmWriteDetailPage() {
   if (isLoading || !entry) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header user={user} />
+        <Header user={user || undefined} />
         <div className="container mx-auto px-4 max-w-4xl py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <Skeleton className="h-6 w-1/2 mb-8" />
@@ -65,7 +65,7 @@ export default function AlgorithmWriteDetailPage() {
   if (!algorithmArticle) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header user={user} />
+        <Header user={user || undefined} />
         <div className="container mx-auto px-4 max-w-4xl py-12 text-center">
           <h2 className="text-2xl font-bold">المقال غير متاح</h2>
         </div>
@@ -75,7 +75,7 @@ export default function AlgorithmWriteDetailPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} />
+      <Header user={user || undefined} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 dark:from-green-900 dark:via-emerald-900 dark:to-teal-900 text-white py-16">
