@@ -5305,7 +5305,39 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(mirqabEntries)
       .where(eq(mirqabEntries.slug, slug));
-    return entry;
+    
+    if (!entry) return undefined;
+
+    // Fetch related data based on entry type
+    let relatedData: any = {};
+    
+    if (entry.entryType === 'sabq_index') {
+      const sabqIndex = await this.getSabqIndexByEntryId(entry.id);
+      relatedData = { sabqIndex };
+    } else if (entry.entryType === 'next_story') {
+      const nextStory = await this.getNextStoryByEntryId(entry.id);
+      relatedData = { nextStory };
+    } else if (entry.entryType === 'radar') {
+      const radarAlert = await this.getRadarReportByEntryId(entry.id);
+      relatedData = { radarAlert };
+    } else if (entry.entryType === 'algorithm_write') {
+      const algorithmArticle = await this.getAlgorithmArticleByEntryId(entry.id);
+      relatedData = { algorithmArticle };
+    }
+
+    // Fetch author and editor if available
+    let author = undefined;
+    let editor = undefined;
+    
+    if (entry.authorId) {
+      author = await this.getUser(entry.authorId);
+    }
+    
+    if (entry.editorId) {
+      editor = await this.getUser(entry.editorId);
+    }
+
+    return { ...entry, ...relatedData, author, editor };
   }
 
   async createMirqabEntry(entry: any): Promise<any> {
