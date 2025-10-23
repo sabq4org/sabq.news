@@ -136,7 +136,7 @@ export default function TermsPage() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto"
           >
-            <Card className="border-l-4 border-l-blue-500" data-testid="card-intro">
+            <Card className="bg-gradient-to-br from-blue-500/5 to-purple-500/5 border-blue-500/20" data-testid="card-intro">
               <CardContent className="p-6 md:p-8">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">

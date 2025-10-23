@@ -55,6 +55,8 @@ import ABTestDetail from "@/pages/ABTestDetail";
 import ReporterProfile from "@/pages/ReporterProfile";
 import ActivityLogsPage from "@/pages/dashboard/ActivityLogsPage";
 import AboutPage from "@/pages/AboutPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -62,6 +64,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={AboutPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
       <Route path="/news" component={NewsPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/login" component={Login} />
