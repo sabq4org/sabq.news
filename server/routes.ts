@@ -9283,6 +9283,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "الكلمة المفتاحية مطلوبة" });
       }
 
+      console.log(`🔍 [Smart Block] Searching for keyword: "${keyword}", limit: ${limit}`);
+
       const filters: any = {};
       if (categories) {
         filters.categories = Array.isArray(categories) ? categories : [categories];
@@ -9300,9 +9302,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters
       );
 
+      console.log(`✅ [Smart Block] Found ${articles.length} articles for "${keyword}"`);
+      articles.forEach((article, index) => {
+        console.log(`   ${index + 1}. "${article.title.substring(0, 60)}..."`);
+      });
+
       res.json({ items: articles, total: articles.length });
     } catch (error: any) {
-      console.error("Error querying articles:", error);
+      console.error("❌ [Smart Block] Error querying articles:", error);
       res.status(500).json({ message: "فشل في البحث عن المقالات" });
     }
   });

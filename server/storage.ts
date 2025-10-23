@@ -5583,19 +5583,27 @@ export class DatabaseStorage implements IStorage {
       dateTo?: string;
     }
   ): Promise<Array<any>> {
+    console.log(`🔎 [Storage] Searching articles with keyword: "${keyword}"`);
+    
     const conditions = [eq(articles.status, 'published')];
 
     if (filters?.categories && filters.categories.length > 0) {
       conditions.push(inArray(articles.categoryId, filters.categories));
+      console.log(`   - Filtering by categories: ${filters.categories.join(', ')}`);
     }
 
     if (filters?.dateFrom) {
       conditions.push(gte(articles.publishedAt, new Date(filters.dateFrom)));
+      console.log(`   - Date from: ${filters.dateFrom}`);
     }
 
     if (filters?.dateTo) {
       conditions.push(lte(articles.publishedAt, new Date(filters.dateTo)));
+      console.log(`   - Date to: ${filters.dateTo}`);
     }
+
+    console.log(`   - Search pattern: ILIKE '%${keyword}%' in (title OR content)`);
+    console.log(`   - Limit: ${limit}`);
 
     const results = await db
       .select({
@@ -5618,6 +5626,14 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
+
+    console.log(`✓ [Storage] Query returned ${results.length} results`);
+    
+    // Log each result to verify keyword presence
+    results.forEach((article, index) => {
+      const titleMatch = article.title.toLowerCase().includes(keyword.toLowerCase());
+      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." - Title match: ${titleMatch ? '✓' : '✗'}`);
+    });
 
     return results;
   }
