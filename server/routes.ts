@@ -105,6 +105,8 @@ import {
   insertMirqabRadarAlertSchema,
   updateMirqabRadarAlertSchema,
   insertMirqabAlgorithmArticleSchema,
+  insertSmartBlockSchema,
+  updateSmartBlockSchema,
   updateMirqabAlgorithmArticleSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
@@ -9145,6 +9147,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching reporter profile:", error);
       res.status(500).json({ message: "فشل في جلب بيانات المراسل" });
+    }
+  });
+
+  // ==========================================
+  // Smart Blocks Routes - البلوكات الذكية
+  // ==========================================
+
+  // GET /api/smart-blocks - List all smart blocks
+  app.get("/api/smart-blocks", async (req: any, res) => {
+    try {
+      const { isActive, placement } = req.query;
+      
+      const filters: any = {};
+      if (isActive !== undefined) {
+        filters.isActive = isActive === 'true';
+      }
+      if (placement) {
+        filters.placement = placement;
+      }
+
+      const blocks = await storage.getSmartBlocks(filters);
+      res.json(blocks);
+    } catch (error: any) {
+      console.error("Error fetching smart blocks:", error);
+      res.status(500).json({ message: "فشل في جلب البلوكات الذكية" });
+    }
+  });
+
+  // POST /api/smart-blocks - Create new smart block
+  app.post("/api/smart-blocks", requirePermission('system:manage_settings'), async (req: any, res) => {
+    try {
+      const validatedData = insertSmartBlockSchema.parse({
+        ...req.body,
+        createdBy: req.user?.id,
+      });
+
+      const block = await storage.createSmartBlock(validatedData as any);
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'create_smart_block',
+        entityType: 'smart_block',
+        entityId: block.id,
+        newValue: { title: block.title, keyword: block.keyword }
+      });
+
+      res.status(201).json(block);
+    } catch (error: any) {
+      console.error("Error creating smart block:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في إنشاء البلوك الذكي" });
+    }
+  });
+
+  // GET /api/smart-blocks/:id - Get specific smart block
+  app.get("/api/smart-blocks/:id", async (req: any, res) => {
+    try {
+      const block = await storage.getSmartBlockById(req.params.id);
+      
+      if (!block) {
+        return res.status(404).json({ message: "البلوك الذكي غير موجود" });
+      }
+
+      res.json(block);
+    } catch (error: any) {
+      console.error("Error fetching smart block:", error);
+      res.status(500).json({ message: "فشل في جلب البلوك الذكي" });
+    }
+  });
+
+  // PUT /api/smart-blocks/:id - Update smart block
+  app.put("/api/smart-blocks/:id", requirePermission('system:manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await storage.getSmartBlockById(req.params.id);
+      if (!existingBlock) {
+        return res.status(404).json({ message: "البلوك الذكي غير موجود" });
+      }
+
+      const validatedData = updateSmartBlockSchema.parse(req.body);
+      const updated = await storage.updateSmartBlock(req.params.id, validatedData as any);
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'update_smart_block',
+        entityType: 'smart_block',
+        entityId: updated.id,
+        oldValue: { title: existingBlock.title, keyword: existingBlock.keyword },
+        newValue: { title: updated.title, keyword: updated.keyword }
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating smart block:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في تحديث البلوك الذكي" });
+    }
+  });
+
+  // DELETE /api/smart-blocks/:id - Delete smart block
+  app.delete("/api/smart-blocks/:id", requirePermission('system:manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await storage.getSmartBlockById(req.params.id);
+      if (!existingBlock) {
+        return res.status(404).json({ message: "البلوك الذكي غير موجود" });
+      }
+
+      await storage.deleteSmartBlock(req.params.id);
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'delete_smart_block',
+        entityType: 'smart_block',
+        entityId: req.params.id,
+        oldValue: { title: existingBlock.title, keyword: existingBlock.keyword }
+      });
+
+      res.json({ success: true, message: "تم حذف البلوك الذكي بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting smart block:", error);
+      res.status(500).json({ message: "فشل في حذف البلوك الذكي" });
+    }
+  });
+
+  // GET /api/smart-blocks/query/articles - Query articles by keyword
+  app.get("/api/smart-blocks/query/articles", async (req: any, res) => {
+    try {
+      const { keyword, limit = 6, categories, dateFrom, dateTo } = req.query;
+
+      if (!keyword) {
+        return res.status(400).json({ message: "الكلمة المفتاحية مطلوبة" });
+      }
+
+      const filters: any = {};
+      if (categories) {
+        filters.categories = Array.isArray(categories) ? categories : [categories];
+      }
+      if (dateFrom) {
+        filters.dateFrom = dateFrom;
+      }
+      if (dateTo) {
+        filters.dateTo = dateTo;
+      }
+
+      const articles = await storage.queryArticlesByKeyword(
+        keyword,
+        parseInt(limit as string) || 6,
+        filters
+      );
+
+      res.json({ items: articles, total: articles.length });
+    } catch (error: any) {
+      console.error("Error querying articles:", error);
+      res.status(500).json({ message: "فشل في البحث عن المقالات" });
     }
   });
 

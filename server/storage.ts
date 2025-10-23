@@ -5521,7 +5521,7 @@ export class DatabaseStorage implements IStorage {
   // ============================================
 
   async createSmartBlock(data: InsertSmartBlock): Promise<SmartBlock> {
-    const [block] = await db.insert(smartBlocks).values(data).returning();
+    const [block] = await db.insert(smartBlocks).values(data as any).returning();
     return block;
   }
 
@@ -5564,7 +5564,7 @@ export class DatabaseStorage implements IStorage {
   async updateSmartBlock(id: string, updates: UpdateSmartBlock): Promise<SmartBlock> {
     const [updated] = await db
       .update(smartBlocks)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updates, updatedAt: new Date() } as any)
       .where(eq(smartBlocks.id, id))
       .returning();
     return updated;
