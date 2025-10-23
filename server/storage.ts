@@ -5583,9 +5583,13 @@ export class DatabaseStorage implements IStorage {
       dateTo?: string;
     }
   ): Promise<Array<any>> {
-    console.log(`🔎 [Storage] Searching articles with keyword: "${keyword}"`);
+    console.log(`🔎 [Storage] Searching articles with keyword: "${keyword}" (in SEO keywords only)`);
     
-    const conditions = [eq(articles.status, 'published')];
+    const conditions = [
+      eq(articles.status, 'published'),
+      // Search in seo.keywords JSONB array using PostgreSQL JSONB contains operator
+      sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`
+    ];
 
     if (filters?.categories && filters.categories.length > 0) {
       conditions.push(inArray(articles.categoryId, filters.categories));
@@ -5602,7 +5606,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`   - Date to: ${filters.dateTo}`);
     }
 
-    console.log(`   - Search pattern: ILIKE '%${keyword}%' in (title OR content)`);
+    console.log(`   - Search pattern: seo.keywords @> '["${keyword}"]'`);
     console.log(`   - Limit: ${limit}`);
 
     const results = await db
@@ -5615,24 +5619,15 @@ export class DatabaseStorage implements IStorage {
         views: articles.views,
       })
       .from(articles)
-      .where(
-        and(
-          ...conditions,
-          or(
-            ilike(articles.title, `%${keyword}%`),
-            ilike(articles.content, `%${keyword}%`)
-          )
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
     console.log(`✓ [Storage] Query returned ${results.length} results`);
     
-    // Log each result to verify keyword presence
+    // Log each result
     results.forEach((article, index) => {
-      const titleMatch = article.title.toLowerCase().includes(keyword.toLowerCase());
-      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." - Title match: ${titleMatch ? '✓' : '✗'}`);
+      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..."`);
     });
 
     return results;
