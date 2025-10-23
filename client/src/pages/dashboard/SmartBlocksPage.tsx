@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -46,7 +56,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Blocks, Plus, Edit, Trash2, Eye } from "lucide-react";
 import type { SmartBlock, InsertSmartBlock } from "@shared/schema";
 import { insertSmartBlockSchema } from "@shared/schema";
-import { z } from "zod";
 
 const placementOptions = [
   { value: 'below_featured', label: 'بعد البانر الرئيسي' },
@@ -60,15 +69,18 @@ export default function SmartBlocksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState<SmartBlock | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<InsertSmartBlock>>({
-    title: '',
-    keyword: '',
-    color: '#3B82F6',
-    placement: 'below_featured',
-    limitCount: 6,
-    isActive: true,
+
+  const form = useForm<InsertSmartBlock>({
+    resolver: zodResolver(insertSmartBlockSchema),
+    defaultValues: {
+      title: '',
+      keyword: '',
+      color: '#3B82F6',
+      placement: 'below_featured',
+      limitCount: 6,
+      isActive: true,
+    },
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const { data: blocks = [], isLoading } = useQuery<SmartBlock[]>({
     queryKey: ['/api/smart-blocks'],
@@ -104,9 +116,9 @@ export default function SmartBlocksPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertSmartBlock> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: InsertSmartBlock }) => {
       return await apiRequest(`/api/smart-blocks/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(data),
       });
     },
@@ -148,45 +160,17 @@ export default function SmartBlocksPage() {
     },
   });
 
-  const validateForm = (): boolean => {
-    try {
-      insertSmartBlockSchema.parse(formData);
-      setFormErrors({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            errors[err.path[0].toString()] = err.message;
-          }
-        });
-        setFormErrors(errors);
-      }
-      return false;
-    }
-  };
-
-  const handleSubmit = () => {
-    if (!validateForm()) {
-      toast({
-        title: "خطأ في النموذج",
-        description: "يرجى التحقق من جميع الحقول",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSubmit = (data: InsertSmartBlock) => {
     if (editingBlock) {
-      updateMutation.mutate({ id: editingBlock.id, data: formData as InsertSmartBlock });
+      updateMutation.mutate({ id: editingBlock.id, data });
     } else {
-      createMutation.mutate(formData as InsertSmartBlock);
+      createMutation.mutate(data);
     }
   };
 
   const handleEdit = (block: SmartBlock) => {
     setEditingBlock(block);
-    setFormData({
+    form.reset({
       title: block.title,
       keyword: block.keyword,
       color: block.color,
@@ -194,14 +178,13 @@ export default function SmartBlocksPage() {
       limitCount: block.limitCount,
       isActive: block.isActive,
     });
-    setFormErrors({});
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingBlock(null);
-    setFormData({
+    form.reset({
       title: '',
       keyword: '',
       color: '#3B82F6',
@@ -209,12 +192,13 @@ export default function SmartBlocksPage() {
       limitCount: 6,
       isActive: true,
     });
-    setFormErrors({});
   };
 
   const getPlacementLabel = (placement: string) => {
     return placementOptions.find(opt => opt.value === placement)?.label || placement;
   };
+
+  const formValues = form.watch();
 
   return (
     <DashboardLayout>
@@ -235,7 +219,7 @@ export default function SmartBlocksPage() {
           <Button
             onClick={() => {
               setEditingBlock(null);
-              setFormData({
+              form.reset({
                 title: '',
                 keyword: '',
                 color: '#3B82F6',
@@ -243,10 +227,9 @@ export default function SmartBlocksPage() {
                 limitCount: 6,
                 isActive: true,
               });
-              setFormErrors({});
               setIsDialogOpen(true);
             }}
-            data-testid="button-create-block"
+            data-testid="button-create-smart-block"
           >
             <Plus className="h-4 w-4 ml-2" />
             إنشاء بلوك جديد
@@ -360,7 +343,7 @@ export default function SmartBlocksPage() {
                               size="icon"
                               variant="ghost"
                               onClick={() => handleEdit(block)}
-                              data-testid={`button-edit-${block.id}`}
+                              data-testid={`button-edit-block-${block.id}`}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -368,7 +351,7 @@ export default function SmartBlocksPage() {
                               size="icon"
                               variant="ghost"
                               onClick={() => setDeleteId(block.id)}
-                              data-testid={`button-delete-${block.id}`}
+                              data-testid={`button-delete-block-${block.id}`}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -397,168 +380,211 @@ export default function SmartBlocksPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title">العنوان (60 حرف كحد أقصى)</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="مثال: أخبار التقنية"
-                  maxLength={60}
-                  data-testid="input-title"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                {/* Title */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>العنوان (60 حرف كحد أقصى)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="مثال: أخبار التقنية"
+                          maxLength={60}
+                          data-testid="input-block-title"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        {field.value?.length || 0} / 60
+                      </p>
+                    </FormItem>
+                  )}
                 />
-                {formErrors.title && (
-                  <p className="text-sm text-destructive">{formErrors.title}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {formData.title?.length || 0} / 60
-                </p>
-              </div>
 
-              {/* Keyword */}
-              <div className="space-y-2">
-                <Label htmlFor="keyword">الكلمة المفتاحية (100 حرف كحد أقصى)</Label>
-                <Input
-                  id="keyword"
-                  value={formData.keyword}
-                  onChange={(e) => setFormData({ ...formData, keyword: e.target.value })}
-                  placeholder="مثال: تقنية، ذكاء اصطناعي، برمجة"
-                  maxLength={100}
-                  data-testid="input-keyword"
+                {/* Keyword */}
+                <FormField
+                  control={form.control}
+                  name="keyword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الكلمة المفتاحية (100 حرف كحد أقصى)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="مثال: تقنية، ذكاء اصطناعي، برمجة"
+                          maxLength={100}
+                          data-testid="input-block-keyword"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        {field.value?.length || 0} / 100
+                      </p>
+                    </FormItem>
+                  )}
                 />
-                {formErrors.keyword && (
-                  <p className="text-sm text-destructive">{formErrors.keyword}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {formData.keyword?.length || 0} / 100
-                </p>
-              </div>
 
-              {/* Color */}
-              <div className="space-y-2">
-                <Label htmlFor="color">اللون (HEX)</Label>
-                <div className="flex gap-3 items-center">
-                  <Input
-                    id="color"
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-20 h-10 cursor-pointer"
-                    data-testid="input-color"
-                  />
-                  <Input
-                    value={formData.color}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) {
-                        setFormData({ ...formData, color: val });
-                      }
-                    }}
-                    placeholder="#3B82F6"
-                    maxLength={7}
-                    className="flex-1"
-                    data-testid="input-color-text"
-                  />
+                {/* Color */}
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>اللون (HEX)</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-3 items-center">
+                          <Input
+                            type="color"
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="w-20 h-10 cursor-pointer"
+                            data-testid="input-block-color"
+                          />
+                          <Input
+                            value={field.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) {
+                                field.onChange(val);
+                              }
+                            }}
+                            placeholder="#3B82F6"
+                            maxLength={7}
+                            className="flex-1"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Placement */}
+                <FormField
+                  control={form.control}
+                  name="placement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الموضع في الصفحة الرئيسية</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-block-placement">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {placementOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Limit Count */}
+                <FormField
+                  control={form.control}
+                  name="limitCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>عدد المقالات ({field.value})</FormLabel>
+                      <FormControl>
+                        <Slider
+                          min={1}
+                          max={24}
+                          step={1}
+                          value={[field.value]}
+                          onValueChange={([value]) => field.onChange(value)}
+                          data-testid="slider-block-limit"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        سيتم عرض {field.value} مقالات في هذا البلوك
+                      </p>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Is Active */}
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>تفعيل البلوك</FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-block-active"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Preview */}
+                <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
+                  <p className="text-sm font-medium">معاينة مباشرة:</p>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-6 h-6 rounded-full"
+                      style={{ backgroundColor: formValues.color }}
+                    />
+                    <h3 
+                      className="text-xl font-bold" 
+                      style={{ color: formValues.color }}
+                      data-testid="preview-title"
+                    >
+                      {formValues.title || 'عنوان البلوك'}
+                    </h3>
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>الكلمة المفتاحية: {formValues.keyword || 'غير محدد'}</p>
+                    <p>الموضع: {getPlacementLabel(formValues.placement || 'below_featured')}</p>
+                    <p>عدد المقالات: {formValues.limitCount}</p>
+                    <p>الحالة: {formValues.isActive ? 'نشط' : 'غير نشط'}</p>
+                  </div>
                 </div>
-                {formErrors.color && (
-                  <p className="text-sm text-destructive">{formErrors.color}</p>
-                )}
-              </div>
 
-              {/* Placement */}
-              <div className="space-y-2">
-                <Label htmlFor="placement">الموضع في الصفحة الرئيسية</Label>
-                <Select
-                  value={formData.placement}
-                  onValueChange={(value: any) => setFormData({ ...formData, placement: value })}
-                >
-                  <SelectTrigger data-testid="select-placement">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {placementOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} data-testid={`option-placement-${option.value}`}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.placement && (
-                  <p className="text-sm text-destructive">{formErrors.placement}</p>
-                )}
-              </div>
-
-              {/* Limit Count */}
-              <div className="space-y-2">
-                <Label htmlFor="limitCount">عدد المقالات ({formData.limitCount})</Label>
-                <Slider
-                  id="limitCount"
-                  min={1}
-                  max={24}
-                  step={1}
-                  value={[formData.limitCount || 6]}
-                  onValueChange={([value]) => setFormData({ ...formData, limitCount: value })}
-                  data-testid="slider-limit"
-                />
-                <p className="text-xs text-muted-foreground">
-                  سيتم عرض {formData.limitCount} مقالات في هذا البلوك
-                </p>
-              </div>
-
-              {/* Is Active */}
-              <div className="flex items-center justify-between">
-                <Label htmlFor="isActive">تفعيل البلوك</Label>
-                <Switch
-                  id="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                  data-testid="switch-active"
-                />
-              </div>
-
-              {/* Preview */}
-              <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
-                <p className="text-sm font-medium">معاينة مباشرة:</p>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: formData.color }}
-                  />
-                  <h3 
-                    className="text-xl font-bold" 
-                    style={{ color: formData.color }}
-                    data-testid="preview-title"
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleCloseDialog} 
+                    data-testid="button-cancel-smart-block"
                   >
-                    {formData.title || 'عنوان البلوك'}
-                  </h3>
-                </div>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>الكلمة المفتاحية: {formData.keyword || 'غير محدد'}</p>
-                  <p>الموضع: {getPlacementLabel(formData.placement || 'below_featured')}</p>
-                  <p>عدد المقالات: {formData.limitCount}</p>
-                  <p>الحالة: {formData.isActive ? 'نشط' : 'غير نشط'}</p>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseDialog} data-testid="button-cancel">
-                إلغاء
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-submit"
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? 'جاري الحفظ...'
-                  : editingBlock
-                  ? 'تحديث'
-                  : 'إنشاء'}
-              </Button>
-            </DialogFooter>
+                    إلغاء
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    data-testid="button-submit-smart-block"
+                  >
+                    {createMutation.isPending || updateMutation.isPending
+                      ? 'جاري الحفظ...'
+                      : editingBlock
+                      ? 'تحديث'
+                      : 'إنشاء'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 
