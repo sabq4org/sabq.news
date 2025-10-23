@@ -19,7 +19,7 @@ Key features include:
 - **Authentication & Authorization:** Email/password-based authentication with session management and comprehensive Roles & Permissions Management (RBAC):
     - **Full RBAC System:** Integrated within Users Management page at `/dashboard/users`
     - **7 System Roles:** system_admin, admin, editor, reporter, comments_moderator, media_manager, reader
-    - **43 Granular Permissions:** Organized across 8 modules (articles, categories, users, comments, analytics, system, tags, media)
+    - **49 Granular Permissions:** Organized across 9 modules (articles, categories, users, comments, analytics, system, tags, media, mirqab)
     - **Multi-Role Assignment:** Users can have multiple roles with merged permissions
     - **Secure User Creation:** Admin-only capability with unique temporary passwords (format: `Temp{nanoid(12)}@{year}`), displayed once via AlertDialog with copy-to-clipboard
     - **Role Management UI:** RolesPanel component with PermissionMatrix for viewing merged permissions
@@ -29,6 +29,15 @@ Key features include:
 - **Content Management:** Comprehensive article, news, user, and category lifecycle management with advanced filtering, including a comment moderation system.
 - **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp. Includes reporter assignment functionality with searchable combobox (avatar, name, email display), validation to ensure assigned user has reporter role, and smart query handling to always show pre-assigned reporters regardless of pagination.
 - **Muqtarib (مُقترب) Section:** Thematic system for presenting articles from different perspectives.
+- **Al-Mirqab (المرقاب) - Future Forecasting System:** AI-powered predictive analytics platform at `/mirqab` featuring four distinct content types:
+    - **Sabq Index (مؤشر سبق):** Weekly numerical indicators tracking key metrics with trend analysis, historical comparisons, and AI-generated insights
+    - **Next Stories (القصة القادمة):** In-depth predictive analysis of upcoming events with probability assessments, impact scores, and scenario planning
+    - **Radar (الرادار):** Daily alert reports highlighting emerging trends, risk levels, and real-time monitoring of critical developments
+    - **Algorithm Writes (الخوارزمي يكتب):** AI-generated articles analyzing patterns and forecasting future scenarios with full editorial integration
+    - **Dedicated RBAC:** 6 granular permissions (view, create, edit, delete, publish, manage_all) for fine-grained access control
+    - **Complete CRUD:** 27 protected API endpoints with 18 frontend pages (landing, 4 public lists, 4 detail pages, 4 dashboard views, 4 create/edit forms)
+    - **Database Architecture:** 5 specialized tables (mirqab_entries + 4 type-specific satellites) with JSONB for complex data structures
+    - **Rich Visualization:** Custom gradient themes per content type, RTL-optimized layouts, and responsive design with loading states
 - **Internal Announcement System:** Dashboard-wide announcement banners with various types, expiration options, and admin management.
 - **A/B Testing System:** Comprehensive platform for content optimization with experiment management, smart variant distribution, real-time tracking, and advanced analytics.
 - **AI-Powered Features:**
@@ -59,7 +68,7 @@ Key features include:
     - Clickable reporter links from article detail pages for verified staff members.
 
 ### System Design Choices
-Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Al-Mirqab forecasting tables (mirqab_entries, sabq_index_data, next_story_data, radar_data, algorithm_write_data). AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
 
 ## External Dependencies
 
