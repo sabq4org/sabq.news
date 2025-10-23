@@ -15,19 +15,39 @@ export default function MirqabPage() {
   const { user } = useAuth();
 
   const { data: sabqIndexes = [], isLoading: loadingSabq } = useQuery<MirqabEntryWithDetails[]>({
-    queryKey: ['/api/mirqab/sabq-index', { limit: 3 }],
+    queryKey: ['/api/mirqab/sabq-index'],
+    queryFn: async () => {
+      const res = await fetch('/api/mirqab/sabq-index?limit=3', { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
   });
 
   const { data: nextStories = [], isLoading: loadingStories } = useQuery<MirqabEntryWithDetails[]>({
-    queryKey: ['/api/mirqab/next-stories', { limit: 3 }],
+    queryKey: ['/api/mirqab/next-stories'],
+    queryFn: async () => {
+      const res = await fetch('/api/mirqab/next-stories?limit=3', { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
   });
 
   const { data: radarReports = [], isLoading: loadingRadar } = useQuery<MirqabEntryWithDetails[]>({
-    queryKey: ['/api/mirqab/radar', { limit: 3 }],
+    queryKey: ['/api/mirqab/radar'],
+    queryFn: async () => {
+      const res = await fetch('/api/mirqab/radar?limit=3', { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
   });
 
   const { data: algorithmArticles = [], isLoading: loadingAlgorithm } = useQuery<MirqabEntryWithDetails[]>({
-    queryKey: ['/api/mirqab/algorithm-writes', { limit: 3 }],
+    queryKey: ['/api/mirqab/algorithm-writes'],
+    queryFn: async () => {
+      const res = await fetch('/api/mirqab/algorithm-writes?limit=3', { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
   });
 
   return (
