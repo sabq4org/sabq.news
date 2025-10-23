@@ -75,7 +75,7 @@ export default function ActivityLogsPage() {
   const limit = 50;
 
   // Fetch activity logs
-  const { data: logsData, isLoading: logsLoading } = useQuery({
+  const { data: logsData, isLoading: logsLoading, error: logsError } = useQuery({
     queryKey: ['/api/admin/activity-logs', page, searchQuery, actionFilter, entityTypeFilter],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -89,21 +89,33 @@ export default function ActivityLogsPage() {
       const response = await fetch(`/api/admin/activity-logs?${params}`, {
         credentials: 'include',
       });
-      if (!response.ok) throw new Error('Failed to fetch activity logs');
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('ليس لديك صلاحية لعرض سجلات النشاط');
+        }
+        throw new Error('فشل تحميل سجلات النشاط');
+      }
       return response.json();
     },
+    retry: false,
   });
 
   // Fetch analytics
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
     queryKey: ['/api/admin/activity-logs/analytics'],
     queryFn: async () => {
       const response = await fetch('/api/admin/activity-logs/analytics', {
         credentials: 'include',
       });
-      if (!response.ok) throw new Error('Failed to fetch analytics');
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('ليس لديك صلاحية لعرض التحليلات');
+        }
+        throw new Error('فشل تحميل التحليلات');
+      }
       return response.json();
     },
+    retry: false,
   });
 
   const columns = [
@@ -199,8 +211,24 @@ export default function ActivityLogsPage() {
           </div>
         </motion.div>
 
+        {/* Error Alert */}
+        {(logsError || analyticsError) && (
+          <Card className="border-destructive" data-testid="error-alert">
+            <CardHeader>
+              <CardTitle className="text-destructive">حدث خطأ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {logsError?.message || analyticsError?.message || 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى.'}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Analytics Dashboard */}
-        <ActivityLogsInsights analytics={analytics} isLoading={analyticsLoading} />
+        {!analyticsError && (
+          <ActivityLogsInsights analytics={analytics} isLoading={analyticsLoading} />
+        )}
 
         {/* Filters */}
         <motion.div
