@@ -1,0 +1,348 @@
+تمام يا أبو محمد! جهّزت لك برومبت نصّي جاهز لوكيل AI (خبير واجهات وويب وX) علشان يبني “البلوكات الذكية” اللي تسحب روابط أخبار تلقائياً من كلمة مفتاحية، مع عنوان، لون، ومعاينة، ومكان الظهور (٤ أماكن محددة). تحت البرومبت فيه مخرجات متوقعة: سكيمة JSON، عقد API، سكيبّة DB (Supabase/Prisma)، وكومبوننت React/Next.js + Tailwind + Radix UI يدعم RTL—كلّه مطابق لمعايير “سبق الذكية”.
+
+⸻
+
+برومبت جاهز للاستخدام (انسخه كما هو)
+
+الدور (Role):
+أنت وكيل ذكاء اصطناعي خبير في تطوير الواجهات (Next.js + TypeScript + Tailwind + Radix UI + Framer Motion + Lucide Icons) وخبير في تطوير الويب والـX. مطلوب منك إنشاء “بلوك ذكي” يعرض روابط أخبار وفق كلمة مفتاحية محددة، مع عنوان قابل للتخصيص، لون مميز، ومعاينة فورية، وخيارات موقع الظهور ضمن ٤ أماكن معرّفة مسبقاً.
+
+الهدف:
+إنشاء/تحديث تعريف بلوك ذكي + توليد مكوّن واجهة ومتطلبات الباك إند بحيث:
+	•	يَجلب روابط الأخبار التي تتطابق مع كلمة مفتاحية (keyword).
+	•	يسمح بتحديد عنوان البلوك، لون (كـ token أو HEX)، ومكان الظهور من مجموعة ثابتة.
+	•	ينتج Config JSON صالح وموحّد + عقد API واضح + مخطط DB مختصر + كومبوننت React بالإكسسِبيلتي وRTL.
+	•	يوفّر معاينة فورية (preview) على عينة بيانات.
+	•	يلتزم بمعايير UX/UI الحديثة: Responsive, Accessible (ARIA, keyboard), RTL, أداء عالي (skeleton/loading, pagination).
+
+أماكن الظهور (placements) المسموح بها (enum):
+	1.	below_featured  ← المكان الأول: تحت الأخبار المميزة
+	2.	above_all_news  ← المكان الثاني: فوق بلوك جميع الأخبار
+	3.	between_all_and_murqap ← المكان الثالث: بين بلوك جميع الأخبار وبلوك المرقاب
+	4.	above_footer    ← المكان الرابع: فوق الفوتر
+
+المدخلات (Inputs) التي سأزوّدك بها:
+	•	title: نص عنوان البلوك (قصير وواضح).
+	•	keyword: الكلمة المفتاحية لجلب الأخبار.
+	•	color: قيمة لون (token مثل brand/primary أو HEX مثل #2563eb).
+	•	placement: أحد القيم الأربع في الـ enum أعلاه.
+	•	limit (اختياري): عدد الروابط (افتراضياً 6).
+	•	filters (اختياري): تصنيفات/نطاق زمني (إن وُجد).
+
+ما أريده منك خطوة بخطوة:
+	1.	التحقّق من صحة المدخلات (Validation) مع رسائل خطأ موجزة ومفيدة.
+	2.	إنتاج smartBlockConfig بصيغة JSON حسب السكيمة أدناه.
+	3.	اقتراح/تثبيت عقد API GET /api/smart-blocks/query مع بارامترات موثّقة.
+	4.	اقتراح سكيبّة DB مختصرة (Supabase/Postgres + Prisma) لإنشاء/تحديث سجل البلوك.
+	5.	توليد كومبوننت React/Next.js:
+	•	يدعم RTL + Tailwind + Radix UI + Lucide Icons + Framer Motion.
+	•	يحترم اللون المخصّص.
+	•	يعرض عنوان البلوك + قائمة روابط أخبار (عنوان، وقت، مصدر/قسم).
+	•	حالة تحميل (skeleton) وأخطاء (empty/error states).
+	•	معاينة فورية عبر بيانات Mock (إن لم يتوفر API).
+	6.	توفير ملاحظات UX موجزة: تباين الألوان، طول العنوان، قصّ النص، تنقّل لوحة المفاتيح.
+
+سكيمة JSON المطلوبة للمخرجات (Output Schema):
+
+{
+  "smartBlockConfig": {
+    "id": "string-uuid",
+    "title": "string",
+    "keyword": "string",
+    "color": "string", 
+    "placement": "below_featured | above_all_news | between_all_and_murqap | above_footer",
+    "limit": 6,
+    "filters": {
+      "categories": ["optional-string"],
+      "dateRange": { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" }
+    },
+    "createdBy": "string",
+    "updatedAt": "ISO-8601"
+  },
+  "api": {
+    "endpoint": "/api/smart-blocks/query",
+    "method": "GET",
+    "queryParams": ["keyword", "limit", "categories[]", "dateFrom", "dateTo"],
+    "response": {
+      "items": [
+        {
+          "id": "string",
+          "title": "string",
+          "slug": "string",
+          "publishedAt": "ISO-8601",
+          "category": "string",
+          "source": "string",
+          "url": "string"
+        }
+      ],
+      "total": 0
+    }
+  },
+  "db": {
+    "supabase": {
+      "tables": ["smart_blocks"],
+      "indexes": ["idx_smart_blocks_keyword", "idx_smart_blocks_placement"]
+    },
+    "prismaModel": "SmartBlock"
+  },
+  "ui": { "component": "SmartNewsBlock.tsx", "props": ["config", "preview"] },
+  "validation": {
+    "title": "1..60 chars",
+    "keyword": "required, 1..40 chars, no emojis",
+    "color": "HEX or design token",
+    "placement": "enum",
+    "limit": "1..24"
+  }
+}
+
+قيود ومعايير يجب الالتزام بها:
+	•	أداء: استخدام fetch المخبأ + pagination/limit، وإظهار skeleton.
+	•	إمكانية الوصول: roles/aria، تبويب لوحة المفاتيح، تباين ≥ 4.5:1.
+	•	التصميم: Mobile-first, Responsive, RTL، ألوان متوافقة، أيقونات Lucide بسمك متسق.
+	•	الكود: TypeScript صارم، تفادي الأنماط القديمة، عدم استخدام inline styles غير الضرورية.
+	•	الأمان: تنظيف المُدخلات، منع XSS، قصّ الأطوال.
+	•	الاختبار: توليد Block Preview ببيانات وهمية عند غياب البيانات.
+
+المخرجات النهائية المتوقعة منك:
+	•	ملف JSON للبلوك (config) جاهز.
+	•	مواصفة API مختصرة (request/response).
+	•	سكريبت SQL (Supabase) + Prisma model.
+	•	ملف كومبوننت React/Next.js + مثال استعمال.
+	•	ملاحظات UX مختصرة.
+
+ابدأ الآن وأعد لي كل المخرجات دفعة واحدة وفق هذه المواصفات.
+
+⸻
+
+نموذج مخرجات متوقعة (تقدر تعتمده مباشرة)
+
+1) Config JSON (مثال)
+
+{
+  "smartBlockConfig": {
+    "id": "b7b7b6b8-6f44-4a7a-9f33-0b2f221d5a77",
+    "title": "الأخبار العاجلة عن الكهرباء",
+    "keyword": "الكهرباء",
+    "color": "#2563eb",
+    "placement": "below_featured",
+    "limit": 6,
+    "filters": {
+      "categories": ["اقتصاد"],
+      "dateRange": { "from": "2025-10-01", "to": "2025-10-23" }
+    },
+    "createdBy": "admin@sabq.ai",
+    "updatedAt": "2025-10-23T17:40:00Z"
+  }
+}
+
+2) عقد API مختصر
+
+GET /api/smart-blocks/query
+Query: keyword (required), limit (default 6, max 24), categories[] (optional), dateFrom, dateTo
+Response:
+
+{
+  "items": [
+    {
+      "id": "art_123",
+      "title": "بدء تشغيل محطة كهرباء جديدة…",
+      "slug": "new-power-plant-ksa",
+      "publishedAt": "2025-10-23T12:10:00Z",
+      "category": "اقتصاد",
+      "source": "سبق",
+      "url": "/article/new-power-plant-ksa"
+    }
+  ],
+  "total": 18
+}
+
+3) سكيما DB (Supabase/Postgres) + Prisma
+
+SQL (مختصر):
+
+create table if not exists smart_blocks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 60),
+  keyword text not null check (char_length(keyword) between 1 and 40),
+  color text not null,
+  placement text not null check (placement in ('below_featured','above_all_news','between_all_and_murqap','above_footer')),
+  limit_count int not null default 6 check (limit_count between 1 and 24),
+  filters jsonb,
+  created_by text not null,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_smart_blocks_keyword on smart_blocks (keyword);
+create index if not exists idx_smart_blocks_placement on smart_blocks (placement);
+
+Prisma model (ملف schema.prisma):
+
+model SmartBlock {
+  id         String   @id @default(uuid())
+  title      String   @db.Text
+  keyword    String   @db.Text
+  color      String   @db.Text
+  placement  String   @db.Text
+  limitCount Int      @default(6)
+  filters    Json?
+  createdBy  String   @db.Text
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+  @@index([keyword])
+  @@index([placement])
+}
+
+4) كومبوننت Next.js + Tailwind + Radix + Framer Motion
+
+ملف: components/SmartNewsBlock.tsx
+
+import * as React from "react";
+import { cn } from "@/lib/cn"; // دالة دمج كلاسات
+import { Separator } from "@radix-ui/react-separator";
+import { ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
+
+type Item = {
+  id: string;
+  title: string;
+  url: string;
+  category?: string;
+  publishedAt?: string;
+  source?: string;
+};
+
+type SmartBlockConfig = {
+  title: string;
+  keyword: string;
+  color: string; // HEX أو token محلول مسبقاً
+  placement: "below_featured" | "above_all_news" | "between_all_and_murqap" | "above_footer";
+  limit?: number;
+};
+
+type Props = {
+  config: SmartBlockConfig;
+  previewItems?: Item[]; // للمعاينة الفورية
+};
+
+export function SmartNewsBlock({ config, previewItems }: Props) {
+  const [items, setItems] = React.useState<Item[] | null>(previewItems ?? null);
+  const [loading, setLoading] = React.useState(!previewItems);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (previewItems) return;
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`/api/smart-blocks/query?keyword=${encodeURIComponent(config.keyword)}&limit=${config.limit ?? 6}`, {
+      signal: controller.signal,
+      headers: { "Accept": "application/json" }
+    })
+      .then(async (r) => r.ok ? r.json() : Promise.reject(await r.text()))
+      .then((data) => setItems(data.items ?? []))
+      .catch((e) => setError(typeof e === "string" ? e : "تعذّر جلب البيانات"))
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [config.keyword, config.limit, previewItems]);
+
+  return (
+    <section
+      dir="rtl"
+      aria-label={config.title}
+      className="w-full rounded-lg border bg-white shadow-sm dark:bg-neutral-900"
+      style={{ borderColor: config.color }}
+    >
+      <header
+        className="flex items-center justify-between px-4 py-3"
+        style={{ background: `${config.color}15` }}
+      >
+        <h2 className="text-base font-bold leading-6 line-clamp-1">
+          {config.title}
+        </h2>
+      </header>
+
+      <Separator />
+
+      <div className="p-3">
+        {loading && (
+          <ul className="space-y-2" aria-busy="true" aria-live="polite">
+            {Array.from({ length: config.limit ?? 6 }).map((_, i) => (
+              <li key={i} className="animate-pulse h-5 rounded bg-neutral-200 dark:bg-neutral-800" />
+            ))}
+          </ul>
+        )}
+
+        {!loading && error && (
+          <div role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && items && items.length === 0 && (
+          <p className="text-sm text-neutral-500">لا توجد نتائج لهذه الكلمة حالياً.</p>
+        )}
+
+        {!loading && !error && items && items.length > 0 && (
+          <ul className="space-y-2">
+            {items.map((it) => (
+              <motion.li
+                key={it.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <a
+                  href={it.url}
+                  className={cn(
+                    "group flex items-center justify-between rounded px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2",
+                  )}
+                  aria-label={it.title}
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium leading-5 truncate">{it.title}</div>
+                    <div className="mt-0.5 text-[12px] text-neutral-500">
+                      {it.category ? `${it.category} · ` : ""}{it.publishedAt ?? ""}
+                    </div>
+                  </div>
+                  <ChevronLeft className="size-4 opacity-60 group-hover:opacity-100 shrink-0" />
+                </a>
+              </motion.li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
+مثال استعمال داخل صفحة:
+
+<SmartNewsBlock
+  config={{
+    title: "آخر أخبار الكهرباء",
+    keyword: "الكهرباء",
+    color: "#2563eb",
+    placement: "below_featured",
+    limit: 6
+  }}
+  previewItems={[
+    { id: "m1", title: "محطة جديدة تعزز الشبكة", url: "/article/a1", category: "اقتصاد", publishedAt: "قبل 2 ساعة" }
+  ]}
+/>
+
+5) ملاحظات UX سريعة
+	•	حافظ على عنوان ≤ 60 حرف واظهر خطأاً ودياً عند تجاوزه.
+	•	تحقّق من تباين اللون تلقائياً (يفضّل لون نص داكن على خلفية فاتحة والعكس).
+	•	قصّ العناوين (line-clamp-1) مع تلميح كامل عند التركيز (tooltip اختياري).
+	•	حالات التحميل/الفراغ/الخطأ واضحة ومتماسكة.
+	•	يدعم الكيبورد: تبويب على الروابط + تركيز مرئي.
+	•	Mobile-first: المساحات قابلة للمس.
+	•	أداء: limit صغير + caching + إبطال طلب عند الانتقال (AbortController).
+
+⸻
+
+كيف تستخدم هذا الآن؟
+	1.	انسخ البرومبت الجاهز فوق وامدّه للوكيل عندك.
+	2.	استخدم نموذج المخرجات كمرجع للتطبيق السريع داخل Sabq CMS.
+	3.	فعّل أماكن الظهور الأربع في تخطيط الصفحة (layout slots) حسب الـ placement.
+	4.	أضف الـ API endpoint وموصّل البيانات (query بالكلمة المفتاحية) لمحرّك البحث لديك.
+
+إذا حاب، أقدر أجهّز لك نسخة JSON + كومبوننت مخصصة لكلمة مفتاحية معيّنة (اذكر: العنوان، الكلمة، اللون، المكان).

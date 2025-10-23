@@ -28,7 +28,7 @@ export default function RadarListPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} />
+      <Header user={user || undefined} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-600 dark:from-cyan-900 dark:via-blue-900 dark:to-indigo-900 text-white py-16">
