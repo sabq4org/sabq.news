@@ -82,9 +82,9 @@ export default function MirqabDashboard() {
 
   const tabs = [
     { value: 'sabq_index', label: 'مؤشر سبق', icon: TrendingUp, createPath: '/dashboard/mirqab/sabq-index/new' },
-    { value: 'next_story', label: 'قصة قادمة', icon: Telescope, createPath: '#' },
-    { value: 'radar', label: 'الرادار', icon: Radar, createPath: '#' },
-    { value: 'algorithm_article', label: 'الخوارزمي يكتب', icon: Brain, createPath: '#' },
+    { value: 'next_story', label: 'قصة قادمة', icon: Telescope, createPath: '/dashboard/mirqab/next-stories/new' },
+    { value: 'radar', label: 'الرادار', icon: Radar, createPath: '/dashboard/mirqab/radar/new' },
+    { value: 'algorithm_article', label: 'الخوارزمي يكتب', icon: Brain, createPath: '/dashboard/mirqab/algorithm-writes/new' },
   ];
 
   const currentTab = tabs.find(t => t.value === activeTab);
