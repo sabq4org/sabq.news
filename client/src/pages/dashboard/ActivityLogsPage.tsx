@@ -191,6 +191,44 @@ export default function ActivityLogsPage() {
     setDrawerOpen(true);
   };
 
+  // If there's an error, show error page
+  if (logsError) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto p-6 space-y-6" data-testid="activity-logs-page">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+                <ListChecks className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">سجلات النشاط</h1>
+                <p className="text-muted-foreground">تتبع جميع العمليات والتغييرات في النظام</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Error Alert */}
+          <Card className="border-destructive" data-testid="error-alert">
+            <CardHeader>
+              <CardTitle className="text-destructive">حدث خطأ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {logsError?.message || 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى.'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6" data-testid="activity-logs-page">
@@ -210,20 +248,6 @@ export default function ActivityLogsPage() {
             </div>
           </div>
         </motion.div>
-
-        {/* Error Alert */}
-        {(logsError || analyticsError) && (
-          <Card className="border-destructive" data-testid="error-alert">
-            <CardHeader>
-              <CardTitle className="text-destructive">حدث خطأ</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {logsError?.message || analyticsError?.message || 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى.'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Analytics Dashboard */}
         {!analyticsError && (
