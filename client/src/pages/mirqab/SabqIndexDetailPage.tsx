@@ -13,6 +13,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function SabqIndexDetailPage() {
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const [, params] = useRoute("/mirqab/sabq-index/:slug");
   const slug = params?.slug;
 
@@ -67,7 +72,7 @@ export default function SabqIndexDetailPage() {
   if (isLoading || !entry) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <Skeleton className="h-6 w-1/2 mb-8" />
@@ -82,7 +87,7 @@ export default function SabqIndexDetailPage() {
   if (!sabqIndex) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12 text-center">
           <h2 className="text-2xl font-bold">المؤشر غير متاح</h2>
         </div>
@@ -92,7 +97,7 @@ export default function SabqIndexDetailPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header />
+      <Header user={user} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900 text-white py-16">

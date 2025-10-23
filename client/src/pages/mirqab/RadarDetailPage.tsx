@@ -12,6 +12,11 @@ import { ar } from "date-fns/locale";
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function RadarDetailPage() {
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const [, params] = useRoute("/mirqab/radar/:slug");
   const slug = params?.slug;
 
@@ -56,7 +61,7 @@ export default function RadarDetailPage() {
   if (isLoading || !entry) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <Skeleton className="h-6 w-1/2 mb-8" />
@@ -71,7 +76,7 @@ export default function RadarDetailPage() {
   if (!radarAlert) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12 text-center">
           <h2 className="text-2xl font-bold">التقرير غير متاح</h2>
         </div>
@@ -81,7 +86,7 @@ export default function RadarDetailPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header />
+      <Header user={user} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-600 dark:from-cyan-900 dark:via-blue-900 dark:to-indigo-900 text-white py-16">

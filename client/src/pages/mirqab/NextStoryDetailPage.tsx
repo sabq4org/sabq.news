@@ -13,6 +13,11 @@ import { ar } from "date-fns/locale";
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function NextStoryDetailPage() {
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const [, params] = useRoute("/mirqab/next-stories/:slug");
   const slug = params?.slug;
 
@@ -49,7 +54,7 @@ export default function NextStoryDetailPage() {
   if (isLoading || !entry) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <Skeleton className="h-6 w-1/2 mb-8" />
@@ -64,7 +69,7 @@ export default function NextStoryDetailPage() {
   if (!nextStory) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <Header />
+        <Header user={user} />
         <div className="container mx-auto px-4 max-w-4xl py-12 text-center">
           <h2 className="text-2xl font-bold">القصة غير متاحة</h2>
         </div>
@@ -74,7 +79,7 @@ export default function NextStoryDetailPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header />
+      <Header user={user} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-violet-600 via-fuchsia-600 to-pink-600 dark:from-violet-900 dark:via-fuchsia-900 dark:to-pink-900 text-white py-16">

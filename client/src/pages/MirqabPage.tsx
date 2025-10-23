@@ -11,6 +11,11 @@ import { ar } from "date-fns/locale";
 import type { MirqabEntryWithDetails } from "@shared/schema";
 
 export default function MirqabPage() {
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
   const { data: sabqIndexes = [], isLoading: loadingSabq } = useQuery<MirqabEntryWithDetails[]>({
     queryKey: ['/api/mirqab/sabq-index', { limit: 3 }],
   });
@@ -29,7 +34,7 @@ export default function MirqabPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header />
+      <Header user={user} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900 text-white py-20">
