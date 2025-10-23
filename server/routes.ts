@@ -8058,6 +8058,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE /api/mirqab/entries/:id - Delete Mirqab entry
+  app.delete("/api/mirqab/entries/:id", requireAuth, requirePermission('mirqab.delete'), async (req: any, res) => {
+    try {
+      await storage.deleteMirqabEntry(req.params.id);
+      
+      await logActivity({
+        userId: req.user?.id,
+        action: 'delete_mirqab_entry',
+        entityType: 'mirqab_entry',
+        entityId: req.params.id
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting Mirqab entry:", error);
+      res.status(500).json({ message: "فشل في حذف المدخل" });
+    }
+  });
+
   // GET /api/mirqab/entries/slug/:slug - Get single Mirqab entry by slug
   app.get("/api/mirqab/entries/slug/:slug", async (req, res) => {
     try {
