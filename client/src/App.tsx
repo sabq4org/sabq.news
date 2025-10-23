@@ -60,8 +60,17 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import MirqabPage from "@/pages/MirqabPage";
 import SabqIndexListPage from "@/pages/mirqab/SabqIndexListPage";
 import SabqIndexDetailPage from "@/pages/mirqab/SabqIndexDetailPage";
+import NextStoriesListPage from "@/pages/mirqab/NextStoriesListPage";
+import NextStoryDetailPage from "@/pages/mirqab/NextStoryDetailPage";
+import RadarListPage from "@/pages/mirqab/RadarListPage";
+import RadarDetailPage from "@/pages/mirqab/RadarDetailPage";
+import AlgorithmWritesListPage from "@/pages/mirqab/AlgorithmWritesListPage";
+import AlgorithmWriteDetailPage from "@/pages/mirqab/AlgorithmWriteDetailPage";
 import MirqabDashboard from "@/pages/dashboard/MirqabDashboard";
 import CreateSabqIndex from "@/pages/dashboard/mirqab/CreateSabqIndex";
+import CreateNextStory from "@/pages/dashboard/mirqab/CreateNextStory";
+import CreateRadar from "@/pages/dashboard/mirqab/CreateRadar";
+import CreateAlgorithmWrite from "@/pages/dashboard/mirqab/CreateAlgorithmWrite";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -86,6 +95,12 @@ function Router() {
       <Route path="/mirqab" component={MirqabPage} />
       <Route path="/mirqab/sabq-index" component={SabqIndexListPage} />
       <Route path="/mirqab/sabq-index/:slug" component={SabqIndexDetailPage} />
+      <Route path="/mirqab/next-stories" component={NextStoriesListPage} />
+      <Route path="/mirqab/next-stories/:slug" component={NextStoryDetailPage} />
+      <Route path="/mirqab/radar" component={RadarListPage} />
+      <Route path="/mirqab/radar/:slug" component={RadarDetailPage} />
+      <Route path="/mirqab/algorithm-writes" component={AlgorithmWritesListPage} />
+      <Route path="/mirqab/algorithm-writes/:slug" component={AlgorithmWriteDetailPage} />
       
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
@@ -94,6 +109,12 @@ function Router() {
       <Route path="/dashboard/mirqab" component={MirqabDashboard} />
       <Route path="/dashboard/mirqab/sabq-index/new" component={CreateSabqIndex} />
       <Route path="/dashboard/mirqab/sabq-index/:id/edit" component={CreateSabqIndex} />
+      <Route path="/dashboard/mirqab/next-stories/new" component={CreateNextStory} />
+      <Route path="/dashboard/mirqab/next-stories/:id/edit" component={CreateNextStory} />
+      <Route path="/dashboard/mirqab/radar/new" component={CreateRadar} />
+      <Route path="/dashboard/mirqab/radar/:id/edit" component={CreateRadar} />
+      <Route path="/dashboard/mirqab/algorithm-writes/new" component={CreateAlgorithmWrite} />
+      <Route path="/dashboard/mirqab/algorithm-writes/:id/edit" component={CreateAlgorithmWrite} />
       
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard" component={Dashboard} />
