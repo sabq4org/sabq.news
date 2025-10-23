@@ -70,6 +70,7 @@ export function requirePermission(permissionCode: PermissionCode) {
     }
 
     const userId = (req as any).user?.id;
+    const userEmail = (req as any).user?.email;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -77,6 +78,7 @@ export function requirePermission(permissionCode: PermissionCode) {
     const hasPermission = await userHasPermission(userId, permissionCode);
 
     if (!hasPermission) {
+      console.error(`[RBAC] Permission denied for user ${userEmail} (${userId}): missing ${permissionCode}`);
       return res.status(403).json({ 
         message: "Forbidden - Insufficient permissions",
         required: permissionCode 
