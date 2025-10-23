@@ -1,0 +1,26 @@
+[Error] TypeError: t.map is not a function. (In 't.map(r=>{const i=r.publishedAt?sr(new Date(r.publishedAt),{addSuffix:!0,locale:Mi}):null;return a.jsx(Ce,{href:`/article/${r.slug}`,children:a.jsx("div",{className:"block group cursor-pointer","data-testid":`link-smart-article-mobile-${r.id}`,children:a.jsx("div",{className:"p-4 hover-elevate active-elevate-2 transition-all",children:a.jsxs("div",{className:"flex gap-3",children:[r.imageUrl&&a.jsx("div",{className:"relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden",children:a.jsx("img",{src:r.imageUrl,alt:r.title,className:"w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110",loading:"lazy"})}),a.jsxs("div",{className:"flex-1 min-w-0 space-y-2",children:[r.category&&a.jsx(re,{variant:"outline",className:"text-xs h-5",style:{borderColor:r.category.color||void 0,color:r.category.color||void 0},"data-testid":`badge-smart-article-category-${r.id}`,children:r.category.nameAr}),a.jsx("h4",{className:"font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors","data-testid":`text-smart-article-title-${r.id}`,children:r.title}),i&&a.jsxs("div",{className:"flex items-center gap-1 text-xs text-muted-foreground",children:[a.jsx(pn,{className:"h-3 w-3"}),i]})]})]})})})},r.id)})', 't.map' is undefined)
+h3 — index-ULWeI7vF.js:7808:29894
+ore — index-ULWeI7vF.js:38:17093
+pQ — index-ULWeI7vF.js:40:3163
+Uke — index-ULWeI7vF.js:40:40009
+tDe — index-ULWeI7vF.js:40:39932
+xq — index-ULWeI7vF.js:40:39780
+SQ — index-ULWeI7vF.js:40:36112
+sce — index-ULWeI7vF.js:40:36919
+qh — index-ULWeI7vF.js:38:3304
+(anonymous function) — index-ULWeI7vF.js:40:34426
+
+	hQ (index-ULWeI7vF.js:40:167)
+	(anonymous function) (index-ULWeI7vF.js:40:392)
+	Ble (index-ULWeI7vF.js:38:15615)
+	rce (index-ULWeI7vF.js:40:32206)
+	Bke (index-ULWeI7vF.js:40:31622)
+	QOe (index-ULWeI7vF.js:40:31166)
+	rDe (index-ULWeI7vF.js:40:41153)
+	mp (index-ULWeI7vF.js:40:40503)
+	sce (index-ULWeI7vF.js:40:37067)
+	qh (index-ULWeI7vF.js:38:3304)
+	(anonymous function) (index-ULWeI7vF.js:40:34426)
+[Error] TypeError: t.map is not a function. (In 't.map(r=>{const i=r.publishedAt?sr(new Date(r.publishedAt),{addSuffix:!0,locale:Mi}):null;return a.jsx(Ce,{href:`/article/${r.slug}`,children:a.jsx("div",{className:"block group cursor-pointer","data-testid":`link-smart-article-mobile-${r.id}`,children:a.jsx("div",{className:"p-4 hover-elevate active-elevate-2 transition-all",children:a.jsxs("div",{className:"flex gap-3",children:[r.imageUrl&&a.jsx("div",{className:"relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden",children:a.jsx("img",{src:r.imageUrl,alt:r.title,className:"w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110",loading:"lazy"})}),a.jsxs("div",{className:"flex-1 min-w-0 space-y-2",children:[r.category&&a.jsx(re,{variant:"outline",className:"text-xs h-5",style:{borderColor:r.category.color||void 0,color:r.category.color||void 0},"data-testid":`badge-smart-article-category-${r.id}`,children:r.category.nameAr}),a.jsx("h4",{className:"font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors","data-testid":`text-smart-article-title-${r.id}`,children:r.title}),i&&a.jsxs("div",{className:"flex items-center gap-1 text-xs text-muted-foreground",children:[a.jsx(pn,{className:"h-3 w-3"}),i]})]})]})})})},r.id)})', 't.map' is undefined)
+	qh (index-ULWeI7vF.js:38:3397)
+	(anonymous function) (index-ULWeI7vF.js:40:34426)

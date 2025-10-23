@@ -37,7 +37,8 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to fetch articles');
-      return await res.json();
+      const data = await res.json();
+      return data.items || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
