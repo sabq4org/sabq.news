@@ -47,7 +47,7 @@ const formSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived"]),
   scheduledAt: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  featuredImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  featuredImageUrl: z.string().optional(),
   
   // Algorithm Article fields
   content: z.string().min(50, "المحتوى يجب أن يكون 50 حرف على الأقل"),

@@ -46,7 +46,7 @@ const formSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived"]),
   scheduledAt: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  featuredImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  featuredImageUrl: z.string().optional(),
   
   // Next Story fields
   executiveSummary: z.string().min(10, "الملخص التنفيذي يجب أن يكون 10 أحرف على الأقل"),

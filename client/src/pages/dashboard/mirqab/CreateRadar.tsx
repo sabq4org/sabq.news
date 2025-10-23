@@ -54,7 +54,7 @@ const formSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived"]),
   scheduledAt: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  featuredImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  featuredImageUrl: z.string().optional(),
   
   // Radar fields
   reportDate: z.string().min(1, "تاريخ التقرير مطلوب"),

@@ -44,7 +44,7 @@ const formSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived"]),
   scheduledAt: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  featuredImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  featuredImageUrl: z.string().optional(),
   
   // SABQ Index fields
   indexValue: z.coerce.number().min(0, "القيمة يجب أن تكون أكبر من أو تساوي 0"),
