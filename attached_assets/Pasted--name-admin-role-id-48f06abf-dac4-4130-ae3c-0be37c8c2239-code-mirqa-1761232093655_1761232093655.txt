@@ -1,0 +1,74 @@
+[
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.create",
+    "perm_id": "a6dfc156-f7ca-402f-9b11-50aa68c0f7a8"
+  },
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.delete",
+    "perm_id": "ef252558-52e6-403d-b055-10a58812d3ca"
+  },
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.edit",
+    "perm_id": "6e4e7818-2673-4c27-8b78-21c27ccf9983"
+  },
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.manage_settings",
+    "perm_id": "882cec8d-db97-43dd-9bc4-0ee8585e8463"
+  },
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.publish",
+    "perm_id": "11fb0835-b226-473c-b83a-b887735f7dcd"
+  },
+  {
+    "name": "admin",
+    "role_id": "48f06abf-dac4-4130-ae3c-0be37c8c2239",
+    "code": "mirqab.view",
+    "perm_id": "cd110fb8-f186-47fb-ae46-17d4ac372ac3"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.create",
+    "perm_id": "a6dfc156-f7ca-402f-9b11-50aa68c0f7a8"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.delete",
+    "perm_id": "ef252558-52e6-403d-b055-10a58812d3ca"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.edit",
+    "perm_id": "6e4e7818-2673-4c27-8b78-21c27ccf9983"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.manage_settings",
+    "perm_id": "882cec8d-db97-43dd-9bc4-0ee8585e8463"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.publish",
+    "perm_id": "11fb0835-b226-473c-b83a-b887735f7dcd"
+  },
+  {
+    "name": "system_admin",
+    "role_id": "c3bd3cae-5bf9-48ba-9657-0d41ff3c5dba",
+    "code": "mirqab.view",
+    "perm_id": "cd110fb8-f186-47fb-ae46-17d4ac372ac3"
+  }
+]
