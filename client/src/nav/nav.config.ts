@@ -32,6 +32,7 @@ import {
   Flame,
   Boxes,
   Lightbulb,
+  Telescope,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -104,6 +105,14 @@ export const navConfig: NavItem[] = [
         labelAr: "مُقترب",
         path: "/dashboard/muqtarib",
         icon: Boxes,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "mirqab",
+        labelKey: "nav.mirqab",
+        labelAr: "المرقاب",
+        path: "/dashboard/mirqab",
+        icon: Telescope,
         roles: ["admin", "editor"],
       },
     ],
