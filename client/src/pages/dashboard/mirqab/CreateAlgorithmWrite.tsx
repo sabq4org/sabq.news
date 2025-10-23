@@ -34,10 +34,11 @@ import {
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Save, X, Plus, Sparkles } from "lucide-react";
+import { ChevronDown, Save, X, Plus, Sparkles, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MirqabEntryWithDetails } from "@shared/schema";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
 // Form schema
 const formSchema = z.object({
@@ -73,6 +74,7 @@ export default function CreateAlgorithmWrite() {
   const [seoOpen, setSeoOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Fetch existing entry if editing
   const { data: entry } = useQuery<MirqabEntryWithDetails>({
@@ -114,9 +116,9 @@ export default function CreateAlgorithmWrite() {
         featuredImageUrl: entry.featuredImageUrl || "",
         content: entry.algorithmArticle.content,
         analysisType: entry.algorithmArticle.analysisType as any,
-        modelUsed: entry.algorithmArticle.modelUsed,
+        modelUsed: entry.algorithmArticle.aiModel,
         aiPercentage: entry.algorithmArticle.aiPercentage,
-        aiPrompt: entry.algorithmArticle.aiPrompt || "",
+        aiPrompt: entry.algorithmArticle.prompt || "",
         humanReviewed: entry.algorithmArticle.humanReviewed || false,
         reviewerNotes: entry.algorithmArticle.reviewerNotes || "",
         seoTitle: entry.seo?.metaTitle || "",
@@ -300,14 +302,82 @@ export default function CreateAlgorithmWrite() {
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>صورة مميزة (اختياري)</FormLabel>
+                      <FormLabel>الصورة المميزة</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="https://..." 
-                          data-testid="input-featured-image"
-                        />
+                        <div className="space-y-4">
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={10485760}
+                            allowedFileTypes={['.jpg', '.jpeg', '.png', '.gif', '.webp']}
+                            onGetUploadParameters={async () => {
+                              const uploadData = await apiRequest("/api/objects/upload", {
+                                method: "POST",
+                              }) as { uploadURL: string };
+                              return {
+                                method: "PUT" as const,
+                                url: uploadData.uploadURL,
+                              };
+                            }}
+                            onComplete={async (result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const uploadedFile = result.successful[0];
+                                const fileUrl = uploadedFile.uploadURL?.split('?')[0];
+                                
+                                try {
+                                  const aclData = await apiRequest("/api/article-images", {
+                                    method: "PUT",
+                                    body: JSON.stringify({ imageURL: fileUrl }),
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                  }) as { objectPath: string };
+
+                                  form.setValue("featuredImageUrl", aclData.objectPath);
+                                  toast({
+                                    title: "تم رفع الصورة بنجاح",
+                                    description: "تم إضافة الصورة المميزة",
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    title: "خطأ",
+                                    description: "فشل معالجة الصورة",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }
+                            }}
+                            variant="outline"
+                            size="default"
+                          >
+                            <Upload className="w-4 h-4 ml-2" />
+                            رفع صورة
+                          </ObjectUploader>
+
+                          {field.value && (
+                            <div className="relative">
+                              <img 
+                                src={field.value} 
+                                alt="Featured" 
+                                className="max-w-full h-auto rounded-lg border max-h-64 object-cover"
+                                data-testid="img-featured-preview"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 left-2"
+                                onClick={() => form.setValue("featuredImageUrl", "")}
+                                data-testid="button-remove-image"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
+                      <FormDescription>
+                        اختياري - رفع صورة مميزة (JPG, PNG, GIF, WebP - حتى 10 MB)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
