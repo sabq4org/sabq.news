@@ -104,7 +104,7 @@ export function MirqabHomeSection() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {sabqIndexes.map((index: any) => (
-                  <Link key={index.id} href={`/mirqab/sabq-index/${index.id}`}>
+                  <Link key={index.id} href={`/mirqab/sabq-index/${index.slug}`}>
                     <Card className="hover-elevate h-full" data-testid={`card-sabq-home-${index.id}`}>
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
@@ -187,7 +187,7 @@ export function MirqabHomeSection() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {nextStories.map((story: any) => (
-                  <Link key={story.id} href={`/mirqab/next-stories/${story.id}`}>
+                  <Link key={story.id} href={`/mirqab/next-stories/${story.slug}`}>
                     <Card className="hover-elevate h-full" data-testid={`card-story-home-${story.id}`}>
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
@@ -250,7 +250,7 @@ export function MirqabHomeSection() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {algorithmArticles.map((article: any) => (
-                  <Link key={article.id} href={`/mirqab/algorithm-writes/${article.id}`}>
+                  <Link key={article.id} href={`/mirqab/algorithm-writes/${article.slug}`}>
                     <Card className="hover-elevate h-full" data-testid={`card-algorithm-home-${article.id}`}>
                       <CardHeader>
                         <div className="flex gap-2 mb-2 flex-wrap">

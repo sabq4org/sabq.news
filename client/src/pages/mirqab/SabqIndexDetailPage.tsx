@@ -20,7 +20,7 @@ export default function SabqIndexDetailPage() {
   const slug = params?.slug;
 
   const { data: entry, isLoading } = useQuery<MirqabEntryWithDetails>({
-    queryKey: ['/api/mirqab/entries/slug', slug],
+    queryKey: [`/api/mirqab/entries/slug/${slug}`],
     enabled: !!slug,
   });
 
