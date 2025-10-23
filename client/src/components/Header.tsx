@@ -75,7 +75,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "الأخبار", href: "/news" },
     { name: "التصنيفات", href: "/categories" },
     { name: "عمق", href: "/omq" },
-    { name: "مقترب", href: "/moqtareb" },
+    { name: "المرقاب", href: "/mirqab" },
     { name: "مقالات", href: "/articles" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
   ];
