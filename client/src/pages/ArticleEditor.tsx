@@ -258,8 +258,8 @@ export default function ArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: metaTitle || (title ? title.substring(0, 70) : ""),
-          metaDescription: metaDescription || (excerpt ? excerpt.substring(0, 160) : ""),
+          metaTitle: metaTitle ? metaTitle.substring(0, 70) : (title ? title.substring(0, 70) : ""),
+          metaDescription: metaDescription ? metaDescription.substring(0, 160) : (excerpt ? excerpt.substring(0, 160) : ""),
           keywords: keywords,
         },
       };
