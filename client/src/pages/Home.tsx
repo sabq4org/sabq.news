@@ -140,62 +140,98 @@ export default function Home() {
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       <Header user={user} />
 
-      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-1">
-        {homepage.hero && homepage.hero.length > 0 && (
-          <div className="mb-20">
-            <HeroCarousel articles={homepage.hero} />
-          </div>
-        )}
-
-        {/* Smart Blocks: below_featured */}
-        {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
-          <SmartNewsBlock key={block.id} config={block} />
-        ))}
-
-        {/* AI Insights Block */}
-        <AIInsightsBlock />
-
-        {/* Smart Summary Block - Only for authenticated users */}
-        {user && <SmartSummaryBlock />}
-
-        {/* Smart Blocks: above_all_news */}
-        {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
-          <SmartNewsBlock key={block.id} config={block} />
-        ))}
-
-        {homepage.forYou && homepage.forYou.length > 0 && (
-          <PersonalizedFeed 
-            articles={homepage.forYou}
-            title="جميع الأخبار"
-            showReason={false}
-          />
-        )}
-
-        {/* Smart Blocks: between_all_and_murqap */}
-        {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
-          <SmartNewsBlock key={block.id} config={block} />
-        ))}
-
-        {/* Mirqab Section - Future Forecasting */}
-        <MirqabHomeSection />
-
-        <div className="space-y-8">
-          {homepage.deepDive && homepage.deepDive.length > 0 && (
-            <DeepDiveSection articles={homepage.deepDive} />
+      <main className="flex-1">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+          {/* Hero Section */}
+          {homepage.hero && homepage.hero.length > 0 && (
+            <div className="mb-20">
+              <HeroCarousel articles={homepage.hero} />
+            </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {homepage.trending && homepage.trending.length > 0 && (
-              <TrendingTopics topics={homepage.trending} />
+          {/* Smart Blocks: below_featured */}
+          {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
+            <SmartNewsBlock key={block.id} config={block} />
+          ))}
+        </div>
+
+        {/* Visual Separator + AI Section with soft gradient background */}
+        <div className="section-separator"></div>
+        <div className="bg-ai-gradient-soft py-12">
+          <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            {/* AI Insights Block */}
+            <div className="scroll-fade-in">
+              <AIInsightsBlock />
+            </div>
+
+            {/* Smart Summary Block - Only for authenticated users */}
+            {user && (
+              <div className="scroll-fade-in">
+                <SmartSummaryBlock />
+              </div>
             )}
-            <TrendingKeywords />
           </div>
         </div>
 
-        {/* Smart Blocks: above_footer */}
-        {blocksAboveFooter && blocksAboveFooter.map((block) => (
-          <SmartNewsBlock key={block.id} config={block} />
-        ))}
+        {/* Visual Separator */}
+        <div className="section-separator"></div>
+
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-12">
+          {/* Smart Blocks: above_all_news */}
+          {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
+            <SmartNewsBlock key={block.id} config={block} />
+          ))}
+
+          {/* All News Section */}
+          {homepage.forYou && homepage.forYou.length > 0 && (
+            <div className="scroll-fade-in">
+              <PersonalizedFeed 
+                articles={homepage.forYou}
+                title="جميع الأخبار"
+                showReason={false}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Visual Separator */}
+        <div className="section-separator"></div>
+
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-12">
+          {/* Smart Blocks: between_all_and_murqap */}
+          {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
+            <SmartNewsBlock key={block.id} config={block} />
+          ))}
+
+          {/* Mirqab Section - Future Forecasting */}
+          <div className="scroll-fade-in">
+            <MirqabHomeSection />
+          </div>
+
+          <div className="space-y-8">
+            {homepage.deepDive && homepage.deepDive.length > 0 && (
+              <div className="scroll-fade-in">
+                <DeepDiveSection articles={homepage.deepDive} />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {homepage.trending && homepage.trending.length > 0 && (
+                <div className="scroll-fade-in">
+                  <TrendingTopics topics={homepage.trending} />
+                </div>
+              )}
+              <div className="scroll-fade-in">
+                <TrendingKeywords />
+              </div>
+            </div>
+          </div>
+
+          {/* Smart Blocks: above_footer */}
+          {blocksAboveFooter && blocksAboveFooter.map((block) => (
+            <SmartNewsBlock key={block.id} config={block} />
+          ))}
+        </div>
       </main>
       
       <Footer />

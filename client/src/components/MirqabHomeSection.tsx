@@ -216,15 +216,17 @@ export function MirqabHomeSection() {
           </div>
         )}
 
-        {/* Algorithm Writes */}
+        {/* Algorithm Writes - AI Enhanced */}
         {(loadingAlgorithm || algorithmArticles.length > 0) && (
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-md bg-gradient-to-br from-orange-500 to-red-500 dark:from-orange-600 dark:to-red-600">
+              <div className="p-2 rounded-md bg-ai-gradient ai-pulse ai-glow">
                 <Brain className="w-6 h-6 text-white" data-testid="icon-algorithm-home" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold" data-testid="heading-algorithm-home">الخوارزمي يكتب</h3>
+                <h3 className="text-2xl font-bold" data-testid="heading-algorithm-home">
+                  الخوارزمي يكتب
+                </h3>
                 <p className="text-sm text-muted-foreground">تحليلات وآراء مدعومة بالذكاء الاصطناعي</p>
               </div>
               <Link href="/mirqab/algorithm-writes">
@@ -252,15 +254,20 @@ export function MirqabHomeSection() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {algorithmArticles.map((article: any) => (
                   <Link key={article.id} href={`/mirqab/algorithm-writes/${article.slug}`}>
-                    <Card className="hover-elevate h-full" data-testid={`card-algorithm-home-${article.id}`}>
-                      <CardHeader>
+                    <div className="relative h-full">
+                      {/* AI Gradient Pulse Background - Outside Card */}
+                      <div className="absolute inset-0 ai-gradient-pulse opacity-20 rounded-lg pointer-events-none"></div>
+                      
+                      <Card className="hover-elevate h-full border-2 relative bg-card/95 backdrop-blur-sm" data-testid={`card-algorithm-home-${article.id}`}>
+                      <CardHeader className="relative">
                         <div className="flex gap-2 mb-2 flex-wrap">
                           <Badge variant="secondary" data-testid={`badge-type-${article.id}`}>
                             {article.analysisType === 'opinion' ? 'رأي' :
                              article.analysisType === 'analysis' ? 'تحليل' : 'توقع'}
                           </Badge>
                           {article.aiPercentage && (
-                            <Badge variant="outline" data-testid={`badge-ai-${article.id}`}>
+                            <Badge className="bg-ai-gradient text-white border-0" data-testid={`badge-ai-${article.id}`}>
+                              <Brain className="w-3 h-3 ml-1" />
                               AI {article.aiPercentage}%
                             </Badge>
                           )}
@@ -275,7 +282,7 @@ export function MirqabHomeSection() {
                           </span>
                         </CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="relative">
                         {article.humanReviewed && (
                           <Badge variant="default" className="mt-2" data-testid={`badge-reviewed-${article.id}`}>
                             ✓ تمت المراجعة
@@ -283,6 +290,7 @@ export function MirqabHomeSection() {
                         )}
                       </CardContent>
                     </Card>
+                    </div>
                   </Link>
                 ))}
               </div>

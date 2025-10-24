@@ -3,6 +3,44 @@ import { Link } from "wouter";
 import { Flame, MessageSquare, Zap, Heart, Brain, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface MiniChartProps {
+  trend: string;
+  color: string;
+}
+
+function MiniChart({ trend, color }: MiniChartProps) {
+  const points = trend === "Up" || trend === "صاعد" || trend === "ارتفاع" 
+    ? "0,20 5,15 10,10 15,8 20,5"
+    : trend === "Stable" || trend === "مستقر"
+    ? "0,12 5,13 10,12 15,13 20,12"
+    : "0,5 5,8 10,12 15,15 20,20";
+
+  const sanitizedId = color.replace(/[^a-z0-9]/gi, '');
+
+  return (
+    <svg width="30" height="20" viewBox="0 0 30 20" className="inline-block">
+      <defs>
+        <linearGradient id={`gradient-${sanitizedId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
+      <path
+        d={`M0,20 ${points} 20,20 Z`}
+        fill={`url(#gradient-${sanitizedId})`}
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 interface InsightArticle {
   id: string;
   title: string;
@@ -66,7 +104,8 @@ export function AIInsightsBlock() {
     {
       icon: Flame,
       iconColor: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-950/20",
+      bgColor: "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10",
+      chartColor: "#f97316",
       title: "الأكثر تداولاً",
       subtitle: `${insights.mostViewed.count.toLocaleString('ar-SA')} قراءة`,
       trend: insights.mostViewed.trend,
@@ -76,7 +115,8 @@ export function AIInsightsBlock() {
     {
       icon: MessageSquare,
       iconColor: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-950/20",
+      bgColor: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/10",
+      chartColor: "#3b82f6",
       title: "الأكثر تعليقاً",
       subtitle: `${insights.mostCommented.count} تعليق`,
       trend: insights.mostCommented.trend,
@@ -86,7 +126,8 @@ export function AIInsightsBlock() {
     {
       icon: Zap,
       iconColor: "text-yellow-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
+      bgColor: "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/10",
+      chartColor: "#eab308",
       title: "يثير الجدل",
       subtitle: insights.mostControversial.aiAnalysis,
       trend: insights.mostControversial.trend,
@@ -96,7 +137,8 @@ export function AIInsightsBlock() {
     {
       icon: Heart,
       iconColor: "text-pink-500",
-      bgColor: "bg-pink-50 dark:bg-pink-950/20",
+      bgColor: "bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/10",
+      chartColor: "#ec4899",
       title: "الأكثر إعجاباً",
       subtitle: `${insights.mostPositive.positiveRate} تفاعل إيجابي`,
       trend: insights.mostPositive.trend,
@@ -105,13 +147,15 @@ export function AIInsightsBlock() {
     },
     {
       icon: Brain,
-      iconColor: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-950/20",
+      iconColor: "text-ai-gradient",
+      bgColor: "bg-ai-gradient-soft ai-glow",
+      chartColor: "hsl(var(--ai-primary))",
       title: "اختيار الذكاء الاصطناعي",
       subtitle: insights.aiPick.forecast,
       trend: "AI Forecast",
       article: insights.aiPick.article,
       testId: "ai-pick",
+      isAI: true,
     },
   ];
 
@@ -119,7 +163,7 @@ export function AIInsightsBlock() {
     <div className="space-y-3" data-testid="ai-insights-block">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500">
+        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-ai-gradient ai-pulse">
           <Brain className="h-3.5 w-3.5 text-white" />
         </div>
         <div>
@@ -127,7 +171,7 @@ export function AIInsightsBlock() {
             مؤشرات الأسبوع
           </h2>
           <p className="text-[10px] sm:text-xs text-muted-foreground" data-testid="insights-subtitle">
-            نظرة ذكية على تفاعل القراء
+            نظرة ذكية مدعومة بالذكاء الاصطناعي
           </p>
         </div>
       </div>
@@ -165,10 +209,13 @@ export function AIInsightsBlock() {
                   {insight.subtitle}
                 </p>
 
-                {/* Trend */}
-                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-[10px] font-medium mb-2" data-testid={`insight-trend-${insight.testId}`}>
-                  <TrendingUp className="h-2.5 w-2.5" />
-                  <span>{insight.trend}</span>
+                {/* Trend with MiniChart */}
+                <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
+                  <MiniChart trend={insight.trend} color={insight.chartColor} />
+                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-[10px] font-medium">
+                    <TrendingUp className="h-2.5 w-2.5" />
+                    <span>{insight.trend}</span>
+                  </div>
                 </div>
 
                 {/* Article Title */}
@@ -218,10 +265,13 @@ export function AIInsightsBlock() {
                   {insight.subtitle}
                 </p>
 
-                {/* Trend */}
-                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium mb-2" data-testid={`insight-trend-${insight.testId}`}>
-                  <TrendingUp className="h-3 w-3" />
-                  <span className="text-xs">{insight.trend}</span>
+                {/* Trend with MiniChart */}
+                <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
+                  <MiniChart trend={insight.trend} color={insight.chartColor} />
+                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
+                    <TrendingUp className="h-3 w-3" />
+                    <span className="text-xs">{insight.trend}</span>
+                  </div>
                 </div>
 
                 {/* Article Title - Always visible */}

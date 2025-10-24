@@ -78,6 +78,15 @@
   --chart-4: 200 80% 50%;
   --chart-5: 280 70% 55%;
 
+  /* AI Accent Colors - Neural Blue to Violet Gradient */
+  --ai-primary: 220 85% 55%;
+  --ai-primary-foreground: 220 90% 98%;
+  --ai-secondary: 265 75% 60%;
+  --ai-secondary-foreground: 265 90% 98%;
+  --ai-glow: 220 85% 55%;
+  --ai-background: 220 95% 97%;
+  --ai-background-muted: 220 90% 95%;
+
   --font-sans: Tajawal, Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -195,6 +204,15 @@
   --chart-3: 150 70% 60%;
   --chart-4: 200 80% 65%;
   --chart-5: 280 70% 65%;
+
+  /* AI Accent Colors - Neural Blue to Violet Gradient (Dark Mode) */
+  --ai-primary: 220 75% 65%;
+  --ai-primary-foreground: 220 90% 98%;
+  --ai-secondary: 265 65% 70%;
+  --ai-secondary-foreground: 265 90% 98%;
+  --ai-glow: 220 75% 65%;
+  --ai-background: 220 30% 10%;
+  --ai-background-muted: 220 25% 12%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.15);
   --shadow-xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.20);
@@ -447,4 +465,91 @@
     border-top: 2px solid hsl(var(--border));
     margin: 2rem 0;
   }
+
+  /* AI Accent Utilities */
+  .bg-ai-gradient {
+    background: linear-gradient(135deg, hsl(var(--ai-primary)) 0%, hsl(var(--ai-secondary)) 100%);
+  }
+
+  .bg-ai-gradient-soft {
+    background: linear-gradient(135deg, hsl(var(--ai-background)) 0%, hsl(var(--ai-background-muted)) 100%);
+  }
+
+  .text-ai-gradient {
+    background: linear-gradient(135deg, hsl(var(--ai-primary)) 0%, hsl(var(--ai-secondary)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .border-ai-gradient {
+    border-image: linear-gradient(135deg, hsl(var(--ai-primary)) 0%, hsl(var(--ai-secondary)) 100%) 1;
+  }
+
+  /* AI Glow Effect */
+  .ai-glow {
+    box-shadow: 0 0 20px hsl(var(--ai-glow) / 0.3);
+  }
+
+  /* AI Pulse Animation */
+  @keyframes ai-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+  }
+
+  .ai-pulse {
+    animation: ai-pulse 3s ease-in-out infinite;
+  }
+
+  /* AI Gradient Pulse Animation */
+  @keyframes ai-gradient-pulse {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .ai-gradient-pulse {
+    background: linear-gradient(135deg, hsl(var(--ai-primary)) 0%, hsl(var(--ai-secondary)) 50%, hsl(var(--ai-primary)) 100%);
+    background-size: 200% 200%;
+    animation: ai-gradient-pulse 4s ease infinite;
+  }
+
+  /* Section Separator with Gradient */
+  .section-separator {
+    height: 2px;
+    background: linear-gradient(to left, transparent 0%, hsl(var(--border)) 20%, hsl(var(--border)) 80%, transparent 100%);
+    margin: 4rem 0;
+  }
+
+  /* Scroll Fade In Animation */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .scroll-fade-in {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  /* Stagger animation delays */
+  .scroll-fade-in:nth-child(1) { animation-delay: 0.1s; }
+  .scroll-fade-in:nth-child(2) { animation-delay: 0.2s; }
+  .scroll-fade-in:nth-child(3) { animation-delay: 0.3s; }
+  .scroll-fade-in:nth-child(4) { animation-delay: 0.4s; }
+  .scroll-fade-in:nth-child(5) { animation-delay: 0.5s; }
 }
