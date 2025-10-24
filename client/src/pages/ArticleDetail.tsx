@@ -77,6 +77,28 @@ export default function ArticleDetail() {
     }
   }, [article?.id, user?.id]);
 
+  // Load Twitter widgets script for embedded tweets
+  useEffect(() => {
+    // Load script only once
+    if (!document.getElementById('twitter-widgets-script')) {
+      const script = document.createElement('script');
+      script.id = 'twitter-widgets-script';
+      script.src = 'https://platform.twitter.com/widgets.js';
+      script.async = true;
+      script.charset = 'utf-8';
+      document.body.appendChild(script);
+    }
+
+    // Reload widgets when article content changes
+    if (article?.content) {
+      setTimeout(() => {
+        if (typeof (window as any).twttr !== 'undefined') {
+          (window as any).twttr.widgets.load();
+        }
+      }, 500);
+    }
+  }, [article?.content]);
+
   const reactMutation = useMutation({
     mutationFn: async () => {
       if (!article) return;

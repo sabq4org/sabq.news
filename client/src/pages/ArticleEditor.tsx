@@ -244,12 +244,12 @@ export default function ArticleEditor() {
         console.log('[Save Article] POST result:', result);
         return result;
       } else {
-        console.log('[Save Article] Updating EXISTING article via PUT /api/admin/articles/' + id);
+        console.log('[Save Article] Updating EXISTING article via PATCH /api/admin/articles/' + id);
         const result = await apiRequest(`/api/admin/articles/${id}`, {
-          method: "PUT",
+          method: "PATCH",
           body: JSON.stringify(articleData),
         });
-        console.log('[Save Article] PUT result:', result);
+        console.log('[Save Article] PATCH result:', result);
         return result;
       }
     },
