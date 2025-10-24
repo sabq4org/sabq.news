@@ -250,7 +250,7 @@ export interface IStorage {
     searchQuery?: string;
   }): Promise<ArticleWithDetails[]>;
   getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined>;
-  getArticleById(id: string): Promise<Article | undefined>;
+  getArticleById(id: string, userId?: string): Promise<ArticleWithDetails | undefined>;
   createArticle(article: InsertArticle): Promise<Article>;
   updateArticle(id: string, article: Partial<InsertArticle>): Promise<Article>;
   deleteArticle(id: string): Promise<void>;
@@ -1444,9 +1444,83 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getArticleById(id: string): Promise<Article | undefined> {
-    const [article] = await db.select().from(articles).where(eq(articles.id, id));
-    return article;
+  async getArticleById(id: string, userId?: string): Promise<ArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    const reporterStaffAlias = aliasedTable(staff, 'reporterStaff');
+    
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+        reporter: reporterAlias,
+        staffMember: {
+          id: staff.id,
+          nameAr: staff.nameAr,
+          slug: staff.slug,
+          profileImage: staff.profileImage,
+          isVerified: staff.isVerified,
+        },
+        reporterStaffMember: {
+          id: reporterStaffAlias.id,
+          nameAr: reporterStaffAlias.nameAr,
+          slug: reporterStaffAlias.slug,
+          profileImage: reporterStaffAlias.profileImage,
+          isVerified: reporterStaffAlias.isVerified,
+        },
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
+      .leftJoin(staff, eq(staff.userId, users.id))
+      .leftJoin(reporterStaffAlias, eq(reporterStaffAlias.userId, reporterAlias.id))
+      .where(eq(articles.id, id));
+
+    if (results.length === 0) return undefined;
+
+    const result = results[0];
+    const article = result.article;
+
+    // Calculate user-specific states if userId provided
+    let isBookmarked = false;
+    let hasReacted = false;
+
+    if (userId) {
+      const [bookmark] = await db
+        .select()
+        .from(bookmarks)
+        .where(and(eq(bookmarks.articleId, article.id), eq(bookmarks.userId, userId)));
+      isBookmarked = !!bookmark;
+
+      const [reaction] = await db
+        .select()
+        .from(reactions)
+        .where(and(eq(reactions.articleId, article.id), eq(reactions.userId, userId)));
+      hasReacted = !!reaction;
+    }
+
+    // Calculate aggregated counts
+    const [{ count: reactionsCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reactions)
+      .where(eq(reactions.articleId, article.id));
+
+    const [{ count: commentsCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.articleId, article.id));
+
+    return {
+      ...article,
+      category: result.category || undefined,
+      author: result.reporter || result.author || undefined,
+      staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
+      isBookmarked,
+      hasReacted,
+      reactionsCount: Number(reactionsCount),
+      commentsCount: Number(commentsCount),
+    };
   }
 
   async createArticle(article: InsertArticle): Promise<Article> {

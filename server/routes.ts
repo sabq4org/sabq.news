@@ -4737,7 +4737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const article = await storage.getArticleById(req.params.id);
+      const article = await storage.getArticleById(req.params.id, userId);
 
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
