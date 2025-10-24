@@ -116,7 +116,11 @@ export default function MirqabDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card data-testid="card-stat-total">
+          <Card 
+            data-testid="card-stat-total"
+            className={`cursor-pointer transition-all hover-elevate active-elevate-2 ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setStatusFilter('all')}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 إجمالي المنشورات
@@ -126,7 +130,11 @@ export default function MirqabDashboard() {
               <div className="text-2xl font-bold" data-testid="text-stat-total">{stats.total}</div>
             </CardContent>
           </Card>
-          <Card data-testid="card-stat-published">
+          <Card 
+            data-testid="card-stat-published"
+            className={`cursor-pointer transition-all hover-elevate active-elevate-2 ${statusFilter === 'published' ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setStatusFilter('published')}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 منشورة
@@ -136,7 +144,11 @@ export default function MirqabDashboard() {
               <div className="text-2xl font-bold" data-testid="text-stat-published">{stats.published}</div>
             </CardContent>
           </Card>
-          <Card data-testid="card-stat-draft">
+          <Card 
+            data-testid="card-stat-draft"
+            className={`cursor-pointer transition-all hover-elevate active-elevate-2 ${statusFilter === 'draft' ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setStatusFilter('draft')}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 مسودات
@@ -146,7 +158,11 @@ export default function MirqabDashboard() {
               <div className="text-2xl font-bold" data-testid="text-stat-draft">{stats.draft}</div>
             </CardContent>
           </Card>
-          <Card data-testid="card-stat-scheduled">
+          <Card 
+            data-testid="card-stat-scheduled"
+            className={`cursor-pointer transition-all hover-elevate active-elevate-2 ${statusFilter === 'scheduled' ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setStatusFilter('scheduled')}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 مجدولة
