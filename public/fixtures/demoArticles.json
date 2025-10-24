@@ -1,0 +1,151 @@
+[
+  {
+    "id": "breaking-001",
+    "title": "عاجل: هزة أرضية بقوة 4.2 ريختر تضرب جنوب المملكة",
+    "slug": "earthquake-southern-region",
+    "excerpt": "رصدت هيئة المساحة الجيولوجية السعودية هزة أرضية بلغت قوتها 4.2 درجة على مقياس ريختر في منطقة جنوب المملكة، دون الإبلاغ عن أضرار بشرية أو مادية.",
+    "image": "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=1200",
+    "publishedAt": "2025-10-24T15:45:00Z",
+    "category": {
+      "id": "cat-breaking",
+      "name": "عاجل",
+      "slug": "breaking",
+      "color": "#dc2626"
+    },
+    "views": 28340,
+    "likes": 421,
+    "commentsCount": 89,
+    "newsType": "breaking"
+  },
+  {
+    "id": "featured-001",
+    "title": "تقرير خاص: كيف غيّر الذكاء الاصطناعي مستقبل التعليم في المملكة",
+    "slug": "ai-education-transformation",
+    "excerpt": "تحقيق موسع يكشف عن التحول الجذري الذي أحدثته تقنيات الذكاء الاصطناعي في المنظومة التعليمية السعودية، وكيف ساهمت في تحسين جودة التعليم وزيادة الكفاءة.",
+    "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200",
+    "publishedAt": "2025-10-24T08:00:00Z",
+    "category": {
+      "id": "cat-tech",
+      "name": "تقنية",
+      "slug": "technology",
+      "color": "#7c3aed"
+    },
+    "author": {
+      "id": "author-002",
+      "name": "سارة المطيري",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"
+    },
+    "reporter": {
+      "id": "reporter-001",
+      "name": "محمد الغامدي",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=mohammed"
+    },
+    "views": 12890,
+    "likes": 1204,
+    "commentsCount": 234,
+    "readingTime": 12,
+    "newsType": "featured"
+  },
+  {
+    "id": "lead-001",
+    "title": "المملكة تطلق مشروعاً عملاقاً للطاقة المتجددة بقيمة 500 مليار ريال",
+    "slug": "renewable-energy-mega-project",
+    "excerpt": "في خطوة استراتيجية نحو تحقيق رؤية 2030، أعلنت المملكة العربية السعودية عن إطلاق أضخم مشروع للطاقة المتجددة في الشرق الأوسط، والذي من المتوقع أن يوفر أكثر من 200 ألف فرصة عمل مباشرة.",
+    "image": "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1200",
+    "publishedAt": "2025-10-24T10:30:00Z",
+    "category": {
+      "id": "cat-economy",
+      "name": "اقتصاد",
+      "slug": "economy",
+      "color": "#10b981"
+    },
+    "author": {
+      "id": "author-001",
+      "name": "أحمد السعيد",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=ahmed"
+    },
+    "views": 15240,
+    "likes": 892,
+    "commentsCount": 156,
+    "readingTime": 8,
+    "newsType": "featured"
+  },
+  {
+    "id": "native-001",
+    "title": "كيف تحول شركة XYZ العالمية المملكة إلى مركز للابتكار التقني",
+    "slug": "xyz-innovation-hub",
+    "excerpt": "تعرف على كيفية مساهمة شركة XYZ في بناء منظومة تقنية متقدمة في المملكة من خلال برامج التدريب والشراكات الاستراتيجية مع الجامعات السعودية.",
+    "image": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200",
+    "publishedAt": "2025-10-24T09:00:00Z",
+    "category": {
+      "id": "cat-sponsored",
+      "name": "محتوى مدعوم",
+      "slug": "sponsored",
+      "color": "#6366f1"
+    },
+    "author": {
+      "id": "sponsor-xyz",
+      "name": "فريق XYZ",
+      "avatar": "https://api.dicebear.com/7.x/initials/svg?seed=XYZ"
+    },
+    "views": 5670,
+    "likes": 234,
+    "commentsCount": 45,
+    "readingTime": 5
+  },
+  {
+    "id": "newsletter-001",
+    "title": "اشترك في ملخصنا اليومي",
+    "excerpt": "احصل على أهم الأخبار والتحليلات مباشرة في بريدك الإلكتروني كل صباح. نشرة سبق اليومية - لا تفوت أي خبر مهم!",
+    "image": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200",
+    "category": {
+      "id": "cat-newsletter",
+      "name": "النشرة البريدية",
+      "slug": "newsletter",
+      "color": "#10b981"
+    }
+  },
+  {
+    "id": "opinion-001",
+    "title": "رأي: المسؤولية الاجتماعية للشركات... بين الواجب والاستثمار",
+    "slug": "corporate-social-responsibility",
+    "excerpt": "في عالم الأعمال المعاصر، لم تعد المسؤولية الاجتماعية للشركات مجرد واجب أخلاقي، بل أصبحت استثماراً استراتيجياً يعزز من قيمة العلامة التجارية ويبني جسوراً متينة مع المجتمع.",
+    "image": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200",
+    "publishedAt": "2025-10-23T12:00:00Z",
+    "category": {
+      "id": "cat-opinion",
+      "name": "آراء",
+      "slug": "opinion",
+      "color": "#0891b2"
+    },
+    "author": {
+      "id": "author-003",
+      "name": "د. خالد العتيبي",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=khaled"
+    },
+    "views": 8420,
+    "likes": 567,
+    "commentsCount": 123,
+    "readingTime": 6
+  },
+  {
+    "id": "video-001",
+    "title": "فيديو: جولة حصرية داخل مشروع نيوم المستقبلي",
+    "slug": "neom-exclusive-tour",
+    "excerpt": "تابعوا هذه الجولة الحصرية داخل مشروع نيوم العملاق، حيث نستعرض آخر التطورات في البنية التحتية والتقنيات المستخدمة في بناء مدينة المستقبل.",
+    "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200",
+    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "publishedAt": "2025-10-24T14:00:00Z",
+    "category": {
+      "id": "cat-economy",
+      "name": "اقتصاد",
+      "slug": "economy",
+      "color": "#10b981"
+    },
+    "views": 45670,
+    "likes": 3210,
+    "commentsCount": 456,
+    "readingTime": 4,
+    "newsType": "featured"
+  }
+]

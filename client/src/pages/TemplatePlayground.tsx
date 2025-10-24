@@ -301,9 +301,9 @@ export default function TemplatePlayground() {
                     {TemplateComponent ? (
                       demoItems.length > 0 ? (
                         currentTemplate?.kind === 'hero' || currentTemplate?.kind === 'spotlight' ? (
-                          <TemplateComponent item={demoItems[0]} />
+                          <TemplateComponent item={demoItems[0]} {...({} as any)} />
                         ) : (
-                          <TemplateComponent items={demoItems} />
+                          <TemplateComponent items={demoItems} {...({} as any)} />
                         )
                       ) : (
                         <div className="flex items-center justify-center h-64 text-muted-foreground">
