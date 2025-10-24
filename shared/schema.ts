@@ -1217,6 +1217,7 @@ export const updateArticleSchema = z.object({
   excerpt: z.string().optional(),
   imageUrl: z.union([
     z.string().url("رابط الصورة غير صحيح"),
+    z.string().startsWith("/", "رابط الصورة غير صحيح"),
     z.literal("")
   ]).optional(),
   categoryId: z.union([

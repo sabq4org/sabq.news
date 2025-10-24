@@ -105,8 +105,10 @@ export default function ArticleEditor() {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const validReporterId = article.reporterId && uuidRegex.test(article.reporterId) ? article.reporterId : null;
       setReporterId(validReporterId);
-      // Validate imageUrl - only set if it's a valid URL or empty
-      const validImageUrl = article.imageUrl && article.imageUrl.match(/^https?:\/\/.+/) ? article.imageUrl : "";
+      // Validate imageUrl - accept http/https URLs or relative paths starting with /
+      const validImageUrl = article.imageUrl && (
+        article.imageUrl.match(/^https?:\/\/.+/) || article.imageUrl.startsWith('/')
+      ) ? article.imageUrl : "";
       setImageUrl(validImageUrl);
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
