@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  LayoutGrid,
   FileText,
   FolderOpen,
   Users,
@@ -213,6 +214,14 @@ export const navConfig: NavItem[] = [
         labelAr: "القوالب",
         path: "/dashboard/templates",
         icon: SquareStack,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "template-playground",
+        labelKey: "nav.template_playground",
+        labelAr: "معاينة القوالب",
+        path: "/dashboard/template-playground",
+        icon: LayoutGrid,
         roles: ["admin", "editor"],
       },
     ],
