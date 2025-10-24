@@ -197,12 +197,6 @@ export default function ArticleEditor() {
         content: content?.substring(0, 50)
       });
 
-      // Sanitize and validate data before sending
-      const sanitizedImageUrl = imageUrl?.trim() || "";
-      const sanitizedReporterId = reporterId?.trim() || null;
-      const sanitizedMetaTitle = (metaTitle || title).substring(0, 70);
-      const sanitizedMetaDescription = (metaDescription || excerpt).substring(0, 160);
-      
       const articleData: any = {
         title,
         subtitle,
@@ -210,8 +204,8 @@ export default function ArticleEditor() {
         content,
         excerpt,
         categoryId: categoryId || null,
-        reporterId: sanitizedReporterId === "" ? null : sanitizedReporterId,
-        imageUrl: sanitizedImageUrl,
+        reporterId: reporterId || null,
+        imageUrl: imageUrl || "",
         newsType,
         isFeatured: newsType === "featured",
         publishType,
@@ -220,8 +214,8 @@ export default function ArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: sanitizedMetaTitle,
-          metaDescription: sanitizedMetaDescription,
+          metaTitle: metaTitle || title,
+          metaDescription: metaDescription || excerpt,
           keywords: keywords,
         },
       };
@@ -250,26 +244,17 @@ export default function ArticleEditor() {
         console.log('[Save Article] POST result:', result);
         return result;
       } else {
-        console.log('[Save Article] Updating EXISTING article via PATCH /api/admin/articles/' + id);
+        console.log('[Save Article] Updating EXISTING article via PUT /api/admin/articles/' + id);
         const result = await apiRequest(`/api/admin/articles/${id}`, {
-          method: "PATCH",
+          method: "PUT",
           body: JSON.stringify(articleData),
         });
-        console.log('[Save Article] PATCH result:', result);
+        console.log('[Save Article] PUT result:', result);
         return result;
       }
     },
     onSuccess: (data, variables) => {
-      // Invalidate all article-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
-      if (!isNewArticle && id) {
-        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles", id] });
-      }
-      if (data?.slug) {
-        queryClient.invalidateQueries({ queryKey: ["/api/articles", data.slug] });
-      }
-      
       toast({
         title: variables.publishNow ? "تم النشر بنجاح" : "تم الحفظ بنجاح",
         description: variables.publishNow ? "تم نشر المقال بنجاح" : "تم حفظ المقال كمسودة",
