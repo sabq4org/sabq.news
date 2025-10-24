@@ -61,6 +61,11 @@ export default function ArticleEditor() {
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [reporterId, setReporterId] = useState<string | null>(null);
+  
+  // Debug: Track reporterId changes
+  useEffect(() => {
+    console.log('[ArticleEditor] reporterId state changed to:', reporterId);
+  }, [reporterId]);
   const [imageUrl, setImageUrl] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   
@@ -221,9 +226,22 @@ export default function ArticleEditor() {
         slug,
         content: content?.substring(0, 50)
       });
+      
+      console.log('[Save Article] Current reporterId state:', {
+        reporterId,
+        reporterIdType: typeof reporterId,
+        reporterIdIsNull: reporterId === null,
+        reporterIdValue: JSON.stringify(reporterId)
+      });
 
       // Validate reporterId before sending
       const validReporterId = reporterId && UUID_REGEX.test(reporterId) ? reporterId : null;
+      
+      console.log('[Save Article] After validation:', {
+        validReporterId,
+        passedUUIDTest: reporterId ? UUID_REGEX.test(reporterId) : 'N/A',
+        willSendAsNull: validReporterId === null
+      });
       
       const articleData: any = {
         title,
