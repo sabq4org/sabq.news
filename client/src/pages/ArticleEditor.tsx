@@ -102,8 +102,7 @@ export default function ArticleEditor() {
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
       // Validate reporterId - only set if it's a valid UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      const validReporterId = article.reporterId && uuidRegex.test(article.reporterId) ? article.reporterId : null;
+      const validReporterId = article.reporterId && UUID_REGEX.test(article.reporterId) ? article.reporterId : null;
       setReporterId(validReporterId);
       // Validate imageUrl - accept http/https URLs or relative paths starting with /
       const validImageUrl = article.imageUrl && (
@@ -211,6 +210,9 @@ export default function ArticleEditor() {
         content: content?.substring(0, 50)
       });
 
+      // Validate reporterId before sending
+      const validReporterId = reporterId && UUID_REGEX.test(reporterId) ? reporterId : null;
+      
       const articleData: any = {
         title,
         subtitle,
@@ -218,7 +220,7 @@ export default function ArticleEditor() {
         content,
         excerpt,
         categoryId: categoryId || null,
-        reporterId: reporterId || null,
+        reporterId: validReporterId,
         imageUrl: imageUrl || "",
         newsType,
         isFeatured: newsType === "featured",
@@ -355,7 +357,10 @@ export default function ArticleEditor() {
     },
   });
 
-  const generateSlug = (text: string) => {
+  // UUID validation regex - shared constant to avoid duplication
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const generateSlug = (text: string) => {
     if (!text || typeof text !== 'string') return "";
     
     const slug = text
