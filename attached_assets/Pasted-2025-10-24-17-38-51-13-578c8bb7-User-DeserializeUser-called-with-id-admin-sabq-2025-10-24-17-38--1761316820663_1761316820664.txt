@@ -1,0 +1,104 @@
+2025-10-24 17:38:51.13
+578c8bb7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 17:38:51.22
+578c8bb7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 17:38:51.31
+578c8bb7
+User
+2:38:51 PM [express] GET /api/admin/users 304 in 382ms :: {"items":[{"id":"buthInkHK0H3Q3Wqn1Zox","n…
+2025-10-24 17:38:52.28
+578c8bb7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 17:38:52.31
+578c8bb7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 17:38:52.38
+578c8bb7
+User
+[UPDATE ARTICLE] Update data: { reporterId: null, reporterIdInBody: null, reporterIdInParsed: null }
+2025-10-24 17:38:52.40
+578c8bb7
+User
+[UPDATE ARTICLE] Article updated: {
+2025-10-24 17:38:52.40
+578c8bb7
+User
+articleId: '613b198a-300e-43ee-a77f-b64db37a6062',
+2025-10-24 17:38:52.40
+578c8bb7
+User
+reporterId: null,
+2025-10-24 17:38:52.40
+578c8bb7
+User
+authorId: 'admin-sabq'
+2025-10-24 17:38:52.40
+578c8bb7
+User
+}
+2025-10-24 17:38:52.43
+578c8bb7
+User
+🔍 [UPDATE ARTICLE] Article updated - Old status: published, New status: published
+2025-10-24 17:38:52.43
+578c8bb7
+User
+🔍 [UPDATE ARTICLE] Article ID: 613b198a-300e-43ee-a77f-b64db37a6062, Title: بهدف " البريكان ".. الأهلي يزيد من أوجاع النجمة ويدخل مربع الكبار
+2025-10-24 17:38:52.43
+578c8bb7
+User
+⏸️ [UPDATE ARTICLE] No notification sent - Status unchanged or not published
+2025-10-24 17:38:52.45
+578c8bb7
+User
+2:38:52 PM [express] PATCH /api/admin/articles/613b198a-300e-43ee-a77f-b64db37a6062 200 in 188ms :: …
+2025-10-24 17:38:52.82
+578c8bb7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 17:38:52.84
+578c8bb7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 17:38:52.96
+578c8bb7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 17:38:52.98
+578c8bb7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 17:38:53.01
+578c8bb7
+User
+2:38:53 PM [express] GET /api/dashboard/articles/613b198a-300e-43ee-a77f-b64db37a6062 200 in 209ms :…
+2025-10-24 17:38:53.07
+578c8bb7
+User
+2:38:53 PM [express] GET /api/dashboard/articles/613b198a-300e-43ee-a77f-b64db37a6062 200 in 259ms :…
+2025-10-24 17:39:00.01
+578c8bb7
+User
+[NotificationWorker] Starting queue processing...
+2025-10-24 17:39:00.01
+578c8bb7
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-24 17:39:00.03
+578c8bb7
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-24 17:39:00.03
+578c8bb7
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-24 17:39:00.03
+578c8bb7
+User
+[NotificationWorker] Queue processing completed

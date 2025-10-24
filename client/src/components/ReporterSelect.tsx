@@ -141,7 +141,16 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
                           key={reporter.id}
                           value={reporter.id}
                           onSelect={(currentValue) => {
-                            onChange(currentValue === value ? null : currentValue);
+                            console.log('[ReporterSelect] onSelect called:', {
+                              currentValue,
+                              reporterId: reporter.id,
+                              existingValue: value,
+                              areEqual: currentValue === value,
+                              willSetTo: currentValue === value ? null : currentValue
+                            });
+                            // Use reporter.id directly instead of currentValue
+                            // because CommandItem might transform the value
+                            onChange(reporter.id === value ? null : reporter.id);
                             setOpen(false);
                             setSearchQuery("");
                           }}
