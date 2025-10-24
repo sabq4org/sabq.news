@@ -1215,24 +1215,45 @@ export const updateArticleSchema = z.object({
   slug: z.string().min(3).max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف").optional(),
   content: z.string().min(10, "المحتوى يجب أن يكون 10 أحرف على الأقل").optional(),
   excerpt: z.string().optional(),
-  imageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  imageUrl: z.union([
+    z.string().url("رابط الصورة غير صحيح"),
+    z.literal("")
+  ]).optional(),
   categoryId: z.union([
     z.string().uuid("معرف التصنيف غير صحيح"),
     z.literal(""),
     z.null()
   ]).optional(),
-  reporterId: z.string().uuid("معرف المراسل غير صحيح").optional().or(z.null()),
+  reporterId: z.union([
+    z.string().uuid("معرف المراسل غير صحيح"),
+    z.null()
+  ]).optional(),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
   newsType: z.enum(["breaking", "featured", "regular"]).optional(),
   publishType: z.enum(["instant", "scheduled"]).optional(),
-  scheduledAt: z.string().datetime().optional().or(z.null()),
+  scheduledAt: z.union([
+    z.string().datetime(),
+    z.null()
+  ]).optional(),
   status: z.enum(["draft", "scheduled", "published", "archived"]).optional(),
-  aiSummary: z.string().optional().or(z.null()),
+  aiSummary: z.union([
+    z.string(),
+    z.null()
+  ]).optional(),
   isFeatured: z.boolean().optional(),
-  publishedAt: z.string().datetime().optional().or(z.null()),
+  publishedAt: z.union([
+    z.string().datetime(),
+    z.null()
+  ]).optional(),
   seo: z.object({
-    metaTitle: z.string().max(70, "عنوان SEO يجب ألا يتجاوز 70 حرف").optional(),
-    metaDescription: z.string().max(160, "وصف SEO يجب ألا يتجاوز 160 حرف").optional(),
+    metaTitle: z.union([
+      z.string().max(70, "عنوان SEO يجب ألا يتجاوز 70 حرف"),
+      z.literal("")
+    ]).optional(),
+    metaDescription: z.union([
+      z.string().max(160, "وصف SEO يجب ألا يتجاوز 160 حرف"),
+      z.literal("")
+    ]).optional(),
     keywords: z.array(z.string()).optional(),
   }).optional(),
 });
