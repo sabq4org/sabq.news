@@ -197,6 +197,12 @@ export default function ArticleEditor() {
         content: content?.substring(0, 50)
       });
 
+      // Sanitize and validate data before sending
+      const sanitizedImageUrl = imageUrl?.trim() || "";
+      const sanitizedReporterId = reporterId?.trim() || null;
+      const sanitizedMetaTitle = (metaTitle || title).substring(0, 70);
+      const sanitizedMetaDescription = (metaDescription || excerpt).substring(0, 160);
+      
       const articleData: any = {
         title,
         subtitle,
@@ -204,8 +210,8 @@ export default function ArticleEditor() {
         content,
         excerpt,
         categoryId: categoryId || null,
-        reporterId: reporterId || null,
-        imageUrl: imageUrl || "",
+        reporterId: sanitizedReporterId === "" ? null : sanitizedReporterId,
+        imageUrl: sanitizedImageUrl,
         newsType,
         isFeatured: newsType === "featured",
         publishType,
@@ -214,8 +220,8 @@ export default function ArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: metaTitle || title,
-          metaDescription: metaDescription || excerpt,
+          metaTitle: sanitizedMetaTitle,
+          metaDescription: sanitizedMetaDescription,
           keywords: keywords,
         },
       };
