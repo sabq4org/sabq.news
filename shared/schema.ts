@@ -1226,7 +1226,7 @@ export const updateArticleSchema = z.object({
     z.null()
   ]).optional(),
   reporterId: z.union([
-    z.string().uuid("معرف المراسل غير صحيح"),
+    z.string().min(1, "معرف المراسل غير صحيح"),
     z.null()
   ]).optional(),
   articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
