@@ -1405,32 +1405,31 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    let isBookmarked = false;
-    let hasReacted = false;
-
-    if (userId) {
-      const [bookmark] = await db
-        .select()
-        .from(bookmarks)
-        .where(and(eq(bookmarks.articleId, article.id), eq(bookmarks.userId, userId)));
-      isBookmarked = !!bookmark;
-
-      const [reaction] = await db
-        .select()
+    // Run all queries in parallel for better performance
+    const [
+      bookmarkResult,
+      reactionResult,
+      reactionsCountResult,
+      commentsCountResult
+    ] = await Promise.all([
+      userId ? db.select().from(bookmarks)
+        .where(and(eq(bookmarks.articleId, article.id), eq(bookmarks.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      userId ? db.select().from(reactions)
+        .where(and(eq(reactions.articleId, article.id), eq(reactions.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      db.select({ count: sql<number>`count(*)` })
         .from(reactions)
-        .where(and(eq(reactions.articleId, article.id), eq(reactions.userId, userId)));
-      hasReacted = !!reaction;
-    }
+        .where(eq(reactions.articleId, article.id)),
+      db.select({ count: sql<number>`count(*)` })
+        .from(comments)
+        .where(eq(comments.articleId, article.id))
+    ]);
 
-    const [{ count: reactionsCount }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(reactions)
-      .where(eq(reactions.articleId, article.id));
-
-    const [{ count: commentsCount }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(comments)
-      .where(eq(comments.articleId, article.id));
+    const isBookmarked = bookmarkResult.length > 0;
+    const hasReacted = reactionResult.length > 0;
+    const reactionsCount = Number(reactionsCountResult[0].count);
+    const commentsCount = Number(commentsCountResult[0].count);
 
     return {
       ...article,
@@ -1439,8 +1438,8 @@ export class DatabaseStorage implements IStorage {
       staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
       isBookmarked,
       hasReacted,
-      reactionsCount: Number(reactionsCount),
-      commentsCount: Number(commentsCount),
+      reactionsCount,
+      commentsCount,
     };
   }
 
@@ -1482,34 +1481,31 @@ export class DatabaseStorage implements IStorage {
     const result = results[0];
     const article = result.article;
 
-    // Calculate user-specific states if userId provided
-    let isBookmarked = false;
-    let hasReacted = false;
-
-    if (userId) {
-      const [bookmark] = await db
-        .select()
-        .from(bookmarks)
-        .where(and(eq(bookmarks.articleId, article.id), eq(bookmarks.userId, userId)));
-      isBookmarked = !!bookmark;
-
-      const [reaction] = await db
-        .select()
+    // Run all queries in parallel for better performance
+    const [
+      bookmarkResult,
+      reactionResult,
+      reactionsCountResult,
+      commentsCountResult
+    ] = await Promise.all([
+      userId ? db.select().from(bookmarks)
+        .where(and(eq(bookmarks.articleId, article.id), eq(bookmarks.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      userId ? db.select().from(reactions)
+        .where(and(eq(reactions.articleId, article.id), eq(reactions.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      db.select({ count: sql<number>`count(*)` })
         .from(reactions)
-        .where(and(eq(reactions.articleId, article.id), eq(reactions.userId, userId)));
-      hasReacted = !!reaction;
-    }
+        .where(eq(reactions.articleId, article.id)),
+      db.select({ count: sql<number>`count(*)` })
+        .from(comments)
+        .where(eq(comments.articleId, article.id))
+    ]);
 
-    // Calculate aggregated counts
-    const [{ count: reactionsCount }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(reactions)
-      .where(eq(reactions.articleId, article.id));
-
-    const [{ count: commentsCount }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(comments)
-      .where(eq(comments.articleId, article.id));
+    const isBookmarked = bookmarkResult.length > 0;
+    const hasReacted = reactionResult.length > 0;
+    const reactionsCount = Number(reactionsCountResult[0].count);
+    const commentsCount = Number(commentsCountResult[0].count);
 
     return {
       ...article,
@@ -1518,8 +1514,8 @@ export class DatabaseStorage implements IStorage {
       staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
       isBookmarked,
       hasReacted,
-      reactionsCount: Number(reactionsCount),
-      commentsCount: Number(commentsCount),
+      reactionsCount,
+      commentsCount,
     };
   }
 
