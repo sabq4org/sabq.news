@@ -66,16 +66,6 @@ Key features include:
     - Top 5 writing categories with article counts and percentage shares.
     - 90-day activity timeline chart (views and likes).
     - Clickable reporter links from article detail pages for verified staff members.
-- **Publishing Templates System:** Comprehensive template-based publishing infrastructure for diverse content presentation:
-    - **21 React Components:** 14 production templates (Hero, List, Grid, Ticker, Timeline, Spotlight, Video, Live) + 7 skeleton placeholders (Podcast, Infographic, Tags, Newsletter, Native, Opinion, Mosaic)
-    - **Template Selector Engine:** Intelligent scoring system (0-100) analyzing content context (itemCount, hasImages, hasVideo, hasBreaking, avgExcerptLength, uniqueCategories, isTimeSensitive) to recommend optimal templates
-    - **Template Registry:** Centralized TEMPLATE_REGISTRY mapping template IDs to components for dynamic loading
-    - **Interactive Playground:** Full preview environment at `/dashboard/template-playground` with dataset selection, template switching, smart recommendations, auto-refresh, content analysis, and tabbed interface (Preview, Props, Info)
-    - **Demo Data:** Comprehensive fixtures (demoArticles.json, demoCollections.json) for testing and development
-    - **Manifest Architecture:** JSON-based template definitions (templatesManifest.json) with metadata, behaviors, styles, accessibility, performance hints, and scoring criteria
-    - **TypeScript Types:** Complete type system for template props, content context, recommendations, and selection policies
-    - **RTL-First Design:** All templates support right-to-left Arabic layout with proper accessibility (ARIA roles, keyboard navigation, data-testid attributes)
-    - **Performance Optimized:** Lazy loading images, framer-motion animations (<250ms), responsive design, and virtual scrolling support
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Al-Mirqab forecasting tables (mirqab_entries, sabq_index_data, next_story_data, radar_data, algorithm_write_data). AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.

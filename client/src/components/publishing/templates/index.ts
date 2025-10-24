@@ -6,78 +6,53 @@
  */
 
 // Hero Templates
-import HeroSplit from './HeroSplit';
-import HeroOverlay from './HeroOverlay';
+export { default as HeroSplit } from './HeroSplit';
+export { default as HeroOverlay } from './HeroOverlay';
 
 // News List Templates
-import NewsListBasic from './NewsListBasic';
-import NewsListSummary from './NewsListSummary';
+export { default as NewsListBasic } from './NewsListBasic';
+export { default as NewsListSummary } from './NewsListSummary';
 
 // News Grid Templates
-import NewsGridTwoCol from './NewsGridTwoCol';
-import NewsGridMasonry from './NewsGridMasonry';
+export { default as NewsGridTwoCol } from './NewsGridTwoCol';
+export { default as NewsGridMasonry } from './NewsGridMasonry';
 
 // Ticker Templates
-import TickerInline from './TickerInline';
-import TickerMarquee from './TickerMarquee';
+export { default as TickerInline } from './TickerInline';
+export { default as TickerMarquee } from './TickerMarquee';
 
 // Timeline Templates
-import TimelineVertical from './TimelineVertical';
-import TimelineHorizontal from './TimelineHorizontal';
+export { default as TimelineVertical } from './TimelineVertical';
+export { default as TimelineHorizontal } from './TimelineHorizontal';
 
 // Spotlight Templates
-import SpotlightCard from './SpotlightCard';
-import SpotlightMedia from './SpotlightMedia';
+export { default as SpotlightCard } from './SpotlightCard';
+export { default as SpotlightMedia } from './SpotlightMedia';
 
 // Media Templates
-import VideoReel from './VideoReel';
-import PodcastRow from './PodcastRow';
+export { default as VideoReel } from './VideoReel';
+export { default as PodcastRow } from './PodcastRow';
 
 // Live Templates
-import LiveStream from './LiveStream';
+export { default as LiveStream } from './LiveStream';
 
 // Infographic Templates
-import InfographicStatBar from './InfographicStatBar';
+export { default as InfographicStatBar } from './InfographicStatBar';
 
 // Tag Templates
-import TagStripChips from './TagStripChips';
+export { default as TagStripChips } from './TagStripChips';
 
 // Newsletter Templates
-import NewsletterBlock from './NewsletterBlock';
+export { default as NewsletterBlock } from './NewsletterBlock';
 
 // Native Templates
-import NativeStory from './NativeStory';
+export { default as NativeStory } from './NativeStory';
 
 // Opinion Templates
-import OpinionColumn from './OpinionColumn';
+export { default as OpinionColumn } from './OpinionColumn';
 
 // Mosaic Templates
-import MosaicMagazine from './MosaicMagazine';
-
-// Re-export all templates
-export {
-  HeroSplit,
-  HeroOverlay,
-  NewsListBasic,
-  NewsListSummary,
-  NewsGridTwoCol,
-  NewsGridMasonry,
-  TickerInline,
-  TickerMarquee,
-  TimelineVertical,
-  TimelineHorizontal,
-  SpotlightCard,
-  SpotlightMedia,
-  VideoReel,
-  PodcastRow,
-  LiveStream,
-  InfographicStatBar,
-  TagStripChips,
-  NewsletterBlock,
-  NativeStory,
-  OpinionColumn,
-  MosaicMagazine,
-};
+export { default as MosaicMagazine } from './MosaicMagazine';
 
 /**
  * Template registry mapping template IDs to components

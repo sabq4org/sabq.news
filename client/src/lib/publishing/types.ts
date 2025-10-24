@@ -244,37 +244,3 @@ export interface TemplateScore {
   score: number;
   matchedRules: string[];
 }
-
-// Content Context for Template Selection
-export interface ContentContext {
-  itemCount: number;
-  hasImages: boolean;
-  hasVideo: boolean;
-  hasBreaking: boolean;
-  hasFeatured: boolean;
-  avgExcerptLength: number;
-  uniqueCategories: number;
-  isTimeSensitive: boolean;
-}
-
-// Template Recommendation with Score
-export interface TemplateRecommendation {
-  template: PublishingTemplate;
-  score: number;
-  reasoning: string[];
-}
-
-// Enhanced ScoreHints for Template Selector
-export interface TemplateScoreHints {
-  minItems?: number;
-  maxItems?: number;
-  idealItems?: number;
-  requiresImage?: boolean;
-  requiresVideo?: boolean;
-  prefersVideo?: boolean;
-  requiresExcerpt?: boolean;
-  bestForBreaking?: boolean;
-  bestForFeatured?: boolean;
-  timeSensitive?: boolean;
-  bestForDiversity?: boolean;
-}

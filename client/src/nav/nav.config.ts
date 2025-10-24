@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  LayoutGrid,
   FileText,
   FolderOpen,
   Users,
@@ -216,14 +215,6 @@ export const navConfig: NavItem[] = [
         icon: SquareStack,
         roles: ["admin", "editor"],
       },
-      {
-        id: "template-playground",
-        labelKey: "nav.template_playground",
-        labelAr: "معاينة القوالب",
-        path: "/dashboard/template-playground",
-        icon: LayoutGrid,
-        roles: ["admin", "editor"],
-      },
     ],
   },
 
@@ -284,7 +275,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.smart_content",
     labelAr: "المحتوى الذكي",
     icon: Grid3x3,
-    roles: ["admin"],
+    roles: ["admin", "system_admin"],
     children: [
       {
         id: "smart_blocks",
@@ -292,7 +283,7 @@ export const navConfig: NavItem[] = [
         labelAr: "البلوكات الذكية",
         path: "/dashboard/smart-blocks",
         icon: Grid3x3,
-        roles: ["admin"],
+        roles: ["admin", "system_admin"],
       },
     ],
   },
