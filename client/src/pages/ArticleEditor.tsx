@@ -101,7 +101,10 @@ export default function ArticleEditor() {
       setContent(article.content);
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
-      setReporterId(article.reporterId || null);
+      // Validate reporterId - only set if it's a valid UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const validReporterId = article.reporterId && uuidRegex.test(article.reporterId) ? article.reporterId : null;
+      setReporterId(validReporterId);
       // Validate imageUrl - only set if it's a valid URL or empty
       const validImageUrl = article.imageUrl && article.imageUrl.match(/^https?:\/\/.+/) ? article.imageUrl : "";
       setImageUrl(validImageUrl);
