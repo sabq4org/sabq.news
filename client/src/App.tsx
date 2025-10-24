@@ -1,10 +1,11 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AIChatBot from "@/components/AIChatBot";
+import { useEffect } from "react";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -74,10 +75,22 @@ import CreateAlgorithmWrite from "@/pages/dashboard/mirqab/CreateAlgorithmWrite"
 import SmartBlocksPage from "@/pages/dashboard/SmartBlocksPage";
 import NotFound from "@/pages/not-found";
 
+function ScrollRestoration() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  return null;
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
+    <>
+      <ScrollRestoration />
+      <Switch>
+        <Route path="/" component={Home} />
       <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
@@ -169,6 +182,7 @@ function Router() {
       
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
