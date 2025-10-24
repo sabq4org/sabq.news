@@ -111,8 +111,15 @@ export default function ArticleEditor() {
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
-      setMetaTitle(article.seo?.metaTitle || "");
-      setMetaDescription(article.seo?.metaDescription || "");
+      // Validate SEO fields - truncate if too long (legacy data cleanup)
+      const validMetaTitle = article.seo?.metaTitle 
+        ? article.seo.metaTitle.substring(0, 70) 
+        : "";
+      const validMetaDescription = article.seo?.metaDescription 
+        ? article.seo.metaDescription.substring(0, 160) 
+        : "";
+      setMetaTitle(validMetaTitle);
+      setMetaDescription(validMetaDescription);
       setKeywords(article.seo?.keywords || []);
       setStatus(article.status as any);
     }

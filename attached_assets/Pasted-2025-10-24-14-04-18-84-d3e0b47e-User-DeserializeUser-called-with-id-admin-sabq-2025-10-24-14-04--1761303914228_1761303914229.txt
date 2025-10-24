@@ -1,0 +1,164 @@
+2025-10-24 14:04:18.84
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:18.84
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:18.86
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:18.86
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:18.91
+d3e0b47e
+User
+11:04:18 AM [express] GET /api/system/announcement 304 in 93ms :: {"type":"warning","message":"يرجى ا…
+2025-10-24 14:04:19.18
+d3e0b47e
+User
+11:04:19 AM [express] GET /api/admin/dashboard/stats 304 in 362ms :: {"articles":{"total":63,"publish…
+2025-10-24 14:04:20.47
+430bf8f5
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-10-24 14:04:20.47
+430bf8f5
+User
+📡 SSE connection closed for user: admin-sabq
+2025-10-24 14:04:20.48
+430bf8f5
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-10-24 14:04:20.48
+430bf8f5
+User
+📡 SSE connection closed for user: admin-sabq
+2025-10-24 14:04:20.93
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:20.93
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:20.95
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:20.96
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:21.01
+d3e0b47e
+User
+11:04:21 AM [express] GET /api/categories 304 in 101ms :: [{"id":"f11040af-ae12-4e76-a113-349faac5aad…
+2025-10-24 14:04:21.02
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:21.04
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:21.09
+d3e0b47e
+User
+11:04:21 AM [express] GET /api/admin/articles/metrics 304 in 189ms :: {"published":57,"scheduled":0,"…
+2025-10-24 14:04:21.22
+d3e0b47e
+User
+11:04:21 AM [express] GET /api/admin/articles 304 in 219ms :: [{"id":"a87e1e5b-e910-4f3f-bb24-b31a799…
+2025-10-24 14:04:23.37
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:23.39
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:23.39
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:23.41
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:23.46
+d3e0b47e
+User
+11:04:23 AM [express] GET /api/dashboard/articles/a87e1e5b-e910-4f3f-bb24-b31a799dfca2 304 in 116ms :…
+2025-10-24 14:04:23.61
+d3e0b47e
+User
+11:04:23 AM [express] GET /api/admin/users 304 in 237ms :: {"items":[{"id":"buthInkHK0H3Q3Wqn1Zox","n…
+2025-10-24 14:04:29.14
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:29.16
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:29.27
+d3e0b47e
+User
+11:04:29 AM [express] PATCH /api/admin/articles/a87e1e5b-e910-4f3f-bb24-b31a799dfca2 400 in 154ms :: …
+2025-10-24 14:04:31.64
+d3e0b47e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 14:04:31.66
+d3e0b47e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 14:04:31.71
+d3e0b47e
+User
+11:04:31 AM [express] GET /api/themes/active 304 in 89ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-10-24 14:05:00.01
+430bf8f5
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-24 14:05:00.01
+430bf8f5
+User
+[NotificationWorker] Starting queue processing...
+2025-10-24 14:05:00.10
+430bf8f5
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-24 14:05:00.10
+430bf8f5
+User
+[NotificationWorker] Queue processing completed
+2025-10-24 14:05:00.11
+430bf8f5
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-24 14:05:01.62
+d3e0b47e
+User
+[NotificationWorker] Starting queue processing...
+2025-10-24 14:05:02.32
+d3e0b47e
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-24 14:05:03.02
+d3e0b47e
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-24 14:05:01.92
+d3e0b47e
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-24 14:05:02.32
+d3e0b47e
+User
+[NotificationWorker] Queue processing completed
