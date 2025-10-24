@@ -113,12 +113,11 @@ export default function ArticleEditor() {
       setContent(article.content);
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
-      // Validate reporterId - only set if it's a valid UUID format
-      const validReporterId = article.reporterId && UUID_REGEX.test(article.reporterId) ? article.reporterId : null;
+      // Use reporterId as is - system supports various ID formats (nanoid, UUID, etc.)
+      const validReporterId = article.reporterId || null;
       console.log('[ArticleEditor] Setting reporterId:', {
         original: article.reporterId,
         validated: validReporterId,
-        passedUUIDTest: article.reporterId ? UUID_REGEX.test(article.reporterId) : 'N/A'
       });
       setReporterId(validReporterId);
       // Validate imageUrl - accept http/https URLs or relative paths starting with /
@@ -234,12 +233,11 @@ export default function ArticleEditor() {
         reporterIdValue: JSON.stringify(reporterId)
       });
 
-      // Validate reporterId before sending
-      const validReporterId = reporterId && UUID_REGEX.test(reporterId) ? reporterId : null;
+      // Use reporterId as is - no UUID validation needed since system uses various ID formats (nanoid, UUID, etc.)
+      const validReporterId = reporterId || null;
       
       console.log('[Save Article] After validation:', {
         validReporterId,
-        passedUUIDTest: reporterId ? UUID_REGEX.test(reporterId) : 'N/A',
         willSendAsNull: validReporterId === null
       });
       
