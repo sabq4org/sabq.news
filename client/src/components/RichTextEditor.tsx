@@ -7,9 +7,9 @@ import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import Color from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
-import Youtube from "@tiptap/extension-youtube";
 import { TwitterEmbed } from "./editor-extensions/TwitterEmbed";
 import { ImageGallery } from "./editor-extensions/ImageGallery";
+import { VideoEmbed } from "./editor-extensions/VideoEmbed";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -101,15 +101,9 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
       Underline,
       TextStyle,
       Color,
-      Youtube.configure({
-        controls: true,
-        nocookie: true,
-        HTMLAttributes: {
-          class: "w-full aspect-video rounded-md my-4",
-        },
-      }),
       TwitterEmbed,
       ImageGallery,
+      VideoEmbed,
       Placeholder.configure({
         placeholder,
       }),
@@ -186,7 +180,7 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
 
   const handleAddYoutube = () => {
     if (youtubeUrl && editor) {
-      editor.chain().focus().setYoutubeVideo({ src: youtubeUrl }).run();
+      editor.chain().focus().setVideoEmbed({ url: youtubeUrl }).run();
       setYoutubeUrl("");
       setYoutubeDialogOpen(false);
     }
