@@ -254,7 +254,16 @@ export default function ArticleEditor() {
       }
     },
     onSuccess: (data, variables) => {
+      // Invalidate all article-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      if (!isNewArticle && id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles", id] });
+      }
+      if (data?.slug) {
+        queryClient.invalidateQueries({ queryKey: ["/api/articles", data.slug] });
+      }
+      
       toast({
         title: variables.publishNow ? "تم النشر بنجاح" : "تم الحفظ بنجاح",
         description: variables.publishNow ? "تم نشر المقال بنجاح" : "تم حفظ المقال كمسودة",
