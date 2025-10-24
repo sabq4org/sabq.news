@@ -284,7 +284,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.smart_content",
     labelAr: "المحتوى الذكي",
     icon: Grid3x3,
-    roles: ["admin", "system_admin"],
+    roles: ["admin"],
     children: [
       {
         id: "smart_blocks",
@@ -292,7 +292,7 @@ export const navConfig: NavItem[] = [
         labelAr: "البلوكات الذكية",
         path: "/dashboard/smart-blocks",
         icon: Grid3x3,
-        roles: ["admin", "system_admin"],
+        roles: ["admin"],
       },
     ],
   },

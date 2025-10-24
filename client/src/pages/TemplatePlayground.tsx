@@ -282,12 +282,14 @@ export default function TemplatePlayground() {
 
               <CardContent>
                 <div className="rounded-lg border bg-muted/30 p-6 min-h-[500px]" data-testid="preview-area">
-                  {TemplateComponent && demoItems.length > 0 ? (
-                    currentTemplate?.kind === 'hero' || currentTemplate?.kind === 'spotlight' ? (
-                      <TemplateComponent item={demoItems[0]} {...({} as any)} />
-                    ) : (
-                      <TemplateComponent items={demoItems} {...({} as any)} />
-                    )
+                  {TemplateComponent ? (
+                    demoItems.length > 0 ? (
+                      currentTemplate?.kind === 'hero' || currentTemplate?.kind === 'spotlight' ? (
+                        <TemplateComponent item={demoItems[0]} {...({} as any)} />
+                      ) : (
+                        <TemplateComponent items={demoItems} {...({} as any)} />
+                      )
+                    ) : null
                   ) : (
                     <div className="flex flex-col items-center justify-center h-64 text-center">
                       <LayoutGrid className="w-16 h-16 text-muted-foreground mb-4" />
