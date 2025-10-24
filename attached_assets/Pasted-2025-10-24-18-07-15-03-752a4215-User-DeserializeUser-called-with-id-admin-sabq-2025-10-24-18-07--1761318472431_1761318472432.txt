@@ -1,0 +1,108 @@
+2025-10-24 18:07:15.03
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:15.05
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:15.69
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:15.71
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.31
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.43
+752a4215
+User
+isAuthenticated: true,
+2025-10-24 18:07:11.43
+752a4215
+User
+hasUser: true,
+2025-10-24 18:07:11.43
+752a4215
+User
+sessionID: 'BmgF2jE3nLLztdf4NS0vdocdhVY8-l5b'
+2025-10-24 18:07:11.43
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.44
+752a4215
+User
+3:07:11 PM [express] GET /api/smart-blocks 304 in 173ms :: []
+2025-10-24 18:07:11.44
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:11.44
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:11.46
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.56
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.67
+752a4215
+User
+3:07:11 PM [express] GET /api/homepage 200 in 406ms :: {"hero":[{"id":"613b198a-300e-43ee-a77f-b64db…
+2025-10-24 18:07:11.89
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:11.89
+752a4215
+User
+📡 SSE connection opened for user: admin-sabq
+2025-10-24 18:07:11.89
+752a4215
+User
+📡 User admin-sabq subscribed to notification stream
+2025-10-24 18:07:11.91
+752a4215
+User
+📡 SSE connection opened for user: admin-sabq
+2025-10-24 18:07:12.05
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:12.07
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:12.08
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:12.08
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:12.08
+752a4215
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-24 18:07:12.10
+752a4215
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-24 18:07:12.14
+752a4215
+User
+🔍 [Smart Block] Searching for keyword: "السعودية", limit: 6
+2025-10-24 18:07:12.14
+752a4215
+User
+🔎 [Storage] Searching articles with keyword: "السعودية" (in SEO keywords only)
