@@ -42,11 +42,14 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const url = HTMLAttributes.url || '';
+    
     return [
       'div',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      mergeAttributes(this.options.HTMLAttributes, {
         'data-twitter-embed': '',
-        class: 'twitter-embed-wrapper my-4',
+        'data-url': url,
+        class: 'twitter-embed-wrapper my-6 border rounded-lg p-4 bg-muted/30',
       }),
       [
         'blockquote',
@@ -56,12 +59,21 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
           'data-dnt': 'true',
         },
         [
+          'p',
+          {
+            lang: 'ar',
+            dir: 'rtl',
+          },
+          'جاري تحميل التغريدة...',
+        ],
+        [
           'a',
           {
-            href: HTMLAttributes.url,
+            href: url,
             target: '_blank',
             rel: 'noopener noreferrer',
           },
+          'عرض التغريدة',
         ],
       ],
     ];
