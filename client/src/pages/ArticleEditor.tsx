@@ -95,6 +95,13 @@ export default function ArticleEditor() {
   // Load article data when editing
   useEffect(() => {
     if (article && !isNewArticle) {
+      console.log('[ArticleEditor] Loading article data:', {
+        articleId: article.id,
+        reporterId: article.reporterId,
+        reporterIdType: typeof article.reporterId,
+        authorId: article.authorId,
+        author: article.author,
+      });
       setTitle(article.title);
       setSubtitle(article.subtitle || "");
       setSlug(article.slug);
@@ -103,6 +110,11 @@ export default function ArticleEditor() {
       setCategoryId(article.categoryId || "");
       // Validate reporterId - only set if it's a valid UUID format
       const validReporterId = article.reporterId && UUID_REGEX.test(article.reporterId) ? article.reporterId : null;
+      console.log('[ArticleEditor] Setting reporterId:', {
+        original: article.reporterId,
+        validated: validReporterId,
+        passedUUIDTest: article.reporterId ? UUID_REGEX.test(article.reporterId) : 'N/A'
+      });
       setReporterId(validReporterId);
       // Validate imageUrl - accept http/https URLs or relative paths starting with /
       const validImageUrl = article.imageUrl && (

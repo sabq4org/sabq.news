@@ -2647,6 +2647,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.categoryId = null;
       }
 
+      console.log('[UPDATE ARTICLE] Update data:', {
+        reporterId: updateData.reporterId,
+        reporterIdInBody: req.body.reporterId,
+        reporterIdInParsed: parsed.data.reporterId,
+      });
+
       const [updatedArticle] = await db
         .update(articles)
         .set({
@@ -2655,6 +2661,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(articles.id, articleId))
         .returning();
+
+      console.log('[UPDATE ARTICLE] Article updated:', {
+        articleId: updatedArticle.id,
+        reporterId: updatedArticle.reporterId,
+        authorId: updatedArticle.authorId,
+      });
 
       // Log activity
       await logActivity({
