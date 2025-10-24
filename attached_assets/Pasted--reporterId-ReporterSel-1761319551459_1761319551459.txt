@@ -1,0 +1,149 @@
+أبو محمد، ممتاز — اللوجز أوضحت المشكلة بدقّة:
+	•	الواجهة تختار قيمة reporterId وتضبطها:
+[ReporterSelect] onSelect … reporterId: "user-1760951577797-iw4w6rx9i"
+	•	عند الحفظ يظهر 400 من الـPATCH.
+	•	قيمة reporterId الظاهر أنها:
+	1.	ليست UUID للمراسل (لكنها user-… = معرّف مستخدم)، و
+	2.	قد تكون double-encoded (لاحظ: reporterIdValue: "\"user-…\"").
+
+يعني الـAPI غالبًا تتوقع reporterId = معرّف جدول reporters (UUID)، بينما الواجهة ترسل userId (مثل user-…). ومع الـZod/validation (مثلاً .uuid())، يُرفض الطلب ← 400.
+
+خلّني أعطيك حلَّين: “تصليح سريع اليوم”، و”تصميم صحيح دائمًا”.
+
+⸻
+
+الحل السريع (Hotfix اليوم)
+
+(1) الواجهة — أرسل UUID المراسل فعلًا، وتأكد ما فيه double-encode
+
+إذا الـSelect عندك مبني على users وليس reporters، حوّل الـuserId إلى reporterId قبل الإرسال:
+
+// أثناء التحضير للحفظ:
+let reporterId: string | null = form.reporterId ?? null;
+
+// لو القيمة تبدأ بـ "user-" نبحث عن reporter عبر userId
+if (typeof reporterId === "string" && reporterId.startsWith("user-")) {
+  const res = await fetch(`/api/admin/reporters?userId=${encodeURIComponent(reporterId)}`);
+  const reporter = await res.json(); // يفترض يرجّع { id, fullName, userId, ... }
+  reporterId = reporter?.id ?? null; // <-- UUID للمراسل
+}
+
+// انتبه: لا تعمل JSON.stringify لقيمة واحدة ثم تضعها داخل جسم JSON ثاني.
+// خلّها string عادية:
+const payload = {
+  title: form.title,
+  // ...
+  reporterId: reporterId, // <= string أو null - بدون JSON.stringify إضافي
+};
+
+await fetch(`/api/admin/articles/${article.id}`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
+
+لو ما عندك endpoint للاستعلام بـuserId أضف واحد بسيط مؤقتًا يرجّع المراسل بـ userId.
+
+(2) الخادم — اسمح مؤقتًا بكلا الصيغتين (UUID للمراسل أو userId)
+
+عدّل Schema للقبول بصيغة user-… أيضًا، ثم حوّلها داخليًا:
+
+// route.ts (PATCH)
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+
+const UpdateArticleSchema = z.object({
+  // reporterId قد يأتي UUID أو user-...
+  reporterId: z.string().min(1).nullable().optional(),
+  // بقية الحقول...
+});
+
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const raw = await req.json();
+  const input = UpdateArticleSchema.parse(raw);
+
+  let reporterIdToSave: string | null | undefined = input.reporterId;
+
+  if (typeof reporterIdToSave !== "undefined" && reporterIdToSave !== null) {
+    // إزالة double-quote لو كانت مرسلة بمزدوج ( "\"user-...\"" )
+    if (reporterIdToSave.startsWith('"') && reporterIdToSave.endsWith('"')) {
+      reporterIdToSave = reporterIdToSave.slice(1, -1);
+    }
+
+    if (reporterIdToSave.startsWith("user-")) {
+      const reporter = await prisma.reporter.findFirst({
+        where: { userId: reporterIdToSave },
+        select: { id: true },
+      });
+      if (!reporter) {
+        return new Response(JSON.stringify({ error: "Reporter not found for given userId" }), { status: 400 });
+      }
+      reporterIdToSave = reporter.id; // <-- حولناه إلى UUID
+    } else {
+      // تحقق أنه UUID موجود
+      const reporter = await prisma.reporter.findUnique({ where: { id: reporterIdToSave } });
+      if (!reporter) {
+        return new Response(JSON.stringify({ error: "Reporter not found" }), { status: 400 });
+      }
+    }
+  }
+
+  const updated = await prisma.article.update({
+    where: { id: params.id },
+    data: {
+      ...( "reporterId" in input ? { reporterId: reporterIdToSave ?? null } : {} ),
+      // بقية الحقول...
+    },
+    include: { reporter: true, author: true },
+  });
+
+  console.log("[UPDATE ARTICLE] Update data:", { reporterId: updated.reporterId });
+  return Response.json(updated);
+}
+
+بهذه الطريقة، أي قيمة user-… تتحوّل تلقائيًا إلى UUID الصحيح قبل الحفظ، وأي double-encoded ينفك.
+
+⸻
+
+التصميم الصحيح (Fix دائم يريحك):
+	1.	مصدر الحقيقة في الـSelect = reporters
+اجلب للـSelect قائمة المراسلين مباشرة من /api/admin/reporters بحيث قيمة الخيار value = reporter.id (UUID) وليس userId.
+	•	label = fullName
+	•	value = id
+	•	لو احتجت ربطًا بالمستخدم، خزِّن userId في العنصر لكن لا ترسله في PATCH.
+	2.	واجهات الحالة (state)
+	•	حالة النموذج: reporterId: string | null وتُهيّأ من المقال: article.reporter?.id ?? null.
+	•	onChange: خزّن opt.value (UUID) فقط.
+	•	عند الحفظ: أرسل reporterId كما هو (سلسلة واحدة)، بدون stringify إضافي.
+	3.	التحقق في الخادم
+	•	Zod: reporterId: z.string().uuid().nullable().optional() (بعد ما تثبت أن الواجهة ترسل UUID فقط).
+	•	تحقق من الوجود: findUnique({ where: { id: reporterId } }).
+	•	احذف أي تحويلات “user-…”. (الحل السريع أعلاه فقط كجسر انتقالي).
+	4.	عرض الـByline
+	•	في القراءة: byline = article.reporter?.fullName ?? article.author?.name ?? "بدون اسم".
+	5.	منع الـdouble-encode
+	•	لا تسجّل في الـstate نسخة مجمّلة كـ JSON داخل JSON.
+	•	لا تستخدم JSON.stringify(form.reporterId) قبل وضعه داخل كائن payload الذي ستعمل له stringify كامل.
+
+⸻
+
+تشيك لست تنفيذية (10 دقائق)
+	•	تبويب Network على الحفظ → Request Payload يجب أن يحتوي:
+{"reporterId":"<uuid-of-reporter>", ...} (بدون backslashes أو اقتباس زائد).
+	•	Response 200 ويطبع السيرفر:
+[UPDATE ARTICLE] Update data: { reporterId: "<uuid>" }
+	•	إعادة تحميل محرر المقال → يظهر الـSelect على المراسل المختار.
+	•	صفحة القراءة تعرض اسم المراسل بدل مسؤول النظام.
+
+⸻
+
+ملاحظة جانبية من اللوج:
+
+[tiptap warn]: Duplicate extension names found: ['link', 'underline']
+هذه لا تؤثر على المراسل لكنها قد تسبب سلوكًا غريبًا في التحرير. فضّل إزالة التكرار (استخدم امتداد واحد لكل اسم).
+
+⸻
+
+لو تبغى، أجهّز لك Diff/PR صغير:
+	•	Frontend: تصحيح ReporterSelect وقيمة value لتكون UUID، ومنع double-encode في handleSave.
+	•	Backend: قبول مؤقت لصيغة user-… وتحويلها إلى UUID + رسائل خطأ أوضح (بدل 400 عامة).

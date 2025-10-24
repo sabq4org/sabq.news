@@ -2477,18 +2477,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate reporterId if provided
       if (parsed.data.reporterId) {
-        const reporterData = await db
-          .select({
-            userId: users.id,
-            roleName: roles.name,
-          })
+        // Check if user exists
+        const [user] = await db
+          .select()
           .from(users)
-          .leftJoin(userRoles, eq(users.id, userRoles.userId))
-          .leftJoin(roles, eq(userRoles.roleId, roles.id))
           .where(eq(users.id, parsed.data.reporterId))
           .limit(1);
         
-        if (!reporterData[0] || reporterData[0].roleName !== 'reporter') {
+        if (!user) {
+          return res.status(422).json({ 
+            message: "المستخدم المحدد غير موجود" 
+          });
+        }
+
+        // Check if user has reporter role (user can have multiple roles)
+        const reporterRoles = await db
+          .select({
+            roleName: roles.name,
+          })
+          .from(userRoles)
+          .innerJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(eq(userRoles.userId, parsed.data.reporterId));
+        
+        const hasReporterRole = reporterRoles.some(r => r.roleName === 'reporter');
+        
+        if (!hasReporterRole) {
           return res.status(422).json({ 
             message: "المستخدم المحدد ليس مراسلاً" 
           });
@@ -2600,18 +2613,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate reporterId if provided
       if (parsed.data.reporterId) {
-        const reporterData = await db
-          .select({
-            userId: users.id,
-            roleName: roles.name,
-          })
+        // Check if user exists
+        const [user] = await db
+          .select()
           .from(users)
-          .leftJoin(userRoles, eq(users.id, userRoles.userId))
-          .leftJoin(roles, eq(userRoles.roleId, roles.id))
           .where(eq(users.id, parsed.data.reporterId))
           .limit(1);
         
-        if (!reporterData[0] || reporterData[0].roleName !== 'reporter') {
+        if (!user) {
+          return res.status(422).json({ 
+            message: "المستخدم المحدد غير موجود" 
+          });
+        }
+
+        // Check if user has reporter role (user can have multiple roles)
+        const reporterRoles = await db
+          .select({
+            roleName: roles.name,
+          })
+          .from(userRoles)
+          .innerJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(eq(userRoles.userId, parsed.data.reporterId));
+        
+        const hasReporterRole = reporterRoles.some(r => r.roleName === 'reporter');
+        
+        if (!hasReporterRole) {
           return res.status(422).json({ 
             message: "المستخدم المحدد ليس مراسلاً" 
           });
