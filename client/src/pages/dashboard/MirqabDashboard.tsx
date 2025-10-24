@@ -230,7 +230,7 @@ export default function MirqabDashboard() {
                           <TableHead>الحالة</TableHead>
                           <TableHead>تاريخ النشر</TableHead>
                           <TableHead>المشاهدات</TableHead>
-                          <TableHead className="text-left">الإجراءات</TableHead>
+                          <TableHead>الإجراءات</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -251,8 +251,8 @@ export default function MirqabDashboard() {
                             <TableCell data-testid={`text-views-${entry.id}`}>
                               {entry.views || 0}
                             </TableCell>
-                            <TableCell className="text-left">
-                              <div className="flex items-center gap-2">
+                            <TableCell>
+                              <div className="flex items-center gap-2 justify-end">
                                 <Link href={`/mirqab/${activeTab === 'sabq_index' ? 'sabq-index' : activeTab}/${entry.id}`}>
                                   <Button variant="ghost" size="sm" data-testid={`button-view-${entry.id}`}>
                                     <Eye className="w-4 h-4" />

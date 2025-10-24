@@ -386,7 +386,7 @@ export default function ThemeManager() {
                     <TableHead>الأولوية</TableHead>
                     <TableHead>النوع</TableHead>
                     <TableHead>النطاق</TableHead>
-                    <TableHead className="text-left">الإجراءات</TableHead>
+                    <TableHead>الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -423,7 +423,7 @@ export default function ThemeManager() {
                           {theme.applyTo?.join(", ") || "الكل"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-start">
+                          <div className="flex gap-2 justify-end">
                             <Button
                               size="sm"
                               variant="ghost"
