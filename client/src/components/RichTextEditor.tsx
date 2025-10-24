@@ -180,9 +180,13 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
 
   const handleAddYoutube = () => {
     if (youtubeUrl && editor) {
-      editor.chain().focus().setVideoEmbed({ url: youtubeUrl }).run();
-      setYoutubeUrl("");
-      setYoutubeDialogOpen(false);
+      const result = editor.chain().focus().setVideoEmbed({ url: youtubeUrl }).run();
+      if (result) {
+        setYoutubeUrl("");
+        setYoutubeDialogOpen(false);
+      } else {
+        alert("رابط الفيديو غير صحيح. يرجى التأكد من أن الرابط من YouTube أو Dailymotion.");
+      }
     }
   };
 
