@@ -102,7 +102,9 @@ export default function ArticleEditor() {
       setExcerpt(article.excerpt || "");
       setCategoryId(article.categoryId || "");
       setReporterId(article.reporterId || null);
-      setImageUrl(article.imageUrl || "");
+      // Validate imageUrl - only set if it's a valid URL or empty
+      const validImageUrl = article.imageUrl && article.imageUrl.match(/^https?:\/\/.+/) ? article.imageUrl : "";
+      setImageUrl(validImageUrl);
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
@@ -234,6 +236,16 @@ export default function ArticleEditor() {
       }
 
       console.log('[Save Article] Article data prepared:', articleData);
+      console.log('[Save Article] Detailed SEO data:', {
+        metaTitle: articleData.seo.metaTitle,
+        metaTitleLength: articleData.seo.metaTitle?.length,
+        metaDescription: articleData.seo.metaDescription,
+        metaDescLength: articleData.seo.metaDescription?.length,
+        imageUrl: articleData.imageUrl,
+        imageUrlType: typeof articleData.imageUrl,
+        reporterId: articleData.reporterId,
+        reporterIdType: typeof articleData.reporterId,
+      });
 
       if (isNewArticle) {
         console.log('[Save Article] Creating NEW article via POST /api/admin/articles');
