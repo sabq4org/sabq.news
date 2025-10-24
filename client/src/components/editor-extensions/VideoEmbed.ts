@@ -12,7 +12,9 @@ declare module '@tiptap/core' {
   }
 }
 
-const getVideoEmbedUrl = (url: string): string | null => {
+const getVideoEmbedUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  
   // YouTube
   const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
   const youtubeMatch = url.match(youtubeRegex);
@@ -47,9 +49,27 @@ export const VideoEmbed = Node.create<VideoEmbedOptions>({
     return {
       url: {
         default: null,
+        parseHTML: (element) => element.getAttribute('data-url'),
+        renderHTML: (attributes) => {
+          if (!attributes.url) {
+            return {};
+          }
+          return {
+            'data-url': attributes.url,
+          };
+        },
       },
       embedUrl: {
         default: null,
+        parseHTML: (element) => element.getAttribute('data-embed-url'),
+        renderHTML: (attributes) => {
+          if (!attributes.embedUrl) {
+            return {};
+          }
+          return {
+            'data-embed-url': attributes.embedUrl,
+          };
+        },
       },
     };
   },
@@ -62,8 +82,9 @@ export const VideoEmbed = Node.create<VideoEmbedOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    const embedUrl = HTMLAttributes.embedUrl || getVideoEmbedUrl(HTMLAttributes.url);
+  renderHTML({ node, HTMLAttributes }) {
+    const url = node.attrs.url;
+    const embedUrl = node.attrs.embedUrl || getVideoEmbedUrl(url);
     
     if (!embedUrl) {
       return ['div', { class: 'my-4 p-4 border rounded-md text-muted-foreground' }, 'رابط الفيديو غير صحيح'];
@@ -71,7 +92,7 @@ export const VideoEmbed = Node.create<VideoEmbedOptions>({
 
     return [
       'div',
-      mergeAttributes(this.options.HTMLAttributes, {
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-video-embed': '',
         class: 'video-embed-wrapper my-4',
       }),

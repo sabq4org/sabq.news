@@ -123,11 +123,19 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);
+      
+      // Reload Twitter widgets after setting content (for saved articles)
+      setTimeout(() => {
+        if (typeof (window as any).twttr !== 'undefined') {
+          (window as any).twttr.widgets.load();
+        }
+      }, 500);
     }
   }, [content, editor]);
 
+  // Load Twitter widgets script once
   useEffect(() => {
-    if (editor && !document.getElementById('twitter-widgets-script')) {
+    if (!document.getElementById('twitter-widgets-script')) {
       const script = document.createElement('script');
       script.id = 'twitter-widgets-script';
       script.src = 'https://platform.twitter.com/widgets.js';
@@ -135,16 +143,7 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
       script.charset = 'utf-8';
       document.body.appendChild(script);
     }
-  }, [editor]);
-
-  // Reload Twitter widgets when content changes
-  useEffect(() => {
-    if (editor && content && typeof (window as any).twttr !== 'undefined') {
-      setTimeout(() => {
-        (window as any).twttr.widgets.load();
-      }, 100);
-    }
-  }, [editor, content]);
+  }, []);
 
   const handleSetLink = () => {
     if (linkUrl && editor) {

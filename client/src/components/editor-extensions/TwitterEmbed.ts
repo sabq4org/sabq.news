@@ -29,6 +29,15 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
     return {
       url: {
         default: null,
+        parseHTML: (element) => element.getAttribute('data-url'),
+        renderHTML: (attributes) => {
+          if (!attributes.url) {
+            return {};
+          }
+          return {
+            'data-url': attributes.url,
+          };
+        },
       },
     };
   },
@@ -41,14 +50,13 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    const url = HTMLAttributes.url || '';
+  renderHTML({ node, HTMLAttributes }) {
+    const url = node.attrs.url || '';
     
     return [
       'div',
-      mergeAttributes(this.options.HTMLAttributes, {
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-twitter-embed': '',
-        'data-url': url,
         class: 'twitter-embed-wrapper my-6 border rounded-lg p-4 bg-muted/30',
       }),
       [
