@@ -38,7 +38,7 @@ export function AudioPlayer({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!propDuration); // Only loading if no duration provided
   const [hasTrackedListen, setHasTrackedListen] = useState(false);
 
   // Format time in MM:SS
