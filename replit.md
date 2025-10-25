@@ -76,17 +76,21 @@ Key features include:
     - Top 5 writing categories with article counts and percentage shares.
     - 90-day activity timeline chart (views and likes).
     - Clickable reporter links from article detail pages for verified staff members.
-- **Audio Newsletters (النشرات الصوتية):** AI-powered text-to-speech news briefings system featuring:
+- **Audio Newsletters (النشرات الصوتية):** Production-ready AI-powered text-to-speech news briefings system featuring:
     - **ElevenLabs Integration:** Professional Arabic TTS with customizable voice settings (stability, similarity, speaker boost)
+    - **Background Job Queue:** Asynchronous TTS generation using in-memory EventEmitter queue to prevent HTTP timeouts
+    - **Job Status Polling:** Real-time frontend polling (3s intervals) with user notifications on completion/failure
     - **Automated Generation:** Weekly newsletters with AI-curated article selection and script building
     - **Object Storage:** Audio files stored in cloud storage with public URL generation
     - **RSS/Podcast Feed:** Full podcast feed at `/api/audio-newsletters/feed.xml` with iTunes tags
-    - **Analytics Tracking:** Listen duration, completion rates, unique listeners, and listen-by-day metrics
+    - **Analytics Tracking:** Atomic SQL operations for listen duration, completion rates, unique listeners (prevents race conditions)
     - **Anonymous Support:** Session-based tracking for non-authenticated users via nanoid
-    - **RBAC Permissions:** Granular permissions (create, generate, update, delete, publish, view_analytics)
-    - **Database Architecture:** 3 tables (audio_newsletters, audio_newsletter_articles, audio_newsletter_listens)
-    - **API Endpoints:** 12 routes covering CRUD operations, TTS generation, publishing, and analytics
+    - **RBAC Permissions:** Granular permissions (view, create, generate, edit, delete, publish, manage_all) enforced on all admin endpoints
+    - **Database Architecture:** 3 tables with composite indexes for analytics optimization (audio_newsletters, audio_newsletter_articles, audio_newsletter_listens)
+    - **API Endpoints:** 13 routes covering CRUD, job queue, TTS generation, publishing, and analytics
     - **Status Management:** Draft/processing/completed/failed/published workflow with error tracking
+    - **Security:** ElevenLabs API key validation on service initialization
+    - **Professional Components:** AudioPlayer with play/pause, speed control (0.5x-2x), skip ±10s, volume, progress tracking
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Al-Mirqab forecasting tables (mirqab_entries, sabq_index_data, next_story_data, radar_data, algorithm_write_data). AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
