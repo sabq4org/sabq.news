@@ -27,7 +27,17 @@ Key features include:
     - **API Security:** All RBAC endpoints follow `/api/admin/*` pattern with requirePermission middleware
     - **Password Security:** bcrypt hashing with 10 salt rounds, no credential logging, one-time password display
 - **Content Management:** Comprehensive article, news, user, and category lifecycle management with advanced filtering, including a comment moderation system.
-- **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp. Includes reporter assignment functionality with searchable combobox (avatar, name, email display), validation to ensure assigned user has reporter role, and smart query handling to always show pre-assigned reporters regardless of pagination. **Data Validation:** Automatic sanitization of legacy data - imageUrl validated against http/https pattern, reporterId validated against UUID format, SEO metaTitle/metaDescription auto-truncated to 70/160 characters when using title/excerpt as fallbacks.
+- **Advanced Article Editor:** Professional interface with subtitle support, news type classification, SEO management, AI-powered title/summary generation, and intuitive tag-based keyword input. Includes an option to republish with a new timestamp. Includes reporter assignment functionality with searchable combobox (avatar, name, email display), validation to ensure assigned user has reporter role, and smart query handling to always show pre-assigned reporters regardless of pagination. **Data Validation:** Automatic sanitization of legacy data - imageUrl validated against http/https pattern, reporterId validated against nanoid format, SEO metaTitle/metaDescription auto-truncated to 70/160 characters (both from user input and fallback values) to prevent validation errors.
+- **Publishing Templates System:** Comprehensive template library for flexible content presentation with manifest-based architecture:
+    - **21 Production Templates:** 14 full-featured templates + 7 skeleton placeholders covering all major content types
+    - **Template Categories:** Hero (split, overlay), News Lists (basic, summary), Grids (two-column, masonry), Tickers (inline, marquee), Timelines (vertical, horizontal), Spotlights (card, media), Media (video reel, podcast row), Live Stream, Infographics (stat bar), Tags (chips), Newsletter blocks, Native stories, Opinion columns, Mosaic layouts
+    - **RTL-First Design:** All templates support Arabic right-to-left layout with proper text flow
+    - **Animation System:** Framer Motion integration with performance-optimized animations (≤250ms duration)
+    - **Template Registry:** Centralized component registry with dynamic loading via template IDs
+    - **Accessibility:** ARIA roles, keyboard navigation, data-testid attributes for testing
+    - **Responsive Design:** Mobile-first approach with breakpoints for tablet and desktop
+    - **Demo Data System:** Fixtures for articles and collections to showcase template capabilities
+    - **Future Ready:** Skeleton templates ready for quick implementation of additional features
 - **Muqtarib (مُقترب) Section:** Thematic system for presenting articles from different perspectives.
 - **Al-Mirqab (المرقاب) - Future Forecasting System:** AI-powered predictive analytics platform at `/mirqab` featuring four distinct content types:
     - **Sabq Index (مؤشر سبق):** Weekly numerical indicators tracking key metrics with trend analysis, historical comparisons, and AI-generated insights
