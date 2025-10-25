@@ -65,6 +65,9 @@ import {
   mirqabNextStory,
   mirqabRadarAlerts,
   mirqabAlgorithmArticles,
+  audioNewsletters,
+  audioNewsletterArticles,
+  audioNewsletterListens,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -106,8 +109,11 @@ import {
   updateMirqabRadarAlertSchema,
   insertMirqabAlgorithmArticleSchema,
   insertSmartBlockSchema,
-  updateSmartBlockSchema,
   updateMirqabAlgorithmArticleSchema,
+  insertAudioNewsletterSchema,
+  updateAudioNewsletterSchema,
+  insertAudioNewsletterArticleSchema,
+  insertAudioNewsletterListenSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -9371,6 +9377,390 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("❌ [Smart Block] Error querying articles:", error);
       res.status(500).json({ message: "فشل في البحث عن المقالات" });
+    }
+  });
+
+  // ============================================================
+  // AUDIO NEWSLETTERS ROUTES - النشرات الصوتية
+  // ============================================================
+
+  // GET /api/audio-newsletters - List published newsletters (public)
+  app.get("/api/audio-newsletters", async (req: any, res) => {
+    try {
+      const { status = 'published', limit = 20, offset = 0 } = req.query;
+
+      const newsletters = await storage.getAllAudioNewsletters({
+        status: status as string,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      });
+
+      res.json({ newsletters, total: newsletters.length });
+    } catch (error: any) {
+      console.error("Error fetching audio newsletters:", error);
+      res.status(500).json({ message: "فشل في جلب النشرات الصوتية" });
+    }
+  });
+
+  // GET /api/audio-newsletters/feed.xml - RSS/Podcast feed (public)
+  app.get("/api/audio-newsletters/feed.xml", async (req: any, res) => {
+    try {
+      const newsletters = await storage.getAllAudioNewsletters({
+        status: 'published',
+        limit: 50,
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      const rssItems = newsletters
+        .filter(n => n.audioUrl && n.publishedAt)
+        .map(newsletter => {
+          const pubDate = newsletter.publishedAt ? new Date(newsletter.publishedAt).toUTCString() : new Date().toUTCString();
+          const duration = newsletter.duration || 0;
+          const fileSize = newsletter.fileSize || 0;
+
+          return `
+    <item>
+      <title><![CDATA[${newsletter.title}]]></title>
+      <description><![CDATA[${newsletter.description || ''}]]></description>
+      <link>${baseUrl}/audio-newsletters/${newsletter.slug}</link>
+      <guid isPermaLink="false">${newsletter.id}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <enclosure url="${newsletter.audioUrl}" length="${fileSize}" type="audio/mpeg"/>
+      <itunes:duration>${duration}</itunes:duration>
+      <itunes:author>${newsletter.author || 'سبق الذكية'}</itunes:author>
+      <itunes:explicit>no</itunes:explicit>
+      ${newsletter.coverImageUrl ? `<itunes:image href="${newsletter.coverImageUrl}"/>` : ''}
+    </item>`;
+        }).join('\n');
+
+      const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>سبق الذكية - النشرات الصوتية</title>
+    <link>${baseUrl}/audio-newsletters</link>
+    <atom:link href="${baseUrl}/api/audio-newsletters/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>النشرات الإخبارية الصوتية من سبق الذكية</description>
+    <language>ar</language>
+    <copyright>© ${new Date().getFullYear()} سبق الذكية</copyright>
+    <itunes:author>سبق الذكية</itunes:author>
+    <itunes:summary>النشرات الإخبارية الصوتية من سبق الذكية</itunes:summary>
+    <itunes:category text="News"/>
+    <itunes:explicit>no</itunes:explicit>
+    ${rssItems}
+  </channel>
+</rss>`;
+
+      res.set('Content-Type', 'application/xml; charset=utf-8');
+      res.send(rssXml);
+    } catch (error: any) {
+      console.error("Error generating RSS feed:", error);
+      res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><error>Failed to generate feed</error>');
+    }
+  });
+
+  // GET /api/audio-newsletters/:slug - Get newsletter by slug (public)
+  app.get("/api/audio-newsletters/:slug", async (req: any, res) => {
+    try {
+      const newsletter = await storage.getAudioNewsletterBySlug(req.params.slug);
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      if (newsletter.status !== 'published' && !req.user) {
+        return res.status(403).json({ message: "هذه النشرة غير منشورة" });
+      }
+
+      res.json(newsletter);
+    } catch (error: any) {
+      console.error("Error fetching audio newsletter:", error);
+      res.status(500).json({ message: "فشل في جلب النشرة الصوتية" });
+    }
+  });
+
+  // POST /api/audio-newsletters - Create new newsletter (admin only)
+  app.post("/api/audio-newsletters", requireAuth, requirePermission('audio_newsletters.create'), async (req: any, res) => {
+    try {
+      const validatedData = insertAudioNewsletterSchema.parse(req.body);
+
+      // Auto-generate slug from title if not provided
+      let slug = validatedData.slug;
+      if (!slug && validatedData.title) {
+        slug = validatedData.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\u0600-\u06FF\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 100);
+      }
+
+      const newsletter = await storage.createAudioNewsletter({
+        ...validatedData,
+        slug: slug || `newsletter-${Date.now()}`,
+        generatedBy: req.user.id,
+      });
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'create_audio_newsletter',
+        entityType: 'audio_newsletter',
+        entityId: newsletter.id,
+        newValue: { title: newsletter.title, slug: newsletter.slug }
+      });
+
+      res.json(newsletter);
+    } catch (error: any) {
+      console.error("Error creating audio newsletter:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في إنشاء النشرة الصوتية" });
+    }
+  });
+
+  // POST /api/audio-newsletters/:id/generate - Generate TTS audio (admin only)
+  app.post("/api/audio-newsletters/:id/generate", requireAuth, requirePermission('audio_newsletters.generate'), async (req: any, res) => {
+    try {
+      const newsletter = await storage.getAudioNewsletterById(req.params.id);
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      // Update status to processing
+      await storage.updateAudioNewsletter(newsletter.id, {
+        generationStatus: 'processing',
+        generationError: null,
+      });
+
+      // Start generation in background (don't await)
+      (async () => {
+        try {
+          const { getElevenLabsService } = await import("./services/elevenlabs");
+          const { ObjectStorageService } = await import("./objectStorage");
+
+          const elevenLabs = getElevenLabsService();
+          const objectStorage = new ObjectStorageService();
+
+          // Build script from articles
+          const articlesData = newsletter.articles?.map(na => ({
+            title: na.article?.title || '',
+            excerpt: na.article?.excerpt,
+            aiSummary: na.article?.aiSummary,
+          })) || [];
+
+          const script = elevenLabs.buildNewsletterScript({
+            title: newsletter.title,
+            description: newsletter.description || undefined,
+            articles: articlesData,
+          });
+
+          console.log(`[Audio Newsletter] Generating TTS for newsletter ${newsletter.id}`);
+          console.log(`[Audio Newsletter] Script length: ${script.length} characters`);
+
+          // Generate audio
+          const audioBuffer = await elevenLabs.textToSpeech({
+            text: script,
+            voiceId: newsletter.voiceId || undefined,
+            model: newsletter.voiceModel || undefined,
+            voiceSettings: newsletter.voiceSettings || undefined,
+          });
+
+          // Upload to object storage
+          const audioPath = `audio-newsletters/${newsletter.id}.mp3`;
+          const uploadedFile = await objectStorage.uploadFile(
+            audioPath,
+            audioBuffer,
+            'audio/mpeg'
+          );
+
+          // Update newsletter with audio details
+          await storage.updateAudioNewsletter(newsletter.id, {
+            audioUrl: uploadedFile.url,
+            fileSize: audioBuffer.length,
+            duration: Math.floor(audioBuffer.length / 16000), // Rough estimate
+            generationStatus: 'completed',
+            generationError: null,
+          });
+
+          console.log(`[Audio Newsletter] Successfully generated audio for newsletter ${newsletter.id}`);
+        } catch (error: any) {
+          console.error(`[Audio Newsletter] Error generating audio:`, error);
+          await storage.updateAudioNewsletter(newsletter.id, {
+            generationStatus: 'failed',
+            generationError: error.message || 'Unknown error',
+          });
+        }
+      })();
+
+      res.json({ message: "بدأت عملية التوليد", status: 'processing' });
+    } catch (error: any) {
+      console.error("Error initiating audio generation:", error);
+      res.status(500).json({ message: "فشل في بدء توليد الصوت" });
+    }
+  });
+
+  // PUT /api/audio-newsletters/:id - Update newsletter (admin only)
+  app.put("/api/audio-newsletters/:id", requireAuth, requirePermission('audio_newsletters.update'), async (req: any, res) => {
+    try {
+      const validatedData = updateAudioNewsletterSchema.parse(req.body);
+
+      const existing = await storage.getAudioNewsletterById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      const updated = await storage.updateAudioNewsletter(req.params.id, validatedData);
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'update_audio_newsletter',
+        entityType: 'audio_newsletter',
+        entityId: req.params.id,
+        oldValue: { title: existing.title, status: existing.status },
+        newValue: { title: updated.title, status: updated.status }
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating audio newsletter:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في تحديث النشرة الصوتية" });
+    }
+  });
+
+  // DELETE /api/audio-newsletters/:id - Delete newsletter (admin only)
+  app.delete("/api/audio-newsletters/:id", requireAuth, requirePermission('audio_newsletters.delete'), async (req: any, res) => {
+    try {
+      const existing = await storage.getAudioNewsletterById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      await storage.deleteAudioNewsletter(req.params.id);
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'delete_audio_newsletter',
+        entityType: 'audio_newsletter',
+        entityId: req.params.id,
+        oldValue: { title: existing.title }
+      });
+
+      res.json({ success: true, message: "تم حذف النشرة الصوتية بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting audio newsletter:", error);
+      res.status(500).json({ message: "فشل في حذف النشرة الصوتية" });
+    }
+  });
+
+  // POST /api/audio-newsletters/:id/articles - Add articles to newsletter (admin only)
+  app.post("/api/audio-newsletters/:id/articles", requireAuth, requirePermission('audio_newsletters.update'), async (req: any, res) => {
+    try {
+      const { articleIds } = req.body;
+
+      if (!Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: "يجب تحديد مقالات" });
+      }
+
+      const newsletter = await storage.getAudioNewsletterById(req.params.id);
+      if (!newsletter) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      await storage.addArticlesToNewsletter(req.params.id, articleIds);
+
+      res.json({ success: true, message: "تمت إضافة المقالات بنجاح" });
+    } catch (error: any) {
+      console.error("Error adding articles to newsletter:", error);
+      res.status(500).json({ message: "فشل في إضافة المقالات" });
+    }
+  });
+
+  // DELETE /api/audio-newsletters/:id/articles/:articleId - Remove article from newsletter (admin only)
+  app.delete("/api/audio-newsletters/:id/articles/:articleId", requireAuth, requirePermission('audio_newsletters.update'), async (req: any, res) => {
+    try {
+      await storage.removeArticleFromNewsletter(req.params.id, req.params.articleId);
+
+      res.json({ success: true, message: "تمت إزالة المقال بنجاح" });
+    } catch (error: any) {
+      console.error("Error removing article from newsletter:", error);
+      res.status(500).json({ message: "فشل في إزالة المقال" });
+    }
+  });
+
+  // POST /api/audio-newsletters/:id/publish - Publish newsletter (admin only)
+  app.post("/api/audio-newsletters/:id/publish", requireAuth, requirePermission('audio_newsletters.publish'), async (req: any, res) => {
+    try {
+      const newsletter = await storage.getAudioNewsletterById(req.params.id);
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
+      }
+
+      if (!newsletter.audioUrl) {
+        return res.status(400).json({ message: "يجب توليد الصوت أولاً" });
+      }
+
+      const updated = await storage.updateAudioNewsletter(req.params.id, {
+        status: 'published',
+        publishedAt: new Date(),
+      });
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'publish_audio_newsletter',
+        entityType: 'audio_newsletter',
+        entityId: req.params.id,
+        newValue: { status: 'published' }
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error publishing audio newsletter:", error);
+      res.status(500).json({ message: "فشل في نشر النشرة الصوتية" });
+    }
+  });
+
+  // POST /api/audio-newsletters/:id/listen - Track listening event (public/authenticated)
+  app.post("/api/audio-newsletters/:id/listen", async (req: any, res) => {
+    try {
+      const validatedData = insertAudioNewsletterListenSchema.parse(req.body);
+
+      const { nanoid } = await import('nanoid');
+
+      const listenData = {
+        ...validatedData,
+        newsletterId: req.params.id,
+        userId: req.user?.id || null,
+        sessionId: validatedData.sessionId || nanoid(),
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('user-agent'),
+      };
+
+      const listen = await storage.trackListen(listenData as any);
+
+      res.json(listen);
+    } catch (error: any) {
+      console.error("Error tracking listen:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في تسجيل الاستماع" });
+    }
+  });
+
+  // GET /api/audio-newsletters/:id/analytics - Get analytics (admin only)
+  app.get("/api/audio-newsletters/:id/analytics", requireAuth, requirePermission('audio_newsletters.view_analytics'), async (req: any, res) => {
+    try {
+      const analytics = await storage.getNewsletterAnalytics(req.params.id);
+
+      res.json(analytics);
+    } catch (error: any) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "فشل في جلب الإحصائيات" });
     }
   });
 

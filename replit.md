@@ -76,6 +76,17 @@ Key features include:
     - Top 5 writing categories with article counts and percentage shares.
     - 90-day activity timeline chart (views and likes).
     - Clickable reporter links from article detail pages for verified staff members.
+- **Audio Newsletters (النشرات الصوتية):** AI-powered text-to-speech news briefings system featuring:
+    - **ElevenLabs Integration:** Professional Arabic TTS with customizable voice settings (stability, similarity, speaker boost)
+    - **Automated Generation:** Weekly newsletters with AI-curated article selection and script building
+    - **Object Storage:** Audio files stored in cloud storage with public URL generation
+    - **RSS/Podcast Feed:** Full podcast feed at `/api/audio-newsletters/feed.xml` with iTunes tags
+    - **Analytics Tracking:** Listen duration, completion rates, unique listeners, and listen-by-day metrics
+    - **Anonymous Support:** Session-based tracking for non-authenticated users via nanoid
+    - **RBAC Permissions:** Granular permissions (create, generate, update, delete, publish, view_analytics)
+    - **Database Architecture:** 3 tables (audio_newsletters, audio_newsletter_articles, audio_newsletter_listens)
+    - **API Endpoints:** 12 routes covering CRUD operations, TTS generation, publishing, and analytics
+    - **Status Management:** Draft/processing/completed/failed/published workflow with error tracking
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Al-Mirqab forecasting tables (mirqab_entries, sabq_index_data, next_story_data, radar_data, algorithm_write_data). AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and planned sentiment analysis. A scope-aware theme management system allows for dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
@@ -92,6 +103,7 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **AI & Machine Learning**
 - OpenAI API (GPT-5)
+- ElevenLabs API (Text-to-Speech for Arabic)
 
 **File Storage**
 - `@google-cloud/storage` (via Replit Object Storage)

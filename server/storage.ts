@@ -43,6 +43,9 @@ import {
   mirqabRadarAlerts,
   mirqabAlgorithmArticles,
   smartBlocks,
+  audioNewsletters,
+  audioNewsletterArticles,
+  audioNewsletterListens,
   staff,
   roles,
   permissions,
@@ -140,6 +143,14 @@ import {
   type SmartBlock,
   type InsertSmartBlock,
   type UpdateSmartBlock,
+  type AudioNewsletter,
+  type InsertAudioNewsletter,
+  type UpdateAudioNewsletter,
+  type AudioNewsletterArticle,
+  type InsertAudioNewsletterArticle,
+  type AudioNewsletterListen,
+  type InsertAudioNewsletterListen,
+  type AudioNewsletterWithDetails,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -659,6 +670,32 @@ export interface IStorage {
     dateFrom?: string;
     dateTo?: string;
   }): Promise<Array<any>>;
+
+  // ============================================
+  // Audio Newsletters Operations - النشرات الصوتية
+  // ============================================
+  
+  // Audio Newsletter CRUD operations
+  createAudioNewsletter(data: InsertAudioNewsletter): Promise<AudioNewsletter>;
+  getAudioNewsletterById(id: string): Promise<AudioNewsletterWithDetails | null>;
+  getAudioNewsletterBySlug(slug: string): Promise<AudioNewsletterWithDetails | null>;
+  getAllAudioNewsletters(filters?: { status?: string; limit?: number; offset?: number }): Promise<AudioNewsletterWithDetails[]>;
+  updateAudioNewsletter(id: string, data: UpdateAudioNewsletter): Promise<AudioNewsletter>;
+  deleteAudioNewsletter(id: string): Promise<void>;
+
+  // Articles in newsletter
+  addArticlesToNewsletter(newsletterId: string, articleIds: string[]): Promise<void>;
+  removeArticleFromNewsletter(newsletterId: string, articleId: string): Promise<void>;
+  getNewsletterArticles(newsletterId: string): Promise<(AudioNewsletterArticle & { article?: Article })[]>;
+
+  // Listen tracking
+  trackListen(data: InsertAudioNewsletterListen): Promise<AudioNewsletterListen>;
+  getNewsletterAnalytics(newsletterId: string): Promise<{
+    totalListens: number;
+    uniqueListeners: number;
+    averageCompletionRate: number;
+    listensByDay: { date: string; count: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5733,6 +5770,266 @@ export class DatabaseStorage implements IStorage {
     });
 
     return results;
+  }
+
+  // ============================================
+  // Audio Newsletters Operations - النشرات الصوتية
+  // ============================================
+
+  async createAudioNewsletter(data: InsertAudioNewsletter): Promise<AudioNewsletter> {
+    const [newsletter] = await db
+      .insert(audioNewsletters)
+      .values(data as any)
+      .returning();
+    return newsletter;
+  }
+
+  async getAudioNewsletterById(id: string): Promise<AudioNewsletterWithDetails | null> {
+    const [newsletter] = await db
+      .select()
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.id, id));
+
+    if (!newsletter) return null;
+
+    // Get articles with details
+    const articlesList = await db
+      .select()
+      .from(audioNewsletterArticles)
+      .leftJoin(articles, eq(audioNewsletterArticles.articleId, articles.id))
+      .where(eq(audioNewsletterArticles.newsletterId, id))
+      .orderBy(asc(audioNewsletterArticles.order));
+
+    const articlesWithDetails = articlesList.map((row) => ({
+      ...row.audio_newsletter_articles,
+      article: row.articles || undefined,
+    }));
+
+    // Get listen count
+    const [listensCount] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, id));
+
+    return {
+      ...newsletter,
+      articles: articlesWithDetails,
+      _count: {
+        articles: articlesWithDetails.length,
+        listens: listensCount?.count || 0,
+      },
+    };
+  }
+
+  async getAudioNewsletterBySlug(slug: string): Promise<AudioNewsletterWithDetails | null> {
+    const [newsletter] = await db
+      .select()
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.slug, slug));
+
+    if (!newsletter) return null;
+
+    return this.getAudioNewsletterById(newsletter.id);
+  }
+
+  async getAllAudioNewsletters(filters?: { 
+    status?: string; 
+    limit?: number; 
+    offset?: number 
+  }): Promise<AudioNewsletterWithDetails[]> {
+    let query = db
+      .select()
+      .from(audioNewsletters)
+      .orderBy(desc(audioNewsletters.publishedAt), desc(audioNewsletters.createdAt));
+
+    if (filters?.status) {
+      query = query.where(eq(audioNewsletters.status, filters.status)) as any;
+    }
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as any;
+    }
+
+    if (filters?.offset) {
+      query = query.offset(filters.offset) as any;
+    }
+
+    const newsletters = await query;
+
+    // Fetch details for each newsletter
+    const newslettersWithDetails = await Promise.all(
+      newsletters.map(async (newsletter) => {
+        const details = await this.getAudioNewsletterById(newsletter.id);
+        return details!;
+      })
+    );
+
+    return newslettersWithDetails;
+  }
+
+  async updateAudioNewsletter(id: string, data: UpdateAudioNewsletter): Promise<AudioNewsletter> {
+    const [updated] = await db
+      .update(audioNewsletters)
+      .set({ ...data, updatedAt: new Date() } as any)
+      .where(eq(audioNewsletters.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAudioNewsletter(id: string): Promise<void> {
+    await db.delete(audioNewsletters).where(eq(audioNewsletters.id, id));
+  }
+
+  async addArticlesToNewsletter(newsletterId: string, articleIds: string[]): Promise<void> {
+    // Get current max order
+    const [maxOrder] = await db
+      .select({ max: sql<number>`cast(coalesce(max(${audioNewsletterArticles.order}), 0) as integer)` })
+      .from(audioNewsletterArticles)
+      .where(eq(audioNewsletterArticles.newsletterId, newsletterId));
+
+    let currentOrder = (maxOrder?.max || 0) + 1;
+
+    // Insert articles in order
+    for (const articleId of articleIds) {
+      await db
+        .insert(audioNewsletterArticles)
+        .values({
+          newsletterId,
+          articleId,
+          order: currentOrder++,
+        })
+        .onConflictDoNothing();
+    }
+  }
+
+  async removeArticleFromNewsletter(newsletterId: string, articleId: string): Promise<void> {
+    await db
+      .delete(audioNewsletterArticles)
+      .where(
+        and(
+          eq(audioNewsletterArticles.newsletterId, newsletterId),
+          eq(audioNewsletterArticles.articleId, articleId)
+        )
+      );
+  }
+
+  async getNewsletterArticles(newsletterId: string): Promise<(AudioNewsletterArticle & { article?: Article })[]> {
+    const results = await db
+      .select()
+      .from(audioNewsletterArticles)
+      .leftJoin(articles, eq(audioNewsletterArticles.articleId, articles.id))
+      .where(eq(audioNewsletterArticles.newsletterId, newsletterId))
+      .orderBy(asc(audioNewsletterArticles.order));
+
+    return results.map((row) => ({
+      ...row.audio_newsletter_articles,
+      article: row.articles || undefined,
+    }));
+  }
+
+  async trackListen(data: InsertAudioNewsletterListen): Promise<AudioNewsletterListen> {
+    const [listen] = await db
+      .insert(audioNewsletterListens)
+      .values(data as any)
+      .returning();
+
+    // Update newsletter analytics
+    const newsletterId = data.newsletterId;
+
+    // Get unique listeners (count unique userIds + sessionIds)
+    const [uniqueListeners] = await db
+      .select({
+        count: sql<number>`cast(
+          count(distinct coalesce(${audioNewsletterListens.userId}, ${audioNewsletterListens.sessionId}))
+          as integer
+        )`,
+      })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Get total listens
+    const [totalListens] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Calculate average completion rate
+    const [avgCompletion] = await db
+      .select({
+        avg: sql<number>`cast(coalesce(avg(${audioNewsletterListens.completionPercentage}), 0) as real)`,
+      })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Update newsletter with new analytics
+    await db
+      .update(audioNewsletters)
+      .set({
+        totalListens: totalListens?.count || 0,
+        uniqueListeners: uniqueListeners?.count || 0,
+        averageCompletionRate: avgCompletion?.avg || 0,
+      })
+      .where(eq(audioNewsletters.id, newsletterId));
+
+    return listen;
+  }
+
+  async getNewsletterAnalytics(newsletterId: string): Promise<{
+    totalListens: number;
+    uniqueListeners: number;
+    averageCompletionRate: number;
+    listensByDay: { date: string; count: number }[];
+  }> {
+    // Get unique listeners
+    const [uniqueListeners] = await db
+      .select({
+        count: sql<number>`cast(
+          count(distinct coalesce(${audioNewsletterListens.userId}, ${audioNewsletterListens.sessionId}))
+          as integer
+        )`,
+      })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Get total listens
+    const [totalListens] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Calculate average completion rate
+    const [avgCompletion] = await db
+      .select({
+        avg: sql<number>`cast(coalesce(avg(${audioNewsletterListens.completionPercentage}), 0) as real)`,
+      })
+      .from(audioNewsletterListens)
+      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
+
+    // Get listens by day (last 30 days)
+    const listensByDay = await db
+      .select({
+        date: sql<string>`date(${audioNewsletterListens.startedAt})`,
+        count: sql<number>`cast(count(*) as integer)`,
+      })
+      .from(audioNewsletterListens)
+      .where(
+        and(
+          eq(audioNewsletterListens.newsletterId, newsletterId),
+          gte(audioNewsletterListens.startedAt, sql`now() - interval '30 days'`)
+        )
+      )
+      .groupBy(sql`date(${audioNewsletterListens.startedAt})`)
+      .orderBy(sql`date(${audioNewsletterListens.startedAt})`);
+
+    return {
+      totalListens: totalListens?.count || 0,
+      uniqueListeners: uniqueListeners?.count || 0,
+      averageCompletionRate: avgCompletion?.avg || 0,
+      listensByDay: listensByDay.map((row) => ({
+        date: row.date,
+        count: row.count,
+      })),
+    };
   }
 }
 
