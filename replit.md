@@ -107,3 +107,17 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **Development Tools**
 - `TypeScript`
+
+## Mobile App Support
+
+**Capacitor iOS/Android Integration**
+- Native mobile app support via Capacitor 7.4.4
+- iOS platform configured with Xcode project (ios/)
+- Android platform configured with Gradle project (android/)
+- 104 auto-generated app icons and splash screens (adaptive icons, multiple densities)
+- Mobile-optimized CSS with safe area support and touch target optimization
+- RTL support maintained across all platforms
+- Capacitor plugins: StatusBar, SplashScreen, Keyboard, App lifecycle
+- Build output: dist/public/ synced to native platforms
+- App ID: com.sabq.smart
+- **Ready for App Store/Google Play submission** (after final asset design)
