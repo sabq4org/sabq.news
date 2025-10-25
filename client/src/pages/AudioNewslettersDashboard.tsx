@@ -91,14 +91,43 @@ export default function AudioNewslettersDashboard() {
 
   const generateAudioMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest(`/api/audio-newsletters/${id}/generate`, { method: "POST" });
+      const response = await apiRequest(`/api/audio-newsletters/${id}/generate`, { method: "POST" });
+      return response as { jobId: string; status: string; message: string };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/admin"] });
+    onSuccess: (data) => {
       toast({
         title: "تم بدء التوليد",
-        description: "جاري توليد الملف الصوتي...",
+        description: "جاري توليد الملف الصوتي في الخلفية...",
       });
+
+      // Poll job status every 3 seconds
+      const pollInterval = setInterval(async () => {
+        try {
+          const job = await fetch(`/api/audio-newsletters/jobs/${data.jobId}`, {
+            credentials: 'include',
+          }).then(r => r.json());
+          
+          if (job.status === 'completed') {
+            clearInterval(pollInterval);
+            queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/admin"] });
+            toast({
+              title: "✅ تم توليد الصوت بنجاح",
+              description: "تم توليد الملف الصوتي بنجاح",
+            });
+          } else if (job.status === 'failed') {
+            clearInterval(pollInterval);
+            queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/admin"] });
+            toast({
+              title: "❌ فشل توليد الصوت",
+              description: job.error || 'حدث خطأ غير معروف',
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error("Error polling job status:", error);
+          clearInterval(pollInterval);
+        }
+      }, 3000);
     },
     onError: () => {
       toast({

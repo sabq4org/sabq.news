@@ -155,12 +155,17 @@ export class ElevenLabsService {
 let elevenLabsInstance: ElevenLabsService | null = null;
 
 export function getElevenLabsService(): ElevenLabsService {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error(
+      'ELEVENLABS_API_KEY غير مكوّن - يرجى إضافة المفتاح في متغيرات البيئة'
+    );
+  }
+  
   if (!elevenLabsInstance) {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      throw new Error('ELEVENLABS_API_KEY environment variable is not set');
-    }
     elevenLabsInstance = new ElevenLabsService(apiKey);
   }
+  
   return elevenLabsInstance;
 }

@@ -148,6 +148,86 @@ app.use((req, res, next) => {
           console.error("[Server] Server will continue running without notification worker");
         }
       });
+
+      // Register job queue handlers for TTS generation
+      setImmediate(async () => {
+        try {
+          const { jobQueue } = await import("./services/job-queue");
+          const { getElevenLabsService } = await import("./services/elevenlabs");
+          const { ObjectStorageService } = await import("./objectStorage");
+          const { storage } = await import("./storage");
+
+          jobQueue.onExecute(async (job) => {
+            if (job.type === 'generate-tts') {
+              console.log(`[JobQueue] Executing TTS generation job ${job.id}`);
+              
+              const { newsletterId } = job.data;
+              const newsletter = await storage.getAudioNewsletterById(newsletterId);
+
+              if (!newsletter) {
+                throw new Error('النشرة الصوتية غير موجودة');
+              }
+
+              // Update status to processing
+              await storage.updateAudioNewsletter(newsletter.id, {
+                generationStatus: 'processing',
+                generationError: null,
+              });
+
+              const elevenLabs = getElevenLabsService();
+              const objectStorage = new ObjectStorageService();
+
+              // Build script from articles
+              const articlesData = newsletter.articles?.map(na => ({
+                title: na.article?.title || '',
+                excerpt: na.article?.excerpt,
+                aiSummary: na.article?.aiSummary,
+              })) || [];
+
+              const script = elevenLabs.buildNewsletterScript({
+                title: newsletter.title,
+                description: newsletter.description || undefined,
+                articles: articlesData,
+              });
+
+              console.log(`[JobQueue] Generating TTS for newsletter ${newsletter.id}`);
+              console.log(`[JobQueue] Script length: ${script.length} characters`);
+
+              // Generate audio
+              const audioBuffer = await elevenLabs.textToSpeech({
+                text: script,
+                voiceId: newsletter.voiceId || undefined,
+                model: newsletter.voiceModel || undefined,
+                voiceSettings: newsletter.voiceSettings || undefined,
+              });
+
+              // Upload to object storage
+              const audioPath = `audio-newsletters/${newsletter.id}.mp3`;
+              const uploadedFile = await objectStorage.uploadFile(
+                audioPath,
+                audioBuffer,
+                'audio/mpeg'
+              );
+
+              // Update newsletter with audio details
+              await storage.updateAudioNewsletter(newsletter.id, {
+                audioUrl: uploadedFile.url,
+                fileSize: audioBuffer.length,
+                duration: Math.floor(audioBuffer.length / 16000), // Rough estimate
+                generationStatus: 'completed',
+                generationError: null,
+              });
+
+              console.log(`[JobQueue] Successfully generated audio for newsletter ${newsletter.id}`);
+            }
+          });
+
+          console.log("[Server] ✅ Job queue handlers registered successfully");
+        } catch (error) {
+          console.error("[Server] ⚠️  Error registering job queue handlers:", error);
+          console.error("[Server] Server will continue running without job queue");
+        }
+      });
     });
 
     // Handle server errors

@@ -5928,48 +5928,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async trackListen(data: InsertAudioNewsletterListen): Promise<AudioNewsletterListen> {
+    // Insert listen event
     const [listen] = await db
       .insert(audioNewsletterListens)
       .values(data as any)
       .returning();
 
-    // Update newsletter analytics
-    const newsletterId = data.newsletterId;
-
-    // Get unique listeners (count unique userIds + sessionIds)
-    const [uniqueListeners] = await db
-      .select({
-        count: sql<number>`cast(
-          count(distinct coalesce(${audioNewsletterListens.userId}, ${audioNewsletterListens.sessionId}))
-          as integer
-        )`,
-      })
-      .from(audioNewsletterListens)
-      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
-
-    // Get total listens
-    const [totalListens] = await db
-      .select({ count: sql<number>`cast(count(*) as integer)` })
-      .from(audioNewsletterListens)
-      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
-
-    // Calculate average completion rate
-    const [avgCompletion] = await db
-      .select({
-        avg: sql<number>`cast(coalesce(avg(${audioNewsletterListens.completionPercentage}), 0) as real)`,
-      })
-      .from(audioNewsletterListens)
-      .where(eq(audioNewsletterListens.newsletterId, newsletterId));
-
-    // Update newsletter with new analytics
+    // Atomic analytics update using SQL subqueries (fixes race conditions)
     await db
       .update(audioNewsletters)
       .set({
-        totalListens: totalListens?.count || 0,
-        uniqueListeners: uniqueListeners?.count || 0,
-        averageCompletionRate: avgCompletion?.avg || 0,
+        totalListens: sql`${audioNewsletters.totalListens} + 1`,
+        uniqueListeners: sql`(
+          SELECT COUNT(DISTINCT COALESCE(${audioNewsletterListens.userId}, ${audioNewsletterListens.sessionId}))
+          FROM ${audioNewsletterListens}
+          WHERE ${audioNewsletterListens.newsletterId} = ${data.newsletterId}
+        )`,
+        averageCompletionRate: sql`(
+          SELECT COALESCE(AVG(${audioNewsletterListens.completionPercentage}), 0)
+          FROM ${audioNewsletterListens}
+          WHERE ${audioNewsletterListens.newsletterId} = ${data.newsletterId}
+        )`,
+        updatedAt: new Date()
       })
-      .where(eq(audioNewsletters.id, newsletterId));
+      .where(eq(audioNewsletters.id, data.newsletterId));
 
     return listen;
   }

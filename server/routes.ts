@@ -9384,6 +9384,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AUDIO NEWSLETTERS ROUTES - النشرات الصوتية
   // ============================================================
 
+  // GET /api/audio-newsletters/admin - List all newsletters for admin (protected)
+  app.get("/api/audio-newsletters/admin", 
+    requireAuth,
+    requirePermission('audio_newsletters.view'),
+    async (req: any, res) => {
+      try {
+        const { limit = 50, offset = 0 } = req.query;
+
+        // Admin can see all statuses
+        const newsletters = await storage.getAllAudioNewsletters({
+          limit: parseInt(limit as string),
+          offset: parseInt(offset as string),
+        });
+
+        res.json(newsletters);
+      } catch (error: any) {
+        console.error("Error fetching audio newsletters:", error);
+        res.status(500).json({ message: "فشل في جلب النشرات الصوتية" });
+      }
+    }
+  );
+
   // GET /api/audio-newsletters - List published newsletters (public)
   app.get("/api/audio-newsletters", async (req: any, res) => {
     try {
@@ -9519,86 +9541,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/audio-newsletters/:id/generate - Generate TTS audio (admin only)
-  app.post("/api/audio-newsletters/:id/generate", requireAuth, requirePermission('audio_newsletters.generate'), async (req: any, res) => {
-    try {
-      const newsletter = await storage.getAudioNewsletterById(req.params.id);
+  app.post("/api/audio-newsletters/:id/generate", 
+    requireAuth, 
+    requirePermission('audio_newsletters.manage_all'),
+    async (req: any, res) => {
+      try {
+        const newsletter = await storage.getAudioNewsletterById(req.params.id);
 
-      if (!newsletter) {
-        return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
-      }
-
-      // Update status to processing
-      await storage.updateAudioNewsletter(newsletter.id, {
-        generationStatus: 'processing',
-        generationError: null,
-      });
-
-      // Start generation in background (don't await)
-      (async () => {
-        try {
-          const { getElevenLabsService } = await import("./services/elevenlabs");
-          const { ObjectStorageService } = await import("./objectStorage");
-
-          const elevenLabs = getElevenLabsService();
-          const objectStorage = new ObjectStorageService();
-
-          // Build script from articles
-          const articlesData = newsletter.articles?.map(na => ({
-            title: na.article?.title || '',
-            excerpt: na.article?.excerpt,
-            aiSummary: na.article?.aiSummary,
-          })) || [];
-
-          const script = elevenLabs.buildNewsletterScript({
-            title: newsletter.title,
-            description: newsletter.description || undefined,
-            articles: articlesData,
-          });
-
-          console.log(`[Audio Newsletter] Generating TTS for newsletter ${newsletter.id}`);
-          console.log(`[Audio Newsletter] Script length: ${script.length} characters`);
-
-          // Generate audio
-          const audioBuffer = await elevenLabs.textToSpeech({
-            text: script,
-            voiceId: newsletter.voiceId || undefined,
-            model: newsletter.voiceModel || undefined,
-            voiceSettings: newsletter.voiceSettings || undefined,
-          });
-
-          // Upload to object storage
-          const audioPath = `audio-newsletters/${newsletter.id}.mp3`;
-          const uploadedFile = await objectStorage.uploadFile(
-            audioPath,
-            audioBuffer,
-            'audio/mpeg'
-          );
-
-          // Update newsletter with audio details
-          await storage.updateAudioNewsletter(newsletter.id, {
-            audioUrl: uploadedFile.url,
-            fileSize: audioBuffer.length,
-            duration: Math.floor(audioBuffer.length / 16000), // Rough estimate
-            generationStatus: 'completed',
-            generationError: null,
-          });
-
-          console.log(`[Audio Newsletter] Successfully generated audio for newsletter ${newsletter.id}`);
-        } catch (error: any) {
-          console.error(`[Audio Newsletter] Error generating audio:`, error);
-          await storage.updateAudioNewsletter(newsletter.id, {
-            generationStatus: 'failed',
-            generationError: error.message || 'Unknown error',
-          });
+        if (!newsletter) {
+          return res.status(404).json({ message: "النشرة الصوتية غير موجودة" });
         }
-      })();
 
-      res.json({ message: "بدأت عملية التوليد", status: 'processing' });
-    } catch (error: any) {
-      console.error("Error initiating audio generation:", error);
-      res.status(500).json({ message: "فشل في بدء توليد الصوت" });
+        // Import job queue
+        const { jobQueue } = await import("./services/job-queue");
+
+        // Add job to queue instead of processing immediately
+        const jobId = await jobQueue.add('generate-tts', { 
+          newsletterId: req.params.id, 
+          userId: req.user.id 
+        });
+
+        res.json({ 
+          status: 'queued', 
+          jobId, 
+          message: 'جاري التوليد في الخلفية' 
+        });
+      } catch (error: any) {
+        console.error("Error initiating audio generation:", error);
+        res.status(500).json({ message: "فشل في بدء توليد الصوت" });
+      }
     }
-  });
+  );
+
+  // GET /api/audio-newsletters/jobs/:jobId - Get job status (admin only)
+  app.get("/api/audio-newsletters/jobs/:jobId",
+    requireAuth,
+    async (req: any, res) => {
+      try {
+        const { jobQueue } = await import("./services/job-queue");
+        const job = await jobQueue.getStatus(req.params.jobId);
+        
+        if (!job) {
+          return res.status(404).json({ message: 'الوظيفة غير موجودة' });
+        }
+        
+        res.json(job);
+      } catch (error: any) {
+        console.error("Error fetching job status:", error);
+        res.status(500).json({ message: "فشل في جلب حالة الوظيفة" });
+      }
+    }
+  );
 
   // PUT /api/audio-newsletters/:id - Update newsletter (admin only)
   app.put("/api/audio-newsletters/:id", requireAuth, requirePermission('audio_newsletters.update'), async (req: any, res) => {
@@ -9692,7 +9685,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/audio-newsletters/:id/publish - Publish newsletter (admin only)
-  app.post("/api/audio-newsletters/:id/publish", requireAuth, requirePermission('audio_newsletters.publish'), async (req: any, res) => {
+  app.post("/api/audio-newsletters/:id/publish", 
+    requireAuth, 
+    requirePermission('audio_newsletters.publish'), 
+    async (req: any, res) => {
     try {
       const newsletter = await storage.getAudioNewsletterById(req.params.id);
 

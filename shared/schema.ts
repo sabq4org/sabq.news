@@ -2326,6 +2326,9 @@ export const audioNewsletterListens = pgTable("audio_newsletter_listens", {
   index("idx_audio_listens_user").on(table.userId),
   index("idx_audio_listens_session").on(table.sessionId),
   index("idx_audio_listens_started").on(table.startedAt),
+  // New indexes for analytics performance
+  index("idx_audio_listens_completion").on(table.newsletterId, table.completionPercentage),
+  index("idx_audio_listens_analytics").on(table.newsletterId, table.userId, table.sessionId),
 ]);
 
 // Relations
