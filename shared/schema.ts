@@ -2222,20 +2222,184 @@ export const smartBlocksRelations = relations(smartBlocks, ({ one }) => ({
 
 // Smart Blocks Types
 export type SmartBlock = typeof smartBlocks.$inferSelect;
-export type InsertSmartBlock = z.infer<typeof insertSmartBlockSchema>;
-export type UpdateSmartBlock = Partial<InsertSmartBlock>;
-
-// Smart Blocks Schemas
 export const insertSmartBlockSchema = createInsertSchema(smartBlocks).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  title: z.string().min(1).max(60),
-  keyword: z.string().min(1).max(100),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-  placement: z.enum(['below_featured', 'above_all_news', 'between_all_and_murqap', 'above_footer']),
-  limitCount: z.number().min(1).max(24).default(6),
+});
+export type InsertSmartBlock = z.infer<typeof insertSmartBlockSchema>;
+export type UpdateSmartBlock = Partial<InsertSmartBlock>;
+
+// ============================================
+// AUDIO NEWSLETTERS (النشرات الصوتية)
+// ============================================
+
+// Audio Newsletters - النشرات الصوتية الأسبوعية
+export const audioNewsletters = pgTable("audio_newsletters", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(), // عنوان النشرة
+  description: text("description"), // وصف النشرة
+  slug: text("slug").notNull().unique(),
+  
+  // Audio file information
+  audioUrl: text("audio_url"), // رابط الملف الصوتي على Object Storage
+  duration: integer("duration"), // مدة التشغيل بالثواني
+  fileSize: integer("file_size"), // حجم الملف بالبايت
+  
+  // Generation metadata
+  generatedBy: varchar("generated_by").references(() => users.id).notNull(),
+  generationStatus: text("generation_status").default("pending").notNull(), // pending, processing, completed, failed
+  generationError: text("generation_error"),
+  
+  // TTS settings
+  voiceId: text("voice_id"), // ElevenLabs voice ID
+  voiceModel: text("voice_model").default("eleven_multilingual_v2"), // ElevenLabs model
+  voiceSettings: jsonb("voice_settings").$type<{
+    stability?: number;
+    similarity_boost?: number;
+    style?: number;
+    use_speaker_boost?: boolean;
+  }>(),
+  
+  // Publishing
+  status: text("status").default("draft").notNull(), // draft, published, archived
+  publishedAt: timestamp("published_at"),
+  
+  // Analytics
+  totalListens: integer("total_listens").default(0).notNull(),
+  uniqueListeners: integer("unique_listeners").default(0).notNull(),
+  averageCompletionRate: real("average_completion_rate").default(0).notNull(), // 0-100%
+  
+  // Metadata for RSS/Podcast
+  coverImageUrl: text("cover_image_url"),
+  author: text("author").default("سبق الذكية"),
+  category: text("category").default("أخبار"),
+  keywords: text("keywords").array(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audio_newsletters_status").on(table.status),
+  index("idx_audio_newsletters_published").on(table.publishedAt),
+  index("idx_audio_newsletters_generated_by").on(table.generatedBy),
+]);
+
+// Junction table: أي مقالات تم تضمينها في النشرة
+export const audioNewsletterArticles = pgTable("audio_newsletter_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  newsletterId: varchar("newsletter_id").references(() => audioNewsletters.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  order: integer("order").notNull(), // ترتيب المقال في النشرة
+  includeFullContent: boolean("include_full_content").default(false).notNull(), // تضمين المحتوى كامل أو ملخص فقط
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audio_newsletter_articles_newsletter").on(table.newsletterId),
+  index("idx_audio_newsletter_articles_article").on(table.articleId),
+  uniqueIndex("idx_audio_newsletter_articles_unique").on(table.newsletterId, table.articleId),
+]);
+
+// Listening history & analytics
+export const audioNewsletterListens = pgTable("audio_newsletter_listens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  newsletterId: varchar("newsletter_id").references(() => audioNewsletters.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  
+  // Session info (for anonymous users)
+  sessionId: text("session_id"), // للمستخدمين غير المسجلين
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  
+  // Listening metrics
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  lastPosition: integer("last_position").default(0).notNull(), // آخر موضع استماع بالثواني
+  duration: integer("duration").notNull(), // المدة التي استمع لها
+  completionPercentage: real("completion_percentage").default(0).notNull(), // نسبة الإكمال
+  
+  // Platform info
+  platform: text("platform"), // web, ios, android
+  deviceType: text("device_type"), // mobile, tablet, desktop
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audio_listens_newsletter").on(table.newsletterId),
+  index("idx_audio_listens_user").on(table.userId),
+  index("idx_audio_listens_session").on(table.sessionId),
+  index("idx_audio_listens_started").on(table.startedAt),
+]);
+
+// Relations
+export const audioNewslettersRelations = relations(audioNewsletters, ({ one, many }) => ({
+  generator: one(users, {
+    fields: [audioNewsletters.generatedBy],
+    references: [users.id],
+  }),
+  articles: many(audioNewsletterArticles),
+  listens: many(audioNewsletterListens),
+}));
+
+export const audioNewsletterArticlesRelations = relations(audioNewsletterArticles, ({ one }) => ({
+  newsletter: one(audioNewsletters, {
+    fields: [audioNewsletterArticles.newsletterId],
+    references: [audioNewsletters.id],
+  }),
+  article: one(articles, {
+    fields: [audioNewsletterArticles.articleId],
+    references: [articles.id],
+  }),
+}));
+
+export const audioNewsletterListensRelations = relations(audioNewsletterListens, ({ one }) => ({
+  newsletter: one(audioNewsletters, {
+    fields: [audioNewsletterListens.newsletterId],
+    references: [audioNewsletters.id],
+  }),
+  user: one(users, {
+    fields: [audioNewsletterListens.userId],
+    references: [users.id],
+  }),
+}));
+
+// Types
+export type AudioNewsletter = typeof audioNewsletters.$inferSelect;
+export type InsertAudioNewsletter = z.infer<typeof insertAudioNewsletterSchema>;
+export type UpdateAudioNewsletter = Partial<InsertAudioNewsletter>;
+
+export type AudioNewsletterArticle = typeof audioNewsletterArticles.$inferSelect;
+export type InsertAudioNewsletterArticle = z.infer<typeof insertAudioNewsletterArticleSchema>;
+
+export type AudioNewsletterListen = typeof audioNewsletterListens.$inferSelect;
+export type InsertAudioNewsletterListen = z.infer<typeof insertAudioNewsletterListenSchema>;
+
+// Combined type with details
+export type AudioNewsletterWithDetails = AudioNewsletter & {
+  generator?: User;
+  articles?: (AudioNewsletterArticle & { article?: Article })[];
+  listens?: AudioNewsletterListen[];
+  _count?: {
+    articles: number;
+    listens: number;
+  };
+};
+
+// Zod Schemas
+export const insertAudioNewsletterSchema = createInsertSchema(audioNewsletters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalListens: true,
+  uniqueListeners: true,
+  averageCompletionRate: true,
 });
 
-export const updateSmartBlockSchema = insertSmartBlockSchema.partial();
+export const insertAudioNewsletterArticleSchema = createInsertSchema(audioNewsletterArticles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAudioNewsletterListenSchema = createInsertSchema(audioNewsletterListens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const updateAudioNewsletterSchema = insertAudioNewsletterSchema.partial();
