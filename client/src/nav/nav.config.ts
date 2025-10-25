@@ -34,6 +34,7 @@ import {
   Lightbulb,
   Telescope,
   Grid3x3,
+  Podcast,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -114,6 +115,14 @@ export const navConfig: NavItem[] = [
         labelAr: "المرقاب",
         path: "/dashboard/mirqab",
         icon: Telescope,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "audio_newsletters",
+        labelKey: "nav.audio_newsletters",
+        labelAr: "النشرات الصوتية",
+        path: "/dashboard/audio-newsletters",
+        icon: Podcast,
         roles: ["admin", "editor"],
       },
     ],

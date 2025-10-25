@@ -73,6 +73,10 @@ import CreateNextStory from "@/pages/dashboard/mirqab/CreateNextStory";
 import CreateRadar from "@/pages/dashboard/mirqab/CreateRadar";
 import CreateAlgorithmWrite from "@/pages/dashboard/mirqab/CreateAlgorithmWrite";
 import SmartBlocksPage from "@/pages/dashboard/SmartBlocksPage";
+import AudioNewslettersDashboard from "@/pages/AudioNewslettersDashboard";
+import AudioNewsletterEditor from "@/pages/AudioNewsletterEditor";
+import AudioNewslettersArchive from "@/pages/AudioNewslettersArchive";
+import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -119,6 +123,10 @@ function Router() {
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
+      {/* Audio Newsletters public pages */}
+      <Route path="/audio-newsletters" component={AudioNewslettersArchive} />
+      <Route path="/audio-newsletters/:slug" component={AudioNewsletterDetail} />
+      
       {/* Mirqab dashboard */}
       <Route path="/dashboard/mirqab" component={MirqabDashboard} />
       <Route path="/dashboard/mirqab/sabq-index/new" component={CreateSabqIndex} />
@@ -132,6 +140,12 @@ function Router() {
       
       <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
       <Route path="/dashboard/smart-blocks" component={SmartBlocksPage} />
+      
+      {/* Audio Newsletters dashboard */}
+      <Route path="/dashboard/audio-newsletters" component={AudioNewslettersDashboard} />
+      <Route path="/dashboard/audio-newsletters/create" component={AudioNewsletterEditor} />
+      <Route path="/dashboard/audio-newsletters/:id/edit" component={AudioNewsletterEditor} />
+      
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
