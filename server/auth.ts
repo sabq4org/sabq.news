@@ -83,7 +83,11 @@ export async function setupAuth(app: Express) {
           }
 
           console.log("✅ LocalStrategy: Success!");
-          return done(null, { id: user.id, email: user.email });
+          return done(null, { 
+            id: user.id, 
+            email: user.email,
+            twoFactorEnabled: user.twoFactorEnabled 
+          });
         } catch (error) {
           console.error("❌ LocalStrategy error:", error);
           return done(error);
