@@ -21,6 +21,25 @@ import passport from "passport";
 import multer from "multer";
 import { randomUUID } from "crypto";
 import { checkUserStatus } from "./userStatusMiddleware";
+import rateLimit from "express-rate-limit";
+
+// Rate limiters for authentication and sensitive operations
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: { message: "تم تجاوز حد محاولات تسجيل الدخول. يرجى المحاولة بعد 15 دقيقة" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per window
+  message: { message: "تم تجاوز حد الطلبات للعمليات الحساسة. يرجى المحاولة بعد قليل" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 import { 
   users, 
   roles, 
@@ -237,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
 
   // Login
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/login", authLimiter, (req, res, next) => {
     console.log("🔐 Login attempt:", { email: req.body?.email, hasPassword: !!req.body?.password });
     
     passport.authenticate("local", (err: any, user: any, info: any) => {
@@ -269,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Register
-  app.post("/api/register", async (req, res) => {
+  app.post("/api/register", authLimiter, async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;
 
@@ -610,7 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  app.post("/api/profile/upload-avatar", isAuthenticated, avatarUpload.single('avatar'), async (req: any, res) => {
+  app.post("/api/profile/upload-avatar", isAuthenticated, strictLimiter, avatarUpload.single('avatar'), async (req: any, res) => {
     try {
       const userId = req.user.id;
       

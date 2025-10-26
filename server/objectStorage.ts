@@ -141,6 +141,40 @@ export class ObjectStorageService {
     });
   }
 
+  async uploadFile(
+    path: string,
+    buffer: Buffer,
+    contentType: string
+  ): Promise<{ url: string; path: string }> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    if (!privateObjectDir) {
+      throw new Error(
+        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
+          "tool and set PRIVATE_OBJECT_DIR env var."
+      );
+    }
+
+    const fullPath = `${privateObjectDir}/${path}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+
+    await file.save(buffer, {
+      metadata: {
+        contentType,
+      },
+    });
+
+    // Make the file publicly accessible
+    await file.makePublic();
+
+    return {
+      url: `https://storage.googleapis.com/${bucketName}/${objectName}`,
+      path: fullPath,
+    };
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();

@@ -36,6 +36,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -527,7 +528,7 @@ export default function ArticleDetail() {
             {/* Article Content */}
             <div 
               className="prose prose-lg dark:prose-invert max-w-none leading-loose"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
               data-testid="content-article-body"
             />
 

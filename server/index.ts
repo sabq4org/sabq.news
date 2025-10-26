@@ -2,10 +2,111 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import cors from "cors";
 
 const app = express();
+
+// Trust proxy - important for rate limiting to work correctly behind proxies
+app.set("trust proxy", 1);
+
+// CORS Configuration
+const allowedOrigins = (process.env.ALLOWED_ORIGINS?.split(',') || [])
+  .concat(
+    (process.env.REPLIT_DOMAINS?.split(',') || []).map(domain => 
+      domain.trim().startsWith('http') ? domain.trim() : `https://${domain.trim()}`
+    )
+  )
+  .concat(['http://localhost:5000', 'http://localhost:5001'])
+  .filter(origin => origin && origin.trim().length > 0) // Remove empty strings
+  .map(origin => origin.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Strict origin matching - exact match only
+      const isAllowed = allowedOrigins.includes(origin);
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Blocked origin: ${origin}`);
+        console.warn(`[CORS] Allowed origins:`, allowedOrigins);
+        callback(new Error('غير مسموح بالوصول من هذا المصدر'));
+      }
+    },
+    credentials: true, // Allow cookies and authentication headers
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  })
+);
+
+// Security headers with Helmet.js
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: isDevelopment 
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] // Vite needs these in dev
+          : ["'self'"], // Production: no unsafe directives
+        styleSrc: isDevelopment
+          ? ["'self'", "'unsafe-inline'"] 
+          : ["'self'"], // Production: no unsafe directives
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'", "https://api.openai.com", "https://api.elevenlabs.io"],
+        mediaSrc: ["'self'", "https:", "blob:"],
+        objectSrc: ["'none'"],
+        frameSrc: ["'self'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: isDevelopment ? null : [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Rate limiting configurations
+const generalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: { message: "تم تجاوز حد الطلبات. يرجى المحاولة مرة أخرى بعد قليل" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.startsWith("/health") || req.path.startsWith("/ready"),
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 login attempts per window
+  message: { message: "تم تجاوز حد محاولات تسجيل الدخول. يرجى المحاولة بعد 15 دقيقة" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per window for sensitive operations
+  message: { message: "تم تجاوز حد الطلبات للعمليات الحساسة. يرجى المحاولة بعد قليل" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply general rate limiter to all API routes
+app.use("/api", generalApiLimiter);
 
 // Health check endpoint - should be first to avoid middleware issues
 app.get("/health", (_req, res) => {
@@ -180,8 +281,8 @@ app.use((req, res, next) => {
               // Build script from articles
               const articlesData = newsletter.articles?.map(na => ({
                 title: na.article?.title || '',
-                excerpt: na.article?.excerpt,
-                aiSummary: na.article?.aiSummary,
+                excerpt: na.article?.excerpt || undefined,
+                aiSummary: na.article?.aiSummary || undefined,
               })) || [];
 
               const script = elevenLabs.buildNewsletterScript({

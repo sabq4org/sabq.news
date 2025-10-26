@@ -36,6 +36,7 @@ import {
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useState } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 interface AnnouncementDetails {
   id: string;
@@ -323,7 +324,7 @@ export default function AnnouncementDetail() {
             <div 
               className="prose prose-sm max-w-none dark:prose-invert"
               dir="rtl"
-              dangerouslySetInnerHTML={{ __html: announcement.message }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(announcement.message) }}
             />
           </CardContent>
         </Card>
