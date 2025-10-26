@@ -47,6 +47,7 @@ import {
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
 import { hasRole } from "@/hooks/useAuth";
 
@@ -842,7 +843,7 @@ export default function Profile() {
             <Card>
               <CardContent className="p-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
+                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 mb-6">
                     <TabsTrigger value="bookmarks" className="gap-2" data-testid="tab-bookmarks">
                       <Bookmark className="h-4 w-4" />
                       <span className="hidden sm:inline">المحفوظات</span>
@@ -870,6 +871,11 @@ export default function Profile() {
                     <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
                       <Settings className="h-4 w-4" />
                       <span className="hidden sm:inline">الإعدادات</span>
+                    </TabsTrigger>
+                    
+                    <TabsTrigger value="security" className="gap-2" data-testid="tab-security">
+                      <Shield className="h-4 w-4" />
+                      <span className="hidden sm:inline">الأمان</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -1176,6 +1182,17 @@ export default function Profile() {
                           </div>
                         </form>
                       </Form>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="security" className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">الأمان والحماية</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        قم بتأمين حسابك بطبقة حماية إضافية من خلال التحقق بخطوتين
+                      </p>
+                      
+                      <TwoFactorSettings />
                     </div>
                   </TabsContent>
                 </Tabs>

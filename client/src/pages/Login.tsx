@@ -34,11 +34,20 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
-      await apiRequest("/api/login", {
+      const response = await apiRequest("/api/login", {
         method: "POST",
         body: JSON.stringify(data),
       });
       
+      // Check if 2FA is required
+      if (response.requires2FA) {
+        // Redirect to 2FA verification page
+        navigate("/2fa-verify", { 
+          state: { userId: response.userId }
+        });
+        return;
+      }
+
       toast({
         title: "نجح تسجيل الدخول",
         description: "مرحباً بك في سبق الذكية",

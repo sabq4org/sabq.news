@@ -803,7 +803,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ twoFactorEnabled: true })
         .where(eq(users.id, userId));
 
-      await logActivity(userId, 'enable_2fa', { enabled: true });
+      await logActivity({
+        userId,
+        action: 'enable_2fa',
+        entityType: '2fa',
+        entityId: userId,
+        newValue: { enabled: true }
+      });
 
       res.json({ message: "تم تفعيل المصادقة الثنائية بنجاح" });
     } catch (error) {
@@ -851,7 +857,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(users.id, userId));
 
-      await logActivity(userId, 'disable_2fa', { enabled: false });
+      await logActivity({
+        userId,
+        action: 'disable_2fa',
+        entityType: '2fa',
+        entityId: userId,
+        oldValue: { enabled: true },
+        newValue: { enabled: false }
+      });
 
       res.json({ message: "تم تعطيل المصادقة الثنائية بنجاح" });
     } catch (error) {
@@ -954,7 +967,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ twoFactorBackupCodes: backupCodes })
         .where(eq(users.id, userId));
 
-      await logActivity(userId, 'regenerate_backup_codes', { count: backupCodes.length });
+      await logActivity({
+        userId,
+        action: 'regenerate_backup_codes',
+        entityType: '2fa',
+        entityId: userId,
+        newValue: { count: backupCodes.length }
+      });
 
       res.json({ backupCodes });
     } catch (error) {
