@@ -238,10 +238,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <SidebarGroup>
               <SidebarGroupLabel className="text-lg font-bold mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold">س</span>
-                  </div>
-                  <span>سبق الذكية</span>
+                  <img 
+                    src="/attached_assets/sabq-logo.png" 
+                    alt="سبق" 
+                    className="h-8 w-auto object-contain"
+                    data-testid="img-sabq-logo"
+                  />
+                  <span>لوحة التحكم</span>
                 </div>
               </SidebarGroupLabel>
               <SidebarGroupContent>
