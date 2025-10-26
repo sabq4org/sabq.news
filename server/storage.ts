@@ -151,6 +151,9 @@ import {
   type AudioNewsletterListen,
   type InsertAudioNewsletterListen,
   type AudioNewsletterWithDetails,
+  type AudioNewsBrief,
+  type InsertAudioNewsBrief,
+  audioNewsBriefs,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -670,6 +673,17 @@ export interface IStorage {
     dateFrom?: string;
     dateTo?: string;
   }): Promise<Array<any>>;
+
+  // ============================================
+  // Audio News Briefs Operations - الأخبار الصوتية السريعة
+  // ============================================
+  createAudioNewsBrief(data: InsertAudioNewsBrief): Promise<AudioNewsBrief>;
+  getAudioNewsBriefById(id: string): Promise<AudioNewsBrief | null>;
+  getAllAudioNewsBriefs(): Promise<AudioNewsBrief[]>;
+  getPublishedAudioNewsBriefs(limit?: number): Promise<AudioNewsBrief[]>;
+  updateAudioNewsBrief(id: string, data: Partial<InsertAudioNewsBrief>): Promise<AudioNewsBrief>;
+  deleteAudioNewsBrief(id: string): Promise<void>;
+  publishAudioNewsBrief(id: string): Promise<AudioNewsBrief>;
 
   // ============================================
   // Audio Newsletters Operations - النشرات الصوتية
@@ -5770,6 +5784,60 @@ export class DatabaseStorage implements IStorage {
     });
 
     return results;
+  }
+
+  // ============================================
+  // Audio News Briefs Operations - الأخبار الصوتية السريعة
+  // ============================================
+
+  async createAudioNewsBrief(data: InsertAudioNewsBrief): Promise<AudioNewsBrief> {
+    const [brief] = await db.insert(audioNewsBriefs).values(data as any).returning();
+    return brief;
+  }
+
+  async getAudioNewsBriefById(id: string): Promise<AudioNewsBrief | null> {
+    const brief = await db.query.audioNewsBriefs.findFirst({
+      where: eq(audioNewsBriefs.id, id),
+    });
+    return brief || null;
+  }
+
+  async getAllAudioNewsBriefs(): Promise<AudioNewsBrief[]> {
+    return db.query.audioNewsBriefs.findMany({
+      orderBy: [desc(audioNewsBriefs.createdAt)],
+    });
+  }
+
+  async getPublishedAudioNewsBriefs(limit = 10): Promise<AudioNewsBrief[]> {
+    return db.query.audioNewsBriefs.findMany({
+      where: eq(audioNewsBriefs.status, 'published'),
+      orderBy: [desc(audioNewsBriefs.publishedAt)],
+      limit,
+    });
+  }
+
+  async updateAudioNewsBrief(id: string, data: Partial<InsertAudioNewsBrief>): Promise<AudioNewsBrief> {
+    const [updated] = await db.update(audioNewsBriefs)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(audioNewsBriefs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAudioNewsBrief(id: string): Promise<void> {
+    await db.delete(audioNewsBriefs).where(eq(audioNewsBriefs.id, id));
+  }
+
+  async publishAudioNewsBrief(id: string): Promise<AudioNewsBrief> {
+    const [published] = await db.update(audioNewsBriefs)
+      .set({ 
+        status: 'published', 
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(audioNewsBriefs.id, id))
+      .returning();
+    return published;
   }
 
   // ============================================

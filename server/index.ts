@@ -219,6 +219,54 @@ app.use((req, res, next) => {
               });
 
               console.log(`[JobQueue] Successfully generated audio for newsletter ${newsletter.id}`);
+            } else if (job.type === 'generate-audio-brief') {
+              console.log(`[JobQueue] Executing audio brief generation job ${job.id}`);
+              
+              const { briefId } = job.data;
+              const brief = await storage.getAudioNewsBriefById(briefId);
+
+              if (!brief) {
+                throw new Error('الخبر الصوتي غير موجود');
+              }
+
+              // Update status to processing
+              await storage.updateAudioNewsBrief(briefId, {
+                generationStatus: 'processing',
+              });
+
+              const elevenLabs = getElevenLabsService();
+              const objectStorage = new ObjectStorageService();
+
+              console.log(`[JobQueue] Generating TTS for audio brief ${briefId}`);
+              console.log(`[JobQueue] Content length: ${brief.content.length} characters`);
+
+              // Generate audio
+              const audioBuffer = await elevenLabs.textToSpeech({
+                text: brief.content,
+                voiceId: brief.voiceId || undefined,
+                voiceSettings: brief.voiceSettings || undefined,
+              });
+
+              // Upload to object storage
+              const audioPath = `audio-briefs/brief_${briefId}_${Date.now()}.mp3`;
+              const uploadedFile = await objectStorage.uploadFile(
+                audioPath,
+                audioBuffer,
+                'audio/mpeg'
+              );
+
+              // Get audio duration (rough estimate: ~150 words per minute for Arabic)
+              const wordCount = brief.content.split(/\s+/).length;
+              const estimatedDuration = Math.ceil((wordCount / 150) * 60);
+
+              // Update brief with audio details
+              await storage.updateAudioNewsBrief(briefId, {
+                audioUrl: uploadedFile.url,
+                duration: estimatedDuration,
+                generationStatus: 'completed',
+              });
+
+              console.log(`[JobQueue] Successfully generated audio for brief ${briefId}`);
             }
           });
 

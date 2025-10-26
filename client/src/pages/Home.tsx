@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -12,7 +13,86 @@ import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ArticleWithDetails, SmartBlock } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AudioPlayer } from "@/components/AudioPlayer";
+import { Play, Headphones } from "lucide-react";
+import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
+
+function AudioBriefsSection() {
+  const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
+  
+  const { data: briefs } = useQuery<AudioNewsBrief[]>({
+    queryKey: ['/api/audio-briefs/published'],
+  });
+  
+  if (!briefs || briefs.length === 0) return null;
+  
+  return (
+    <section className="py-8 bg-gradient-to-l from-primary/5 to-accent/5" dir="rtl">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center gap-3 mb-6">
+          <Headphones className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold">الأخبار الصوتية</h2>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {briefs.map((brief) => (
+            <div
+              key={brief.id}
+              className="p-4 bg-card border rounded-lg hover-elevate cursor-pointer"
+              onClick={() => setSelectedBrief(brief)}
+              data-testid={`audio-brief-${brief.id}`}
+            >
+              <div className="flex items-start gap-3">
+                <Button
+                  size="icon"
+                  variant="default"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBrief(brief);
+                  }}
+                  data-testid={`button-play-${brief.id}`}
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold line-clamp-2 mb-1">{brief.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {brief.content}
+                  </p>
+                  {brief.duration && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {Math.floor(brief.duration / 60)}:{(brief.duration % 60).toString().padStart(2, '0')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {selectedBrief && (
+        <Dialog open={!!selectedBrief} onOpenChange={() => setSelectedBrief(null)}>
+          <DialogContent className="max-w-2xl" dir="rtl">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">{selectedBrief.title}</h2>
+              <p className="text-muted-foreground">{selectedBrief.content}</p>
+              <AudioPlayer
+                newsletterId={selectedBrief.id}
+                audioUrl={selectedBrief.audioUrl!}
+                title={selectedBrief.title}
+                duration={selectedBrief.duration || undefined}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </section>
+  );
+}
 
 interface HomepageData {
   hero: ArticleWithDetails[];

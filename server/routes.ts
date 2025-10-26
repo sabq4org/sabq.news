@@ -9760,6 +9760,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // AUDIO NEWS BRIEFS ROUTES - الأخبار الصوتية السريعة
+  // ============================================================
+
+  // GET /api/audio-briefs/admin - List all briefs for admin (protected)
+  app.get("/api/audio-briefs/admin",
+    requireAuth,
+    requirePermission('audio_newsletters.view'),
+    async (req: any, res) => {
+      try {
+        const briefs = await storage.getAllAudioNewsBriefs();
+        res.json(briefs);
+      } catch (error: any) {
+        console.error("Error fetching audio briefs:", error);
+        res.status(500).json({ message: "فشل في جلب الأخبار الصوتية" });
+      }
+    }
+  );
+
+  // GET /api/audio-briefs/published - List published briefs (public)
+  app.get("/api/audio-briefs/published", async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const briefs = await storage.getPublishedAudioNewsBriefs(limit);
+      res.json(briefs);
+    } catch (error: any) {
+      console.error("Error fetching published briefs:", error);
+      res.status(500).json({ message: "فشل في جلب الأخبار الصوتية المنشورة" });
+    }
+  });
+
+  // GET /api/audio-briefs/:id - Get brief by ID (public)
+  app.get("/api/audio-briefs/:id", async (req: any, res) => {
+    try {
+      const brief = await storage.getAudioNewsBriefById(req.params.id);
+      if (!brief) {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+      res.json(brief);
+    } catch (error: any) {
+      console.error("Error fetching audio brief:", error);
+      res.status(500).json({ message: "فشل في جلب الخبر الصوتي" });
+    }
+  });
+
+  // POST /api/audio-briefs - Create new brief (admin only)
+  app.post("/api/audio-briefs",
+    requireAuth,
+    requirePermission('audio_newsletters.create'),
+    async (req: any, res) => {
+      try {
+        const validatedData = insertAudioNewsBriefSchema.parse({
+          ...req.body,
+          createdBy: req.user.id,
+        });
+        const brief = await storage.createAudioNewsBrief(validatedData as any);
+        res.status(201).json(brief);
+      } catch (error: any) {
+        console.error("Error creating audio brief:", error);
+        if (error.name === 'ZodError') {
+          return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+        }
+        res.status(500).json({ message: "فشل في إنشاء الخبر الصوتي" });
+      }
+    }
+  );
+
+  // POST /api/audio-briefs/:id/generate - Generate audio (admin only)
+  app.post("/api/audio-briefs/:id/generate",
+    requireAuth,
+    requirePermission('audio_newsletters.manage_all'),
+    async (req: any, res) => {
+      try {
+        const brief = await storage.getAudioNewsBriefById(req.params.id);
+        if (!brief) {
+          return res.status(404).json({ message: "الخبر غير موجود" });
+        }
+
+        const { jobQueue } = await import("./services/job-queue");
+
+        const jobId = await jobQueue.add('generate-audio-brief', { 
+          briefId: req.params.id,
+          userId: req.user.id 
+        });
+
+        res.json({ 
+          status: 'queued', 
+          jobId, 
+          message: 'جاري التوليد في الخلفية' 
+        });
+      } catch (error: any) {
+        console.error("Error queueing audio brief generation:", error);
+        res.status(500).json({ message: "فشل في بدء توليد الصوت" });
+      }
+    }
+  );
+
+  // PUT /api/audio-briefs/:id - Update brief (admin only)
+  app.put("/api/audio-briefs/:id",
+    requireAuth,
+    requirePermission('audio_newsletters.update'),
+    async (req: any, res) => {
+      try {
+        const brief = await storage.updateAudioNewsBrief(req.params.id, req.body);
+        res.json(brief);
+      } catch (error: any) {
+        console.error("Error updating audio brief:", error);
+        res.status(500).json({ message: "فشل في تحديث الخبر الصوتي" });
+      }
+    }
+  );
+
+  // POST /api/audio-briefs/:id/publish - Publish brief (admin only)
+  app.post("/api/audio-briefs/:id/publish",
+    requireAuth,
+    requirePermission('audio_newsletters.publish'),
+    async (req: any, res) => {
+      try {
+        const brief = await storage.getAudioNewsBriefById(req.params.id);
+        if (!brief) {
+          return res.status(404).json({ message: "الخبر غير موجود" });
+        }
+        if (!brief.audioUrl) {
+          return res.status(400).json({ message: "يجب توليد الصوت أولاً" });
+        }
+
+        const published = await storage.publishAudioNewsBrief(req.params.id);
+        res.json(published);
+      } catch (error: any) {
+        console.error("Error publishing audio brief:", error);
+        res.status(500).json({ message: "فشل في نشر الخبر الصوتي" });
+      }
+    }
+  );
+
+  // DELETE /api/audio-briefs/:id - Delete brief (admin only)
+  app.delete("/api/audio-briefs/:id",
+    requireAuth,
+    requirePermission('audio_newsletters.delete'),
+    async (req: any, res) => {
+      try {
+        await storage.deleteAudioNewsBrief(req.params.id);
+        res.status(204).send();
+      } catch (error: any) {
+        console.error("Error deleting audio brief:", error);
+        res.status(500).json({ message: "فشل في حذف الخبر الصوتي" });
+      }
+    }
+  );
+
   const httpServer = createServer(app);
   return httpServer;
 }

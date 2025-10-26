@@ -2231,6 +2231,55 @@ export type InsertSmartBlock = z.infer<typeof insertSmartBlockSchema>;
 export type UpdateSmartBlock = Partial<InsertSmartBlock>;
 
 // ============================================
+// AUDIO NEWS BRIEFS (الأخبار الصوتية السريعة)
+// ============================================
+
+// Audio News Briefs - أخبار صوتية قصيرة
+export const audioNewsBriefs = pgTable("audio_news_briefs", {
+  id: varchar("id").primaryKey().notNull().$defaultFn(() => nanoid()),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  audioUrl: text("audio_url"),
+  voiceId: varchar("voice_id", { length: 100 }), // ElevenLabs voice ID
+  voiceSettings: jsonb("voice_settings").$type<{
+    stability?: number;
+    similarity_boost?: number;
+    style?: number;
+    use_speaker_boost?: boolean;
+  }>(),
+  duration: integer("duration"), // in seconds
+  generationStatus: varchar("generation_status", { length: 20 })
+    .notNull()
+    .default("pending"), // pending, processing, completed, failed
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, published
+  publishedAt: timestamp("published_at"),
+  createdBy: varchar("created_by", { length: 21 }).notNull().references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_audio_briefs_status").on(table.status),
+  index("idx_audio_briefs_published").on(table.publishedAt),
+  index("idx_audio_briefs_created_by").on(table.createdBy),
+]);
+
+// Relations
+export const audioNewsBriefsRelations = relations(audioNewsBriefs, ({ one }) => ({
+  creator: one(users, {
+    fields: [audioNewsBriefs.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Types
+export type AudioNewsBrief = typeof audioNewsBriefs.$inferSelect;
+export const insertAudioNewsBriefSchema = createInsertSchema(audioNewsBriefs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertAudioNewsBrief = z.infer<typeof insertAudioNewsBriefSchema>;
+
+// ============================================
 // AUDIO NEWSLETTERS (النشرات الصوتية)
 // ============================================
 

@@ -77,6 +77,8 @@ import AudioNewslettersDashboard from "@/pages/AudioNewslettersDashboard";
 import AudioNewsletterEditor from "@/pages/AudioNewsletterEditor";
 import AudioNewslettersArchive from "@/pages/AudioNewslettersArchive";
 import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
+import AudioBriefsDashboard from "@/pages/AudioBriefsDashboard";
+import AudioBriefEditor from "@/pages/AudioBriefEditor";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -145,6 +147,11 @@ function Router() {
       <Route path="/dashboard/audio-newsletters" component={AudioNewslettersDashboard} />
       <Route path="/dashboard/audio-newsletters/create" component={AudioNewsletterEditor} />
       <Route path="/dashboard/audio-newsletters/:id/edit" component={AudioNewsletterEditor} />
+      
+      {/* Audio Briefs dashboard */}
+      <Route path="/dashboard/audio-briefs" component={AudioBriefsDashboard} />
+      <Route path="/dashboard/audio-briefs/create" component={AudioBriefEditor} />
+      <Route path="/dashboard/audio-briefs/:id" component={AudioBriefEditor} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
