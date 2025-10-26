@@ -125,6 +125,14 @@ export const navConfig: NavItem[] = [
         icon: Podcast,
         roles: ["admin", "editor"],
       },
+      {
+        id: "audio_briefs",
+        labelKey: "nav.audio_briefs",
+        labelAr: "الأخبار الصوتية السريعة",
+        path: "/dashboard/audio-briefs",
+        icon: AudioLines,
+        roles: ["admin", "editor"],
+      },
     ],
   },
 
