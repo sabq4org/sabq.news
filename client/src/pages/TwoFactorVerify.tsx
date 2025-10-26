@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ShieldCheck, Loader2, Key, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Loader2, Key, AlertTriangle, Smartphone, MessageSquare } from "lucide-react";
 
 const verifySchema = z.object({
   token: z.string().min(1, "الرمز مطلوب"),
@@ -24,6 +25,9 @@ export default function TwoFactorVerify() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const [verificationMethod, setVerificationMethod] = useState<'authenticator' | 'sms'>('authenticator');
+  const [smsSent, setSmsSent] = useState(false);
+  const [sendingSMS, setSendingSMS] = useState(false);
 
   const form = useForm<VerifyFormData>({
     resolver: zodResolver(verifySchema),
@@ -32,15 +36,47 @@ export default function TwoFactorVerify() {
     },
   });
 
+  const sendSMSOTP = async () => {
+    try {
+      setSendingSMS(true);
+      await apiRequest("/api/2fa/send-sms", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+
+      setSmsSent(true);
+      toast({
+        title: "تم الإرسال",
+        description: "تم إرسال رمز التحقق إلى رقم جوالك",
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إرسال رمز التحقق",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingSMS(false);
+    }
+  };
+
   const onSubmit = async (data: VerifyFormData) => {
     try {
       setIsLoading(true);
       
-      const requestBody = useBackupCode 
-        ? { backupCode: data.token }
-        : { token: data.token };
+      let endpoint = "/api/2fa/verify";
+      let requestBody: any = {};
+
+      if (useBackupCode) {
+        requestBody = { backupCode: data.token };
+      } else if (verificationMethod === 'sms') {
+        endpoint = "/api/2fa/verify-sms";
+        requestBody = { code: data.token };
+      } else {
+        requestBody = { token: data.token };
+      }
       
-      await apiRequest("/api/2fa/verify", {
+      await apiRequest(endpoint, {
         method: "POST",
         body: JSON.stringify(requestBody),
       });
@@ -73,6 +109,18 @@ export default function TwoFactorVerify() {
     form.reset();
   };
 
+  const handleMethodChange = (value: string) => {
+    const method = value as 'authenticator' | 'sms';
+    setVerificationMethod(method);
+    setUseBackupCode(false);
+    form.reset();
+    
+    // Auto-send SMS when switching to SMS method
+    if (method === 'sms' && !smsSent) {
+      sendSMSOTP();
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -90,45 +138,221 @@ export default function TwoFactorVerify() {
           <CardDescription>
             {useBackupCode 
               ? "أدخل أحد رموزك الاحتياطية للمتابعة"
-              : "أدخل الرمز من تطبيق المصادقة للمتابعة"
+              : "اختر طريقة التحقق المناسبة لك"
             }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {!useBackupCode ? (
-                <FormField
-                  control={form.control}
-                  name="token"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رمز التحقق</FormLabel>
-                      <FormControl>
-                        <div className="flex justify-center" dir="ltr">
-                          <InputOTP
-                            maxLength={6}
-                            value={field.value}
-                            onChange={field.onChange}
-                            disabled={isLoading}
-                            data-testid="input-2fa-token"
+          {!useBackupCode ? (
+            <Tabs value={verificationMethod} onValueChange={handleMethodChange} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="authenticator" data-testid="tab-authenticator">
+                  <Smartphone className="h-4 w-4 ml-2" />
+                  تطبيق المصادقة
+                </TabsTrigger>
+                <TabsTrigger value="sms" data-testid="tab-sms">
+                  <MessageSquare className="h-4 w-4 ml-2" />
+                  رسالة SMS
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="authenticator">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="token"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>رمز التحقق من التطبيق</FormLabel>
+                          <FormControl>
+                            <div className="flex justify-center" dir="ltr">
+                              <InputOTP
+                                maxLength={6}
+                                value={field.value}
+                                onChange={field.onChange}
+                                disabled={isLoading}
+                                data-testid="input-authenticator-token"
+                              >
+                                <InputOTPGroup>
+                                  <InputOTPSlot index={0} />
+                                  <InputOTPSlot index={1} />
+                                  <InputOTPSlot index={2} />
+                                  <InputOTPSlot index={3} />
+                                  <InputOTPSlot index={4} />
+                                  <InputOTPSlot index={5} />
+                                </InputOTPGroup>
+                              </InputOTP>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        الرمز صالح لمدة 30 ثانية فقط
+                      </AlertDescription>
+                    </Alert>
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                      data-testid="button-verify-authenticator"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          جاري التحقق...
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="ml-2 h-4 w-4" />
+                          تحقق
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={handleToggleBackupCode}
+                        className="text-sm text-primary hover:underline"
+                        disabled={isLoading}
+                        data-testid="link-use-backup-code"
+                      >
+                        استخدام رمز احتياطي بدلاً من ذلك
+                      </button>
+                    </div>
+                  </form>
+                </Form>
+              </TabsContent>
+
+              <TabsContent value="sms">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {!smsSent ? (
+                      <>
+                        <Alert>
+                          <MessageSquare className="h-4 w-4" />
+                          <AlertDescription>
+                            سيتم إرسال رمز التحقق إلى رقم جوالك المسجل
+                          </AlertDescription>
+                        </Alert>
+                        <Button
+                          type="button"
+                          onClick={sendSMSOTP}
+                          className="w-full"
+                          disabled={sendingSMS}
+                          data-testid="button-send-sms"
+                        >
+                          {sendingSMS ? (
+                            <>
+                              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                              جاري الإرسال...
+                            </>
+                          ) : (
+                            <>
+                              <MessageSquare className="ml-2 h-4 w-4" />
+                              إرسال رمز التحقق
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="token"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>رمز التحقق من الرسالة</FormLabel>
+                              <FormControl>
+                                <div className="flex justify-center" dir="ltr">
+                                  <InputOTP
+                                    maxLength={6}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    disabled={isLoading}
+                                    data-testid="input-sms-token"
+                                  >
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={0} />
+                                      <InputOTPSlot index={1} />
+                                      <InputOTPSlot index={2} />
+                                      <InputOTPSlot index={3} />
+                                      <InputOTPSlot index={4} />
+                                      <InputOTPSlot index={5} />
+                                    </InputOTPGroup>
+                                  </InputOTP>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Alert>
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            الرمز صالح لمدة 10 دقائق
+                          </AlertDescription>
+                        </Alert>
+
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isLoading}
+                          data-testid="button-verify-sms"
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                              جاري التحقق...
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="ml-2 h-4 w-4" />
+                              تحقق
+                            </>
+                          )}
+                        </Button>
+
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={sendSMSOTP}
+                            className="text-sm text-primary hover:underline"
+                            disabled={sendingSMS}
+                            data-testid="link-resend-sms"
                           >
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
+                            {sendingSMS ? "جاري الإرسال..." : "إعادة إرسال الرمز"}
+                          </button>
                         </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
+                      </>
+                    )}
+
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={handleToggleBackupCode}
+                        className="text-sm text-primary hover:underline"
+                        disabled={isLoading}
+                        data-testid="link-use-backup-code-sms"
+                      >
+                        استخدام رمز احتياطي بدلاً من ذلك
+                      </button>
+                    </div>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="token"
@@ -150,68 +374,61 @@ export default function TwoFactorVerify() {
                     </FormItem>
                   )}
                 />
-              )}
 
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  {useBackupCode 
-                    ? "كل رمز احتياطي يمكن استخدامه مرة واحدة فقط"
-                    : "الرمز صالح لمدة 30 ثانية فقط"
-                  }
-                </AlertDescription>
-              </Alert>
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    كل رمز احتياطي يمكن استخدامه مرة واحدة فقط
+                  </AlertDescription>
+                </Alert>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-                data-testid="button-verify-2fa"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    جاري التحقق...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="ml-2 h-4 w-4" />
-                    تحقق
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleToggleBackupCode}
-                  className="text-sm text-primary hover:underline"
+                <Button
+                  type="submit"
+                  className="w-full"
                   disabled={isLoading}
-                  data-testid="link-toggle-backup-code"
+                  data-testid="button-verify-backup"
                 >
-                  {useBackupCode 
-                    ? "استخدام رمز من تطبيق المصادقة"
-                    : "استخدام رمز احتياطي بدلاً من ذلك"
-                  }
-                </button>
-              </div>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                      جاري التحقق...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="ml-2 h-4 w-4" />
+                      تحقق
+                    </>
+                  )}
+                </Button>
 
-              <div className="text-center text-sm text-muted-foreground">
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Logout and return to login page
-                    window.location.href = "/login";
-                  }}
-                  className="text-primary hover:underline"
-                  disabled={isLoading}
-                  data-testid="link-back-to-login"
-                >
-                  العودة إلى تسجيل الدخول
-                </button>
-              </div>
-            </form>
-          </Form>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleToggleBackupCode}
+                    className="text-sm text-primary hover:underline"
+                    disabled={isLoading}
+                    data-testid="link-back-to-methods"
+                  >
+                    العودة إلى طرق التحقق
+                  </button>
+                </div>
+              </form>
+            </Form>
+          )}
+
+          <div className="text-center text-sm text-muted-foreground mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                // Logout and return to login page
+                window.location.href = "/login";
+              }}
+              className="text-primary hover:underline"
+              data-testid="link-back-to-login"
+            >
+              العودة إلى تسجيل الدخول
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>

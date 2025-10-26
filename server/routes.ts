@@ -742,7 +742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         enabled: user.twoFactorEnabled || false,
         hasBackupCodes: (user.twoFactorBackupCodes?.length || 0) > 0,
-        backupCodesCount: user.twoFactorBackupCodes?.length || 0
+        backupCodesCount: user.twoFactorBackupCodes?.length || 0,
+        method: user.twoFactorMethod || 'authenticator'
       });
     } catch (error) {
       console.error("Error checking 2FA status:", error);
