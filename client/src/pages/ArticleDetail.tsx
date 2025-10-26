@@ -7,6 +7,7 @@ import { CredibilityIndicator } from "@/components/CredibilityIndicator";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import StoryTimeline from "@/components/StoryTimeline";
 import FollowStoryButton from "@/components/FollowStoryButton";
+import { ViewsCount } from "@/components/ViewsCount";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -23,7 +24,6 @@ import {
   Bookmark,
   Share2,
   Clock,
-  Eye,
   Sparkles,
   ChevronRight,
   Volume2,
@@ -451,8 +451,11 @@ export default function ArticleDetail() {
 
                 <div className="flex items-center gap-4 text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    {article.views} مشاهدة
+                    <ViewsCount 
+                      views={article.views}
+                      iconClassName="h-4 w-4"
+                    />
+                    <span>مشاهدة</span>
                   </span>
                   <span className="flex items-center gap-1">
                     <Heart className="h-4 w-4" />
