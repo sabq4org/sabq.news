@@ -1,0 +1,24 @@
+[Error] Refused to load https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&family=Inter:wght@100..900&display=swap because it does not appear in the style-src directive of the Content Security Policy.
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Log] 📡 Connecting to notification stream... (index-Cb21JdJ3.js, line 7792, x2)
+[Error] Refused to connect to https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/c907fbaf-f89b-40e3-99f5-f29394e7bae3?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20251026%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251026T213914Z&X-Goog-Expires=899&X-Goog-Signature=3dfc83e6bb9358ad14d5bdbdb38e6eadbdcd1955c3548bd8f23f6c897aa1bd470d1d58b96efd433706259d7a8fdad0cd8902c7209e4e39f9d17596989f32af2aa9d5c8ef2bc0a54bc240803a0fbf0a63a516f81ff2e649022eaa7db6704ac4f5c9525dbafe3ee615072255994f65e8e00a9d06d93f1efcf24d838e1945b53e53426667b63fa77753931b93611396bb4ad0566895090da9fffc84bed0805148330b50b42a04fa6db5691417bd8ca183eced2b90687e5e4411108eda4a0e5be9328d512a5bbfd5483d8a911f7a8618847bf7b3e2503fe6e596fba7dceb6ab5832378acbd91837a51eb163ab37571e80f4286f14e36c61f65695bfb7c2a0460b412&X-Goog-SignedHeaders=host because it does not appear in the connect-src directive of the Content Security Policy.
+[Error] [Uppy] [00:39:14] – "Unknown error"
+	log (index-Cb21JdJ3.js:8059:1447)
+	(anonymous function) (index-Cb21JdJ3.js:8059:8005)
+	a (index-Cb21JdJ3.js:8054:26071)
+	(anonymous function) (index-Cb21JdJ3.js:8054:25435)
+	emit (index-Cb21JdJ3.js:8054:33065)
+	o (index-Cb21JdJ3.js:8070:17763)
+[Error] [Profile] Error saving image: – Error: لم يتم الحصول على رابط الصورة
+Error: لم يتم الحصول على رابط الصورة
+	(anonymous function) (index-Cb21JdJ3.js:8071:13464)
+	o (index-Cb21JdJ3.js:8071:13599)
+	(anonymous function) (index-Cb21JdJ3.js:8070:19508)
+	a (index-Cb21JdJ3.js:8054:26071)
+	(anonymous function) (index-Cb21JdJ3.js:8054:25435)
+	emit (index-Cb21JdJ3.js:8054:33065)
+	(anonymous function) (index-Cb21JdJ3.js:8059:3530)
+> Selected Element
+< <div class="flex flex-col sm:flex-row sm:items-center gap-3">…</div>
+[Log] 📡 SSE connection established (index-Cb21JdJ3.js, line 7792, x2)

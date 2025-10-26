@@ -57,11 +57,11 @@ app.use(
           ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] // Vite needs these in dev
           : ["'self'"], // Production: no unsafe directives
         styleSrc: isDevelopment
-          ? ["'self'", "'unsafe-inline'"] 
-          : ["'self'"], // Production: no unsafe directives
+          ? ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"] 
+          : ["'self'", "https://fonts.googleapis.com"], // Production: allow Google Fonts
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        fontSrc: ["'self'", "data:"],
-        connectSrc: ["'self'", "https://api.openai.com", "https://api.elevenlabs.io"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+        connectSrc: ["'self'", "https://api.openai.com", "https://api.elevenlabs.io", "https://storage.googleapis.com"],
         mediaSrc: ["'self'", "https:", "blob:"],
         objectSrc: ["'none'"],
         frameSrc: ["'self'"],
