@@ -83,7 +83,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Tajawal', 'Inter', '-apple-system', 'BlinkMacSystemFont', '.AppleSystemUIFont', 'system-ui', 'sans-serif'],
+        sans: ['sans-serif'],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
