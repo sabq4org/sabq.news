@@ -259,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/login", authLimiter, (req, res, next) => {
     console.log("🔐 Login attempt:", { email: req.body?.email, hasPassword: !!req.body?.password });
     
-    passport.authenticate("local", (err: any, user: any, info: any) => {
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
         console.error("❌ Login error:", err);
         return res.status(500).json({ message: "خطأ في الخادم" });
@@ -268,6 +268,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("❌ Login failed:", info?.message);
         return res.status(401).json({ message: info?.message || "فشل تسجيل الدخول" });
       }
+
+      // Check if 2FA is enabled
+      if (user.twoFactorEnabled) {
+        console.log("🔐 2FA required for user:", user.email);
+        return res.json({ 
+          requires2FA: true,
+          userId: user.id,
+          message: "يرجى إدخال رمز التحقق بخطوتين" 
+        });
+      }
+
+      // If no 2FA, proceed with normal login
       req.logIn(user, (err) => {
         if (err) {
           console.error("❌ Session error:", err);
@@ -703,6 +715,251 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(500).json({ message: "فشل في رفع الصورة" });
+    }
+  });
+
+  // ============================================================
+  // TWO-FACTOR AUTHENTICATION (2FA) ROUTES
+  // ============================================================
+
+  const { generateSecret, generateQRCode, verifyToken, generateBackupCodes, verifyBackupCode } = await import('./twoFactor');
+
+  // Check 2FA status
+  app.get("/api/2fa/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      
+      res.json({
+        enabled: user.twoFactorEnabled || false,
+        hasBackupCodes: (user.twoFactorBackupCodes?.length || 0) > 0,
+        backupCodesCount: user.twoFactorBackupCodes?.length || 0
+      });
+    } catch (error) {
+      console.error("Error checking 2FA status:", error);
+      res.status(500).json({ message: "فشل في التحقق من حالة المصادقة الثنائية" });
+    }
+  });
+
+  // Setup 2FA - Generate secret and QR code
+  app.post("/api/2fa/setup", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      
+      if (!user.email) {
+        return res.status(400).json({ message: "البريد الإلكتروني مطلوب" });
+      }
+
+      // Generate new secret
+      const secret = generateSecret();
+      const qrCode = await generateQRCode(user.email, secret);
+      const backupCodes = generateBackupCodes();
+
+      // Store secret temporarily (not enabled yet until verified)
+      await db.update(users)
+        .set({ 
+          twoFactorSecret: secret,
+          twoFactorBackupCodes: backupCodes 
+        })
+        .where(eq(users.id, userId));
+
+      res.json({
+        secret,
+        qrCode,
+        backupCodes
+      });
+    } catch (error) {
+      console.error("Error setting up 2FA:", error);
+      res.status(500).json({ message: "فشل في إعداد المصادقة الثنائية" });
+    }
+  });
+
+  // Enable 2FA - Verify token and enable
+  app.post("/api/2fa/enable", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({ message: "الرمز مطلوب" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user.twoFactorSecret) {
+        return res.status(400).json({ message: "يجب إعداد المصادقة الثنائية أولاً" });
+      }
+
+      // Verify the token
+      const isValid = verifyToken(user.twoFactorSecret, token);
+
+      if (!isValid) {
+        return res.status(400).json({ message: "الرمز غير صحيح" });
+      }
+
+      // Enable 2FA
+      await db.update(users)
+        .set({ twoFactorEnabled: true })
+        .where(eq(users.id, userId));
+
+      await logActivity(userId, 'enable_2fa', { enabled: true });
+
+      res.json({ message: "تم تفعيل المصادقة الثنائية بنجاح" });
+    } catch (error) {
+      console.error("Error enabling 2FA:", error);
+      res.status(500).json({ message: "فشل في تفعيل المصادقة الثنائية" });
+    }
+  });
+
+  // Disable 2FA
+  app.post("/api/2fa/disable", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { password, token } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user.twoFactorEnabled) {
+        return res.status(400).json({ message: "المصادقة الثنائية غير مفعلة" });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || '');
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "كلمة المرور غير صحيحة" });
+      }
+
+      // Verify 2FA token if provided
+      if (token) {
+        const isTokenValid = verifyToken(user.twoFactorSecret || '', token);
+        if (!isTokenValid) {
+          return res.status(400).json({ message: "رمز المصادقة غير صحيح" });
+        }
+      }
+
+      // Disable 2FA
+      await db.update(users)
+        .set({ 
+          twoFactorEnabled: false,
+          twoFactorSecret: null,
+          twoFactorBackupCodes: null
+        })
+        .where(eq(users.id, userId));
+
+      await logActivity(userId, 'disable_2fa', { enabled: false });
+
+      res.json({ message: "تم تعطيل المصادقة الثنائية بنجاح" });
+    } catch (error) {
+      console.error("Error disabling 2FA:", error);
+      res.status(500).json({ message: "فشل في تعطيل المصادقة الثنائية" });
+    }
+  });
+
+  // Verify 2FA token during login
+  app.post("/api/2fa/verify", async (req, res) => {
+    try {
+      const { userId, token, backupCode } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ message: "معرف المستخدم مطلوب" });
+      }
+
+      if (!token && !backupCode) {
+        return res.status(400).json({ message: "الرمز أو الرمز الاحتياطي مطلوب" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user || !user.twoFactorEnabled) {
+        return res.status(400).json({ message: "المستخدم غير موجود أو المصادقة الثنائية غير مفعلة" });
+      }
+
+      let isValid = false;
+
+      // Try backup code first
+      if (backupCode) {
+        const result = verifyBackupCode(user.twoFactorBackupCodes || [], backupCode);
+        if (result.valid) {
+          isValid = true;
+          // Update backup codes (remove used code)
+          await db.update(users)
+            .set({ twoFactorBackupCodes: result.remainingCodes || [] })
+            .where(eq(users.id, userId));
+        }
+      } 
+      // Try regular token
+      else if (token) {
+        isValid = verifyToken(user.twoFactorSecret || '', token);
+      }
+
+      if (!isValid) {
+        return res.status(400).json({ message: "الرمز غير صحيح" });
+      }
+
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Error logging in user after 2FA:", err);
+          return res.status(500).json({ message: "فشل في تسجيل الدخول" });
+        }
+
+        res.json({ 
+          message: "تم التحقق بنجاح",
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error verifying 2FA:", error);
+      res.status(500).json({ message: "فشل في التحقق من الرمز" });
+    }
+  });
+
+  // Generate new backup codes
+  app.post("/api/2fa/backup-codes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user.twoFactorEnabled) {
+        return res.status(400).json({ message: "المصادقة الثنائية غير مفعلة" });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || '');
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "كلمة المرور غير صحيحة" });
+      }
+
+      // Generate new backup codes
+      const backupCodes = generateBackupCodes();
+
+      await db.update(users)
+        .set({ twoFactorBackupCodes: backupCodes })
+        .where(eq(users.id, userId));
+
+      await logActivity(userId, 'regenerate_backup_codes', { count: backupCodes.length });
+
+      res.json({ backupCodes });
+    } catch (error) {
+      console.error("Error generating backup codes:", error);
+      res.status(500).json({ message: "فشل في إنشاء الرموز الاحتياطية" });
     }
   });
 
