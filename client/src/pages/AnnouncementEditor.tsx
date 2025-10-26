@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
-import { CalendarIcon, Save, Send, Clock } from "lucide-react";
+import { CalendarIcon, Save, Send, Clock, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,7 @@ interface Announcement {
   iconName: string | null;
   actionButtonLabel: string | null;
   actionButtonUrl: string | null;
+  tags: string[] | null;
 }
 
 export default function AnnouncementEditor() {
@@ -104,6 +105,8 @@ export default function AnnouncementEditor() {
         actionButtonLabel: announcement.actionButtonLabel || undefined,
         actionButtonUrl: announcement.actionButtonUrl || undefined,
       });
+      // Load tags into local state
+      setTags(announcement.tags || []);
     }
   }, [announcement, isEditMode, form]);
 
@@ -156,11 +159,12 @@ export default function AnnouncementEditor() {
       channels: data.channels,
       audienceRoles: data.audienceRoles && data.audienceRoles.length > 0 ? data.audienceRoles : null,
       audienceUserIds: data.audienceUserIds && data.audienceUserIds.length > 0 ? data.audienceUserIds : null,
-      startAt: data.startAt || null,
-      endAt: data.endAt || null,
+      startAt: data.startAt ? data.startAt.toISOString() : null,
+      endAt: data.endAt ? data.endAt.toISOString() : null,
       iconName: data.iconName || null,
       actionButtonLabel: data.actionButtonLabel || null,
       actionButtonUrl: data.actionButtonUrl || null,
+      tags: tags.length > 0 ? tags : null,
       status: action === 'publish' ? 'published' : action === 'schedule' ? 'scheduled' : 'draft',
     };
 
@@ -408,31 +412,44 @@ export default function AnnouncementEditor() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>تاريخ البدء</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-right font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                  data-testid="button-start-date"
-                                >
-                                  <CalendarIcon className="ml-2 h-4 w-4" />
-                                  {field.value ? format(field.value, "PPP", { locale: ar }) : "اختر تاريخ البدء"}
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                locale={ar}
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <div className="flex gap-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "flex-1 justify-start text-right font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="button-start-date"
+                                  >
+                                    <CalendarIcon className="ml-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP", { locale: ar }) : "اختر تاريخ البدء"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  locale={ar}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            {field.value && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => field.onChange(undefined)}
+                                data-testid="button-clear-start-date"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -443,31 +460,44 @@ export default function AnnouncementEditor() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>تاريخ الانتهاء</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-right font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                  data-testid="button-end-date"
-                                >
-                                  <CalendarIcon className="ml-2 h-4 w-4" />
-                                  {field.value ? format(field.value, "PPP", { locale: ar }) : "اختر تاريخ الانتهاء"}
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                locale={ar}
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <div className="flex gap-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "flex-1 justify-start text-right font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="button-end-date"
+                                  >
+                                    <CalendarIcon className="ml-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP", { locale: ar }) : "اختر تاريخ الانتهاء"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  locale={ar}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            {field.value && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => field.onChange(undefined)}
+                                data-testid="button-clear-end-date"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </FormItem>
                       )}
                     />
