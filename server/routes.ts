@@ -10442,14 +10442,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 13. GET /api/announcements/active - Get active announcements for user
+  // 13. GET /api/announcements/active - Get active announcements for user (public endpoint)
   app.get("/api/announcements/active",
-    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
+        
+        // If user is not logged in, return empty array (no announcements for guests)
         if (!userId) {
-          return res.status(401).json({ message: "غير مصرح" });
+          return res.json([]);
         }
 
         const { channel } = req.query;
