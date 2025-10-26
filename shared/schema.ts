@@ -2626,6 +2626,9 @@ export const insertInternalAnnouncementSchema = createInsertSchema(internalAnnou
   createdAt: true,
   updatedAt: true,
   publishedAt: true,
+  createdBy: true, // Will be added by backend from req.user
+  updatedBy: true,
+  publishedBy: true,
 }).extend({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").max(200, "العنوان يجب ألا يتجاوز 200 حرف"),
   message: z.string().min(10, "الرسالة يجب أن تكون 10 أحرف على الأقل"),
