@@ -273,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user.twoFactorEnabled) {
         console.log("🔐 2FA required for user:", user.email);
         // Store userId in session temporarily for 2FA verification
-        req.session.pending2FAUserId = user.id;
+        (req.session as any).pending2FAUserId = user.id;
         req.session.save((saveErr) => {
           if (saveErr) {
             console.error("❌ Session save error:", saveErr);
@@ -891,7 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { token, backupCode } = req.body;
 
       // Get userId from session
-      const userId = req.session.pending2FAUserId;
+      const userId = (req.session as any).pending2FAUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "الجلسة منتهية. الرجاء تسجيل الدخول مرة أخرى" });
@@ -930,14 +930,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Log the user in
-      req.login(user, (err) => {
+      req.login(user, (err: any) => {
         if (err) {
           console.error("Error logging in user after 2FA:", err);
           return res.status(500).json({ message: "فشل في تسجيل الدخول" });
         }
 
         // Clear the pending 2FA userId from session
-        delete req.session.pending2FAUserId;
+        delete (req.session as any).pending2FAUserId;
 
         res.json({ 
           message: "تم التحقق بنجاح",
