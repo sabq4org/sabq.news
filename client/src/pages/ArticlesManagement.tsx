@@ -539,7 +539,7 @@ export default function ArticlesManagement() {
                     {article.newsType !== "breaking" ? (
                       <Button
                         size="sm"
-                        variant="destructive"
+                        variant="outline"
                         onClick={() => toggleBreakingMutation.mutate({ 
                           id: article.id, 
                           currentState: false 
@@ -554,7 +554,7 @@ export default function ArticlesManagement() {
                     ) : (
                       <Button
                         size="sm"
-                        variant="secondary"
+                        variant="destructive"
                         onClick={() => toggleBreakingMutation.mutate({ 
                           id: article.id, 
                           currentState: true 
