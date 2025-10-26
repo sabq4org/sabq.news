@@ -49,6 +49,11 @@ export const users = pgTable("users", {
   lockedUntil: timestamp("locked_until"),
   failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
   
+  // Two-Factor Authentication fields
+  twoFactorSecret: text("two_factor_secret"),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
+  twoFactorBackupCodes: text("two_factor_backup_codes").array(),
+  
   // Soft delete
   deletedAt: timestamp("deleted_at"),
   
