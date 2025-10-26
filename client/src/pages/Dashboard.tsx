@@ -235,6 +235,12 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
+                  <img 
+                    src="/attached_assets/sabq-logo.png" 
+                    alt="سبق" 
+                    className="h-10 w-auto object-contain"
+                    data-testid="img-sabq-logo"
+                  />
                   <Sparkles className="h-6 w-6 text-primary" data-testid="icon-sparkles" />
                   <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-greeting">
                     {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
