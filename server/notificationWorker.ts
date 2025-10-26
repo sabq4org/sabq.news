@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { db } from "./db";
 import { eq, and, lte, isNull, sql } from "drizzle-orm";
 import { notificationQueue, notificationsInbox, notificationMetrics, articles } from "@shared/schema";
+import { storage } from "./storage";
 
 async function processNotificationQueue() {
   try {
@@ -322,10 +323,18 @@ export function startNotificationWorker() {
       });
     });
 
+    // Process scheduled announcements every minute (auto-publish/expire)
+    cron.schedule("*/1 * * * *", () => {
+      processScheduledAnnouncements().catch(error => {
+        console.error("[AnnouncementScheduler] Cron job error:", error);
+      });
+    });
+
     console.log("[NotificationWorker] Notification worker started successfully");
     console.log("[ScheduledPublisher] Scheduled article publisher started successfully");
     console.log("[DigestWorker] Daily digest worker started successfully");
     console.log("[REC WORKER] Smart recommendation worker started successfully");
+    console.log("[AnnouncementScheduler] Announcement scheduler started successfully");
     
     // Run initial processing in a non-blocking way
     processNotificationQueue().catch(error => {
@@ -336,8 +345,22 @@ export function startNotificationWorker() {
     publishScheduledArticles().catch(error => {
       console.error("[ScheduledPublisher] Initial publishing check error:", error);
     });
+
+    // Run initial announcement scheduling check
+    processScheduledAnnouncements().catch(error => {
+      console.error("[AnnouncementScheduler] Initial scheduling check error:", error);
+    });
   } catch (error) {
     console.error("[NotificationWorker] Failed to start notification worker:", error);
     throw error; // Re-throw so the main server can handle it
+  }
+}
+
+// Process scheduled announcements (auto-publish and auto-expire)
+async function processScheduledAnnouncements() {
+  try {
+    await storage.processScheduledAnnouncements();
+  } catch (error) {
+    console.error("[AnnouncementScheduler] Error processing scheduled announcements:", error);
   }
 }

@@ -2236,7 +2236,7 @@ export type UpdateSmartBlock = Partial<InsertSmartBlock>;
 
 // Audio News Briefs - أخبار صوتية قصيرة
 export const audioNewsBriefs = pgTable("audio_news_briefs", {
-  id: varchar("id").primaryKey().notNull().$defaultFn(() => nanoid()),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   content: text("content").notNull(),
   audioUrl: text("audio_url"),
@@ -2455,3 +2455,200 @@ export const insertAudioNewsletterListenSchema = createInsertSchema(audioNewslet
 });
 
 export const updateAudioNewsletterSchema = insertAudioNewsletterSchema.partial();
+
+// ============================================================
+// INTERNAL ANNOUNCEMENTS SYSTEM - نظام الإعلانات الداخلية المتقدم
+// ============================================================
+
+// Internal Announcements (multiple announcements with advanced features)
+export const internalAnnouncements = pgTable("internal_announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  message: text("message").notNull(), // Rich text HTML or JSON
+  priority: text("priority").default("normal").notNull(), // low, normal, high
+  status: text("status").default("draft").notNull(), // draft, scheduled, published, expired, archived
+  
+  // Channels where announcement will appear
+  channels: jsonb("channels").default([]).notNull().$type<string[]>(), // ["dashboardBanner", "inbox", "toast"]
+  
+  // Targeting & Audience
+  audienceRoles: jsonb("audience_roles").$type<string[]>(), // ["admin", "editor", "reporter"] or null for all
+  audienceUserIds: jsonb("audience_user_ids").$type<string[]>(), // Specific user IDs or null
+  
+  // Metadata
+  tags: jsonb("tags").$type<string[]>(), // Keywords for filtering/search
+  attachments: jsonb("attachments").$type<{url: string; name: string; type: string}[]>(), // Files/links
+  
+  // Display settings
+  dismissible: boolean("dismissible").default(true).notNull(),
+  maxViewsPerUser: integer("max_views_per_user"), // null = unlimited
+  
+  // Scheduling
+  startAt: timestamp("start_at"), // When to auto-publish (null = manual publish)
+  endAt: timestamp("end_at"), // When to auto-expire (null = never)
+  
+  // Tracking
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  publishedBy: varchar("published_by").references(() => users.id),
+  publishedAt: timestamp("published_at"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_announcements_status").on(table.status),
+  index("idx_announcements_priority").on(table.priority),
+  index("idx_announcements_published").on(table.publishedAt),
+  index("idx_announcements_schedule").on(table.startAt, table.endAt),
+  index("idx_announcements_created").on(table.createdBy),
+]);
+
+// Announcement Versions (for history/archiving)
+export const internalAnnouncementVersions = pgTable("internal_announcement_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  announcementId: varchar("announcement_id").references(() => internalAnnouncements.id, { onDelete: "cascade" }).notNull(),
+  
+  // Snapshot of data at this version
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  priority: text("priority").notNull(),
+  status: text("status").notNull(),
+  channels: jsonb("channels").notNull().$type<string[]>(),
+  audienceRoles: jsonb("audience_roles").$type<string[]>(),
+  audienceUserIds: jsonb("audience_user_ids").$type<string[]>(),
+  tags: jsonb("tags").$type<string[]>(),
+  
+  // Version metadata
+  changedBy: varchar("changed_by").references(() => users.id).notNull(),
+  changeReason: text("change_reason"), // Optional description of change
+  diff: jsonb("diff"), // JSON diff of what changed
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_versions_announcement").on(table.announcementId),
+  index("idx_versions_created").on(table.createdAt),
+]);
+
+// Announcement Metrics (for analytics)
+export const internalAnnouncementMetrics = pgTable("internal_announcement_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  announcementId: varchar("announcement_id").references(() => internalAnnouncements.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id), // null for anonymous
+  
+  event: text("event").notNull(), // impression, unique_view, dismiss, click
+  channel: text("channel"), // Which channel it was seen on
+  
+  // Event metadata
+  meta: jsonb("meta").$type<{
+    deviceType?: string;
+    userAgent?: string;
+    location?: string;
+    [key: string]: any;
+  }>(),
+  
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_metrics_announcement").on(table.announcementId),
+  index("idx_metrics_event").on(table.event),
+  index("idx_metrics_user").on(table.userId),
+  index("idx_metrics_occurred").on(table.occurredAt),
+  index("idx_metrics_analytics").on(table.announcementId, table.event, table.occurredAt),
+]);
+
+// Relations
+export const internalAnnouncementsRelations = relations(internalAnnouncements, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [internalAnnouncements.createdBy],
+    references: [users.id],
+    relationName: "announcement_creator",
+  }),
+  updater: one(users, {
+    fields: [internalAnnouncements.updatedBy],
+    references: [users.id],
+    relationName: "announcement_updater",
+  }),
+  publisher: one(users, {
+    fields: [internalAnnouncements.publishedBy],
+    references: [users.id],
+    relationName: "announcement_publisher",
+  }),
+  versions: many(internalAnnouncementVersions),
+  metrics: many(internalAnnouncementMetrics),
+}));
+
+export const internalAnnouncementVersionsRelations = relations(internalAnnouncementVersions, ({ one }) => ({
+  announcement: one(internalAnnouncements, {
+    fields: [internalAnnouncementVersions.announcementId],
+    references: [internalAnnouncements.id],
+  }),
+  changer: one(users, {
+    fields: [internalAnnouncementVersions.changedBy],
+    references: [users.id],
+  }),
+}));
+
+export const internalAnnouncementMetricsRelations = relations(internalAnnouncementMetrics, ({ one }) => ({
+  announcement: one(internalAnnouncements, {
+    fields: [internalAnnouncementMetrics.announcementId],
+    references: [internalAnnouncements.id],
+  }),
+  user: one(users, {
+    fields: [internalAnnouncementMetrics.userId],
+    references: [users.id],
+  }),
+}));
+
+// Types
+export type InternalAnnouncement = typeof internalAnnouncements.$inferSelect;
+export type InternalAnnouncementVersion = typeof internalAnnouncementVersions.$inferSelect;
+export type InternalAnnouncementMetric = typeof internalAnnouncementMetrics.$inferSelect;
+
+// Combined type with details
+export type InternalAnnouncementWithDetails = InternalAnnouncement & {
+  creator?: User;
+  updater?: User;
+  publisher?: User;
+  versions?: InternalAnnouncementVersion[];
+  metrics?: InternalAnnouncementMetric[];
+  _count?: {
+    versions: number;
+    metrics: number;
+    impressions: number;
+    uniqueViews: number;
+    dismissals: number;
+    clicks: number;
+  };
+};
+
+// Zod Schemas
+export const insertInternalAnnouncementSchema = createInsertSchema(internalAnnouncements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+}).extend({
+  title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").max(200, "العنوان يجب ألا يتجاوز 200 حرف"),
+  message: z.string().min(10, "الرسالة يجب أن تكون 10 أحرف على الأقل"),
+  priority: z.enum(["low", "normal", "high"]).default("normal"),
+  status: z.enum(["draft", "scheduled", "published", "expired", "archived"]).default("draft"),
+  channels: z.array(z.enum(["dashboardBanner", "inbox", "toast"])).min(1, "يجب اختيار قناة واحدة على الأقل"),
+});
+
+export const updateInternalAnnouncementSchema = insertInternalAnnouncementSchema.partial();
+
+export const insertInternalAnnouncementVersionSchema = createInsertSchema(internalAnnouncementVersions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInternalAnnouncementMetricSchema = createInsertSchema(internalAnnouncementMetrics).omit({
+  id: true,
+  occurredAt: true,
+}).extend({
+  event: z.enum(["impression", "unique_view", "dismiss", "click"]),
+});
+
+export type InsertInternalAnnouncement = z.infer<typeof insertInternalAnnouncementSchema>;
+export type UpdateInternalAnnouncement = z.infer<typeof updateInternalAnnouncementSchema>;
+export type InsertInternalAnnouncementVersion = z.infer<typeof insertInternalAnnouncementVersionSchema>;
+export type InsertInternalAnnouncementMetric = z.infer<typeof insertInternalAnnouncementMetricSchema>;

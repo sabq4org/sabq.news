@@ -46,6 +46,9 @@ import {
   audioNewsletters,
   audioNewsletterArticles,
   audioNewsletterListens,
+  internalAnnouncements,
+  internalAnnouncementVersions,
+  internalAnnouncementMetrics,
   staff,
   roles,
   permissions,
@@ -154,6 +157,14 @@ import {
   type AudioNewsBrief,
   type InsertAudioNewsBrief,
   audioNewsBriefs,
+  type InternalAnnouncement,
+  type InsertInternalAnnouncement,
+  type UpdateInternalAnnouncement,
+  type InternalAnnouncementVersion,
+  type InsertInternalAnnouncementVersion,
+  type InternalAnnouncementMetric,
+  type InsertInternalAnnouncementMetric,
+  type InternalAnnouncementWithDetails,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -710,6 +721,53 @@ export interface IStorage {
     averageCompletionRate: number;
     listensByDay: { date: string; count: number }[];
   }>;
+
+  // ============================================
+  // Internal Announcements Operations - نظام الإعلانات الداخلية المتقدم
+  // ============================================
+  
+  // Announcement CRUD operations
+  createInternalAnnouncement(data: InsertInternalAnnouncement): Promise<InternalAnnouncement>;
+  getInternalAnnouncementById(id: string): Promise<InternalAnnouncementWithDetails | null>;
+  getAllInternalAnnouncements(filters?: {
+    status?: string;
+    priority?: string;
+    channel?: string;
+    tags?: string[];
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<InternalAnnouncementWithDetails[]>;
+  updateInternalAnnouncement(id: string, data: UpdateInternalAnnouncement, changedBy: string, changeReason?: string): Promise<InternalAnnouncement>;
+  deleteInternalAnnouncement(id: string): Promise<void>;
+  
+  // Status management
+  publishInternalAnnouncement(id: string, publishedBy: string): Promise<InternalAnnouncement>;
+  archiveInternalAnnouncement(id: string): Promise<InternalAnnouncement>;
+  scheduleInternalAnnouncement(id: string, startAt: Date, endAt?: Date): Promise<InternalAnnouncement>;
+  
+  // Audience targeting
+  getActiveAnnouncementsForUser(userId: string, userRoles: string[], channel?: string): Promise<InternalAnnouncementWithDetails[]>;
+  
+  // Versioning
+  createAnnouncementVersion(data: InsertInternalAnnouncementVersion): Promise<InternalAnnouncementVersion>;
+  getAnnouncementVersions(announcementId: string): Promise<InternalAnnouncementVersion[]>;
+  restoreAnnouncementVersion(versionId: string, restoredBy: string): Promise<InternalAnnouncement>;
+  
+  // Metrics tracking
+  trackAnnouncementMetric(data: InsertInternalAnnouncementMetric): Promise<InternalAnnouncementMetric>;
+  getAnnouncementMetrics(announcementId: string, event?: string): Promise<InternalAnnouncementMetric[]>;
+  getAnnouncementAnalytics(announcementId: string): Promise<{
+    totalImpressions: number;
+    uniqueViews: number;
+    dismissals: number;
+    clicks: number;
+    viewsByChannel: { channel: string; count: number }[];
+    viewsByDay: { date: string; count: number }[];
+  }>;
+  
+  // Scheduled tasks
+  processScheduledAnnouncements(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5818,7 +5876,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateAudioNewsBrief(id: string, data: Partial<InsertAudioNewsBrief>): Promise<AudioNewsBrief> {
     const [updated] = await db.update(audioNewsBriefs)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...data as any, updatedAt: new Date() })
       .where(eq(audioNewsBriefs.id, id))
       .returning();
     return updated;
@@ -6080,6 +6138,569 @@ export class DatabaseStorage implements IStorage {
         count: row.count,
       })),
     };
+  }
+
+  // ============================================
+  // Internal Announcements Operations - نظام الإعلانات الداخلية المتقدم
+  // ============================================
+
+  async createInternalAnnouncement(data: InsertInternalAnnouncement): Promise<InternalAnnouncement> {
+    const [announcement] = await db
+      .insert(internalAnnouncements)
+      .values(data as any)
+      .returning();
+    return announcement;
+  }
+
+  async getInternalAnnouncementById(id: string): Promise<InternalAnnouncementWithDetails | null> {
+    const creatorAlias = aliasedTable(users, 'creator');
+    const updaterAlias = aliasedTable(users, 'updater');
+    const publisherAlias = aliasedTable(users, 'publisher');
+
+    const [announcement] = await db
+      .select()
+      .from(internalAnnouncements)
+      .leftJoin(creatorAlias, eq(internalAnnouncements.createdBy, creatorAlias.id))
+      .leftJoin(updaterAlias, eq(internalAnnouncements.updatedBy, updaterAlias.id))
+      .leftJoin(publisherAlias, eq(internalAnnouncements.publishedBy, publisherAlias.id))
+      .where(eq(internalAnnouncements.id, id));
+
+    if (!announcement) return null;
+
+    // Get versions
+    const versions = await db
+      .select()
+      .from(internalAnnouncementVersions)
+      .where(eq(internalAnnouncementVersions.announcementId, id))
+      .orderBy(desc(internalAnnouncementVersions.createdAt));
+
+    // Get metrics
+    const metrics = await db
+      .select()
+      .from(internalAnnouncementMetrics)
+      .where(eq(internalAnnouncementMetrics.announcementId, id));
+
+    // Calculate counts
+    const [impressionsCount] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, id),
+          eq(internalAnnouncementMetrics.event, 'impression')
+        )
+      );
+
+    const [uniqueViewsCount] = await db
+      .select({ count: sql<number>`cast(count(distinct ${internalAnnouncementMetrics.userId}) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, id),
+          eq(internalAnnouncementMetrics.event, 'unique_view')
+        )
+      );
+
+    const [dismissalsCount] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, id),
+          eq(internalAnnouncementMetrics.event, 'dismiss')
+        )
+      );
+
+    const [clicksCount] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, id),
+          eq(internalAnnouncementMetrics.event, 'click')
+        )
+      );
+
+    return {
+      ...announcement.internal_announcements,
+      creator: announcement.creator || undefined,
+      updater: announcement.updater || undefined,
+      publisher: announcement.publisher || undefined,
+      versions,
+      metrics,
+      _count: {
+        versions: versions.length,
+        metrics: metrics.length,
+        impressions: impressionsCount?.count || 0,
+        uniqueViews: uniqueViewsCount?.count || 0,
+        dismissals: dismissalsCount?.count || 0,
+        clicks: clicksCount?.count || 0,
+      },
+    };
+  }
+
+  async getAllInternalAnnouncements(filters?: {
+    status?: string;
+    priority?: string;
+    channel?: string;
+    tags?: string[];
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<InternalAnnouncementWithDetails[]> {
+    const creatorAlias = aliasedTable(users, 'creator');
+    
+    let query = db
+      .select()
+      .from(internalAnnouncements)
+      .leftJoin(creatorAlias, eq(internalAnnouncements.createdBy, creatorAlias.id))
+      .orderBy(desc(internalAnnouncements.createdAt));
+
+    const conditions = [];
+
+    if (filters?.status) {
+      conditions.push(eq(internalAnnouncements.status, filters.status));
+    }
+
+    if (filters?.priority) {
+      conditions.push(eq(internalAnnouncements.priority, filters.priority));
+    }
+
+    if (filters?.channel) {
+      conditions.push(sql`${internalAnnouncements.channels}::jsonb @> ${JSON.stringify([filters.channel])}::jsonb`);
+    }
+
+    if (filters?.tags && filters.tags.length > 0) {
+      conditions.push(sql`${internalAnnouncements.tags}::jsonb ?| array[${filters.tags.map(t => `'${t}'`).join(',')}]`);
+    }
+
+    if (filters?.search) {
+      conditions.push(
+        or(
+          ilike(internalAnnouncements.title, `%${filters.search}%`),
+          ilike(internalAnnouncements.message, `%${filters.search}%`)
+        )!
+      );
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as any;
+    }
+
+    if (filters?.offset) {
+      query = query.offset(filters.offset) as any;
+    }
+
+    const results = await query;
+
+    // Fetch details for each announcement
+    const announcementsWithDetails = await Promise.all(
+      results.map(async (row) => {
+        const details = await this.getInternalAnnouncementById(row.internal_announcements.id);
+        return details!;
+      })
+    );
+
+    return announcementsWithDetails;
+  }
+
+  async updateInternalAnnouncement(
+    id: string,
+    data: UpdateInternalAnnouncement,
+    changedBy: string,
+    changeReason?: string
+  ): Promise<InternalAnnouncement> {
+    // Get current announcement for version snapshot
+    const [current] = await db
+      .select()
+      .from(internalAnnouncements)
+      .where(eq(internalAnnouncements.id, id));
+
+    if (!current) {
+      throw new Error('Announcement not found');
+    }
+
+    // Create version snapshot
+    await this.createAnnouncementVersion({
+      announcementId: id,
+      title: current.title,
+      message: current.message,
+      priority: current.priority,
+      status: current.status,
+      channels: current.channels as string[],
+      audienceRoles: current.audienceRoles as string[] | undefined,
+      audienceUserIds: current.audienceUserIds as string[] | undefined,
+      tags: current.tags as string[] | undefined,
+      changedBy,
+      changeReason,
+    });
+
+    // Update announcement
+    const [updated] = await db
+      .update(internalAnnouncements)
+      .set({
+        ...data,
+        updatedBy: changedBy,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(internalAnnouncements.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  async deleteInternalAnnouncement(id: string): Promise<void> {
+    await db.delete(internalAnnouncements).where(eq(internalAnnouncements.id, id));
+  }
+
+  async publishInternalAnnouncement(id: string, publishedBy: string): Promise<InternalAnnouncement> {
+    const [published] = await db
+      .update(internalAnnouncements)
+      .set({
+        status: 'published',
+        publishedBy,
+        publishedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(internalAnnouncements.id, id))
+      .returning();
+
+    return published;
+  }
+
+  async archiveInternalAnnouncement(id: string): Promise<InternalAnnouncement> {
+    const [archived] = await db
+      .update(internalAnnouncements)
+      .set({
+        status: 'archived',
+        updatedAt: new Date(),
+      })
+      .where(eq(internalAnnouncements.id, id))
+      .returning();
+
+    return archived;
+  }
+
+  async scheduleInternalAnnouncement(id: string, startAt: Date, endAt?: Date): Promise<InternalAnnouncement> {
+    const [scheduled] = await db
+      .update(internalAnnouncements)
+      .set({
+        status: 'scheduled',
+        startAt,
+        endAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(internalAnnouncements.id, id))
+      .returning();
+
+    return scheduled;
+  }
+
+  async getActiveAnnouncementsForUser(
+    userId: string,
+    userRoles: string[],
+    channel?: string
+  ): Promise<InternalAnnouncementWithDetails[]> {
+    const now = new Date();
+
+    let query = db
+      .select()
+      .from(internalAnnouncements)
+      .where(
+        and(
+          eq(internalAnnouncements.status, 'published'),
+          or(
+            isNull(internalAnnouncements.startAt),
+            lte(internalAnnouncements.startAt, now)
+          )!,
+          or(
+            isNull(internalAnnouncements.endAt),
+            gte(internalAnnouncements.endAt, now)
+          )!
+        )
+      )
+      .orderBy(desc(internalAnnouncements.priority), desc(internalAnnouncements.publishedAt));
+
+    const announcements = await query;
+
+    // Filter by channel if specified
+    let filteredAnnouncements = announcements;
+    if (channel) {
+      filteredAnnouncements = announcements.filter(a => 
+        (a.channels as string[]).includes(channel)
+      );
+    }
+
+    // Filter by audience targeting (roles and specific users)
+    filteredAnnouncements = filteredAnnouncements.filter(a => {
+      // If no audience targeting, show to everyone
+      if (!a.audienceRoles && !a.audienceUserIds) {
+        return true;
+      }
+
+      // Check if user is in specific user list
+      if (a.audienceUserIds && (a.audienceUserIds as string[]).includes(userId)) {
+        return true;
+      }
+
+      // Check if user has any of the required roles
+      if (a.audienceRoles && (a.audienceRoles as string[]).some(role => userRoles.includes(role))) {
+        return true;
+      }
+
+      return false;
+    });
+
+    // Fetch details for each announcement
+    const announcementsWithDetails = await Promise.all(
+      filteredAnnouncements.map(async (announcement) => {
+        const details = await this.getInternalAnnouncementById(announcement.id);
+        return details!;
+      })
+    );
+
+    return announcementsWithDetails;
+  }
+
+  async createAnnouncementVersion(data: InsertInternalAnnouncementVersion): Promise<InternalAnnouncementVersion> {
+    const [version] = await db
+      .insert(internalAnnouncementVersions)
+      .values(data as any)
+      .returning();
+
+    return version;
+  }
+
+  async getAnnouncementVersions(announcementId: string): Promise<InternalAnnouncementVersion[]> {
+    const versions = await db
+      .select()
+      .from(internalAnnouncementVersions)
+      .where(eq(internalAnnouncementVersions.announcementId, announcementId))
+      .orderBy(desc(internalAnnouncementVersions.createdAt));
+
+    return versions;
+  }
+
+  async restoreAnnouncementVersion(versionId: string, restoredBy: string): Promise<InternalAnnouncement> {
+    // Get the version
+    const [version] = await db
+      .select()
+      .from(internalAnnouncementVersions)
+      .where(eq(internalAnnouncementVersions.id, versionId));
+
+    if (!version) {
+      throw new Error('Version not found');
+    }
+
+    // Get current announcement for creating a version snapshot before restore
+    const [current] = await db
+      .select()
+      .from(internalAnnouncements)
+      .where(eq(internalAnnouncements.id, version.announcementId));
+
+    if (!current) {
+      throw new Error('Announcement not found');
+    }
+
+    // Create snapshot of current state before restoring
+    await this.createAnnouncementVersion({
+      announcementId: version.announcementId,
+      title: current.title,
+      message: current.message,
+      priority: current.priority,
+      status: current.status,
+      channels: current.channels as string[],
+      audienceRoles: current.audienceRoles as string[] | undefined,
+      audienceUserIds: current.audienceUserIds as string[] | undefined,
+      tags: current.tags as string[] | undefined,
+      changedBy: restoredBy,
+      changeReason: `Restored from version ${versionId}`,
+    });
+
+    // Restore the version
+    const [restored] = await db
+      .update(internalAnnouncements)
+      .set({
+        title: version.title,
+        message: version.message,
+        priority: version.priority,
+        status: version.status,
+        channels: version.channels as any,
+        audienceRoles: version.audienceRoles as any,
+        audienceUserIds: version.audienceUserIds as any,
+        tags: version.tags as any,
+        updatedBy: restoredBy,
+        updatedAt: new Date(),
+      })
+      .where(eq(internalAnnouncements.id, version.announcementId))
+      .returning();
+
+    return restored;
+  }
+
+  async trackAnnouncementMetric(data: InsertInternalAnnouncementMetric): Promise<InternalAnnouncementMetric> {
+    const [metric] = await db
+      .insert(internalAnnouncementMetrics)
+      .values(data as any)
+      .returning();
+
+    return metric;
+  }
+
+  async getAnnouncementMetrics(announcementId: string, event?: string): Promise<InternalAnnouncementMetric[]> {
+    const conditions = [eq(internalAnnouncementMetrics.announcementId, announcementId)];
+    
+    if (event) {
+      conditions.push(eq(internalAnnouncementMetrics.event, event));
+    }
+
+    const metrics = await db
+      .select()
+      .from(internalAnnouncementMetrics)
+      .where(and(...conditions))
+      .orderBy(desc(internalAnnouncementMetrics.occurredAt));
+
+    return metrics;
+  }
+
+  async getAnnouncementAnalytics(announcementId: string): Promise<{
+    totalImpressions: number;
+    uniqueViews: number;
+    dismissals: number;
+    clicks: number;
+    viewsByChannel: { channel: string; count: number }[];
+    viewsByDay: { date: string; count: number }[];
+  }> {
+    // Total impressions
+    const [impressions] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'impression')
+        )
+      );
+
+    // Unique views
+    const [uniqueViews] = await db
+      .select({ 
+        count: sql<number>`cast(count(distinct ${internalAnnouncementMetrics.userId}) as integer)` 
+      })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'unique_view')
+        )
+      );
+
+    // Dismissals
+    const [dismissals] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'dismiss')
+        )
+      );
+
+    // Clicks
+    const [clicks] = await db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'click')
+        )
+      );
+
+    // Views by channel
+    const viewsByChannel = await db
+      .select({
+        channel: internalAnnouncementMetrics.channel,
+        count: sql<number>`cast(count(*) as integer)`,
+      })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'unique_view')
+        )
+      )
+      .groupBy(internalAnnouncementMetrics.channel)
+      .orderBy(desc(sql`count(*)`));
+
+    // Views by day (last 30 days)
+    const viewsByDay = await db
+      .select({
+        date: sql<string>`date(${internalAnnouncementMetrics.occurredAt})`,
+        count: sql<number>`cast(count(*) as integer)`,
+      })
+      .from(internalAnnouncementMetrics)
+      .where(
+        and(
+          eq(internalAnnouncementMetrics.announcementId, announcementId),
+          eq(internalAnnouncementMetrics.event, 'unique_view'),
+          gte(internalAnnouncementMetrics.occurredAt, sql`now() - interval '30 days'`)
+        )
+      )
+      .groupBy(sql`date(${internalAnnouncementMetrics.occurredAt})`)
+      .orderBy(sql`date(${internalAnnouncementMetrics.occurredAt})`);
+
+    return {
+      totalImpressions: impressions?.count || 0,
+      uniqueViews: uniqueViews?.count || 0,
+      dismissals: dismissals?.count || 0,
+      clicks: clicks?.count || 0,
+      viewsByChannel: viewsByChannel.map((row) => ({
+        channel: row.channel || 'unknown',
+        count: row.count,
+      })),
+      viewsByDay: viewsByDay.map((row) => ({
+        date: row.date,
+        count: row.count,
+      })),
+    };
+  }
+
+  async processScheduledAnnouncements(): Promise<void> {
+    const now = new Date();
+
+    // Publish scheduled announcements whose startAt time has arrived
+    await db
+      .update(internalAnnouncements)
+      .set({
+        status: 'published',
+        publishedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(internalAnnouncements.status, 'scheduled'),
+          lte(internalAnnouncements.startAt, now)
+        )
+      );
+
+    // Expire published announcements whose endAt time has passed
+    await db
+      .update(internalAnnouncements)
+      .set({
+        status: 'expired',
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(internalAnnouncements.status, 'published'),
+          lte(internalAnnouncements.endAt, now)
+        )
+      );
   }
 }
 
