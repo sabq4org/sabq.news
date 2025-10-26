@@ -9949,10 +9949,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // INTERNAL ANNOUNCEMENTS ROUTES - نظام الإعلانات الداخلية المتقدم
   // ============================================================
 
-  // 1. POST /api/announcements - Create announcement (admin/editor)
+  // 1. POST /api/announcements - Create announcement (admin only)
   app.post("/api/announcements",
     requireAuth,
-    requireAnyPermission('announcements.create', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -9989,10 +9989,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 2. GET /api/announcements - List all with filters
+  // 2. GET /api/announcements - List all with filters (admin only)
   app.get("/api/announcements",
     requireAuth,
-    requireAnyPermission('announcements.read', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const {
@@ -10028,7 +10028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 3. GET /api/announcements/:id - Get single announcement with details
   app.get("/api/announcements/:id",
     requireAuth,
-    requireAnyPermission('announcements.read', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const announcement = await storage.getInternalAnnouncementById(req.params.id);
@@ -10048,7 +10048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 4. PATCH /api/announcements/:id - Update announcement (auto-creates version)
   app.patch("/api/announcements/:id",
     requireAuth,
-    requireAnyPermission('announcements.update', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10120,7 +10120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 5. DELETE /api/announcements/:id - Delete announcement
   app.delete("/api/announcements/:id",
     requireAuth,
-    requireAnyPermission('announcements.delete', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10159,7 +10159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 6. POST /api/announcements/:id/publish - Publish announcement
   app.post("/api/announcements/:id/publish",
     requireAuth,
-    requireAnyPermission('announcements.publish', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10204,7 +10204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 7. POST /api/announcements/:id/archive - Archive announcement
   app.post("/api/announcements/:id/archive",
     requireAuth,
-    requireAnyPermission('announcements.archive', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10244,7 +10244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 8. POST /api/announcements/:id/schedule - Schedule announcement
   app.post("/api/announcements/:id/schedule",
     requireAuth,
-    requireAnyPermission('announcements.schedule', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10317,7 +10317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 9. GET /api/announcements/:id/versions - Get version history
   app.get("/api/announcements/:id/versions",
     requireAuth,
-    requireAnyPermission('announcements.read', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const announcementId = req.params.id;
@@ -10341,7 +10341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 10. POST /api/announcements/:id/versions/:versionId/restore - Restore version
   app.post("/api/announcements/:id/versions/:versionId/restore",
     requireAuth,
-    requireAnyPermission('announcements.update', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const userId = req.user?.id;
@@ -10421,7 +10421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 12. GET /api/announcements/:id/analytics - Get aggregated analytics
   app.get("/api/announcements/:id/analytics",
     requireAuth,
-    requireAnyPermission('announcements.read', 'system.admin'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const announcementId = req.params.id;

@@ -53,8 +53,18 @@ export default function AnnouncementsList() {
 
   const pageSize = 20;
 
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+    if (priorityFilter && priorityFilter !== 'all') params.append('priority', priorityFilter);
+    if (channelFilters.length > 0) params.append('channels', channelFilters.join(','));
+    if (search) params.append('search', search);
+    return params.toString() ? `?${params.toString()}` : '';
+  };
+
   const { data: announcements, isLoading } = useQuery<Announcement[]>({
-    queryKey: ['/api/announcements', { status: statusFilter !== 'all' ? statusFilter : undefined }],
+    queryKey: ['/api/announcements', statusFilter, priorityFilter, channelFilters, search],
+    queryFn: () => fetch(`/api/announcements${buildQueryString()}`).then(r => r.json()),
   });
 
   const deleteMutation = useMutation({
