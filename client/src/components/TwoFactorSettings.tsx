@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Shield, ShieldCheck, Copy, Key, Loader2, AlertTriangle } from "lucide-react";
+import { Shield, ShieldCheck, Copy, Key, Loader2, AlertTriangle, Smartphone, MessageSquare } from "lucide-react";
 
 const enableSchema = z.object({
   token: z.string().length(6, "الرمز يجب أن يكون 6 أرقام"),
@@ -28,13 +29,20 @@ const backupCodesSchema = z.object({
   password: z.string().min(1, "كلمة المرور مطلوبة"),
 });
 
+const methodSchema = z.object({
+  method: z.enum(['authenticator', 'sms', 'both']),
+  password: z.string().min(1, "كلمة المرور مطلوبة"),
+});
+
 type EnableFormData = z.infer<typeof enableSchema>;
 type DisableFormData = z.infer<typeof disableSchema>;
 type BackupCodesFormData = z.infer<typeof backupCodesSchema>;
+type MethodFormData = z.infer<typeof methodSchema>;
 
 interface TwoFactorStatus {
   enabled: boolean;
   hasBackupCodes: boolean;
+  method?: 'authenticator' | 'sms' | 'both';
 }
 
 interface SetupResponse {
@@ -51,6 +59,7 @@ export function TwoFactorSettings() {
   const [setupDialogOpen, setSetupDialogOpen] = useState(false);
   const [disableDialogOpen, setDisableDialogOpen] = useState(false);
   const [backupCodesDialogOpen, setBackupCodesDialogOpen] = useState(false);
+  const [methodDialogOpen, setMethodDialogOpen] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
 
@@ -81,6 +90,14 @@ export function TwoFactorSettings() {
   const backupCodesForm = useForm<BackupCodesFormData>({
     resolver: zodResolver(backupCodesSchema),
     defaultValues: {
+      password: "",
+    },
+  });
+
+  const methodForm = useForm<MethodFormData>({
+    resolver: zodResolver(methodSchema),
+    defaultValues: {
+      method: status?.method || 'authenticator',
       password: "",
     },
   });
@@ -174,6 +191,31 @@ export function TwoFactorSettings() {
       toast({
         title: "خطأ",
         description: error.message || "فشل في إنشاء الرموز الاحتياطية",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const methodMutation = useMutation({
+    mutationFn: async (data: MethodFormData) => {
+      return await apiRequest("/api/2fa/update-method", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/2fa/status"] });
+      setMethodDialogOpen(false);
+      methodForm.reset();
+      toast({
+        title: "تم التحديث بنجاح",
+        description: data.message || "تم تحديث طريقة التحقق بخطوتين",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في تحديث طريقة التحقق",
         variant: "destructive",
       });
     },
@@ -283,30 +325,66 @@ export function TwoFactorSettings() {
               <ShieldCheck className="h-4 w-4" />
               <AlertDescription>
                 التحقق بخطوتين مفعّل. حسابك محمي بطبقة أمان إضافية.
+                {status?.method && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-sm">الطريقة الحالية:</span>
+                    <Badge variant="outline">
+                      {status.method === 'authenticator' && (
+                        <>
+                          <Smartphone className="h-3 w-3 ml-1" />
+                          تطبيق المصادقة
+                        </>
+                      )}
+                      {status.method === 'sms' && (
+                        <>
+                          <MessageSquare className="h-3 w-3 ml-1" />
+                          رسالة نصية
+                        </>
+                      )}
+                      {status.method === 'both' && (
+                        <>
+                          <Shield className="h-3 w-3 ml-1" />
+                          كلا الطريقتين
+                        </>
+                      )}
+                    </Badge>
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
-                onClick={() => setBackupCodesDialogOpen(true)}
-                disabled={!status?.hasBackupCodes}
-                data-testid="button-regenerate-backup-codes"
-                className="flex-1"
+                onClick={() => setMethodDialogOpen(true)}
+                data-testid="button-change-method"
               >
-                <Key className="ml-2 h-4 w-4" />
-                إنشاء رموز احتياطية جديدة
+                <Shield className="ml-2 h-4 w-4" />
+                تغيير طريقة التحقق
               </Button>
 
-              <Button
-                variant="destructive"
-                onClick={() => setDisableDialogOpen(true)}
-                data-testid="button-disable-2fa"
-                className="flex-1"
-              >
-                <AlertTriangle className="ml-2 h-4 w-4" />
-                تعطيل التحقق بخطوتين
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setBackupCodesDialogOpen(true)}
+                  disabled={!status?.hasBackupCodes}
+                  data-testid="button-regenerate-backup-codes"
+                  className="flex-1"
+                >
+                  <Key className="ml-2 h-4 w-4" />
+                  إنشاء رموز احتياطية جديدة
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  onClick={() => setDisableDialogOpen(true)}
+                  data-testid="button-disable-2fa"
+                  className="flex-1"
+                >
+                  <AlertTriangle className="ml-2 h-4 w-4" />
+                  تعطيل التحقق بخطوتين
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -678,6 +756,123 @@ export function TwoFactorSettings() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Change Method Dialog */}
+        <Dialog open={methodDialogOpen} onOpenChange={setMethodDialogOpen}>
+          <DialogContent className="max-w-md" data-testid="dialog-change-method">
+            <DialogHeader>
+              <DialogTitle>تغيير طريقة التحقق بخطوتين</DialogTitle>
+              <DialogDescription>
+                اختر الطريقة المفضلة للتحقق من هويتك عند تسجيل الدخول
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...methodForm}>
+              <form
+                onSubmit={methodForm.handleSubmit((data) => methodMutation.mutate(data))}
+                className="space-y-4"
+              >
+                <FormField
+                  control={methodForm.control}
+                  name="method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>طريقة التحقق</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-method">
+                            <SelectValue placeholder="اختر طريقة التحقق" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="authenticator" data-testid="option-authenticator">
+                            <div className="flex items-center gap-2">
+                              <Smartphone className="h-4 w-4" />
+                              <span>تطبيق المصادقة</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="sms" data-testid="option-sms">
+                            <div className="flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4" />
+                              <span>رسالة نصية SMS</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="both" data-testid="option-both">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              <span>كلا الطريقتين</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={methodForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>كلمة المرور للتأكيد</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          placeholder="••••••"
+                          dir="ltr"
+                          data-testid="input-method-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Alert>
+                  <AlertDescription className="text-sm">
+                    {methodForm.watch('method') === 'sms' || methodForm.watch('method') === 'both' ? (
+                      "تأكد من إضافة رقم جوالك في الملف الشخصي قبل اختيار طريقة الرسائل النصية"
+                    ) : (
+                      "ستحتاج إلى تطبيق المصادقة مثل Google Authenticator أو Microsoft Authenticator"
+                    )}
+                  </AlertDescription>
+                </Alert>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setMethodDialogOpen(false);
+                      methodForm.reset();
+                    }}
+                    className="flex-1"
+                    data-testid="button-cancel-method"
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={methodMutation.isPending}
+                    data-testid="button-confirm-method"
+                  >
+                    {methodMutation.isPending ? (
+                      <>
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        جاري التحديث...
+                      </>
+                    ) : (
+                      "حفظ التغييرات"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
