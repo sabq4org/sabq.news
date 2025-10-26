@@ -742,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Setup 2FA - Generate secret and QR code
-  app.post("/api/2fa/setup", isAuthenticated, async (req: any, res) => {
+  app.get("/api/2fa/setup", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const [user] = await db.select().from(users).where(eq(users.id, userId));
