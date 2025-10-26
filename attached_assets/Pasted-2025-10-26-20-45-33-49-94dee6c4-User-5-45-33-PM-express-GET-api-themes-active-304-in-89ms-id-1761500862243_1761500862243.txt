@@ -1,0 +1,116 @@
+2025-10-26 20:45:33.49
+94dee6c4
+User
+5:45:33 PM [express] GET /api/themes/active 304 in 89ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-10-26 20:46:00.02
+5a614b4d
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 20:46:00.02
+5a614b4d
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 20:46:00.02
+94dee6c4
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 20:46:00.03
+94dee6c4
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 20:46:00.05
+94dee6c4
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 20:46:00.05
+94dee6c4
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 20:46:00.13
+5a614b4d
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-26 20:46:00.13
+94dee6c4
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-26 20:46:00.13
+5a614b4d
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 20:46:00.13
+5a614b4d
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 20:46:12.79
+94dee6c4
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 20:46:12.81
+94dee6c4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 20:46:12.90
+94dee6c4
+User
+5:46:12 PM [express] POST /api/2fa/enable 200 in 284ms :: {"message":"تم تفعيل المصادقة الثنائية بنج…
+2025-10-26 20:46:13.28
+94dee6c4
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 20:46:13.30
+94dee6c4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 20:46:13.35
+94dee6c4
+User
+5:46:13 PM [express] GET /api/2fa/status 200 in 87ms :: {"enabled":true,"hasBackupCodes":true,"backu…
+2025-10-26 20:46:34.04
+94dee6c4
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 20:46:34.06
+94dee6c4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 20:46:34.11
+94dee6c4
+User
+5:46:34 PM [express] GET /api/themes/active 304 in 219ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-10-26 20:47:00.02
+5a614b4d
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 20:47:00.02
+5a614b4d
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 20:47:00.02
+94dee6c4
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 20:47:00.02
+94dee6c4
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 20:47:00.05
+94dee6c4
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 20:47:00.05
+94dee6c4
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 20:47:00.11
+5a614b4d
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 20:47:00.11
+5a614b4d
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 20:47:00.11
+5a614b4d
+User
+[ScheduledPublisher] Found 0 articles ready to publish

@@ -811,7 +811,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newValue: { enabled: true }
       });
 
-      res.json({ message: "تم تفعيل المصادقة الثنائية بنجاح" });
+      // Return the backup codes that were generated during setup
+      res.json({ 
+        message: "تم تفعيل المصادقة الثنائية بنجاح",
+        backupCodes: user.twoFactorBackupCodes || []
+      });
     } catch (error) {
       console.error("Error enabling 2FA:", error);
       res.status(500).json({ message: "فشل في تفعيل المصادقة الثنائية" });

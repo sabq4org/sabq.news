@@ -111,7 +111,7 @@ export function TwoFactorSettings() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/2fa/status"] });
-      setBackupCodes(data.backupCodes);
+      setBackupCodes(data.backupCodes || []);
       setShowBackupCodes(true);
       enableForm.reset();
       toast({
@@ -162,7 +162,7 @@ export function TwoFactorSettings() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/2fa/status"] });
-      setBackupCodes(data.backupCodes);
+      setBackupCodes(data.backupCodes || []);
       setBackupCodesDialogOpen(false);
       backupCodesForm.reset();
       toast({
