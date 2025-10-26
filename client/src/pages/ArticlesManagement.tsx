@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Eye, Send, Star, Bell, Plus } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus } from "lucide-react";
+import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatusCards } from "@/components/admin/StatusCards";
 import { BreakingSwitch } from "@/components/admin/BreakingSwitch";
@@ -438,10 +439,10 @@ export default function ArticlesManagement() {
                           </Button>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{article.views}</span>
-                          </div>
+                          <ViewsCount 
+                            views={article.views}
+                            iconClassName="h-4 w-4"
+                          />
                         </td>
                         <td className="py-3 px-4">
                           <RowActions 
@@ -517,10 +518,11 @@ export default function ArticlesManagement() {
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Eye className="h-3.5 w-3.5" />
-                      <span>{article.views}</span>
-                    </div>
+                    <ViewsCount 
+                      views={article.views}
+                      iconClassName="h-3.5 w-3.5"
+                      className="text-xs text-muted-foreground"
+                    />
                   </div>
 
                   {/* Actions */}
