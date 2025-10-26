@@ -86,7 +86,8 @@ export async function setupAuth(app: Express) {
           return done(null, { 
             id: user.id, 
             email: user.email,
-            twoFactorEnabled: user.twoFactorEnabled 
+            twoFactorEnabled: user.twoFactorEnabled,
+            twoFactorMethod: user.twoFactorMethod
           });
         } catch (error) {
           console.error("❌ LocalStrategy error:", error);

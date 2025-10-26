@@ -28,13 +28,7 @@ export default function TwoFactorVerify() {
   const [verificationMethod, setVerificationMethod] = useState<'authenticator' | 'sms'>('authenticator');
   const [smsSent, setSmsSent] = useState(false);
   const [sendingSMS, setSendingSMS] = useState(false);
-
-  const form = useForm<VerifyFormData>({
-    resolver: zodResolver(verifySchema),
-    defaultValues: {
-      token: "",
-    },
-  });
+  const [userMethod, setUserMethod] = useState<string | null>(null);
 
   const sendSMSOTP = async () => {
     try {
@@ -59,6 +53,51 @@ export default function TwoFactorVerify() {
       setSendingSMS(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUserMethod = async () => {
+      try {
+        const response = await fetch('/api/2fa/pending-method');
+        if (!response.ok) {
+          throw new Error('فشل في الحصول على طريقة التحقق');
+        }
+        
+        const data = await response.json();
+        setUserMethod(data.method);
+        
+        if (data.method === 'sms' || data.method === 'both') {
+          setVerificationMethod('sms');
+          if (data.method === 'sms') {
+            // Auto-send SMS for SMS-only method using shared function
+            sendSMSOTP();
+          }
+        } else {
+          setVerificationMethod('authenticator');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user 2FA method:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل في تحميل بيانات التحقق. يرجى المحاولة مرة أخرى",
+          variant: "destructive",
+        });
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      }
+    };
+
+    fetchUserMethod();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const form = useForm<VerifyFormData>({
+    resolver: zodResolver(verifySchema),
+    defaultValues: {
+      token: "",
+    },
+  });
 
   const onSubmit = async (data: VerifyFormData) => {
     try {
@@ -415,8 +454,9 @@ export default function TwoFactorVerify() {
               </form>
             </Form>
           )}
-
-          <div className="text-center text-sm text-muted-foreground mt-4">
+        </CardContent>
+        <div className="p-6 pt-0">
+          <div className="text-center text-sm text-muted-foreground">
             <button
               type="button"
               onClick={() => {
@@ -429,7 +469,7 @@ export default function TwoFactorVerify() {
               العودة إلى تسجيل الدخول
             </button>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );

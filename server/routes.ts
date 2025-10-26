@@ -995,6 +995,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending 2FA method
+  app.get("/api/2fa/pending-method", async (req: any, res) => {
+    try {
+      const userId = (req.session as any).pending2FAUserId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      res.json({
+        method: user.twoFactorMethod || 'authenticator',
+        hasPhoneNumber: !!user.phoneNumber
+      });
+    } catch (error) {
+      console.error("Error getting pending 2FA method:", error);
+      res.status(500).json({ message: "فشل في الحصول على طريقة التحقق" });
+    }
+  });
+
   // Verify SMS OTP during login
   app.post("/api/2fa/verify-sms", strictLimiter, async (req: any, res) => {
     try {
