@@ -20,14 +20,10 @@ const verifySchema = z.object({
 type VerifyFormData = z.infer<typeof verifySchema>;
 
 export default function TwoFactorVerify() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [useBackupCode, setUseBackupCode] = useState(false);
-
-  // Get userId from navigation state
-  const state = (window.history.state?.state || {}) as { userId?: string };
-  const userId = state.userId;
 
   const form = useForm<VerifyFormData>({
     resolver: zodResolver(verifySchema),
@@ -40,19 +36,9 @@ export default function TwoFactorVerify() {
     try {
       setIsLoading(true);
       
-      if (!userId) {
-        toast({
-          title: "خطأ",
-          description: "معرف المستخدم غير موجود. الرجاء تسجيل الدخول مرة أخرى.",
-          variant: "destructive",
-        });
-        navigate("/login");
-        return;
-      }
-      
       const requestBody = useBackupCode 
-        ? { userId, backupCode: data.token }
-        : { userId, token: data.token };
+        ? { backupCode: data.token }
+        : { token: data.token };
       
       await apiRequest("/api/2fa/verify", {
         method: "POST",

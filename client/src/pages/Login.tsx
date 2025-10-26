@@ -42,9 +42,7 @@ export default function Login() {
       // Check if 2FA is required
       if (response.requires2FA) {
         // Redirect to 2FA verification page
-        navigate("/2fa-verify", { 
-          state: { userId: response.userId }
-        });
+        navigate("/2fa-verify");
         return;
       }
 

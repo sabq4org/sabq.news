@@ -272,11 +272,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if 2FA is enabled
       if (user.twoFactorEnabled) {
         console.log("🔐 2FA required for user:", user.email);
-        return res.json({ 
-          requires2FA: true,
-          userId: user.id,
-          message: "يرجى إدخال رمز التحقق بخطوتين" 
+        // Store userId in session temporarily for 2FA verification
+        req.session.pending2FAUserId = user.id;
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("❌ Session save error:", saveErr);
+            return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
+          }
+          return res.json({ 
+            requires2FA: true,
+            message: "يرجى إدخال رمز التحقق بخطوتين" 
+          });
         });
+        return;
       }
 
       // If no 2FA, proceed with normal login
@@ -878,12 +886,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify 2FA token during login
-  app.post("/api/2fa/verify", async (req, res) => {
+  app.post("/api/2fa/verify", async (req: any, res) => {
     try {
-      const { userId, token, backupCode } = req.body;
+      const { token, backupCode } = req.body;
+
+      // Get userId from session
+      const userId = req.session.pending2FAUserId;
 
       if (!userId) {
-        return res.status(400).json({ message: "معرف المستخدم مطلوب" });
+        return res.status(400).json({ message: "الجلسة منتهية. الرجاء تسجيل الدخول مرة أخرى" });
       }
 
       if (!token && !backupCode) {
@@ -924,6 +935,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Error logging in user after 2FA:", err);
           return res.status(500).json({ message: "فشل في تسجيل الدخول" });
         }
+
+        // Clear the pending 2FA userId from session
+        delete req.session.pending2FAUserId;
 
         res.json({ 
           message: "تم التحقق بنجاح",

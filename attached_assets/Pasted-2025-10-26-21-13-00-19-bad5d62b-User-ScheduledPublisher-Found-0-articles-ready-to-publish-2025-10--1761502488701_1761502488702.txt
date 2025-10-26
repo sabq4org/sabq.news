@@ -1,0 +1,104 @@
+2025-10-26 21:13:00.19
+bad5d62b
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-26 21:13:00.30
+6b4b32ac
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 21:13:00.32
+6b4b32ac
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 21:13:00.32
+6b4b32ac
+User
+🔐 Login attempt: { email: 'admin@sabq.sa', hasPassword: true }
+2025-10-26 21:13:00.33
+6b4b32ac
+User
+🔍 LocalStrategy: Checking user: admin@sabq.sa
+2025-10-26 21:13:00.35
+6b4b32ac
+User
+✅ LocalStrategy: User found, checking password
+2025-10-26 21:13:00.41
+6b4b32ac
+User
+🔑 LocalStrategy: Password valid? true
+2025-10-26 21:13:00.41
+6b4b32ac
+User
+✅ LocalStrategy: Success!
+2025-10-26 21:13:00.41
+6b4b32ac
+User
+🔐 2FA required for user: admin@sabq.sa
+2025-10-26 21:13:00.43
+6b4b32ac
+User
+6:13:00 PM [express] POST /api/login 200 in 155ms :: {"requires2FA":true,"userId":"admin-sabq","mess…
+2025-10-26 21:13:01.96
+6b4b32ac
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 21:13:01.98
+6b4b32ac
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 21:13:01.98
+6b4b32ac
+User
+📡 SSE connection opened for user: admin-sabq
+2025-10-26 21:13:01.98
+6b4b32ac
+User
+📡 User admin-sabq subscribed to notification stream
+2025-10-26 21:13:23.63
+6b4b32ac
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-26 21:13:23.65
+6b4b32ac
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-26 21:13:23.65
+6b4b32ac
+User
+🔐 Login attempt: { email: 'admin@sabq.sa', hasPassword: true }
+2025-10-26 21:13:23.65
+6b4b32ac
+User
+🔍 LocalStrategy: Checking user: admin@sabq.sa
+2025-10-26 21:13:23.67
+6b4b32ac
+User
+✅ LocalStrategy: User found, checking password
+2025-10-26 21:13:23.73
+6b4b32ac
+User
+🔑 LocalStrategy: Password valid? true
+2025-10-26 21:13:23.73
+6b4b32ac
+User
+✅ LocalStrategy: Success!
+2025-10-26 21:13:23.73
+6b4b32ac
+User
+🔐 2FA required for user: admin@sabq.sa
+2025-10-26 21:13:23.75
+6b4b32ac
+User
+6:13:23 PM [express] POST /api/login 200 in 285ms :: {"requires2FA":true,"userId":"admin-sabq","mess…
+2025-10-26 21:13:49.27
+6b4b32ac
+User
+6:13:49 PM [express] GET /api/themes/active 304 in 192ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-10-26 21:14:00.02
+6b4b32ac
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 21:14:00.02
+6b4b32ac
+User
+[ScheduledPublisher] Checking for scheduled articles...
