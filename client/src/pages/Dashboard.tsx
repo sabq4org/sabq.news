@@ -19,6 +19,7 @@ import {
   Activity,
   Sparkles,
 } from "lucide-react";
+import { ViewsCount } from "@/components/ViewsCount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -602,10 +603,10 @@ export default function Dashboard() {
                               locale: arSA,
                             })}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </span>
+                          <ViewsCount 
+                            views={article.views}
+                            iconClassName="h-3 w-3"
+                          />
                         </div>
                       </div>
                     </div>
@@ -719,8 +720,11 @@ export default function Dashboard() {
                           </Badge>
                         )}
                         <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {article.views} مشاهدة
+                          <ViewsCount 
+                            views={article.views}
+                            iconClassName="h-3 w-3"
+                          />
+                          <span>مشاهدة</span>
                         </span>
                       </div>
                     </div>
