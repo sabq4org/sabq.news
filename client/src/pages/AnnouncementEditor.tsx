@@ -27,10 +27,10 @@ import { cn } from "@/lib/utils";
 const announcementSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
   message: z.string().min(10, "الرسالة يجب أن تكون 10 أحرف على الأقل"),
-  priority: z.enum(["low", "medium", "high", "critical"]),
-  channels: z.array(z.string()).min(1, "يجب اختيار قناة واحدة على الأقل"),
-  targetRoles: z.array(z.string()).optional(),
-  targetUserIds: z.array(z.string()).optional(),
+  priority: z.enum(["low", "normal", "high"]),
+  channels: z.array(z.enum(["dashboardBanner", "inbox", "toast"])).min(1, "يجب اختيار قناة واحدة على الأقل"),
+  audienceRoles: z.array(z.string()).optional(),
+  audienceUserIds: z.array(z.string()).optional(),
   startAt: z.date().optional(),
   endAt: z.date().optional(),
   publishNow: z.boolean().default(false),
@@ -48,8 +48,8 @@ interface Announcement {
   message: string;
   priority: string;
   channels: string[];
-  targetRoles: string[] | null;
-  targetUserIds: string[] | null;
+  audienceRoles: string[] | null;
+  audienceUserIds: string[] | null;
   startAt: string | null;
   endAt: string | null;
   iconName: string | null;
@@ -79,10 +79,10 @@ export default function AnnouncementEditor() {
     defaultValues: {
       title: "",
       message: "",
-      priority: "medium",
+      priority: "normal",
       channels: [],
-      targetRoles: [],
-      targetUserIds: [],
+      audienceRoles: [],
+      audienceUserIds: [],
       publishNow: false,
       tags: [],
     },
@@ -94,9 +94,9 @@ export default function AnnouncementEditor() {
         title: announcement.title,
         message: announcement.message,
         priority: announcement.priority as any,
-        channels: announcement.channels,
-        targetRoles: announcement.targetRoles || [],
-        targetUserIds: announcement.targetUserIds || [],
+        channels: announcement.channels as ("dashboardBanner" | "inbox" | "toast")[],
+        audienceRoles: announcement.audienceRoles || [],
+        audienceUserIds: announcement.audienceUserIds || [],
         startAt: announcement.startAt ? new Date(announcement.startAt) : undefined,
         endAt: announcement.endAt ? new Date(announcement.endAt) : undefined,
         publishNow: false,
@@ -154,8 +154,8 @@ export default function AnnouncementEditor() {
       message: data.message,
       priority: data.priority,
       channels: data.channels,
-      targetRoles: data.targetRoles && data.targetRoles.length > 0 ? data.targetRoles : null,
-      targetUserIds: data.targetUserIds && data.targetUserIds.length > 0 ? data.targetUserIds : null,
+      audienceRoles: data.audienceRoles && data.audienceRoles.length > 0 ? data.audienceRoles : null,
+      audienceUserIds: data.audienceUserIds && data.audienceUserIds.length > 0 ? data.audienceUserIds : null,
       startAt: data.startAt || null,
       endAt: data.endAt || null,
       iconName: data.iconName || null,
@@ -171,7 +171,7 @@ export default function AnnouncementEditor() {
     }
   };
 
-  const toggleChannel = (channel: string) => {
+  const toggleChannel = (channel: "dashboardBanner" | "inbox" | "toast") => {
     const current = form.getValues('channels');
     if (current.includes(channel)) {
       form.setValue('channels', current.filter(c => c !== channel));
@@ -181,11 +181,11 @@ export default function AnnouncementEditor() {
   };
 
   const toggleRole = (role: string) => {
-    const current = form.getValues('targetRoles') || [];
+    const current = form.getValues('audienceRoles') || [];
     if (current.includes(role)) {
-      form.setValue('targetRoles', current.filter(r => r !== role));
+      form.setValue('audienceRoles', current.filter(r => r !== role));
     } else {
-      form.setValue('targetRoles', [...current, role]);
+      form.setValue('audienceRoles', [...current, role]);
     }
   };
 
@@ -274,9 +274,8 @@ export default function AnnouncementEditor() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="low">منخفض</SelectItem>
-                              <SelectItem value="medium">متوسط</SelectItem>
+                              <SelectItem value="normal">عادي</SelectItem>
                               <SelectItem value="high">عالي</SelectItem>
-                              <SelectItem value="critical">حرج</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -309,7 +308,7 @@ export default function AnnouncementEditor() {
                         <FormItem>
                           <FormLabel>القنوات</FormLabel>
                           <div className="space-y-2">
-                            {['all', 'dashboard', 'email', 'mobile', 'web'].map(channel => (
+                            {(['dashboardBanner', 'inbox', 'toast'] as const).map(channel => (
                               <div key={channel} className="flex items-center gap-2">
                                 <Checkbox
                                   id={`channel-${channel}`}
@@ -318,11 +317,9 @@ export default function AnnouncementEditor() {
                                   data-testid={`checkbox-channel-${channel}`}
                                 />
                                 <label htmlFor={`channel-${channel}`} className="text-sm cursor-pointer">
-                                  {channel === 'all' && 'جميع القنوات'}
-                                  {channel === 'dashboard' && 'لوحة التحكم'}
-                                  {channel === 'email' && 'البريد الإلكتروني'}
-                                  {channel === 'mobile' && 'تطبيق الجوال'}
-                                  {channel === 'web' && 'الموقع'}
+                                  {channel === 'dashboardBanner' && 'بانر لوحة التحكم'}
+                                  {channel === 'inbox' && 'صندوق الوارد'}
+                                  {channel === 'toast' && 'إشعار منبثق'}
                                 </label>
                               </div>
                             ))}
@@ -334,7 +331,7 @@ export default function AnnouncementEditor() {
 
                     <FormField
                       control={form.control}
-                      name="targetRoles"
+                      name="audienceRoles"
                       render={() => (
                         <FormItem>
                           <FormLabel>الأدوار المستهدفة</FormLabel>
@@ -343,7 +340,7 @@ export default function AnnouncementEditor() {
                               <div key={role} className="flex items-center gap-2">
                                 <Checkbox
                                   id={`role-${role}`}
-                                  checked={(form.watch('targetRoles') || []).includes(role)}
+                                  checked={(form.watch('audienceRoles') || []).includes(role)}
                                   onCheckedChange={() => toggleRole(role)}
                                   data-testid={`checkbox-role-${role}`}
                                 />
@@ -362,7 +359,7 @@ export default function AnnouncementEditor() {
 
                     <FormField
                       control={form.control}
-                      name="targetUserIds"
+                      name="audienceUserIds"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>مستخدمون محددون (اختياري)</FormLabel>
