@@ -53,10 +53,10 @@ export function MirqabHomeSection() {
             <Telescope className="w-8 h-8 text-white" data-testid="icon-telescope-home" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold" data-testid="heading-mirqab-home">
+            <h2 className="text-xl md:text-3xl font-bold" data-testid="heading-mirqab-home">
               المرقاب - استشراف المستقبل
             </h2>
-            <p className="text-muted-foreground" data-testid="text-mirqab-subtitle">
+            <p className="text-xs md:text-sm text-muted-foreground" data-testid="text-mirqab-subtitle">
               تحليلات وتوقعات مدعومة بالذكاء الاصطناعي
             </p>
           </div>
@@ -78,8 +78,8 @@ export function MirqabHomeSection() {
                 <TrendingUp className="w-6 h-6 text-white" data-testid="icon-sabq-home" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold" data-testid="heading-sabq-home">مؤشر سبق</h3>
-                <p className="text-sm text-muted-foreground">مؤشرات اقتصادية وسياسية واجتماعية</p>
+                <h3 className="text-lg md:text-2xl font-bold" data-testid="heading-sabq-home">مؤشر سبق</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">مؤشرات اقتصادية وسياسية واجتماعية</p>
               </div>
               <Link href="/mirqab/sabq-index">
                 <Button variant="ghost" size="sm" data-testid="button-view-sabq">
@@ -117,7 +117,7 @@ export function MirqabHomeSection() {
                             <span data-testid={`text-views-${index.id}`}>{index.views || 0}</span>
                           </div>
                         </div>
-                        <CardTitle className="line-clamp-2" data-testid={`text-title-${index.id}`}>
+                        <CardTitle className="line-clamp-2 text-base md:text-lg" data-testid={`text-title-${index.id}`}>
                           {index.title}
                         </CardTitle>
                         <CardDescription className="flex items-center gap-2">
@@ -161,8 +161,8 @@ export function MirqabHomeSection() {
                 <Telescope className="w-6 h-6 text-white" data-testid="icon-stories-home" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold" data-testid="heading-stories-home">قصة قادمة</h3>
-                <p className="text-sm text-muted-foreground">توقعات الأحداث المستقبلية</p>
+                <h3 className="text-lg md:text-2xl font-bold" data-testid="heading-stories-home">قصة قادمة</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">توقعات الأحداث المستقبلية</p>
               </div>
               <Link href="/mirqab/next-stories">
                 <Button variant="ghost" size="sm" data-testid="button-view-stories">
@@ -201,7 +201,7 @@ export function MirqabHomeSection() {
                              story.expectedTiming === 'quarter' ? 'ربع سنة' : 'سنة'}
                           </Badge>
                         </div>
-                        <CardTitle className="line-clamp-2" data-testid={`text-title-${story.id}`}>
+                        <CardTitle className="line-clamp-2 text-base md:text-lg" data-testid={`text-title-${story.id}`}>
                           {story.title}
                         </CardTitle>
                         <CardDescription className="line-clamp-3" data-testid={`text-summary-${story.id}`}>
@@ -224,10 +224,10 @@ export function MirqabHomeSection() {
                 <Brain className="w-6 h-6 text-white" data-testid="icon-algorithm-home" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold" data-testid="heading-algorithm-home">
+                <h3 className="text-lg md:text-2xl font-bold" data-testid="heading-algorithm-home">
                   الخوارزمي يكتب
                 </h3>
-                <p className="text-sm text-muted-foreground">تحليلات وآراء مدعومة بالذكاء الاصطناعي</p>
+                <p className="text-xs md:text-sm text-muted-foreground">تحليلات وآراء مدعومة بالذكاء الاصطناعي</p>
               </div>
               <Link href="/mirqab/algorithm-writes">
                 <Button variant="ghost" size="sm" data-testid="button-view-algorithm">
@@ -272,7 +272,7 @@ export function MirqabHomeSection() {
                             </Badge>
                           )}
                         </div>
-                        <CardTitle className="line-clamp-2" data-testid={`text-title-${article.id}`}>
+                        <CardTitle className="line-clamp-2 text-base md:text-lg" data-testid={`text-title-${article.id}`}>
                           {article.title}
                         </CardTitle>
                         <CardDescription className="flex items-center gap-2">
