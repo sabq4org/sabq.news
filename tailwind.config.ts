@@ -83,7 +83,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['sans-serif'],
+        sans: ['Tajawal', 'Inter', 'system-ui', 'sans-serif'],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
