@@ -253,7 +253,7 @@ export default function ArticleEditor() {
         newsType,
         isFeatured: newsType === "featured",
         publishType,
-        scheduledAt: publishType === "scheduled" && scheduledAt ? scheduledAt : null,
+        scheduledAt: publishType === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
         status: publishNow 
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
@@ -269,7 +269,7 @@ export default function ArticleEditor() {
         if (publishNow && publishType === "instant") {
           articleData.publishedAt = new Date().toISOString();
         } else if (publishNow && publishType === "scheduled" && scheduledAt) {
-          articleData.publishedAt = scheduledAt;
+          articleData.publishedAt = new Date(scheduledAt).toISOString();
         }
       } else {
         // For updates, include republish flag
