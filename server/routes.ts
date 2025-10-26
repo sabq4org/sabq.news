@@ -9294,8 +9294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "البلوك الذكي غير موجود" });
       }
 
-      const validatedData = updateSmartBlockSchema.parse(req.body);
-      const updated = await storage.updateSmartBlock(req.params.id, validatedData as any);
+      const updated = await storage.updateSmartBlock(req.params.id, req.body);
 
       await logActivity({
         userId: req.user?.id,
