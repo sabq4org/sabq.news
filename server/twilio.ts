@@ -53,19 +53,24 @@ export async function getTwilioFromPhoneNumber() {
  */
 export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolean; message: string }> {
   try {
+    if (!process.env.TWILIO_VERIFY_SID) {
+      throw new Error('TWILIO_VERIFY_SID environment variable is not configured');
+    }
+
     const client = await getTwilioClient();
-    const { accountSid } = await getCredentials();
+    
+    console.log('📱 Sending SMS OTP to:', phoneNumber);
     
     // Use Twilio Verify API to send OTP
     const verification = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SID || 'default')
+      .services(process.env.TWILIO_VERIFY_SID)
       .verifications
       .create({
         to: phoneNumber,
-        channel: phoneNumber.startsWith('+966') ? 'sms' : 'sms'
+        channel: 'sms'
       });
 
-    console.log('📱 SMS OTP sent:', { to: phoneNumber, status: verification.status });
+    console.log('✅ SMS OTP sent successfully:', { to: phoneNumber, status: verification.status });
 
     return {
       success: verification.status === 'pending',
@@ -74,10 +79,10 @@ export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolea
         : 'فشل في إرسال رمز التحقق'
     };
   } catch (error: any) {
-    console.error('❌ Error sending SMS OTP:', error);
+    console.error('❌ Error sending SMS OTP:', error.message || error);
     return {
       success: false,
-      message: error.message || 'فشل في إرسال رمز التحقق'
+      message: 'فشل في إرسال رمز التحقق. تأكد من صحة رقم الجوال'
     };
   }
 }
@@ -87,17 +92,23 @@ export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolea
  */
 export async function verifySMSOTP(phoneNumber: string, code: string): Promise<{ valid: boolean; message: string }> {
   try {
+    if (!process.env.TWILIO_VERIFY_SID) {
+      throw new Error('TWILIO_VERIFY_SID environment variable is not configured');
+    }
+
     const client = await getTwilioClient();
     
+    console.log('🔍 Verifying SMS OTP for:', phoneNumber);
+    
     const verificationCheck = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SID || 'default')
+      .services(process.env.TWILIO_VERIFY_SID)
       .verificationChecks
       .create({
         to: phoneNumber,
         code: code
       });
 
-    console.log('🔍 SMS OTP verification:', { to: phoneNumber, status: verificationCheck.status });
+    console.log('✅ SMS OTP verification result:', { to: phoneNumber, status: verificationCheck.status });
 
     return {
       valid: verificationCheck.status === 'approved',
@@ -106,10 +117,10 @@ export async function verifySMSOTP(phoneNumber: string, code: string): Promise<{
         : 'الرمز غير صحيح أو منتهي الصلاحية'
     };
   } catch (error: any) {
-    console.error('❌ Error verifying SMS OTP:', error);
+    console.error('❌ Error verifying SMS OTP:', error.message || error);
     return {
       valid: false,
-      message: error.message || 'فشل في التحقق من الرمز'
+      message: 'الرمز غير صحيح أو منتهي الصلاحية'
     };
   }
 }
