@@ -53,6 +53,7 @@ export const users = pgTable("users", {
   twoFactorSecret: text("two_factor_secret"),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
   twoFactorBackupCodes: text("two_factor_backup_codes").array(),
+  twoFactorMethod: text("two_factor_method").default("authenticator").notNull(), // authenticator, sms, both
   
   // Soft delete
   deletedAt: timestamp("deleted_at"),
