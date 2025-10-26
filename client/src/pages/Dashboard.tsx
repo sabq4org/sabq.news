@@ -351,7 +351,7 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div className="text-2xl font-bold" data-testid="text-views-total">
-                    {stats?.articles.totalViews.toLocaleString('ar-EG') || 0}
+                    {stats?.articles.totalViews || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-views-description">
                     إجمالي مشاهدات المقالات
@@ -375,7 +375,7 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div className="text-2xl font-bold text-primary" data-testid="text-views-today">
-                    {stats?.articles.viewsToday.toLocaleString('ar-EG') || 0}
+                    {stats?.articles.viewsToday || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
                     مشاهدة جديدة اليوم
@@ -417,10 +417,10 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div className="text-2xl font-bold text-chart-3" data-testid="text-reads-today">
-                    {stats?.engagement.readsToday.toLocaleString('ar-EG') || 0}
+                    {stats?.engagement.readsToday || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
-                    من {stats?.engagement.totalReads.toLocaleString('ar-EG') || 0} إجمالي
+                    من {stats?.engagement.totalReads || 0} إجمالي
                   </p>
                 </>
               )}
@@ -438,10 +438,10 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div className="text-2xl font-bold text-chart-4" data-testid="text-engagement-today">
-                    {stats?.reactions.todayCount.toLocaleString('ar-EG') || 0}
+                    {stats?.reactions.todayCount || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
-                    من {stats?.reactions.total.toLocaleString('ar-EG') || 0} إجمالي
+                    من {stats?.reactions.total || 0} إجمالي
                   </p>
                 </>
               )}
@@ -730,7 +730,7 @@ export default function Dashboard() {
                         )}
                         <span className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />
-                          {article.views.toLocaleString('ar-EG')} مشاهدة
+                          {article.views} مشاهدة
                         </span>
                       </div>
                     </div>
