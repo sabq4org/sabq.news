@@ -190,7 +190,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-32" />
             ))}
@@ -263,7 +263,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Main Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Articles Stats */}
           <Card data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -354,7 +354,7 @@ export default function Dashboard() {
         </div>
 
         {/* Today's Activity Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
