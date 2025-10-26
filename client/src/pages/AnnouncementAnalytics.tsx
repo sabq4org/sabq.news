@@ -56,9 +56,9 @@ export default function AnnouncementAnalytics() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="container mx-auto p-6 space-y-6" dir="rtl">
+        <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
           <Skeleton className="h-12 w-64" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-32" />
             ))}
@@ -73,8 +73,8 @@ export default function AnnouncementAnalytics() {
   if (!analytics) {
     return (
       <DashboardLayout>
-        <div className="container mx-auto p-6" dir="rtl">
-          <p className="text-muted-foreground">لا توجد بيانات تحليلية</p>
+        <div className="container mx-auto p-3 md:p-6" dir="rtl">
+          <p className="text-sm md:text-base text-muted-foreground">لا توجد بيانات تحليلية</p>
         </div>
       </DashboardLayout>
     );
@@ -82,22 +82,22 @@ export default function AnnouncementAnalytics() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
         <div>
-          <h1 className="text-3xl font-bold">تحليلات الإعلان</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">تحليلات الإعلان</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             إحصائيات مفصلة حول أداء الإعلان
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي الظهور</CardTitle>
+              <CardTitle className="text-xs md:text-sm font-medium">إجمالي الظهور</CardTitle>
               <Eye className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-total-impressions">
+              <div className="text-xl md:text-2xl font-bold" data-testid="stat-total-impressions">
                 {formatNumber(analytics.summary.totalImpressions)}
               </div>
             </CardContent>
@@ -105,11 +105,11 @@ export default function AnnouncementAnalytics() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المشاهدات الفريدة</CardTitle>
+              <CardTitle className="text-xs md:text-sm font-medium">المشاهدات الفريدة</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-unique-views">
+              <div className="text-xl md:text-2xl font-bold" data-testid="stat-unique-views">
                 {formatNumber(analytics.summary.uniqueViews)}
               </div>
             </CardContent>
@@ -117,11 +117,11 @@ export default function AnnouncementAnalytics() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الإغلاقات</CardTitle>
+              <CardTitle className="text-xs md:text-sm font-medium">الإغلاقات</CardTitle>
               <XIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-dismissals">
+              <div className="text-xl md:text-2xl font-bold" data-testid="stat-dismissals">
                 {formatNumber(analytics.summary.dismissals)}
               </div>
             </CardContent>
@@ -129,11 +129,11 @@ export default function AnnouncementAnalytics() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">النقرات</CardTitle>
+              <CardTitle className="text-xs md:text-sm font-medium">النقرات</CardTitle>
               <MousePointer className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-clicks">
+              <div className="text-xl md:text-2xl font-bold" data-testid="stat-clicks">
                 {formatNumber(analytics.summary.clicks)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -145,7 +145,7 @@ export default function AnnouncementAnalytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>الأداء حسب القناة</CardTitle>
+            <CardTitle className="text-base md:text-lg">الأداء حسب القناة</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -172,7 +172,7 @@ export default function AnnouncementAnalytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>اتجاه المشاهدات اليومية</CardTitle>
+            <CardTitle className="text-base md:text-lg">اتجاه المشاهدات اليومية</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

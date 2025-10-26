@@ -88,38 +88,38 @@ export default function AnnouncementsArchive() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
         <div>
-          <h1 className="text-3xl font-bold">أرشيف الإعلانات</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">أرشيف الإعلانات</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             الإعلانات المؤرشفة يمكن استعادتها أو حذفها نهائياً
           </p>
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-32 w-full" />
             ))}
           </div>
         ) : announcements && announcements.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid gap-3 md:gap-4">
             {announcements.map((announcement) => (
               <Card key={announcement.id} data-testid={`card-announcement-${announcement.id}`}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{announcement.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                <CardHeader className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-4">
+                    <div className="flex-1 w-full">
+                      <CardTitle className="text-lg md:text-xl">{announcement.title}</CardTitle>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
                         {announcement.message.replace(/<[^>]*>/g, '')}
                       </p>
                     </div>
                     {getPriorityBadge(announcement.priority)}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-3 text-sm text-muted-foreground">
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
+                    <div className="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground">
                       <div>
                         القنوات:{' '}
                         {announcement.channels.map(ch => (
@@ -128,21 +128,22 @@ export default function AnnouncementsArchive() {
                           ch === 'mobile' ? 'جوال' : 'ويب'
                         )).join(', ')}
                       </div>
-                      <div>•</div>
+                      <div className="hidden sm:block">•</div>
                       <div>
                         أُرشف في: {format(new Date(announcement.createdAt), 'dd MMM yyyy', { locale: ar })}
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button
                         size="sm"
                         variant="default"
                         onClick={() => restoreMutation.mutate(announcement.id)}
                         disabled={restoreMutation.isPending}
                         data-testid={`button-restore-${announcement.id}`}
+                        className="flex-1 sm:flex-initial"
                       >
-                        <RefreshCcw className="ml-2 h-4 w-4" />
+                        <RefreshCcw className="ml-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                         استعادة
                       </Button>
 
@@ -151,9 +152,11 @@ export default function AnnouncementsArchive() {
                         variant="destructive"
                         onClick={() => setDeleteDialogId(announcement.id)}
                         data-testid={`button-delete-${announcement.id}`}
+                        className="flex-1 sm:flex-initial"
                       >
-                        <Trash2 className="ml-2 h-4 w-4" />
-                        حذف نهائي
+                        <Trash2 className="ml-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">حذف نهائي</span>
+                        <span className="sm:hidden">حذف</span>
                       </Button>
                     </div>
                   </div>

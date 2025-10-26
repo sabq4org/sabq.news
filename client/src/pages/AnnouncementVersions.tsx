@@ -70,48 +70,48 @@ export default function AnnouncementVersions() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
         <div>
-          <h1 className="text-3xl font-bold">سجل الإصدارات</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">سجل الإصدارات</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             عرض جميع التغييرات التي تم إجراؤها على هذا الإعلان
           </p>
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-32 w-full" />
             ))}
           </div>
         ) : versions && versions.length > 0 ? (
           <div className="relative">
-            <div className="absolute right-6 top-0 bottom-0 w-px bg-border" />
+            <div className="hidden md:block absolute right-6 top-0 bottom-0 w-px bg-border" />
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {versions.map((version, index) => {
                 const previousVersion = versions[index + 1];
                 const titleDiff = getTitleDiff(version.title, previousVersion?.title);
 
                 return (
-                  <div key={version.id} className="relative pr-12" data-testid={`version-${version.id}`}>
-                    <div className="absolute right-[17px] top-4 h-4 w-4 rounded-full bg-primary border-4 border-background" />
+                  <div key={version.id} className="relative pr-0 md:pr-12" data-testid={`version-${version.id}`}>
+                    <div className="hidden md:block absolute right-[17px] top-4 h-4 w-4 rounded-full bg-primary border-4 border-background" />
 
                     <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
+                      <CardContent className="pt-4 md:pt-6">
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-4 mb-4">
+                          <div className="flex-1 w-full">
+                            <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
                               <Badge variant="outline">
                                 الإصدار {version.versionNumber}
                               </Badge>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="h-4 w-4" />
+                              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                                <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
                                 {format(new Date(version.createdAt), 'dd MMM yyyy، HH:mm', { locale: ar })}
                               </div>
                             </div>
 
-                            <h3 className="text-lg font-semibold">{version.title}</h3>
+                            <h3 className="text-base md:text-lg font-semibold">{version.title}</h3>
                             
                             {titleDiff && (
                               <div className="mt-2">
@@ -120,14 +120,14 @@ export default function AnnouncementVersions() {
                               </div>
                             )}
 
-                            <div className="mt-2 text-sm text-muted-foreground">
+                            <div className="mt-2 text-xs md:text-sm text-muted-foreground">
                               بواسطة: {version.changedBy}
                             </div>
 
                             {version.changeNote && (
-                              <div className="mt-3 p-3 bg-muted rounded-lg">
-                                <p className="text-sm font-medium mb-1">ملاحظة التغيير:</p>
-                                <p className="text-sm">{version.changeNote}</p>
+                              <div className="mt-3 p-2 md:p-3 bg-muted rounded-lg">
+                                <p className="text-xs md:text-sm font-medium mb-1">ملاحظة التغيير:</p>
+                                <p className="text-xs md:text-sm">{version.changeNote}</p>
                               </div>
                             )}
                           </div>
@@ -138,15 +138,17 @@ export default function AnnouncementVersions() {
                               variant="outline"
                               onClick={() => setRestoreDialogVersion(version.id)}
                               data-testid={`button-restore-${version.id}`}
+                              className="w-full sm:w-auto"
                             >
-                              <RefreshCcw className="ml-2 h-4 w-4" />
-                              استعادة هذا الإصدار
+                              <RefreshCcw className="ml-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+                              <span className="hidden sm:inline">استعادة هذا الإصدار</span>
+                              <span className="sm:hidden">استعادة</span>
                             </Button>
                           )}
                         </div>
 
                         <div className="mt-4 pt-4 border-t">
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs md:text-sm text-muted-foreground">
                             <span className="font-medium">الأولوية:</span>{' '}
                             <Badge variant="outline" className="mr-2">
                               {version.priority === 'critical' && 'حرج'}

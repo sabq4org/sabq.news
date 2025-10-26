@@ -165,38 +165,40 @@ export default function AnnouncementsList() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">الإعلانات الداخلية</h1>
+      <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold">الإعلانات الداخلية</h1>
           <Button
             onClick={() => setLocation('/dashboard/announcements/new')}
             data-testid="button-create-announcement"
+            size="sm"
+            className="w-full sm:w-auto"
           >
             <Plus className="ml-2 h-4 w-4" />
             إنشاء إعلان جديد
           </Button>
         </div>
 
-        <div className="flex flex-col gap-4 p-4 bg-card rounded-lg border">
-          <div className="flex gap-4 items-end">
+        <div className="flex flex-col gap-3 md:gap-4 p-3 md:p-4 bg-card rounded-lg border">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-end">
             <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">بحث</label>
+              <label className="text-xs md:text-sm font-medium mb-1.5 md:mb-2 block">بحث</label>
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 <Input
                   placeholder="ابحث في العناوين..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pr-10"
+                  className="pr-9 md:pr-10 h-9 md:h-10 text-sm"
                   data-testid="input-search"
                 />
               </div>
             </div>
 
-            <div className="w-48">
-              <label className="text-sm font-medium mb-2 block">الحالة</label>
+            <div className="w-full md:w-48">
+              <label className="text-xs md:text-sm font-medium mb-1.5 md:mb-2 block">الحالة</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger data-testid="select-status">
+                <SelectTrigger data-testid="select-status" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="اختر الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,10 +212,10 @@ export default function AnnouncementsList() {
               </Select>
             </div>
 
-            <div className="w-48">
-              <label className="text-sm font-medium mb-2 block">الأولوية</label>
+            <div className="w-full md:w-48">
+              <label className="text-xs md:text-sm font-medium mb-1.5 md:mb-2 block">الأولوية</label>
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger data-testid="select-priority">
+                <SelectTrigger data-testid="select-priority" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="اختر الأولوية" />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,17 +230,18 @@ export default function AnnouncementsList() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">القنوات</label>
-            <div className="flex gap-4">
+            <label className="text-xs md:text-sm font-medium mb-1.5 md:mb-2 block">القنوات</label>
+            <div className="flex flex-wrap gap-3 md:gap-4">
               {['dashboard', 'email', 'mobile', 'web'].map(channel => (
-                <div key={channel} className="flex items-center gap-2">
+                <div key={channel} className="flex items-center gap-1.5 md:gap-2">
                   <Checkbox
                     id={`channel-${channel}`}
                     checked={channelFilters.includes(channel)}
                     onCheckedChange={() => toggleChannelFilter(channel)}
                     data-testid={`checkbox-channel-${channel}`}
+                    className="h-3.5 w-3.5 md:h-4 md:w-4"
                   />
-                  <label htmlFor={`channel-${channel}`} className="text-sm cursor-pointer">
+                  <label htmlFor={`channel-${channel}`} className="text-xs md:text-sm cursor-pointer whitespace-nowrap">
                     {channel === 'dashboard' && 'لوحة التحكم'}
                     {channel === 'email' && 'البريد الإلكتروني'}
                     {channel === 'mobile' && 'تطبيق الجوال'}
@@ -253,12 +256,13 @@ export default function AnnouncementsList() {
         {isLoading ? (
           <div className="space-y-2">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+              <Skeleton key={i} className="h-16 md:h-20 w-full" />
             ))}
           </div>
         ) : (
           <>
-            <div className="border rounded-lg">
+            {/* Desktop Table View */}
+            <div className="hidden md:block border rounded-lg overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -266,7 +270,7 @@ export default function AnnouncementsList() {
                     <TableHead className="text-right">الحالة</TableHead>
                     <TableHead className="text-right">الأولوية</TableHead>
                     <TableHead className="text-right">القنوات</TableHead>
-                    <TableHead className="text-right">الجمهور المستهدف</TableHead>
+                    <TableHead className="text-right">الجمهور</TableHead>
                     <TableHead className="text-right">التواريخ</TableHead>
                     <TableHead className="text-right">الإجراءات</TableHead>
                   </TableRow>
@@ -281,7 +285,7 @@ export default function AnnouncementsList() {
                   ) : (
                     paginatedAnnouncements.map((announcement) => (
                       <TableRow key={announcement.id} data-testid={`row-announcement-${announcement.id}`}>
-                        <TableCell className="font-medium">{announcement.title}</TableCell>
+                        <TableCell className="font-medium max-w-xs truncate">{announcement.title}</TableCell>
                         <TableCell>{getStatusBadge(announcement.status)}</TableCell>
                         <TableCell>{getPriorityBadge(announcement.priority)}</TableCell>
                         <TableCell>
@@ -296,7 +300,7 @@ export default function AnnouncementsList() {
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell>{getTargetAudience(announcement)}</TableCell>
+                        <TableCell className="text-sm">{getTargetAudience(announcement)}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             {announcement.publishedAt ? (
@@ -358,6 +362,107 @@ export default function AnnouncementsList() {
                   )}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {paginatedAnnouncements.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  لا توجد إعلانات
+                </div>
+              ) : (
+                paginatedAnnouncements.map((announcement) => (
+                  <div 
+                    key={announcement.id} 
+                    className="border rounded-lg p-3 space-y-3 hover-elevate"
+                    data-testid={`card-announcement-${announcement.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
+                        {announcement.title}
+                      </h3>
+                      <div className="flex gap-1 shrink-0">
+                        {getStatusBadge(announcement.status)}
+                        {getPriorityBadge(announcement.priority)}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {announcement.channels.map(ch => (
+                        <Badge key={ch} variant="outline" className="text-xs">
+                          {ch === 'dashboard' && 'لوحة'}
+                          {ch === 'email' && 'بريد'}
+                          {ch === 'mobile' && 'جوال'}
+                          {ch === 'web' && 'ويب'}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{getTargetAudience(announcement)}</span>
+                      <span>
+                        {announcement.publishedAt ? (
+                          <>نشر: {format(new Date(announcement.publishedAt), 'dd MMM yyyy', { locale: ar })}</>
+                        ) : announcement.startAt ? (
+                          <>يبدأ: {format(new Date(announcement.startAt), 'dd MMM yyyy', { locale: ar })}</>
+                        ) : (
+                          <>أنشئ: {format(new Date(announcement.createdAt), 'dd MMM yyyy', { locale: ar })}</>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLocation(`/dashboard/announcements/${announcement.id}/edit`)}
+                        data-testid={`button-edit-${announcement.id}`}
+                        className="flex-1"
+                      >
+                        <Edit className="ml-2 h-3.5 w-3.5" />
+                        تعديل
+                      </Button>
+
+                      {(announcement.status === 'draft' || announcement.status === 'scheduled') && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => publishMutation.mutate(announcement.id)}
+                          disabled={publishMutation.isPending}
+                          data-testid={`button-publish-${announcement.id}`}
+                          className="flex-1"
+                        >
+                          <Send className="ml-2 h-3.5 w-3.5" />
+                          نشر
+                        </Button>
+                      )}
+
+                      {announcement.status === 'published' && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => archiveMutation.mutate(announcement.id)}
+                          disabled={archiveMutation.isPending}
+                          data-testid={`button-archive-${announcement.id}`}
+                          className="flex-1"
+                        >
+                          <Archive className="ml-2 h-3.5 w-3.5" />
+                          أرشفة
+                        </Button>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setDeleteDialogId(announcement.id)}
+                        data-testid={`button-delete-${announcement.id}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {totalPages > 1 && (
