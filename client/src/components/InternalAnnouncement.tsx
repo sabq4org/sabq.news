@@ -71,6 +71,7 @@ export function InternalAnnouncement() {
 
   const getCurrentChannel = () => {
     // Map routes to announcement channels
+    // Show all channels in dashboard for now
     if (location.startsWith('/dashboard')) return 'dashboardBanner';
     return 'toast'; // Default for web pages
   };
@@ -131,6 +132,12 @@ export function InternalAnnouncement() {
   const currentChannel = getCurrentChannel();
   
   const visibleAnnouncements = announcements.filter(ann => {
+    // In dashboard, show all announcements regardless of channel
+    if (location.startsWith('/dashboard')) {
+      return true;
+    }
+    
+    // Outside dashboard, filter by channel
     if (!ann.channels.includes('all') && !ann.channels.includes(currentChannel)) {
       return false;
     }

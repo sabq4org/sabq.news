@@ -184,13 +184,17 @@ export function requireRole(...roleNames: string[]) {
       }
     }
 
+    console.log(`[RBAC] requireRole check - userId: ${userId}, required: ${roleNames}, user has: ${userRoleNames.join(', ')}`);
+
     // Check if user has any of the required roles
     const hasRole = roleNames.some(roleName => userRoleNames.includes(roleName));
 
     if (!hasRole) {
+      console.log(`[RBAC] Access denied - user roles: ${userRoleNames.join(', ')}, required: ${roleNames.join(', ')}`);
       return res.status(403).json({ 
         message: "Forbidden - Insufficient permissions",
-        required: roleNames 
+        required: roleNames,
+        userHas: userRoleNames
       });
     }
 
