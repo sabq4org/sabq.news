@@ -138,6 +138,17 @@ export default function AnnouncementEditor() {
   });
 
   const onSubmit = (data: AnnouncementFormData, action: 'draft' | 'schedule' | 'publish') => {
+    // Debug: Log form errors if any
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.error('❌ Form validation errors:', form.formState.errors);
+      toast({ 
+        title: "❌ خطأ في النموذج", 
+        description: "يرجى التحقق من جميع الحقول المطلوبة",
+        variant: "destructive" 
+      });
+      return;
+    }
+
     const payload = {
       title: data.title,
       message: data.message,

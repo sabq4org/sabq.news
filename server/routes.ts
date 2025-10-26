@@ -9989,7 +9989,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 2. GET /api/announcements - List all with filters (admin only)
+  // 2. GET /api/announcements/active - Get active announcements for user (public endpoint)
+  // IMPORTANT: This must be BEFORE /:id route to avoid matching "active" as an id
+  app.get("/api/announcements/active",
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.id;
+        
+        // If user is not logged in, return empty array (no announcements for guests)
+        if (!userId) {
+          return res.json([]);
+        }
+
+        const { channel } = req.query;
+
+        // Get user roles
+        const userRolesData = await storage.getUserRoles(userId);
+        const userRoles = userRolesData.map(r => r.name);
+
+        // Get active announcements for this user
+        const announcements = await storage.getActiveAnnouncementsForUser(
+          userId,
+          userRoles,
+          channel as string | undefined
+        );
+
+        res.json(announcements);
+      } catch (error: any) {
+        console.error("Error fetching active announcements:", error);
+        res.status(500).json({ message: "فشل في جلب الإعلانات النشطة" });
+      }
+    }
+  );
+
+  // 3. GET /api/announcements - List all with filters (admin only)
   app.get("/api/announcements",
     requireAuth,
     requireRole('admin'),
@@ -10025,7 +10058,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 3. GET /api/announcements/:id - Get single announcement with details
+  // 4. GET /api/announcements/:id - Get single announcement with details
   app.get("/api/announcements/:id",
     requireAuth,
     requireRole('admin'),
@@ -10438,38 +10471,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error: any) {
         console.error("Error fetching analytics:", error);
         res.status(500).json({ message: "فشل في جلب التحليلات" });
-      }
-    }
-  );
-
-  // 13. GET /api/announcements/active - Get active announcements for user (public endpoint)
-  app.get("/api/announcements/active",
-    async (req: any, res) => {
-      try {
-        const userId = req.user?.id;
-        
-        // If user is not logged in, return empty array (no announcements for guests)
-        if (!userId) {
-          return res.json([]);
-        }
-
-        const { channel } = req.query;
-
-        // Get user roles
-        const userRolesData = await storage.getUserRoles(userId);
-        const userRoles = userRolesData.map(r => r.name);
-
-        // Get active announcements for this user
-        const announcements = await storage.getActiveAnnouncementsForUser(
-          userId,
-          userRoles,
-          channel as string | undefined
-        );
-
-        res.json(announcements);
-      } catch (error: any) {
-        console.error("Error fetching active announcements:", error);
-        res.status(500).json({ message: "فشل في جلب الإعلانات النشطة" });
       }
     }
   );

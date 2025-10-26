@@ -79,11 +79,7 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-      }),
+      StarterKit,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
