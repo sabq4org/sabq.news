@@ -55,6 +55,7 @@ import {
   userRoles,
   rolePermissions,
   activityLogs,
+  userEvents,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -2635,7 +2636,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         totalReads: sql<number>`count(*)`,
         readsToday: sql<number>`count(*) filter (where ${readingHistory.readAt} >= ${todayStart})`,
-        avgDuration: sql<number>`coalesce(avg(${readingHistory.durationSeconds}), 0)`,
+        avgDuration: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)`,
       })
       .from(readingHistory);
 

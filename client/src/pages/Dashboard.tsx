@@ -35,13 +35,16 @@ interface AdminDashboardStats {
     published: number;
     draft: number;
     archived: number;
+    scheduled: number;
     totalViews: number;
+    viewsToday: number;
   };
   users: {
     total: number;
     emailVerified: number;
     active24h: number;
     newThisWeek: number;
+    activeToday: number;
   };
   comments: {
     total: number;
@@ -58,6 +61,12 @@ interface AdminDashboardStats {
   };
   reactions: {
     total: number;
+    todayCount: number;
+  };
+  engagement: {
+    averageTimeOnSite: number;
+    totalReads: number;
+    readsToday: number;
   };
   recentArticles: Array<{
     id: string;
@@ -279,7 +288,7 @@ export default function Dashboard() {
                     {stats?.articles.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-articles-breakdown">
-                    {stats?.articles.published || 0} منشور · {stats?.articles.draft || 0} مسودة
+                    {stats?.articles.published || 0} منشور · {stats?.articles.draft || 0} مسودة · {stats?.articles.scheduled || 0} مجدولة
                   </p>
                 </>
               )}
@@ -353,6 +362,93 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Today's Activity Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
+              <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-primary" data-testid="text-views-today">
+                    {stats?.articles.viewsToday.toLocaleString('ar-EG') || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
+                    مشاهدة جديدة اليوم
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
+              <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-chart-2" data-testid="text-active-today">
+                    {stats?.users.activeToday || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-active-today-description">
+                    زائر نشط حالياً
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
+              <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-chart-3" data-testid="text-reads-today">
+                    {stats?.engagement.readsToday.toLocaleString('ar-EG') || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
+                    من {stats?.engagement.totalReads.toLocaleString('ar-EG') || 0} إجمالي
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
+              <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-chart-4" data-testid="text-engagement-today">
+                    {stats?.reactions.todayCount.toLocaleString('ar-EG') || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
+                    من {stats?.reactions.total.toLocaleString('ar-EG') || 0} إجمالي
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card data-testid="card-categories-stats">
@@ -392,18 +488,23 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-reactions-stats">
+          <Card data-testid="card-avg-time-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الإعجابات</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">متوسط وقت القراءة</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-2xl font-bold" data-testid="text-reactions-total">
-                  {stats?.reactions.total.toLocaleString('ar-EG') || 0}
-                </div>
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-avg-time">
+                    {Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:{String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
+                    دقيقة:ثانية لكل مقال
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
