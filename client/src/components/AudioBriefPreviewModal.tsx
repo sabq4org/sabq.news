@@ -24,7 +24,7 @@ export function AudioBriefPreviewModal({
 }: AudioBriefPreviewModalProps) {
   if (!brief) return null;
 
-  const canPublish = brief.audioUrl && brief.status !== 'published' && onPublish;
+  const canPublish = brief.audioUrl && brief.generationStatus === 'completed' && brief.status !== 'published' && onPublish;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -112,7 +112,7 @@ export function AudioBriefPreviewModal({
           {canPublish && (
             <Button
               onClick={() => onPublish(brief.id)}
-              disabled={isPublishing}
+              disabled={brief.generationStatus !== 'completed' || isPublishing}
               data-testid="button-publish-to-homepage"
             >
               {isPublishing ? "جاري النشر..." : "نشر في الصفحة الرئيسية"}

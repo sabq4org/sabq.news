@@ -9857,6 +9857,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // GET /api/audio-briefs/jobs/:jobId - Get job status for audio brief generation
+  app.get("/api/audio-briefs/jobs/:jobId",
+    requireAuth,
+    async (req: any, res) => {
+      try {
+        const { jobQueue } = await import("./services/job-queue");
+        const job = await jobQueue.getStatus(req.params.jobId);
+        
+        if (!job) {
+          return res.status(404).json({ message: 'الوظيفة غير موجودة' });
+        }
+        
+        res.json(job);
+      } catch (error: any) {
+        console.error("Error fetching job status:", error);
+        res.status(500).json({ message: "فشل في جلب حالة الوظيفة" });
+      }
+    }
+  );
+
   // PUT /api/audio-briefs/:id - Update brief (admin only)
   app.put("/api/audio-briefs/:id",
     requireAuth,
@@ -9879,11 +9899,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const brief = await storage.getAudioNewsBriefById(req.params.id);
+        
         if (!brief) {
-          return res.status(404).json({ message: "الخبر غير موجود" });
+          return res.status(404).json({ message: "الخبر الصوتي غير موجود" });
         }
+        
+        // CRITICAL: Check generation status before allowing publish
+        if (brief.generationStatus !== 'completed') {
+          return res.status(400).json({ 
+            message: 'لا يمكن النشر - يجب إتمام توليد الصوت أولاً' 
+          });
+        }
+        
         if (!brief.audioUrl) {
-          return res.status(400).json({ message: "يجب توليد الصوت أولاً" });
+          return res.status(400).json({ 
+            message: 'لا يمكن النشر - رابط الملف الصوتي غير موجود' 
+          });
         }
 
         const published = await storage.publishAudioNewsBrief(req.params.id);

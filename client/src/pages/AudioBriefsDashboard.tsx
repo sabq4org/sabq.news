@@ -91,7 +91,7 @@ export default function AudioBriefsDashboard() {
                 <Button
                   size="sm"
                   onClick={() => publishMutation.mutate(brief.id)}
-                  disabled={publishMutation.isPending}
+                  disabled={brief.generationStatus !== 'completed' || publishMutation.isPending}
                   data-testid={`button-publish-${brief.id}`}
                 >
                   نشر

@@ -127,7 +127,7 @@ export default function AudioBriefEditor() {
     
     const interval = setInterval(async () => {
       try {
-        const job = await fetch(`/api/audio-newsletters/jobs/${pollingJobId}`).then(r => r.json());
+        const job = await fetch(`/api/audio-briefs/jobs/${pollingJobId}`).then(r => r.json());
         
         if (job.status === 'completed') {
           clearInterval(interval);
