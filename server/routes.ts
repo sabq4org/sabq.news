@@ -114,6 +114,7 @@ import {
   updateAudioNewsletterSchema,
   insertAudioNewsletterArticleSchema,
   insertAudioNewsletterListenSchema,
+  insertAudioNewsBriefSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -9767,7 +9768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/audio-briefs/admin - List all briefs for admin (protected)
   app.get("/api/audio-briefs/admin",
     requireAuth,
-    requirePermission('audio_newsletters.view'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const briefs = await storage.getAllAudioNewsBriefs();
@@ -9808,7 +9809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/audio-briefs - Create new brief (admin only)
   app.post("/api/audio-briefs",
     requireAuth,
-    requirePermission('audio_newsletters.create'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const validatedData = insertAudioNewsBriefSchema.parse({
@@ -9830,7 +9831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/audio-briefs/:id/generate - Generate audio (admin only)
   app.post("/api/audio-briefs/:id/generate",
     requireAuth,
-    requirePermission('audio_newsletters.manage_all'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const brief = await storage.getAudioNewsBriefById(req.params.id);
@@ -9880,7 +9881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PUT /api/audio-briefs/:id - Update brief (admin only)
   app.put("/api/audio-briefs/:id",
     requireAuth,
-    requirePermission('audio_newsletters.update'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const brief = await storage.updateAudioNewsBrief(req.params.id, req.body);
@@ -9895,7 +9896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/audio-briefs/:id/publish - Publish brief (admin only)
   app.post("/api/audio-briefs/:id/publish",
     requireAuth,
-    requirePermission('audio_newsletters.publish'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         const brief = await storage.getAudioNewsBriefById(req.params.id);
@@ -9929,7 +9930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE /api/audio-briefs/:id - Delete brief (admin only)
   app.delete("/api/audio-briefs/:id",
     requireAuth,
-    requirePermission('audio_newsletters.delete'),
+    requireRole('admin'),
     async (req: any, res) => {
       try {
         await storage.deleteAudioNewsBrief(req.params.id);
