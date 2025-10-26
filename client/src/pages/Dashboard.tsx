@@ -104,16 +104,16 @@ interface AdminDashboardStats {
 
 // Motivational quotes in Arabic
 const MOTIVATIONAL_QUOTES = [
-  "يوم جديد، إنجاز جديد ✨… خلنا نبدأ بقوّة يا بطل!",
-  "ابدأ يومك بحماس، فكل فكرة منك تصنع فرقاً في سبق 💪",
-  "صباح الذكاء والإبداع… أنت محور التميّز اليوم! 🚀",
-  "تذكّر: الجودة تبدأ من التفاصيل الصغيرة 👀",
-  "وجودك يصنع الأثر، ونتائجك تُلهم الفريق 🌟",
-  "كل مقال تكتبه اليوم… بصمة تُضاف لتاريخ سبق 🖋️",
-  "كن النسخة الأفضل من نفسك في كل مهمة 🔥",
-  "الإتقان ما هو خيار… هو أسلوب حياة في سبق 👑",
-  "ابدع كأنك تصنع خبراً يُقرأ لأول مرة 💡",
-  "كل ضغطة زر منك تُحدث فرقاً في تجربة آلاف القراء 🌍",
+  "يوم جديد، إنجاز جديد... خلنا نبدأ بقوّة يا بطل!",
+  "ابدأ يومك بحماس، فكل فكرة منك تصنع فرقاً في سبق",
+  "صباح الذكاء والإبداع... أنت محور التميّز اليوم!",
+  "تذكّر: الجودة تبدأ من التفاصيل الصغيرة",
+  "وجودك يصنع الأثر، ونتائجك تُلهم الفريق",
+  "كل مقال تكتبه اليوم... بصمة تُضاف لتاريخ سبق",
+  "كن النسخة الأفضل من نفسك في كل مهمة",
+  "الإتقان ما هو خيار... هو أسلوب حياة في سبق",
+  "ابدع كأنك تصنع خبراً يُقرأ لأول مرة",
+  "كل ضغطة زر منك تُحدث فرقاً في تجربة آلاف القراء",
 ];
 
 // Get time-based greeting
@@ -124,12 +124,10 @@ function getTimeBasedGreeting(): string {
   return "مساء الخير";
 }
 
-// Get random motivational quote (changes daily)
-function getDailyMotivationalQuote(): string {
-  const today = new Date().toDateString();
-  const hash = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const index = hash % MOTIVATIONAL_QUOTES.length;
-  return MOTIVATIONAL_QUOTES[index];
+// Get random motivational quote (changes on each visit)
+function getRandomMotivationalQuote(): string {
+  const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+  return MOTIVATIONAL_QUOTES[randomIndex];
 }
 
 export default function Dashboard() {
@@ -140,9 +138,11 @@ export default function Dashboard() {
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
-  // Get greeting and quote (memoized to avoid recalculation)
+  // Get greeting (memoized to avoid recalculation during re-renders)
   const greeting = useMemo(() => getTimeBasedGreeting(), []);
-  const dailyQuote = useMemo(() => getDailyMotivationalQuote(), []);
+  
+  // Get a fresh random quote on each render to ensure it changes on every visit
+  const motivationalQuote = getRandomMotivationalQuote();
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -241,7 +241,7 @@ export default function Dashboard() {
                   </h2>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
-                  {dailyQuote}
+                  {motivationalQuote}
                 </p>
               </div>
               <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
