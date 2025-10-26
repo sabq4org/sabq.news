@@ -17,6 +17,7 @@ import {
   XCircle,
   AlertCircle,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useMemo } from "react";
 
 interface AdminDashboardStats {
   articles: {
@@ -91,6 +93,36 @@ interface AdminDashboardStats {
   }>;
 }
 
+// Motivational quotes in Arabic
+const MOTIVATIONAL_QUOTES = [
+  "يوم جديد، إنجاز جديد ✨… خلنا نبدأ بقوّة يا بطل!",
+  "ابدأ يومك بحماس، فكل فكرة منك تصنع فرقاً في سبق 💪",
+  "صباح الذكاء والإبداع… أنت محور التميّز اليوم! 🚀",
+  "تذكّر: الجودة تبدأ من التفاصيل الصغيرة 👀",
+  "وجودك يصنع الأثر، ونتائجك تُلهم الفريق 🌟",
+  "كل مقال تكتبه اليوم… بصمة تُضاف لتاريخ سبق 🖋️",
+  "كن النسخة الأفضل من نفسك في كل مهمة 🔥",
+  "الإتقان ما هو خيار… هو أسلوب حياة في سبق 👑",
+  "ابدع كأنك تصنع خبراً يُقرأ لأول مرة 💡",
+  "كل ضغطة زر منك تُحدث فرقاً في تجربة آلاف القراء 🌍",
+];
+
+// Get time-based greeting
+function getTimeBasedGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "صباح الخير";
+  if (hour < 18) return "مساء الخير";
+  return "مساء الخير";
+}
+
+// Get random motivational quote (changes daily)
+function getDailyMotivationalQuote(): string {
+  const today = new Date().toDateString();
+  const hash = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const index = hash % MOTIVATIONAL_QUOTES.length;
+  return MOTIVATIONAL_QUOTES[index];
+}
+
 export default function Dashboard() {
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
@@ -98,6 +130,10 @@ export default function Dashboard() {
     queryKey: ["/api/admin/dashboard/stats"],
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
+
+  // Get greeting and quote (memoized to avoid recalculation)
+  const greeting = useMemo(() => getTimeBasedGreeting(), []);
+  const dailyQuote = useMemo(() => getDailyMotivationalQuote(), []);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -184,6 +220,38 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Welcome Section with Greeting */}
+        <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20" data-testid="card-welcome">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-6 w-6 text-primary" data-testid="icon-sparkles" />
+                  <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-greeting">
+                    {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
+                  </h2>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
+                  {dailyQuote}
+                </p>
+              </div>
+              <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span data-testid="text-current-time">
+                    {new Date().toLocaleString('ar-SA', { 
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold" data-testid="heading-dashboard">
