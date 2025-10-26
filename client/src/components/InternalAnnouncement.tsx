@@ -63,7 +63,7 @@ export function InternalAnnouncement() {
           event: 'impression',
           channel: getCurrentChannel(),
         });
-        setTrackedImpressions(prev => new Set([...prev, ann.id]));
+        setTrackedImpressions(prev => new Set(Array.from(prev).concat(ann.id)));
       }
 
       const uniqueViewKey = `${VIEWED_PREFIX}${ann.id}`;
@@ -77,7 +77,7 @@ export function InternalAnnouncement() {
             channel: getCurrentChannel(),
           });
           sessionStorage.setItem(uniqueViewKey, 'true');
-          setTrackedUniqueViews(prev => new Set([...prev, ann.id]));
+          setTrackedUniqueViews(prev => new Set(Array.from(prev).concat(ann.id)));
         }, 3000);
 
         return () => clearTimeout(timer);
@@ -98,7 +98,7 @@ export function InternalAnnouncement() {
     });
     
     localStorage.setItem(`${DISMISSED_PREFIX}${announcementId}`, 'true');
-    setDismissedIds(prev => new Set([...prev, announcementId]));
+    setDismissedIds(prev => new Set(Array.from(prev).concat(announcementId)));
   };
 
   const handleActionClick = (announcement: Announcement) => {

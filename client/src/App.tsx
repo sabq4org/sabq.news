@@ -79,6 +79,11 @@ import AudioNewslettersArchive from "@/pages/AudioNewslettersArchive";
 import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
 import AudioBriefsDashboard from "@/pages/AudioBriefsDashboard";
 import AudioBriefEditor from "@/pages/AudioBriefEditor";
+import AnnouncementsList from "@/pages/AnnouncementsList";
+import AnnouncementEditor from "@/pages/AnnouncementEditor";
+import AnnouncementsArchive from "@/pages/AnnouncementsArchive";
+import AnnouncementVersions from "@/pages/AnnouncementVersions";
+import AnnouncementAnalytics from "@/pages/AnnouncementAnalytics";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -152,6 +157,14 @@ function Router() {
       <Route path="/dashboard/audio-briefs" component={AudioBriefsDashboard} />
       <Route path="/dashboard/audio-briefs/create" component={AudioBriefEditor} />
       <Route path="/dashboard/audio-briefs/:id" component={AudioBriefEditor} />
+      
+      {/* Internal Announcements dashboard */}
+      <Route path="/dashboard/announcements" component={AnnouncementsList} />
+      <Route path="/dashboard/announcements/new" component={AnnouncementEditor} />
+      <Route path="/dashboard/announcements/:id/edit" component={AnnouncementEditor} />
+      <Route path="/dashboard/announcements/:id/versions" component={AnnouncementVersions} />
+      <Route path="/dashboard/announcements/:id/analytics" component={AnnouncementAnalytics} />
+      <Route path="/dashboard/announcements/archive" component={AnnouncementsArchive} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />

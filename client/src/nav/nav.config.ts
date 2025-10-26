@@ -35,6 +35,7 @@ import {
   Telescope,
   Grid3x3,
   Podcast,
+  Megaphone,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -343,6 +344,14 @@ export const navConfig: NavItem[] = [
         labelAr: "سجلات النشاط",
         path: "/dashboard/audit-logs",
         icon: ListChecks,
+        roles: ["admin"],
+      },
+      {
+        id: "announcements",
+        labelKey: "nav.announcements",
+        labelAr: "الإعلانات الداخلية",
+        path: "/dashboard/announcements",
+        icon: Megaphone,
         roles: ["admin"],
       },
       {

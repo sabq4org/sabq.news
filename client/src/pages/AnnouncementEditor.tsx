@@ -277,7 +277,7 @@ export default function AnnouncementEditor() {
                       <FormLabel>الوسوم</FormLabel>
                       <TagInput
                         tags={tags}
-                        onChange={setTags}
+                        onTagsChange={setTags}
                         placeholder="أضف وسماً..."
                       />
                     </div>
