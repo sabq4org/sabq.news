@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { ListTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ViewsCount } from "@/components/ViewsCount";
 
 export default function NewsListBasic({
   items,
@@ -97,10 +98,10 @@ export default function NewsListBasic({
                     </div>
                   )}
                   {typeof item.views === "number" && (
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      <span>{item.views.toLocaleString("ar")}</span>
-                    </div>
+                    <ViewsCount 
+                      views={item.views}
+                      iconClassName="w-3 h-3"
+                    />
                   )}
                 </div>
               )}

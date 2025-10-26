@@ -13,16 +13,16 @@ export function ViewsCount({
   className = "", 
   iconClassName = "h-3 w-3",
   showFlame = true,
-  flameThreshold = 50
+  flameThreshold = 100
 }: ViewsCountProps) {
   const isTrending = showFlame && views >= flameThreshold;
   
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className={`flex items-center gap-1 ${className}`} data-testid="views-count">
       <Eye className={iconClassName} />
-      <span>{views || 0}</span>
+      <span>{views.toLocaleString()}</span>
       {isTrending && (
-        <Flame className={`${iconClassName} text-orange-500`} data-testid="icon-trending" />
+        <Flame className={`${iconClassName} text-orange-500`} data-testid="icon-flame-trending" />
       )}
     </div>
   );

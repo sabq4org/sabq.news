@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye, MessageSquare, BookOpen } from "lucide-react";
+import { Clock, MessageSquare, BookOpen } from "lucide-react";
 import type { SpotlightTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ViewsCount } from "@/components/ViewsCount";
 
 export default function SpotlightCard({
   item,
@@ -82,11 +83,10 @@ export default function SpotlightCard({
         {/* Meta Grid */}
         <div className="grid grid-cols-2 gap-3 py-3 border-t border-b my-4">
           {typeof item.views === "number" && (
-            <div className="flex items-center gap-2 text-sm">
-              <Eye className="w-4 h-4 text-muted-foreground" />
-              <span className="text-foreground font-medium">{item.views.toLocaleString("ar")}</span>
-              <span className="text-muted-foreground text-xs">مشاهدة</span>
-            </div>
+            <ViewsCount 
+              views={item.views}
+              iconClassName="w-4 h-4"
+            />
           )}
           {typeof item.commentsCount === "number" && (
             <div className="flex items-center gap-2 text-sm">

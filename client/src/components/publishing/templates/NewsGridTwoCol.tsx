@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye, MessageSquare } from "lucide-react";
+import { Clock, MessageSquare } from "lucide-react";
 import type { GridTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ViewsCount } from "@/components/ViewsCount";
 
 export default function NewsGridTwoCol({
   items,
@@ -113,10 +114,10 @@ export default function NewsGridTwoCol({
                     </div>
                   )}
                   {typeof item.views === "number" && (
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      <span>{item.views.toLocaleString("ar")}</span>
-                    </div>
+                    <ViewsCount 
+                      views={item.views}
+                      iconClassName="w-3 h-3"
+                    />
                   )}
                   {typeof item.commentsCount === "number" && (
                     <div className="flex items-center gap-1">

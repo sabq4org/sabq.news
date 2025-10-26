@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye, MessageSquare, Play } from "lucide-react";
+import { Clock, MessageSquare, Play } from "lucide-react";
 import type { SpotlightTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ViewsCount } from "@/components/ViewsCount";
 
 export default function SpotlightMedia({
   item,
@@ -137,10 +138,10 @@ export default function SpotlightMedia({
             </div>
           )}
           {typeof item.views === "number" && (
-            <div className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5" />
-              <span>{item.views.toLocaleString("ar")} مشاهدة</span>
-            </div>
+            <ViewsCount 
+              views={item.views}
+              iconClassName="w-3.5 h-3.5"
+            />
           )}
           {typeof item.commentsCount === "number" && (
             <div className="flex items-center gap-1">
