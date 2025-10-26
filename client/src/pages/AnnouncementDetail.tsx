@@ -188,20 +188,22 @@ export default function AnnouncementDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6" dir="rtl">
+      <div className="space-y-4 md:space-y-6" dir="rtl">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="space-y-3">
+          {/* Title Row */}
+          <div className="flex items-start gap-2 md:gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setLocation('/dashboard/announcements')}
               data-testid="button-back"
+              className="shrink-0"
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{announcement.title}</h1>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg md:text-2xl font-bold break-words">{announcement.title}</h1>
               <div className="flex items-center gap-2 mt-2">
                 {getStatusBadge(announcement.status)}
                 {getPriorityBadge(announcement.priority)}
@@ -209,89 +211,99 @@ export default function AnnouncementDetail() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Action Buttons Row */}
+          <div className="flex items-center gap-2 pr-12 md:pr-0 md:justify-end flex-wrap">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setLocation(`/dashboard/announcements/${id}/edit`)}
               data-testid="button-edit"
+              className="flex-1 md:flex-none"
             >
               <Edit className="ml-2 h-4 w-4" />
-              تعديل
+              <span className="hidden sm:inline">تعديل</span>
+              <span className="sm:hidden">تعديل</span>
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => archiveMutation.mutate()}
               disabled={archiveMutation.isPending}
               data-testid="button-archive"
+              className="flex-1 md:flex-none"
             >
               <Archive className="ml-2 h-4 w-4" />
-              أرشفة
+              <span className="hidden sm:inline">أرشفة</span>
+              <span className="sm:hidden">أرشفة</span>
             </Button>
             <Button
               variant="destructive"
+              size="sm"
               onClick={() => setDeleteDialogOpen(true)}
               data-testid="button-delete"
+              className="flex-1 md:flex-none"
             >
               <Trash2 className="ml-2 h-4 w-4" />
-              حذف
+              <span className="hidden sm:inline">حذف</span>
+              <span className="sm:hidden">حذف</span>
             </Button>
           </div>
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {isLoadingAnalytics ? (
             <>
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
+              <Skeleton className="h-24 md:h-32" />
+              <Skeleton className="h-24 md:h-32" />
+              <Skeleton className="h-24 md:h-32" />
+              <Skeleton className="h-24 md:h-32" />
             </>
           ) : isErrorAnalytics ? (
-            <Card className="col-span-4">
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">فشل تحميل الإحصائيات</p>
+            <Card className="col-span-2 md:col-span-4">
+              <CardContent className="py-6 md:py-8 text-center">
+                <p className="text-sm md:text-base text-muted-foreground">فشل تحميل الإحصائيات</p>
               </CardContent>
             </Card>
           ) : analytics ? (
             <>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
-                  <Eye className="h-4 w-4 text-muted-foreground" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+                  <CardTitle className="text-xs md:text-sm font-medium">المشاهدات الكلية</CardTitle>
+                  <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.totalImpressions.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.totalImpressions.toLocaleString('ar-SA')}</div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">المشاهدات الفريدة</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+                  <CardTitle className="text-xs md:text-sm font-medium">المشاهدات الفريدة</CardTitle>
+                  <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.uniqueViews.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.uniqueViews.toLocaleString('ar-SA')}</div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">النقرات</CardTitle>
-                  <MousePointer className="h-4 w-4 text-muted-foreground" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+                  <CardTitle className="text-xs md:text-sm font-medium">النقرات</CardTitle>
+                  <MousePointer className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.clicks.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.clicks.toLocaleString('ar-SA')}</div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">معدل النقر (CTR)</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+                  <CardTitle className="text-xs md:text-sm font-medium">معدل النقر (CTR)</CardTitle>
+                  <Target className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-lg md:text-2xl font-bold">
                     {analytics.uniqueViews > 0 
                       ? ((analytics.clicks / analytics.uniqueViews) * 100).toFixed(2)
                       : '0.00'}%
@@ -317,12 +329,12 @@ export default function AnnouncementDetail() {
         </Card>
 
         {/* Compact Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {/* Targeting Card - Compact */}
           <Card className="hover-elevate transition-all duration-300 bg-blue-50/30 dark:bg-blue-950/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-semibold flex items-center gap-2">
+                <Target className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600 dark:text-blue-400" />
                 الاستهداف
               </CardTitle>
             </CardHeader>
@@ -358,9 +370,9 @@ export default function AnnouncementDetail() {
 
           {/* Scheduling Card - Compact */}
           <Card className="hover-elevate transition-all duration-300 bg-purple-50/30 dark:bg-purple-950/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-semibold flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-600 dark:text-purple-400" />
                 الجدولة
               </CardTitle>
             </CardHeader>
@@ -389,9 +401,9 @@ export default function AnnouncementDetail() {
 
           {/* Creator Card - Compact */}
           <Card className="hover-elevate transition-all duration-300 bg-green-50/30 dark:bg-green-950/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <User className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-semibold flex items-center gap-2">
+                <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600 dark:text-green-400" />
                 المنشئ
               </CardTitle>
             </CardHeader>
@@ -420,15 +432,15 @@ export default function AnnouncementDetail() {
           </Card>
 
           {/* Quick Links Card - Compact */}
-          <Card className="hover-elevate transition-all duration-300 bg-orange-50/30 dark:bg-orange-950/20 md:col-span-2 lg:col-span-3">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Link className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+          <Card className="hover-elevate transition-all duration-300 bg-orange-50/30 dark:bg-orange-950/20 sm:col-span-2 lg:col-span-3">
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-semibold flex items-center gap-2">
+                <Link className="h-3.5 w-3.5 md:h-4 md:w-4 text-orange-600 dark:text-orange-400" />
                 روابط سريعة
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
