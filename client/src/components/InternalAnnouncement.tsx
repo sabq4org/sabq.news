@@ -86,8 +86,9 @@ export function InternalAnnouncement() {
   }, [announcements, dismissedIds, trackedImpressions, trackedUniqueViews]);
 
   const getCurrentChannel = () => {
-    if (location.startsWith('/dashboard')) return 'dashboard';
-    return 'web';
+    // Map routes to announcement channels
+    if (location.startsWith('/dashboard')) return 'dashboardBanner';
+    return 'toast'; // Default for web pages
   };
 
   const handleDismiss = (announcementId: string) => {
