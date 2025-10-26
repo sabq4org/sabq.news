@@ -1,0 +1,92 @@
+2025-10-26 23:03:55.53
+ab67b7cc
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 23:03:55.54
+ab67b7cc
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 23:03:55.58
+ab67b7cc
+User
+[Server] ✅ Job queue handlers registered successfully
+2025-10-26 23:03:55.69
+ab67b7cc
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-26 23:03:55.74
+ab67b7cc
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 23:03:55.74
+ab67b7cc
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 23:04:00.02
+d1af21b1
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-10-26 23:04:00.02
+d1af21b1
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 23:04:00.12
+d1af21b1
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 23:04:00.12
+d1af21b1
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 23:04:00.12
+d1af21b1
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-10-26 23:04:04.46
+ab67b7cc
+User
+[NotificationWorker] Starting queue processing...
+2025-10-26 23:04:06.66
+ab67b7cc
+User
+[NotificationWorker] Found 0 notifications to process
+2025-10-26 23:04:06.66
+ab67b7cc
+User
+[NotificationWorker] Queue processing completed
+2025-10-26 23:04:15.21
+ab67b7cc
+User
+8:04:15 PM [express] GET /api/2fa/pending-method 200 in 78ms :: {"method":"authenticator","hasPhoneN…
+2025-10-26 23:04:15.34
+ab67b7cc
+User
+8:04:15 PM [express] GET /api/themes/active 200 in 198ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-10-26 23:04:16.91
+ab67b7cc
+User
+📱 Sending SMS OTP to: +966564255999
+2025-10-26 23:04:17.18
+ab67b7cc
+User
+❌ Error sending SMS OTP: Invalid parameter
+2025-10-26 23:04:17.20
+ab67b7cc
+User
+8:04:17 PM [express] POST /api/2fa/send-sms 500 in 404ms :: {"message":"فشل في إرسال رمز التحقق. تأك…
+2025-10-26 23:04:38.08
+d1af21b1
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-10-26 23:04:38.08
+d1af21b1
+User
+📡 SSE connection closed for user: admin-sabq
+2025-10-26 23:04:38.08
+d1af21b1
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-10-26 23:04:38.08
+d1af21b1
+User
+📡 SSE connection closed for user: admin-sabq

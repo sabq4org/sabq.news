@@ -54,12 +54,14 @@ export async function getTwilioFromPhoneNumber() {
 export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolean; message: string }> {
   try {
     if (!process.env.TWILIO_VERIFY_SID) {
+      console.error('❌ TWILIO_VERIFY_SID is not configured');
       throw new Error('TWILIO_VERIFY_SID environment variable is not configured');
     }
 
     const client = await getTwilioClient();
     
     console.log('📱 Sending SMS OTP to:', phoneNumber);
+    console.log('📱 Using Verify Service SID:', process.env.TWILIO_VERIFY_SID.substring(0, 10) + '...');
     
     // Use Twilio Verify API to send OTP
     const verification = await client.verify.v2
@@ -70,7 +72,11 @@ export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolea
         channel: 'sms'
       });
 
-    console.log('✅ SMS OTP sent successfully:', { to: phoneNumber, status: verification.status });
+    console.log('✅ SMS OTP sent successfully:', { 
+      to: phoneNumber, 
+      status: verification.status,
+      sid: verification.sid 
+    });
 
     return {
       success: verification.status === 'pending',
@@ -79,10 +85,31 @@ export async function sendSMSOTP(phoneNumber: string): Promise<{ success: boolea
         : 'فشل في إرسال رمز التحقق'
     };
   } catch (error: any) {
-    console.error('❌ Error sending SMS OTP:', error.message || error);
+    console.error('❌ Error sending SMS OTP:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      moreInfo: error.moreInfo
+    });
+    
+    // Provide more specific error messages based on Twilio error codes
+    let errorMessage = 'فشل في إرسال رمز التحقق';
+    
+    if (error.code === 60200) {
+      errorMessage = 'رقم الجوال غير صحيح أو غير مدعوم. تأكد من إدخال الرقم بالصيغة الدولية (مثال: +966xxxxxxxxx)';
+    } else if (error.code === 60202) {
+      errorMessage = 'تم تجاوز الحد الأقصى لمحاولات الإرسال. حاول مرة أخرى لاحقاً';
+    } else if (error.code === 60203) {
+      errorMessage = 'رقم الجوال غير صالح';
+    } else if (error.code === 60205) {
+      errorMessage = 'خدمة التحقق غير متاحة حالياً. حاول مرة أخرى لاحقاً';
+    } else if (error.code === 20003) {
+      errorMessage = 'تعذر الوصول إلى خدمة Twilio. تحقق من إعدادات TWILIO_VERIFY_SID';
+    }
+    
     return {
       success: false,
-      message: 'فشل في إرسال رمز التحقق. تأكد من صحة رقم الجوال'
+      message: errorMessage
     };
   }
 }
