@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,11 +18,9 @@ interface Announcement {
 }
 
 const VIEWED_PREFIX = "announcement_viewed_";
-const DISMISSED_PREFIX = "announcement_dismissed_";
 
 export function InternalAnnouncement() {
   const [location, navigate] = useLocation();
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [trackedImpressions, setTrackedImpressions] = useState<Set<string>>(new Set());
   const [trackedUniqueViews, setTrackedUniqueViews] = useState<Set<string>>(new Set());
 
@@ -43,20 +40,7 @@ export function InternalAnnouncement() {
   });
 
   useEffect(() => {
-    const dismissed = new Set<string>();
     announcements.forEach(ann => {
-      const key = `${DISMISSED_PREFIX}${ann.id}`;
-      if (localStorage.getItem(key) === 'true') {
-        dismissed.add(ann.id);
-      }
-    });
-    setDismissedIds(dismissed);
-  }, [announcements]);
-
-  useEffect(() => {
-    announcements.forEach(ann => {
-      if (dismissedIds.has(ann.id)) return;
-
       if (!trackedImpressions.has(ann.id)) {
         trackMetricMutation.mutate({ 
           announcementId: ann.id, 
@@ -83,23 +67,12 @@ export function InternalAnnouncement() {
         return () => clearTimeout(timer);
       }
     });
-  }, [announcements, dismissedIds, trackedImpressions, trackedUniqueViews]);
+  }, [announcements, trackedImpressions, trackedUniqueViews]);
 
   const getCurrentChannel = () => {
     // Map routes to announcement channels
     if (location.startsWith('/dashboard')) return 'dashboardBanner';
     return 'toast'; // Default for web pages
-  };
-
-  const handleDismiss = (announcementId: string) => {
-    trackMetricMutation.mutate({ 
-      announcementId, 
-      event: 'dismiss',
-      channel: getCurrentChannel(),
-    });
-    
-    localStorage.setItem(`${DISMISSED_PREFIX}${announcementId}`, 'true');
-    setDismissedIds(prev => new Set(Array.from(prev).concat(announcementId)));
   };
 
   const handleActionClick = (announcement: Announcement) => {
@@ -158,12 +131,9 @@ export function InternalAnnouncement() {
   const currentChannel = getCurrentChannel();
   
   const visibleAnnouncements = announcements.filter(ann => {
-    if (dismissedIds.has(ann.id)) return false;
-    
     if (!ann.channels.includes('all') && !ann.channels.includes(currentChannel)) {
       return false;
     }
-    
     return true;
   });
 
@@ -210,18 +180,6 @@ export function InternalAnnouncement() {
                 >
                   عرض التفاصيل
                 </Button>
-                
-                <button
-                  onClick={() => handleDismiss(announcement.id)}
-                  className={cn(
-                    "flex-shrink-0 p-1 rounded-md transition-colors hover-elevate",
-                    config.text
-                  )}
-                  aria-label="إغلاق الإعلان"
-                  data-testid={`button-close-${announcement.id}`}
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </div>
             </div>
           </div>
