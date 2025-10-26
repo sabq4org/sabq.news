@@ -80,6 +80,7 @@ import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
 import AudioBriefsDashboard from "@/pages/AudioBriefsDashboard";
 import AudioBriefEditor from "@/pages/AudioBriefEditor";
 import AnnouncementsList from "@/pages/AnnouncementsList";
+import AnnouncementDetail from "@/pages/AnnouncementDetail";
 import AnnouncementEditor from "@/pages/AnnouncementEditor";
 import AnnouncementsArchive from "@/pages/AnnouncementsArchive";
 import AnnouncementVersions from "@/pages/AnnouncementVersions";
@@ -161,10 +162,11 @@ function Router() {
       {/* Internal Announcements dashboard */}
       <Route path="/dashboard/announcements" component={AnnouncementsList} />
       <Route path="/dashboard/announcements/new" component={AnnouncementEditor} />
+      <Route path="/dashboard/announcements/archive" component={AnnouncementsArchive} />
       <Route path="/dashboard/announcements/:id/edit" component={AnnouncementEditor} />
       <Route path="/dashboard/announcements/:id/versions" component={AnnouncementVersions} />
       <Route path="/dashboard/announcements/:id/analytics" component={AnnouncementAnalytics} />
-      <Route path="/dashboard/announcements/archive" component={AnnouncementsArchive} />
+      <Route path="/dashboard/announcements/:id" component={AnnouncementDetail} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />

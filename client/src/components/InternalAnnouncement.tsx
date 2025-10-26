@@ -196,27 +196,20 @@ export function InternalAnnouncement() {
                 )}
                 
                 <div className="flex-1">
-                  <p className={cn("text-sm font-medium", config.text)}>
-                    <span className="font-bold">{announcement.title}</span>
-                    {announcement.message && (
-                      <span className="mr-2">
-                        {announcement.message.replace(/<[^>]*>/g, '').substring(0, 150)}
-                      </span>
-                    )}
+                  <p className={cn("text-sm font-bold", config.text)}>
+                    {announcement.title}
                   </p>
                 </div>
                 
-                {announcement.actionButtonLabel && announcement.actionButtonUrl && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleActionClick(announcement)}
-                    className={cn("flex-shrink-0", config.text)}
-                    data-testid={`button-action-${announcement.id}`}
-                  >
-                    {announcement.actionButtonLabel}
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/dashboard/announcements/${announcement.id}`)}
+                  className="flex-shrink-0"
+                  data-testid={`button-view-details-${announcement.id}`}
+                >
+                  عرض التفاصيل
+                </Button>
                 
                 <button
                   onClick={() => handleDismiss(announcement.id)}
