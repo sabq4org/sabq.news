@@ -14,6 +14,7 @@ import { sendArticleNotification } from "./notificationService";
 import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
+import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { db } from "./db";
 import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -953,6 +954,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error verifying 2FA:", error);
       res.status(500).json({ message: "فشل في التحقق من الرمز" });
+    }
+  });
+
+  // Send SMS OTP for 2FA setup or verification
+  app.post("/api/2fa/send-sms", strictLimiter, async (req: any, res) => {
+    try {
+      const userId = (req.session as any).pending2FAUserId || req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      if (!user.phoneNumber) {
+        return res.status(400).json({ message: "يرجى إضافة رقم الجوال أولاً في الملف الشخصي" });
+      }
+
+      // Send SMS OTP
+      const result = await sendSMSOTP(user.phoneNumber);
+
+      if (!result.success) {
+        return res.status(500).json({ message: result.message });
+      }
+
+      res.json({ 
+        success: true,
+        message: result.message,
+        phoneNumber: user.phoneNumber.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') // Mask phone number
+      });
+    } catch (error) {
+      console.error("Error sending SMS OTP:", error);
+      res.status(500).json({ message: "فشل في إرسال رمز التحقق" });
+    }
+  });
+
+  // Verify SMS OTP during login
+  app.post("/api/2fa/verify-sms", strictLimiter, async (req: any, res) => {
+    try {
+      const { code } = req.body;
+
+      // Get userId from session
+      const userId = (req.session as any).pending2FAUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "الجلسة منتهية. الرجاء تسجيل الدخول مرة أخرى" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      if (!user.phoneNumber) {
+        return res.status(400).json({ message: "رقم الجوال غير موجود" });
+      }
+
+      // Verify SMS OTP
+      const verification = await verifySMSOTP(user.phoneNumber, code);
+
+      if (!verification.valid) {
+        return res.status(400).json({ message: verification.message });
+      }
+
+      // Log the user in
+      req.login(user, (err: any) => {
+        if (err) {
+          console.error("Error logging in user after SMS 2FA:", err);
+          return res.status(500).json({ message: "فشل في تسجيل الدخول" });
+        }
+
+        // Clear the pending 2FA userId from session
+        delete (req.session as any).pending2FAUserId;
+
+        res.json({ 
+          message: "تم التحقق بنجاح",
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error verifying SMS OTP:", error);
+      res.status(500).json({ message: "فشل في التحقق من الرمز" });
+    }
+  });
+
+  // Update 2FA method preference
+  app.post("/api/2fa/update-method", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { method, password } = req.body;
+
+      if (!method || !['authenticator', 'sms', 'both'].includes(method)) {
+        return res.status(400).json({ message: "طريقة غير صالحة" });
+      }
+
+      if (!password) {
+        return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+      if (!user.twoFactorEnabled) {
+        return res.status(400).json({ message: "المصادقة الثنائية غير مفعلة" });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || '');
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "كلمة المرور غير صحيحة" });
+      }
+
+      // Check if phone number is required for SMS methods
+      if ((method === 'sms' || method === 'both') && !user.phoneNumber) {
+        return res.status(400).json({ message: "يرجى إضافة رقم الجوال أولاً في الملف الشخصي" });
+      }
+
+      // Update method
+      await db.update(users)
+        .set({ twoFactorMethod: method })
+        .where(eq(users.id, userId));
+
+      await logActivity({
+        userId,
+        action: 'update_2fa_method',
+        entityType: '2fa',
+        entityId: userId,
+        newValue: { method }
+      });
+
+      res.json({ 
+        success: true,
+        message: "تم تحديث طريقة المصادقة الثنائية بنجاح",
+        method
+      });
+    } catch (error) {
+      console.error("Error updating 2FA method:", error);
+      res.status(500).json({ message: "فشل في تحديث طريقة المصادقة الثنائية" });
     }
   });
 
