@@ -26,7 +26,8 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { type AudioNewsBrief } from "@db/schema";
+import { type AudioNewsBrief } from "@shared/schema";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 const formSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
@@ -169,141 +170,143 @@ export default function AudioBriefEditor() {
   const voiceSettings = form.watch('voiceSettings');
   
   return (
-    <div className="container mx-auto p-6 max-w-3xl" dir="rtl">
-      <h1 className="text-3xl font-bold mb-6">
-        {isEdit ? 'تعديل الخبر الصوتي' : 'إنشاء خبر صوتي جديد'}
-      </h1>
-      
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">العنوان</Label>
-          <Input
-            id="title"
-            {...form.register('title')}
-            placeholder="عنوان الخبر الصوتي"
-            data-testid="input-title"
-          />
-          {form.formState.errors.title && (
-            <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
-          )}
-        </div>
+    <DashboardLayout>
+      <div className="container mx-auto p-6 max-w-3xl" dir="rtl">
+        <h1 className="text-3xl font-bold mb-6">
+          {isEdit ? 'تعديل الخبر الصوتي' : 'إنشاء خبر صوتي جديد'}
+        </h1>
         
-        <div className="space-y-2">
-          <Label htmlFor="content">النص الإخباري</Label>
-          <Textarea
-            id="content"
-            {...form.register('content')}
-            placeholder="اكتب النص الإخباري هنا..."
-            rows={8}
-            data-testid="input-content"
-          />
-          {form.formState.errors.content && (
-            <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <Label>اختيار الصوت</Label>
-          <Select
-            value={form.watch('voiceId')}
-            onValueChange={(value) => form.setValue('voiceId', value)}
-          >
-            <SelectTrigger data-testid="select-voice">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ARABIC_VOICES.map((voice) => (
-                <SelectItem key={voice.id} value={voice.id}>
-                  {voice.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-4 p-4 border rounded-lg">
-          <h3 className="font-semibold">إعدادات النبرة</h3>
-          
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label>الاستقرار: {voiceSettings?.stability?.toFixed(2)}</Label>
-            <Slider
-              value={[voiceSettings?.stability || 0.5]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={([value]) => 
-                form.setValue('voiceSettings.stability', value)
-              }
-              data-testid="slider-stability"
+            <Label htmlFor="title">العنوان</Label>
+            <Input
+              id="title"
+              {...form.register('title')}
+              placeholder="عنوان الخبر الصوتي"
+              data-testid="input-title"
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>التشابه: {voiceSettings?.similarity_boost?.toFixed(2)}</Label>
-            <Slider
-              value={[voiceSettings?.similarity_boost || 0.75]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={([value]) =>
-                form.setValue('voiceSettings.similarity_boost', value)
-              }
-              data-testid="slider-similarity"
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            type="submit"
-            disabled={saveMutation.isPending}
-            data-testid="button-save"
-          >
-            {saveMutation.isPending && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-            حفظ
-          </Button>
-          
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleGenerate}
-            disabled={generateMutation.isPending || !!pollingJobId}
-            data-testid="button-generate"
-          >
-            {(generateMutation.isPending || pollingJobId) && (
-              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+            {form.formState.errors.title && (
+              <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
             )}
-            توليد الصوت
-          </Button>
+          </div>
           
-          {brief?.audioUrl && (
+          <div className="space-y-2">
+            <Label htmlFor="content">النص الإخباري</Label>
+            <Textarea
+              id="content"
+              {...form.register('content')}
+              placeholder="اكتب النص الإخباري هنا..."
+              rows={8}
+              data-testid="input-content"
+            />
+            {form.formState.errors.content && (
+              <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label>اختيار الصوت</Label>
+            <Select
+              value={form.watch('voiceId')}
+              onValueChange={(value) => form.setValue('voiceId', value)}
+            >
+              <SelectTrigger data-testid="select-voice">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ARABIC_VOICES.map((voice) => (
+                  <SelectItem key={voice.id} value={voice.id}>
+                    {voice.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-4 p-4 border rounded-lg">
+            <h3 className="font-semibold">إعدادات النبرة</h3>
+            
+            <div className="space-y-2">
+              <Label>الاستقرار: {voiceSettings?.stability?.toFixed(2)}</Label>
+              <Slider
+                value={[voiceSettings?.stability || 0.5]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={([value]) => 
+                  form.setValue('voiceSettings.stability', value)
+                }
+                data-testid="slider-stability"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>التشابه: {voiceSettings?.similarity_boost?.toFixed(2)}</Label>
+              <Slider
+                value={[voiceSettings?.similarity_boost || 0.75]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={([value]) =>
+                  form.setValue('voiceSettings.similarity_boost', value)
+                }
+                data-testid="slider-similarity"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              disabled={saveMutation.isPending}
+              data-testid="button-save"
+            >
+              {saveMutation.isPending && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              حفظ
+            </Button>
+            
             <Button
               type="button"
-              variant="outline"
-              onClick={() => setShowPreview(true)}
-              data-testid="button-preview"
+              variant="secondary"
+              onClick={handleGenerate}
+              disabled={generateMutation.isPending || !!pollingJobId}
+              data-testid="button-generate"
             >
-              معاينة الصوت
+              {(generateMutation.isPending || pollingJobId) && (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              )}
+              توليد الصوت
             </Button>
-          )}
-        </div>
-      </form>
-      
-      {brief?.audioUrl && (
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-2xl" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>معاينة الخبر الصوتي</DialogTitle>
-            </DialogHeader>
-            <AudioPlayer
-              newsletterId={brief.id}
-              audioUrl={brief.audioUrl}
-              title={brief.title}
-              duration={brief.duration || undefined}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+            
+            {brief?.audioUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPreview(true)}
+                data-testid="button-preview"
+              >
+                معاينة الصوت
+              </Button>
+            )}
+          </div>
+        </form>
+        
+        {brief?.audioUrl && (
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
+            <DialogContent className="max-w-2xl" dir="rtl">
+              <DialogHeader>
+                <DialogTitle>معاينة الخبر الصوتي</DialogTitle>
+              </DialogHeader>
+              <AudioPlayer
+                newsletterId={brief.id}
+                audioUrl={brief.audioUrl}
+                title={brief.title}
+                duration={brief.duration || undefined}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
