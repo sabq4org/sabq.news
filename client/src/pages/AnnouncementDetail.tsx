@@ -29,7 +29,9 @@ import {
   Users,
   Calendar,
   Radio,
-  Target
+  Target,
+  User,
+  Link
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -314,127 +316,100 @@ export default function AnnouncementDetail() {
           </CardContent>
         </Card>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Targeting */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
+        {/* Compact Details Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Targeting Card - Compact */}
+          <Card className="hover-elevate transition-all duration-300 bg-blue-50/30 dark:bg-blue-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 الاستهداف
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">القنوات</h4>
-                <div className="flex flex-wrap gap-2">
-                  {announcement.channels.map(channel => (
-                    <Badge key={channel} variant="outline">
-                      {getChannelLabel(channel)}
+            <CardContent className="space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {announcement.channels.map(channel => (
+                  <Badge key={channel} variant="outline" className="text-xs">
+                    {getChannelLabel(channel)}
+                  </Badge>
+                ))}
+              </div>
+              {announcement.audienceRoles && announcement.audienceRoles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {announcement.audienceRoles.map(role => (
+                    <Badge key={role} variant="secondary" className="text-xs">
+                      {getRoleLabel(role)}
                     </Badge>
                   ))}
                 </div>
-              </div>
-
-              {announcement.audienceRoles && announcement.audienceRoles.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">الأدوار المستهدفة</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {announcement.audienceRoles.map(role => (
-                      <Badge key={role} variant="secondary">
-                        {getRoleLabel(role)}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
               )}
-
               {announcement.audienceUserIds && announcement.audienceUserIds.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">مستخدمون محددون</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {announcement.audienceUserIds.length} مستخدم
+                <div className="pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    مستخدمون محددون: {announcement.audienceUserIds.length}
                   </p>
                 </div>
               )}
-
               {!announcement.audienceRoles && !announcement.audienceUserIds && (
-                <p className="text-sm text-muted-foreground">
-                  متاح لجميع المستخدمين
-                </p>
+                <p className="text-xs text-muted-foreground">جميع المستخدمين</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Scheduling */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                الجدولة والتواريخ
+          {/* Scheduling Card - Compact */}
+          <Card className="hover-elevate transition-all duration-300 bg-purple-50/30 dark:bg-purple-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                الجدولة
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-sm text-muted-foreground">تاريخ الإنشاء</p>
-                <p className="font-medium">
-                  {format(new Date(announcement.createdAt), "PPP - p", { locale: ar })}
-                </p>
-              </div>
-
+            <CardContent className="space-y-2">
               {announcement.publishedAt && (
                 <div>
-                  <p className="text-sm text-muted-foreground">تاريخ النشر</p>
-                  <p className="font-medium">
-                    {format(new Date(announcement.publishedAt), "PPP - p", { locale: ar })}
+                  <p className="text-xs text-muted-foreground">النشر</p>
+                  <p className="text-sm font-medium">
+                    {format(new Date(announcement.publishedAt), "PPP", { locale: ar })}
                   </p>
                 </div>
               )}
-
-              {announcement.startAt && (
-                <div>
-                  <p className="text-sm text-muted-foreground">تاريخ البدء</p>
-                  <p className="font-medium">
-                    {format(new Date(announcement.startAt), "PPP - p", { locale: ar })}
-                  </p>
-                </div>
-              )}
-
               {announcement.endAt && (
                 <div>
-                  <p className="text-sm text-muted-foreground">تاريخ الانتهاء</p>
-                  <p className="font-medium">
-                    {format(new Date(announcement.endAt), "PPP - p", { locale: ar })}
+                  <p className="text-xs text-muted-foreground">الانتهاء</p>
+                  <p className="text-sm font-medium">
+                    {format(new Date(announcement.endAt), "PPP", { locale: ar })}
                   </p>
                 </div>
+              )}
+              {!announcement.publishedAt && !announcement.endAt && (
+                <p className="text-xs text-muted-foreground">غير مجدول</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Creator Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                معلومات المنشئ
+          {/* Creator Card - Compact */}
+          <Card className="hover-elevate transition-all duration-300 bg-green-50/30 dark:bg-green-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <User className="h-4 w-4 text-green-600 dark:text-green-400" />
+                المنشئ
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {announcement.creator && (
                 <div>
-                  <p className="text-sm text-muted-foreground">أنشأه</p>
-                  <p className="font-medium">
+                  <p className="text-xs text-muted-foreground">أنشأه</p>
+                  <p className="text-sm font-medium">
                     {announcement.creator.firstName && announcement.creator.lastName
                       ? `${announcement.creator.firstName} ${announcement.creator.lastName}`
                       : announcement.creator.email}
                   </p>
                 </div>
               )}
-
               {announcement.publisher && (
                 <div>
-                  <p className="text-sm text-muted-foreground">نشره</p>
-                  <p className="font-medium">
+                  <p className="text-xs text-muted-foreground">نشره</p>
+                  <p className="text-sm font-medium">
                     {announcement.publisher.firstName && announcement.publisher.lastName
                       ? `${announcement.publisher.firstName} ${announcement.publisher.lastName}`
                       : announcement.publisher.email}
@@ -444,30 +419,37 @@ export default function AnnouncementDetail() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>روابط سريعة</CardTitle>
+          {/* Quick Links Card - Compact */}
+          <Card className="hover-elevate transition-all duration-300 bg-orange-50/30 dark:bg-orange-950/20 md:col-span-2 lg:col-span-3">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Link className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                روابط سريعة
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => setLocation(`/dashboard/announcements/${id}/versions`)}
-                data-testid="button-versions"
-              >
-                <Radio className="ml-2 h-4 w-4" />
-                سجل الإصدارات
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => setLocation(`/dashboard/announcements/${id}/analytics`)}
-                data-testid="button-full-analytics"
-              >
-                <Target className="ml-2 h-4 w-4" />
-                التحليلات التفصيلية
-              </Button>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/dashboard/announcements/${id}/versions`)}
+                  data-testid="button-versions"
+                  className="text-xs"
+                >
+                  <Radio className="ml-2 h-3 w-3" />
+                  سجل الإصدارات
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/dashboard/announcements/${id}/analytics`)}
+                  data-testid="button-full-analytics"
+                  className="text-xs"
+                >
+                  <Target className="ml-2 h-3 w-3" />
+                  التحليلات التفصيلية
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
