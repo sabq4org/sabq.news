@@ -205,6 +205,58 @@ export default function ArticlesManagement() {
     },
   });
 
+  // Toggle breaking news mutation
+  const toggleBreakingMutation = useMutation({
+    mutationFn: async ({ id, currentState }: { id: string; currentState: boolean }) => {
+      return await apiRequest(`/api/admin/articles/${id}/toggle-breaking`, {
+        method: "POST",
+      });
+    },
+    onMutate: async ({ id, currentState }) => {
+      // Store the exact query key being modified
+      const queryKey = ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter];
+      
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/articles"] });
+      
+      // Snapshot the previous value with its query key
+      const previousArticles = queryClient.getQueryData(queryKey);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(queryKey, (old: Article[] | undefined) => {
+        if (!old) return old;
+        return old.map(article => 
+          article.id === id 
+            ? { ...article, newsType: currentState ? "regular" : "breaking" }
+            : article
+        );
+      });
+      
+      return { previousArticles, queryKey };
+    },
+    onSuccess: (data: any, { currentState }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      const isNowBreaking = !currentState;
+      toast({
+        title: isNowBreaking ? "تم التمييز كخبر عاجل" : "تم إلغاء التمييز كخبر عاجل",
+        description: isNowBreaking 
+          ? "تم تمييز المقال كخبر عاجل بنجاح"
+          : "تم إلغاء تمييز المقال كخبر عاجل بنجاح",
+      });
+    },
+    onError: (error: any, variables, context) => {
+      // Rollback on error using the original query key
+      if (context?.previousArticles && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousArticles);
+      }
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل تحديث حالة الخبر العاجل",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEdit = (article: Article) => {
     setLocation(`/dashboard/articles/${article.id}`);
   };
@@ -231,23 +283,24 @@ export default function ArticlesManagement() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-0">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold" data-testid="heading-title">
+            <h1 className="text-xl md:text-2xl font-bold" data-testid="heading-title">
               إدارة الأخبار والمقالات
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               إدارة المحتوى الإخباري والمقالات
             </p>
           </div>
           <Button
             onClick={() => setLocation("/dashboard/articles/new")}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
+            size="sm"
             data-testid="button-create-article"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
             مقال جديد
           </Button>
         </div>
@@ -272,20 +325,21 @@ export default function ArticlesManagement() {
         )}
 
         {/* Filters */}
-        <div className="bg-card rounded-lg border border-border p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-card rounded-lg border border-border p-3 md:p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div>
                 <Input
                   placeholder="بحث بالعنوان..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-9 md:h-10 text-sm"
                   data-testid="input-search"
                 />
               </div>
 
               <div>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger data-testid="select-type-filter">
+                  <SelectTrigger data-testid="select-type-filter" className="h-9 md:h-10 text-sm">
                     <SelectValue placeholder="النوع" />
                   </SelectTrigger>
                   <SelectContent>
@@ -300,7 +354,7 @@ export default function ArticlesManagement() {
 
               <div>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger data-testid="select-category-filter">
+                  <SelectTrigger data-testid="select-category-filter" className="h-9 md:h-10 text-sm">
                     <SelectValue placeholder="التصنيف" />
                   </SelectTrigger>
                   <SelectContent>
@@ -316,8 +370,8 @@ export default function ArticlesManagement() {
             </div>
           </div>
 
-          {/* Articles Table */}
-          <div className="bg-card rounded-lg border border-border overflow-hidden">
+          {/* Articles Table - Desktop View */}
+          <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
             {articlesLoading ? (
               <div className="p-8 text-center text-muted-foreground">
                 جاري التحميل...
@@ -348,7 +402,7 @@ export default function ArticlesManagement() {
                         data-testid={`row-article-${article.id}`}
                       >
                         <td className="py-3 px-4">
-                          <span className="font-medium">{article.title}</span>
+                          <span className="font-medium max-w-xs truncate inline-block">{article.title}</span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -403,6 +457,137 @@ export default function ArticlesManagement() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+
+          {/* Articles Cards - Mobile View */}
+          <div className="md:hidden space-y-3">
+            {articlesLoading ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                جاري التحميل...
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                لا توجد مقالات
+              </div>
+            ) : (
+              articles.map((article) => (
+                <div 
+                  key={article.id} 
+                  className="bg-card border rounded-lg p-3 space-y-3 hover-elevate"
+                  data-testid={`card-article-${article.id}`}
+                >
+                  {/* Title and Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
+                      {article.title}
+                    </h3>
+                    {getStatusBadge(article.status)}
+                  </div>
+
+                  {/* Author and Category */}
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={article.author?.profileImageUrl || ""} />
+                        <AvatarFallback className="text-xs">
+                          {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-muted-foreground">
+                        {article.author?.firstName || article.author?.email}
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">
+                      {article.category?.nameAr || "-"}
+                    </span>
+                  </div>
+
+                  {/* Badges and Views */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {article.newsType === "breaking" && (
+                        <Badge variant="destructive" className="text-xs">عاجل</Badge>
+                      )}
+                      {article.isFeatured && (
+                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-current" />
+                          مميز
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>{article.views}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(article)}
+                      className="flex-1"
+                      data-testid={`button-edit-mobile-${article.id}`}
+                    >
+                      <Edit className="ml-1.5 h-3.5 w-3.5" />
+                      تعديل
+                    </Button>
+                    
+                    {article.newsType !== "breaking" ? (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => toggleBreakingMutation.mutate({ 
+                          id: article.id, 
+                          currentState: false 
+                        })}
+                        disabled={toggleBreakingMutation.isPending}
+                        className="flex-1"
+                        data-testid={`button-breaking-mobile-${article.id}`}
+                      >
+                        <Bell className="ml-1.5 h-3.5 w-3.5" />
+                        عاجل
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => toggleBreakingMutation.mutate({ 
+                          id: article.id, 
+                          currentState: true 
+                        })}
+                        disabled={toggleBreakingMutation.isPending}
+                        className="flex-1"
+                        data-testid={`button-unbreaking-mobile-${article.id}`}
+                      >
+                        إلغاء العاجل
+                      </Button>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
+                      disabled={featureMutation.isPending}
+                      data-testid={`button-feature-mobile-${article.id}`}
+                    >
+                      <Star className={`h-3.5 w-3.5 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDeletingArticle(article)}
+                      data-testid={`button-delete-mobile-${article.id}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
