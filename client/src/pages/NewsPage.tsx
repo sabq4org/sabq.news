@@ -3,15 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Sparkles } from "lucide-react";
+import { Clock, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
+const ARTICLES_PER_PAGE = 20;
+
 export default function NewsPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -21,6 +26,58 @@ export default function NewsPage() {
     queryKey: ["/api/articles"],
     staleTime: 30000,
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE);
+  const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
+  const endIndex = startIndex + ARTICLES_PER_PAGE;
+  const currentArticles = articles.slice(startIndex, endIndex);
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 7; // Maximum number of page buttons to show
+
+    if (totalPages <= maxVisible) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    scrollToTop();
+  };
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -57,78 +114,126 @@ export default function NewsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {articles.map((article) => (
-              <Link key={article.id} href={`/article/${article.slug}`}>
-                <Card 
-                  className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
-                  data-testid={`card-article-${article.id}`}
-                >
-                  {article.imageUrl && (
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={article.imageUrl}
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      {article.category && (
-                        <Badge 
-                          variant="default" 
-                          className="absolute top-3 right-3 shadow-md" 
-                          data-testid={`badge-category-${article.id}`}
-                        >
-                          {article.category.icon} {article.category.nameAr}
-                        </Badge>
-                      )}
-                      {article.aiSummary && (
-                        <div className="absolute top-3 left-3">
-                          <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                            <Sparkles className="h-3 w-3 ml-1" />
-                            ذكاء اصطناعي
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {currentArticles.map((article) => (
+                <Link key={article.id} href={`/article/${article.slug}`}>
+                  <Card 
+                    className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
+                    data-testid={`card-article-${article.id}`}
+                  >
+                    {article.imageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {article.category && (
+                          <Badge 
+                            variant="default" 
+                            className="absolute top-3 right-3 shadow-md" 
+                            data-testid={`badge-category-${article.id}`}
+                          >
+                            {article.category.icon} {article.category.nameAr}
                           </Badge>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <CardContent className="p-4 space-y-3">
-                    
-                    <h3 
-                      className="font-bold text-lg line-clamp-2 text-foreground"
-                      data-testid={`text-article-title-${article.id}`}
-                    >
-                      {article.title}
-                    </h3>
-                    
-                    {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {article.excerpt}
-                      </p>
+                        )}
+                        {article.aiSummary && (
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                              <Sparkles className="h-3 w-3 ml-1" />
+                              ذكاء اصطناعي
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
                     )}
-
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                      {article.publishedAt && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>
-                            {formatDistanceToNow(new Date(article.publishedAt), {
-                              addSuffix: true,
-                              locale: ar,
-                            })}
-                          </span>
-                        </div>
-                      )}
+                    
+                    <CardContent className="p-4 space-y-3">
                       
-                      <ViewsCount 
-                        views={article.views || 0}
-                        iconClassName="h-3 w-3"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      <h3 
+                        className="font-bold text-lg line-clamp-2 text-foreground"
+                        data-testid={`text-article-title-${article.id}`}
+                      >
+                        {article.title}
+                      </h3>
+                      
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                        {article.publishedAt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {formatDistanceToNow(new Date(article.publishedAt), {
+                                addSuffix: true,
+                                locale: ar,
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        
+                        <ViewsCount 
+                          views={article.views || 0}
+                          iconClassName="h-3 w-3"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex justify-center items-center gap-2" dir="ltr">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  data-testid="button-prev-page"
+                  aria-label="الصفحة السابقة"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => handlePageChange(page as number)}
+                      data-testid={`button-page-${page}`}
+                      className="min-w-9"
+                    >
+                      {page}
+                    </Button>
+                  )
+                ))}
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                  aria-label="الصفحة التالية"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
