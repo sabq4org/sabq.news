@@ -550,20 +550,20 @@ export default function SmartBlocksPage() {
                   name="limitCount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>عدد المقالات ({field.value})</FormLabel>
+                      <FormLabel>عدد المقالات ({field.value || 6})</FormLabel>
                       <FormControl>
                         <Slider
                           min={1}
                           max={24}
                           step={1}
-                          value={[field.value]}
+                          value={[field.value || 6]}
                           onValueChange={([value]) => field.onChange(value)}
                           data-testid="slider-block-limit"
                         />
                       </FormControl>
                       <FormMessage />
                       <p className="text-xs text-muted-foreground">
-                        سيتم عرض {field.value} مقالات في هذا البلوك
+                        سيتم عرض {field.value || 6} مقالات في هذا البلوك
                       </p>
                     </FormItem>
                   )}
