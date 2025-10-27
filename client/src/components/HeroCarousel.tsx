@@ -228,55 +228,27 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
       </div>
 
       {articles.length > 1 && (
-        <div className="mt-4 flex gap-3 justify-center w-full px-4">
+        <div className="mt-4 flex gap-2 justify-center w-full px-4">
           {articles.slice(0, 3).map((article, index) => (
             <button
               key={index}
-              className={`relative flex-1 max-w-[200px] group overflow-hidden rounded-lg border-2 transition-all ${
+              className={`relative flex-shrink-0 w-20 h-16 sm:w-24 sm:h-20 rounded-md overflow-hidden border-2 transition-all ${
                 index === selectedIndex
-                  ? "border-primary shadow-lg scale-105"
-                  : "border-border hover:border-primary/50 hover:scale-102"
+                  ? "border-primary"
+                  : "border-transparent opacity-70 hover:opacity-100 hover:border-border"
               }`}
               onClick={() => emblaApi?.scrollTo(index)}
               data-testid={`button-carousel-thumbnail-${index}`}
             >
-              {/* Image */}
-              <div className="relative h-24 sm:h-28 overflow-hidden">
-                {article.imageUrl ? (
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-full h-full object-cover object-center transition-transform group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
-                )}
-                
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                
-                {/* Badge */}
-                <div className="absolute top-2 right-2">
-                  {article.newsType === "breaking" ? (
-                    <Badge variant="destructive" className="text-xs gap-1 shadow-lg">
-                      <Zap className="h-3 w-3" />
-                      عاجل
-                    </Badge>
-                  ) : article.isFeatured ? (
-                    <Badge className="text-xs gap-1 bg-amber-500 border-amber-600 shadow-lg">
-                      <Star className="h-3 w-3 fill-current" />
-                      مميز
-                    </Badge>
-                  ) : null}
-                </div>
-              </div>
-              
-              {/* Title */}
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
-                <p className="text-white text-xs font-semibold line-clamp-2 text-right">
-                  {article.title}
-                </p>
-              </div>
+              {article.imageUrl ? (
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+              )}
             </button>
           ))}
         </div>
