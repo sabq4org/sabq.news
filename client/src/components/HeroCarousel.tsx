@@ -232,7 +232,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           {articles.slice(0, 3).map((article, index) => (
             <button
               key={index}
-              className={`relative flex-shrink-0 w-20 h-16 sm:w-24 sm:h-20 rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden border-2 transition-all ${
                 index === selectedIndex
                   ? "border-primary"
                   : "border-transparent opacity-70 hover:opacity-100 hover:border-border"
