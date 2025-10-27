@@ -46,7 +46,7 @@ export async function exportArticleToPdf({
       logging: false,
       backgroundColor: '#ffffff',
       imageTimeout: 0,
-      windowWidth: 1200, // عرض ثابت لضمان تنسيق متسق
+      width: 1200, // عرض ثابت لضمان تنسيق متسق
     });
 
     // حساب أبعاد PDF (A4)
