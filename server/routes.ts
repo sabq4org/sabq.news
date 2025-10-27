@@ -11161,6 +11161,429 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // ============================================================
+  // AI PUBLISHER API v1 - Machine-readable endpoints for LLMs
+  // ============================================================
+
+  // GET /api/v1/articles - List articles with full AI-ready metadata
+  app.get("/api/v1/articles", async (req, res) => {
+    try {
+      const { 
+        limit = "50", 
+        offset = "0", 
+        category, 
+        status = "published",
+        since,
+        newsType,
+        featured
+      } = req.query;
+
+      const limitNum = Math.min(parseInt(limit as string), 200);
+      const offsetNum = parseInt(offset as string);
+
+      let query = db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .$dynamic();
+
+      // Default to published only
+      if (status) {
+        query = query.where(eq(articles.status, status as string));
+      }
+
+      // Filter by category
+      if (category) {
+        query = query.where(eq(articles.categoryId, category as string));
+      }
+
+      // Filter by date (articles updated/published since timestamp)
+      if (since) {
+        const sinceDate = new Date(since as string);
+        query = query.where(gte(articles.updatedAt, sinceDate));
+      }
+
+      // Filter by news type (breaking, featured, regular)
+      if (newsType) {
+        query = query.where(eq(articles.newsType, newsType as string));
+      }
+
+      // Filter by featured status
+      if (featured !== undefined) {
+        query = query.where(eq(articles.isFeatured, featured === "true"));
+      }
+
+      query = query
+        .orderBy(desc(articles.publishedAt))
+        .limit(limitNum)
+        .offset(offsetNum);
+
+      const results = await query;
+
+      // Format for AI consumption
+      const formattedArticles = results.map((row) => ({
+        id: row.article.id,
+        url: `${req.protocol}://${req.get("host")}/article/${row.article.slug}`,
+        canonical_url: `${req.protocol}://${req.get("host")}/article/${row.article.slug}`,
+        title: row.article.title,
+        subtitle: row.article.subtitle,
+        section: row.category?.nameAr || "عام",
+        section_en: row.category?.nameEn || "General",
+        category_id: row.article.categoryId,
+        author: row.author ? {
+          id: row.author.id,
+          name: `${row.author.firstName || ""} ${row.author.lastName || ""}`.trim(),
+          email: row.author.email,
+          profile_image: row.author.profileImageUrl,
+        } : null,
+        lang: "ar",
+        published_at: row.article.publishedAt?.toISOString(),
+        updated_at: row.article.updatedAt.toISOString(),
+        summary: row.article.aiSummary || row.article.excerpt || "",
+        excerpt: row.article.excerpt || "",
+        full_text: row.article.content,
+        image: row.article.imageUrl,
+        article_type: row.article.articleType,
+        news_type: row.article.newsType,
+        is_featured: row.article.isFeatured,
+        views: row.article.views,
+        credibility_score: row.article.credibilityScore,
+        seo: row.article.seo,
+        rights: {
+          attribution_required: true,
+          training_allowed: false,
+          usage: "inference-only",
+          license: "Sabq-AI-Use-1.0",
+        },
+      }));
+
+      res.json({
+        total: formattedArticles.length,
+        limit: limitNum,
+        offset: offsetNum,
+        articles: formattedArticles,
+      });
+    } catch (error) {
+      console.error("Error fetching AI articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // GET /api/v1/articles/:id - Get single article with full metadata
+  app.get("/api/v1/articles/:id", async (req, res) => {
+    try {
+      const articleId = req.params.id;
+
+      const [result] = await db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+            bio: users.bio,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!result) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Get tags for this article
+      const articleTagsData = await db
+        .select({
+          tag: tags,
+        })
+        .from(articleTags)
+        .innerJoin(tags, eq(articleTags.tagId, tags.id))
+        .where(eq(articleTags.articleId, articleId));
+
+      const tagsList = articleTagsData.map(t => t.tag.nameAr);
+
+      // Format for AI consumption with full metadata
+      const formattedArticle = {
+        id: result.article.id,
+        url: `${req.protocol}://${req.get("host")}/article/${result.article.slug}`,
+        canonical_url: `${req.protocol}://${req.get("host")}/article/${result.article.slug}`,
+        title: result.article.title,
+        subtitle: result.article.subtitle,
+        section: result.category?.nameAr || "عام",
+        section_en: result.category?.nameEn || "General",
+        tags: tagsList,
+        author: result.author ? {
+          id: result.author.id,
+          name: `${result.author.firstName || ""} ${result.author.lastName || ""}`.trim(),
+          email: result.author.email,
+          bio: result.author.bio,
+          profile_image: result.author.profileImageUrl,
+          profile_url: `${req.protocol}://${req.get("host")}/reporter/${result.author.id}`,
+        } : null,
+        lang: "ar",
+        published_at: result.article.publishedAt?.toISOString(),
+        updated_at: result.article.updatedAt.toISOString(),
+        created_at: result.article.createdAt.toISOString(),
+        summary: result.article.aiSummary || result.article.excerpt || "",
+        excerpt: result.article.excerpt || "",
+        full_text: result.article.content,
+        images: result.article.imageUrl ? [{
+          url: result.article.imageUrl,
+          caption: result.article.title,
+          copyright: "© صحيفة سبق",
+        }] : [],
+        article_type: result.article.articleType,
+        news_type: result.article.newsType,
+        is_featured: result.article.isFeatured,
+        views: result.article.views,
+        credibility_score: result.article.credibilityScore,
+        credibility_analysis: result.article.credibilityAnalysis,
+        seo: result.article.seo || {},
+        rights: {
+          attribution_required: true,
+          training_allowed: false,
+          usage: "inference-only",
+          license: "Sabq-AI-Use-1.0",
+          attribution_text: "المصدر: صحيفة سبق",
+          linkback_required: true,
+        },
+        content_hash: `sha256:${result.article.id}`,
+      };
+
+      res.json(formattedArticle);
+    } catch (error) {
+      console.error("Error fetching AI article:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  // GET /api/v1/search - Advanced search for LLMs
+  app.get("/api/v1/search", async (req, res) => {
+    try {
+      const { 
+        q,
+        limit = "20",
+        category,
+        since,
+        newsType
+      } = req.query;
+
+      if (!q) {
+        return res.status(400).json({ message: "Search query 'q' is required" });
+      }
+
+      const limitNum = Math.min(parseInt(limit as string), 100);
+      const searchQuery = q as string;
+
+      let query = db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .$dynamic();
+
+      // Search in title, content, excerpt
+      query = query.where(
+        and(
+          eq(articles.status, "published"),
+          or(
+            ilike(articles.title, `%${searchQuery}%`),
+            ilike(articles.content, `%${searchQuery}%`),
+            ilike(articles.excerpt, `%${searchQuery}%`)
+          )
+        )
+      );
+
+      if (category) {
+        query = query.where(eq(articles.categoryId, category as string));
+      }
+
+      if (since) {
+        const sinceDate = new Date(since as string);
+        query = query.where(gte(articles.publishedAt, sinceDate));
+      }
+
+      if (newsType) {
+        query = query.where(eq(articles.newsType, newsType as string));
+      }
+
+      query = query
+        .orderBy(desc(articles.publishedAt))
+        .limit(limitNum);
+
+      const results = await query;
+
+      const formattedResults = results.map((row) => ({
+        id: row.article.id,
+        url: `${req.protocol}://${req.get("host")}/article/${row.article.slug}`,
+        title: row.article.title,
+        summary: row.article.aiSummary || row.article.excerpt || "",
+        section: row.category?.nameAr || "عام",
+        author: row.author ? `${row.author.firstName || ""} ${row.author.lastName || ""}`.trim() : null,
+        published_at: row.article.publishedAt?.toISOString(),
+        news_type: row.article.newsType,
+        relevance_score: 1.0,
+      }));
+
+      res.json({
+        query: searchQuery,
+        total: formattedResults.length,
+        results: formattedResults,
+      });
+    } catch (error) {
+      console.error("Error searching articles:", error);
+      res.status(500).json({ message: "Failed to search articles" });
+    }
+  });
+
+  // GET /api/v1/breaking - Get breaking news only
+  app.get("/api/v1/breaking", async (req, res) => {
+    try {
+      const { limit = "10" } = req.query;
+      const limitNum = Math.min(parseInt(limit as string), 50);
+
+      const results = await db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(
+          and(
+            eq(articles.status, "published"),
+            eq(articles.newsType, "breaking")
+          )
+        )
+        .orderBy(desc(articles.publishedAt))
+        .limit(limitNum);
+
+      const formattedResults = results.map((row) => ({
+        id: row.article.id,
+        url: `${req.protocol}://${req.get("host")}/article/${row.article.slug}`,
+        title: row.article.title,
+        summary: row.article.aiSummary || row.article.excerpt || "",
+        section: row.category?.nameAr || "عام",
+        author: row.author ? `${row.author.firstName || ""} ${row.author.lastName || ""}`.trim() : null,
+        published_at: row.article.publishedAt?.toISOString(),
+        image: row.article.imageUrl,
+        priority: "urgent",
+      }));
+
+      res.json({
+        total: formattedResults.length,
+        breaking_news: formattedResults,
+      });
+    } catch (error) {
+      console.error("Error fetching breaking news:", error);
+      res.status(500).json({ message: "Failed to fetch breaking news" });
+    }
+  });
+
+  // GET /api/v1/categories - Get all categories
+  app.get("/api/v1/categories", async (req, res) => {
+    try {
+      const categoriesList = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.status, "active"))
+        .orderBy(categories.displayOrder);
+
+      const formattedCategories = categoriesList.map(cat => ({
+        id: cat.id,
+        name_ar: cat.nameAr,
+        name_en: cat.nameEn,
+        slug: cat.slug,
+        description: cat.description,
+        url: `${req.protocol}://${req.get("host")}/category/${cat.slug}`,
+      }));
+
+      res.json({
+        total: formattedCategories.length,
+        categories: formattedCategories,
+      });
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // GET /.well-known/ai-usage.json - AI usage policy (machine-readable)
+  app.get("/.well-known/ai-usage.json", (req, res) => {
+    res.json({
+      policy_version: "1.0",
+      publisher: {
+        name: "صحيفة سبق",
+        name_en: "Sabq Newspaper",
+        url: `${req.protocol}://${req.get("host")}`,
+        contact: "info@sabq.org",
+      },
+      inference: {
+        allowed: true,
+        attribution: "required",
+        attribution_text: "المصدر: صحيفة سبق",
+        linkback: "required",
+        description: "يُسمح باستخدام المحتوى لتقديم إجابات للمستخدمين مع إسناد واضح ورابط المصدر",
+      },
+      training: {
+        allowed: false,
+        contact: "partnerships@sabq.org",
+        description: "تدريب النماذج الأساسية ممنوع بدون اتفاق مكتوب",
+      },
+      quotas: {
+        free_per_day: 200,
+        description: "200 طلب يومياً للاستخدام المجاني مع إسناد إلزامي",
+      },
+      rate_limits: {
+        rpm: 120,
+        rpd: 5000,
+      },
+      api_endpoints: {
+        articles: "/api/v1/articles",
+        search: "/api/v1/search",
+        breaking: "/api/v1/breaking",
+        categories: "/api/v1/categories",
+      },
+      documentation: {
+        publisher_kit: `${req.protocol}://${req.get("host")}/ai-publisher`,
+        policy: `${req.protocol}://${req.get("host")}/ai-policy`,
+      },
+      license: "Sabq-AI-Use-1.0",
+      last_updated: "2025-10-27",
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
