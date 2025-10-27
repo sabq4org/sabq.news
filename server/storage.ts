@@ -1393,6 +1393,39 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(categories).orderBy(categories.nameAr);
   }
 
+  async getCategoriesWithStats(): Promise<Array<Category & {
+    articleCount: number;
+    totalViews: number;
+    totalLikes: number;
+    totalBookmarks: number;
+  }>> {
+    const results = await db
+      .select({
+        category: categories,
+        articleCount: sql<number>`cast(count(distinct ${articles.id}) as int)`,
+        totalViews: sql<number>`cast(coalesce(sum(${articles.views}), 0) as int)`,
+        totalLikes: sql<number>`cast(count(distinct ${reactions.id}) as int)`,
+        totalBookmarks: sql<number>`cast(count(distinct ${bookmarks.id}) as int)`,
+      })
+      .from(categories)
+      .leftJoin(articles, and(
+        eq(articles.categoryId, categories.id),
+        eq(articles.status, 'published')
+      ))
+      .leftJoin(reactions, eq(reactions.articleId, articles.id))
+      .leftJoin(bookmarks, eq(bookmarks.articleId, articles.id))
+      .groupBy(categories.id)
+      .orderBy(categories.displayOrder, categories.nameAr);
+
+    return results.map(r => ({
+      ...r.category,
+      articleCount: r.articleCount,
+      totalViews: r.totalViews,
+      totalLikes: r.totalLikes,
+      totalBookmarks: r.totalBookmarks,
+    }));
+  }
+
   async getCategoryById(id: string): Promise<Category | undefined> {
     const [category] = await db.select().from(categories).where(eq(categories.id, id));
     return category;
