@@ -239,17 +239,17 @@ export default function Home() {
         <div className="section-separator"></div>
         <div className="bg-ai-gradient-soft py-12">
           <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            {/* AI Insights Block */}
-            <div className="scroll-fade-in">
-              <AIInsightsBlock />
-            </div>
-
-            {/* Smart Summary Block - Only for authenticated users */}
+            {/* Smart Summary Block (صباح الخير) - Only for authenticated users */}
             {user && (
               <div className="scroll-fade-in">
                 <SmartSummaryBlock />
               </div>
             )}
+
+            {/* AI Insights Block (مؤشرات الأسبوع) */}
+            <div className="scroll-fade-in">
+              <AIInsightsBlock />
+            </div>
           </div>
         </div>
 
