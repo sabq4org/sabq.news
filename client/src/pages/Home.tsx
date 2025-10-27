@@ -12,6 +12,7 @@ import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
+import { MoreFromSabq } from "@/components/MoreFromSabq";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -272,6 +273,14 @@ export default function Home() {
               />
             </div>
           )}
+        </div>
+
+        {/* Visual Separator */}
+        <div className="section-separator"></div>
+
+        {/* More From Sabq - Personalized Content Section */}
+        <div className="scroll-fade-in">
+          <MoreFromSabq />
         </div>
 
         {/* Visual Separator */}
