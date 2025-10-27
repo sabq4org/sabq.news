@@ -120,6 +120,41 @@ const strictLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Smart caching middleware - must come before routes
+app.use((req, res, next) => {
+  const path = req.path;
+  
+  // Hashed assets (Vite generates files like main-abc123.js)
+  // Cache aggressively with immutable flag
+  if (/\/assets\/.*\.(js|css)$/.test(path) && /[-_][a-f0-9]{8,}/.test(path)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+  // Images and fonts - cache for 30 days
+  else if (/\.(jpg|jpeg|png|gif|svg|webp|avif|ico|woff|woff2|ttf|eot)$/i.test(path)) {
+    res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days
+  }
+  // HTML files - always revalidate
+  else if (path.endsWith('.html') || path === '/') {
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  }
+  // API routes - short cache for GET, no cache for mutations
+  else if (path.startsWith('/api/')) {
+    if (req.method === 'GET') {
+      // Cache public API data for 5 minutes
+      if (path.startsWith('/api/v1/')) {
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+      } else {
+        res.setHeader('Cache-Control', 'private, max-age=60'); // 1 minute
+      }
+    } else {
+      // No cache for POST/PUT/DELETE
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  }
+  
+  next();
+});
+
 // Apply general rate limiter to all API routes
 app.use("/api", generalApiLimiter);
 
