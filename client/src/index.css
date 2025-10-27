@@ -623,4 +623,18 @@
   .emoji-picker-wrapper .epr-body {
     overflow-y: auto !important;
   }
+
+  /* Small Switch Component - Better sizing for table cells */
+  button[role="switch"].h-5.w-9 > span {
+    height: 1rem !important;
+    width: 1rem !important;
+  }
+
+  button[role="switch"].h-5.w-9[data-state="checked"] > span {
+    transform: translateX(1rem) !important;
+  }
+
+  button[role="switch"].h-5.w-9[data-state="unchecked"] > span {
+    transform: translateX(0) !important;
+  }
 }
