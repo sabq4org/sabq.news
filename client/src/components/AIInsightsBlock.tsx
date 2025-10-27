@@ -177,7 +177,7 @@ export function AIInsightsBlock() {
       </div>
 
       {/* Mobile: Horizontal Scroll */}
-      <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+      <div className="flex flex-row lg:hidden gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
         {insightsData.map((insight, index) => {
           const IconComponent = insight.icon;
           const articleLink = insight.article ? `/article/${insight.article.slug}` : "#";
@@ -186,10 +186,10 @@ export function AIInsightsBlock() {
             <Link 
               key={index} 
               href={articleLink}
-              className={insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}
+              className={`flex-shrink-0 snap-start ${insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}`}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 flex flex-col w-[160px] h-[140px] flex-shrink-0 snap-start ${
+                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 flex flex-col w-[160px] h-[140px] ${
                   insight.article ? "" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
