@@ -561,4 +561,38 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Emoji Picker Optimizations */
+  .emoji-picker-wrapper {
+    width: 100%;
+  }
+  
+  .emoji-picker-wrapper aside.epr-main {
+    max-width: 100% !important;
+  }
+  
+  /* Reduce emoji size */
+  .emoji-picker-wrapper button.epr-emoji-img {
+    font-size: 20px !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 2px !important;
+  }
+  
+  /* Reduce category button size */
+  .emoji-picker-wrapper .epr-category-nav button {
+    padding: 6px !important;
+    font-size: 16px !important;
+  }
+  
+  /* Reduce search input padding */
+  .emoji-picker-wrapper .epr-search-container input {
+    padding: 6px 8px !important;
+    font-size: 13px !important;
+  }
+  
+  /* Tighter grid spacing */
+  .emoji-picker-wrapper .epr-emoji-category-content {
+    gap: 2px !important;
+  }
 }
