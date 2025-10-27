@@ -49,6 +49,11 @@ export async function exportArticleToPdf({
       width: 1200, // عرض ثابت لضمان تنسيق متسق
     });
 
+    // التحقق من صحة أبعاد Canvas
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error('فشل إنشاء الصورة - تأكد من أن المحتوى معروض بشكل صحيح');
+    }
+
     // حساب أبعاد PDF (A4)
     const imgWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm

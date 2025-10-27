@@ -20,13 +20,17 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
   return (
     <div
       id="article-pdf-content"
-      className="hidden print:block"
+      className="print:block"
       style={{
+        position: 'fixed',
+        left: '-9999px',
+        top: '0',
         width: '1200px',
         backgroundColor: 'white',
         color: 'black',
         direction: 'rtl',
         fontFamily: 'Noto Naskh Arabic, Arial, sans-serif',
+        zIndex: -1,
       }}
     >
       {/* ترويسة PDF */}
