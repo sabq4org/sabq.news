@@ -467,12 +467,13 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
               <Smile className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0" align="start">
             <EmojiPicker
               onEmojiClick={handleEmojiClick}
               searchPlaceHolder="بحث..."
-              width={300}
-              height={400}
+              width={320}
+              height={350}
+              previewConfig={{ showPreview: false }}
             />
           </PopoverContent>
         </Popover>
