@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ import {
   AlertCircle,
   Calendar,
   Hash,
+  EyeOff,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -73,6 +75,7 @@ export default function ArticleEditor() {
   const [newsType, setNewsType] = useState<"breaking" | "featured" | "regular">("regular");
   const [publishType, setPublishType] = useState<"instant" | "scheduled">("instant");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [hideFromHomepage, setHideFromHomepage] = useState(false);
   
   // SEO fields
   const [metaTitle, setMetaTitle] = useState("");
@@ -128,6 +131,7 @@ export default function ArticleEditor() {
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
+      setHideFromHomepage(article.hideFromHomepage || false);
       // Validate SEO fields - truncate if too long (legacy data cleanup)
       const validMetaTitle = article.seo?.metaTitle 
         ? article.seo.metaTitle.substring(0, 70) 
@@ -254,6 +258,7 @@ export default function ArticleEditor() {
         isFeatured: newsType === "featured",
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        hideFromHomepage,
         status: publishNow 
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
@@ -695,6 +700,27 @@ const generateSlug = (text: string) => {
                     </Label>
                   </div>
                 </RadioGroup>
+                
+                {/* Hide from Homepage Option */}
+                <div className="pt-4 border-t mt-4">
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Checkbox 
+                      id="hideFromHomepage"
+                      checked={hideFromHomepage}
+                      onCheckedChange={(checked) => setHideFromHomepage(checked as boolean)}
+                      data-testid="checkbox-hide-from-homepage"
+                    />
+                    <Label htmlFor="hideFromHomepage" className="flex items-center gap-2 cursor-pointer text-sm">
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">إخفاء من الواجهة الرئيسية</div>
+                        <div className="text-xs text-muted-foreground">
+                          المقال سينشر لكن لن يظهر في الصفحة الرئيسية
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

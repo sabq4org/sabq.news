@@ -103,6 +103,7 @@ export const articles = pgTable("articles", {
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
   scheduledAt: timestamp("scheduled_at"),
   status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
+  hideFromHomepage: boolean("hide_from_homepage").default(false).notNull(), // Hide article from homepage but keep accessible via direct link
   aiSummary: text("ai_summary"),
   aiGenerated: boolean("ai_generated").default(false),
   isFeatured: boolean("is_featured").default(false).notNull(),
