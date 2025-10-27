@@ -54,7 +54,7 @@ export function ExportPdfButton({
 
       // إشعار النجاح
       toast({
-        title: "✅ تم إنشاء ملف PDF بنجاح",
+        title: "تم إنشاء ملف PDF بنجاح",
         description: `تم حفظ الملف: ${filename}`,
         variant: "default",
       });
@@ -62,7 +62,7 @@ export function ExportPdfButton({
       console.error("خطأ في تصدير PDF:", error);
       
       toast({
-        title: "❌ تعذّر إنشاء PDF",
+        title: "تعذّر إنشاء PDF",
         description: error instanceof Error ? error.message : "حاول لاحقاً",
         variant: "destructive",
       });
