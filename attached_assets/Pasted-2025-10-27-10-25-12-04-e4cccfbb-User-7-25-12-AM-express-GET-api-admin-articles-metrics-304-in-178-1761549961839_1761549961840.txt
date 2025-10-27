@@ -1,0 +1,116 @@
+2025-10-27 10:25:12.04
+e4cccfbb
+User
+7:25:12 AM [express] GET /api/admin/articles/metrics 304 in 178ms :: {"published":1,"scheduled":0,"d…
+2025-10-27 10:25:12.06
+e4cccfbb
+User
+7:25:12 AM [express] GET /api/admin/articles 200 in 190ms :: [{"id":"3b5c2bee-d9ac-4b35-a5b1-478401f…
+2025-10-27 10:25:12.23
+e4cccfbb
+User
+7:25:12 AM [express] GET /api/announcements/active 200 in 355ms :: [{"id":"41381365-8425-465e-aeda-0…
+2025-10-27 10:25:12.69
+e4cccfbb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-27 10:25:12.72
+e4cccfbb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-27 10:25:12.77
+e4cccfbb
+User
+7:25:12 AM [express] POST /api/announcements/41381365-8425-465e-aeda-0f17fffdfff9/metrics 201 in 98m…
+2025-10-27 10:25:23.38
+e4cccfbb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-27 10:25:23.40
+e4cccfbb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-27 10:25:23.57
+e4cccfbb
+User
+7:25:23 AM [express] GET /api/admin/articles 304 in 334ms :: [{"id":"50bd27b4-5704-4f24-a09d-67268f4…
+2025-10-27 10:25:23.92
+e4cccfbb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-27 10:25:23.94
+e4cccfbb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-27 10:25:28.80
+e4cccfbb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-10-27 10:25:28.82
+e4cccfbb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+Error bulk permanently deleting articles: error: update or delete on table "articles" violates foreign key constraint "bookmarks_article_id_articles_id_fk" on table "bookmarks"
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+at async file:///home/runner/workspace/dist/index.js:11954:7 {
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+length: 345,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+severity: 'ERROR',
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+code: '23503',
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+detail: 'Key (id)=(282b7733-f501-4fe2-a2c6-971b35109571) is still referenced from table "bookmarks".',
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+hint: undefined,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+position: undefined,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+internalPosition: undefined,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+internalQuery: undefined,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+where: undefined,
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+schema: 'public',
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+table: 'bookmarks',
+2025-10-27 10:25:28.97
+e4cccfbb
+User
+column: undefined,
