@@ -14,6 +14,16 @@ The platform features an RTL-first design system with custom theming for light/d
 ### Technical Implementations
 The frontend utilizes Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Session-based authentication is managed by Passport.js with a local strategy and bcrypt. PostgreSQL, hosted on Neon serverless, serves as the database, accessed via Drizzle ORM. File storage is handled by Google Cloud Storage via Replit Object Storage, and Server-Sent Events (SSE) power real-time features.
 
+**Performance Optimizations:**
+- **Gzip Compression:** All responses (API + static assets) compressed using gzip middleware (level 6, 1KB threshold) for 60-70% bandwidth reduction
+- **Smart Caching Strategy:** 
+  - Hashed assets (JS/CSS from Vite): `public, max-age=31536000, immutable` (1 year)
+  - Images & Fonts: `public, max-age=2592000` (30 days)
+  - HTML files: `public, max-age=0, must-revalidate` (always fresh)
+  - API v1 endpoints: `public, max-age=300` (5 minutes)
+  - Regular API: `private, max-age=60` (1 minute)
+  - Mutations (POST/PUT/DELETE): `no-store`
+
 ### Feature Specifications
 Key features include:
 - **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 7 system roles, 49 granular permissions across 9 modules, multi-role assignment, and secure user creation with activity logging.
