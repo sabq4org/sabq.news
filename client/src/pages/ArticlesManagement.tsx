@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatusCards } from "@/components/admin/StatusCards";
@@ -76,6 +77,10 @@ export default function ArticlesManagement() {
   const [activeStatus, setActiveStatus] = useState<"published" | "scheduled" | "draft" | "archived">("published");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  
+  // State for bulk selection
+  const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
   // Fetch metrics
   const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
@@ -258,6 +263,92 @@ export default function ArticlesManagement() {
     },
   });
 
+  // Bulk archive mutation
+  const bulkArchiveMutation = useMutation({
+    mutationFn: async (articleIds: string[]) => {
+      return await apiRequest("/api/admin/articles/bulk-archive", {
+        method: "POST",
+        body: JSON.stringify({ articleIds }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles/metrics"] });
+      setSelectedArticles(new Set());
+      toast({
+        title: "تم الأرشفة",
+        description: "تم أرشفة المقالات المحددة بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشلت عملية الأرشفة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bulk permanent delete mutation
+  const bulkPermanentDeleteMutation = useMutation({
+    mutationFn: async (articleIds: string[]) => {
+      return await apiRequest("/api/admin/articles/bulk-delete-permanent", {
+        method: "POST",
+        body: JSON.stringify({ articleIds }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles/metrics"] });
+      setSelectedArticles(new Set());
+      setShowBulkDeleteDialog(false);
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف المقالات المحددة نهائياً",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشلت عملية الحذف",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Selection handlers
+  const toggleArticleSelection = (articleId: string) => {
+    setSelectedArticles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(articleId)) {
+        newSet.delete(articleId);
+      } else {
+        newSet.add(articleId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedArticles.size === articles.length) {
+      setSelectedArticles(new Set());
+    } else {
+      setSelectedArticles(new Set(articles.map(a => a.id)));
+    }
+  };
+
+  const handleBulkArchive = () => {
+    if (selectedArticles.size === 0) return;
+    bulkArchiveMutation.mutate(Array.from(selectedArticles));
+  };
+
+  const handleBulkPermanentDelete = () => {
+    if (selectedArticles.size === 0) return;
+    setShowBulkDeleteDialog(true);
+  };
+
   const handleEdit = (article: Article) => {
     setLocation(`/dashboard/articles/${article.id}`);
   };
@@ -371,6 +462,53 @@ export default function ArticlesManagement() {
             </div>
           </div>
 
+          {/* Bulk Actions Toolbar */}
+          {selectedArticles.size > 0 && (
+            <div className="bg-card rounded-lg border border-border p-3 md:p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-sm text-muted-foreground">
+                  تم تحديد {selectedArticles.size} مقال
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeStatus !== "archived" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkArchive}
+                      disabled={bulkArchiveMutation.isPending}
+                      data-testid="button-bulk-archive"
+                      className="gap-2"
+                    >
+                      <Archive className="h-4 w-4" />
+                      أرشفة المحدد
+                    </Button>
+                  )}
+                  {activeStatus === "archived" && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkPermanentDelete}
+                      disabled={bulkPermanentDeleteMutation.isPending}
+                      data-testid="button-bulk-delete-permanent"
+                      className="gap-2"
+                    >
+                      <Trash className="h-4 w-4" />
+                      حذف نهائي
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedArticles(new Set())}
+                    data-testid="button-clear-selection"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Articles Table - Desktop View */}
           <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
             {articlesLoading ? (
@@ -386,6 +524,13 @@ export default function ArticlesManagement() {
                 <table className="w-full">
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
+                      <th className="text-center py-3 px-4 w-12">
+                        <Checkbox
+                          checked={articles.length > 0 && selectedArticles.size === articles.length}
+                          onCheckedChange={toggleSelectAll}
+                          data-testid="checkbox-select-all"
+                        />
+                      </th>
                       <th className="text-right py-3 px-4 font-medium">العنوان</th>
                       <th className="text-right py-3 px-4 font-medium">الكاتب</th>
                       <th className="text-right py-3 px-4 font-medium">التصنيف</th>
@@ -401,6 +546,13 @@ export default function ArticlesManagement() {
                         className="border-b border-border hover:bg-muted/30"
                         data-testid={`row-article-${article.id}`}
                       >
+                        <td className="py-3 px-4 text-center">
+                          <Checkbox
+                            checked={selectedArticles.has(article.id)}
+                            onCheckedChange={() => toggleArticleSelection(article.id)}
+                            data-testid={`checkbox-article-${article.id}`}
+                          />
+                        </td>
                         <td className="py-3 px-4">
                           <span className="font-medium max-w-md truncate inline-block">{article.title}</span>
                         </td>
@@ -466,12 +618,20 @@ export default function ArticlesManagement() {
                   className="bg-card border rounded-lg p-3 space-y-3 hover-elevate"
                   data-testid={`card-article-${article.id}`}
                 >
-                  {/* Title and Status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
-                      {article.title}
-                    </h3>
-                    {getStatusBadge(article.status)}
+                  {/* Checkbox and Title */}
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      checked={selectedArticles.has(article.id)}
+                      onCheckedChange={() => toggleArticleSelection(article.id)}
+                      data-testid={`checkbox-article-mobile-${article.id}`}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
+                        {article.title}
+                      </h3>
+                      {getStatusBadge(article.status)}
+                    </div>
                   </div>
 
                   {/* Author and Category */}
@@ -598,6 +758,28 @@ export default function ArticlesManagement() {
               data-testid="button-confirm-delete"
             >
               أرشفة
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Permanent Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف النهائي</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف {selectedArticles.size} مقال نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-bulk-delete">إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkPermanentDeleteMutation.mutate(Array.from(selectedArticles))}
+              data-testid="button-confirm-bulk-delete"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              حذف نهائي
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
