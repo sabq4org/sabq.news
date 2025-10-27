@@ -80,6 +80,59 @@ export default function ArticleDetail() {
     }
   }, [article?.id, user?.id]);
 
+  // Add Schema.org JSON-LD for search engines and LLMs
+  useEffect(() => {
+    if (!article) return;
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": window.location.href
+      },
+      "headline": article.title,
+      "description": article.excerpt || article.aiSummary || "",
+      "image": article.imageUrl ? [article.imageUrl] : [],
+      "datePublished": article.publishedAt,
+      "dateModified": article.updatedAt,
+      "author": {
+        "@type": "Person",
+        "name": article.author?.firstName && article.author?.lastName
+          ? `${article.author.firstName} ${article.author.lastName}`
+          : article.author?.email || "سبق",
+        "url": article.staff?.slug ? `${window.location.origin}/reporter/${article.staff.slug}` : undefined
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "صحيفة سبق",
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${window.location.origin}/logo.png`
+        }
+      },
+      "articleSection": article.category?.nameAr || "عام",
+      "keywords": article.seo?.keywords?.join(", ") || "",
+      "isAccessibleForFree": true,
+      "inLanguage": "ar"
+    };
+
+    // Add script tag to head
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(structuredData);
+    script.id = 'article-structured-data';
+    document.head.appendChild(script);
+
+    // Cleanup on unmount
+    return () => {
+      const existingScript = document.getElementById('article-structured-data');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, [article?.id]);
+
   const reactMutation = useMutation({
     mutationFn: async () => {
       if (!article) return;
@@ -352,59 +405,6 @@ export default function ArticleDetail() {
     if (email) return email[0].toUpperCase();
     return 'م';
   };
-
-  // Add Schema.org JSON-LD for search engines and LLMs
-  useEffect(() => {
-    if (!article) return;
-
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "NewsArticle",
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": window.location.href
-      },
-      "headline": article.title,
-      "description": article.excerpt || article.aiSummary || "",
-      "image": article.imageUrl ? [article.imageUrl] : [],
-      "datePublished": article.publishedAt,
-      "dateModified": article.updatedAt,
-      "author": {
-        "@type": "Person",
-        "name": article.author?.firstName && article.author?.lastName
-          ? `${article.author.firstName} ${article.author.lastName}`
-          : article.author?.email || "سبق",
-        "url": article.staff?.slug ? `${window.location.origin}/reporter/${article.staff.slug}` : undefined
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "صحيفة سبق",
-        "logo": {
-          "@type": "ImageObject",
-          "url": `${window.location.origin}/logo.png`
-        }
-      },
-      "articleSection": article.category?.nameAr || "عام",
-      "keywords": article.seo?.keywords?.join(", ") || "",
-      "isAccessibleForFree": true,
-      "inLanguage": "ar"
-    };
-
-    // Add script tag to head
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.text = JSON.stringify(structuredData);
-    script.id = 'article-structured-data';
-    document.head.appendChild(script);
-
-    // Cleanup on unmount
-    return () => {
-      const existingScript = document.getElementById('article-structured-data');
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-    };
-  }, [article]);
 
   return (
     <div className="min-h-screen bg-background">
