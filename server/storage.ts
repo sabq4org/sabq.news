@@ -2166,11 +2166,13 @@ export class DatabaseStorage implements IStorage {
           a.image_url,
           a.category_id,
           a.author_id,
+          a.reporter_id,
           a.article_type,
           a.news_type,
           a.publish_type,
           a.scheduled_at,
           a.status,
+          a.hide_from_homepage,
           a.ai_summary,
           a.ai_generated,
           a.is_featured,
@@ -2209,6 +2211,7 @@ export class DatabaseStorage implements IStorage {
         FROM articles a
         LEFT JOIN user_interests_weights ui ON a.category_id = ui.category_id
         WHERE a.status = 'published'
+          AND a.hide_from_homepage = false
           AND a.id NOT IN (SELECT article_id FROM recently_read_articles)
           AND (
             EXISTS (SELECT 1 FROM user_interests_weights WHERE category_id = a.category_id)
@@ -2263,6 +2266,7 @@ export class DatabaseStorage implements IStorage {
       publishType: row.publish_type,
       scheduledAt: row.scheduled_at,
       status: row.status,
+      hideFromHomepage: row.hide_from_homepage,
       aiSummary: row.ai_summary,
       aiGenerated: row.ai_generated,
       isFeatured: row.is_featured,
@@ -2337,6 +2341,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(articles.status, "published"),
+          eq(articles.hideFromHomepage, false),
           or(
             eq(articles.newsType, "breaking"),
             eq(articles.isFeatured, true)
@@ -2373,7 +2378,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
-      .where(eq(articles.status, "published"))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          eq(articles.hideFromHomepage, false)
+        )
+      )
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
@@ -2404,7 +2414,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
-      .where(eq(articles.status, "published"))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          eq(articles.hideFromHomepage, false)
+        )
+      )
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
@@ -2435,7 +2450,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .leftJoin(storyLinks, eq(articles.id, storyLinks.articleId))
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
-      .where(eq(articles.status, "published"))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          eq(articles.hideFromHomepage, false)
+        )
+      )
       .orderBy(desc(articles.views), desc(articles.publishedAt))
       .limit(limit);
 
@@ -2468,6 +2488,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(stories, eq(storyLinks.storyId, stories.id))
       .where(and(
         eq(articles.status, "published"),
+        eq(articles.hideFromHomepage, false),
         sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`
       ))
       .orderBy(desc(articles.createdAt))
