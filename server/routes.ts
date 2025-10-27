@@ -3151,11 +3151,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Convert publishedAt string to Date if provided
+      // Convert all timestamp fields from strings to Date objects if provided
       const updateData: any = { ...parsed.data };
-      if (updateData.publishedAt) {
-        updateData.publishedAt = new Date(updateData.publishedAt);
-      }
+      
+      // Convert timestamp fields (if they exist and are strings)
+      const timestampFields = ['publishedAt', 'scheduledAt', 'credibilityLastUpdated'];
+      timestampFields.forEach(field => {
+        if (updateData[field] && typeof updateData[field] === 'string') {
+          updateData[field] = new Date(updateData[field]);
+        }
+      });
       
       // Handle republish feature
       if (req.body.republish === true) {
