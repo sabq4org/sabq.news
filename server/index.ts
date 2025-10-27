@@ -5,6 +5,7 @@ import { startNotificationWorker } from "./notificationWorker";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
+import compression from "compression";
 
 const app = express();
 
@@ -74,6 +75,20 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+
+// Enable Gzip compression for all responses
+app.use(compression({
+  filter: (req, res) => {
+    // Don't compress if the request includes a Cache-Control: no-transform directive
+    if (req.headers['cache-control']?.includes('no-transform')) {
+      return false;
+    }
+    // Compress everything else
+    return compression.filter(req, res);
+  },
+  level: 6, // Compression level (0-9, default is 6)
+  threshold: 1024, // Only compress responses larger than 1KB
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
