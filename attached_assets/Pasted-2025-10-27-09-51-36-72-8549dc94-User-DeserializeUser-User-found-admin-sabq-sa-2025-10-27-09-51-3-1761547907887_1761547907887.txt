@@ -1,0 +1,100 @@
+2025-10-27 09:51:36.72
+8549dc94
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-10-27 09:51:36.80
+8549dc94
+User
+Error deleting category: error: update or delete on table "categories" violates foreign key constraint "user_interests_category_id_categories_id_fk" on table "user_interests"
+2025-10-27 09:51:36.80
+8549dc94
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-10-27 09:51:36.80
+8549dc94
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-27 09:51:36.80
+8549dc94
+User
+at async DatabaseStorage.deleteCategory (file:///home/runner/workspace/dist/index.js:2582:9)
+2025-10-27 09:51:36.80
+8549dc94
+User
+at async file:///home/runner/workspace/dist/index.js:10763:7 {
+2025-10-27 09:51:36.80
+8549dc94
+User
+length: 378,
+2025-10-27 09:51:36.80
+8549dc94
+User
+severity: 'ERROR',
+2025-10-27 09:51:36.80
+8549dc94
+User
+code: '23503',
+2025-10-27 09:51:36.80
+8549dc94
+User
+detail: 'Key (id)=(0347c2ef-a8c3-42ea-b325-23d1a958e7e6) is still referenced from table "user_interests".',
+2025-10-27 09:51:36.80
+8549dc94
+User
+hint: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+position: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+internalPosition: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+internalQuery: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+where: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+schema: 'public',
+2025-10-27 09:51:36.80
+8549dc94
+User
+table: 'user_interests',
+2025-10-27 09:51:36.80
+8549dc94
+User
+column: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+dataType: undefined,
+2025-10-27 09:51:36.80
+8549dc94
+User
+constraint: 'user_interests_category_id_categories_id_fk',
+2025-10-27 09:51:36.80
+8549dc94
+User
+file: 'ri_triggers.c',
+2025-10-27 09:51:36.80
+8549dc94
+User
+line: '2621',
+2025-10-27 09:51:36.80
+8549dc94
+User
+routine: 'ri_ReportViolation'
+2025-10-27 09:51:36.80
+8549dc94
+User
+}
+2025-10-27 09:51:36.83
+8549dc94
+User
+6:51:36 AM [express] DELETE /api/categories/0347c2ef-a8c3-42ea-b325-23d1a958e7e6 500 in 326ms :: {"m…
