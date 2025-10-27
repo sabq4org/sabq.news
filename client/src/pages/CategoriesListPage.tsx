@@ -13,8 +13,6 @@ interface CategoryWithCount extends Category {
 }
 
 export default function CategoriesListPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -27,7 +25,7 @@ export default function CategoriesListPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header user={user} onSearch={setSearchQuery} />
+      <Header user={user} />
 
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -62,6 +60,7 @@ export default function CategoriesListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories
               .filter((cat) => cat.status === "active")
+              .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
               .map((category) => (
                 <Link key={category.id} href={`/category/${category.slug}`}>
                   <Card 
