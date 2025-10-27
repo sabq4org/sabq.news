@@ -12,6 +12,7 @@ import {
   ImagePlus,
   Loader2,
   Upload,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,23 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import type { Category } from "@shared/schema";
 import { insertCategorySchema } from "@shared/schema";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // Form schema for client-side validation
 const categoryFormSchema = insertCategorySchema.extend({
@@ -59,6 +77,106 @@ const categoryFormSchema = insertCategorySchema.extend({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
+// Sortable category item component
+function SortableCategoryItem({
+  category,
+  onEdit,
+  onDelete,
+}: {
+  category: Category;
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-4 border rounded-lg bg-card transition-all"
+      data-testid={`category-row-${category.id}`}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+          data-testid={`drag-handle-${category.id}`}
+        >
+          <GripVertical className="h-5 w-5" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-2">
+            {category.icon && (
+              <span className="text-2xl" data-testid={`icon-${category.id}`}>
+                {category.icon}
+              </span>
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg" data-testid={`name-ar-${category.id}`}>
+                {category.nameAr}
+              </h3>
+              {category.nameEn && (
+                <p className="text-sm text-muted-foreground" data-testid={`name-en-${category.id}`}>
+                  {category.nameEn}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" data-testid={`slug-${category.id}`}>
+              {category.slug}
+            </Badge>
+            <Badge 
+              variant={category.status === "active" ? "default" : "secondary"}
+              data-testid={`status-${category.id}`}
+            >
+              {category.status === "active" ? "نشط" : "معطل"}
+            </Badge>
+            {category.heroImageUrl && (
+              <Badge variant="outline">
+                صورة بطل
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(category)}
+          data-testid={`button-edit-${category.id}`}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(category)}
+          data-testid={`button-delete-${category.id}`}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function CategoriesManagement() {
   const { toast } = useToast();
 
@@ -68,6 +186,9 @@ export default function CategoriesManagement() {
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
+
+  // Local state for sorting
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
 
   // Form
   const form = useForm<CategoryFormValues>({
@@ -88,6 +209,38 @@ export default function CategoriesManagement() {
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+    select: (data) => {
+      // Sort by displayOrder
+      const sorted = [...data].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setLocalCategories(sorted);
+      return sorted;
+    },
+  });
+
+  // Reorder mutation
+  const reorderMutation = useMutation({
+    mutationFn: async (categoryIds: string[]) => {
+      return await apiRequest("/api/categories/reorder", {
+        method: "POST",
+        body: JSON.stringify({ categoryIds }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({
+        title: "تم تحديث الترتيب",
+        description: "تم حفظ الترتيب الجديد بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في تحديث الترتيب",
+        variant: "destructive",
+      });
+      // Revert to original order on error
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+    },
   });
 
   // Create mutation
@@ -165,6 +318,30 @@ export default function CategoriesManagement() {
       });
     },
   });
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localCategories.findIndex((cat) => cat.id === active.id);
+      const newIndex = localCategories.findIndex((cat) => cat.id === over.id);
+
+      const newOrder = arrayMove(localCategories, oldIndex, newIndex);
+      setLocalCategories(newOrder);
+
+      // Update on server
+      const categoryIds = newOrder.map((cat) => cat.id);
+      reorderMutation.mutate(categoryIds);
+    }
+  };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
@@ -258,7 +435,7 @@ export default function CategoriesManagement() {
   };
 
   // Filter categories
-  const filteredCategories = categories.filter((cat) =>
+  const filteredCategories = localCategories.filter((cat) =>
     searchQuery
       ? cat.nameAr.includes(searchQuery) ||
         cat.nameEn?.includes(searchQuery) ||
@@ -309,69 +486,27 @@ export default function CategoriesManagement() {
                 جاري التحميل...
               </div>
             ) : filteredCategories.length > 0 ? (
-              <div className="space-y-2">
-                {filteredCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover-elevate transition-all"
-                    data-testid={`category-row-${category.id}`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        {category.icon && (
-                          <span className="text-2xl" data-testid={`icon-${category.id}`}>
-                            {category.icon}
-                          </span>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg" data-testid={`name-ar-${category.id}`}>
-                            {category.nameAr}
-                          </h3>
-                          {category.nameEn && (
-                            <p className="text-sm text-muted-foreground" data-testid={`name-en-${category.id}`}>
-                              {category.nameEn}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" data-testid={`slug-${category.id}`}>
-                          {category.slug}
-                        </Badge>
-                        <Badge 
-                          variant={category.status === "active" ? "default" : "secondary"}
-                          data-testid={`status-${category.id}`}
-                        >
-                          {category.status === "active" ? "نشط" : "معطل"}
-                        </Badge>
-                        {category.heroImageUrl && (
-                          <Badge variant="outline">
-                            صورة بطل
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(category)}
-                        data-testid={`button-edit-${category.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeletingCategory(category)}
-                        data-testid={`button-delete-${category.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={filteredCategories.map((cat) => cat.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {filteredCategories.map((category) => (
+                      <SortableCategoryItem
+                        key={category.id}
+                        category={category}
+                        onEdit={handleEdit}
+                        onDelete={setDeletingCategory}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 {searchQuery ? "لا توجد نتائج" : "لا توجد تصنيفات"}

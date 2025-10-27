@@ -1971,6 +1971,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update categories order (requires permission)
+  app.post("/api/categories/reorder", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { categoryIds } = req.body;
+      
+      if (!Array.isArray(categoryIds)) {
+        return res.status(400).json({ message: "categoryIds must be an array" });
+      }
+
+      // Update each category's displayOrder
+      const updates = categoryIds.map(async (id, index) => {
+        return await storage.updateCategory(id, { displayOrder: index });
+      });
+
+      await Promise.all(updates);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "reordered",
+        entityType: "category",
+        entityId: "bulk",
+        metadata: {
+          categoryIds,
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Categories reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering categories:", error);
+      res.status(500).json({ message: "Failed to reorder categories" });
+    }
+  });
+
   // ============================================================
   // USERS MANAGEMENT ROUTES
   // ============================================================
