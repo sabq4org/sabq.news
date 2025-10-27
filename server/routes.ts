@@ -11578,10 +11578,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       documentation: {
         publisher_kit: `${req.protocol}://${req.get("host")}/ai-publisher`,
         policy: `${req.protocol}://${req.get("host")}/ai-policy`,
+        openapi_spec: `${req.protocol}://${req.get("host")}/openapi.json`,
       },
       license: "Sabq-AI-Use-1.0",
       last_updated: "2025-10-27",
     });
+  });
+
+  // GET /openapi.json - OpenAPI 3.0 specification
+  app.get("/openapi.json", (req, res) => {
+    res.sendFile("openapi.json", { root: "./public" });
   });
 
   const httpServer = createServer(app);
