@@ -205,7 +205,7 @@ export default function ReporterProfile() {
                   <span className="text-sm">المشاهدات</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-views">
-                  {kpis.totalViews.toLocaleString('ar-SA')}
+                  {kpis.totalViews}
                 </p>
               </div>
             </CardContent>
@@ -219,7 +219,7 @@ export default function ReporterProfile() {
                   <span className="text-sm">الإعجابات</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-likes">
-                  {kpis.totalLikes.toLocaleString('ar-SA')}
+                  {kpis.totalLikes}
                 </p>
               </div>
             </CardContent>
@@ -305,7 +305,7 @@ export default function ReporterProfile() {
                             </span>
                             <span className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
-                              {article.views.toLocaleString('ar-SA')}
+                              {article.views}
                             </span>
                             {article.comments > 0 && (
                               <span>{article.comments} تعليق</span>
@@ -352,7 +352,7 @@ export default function ReporterProfile() {
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>{cat.articles} مقال</span>
-                        <span>{cat.views.toLocaleString('ar-SA')} مشاهدة</span>
+                        <span>{cat.views} مشاهدة</span>
                       </div>
                     </div>
                   ))}
@@ -393,7 +393,7 @@ export default function ReporterProfile() {
                         const date = new Date(value as string);
                         return date.toLocaleDateString('ar-SA');
                       }}
-                      formatter={(value: number) => [value.toLocaleString('ar-SA'), '']}
+                      formatter={(value: number) => [value, '']}
                     />
                     <Legend />
                     <Line 
