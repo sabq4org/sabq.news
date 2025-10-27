@@ -3608,6 +3608,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Permanently delete article (only for archived articles)
+  app.delete("/api/admin/articles/:id/permanent", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Only allow permanent deletion of archived articles
+      if (article.status !== "archived") {
+        return res.status(400).json({ message: "Only archived articles can be permanently deleted" });
+      }
+
+      // Delete article permanently
+      await db.delete(articles).where(eq(articles.id, articleId));
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "deleted_permanently",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: undefined,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Article permanently deleted successfully" });
+    } catch (error) {
+      console.error("Error permanently deleting article:", error);
+      res.status(500).json({ message: "Failed to permanently delete article" });
+    }
+  });
+
+  // Bulk archive articles
+  app.post("/api/admin/articles/bulk-archive", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleIds } = req.body;
+
+      if (!Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: "Article IDs are required" });
+      }
+
+      // Archive all selected articles
+      await db
+        .update(articles)
+        .set({
+          status: "archived",
+          updatedAt: new Date(),
+        })
+        .where(inArray(articles.id, articleIds));
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "bulk_archived",
+        entityType: "article",
+        entityId: articleIds.join(","),
+        newValue: { count: articleIds.length, articleIds },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: `Successfully archived ${articleIds.length} articles` });
+    } catch (error) {
+      console.error("Error bulk archiving articles:", error);
+      res.status(500).json({ message: "Failed to bulk archive articles" });
+    }
+  });
+
+  // Bulk permanently delete articles (only for archived articles)
+  app.post("/api/admin/articles/bulk-delete-permanent", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleIds } = req.body;
+
+      if (!Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: "Article IDs are required" });
+      }
+
+      // Verify all articles are archived
+      const articlesToDelete = await db
+        .select()
+        .from(articles)
+        .where(inArray(articles.id, articleIds));
+
+      const nonArchivedArticles = articlesToDelete.filter(a => a.status !== "archived");
+      
+      if (nonArchivedArticles.length > 0) {
+        return res.status(400).json({ 
+          message: "Only archived articles can be permanently deleted",
+          nonArchivedCount: nonArchivedArticles.length 
+        });
+      }
+
+      // Delete articles permanently
+      await db.delete(articles).where(inArray(articles.id, articleIds));
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "bulk_deleted_permanently",
+        entityType: "article",
+        entityId: articleIds.join(","),
+        oldValue: { count: articleIds.length, articleIds },
+        newValue: undefined,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: `Successfully permanently deleted ${articleIds.length} articles` });
+    } catch (error) {
+      console.error("Error bulk permanently deleting articles:", error);
+      res.status(500).json({ message: "Failed to bulk permanently delete articles" });
+    }
+  });
+
   // ============================================================
   // ADMIN ACTIVITY LOGS ROUTES
   // ============================================================
