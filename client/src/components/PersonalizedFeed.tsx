@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Clock, MessageSquare, Sparkles } from "lucide-react";
+import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -48,7 +48,9 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                       className="block group cursor-pointer"
                       data-testid={`link-article-mobile-${article.id}`}
                     >
-                      <div className="p-4 hover-elevate active-elevate-2 transition-all">
+                      <div className={`p-4 hover-elevate active-elevate-2 transition-all ${
+                        article.newsType === "breaking" ? "bg-destructive/5" : ""
+                      }`}>
                         <div className="flex gap-3">
                           {/* Image */}
                           <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
@@ -66,8 +68,26 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
 
                           {/* Content */}
                           <div className="flex-1 min-w-0 space-y-2">
-                            {/* Category */}
-                            {article.category && (
+                            {/* Breaking/Featured/Category Badge */}
+                            {article.newsType === "breaking" ? (
+                              <Badge 
+                                variant="destructive" 
+                                className="text-xs h-5 gap-1"
+                                data-testid={`badge-breaking-${article.id}`}
+                              >
+                                <Zap className="h-3 w-3" />
+                                عاجل
+                              </Badge>
+                            ) : article.isFeatured ? (
+                              <Badge 
+                                variant="default" 
+                                className="text-xs h-5 gap-1 bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+                                data-testid={`badge-featured-${article.id}`}
+                              >
+                                <Star className="h-3 w-3 fill-current" />
+                                مميز
+                              </Badge>
+                            ) : article.category ? (
                               <Badge 
                                 variant="outline" 
                                 className="text-xs h-5"
@@ -75,10 +95,14 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                               >
                                 {article.category.icon} {article.category.nameAr}
                               </Badge>
-                            )}
+                            ) : null}
 
                             {/* Title */}
-                            <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-article-title-${article.id}`}>
+                            <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                              article.newsType === "breaking"
+                                ? "text-destructive"
+                                : "group-hover:text-primary"
+                            }`} data-testid={`text-article-title-${article.id}`}>
                               {article.title}
                             </h4>
 
@@ -118,7 +142,9 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="cursor-pointer h-full overflow-hidden border border-card-border"
+              className={`cursor-pointer h-full overflow-hidden border border-card-border ${
+                article.newsType === "breaking" ? "bg-destructive/5" : ""
+              }`}
               data-testid={`card-article-${article.id}`}
             >
               {article.imageUrl && (
@@ -128,7 +154,25 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     alt={article.title}
                     className="w-full h-full object-cover"
                   />
-                  {article.category && (
+                  {article.newsType === "breaking" ? (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute top-3 right-3 gap-1" 
+                      data-testid={`badge-breaking-${article.id}`}
+                    >
+                      <Zap className="h-3 w-3" />
+                      عاجل
+                    </Badge>
+                  ) : article.isFeatured ? (
+                    <Badge 
+                      variant="default" 
+                      className="absolute top-3 right-3 gap-1 bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
+                      data-testid={`badge-featured-${article.id}`}
+                    >
+                      <Star className="h-3 w-3 fill-current" />
+                      مميز
+                    </Badge>
+                  ) : article.category ? (
                     <Badge 
                       variant="default" 
                       className="absolute top-3 right-3" 
@@ -136,7 +180,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     >
                       {article.category.icon} {article.category.nameAr}
                     </Badge>
-                  )}
+                  ) : null}
                   {article.aiSummary && (
                     <div className="absolute top-3 left-3">
                       <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
@@ -151,7 +195,11 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
               <CardContent className="p-4 space-y-3">
                 
                 <h3 
-                  className="font-bold text-lg line-clamp-2 text-foreground"
+                  className={`font-bold text-lg line-clamp-2 ${
+                    article.newsType === "breaking"
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}
                   data-testid={`text-article-title-${article.id}`}
                 >
                   {article.title}
