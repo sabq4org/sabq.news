@@ -1999,9 +1999,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: "category",
         entityId: "bulk",
         metadata: {
-          categoryIds,
           ip: req.ip,
           userAgent: req.get("user-agent"),
+          reason: `Reordered ${categoryIds.length} categories`,
         },
       });
 

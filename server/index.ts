@@ -18,7 +18,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS?.split(',') || [])
       domain.trim().startsWith('http') ? domain.trim() : `https://${domain.trim()}`
     )
   )
-  .concat(['http://localhost:5000', 'http://localhost:5001'])
+  .concat(['http://localhost:5000', 'http://localhost:5001', 'http://127.0.0.1:5000', 'http://127.0.0.1:5001'])
   .filter(origin => origin && origin.trim().length > 0) // Remove empty strings
   .map(origin => origin.trim());
 
@@ -81,7 +81,7 @@ app.use(express.urlencoded({ extended: false }));
 // Rate limiting configurations
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 300, // 300 requests per window (increased for bulk operations)
   message: { message: "تم تجاوز حد الطلبات. يرجى المحاولة مرة أخرى بعد قليل" },
   standardHeaders: true,
   legacyHeaders: false,
