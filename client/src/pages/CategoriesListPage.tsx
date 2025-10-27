@@ -4,12 +4,15 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Newspaper } from "lucide-react";
+import { Newspaper, Eye, Heart, Bookmark, FileText } from "lucide-react";
 import { Link } from "wouter";
 import type { Category } from "@shared/schema";
 
-interface CategoryWithCount extends Category {
-  articleCount?: number;
+interface CategoryWithStats extends Category {
+  articleCount: number;
+  totalViews: number;
+  totalLikes: number;
+  totalBookmarks: number;
 }
 
 export default function CategoriesListPage() {
@@ -18,8 +21,13 @@ export default function CategoriesListPage() {
     retry: false,
   });
 
-  const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+  const { data: categories = [], isLoading } = useQuery<CategoryWithStats[]>({
+    queryKey: ["/api/categories", "withStats"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories?withStats=true", { credentials: 'include' });
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      return res.json();
+    },
     staleTime: 60000,
   });
 
@@ -101,14 +109,21 @@ export default function CategoriesListPage() {
                       </div>
                     )}
                     
-                    <CardContent className="p-6 space-y-3">
-                      {/* Category Name */}
-                      <h3 
-                        className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors"
-                        data-testid={`text-category-name-${category.id}`}
-                      >
-                        {category.nameAr}
-                      </h3>
+                    <CardContent className="p-6 space-y-4">
+                      {/* Category Name with Icon */}
+                      <div className="flex items-center gap-3">
+                        {category.icon && (
+                          <span className="text-3xl" style={{ color: category.color || 'hsl(var(--primary))' }}>
+                            {category.icon}
+                          </span>
+                        )}
+                        <h3 
+                          className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors flex-1"
+                          data-testid={`text-category-name-${category.id}`}
+                        >
+                          {category.nameAr}
+                        </h3>
+                      </div>
                       
                       {/* Description */}
                       {category.description && (
@@ -116,6 +131,61 @@ export default function CategoriesListPage() {
                           {category.description}
                         </p>
                       )}
+
+                      {/* Statistics Grid */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+                        {/* Articles Count */}
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">المقالات</p>
+                            <p className="text-lg font-bold" data-testid={`stat-articles-${category.id}`}>
+                              {(category.articleCount || 0).toLocaleString('en-US')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Views Count */}
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-lg bg-blue-500/10">
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">المشاهدات</p>
+                            <p className="text-lg font-bold" data-testid={`stat-views-${category.id}`}>
+                              {(category.totalViews || 0).toLocaleString('en-US')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Likes Count */}
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-lg bg-red-500/10">
+                            <Heart className="h-4 w-4 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">الإعجابات</p>
+                            <p className="text-lg font-bold" data-testid={`stat-likes-${category.id}`}>
+                              {(category.totalLikes || 0).toLocaleString('en-US')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Bookmarks Count */}
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-lg bg-amber-500/10">
+                            <Bookmark className="h-4 w-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">الحفظ</p>
+                            <p className="text-lg font-bold" data-testid={`stat-bookmarks-${category.id}`}>
+                              {(category.totalBookmarks || 0).toLocaleString('en-US')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
                       {/* English Name Badge */}
                       {category.nameEn && (
