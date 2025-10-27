@@ -135,7 +135,7 @@ export const rssFeeds = pgTable("rss_feeds", {
 export const readingHistory = pgTable("reading_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   readAt: timestamp("read_at").defaultNow().notNull(),
   readDuration: integer("read_duration"),
 });
@@ -143,7 +143,7 @@ export const readingHistory = pgTable("reading_history", {
 // Comments with status management
 export const comments = pgTable("comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
   status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
@@ -157,7 +157,7 @@ export const comments = pgTable("comments", {
 // Likes/reactions
 export const reactions = pgTable("reactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   type: text("type").notNull().default("like"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -166,7 +166,7 @@ export const reactions = pgTable("reactions", {
 // Bookmarks/saved articles
 export const bookmarks = pgTable("bookmarks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -228,7 +228,7 @@ export const sentimentScores = pgTable("sentiment_scores", {
     sadness?: number;
     neutral?: number;
   }>(),
-  articleId: varchar("article_id").references(() => articles.id),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
   commentId: varchar("comment_id").references(() => comments.id),
   source: text("source").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -602,7 +602,7 @@ export const angles = pgTable("angles", {
 
 // Junction table for article-angle many-to-many
 export const articleAngles = pgTable("article_angles", {
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   angleId: varchar("angle_id").references(() => angles.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
@@ -642,7 +642,7 @@ export const tags = pgTable("tags", {
 
 // Junction table for article-tag many-to-many
 export const articleTags = pgTable("article_tags", {
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   tagId: varchar("tag_id").references(() => tags.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
@@ -795,7 +795,7 @@ export const stories = pgTable("stories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
-  rootArticleId: varchar("root_article_id").references(() => articles.id).notNull(),
+  rootArticleId: varchar("root_article_id").references(() => articles.id, { onDelete: "set null" }),
   entities: jsonb("entities").$type<Record<string, any>>(),
   tags: text("tags").array().default(sql`ARRAY[]::text[]`).notNull(),
   status: text("status").default("active").notNull(),
@@ -806,7 +806,7 @@ export const stories = pgTable("stories", {
 export const storyLinks = pgTable("story_links", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   storyId: varchar("story_id").references(() => stories.id).notNull(),
-  articleId: varchar("article_id").references(() => articles.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   relation: text("relation").notNull(), // 'root' or 'followup'
   confidence: real("confidence"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -834,7 +834,7 @@ export const storyFollows = pgTable("story_follows", {
 export const storyNotifications = pgTable("story_notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   storyId: varchar("story_id").references(() => stories.id).notNull(),
-  articleId: varchar("article_id").references(() => articles.id),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
   deliveredTo: text("delivered_to").array().default(sql`ARRAY[]::text[]`).notNull(),
   channel: text("channel").notNull(),
   metadata: jsonb("metadata").$type<Record<string, any>>(),
