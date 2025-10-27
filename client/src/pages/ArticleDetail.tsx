@@ -8,6 +8,8 @@ import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import StoryTimeline from "@/components/StoryTimeline";
 import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
+import { ExportPdfButton } from "@/components/ExportPdfButton";
+import { ArticlePdfView } from "@/components/ArticlePdfView";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -568,6 +570,13 @@ export default function ArticleDetail() {
                 <Share2 />
                 مشاركة
               </Button>
+
+              <ExportPdfButton
+                articleSlug={article.slug}
+                articleUrl={`${window.location.origin}/article/${article.slug}`}
+                variant="outline"
+                className="gap-2 hover-elevate"
+              />
             </div>
 
             <Separator />
@@ -634,6 +643,12 @@ export default function ArticleDetail() {
           </aside>
         </div>
       </main>
+
+      {/* PDF View - Hidden component for PDF export */}
+      <ArticlePdfView
+        article={article}
+        articleUrl={`${window.location.origin}/article/${article.slug}`}
+      />
     </div>
   );
 }
