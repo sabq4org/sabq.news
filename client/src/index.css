@@ -571,28 +571,56 @@
     max-width: 100% !important;
   }
   
-  /* Reduce emoji size */
-  .emoji-picker-wrapper button.epr-emoji-img {
-    font-size: 20px !important;
-    width: 28px !important;
-    height: 28px !important;
-    padding: 2px !important;
+  /* Make emoji much smaller */
+  .emoji-picker-wrapper .epr-emoji-img {
+    font-size: 16px !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 1px !important;
+    margin: 0 !important;
+  }
+  
+  .emoji-picker-wrapper button.epr-emoji {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   
   /* Reduce category button size */
   .emoji-picker-wrapper .epr-category-nav button {
-    padding: 6px !important;
-    font-size: 16px !important;
+    padding: 4px !important;
+    font-size: 14px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
   
   /* Reduce search input padding */
+  .emoji-picker-wrapper .epr-search-container {
+    padding: 4px !important;
+  }
+  
   .emoji-picker-wrapper .epr-search-container input {
-    padding: 6px 8px !important;
-    font-size: 13px !important;
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+    height: 28px !important;
   }
   
   /* Tighter grid spacing */
   .emoji-picker-wrapper .epr-emoji-category-content {
-    gap: 2px !important;
+    gap: 1px !important;
+    padding: 4px !important;
+  }
+  
+  /* Reduce header spacing */
+  .emoji-picker-wrapper .epr-header {
+    padding: 4px !important;
+  }
+  
+  /* Ensure scrolling works */
+  .emoji-picker-wrapper .epr-body {
+    overflow-y: auto !important;
   }
 }
