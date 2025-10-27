@@ -55,10 +55,11 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg bg-card" dir="rtl">
-      <div className="embla overflow-hidden" ref={emblaRef}>
-        <div className="embla__container flex">
-          {articles.map((article) => (
+    <>
+      <div className="relative w-full overflow-hidden rounded-lg bg-card" dir="rtl">
+        <div className="embla overflow-hidden" ref={emblaRef}>
+          <div className="embla__container flex">
+            {articles.map((article) => (
             <div key={article.id} className="embla__slide relative flex-shrink-0 flex-grow-0" style={{ flexBasis: '100%' }}>
               <Link href={`/article/${article.slug}`}>
                 {/* Mobile: Vertical Layout */}
@@ -226,8 +227,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           ))}
         </div>
       </div>
+    </div>
 
-      {articles.length > 1 && (
+    {articles.length > 1 && (
         <div className="mt-4 flex gap-2 justify-center w-full px-4">
           {articles.slice(0, 3).map((article, index) => (
             <button
@@ -253,6 +255,6 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
