@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag } from "lucide-react";
+import { Clock, Tag, Newspaper } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { SmartBlock } from "@shared/schema";
@@ -296,146 +296,93 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
   if (articles.length === 0) return null;
 
   const [featured, ...rest] = articles;
-  const featuredTimeAgo = featured.publishedAt
-    ? formatDistanceToNow(new Date(featured.publishedAt), {
-        addSuffix: true,
-        locale: arSA,
-      })
-    : null;
+  const sideArticles = rest.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-testid={`smart-block-featured-${blockId}`}>
-      <Link href={`/article/${featured.slug}`} className="lg:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4" data-testid={`smart-block-featured-${blockId}`}>
+      <Link href={`/article/${featured.slug}`} className="lg:col-span-3">
         <Card 
-          className="cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative"
+          className="group cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative border-0"
           data-testid={`card-smart-article-featured-main-${featured.id}`}
         >
-          {featured.imageUrl ? (
-            <>
-              <div className="h-80 md:h-96 lg:h-full min-h-[32rem] overflow-hidden">
-                <img
-                  src={featured.imageUrl}
-                  alt={featured.title}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  loading="lazy"
-                />
+          <div className="relative h-96 lg:h-[600px] overflow-hidden bg-muted">
+            {featured.imageUrl ? (
+              <img
+                src={featured.imageUrl}
+                alt={featured.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+                <Newspaper className="h-16 w-16 text-muted-foreground/30" />
               </div>
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-8">
+            )}
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
+              <h3 className="font-bold text-2xl md:text-3xl lg:text-4xl leading-tight text-white mb-4" data-testid={`text-smart-article-featured-title-${featured.id}`}>
+                {featured.title}
+              </h3>
+
+              <div className="flex flex-wrap items-center gap-3 text-sm">
                 {featured.category && (
                   <Badge 
                     variant="outline"
-                    className="w-fit mb-4 bg-white/10 backdrop-blur-sm border-white/30 text-white"
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white"
                     data-testid={`badge-smart-article-featured-category-${featured.id}`}
                   >
                     {featured.category.nameAr}
                   </Badge>
                 )}
-
-                <h3 className="font-bold text-3xl md:text-4xl lg:text-5xl leading-tight text-white mb-4" data-testid={`text-smart-article-featured-title-${featured.id}`}>
-                  {featured.title}
-                </h3>
-
-                {featuredTimeAgo && (
-                  <div className="flex items-center gap-2 text-base text-white/80">
-                    <Clock className="h-5 w-5" />
-                    {featuredTimeAgo}
+                
+                {featured.publishedAt && (
+                  <div className="flex items-center gap-1.5 text-white/90">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {formatDistanceToNow(new Date(featured.publishedAt), {
+                        addSuffix: true,
+                        locale: arSA,
+                      })}
+                    </span>
                   </div>
                 )}
               </div>
-            </>
-          ) : (
-            <CardContent className="p-8 flex flex-col justify-center min-h-[32rem]">
-              {featured.category && (
-                <Badge 
-                  variant="outline"
-                  className="w-fit mb-4"
-                  style={{ 
-                    borderColor: featured.category.color || undefined,
-                    color: featured.category.color || undefined,
-                  }}
-                  data-testid={`badge-smart-article-featured-category-${featured.id}`}
-                >
-                  {featured.category.nameAr}
-                </Badge>
-              )}
-
-              <h3 className="font-bold text-3xl md:text-4xl lg:text-5xl leading-tight mb-4" data-testid={`text-smart-article-featured-title-${featured.id}`}>
-                {featured.title}
-              </h3>
-
-              {featuredTimeAgo && (
-                <div className="flex items-center gap-2 text-base text-muted-foreground">
-                  <Clock className="h-5 w-5" />
-                  {featuredTimeAgo}
-                </div>
-              )}
-            </CardContent>
-          )}
+            </div>
+          </div>
         </Card>
       </Link>
 
-      {rest.length > 0 && (
-        <div className="space-y-4 lg:col-span-1">
-          {rest.slice(0, 3).map((article) => {
-            const timeAgo = article.publishedAt
-              ? formatDistanceToNow(new Date(article.publishedAt), {
-                  addSuffix: true,
-                  locale: arSA,
-                })
-              : null;
-
-            return (
-              <Link key={article.id} href={`/article/${article.slug}`}>
-                <Card 
-                  className="cursor-pointer overflow-hidden hover-elevate active-elevate-2"
-                  data-testid={`card-smart-article-featured-${article.id}`}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex gap-4">
-                      {article.imageUrl && (
-                        <div className="relative flex-shrink-0 w-24 h-24 rounded-md overflow-hidden">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                            loading="lazy"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="flex-1 min-w-0 space-y-2">
-                        {article.category && (
-                          <Badge 
-                            variant="outline"
-                            className="text-xs h-5"
-                            style={{ 
-                              borderColor: article.category.color || undefined,
-                              color: article.category.color || undefined,
-                            }}
-                            data-testid={`badge-smart-article-featured-sub-category-${article.id}`}
-                          >
-                            {article.category.nameAr}
-                          </Badge>
-                        )}
-
-                        <h4 className="font-bold text-base line-clamp-3 leading-snug" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
-                          {article.title}
-                        </h4>
-
-                        {timeAgo && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {timeAgo}
-                          </div>
-                        )}
-                      </div>
+      {sideArticles.length > 0 && (
+        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+          {sideArticles.map((article) => (
+            <Link key={article.id} href={`/article/${article.slug}`} className="col-span-2 lg:col-span-1">
+              <Card 
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0 h-full"
+                data-testid={`card-smart-article-featured-${article.id}`}
+              >
+                <div className="relative h-48 lg:h-36 overflow-hidden bg-muted">
+                  {article.imageUrl ? (
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+                      <Newspaper className="h-8 w-8 text-muted-foreground/30" />
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+                  )}
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-4">
+                    <h4 className="font-bold text-base lg:text-sm leading-tight text-white line-clamp-2" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
+                      {article.title}
+                    </h4>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
     </div>
