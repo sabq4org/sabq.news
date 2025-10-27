@@ -95,7 +95,7 @@ export const articles = pgTable("articles", {
   content: text("content").notNull(),
   excerpt: text("excerpt"),
   imageUrl: text("image_url"),
-  categoryId: varchar("category_id").references(() => categories.id),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
   articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
@@ -125,7 +125,7 @@ export const rssFeeds = pgTable("rss_feeds", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   url: text("url").notNull().unique(),
-  categoryId: varchar("category_id").references(() => categories.id),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   isActive: boolean("is_active").default(true).notNull(),
   lastFetchedAt: timestamp("last_fetched_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -562,7 +562,7 @@ export const loyaltyCampaigns = pgTable("loyalty_campaigns", {
   targetAction: text("target_action"), // READ, SHARE, etc. (null = all actions)
   multiplier: real("multiplier").default(1.0), // 2.0 = نقاط مضاعفة
   bonusPoints: integer("bonus_points").default(0),
-  targetCategory: varchar("target_category").references(() => categories.id), // null = all categories
+  targetCategory: varchar("target_category").references(() => categories.id, { onDelete: 'set null' }), // null = all categories
   isActive: boolean("is_active").default(true).notNull(),
   startAt: timestamp("start_at").notNull(),
   endAt: timestamp("end_at").notNull(),
