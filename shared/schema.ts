@@ -2204,6 +2204,7 @@ export const smartBlocks = pgTable("smart_blocks", {
   keyword: varchar("keyword", { length: 100 }).notNull(),
   color: varchar("color", { length: 20 }).notNull(),
   placement: varchar("placement", { length: 30 }).notNull(), // below_featured, above_all_news, between_all_and_murqap, above_footer
+  layoutStyle: varchar("layout_style", { length: 20 }).notNull().default('grid'), // grid, list, featured
   limitCount: integer("limit_count").notNull().default(6),
   filters: jsonb("filters").$type<{
     categories?: string[];
