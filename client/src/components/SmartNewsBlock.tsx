@@ -228,7 +228,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
 function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
-    <div className="space-y-4" data-testid={`smart-block-list-${blockId}`}>
+    <div className="space-y-6" data-testid={`smart-block-list-${blockId}`}>
       {articles.map((article) => {
         const timeAgo = article.publishedAt
           ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -244,9 +244,9 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
               data-testid={`card-smart-article-list-${article.id}`}
             >
               <CardContent className="p-0">
-                <div className="flex gap-4 p-4 md:gap-6 md:p-6">
+                <div className="flex flex-col md:flex-row gap-0">
                   {article.imageUrl && (
-                    <div className="relative flex-shrink-0 w-32 h-24 md:w-48 md:h-36 rounded-lg overflow-hidden">
+                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 h-56 md:h-64 overflow-hidden">
                       <img
                         src={article.imageUrl}
                         alt={article.title}
@@ -256,10 +256,11 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-0 space-y-3">
+                  <div className="flex-1 min-w-0 p-6 md:p-8 flex flex-col justify-center space-y-4">
                     {article.category && (
                       <Badge 
                         variant="outline"
+                        className="w-fit"
                         style={{ 
                           borderColor: article.category.color || undefined,
                           color: article.category.color || undefined,
@@ -270,13 +271,13 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       </Badge>
                     )}
 
-                    <h3 className="font-bold text-xl md:text-2xl line-clamp-2 leading-snug hover:text-primary transition-colors" data-testid={`text-smart-article-list-title-${article.id}`}>
+                    <h3 className="font-bold text-2xl md:text-3xl lg:text-4xl line-clamp-3 leading-tight hover:text-primary transition-colors" data-testid={`text-smart-article-list-title-${article.id}`}>
                       {article.title}
                     </h3>
 
                     {timeAgo && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
+                      <div className="flex items-center gap-2 text-base text-muted-foreground">
+                        <Clock className="h-5 w-5" />
                         {timeAgo}
                       </div>
                     )}
