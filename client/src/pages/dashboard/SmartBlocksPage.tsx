@@ -64,6 +64,12 @@ const placementOptions = [
   { value: 'above_footer', label: 'قبل التذييل' },
 ] as const;
 
+const layoutStyleOptions = [
+  { value: 'grid', label: 'شبكة (Grid) - 4 أعمدة' },
+  { value: 'list', label: 'قائمة (List) - صور جانبية كبيرة' },
+  { value: 'featured', label: 'مميز (Featured) - مقال كبير + مقالات صغيرة' },
+] as const;
+
 export default function SmartBlocksPage() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,6 +83,7 @@ export default function SmartBlocksPage() {
       keyword: '',
       color: '#3B82F6',
       placement: 'below_featured',
+      layoutStyle: 'grid',
       limitCount: 6,
       isActive: true,
     },
@@ -175,6 +182,7 @@ export default function SmartBlocksPage() {
       keyword: block.keyword,
       color: block.color,
       placement: block.placement as any,
+      layoutStyle: block.layoutStyle as any,
       limitCount: block.limitCount,
       isActive: block.isActive,
     });
@@ -189,6 +197,7 @@ export default function SmartBlocksPage() {
       keyword: '',
       color: '#3B82F6',
       placement: 'below_featured',
+      layoutStyle: 'grid',
       limitCount: 6,
       isActive: true,
     });
@@ -196,6 +205,10 @@ export default function SmartBlocksPage() {
 
   const getPlacementLabel = (placement: string) => {
     return placementOptions.find(opt => opt.value === placement)?.label || placement;
+  };
+
+  const getLayoutStyleLabel = (layoutStyle: string) => {
+    return layoutStyleOptions.find(opt => opt.value === layoutStyle)?.label || layoutStyle;
   };
 
   const formValues = form.watch();
@@ -224,6 +237,7 @@ export default function SmartBlocksPage() {
                 keyword: '',
                 color: '#3B82F6',
                 placement: 'below_featured',
+                layoutStyle: 'grid',
                 limitCount: 6,
                 isActive: true,
               });
@@ -302,6 +316,7 @@ export default function SmartBlocksPage() {
                       <TableHead className="text-right">العنوان</TableHead>
                       <TableHead className="text-right">الكلمة المفتاحية</TableHead>
                       <TableHead className="text-right">الموضع</TableHead>
+                      <TableHead className="text-right">الشكل</TableHead>
                       <TableHead className="text-right">العدد</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">الإجراءات</TableHead>
@@ -325,6 +340,9 @@ export default function SmartBlocksPage() {
                         </TableCell>
                         <TableCell data-testid={`text-placement-${block.id}`}>
                           {getPlacementLabel(block.placement)}
+                        </TableCell>
+                        <TableCell data-testid={`text-layout-${block.id}`}>
+                          <Badge variant="secondary">{getLayoutStyleLabel(block.layoutStyle || 'grid')}</Badge>
                         </TableCell>
                         <TableCell data-testid={`text-limit-${block.id}`}>
                           {block.limitCount}
@@ -492,6 +510,40 @@ export default function SmartBlocksPage() {
                   )}
                 />
 
+                {/* Layout Style */}
+                <FormField
+                  control={form.control}
+                  name="layoutStyle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>شكل عرض الأخبار</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-block-layout-style">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {layoutStyleOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        {field.value === 'grid' && 'عرض الأخبار في شبكة 4 أعمدة (مناسب لعرض عدة أخبار)'}
+                        {field.value === 'list' && 'عرض الأخبار في قائمة عمودية مع صور كبيرة (مناسب للقراءة السريعة)'}
+                        {field.value === 'featured' && 'خبر مميز كبير + أخبار صغيرة (مناسب لتسليط الضوء على خبر واحد)'}
+                      </p>
+                    </FormItem>
+                  )}
+                />
+
                 {/* Limit Count */}
                 <FormField
                   control={form.control}
@@ -557,6 +609,7 @@ export default function SmartBlocksPage() {
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>الكلمة المفتاحية: {formValues.keyword || 'غير محدد'}</p>
                     <p>الموضع: {getPlacementLabel(formValues.placement || 'below_featured')}</p>
+                    <p>الشكل: {getLayoutStyleLabel(formValues.layoutStyle || 'grid')}</p>
                     <p>عدد المقالات: {formValues.limitCount}</p>
                     <p>الحالة: {formValues.isActive ? 'نشط' : 'غير نشط'}</p>
                   </div>
