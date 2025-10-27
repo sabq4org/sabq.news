@@ -5891,12 +5891,16 @@ export class DatabaseStorage implements IStorage {
       dateTo?: string;
     }
   ): Promise<Array<any>> {
-    console.log(`🔎 [Storage] Searching articles with keyword: "${keyword}" (in SEO keywords only)`);
+    console.log(`🔎 [Storage] Searching articles with keyword: "${keyword}"`);
     
     const conditions = [
       eq(articles.status, 'published'),
-      // Search in seo.keywords JSONB array using PostgreSQL JSONB contains operator
-      sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`
+      // Search in seo.keywords JSONB array OR in title/excerpt
+      or(
+        sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`,
+        sql`${articles.title} LIKE ${`%${keyword}%`}`,
+        sql`${articles.excerpt} LIKE ${`%${keyword}%`}`
+      )
     ];
 
     if (filters?.categories && filters.categories.length > 0) {
@@ -5914,7 +5918,6 @@ export class DatabaseStorage implements IStorage {
       console.log(`   - Date to: ${filters.dateTo}`);
     }
 
-    console.log(`   - Search pattern: seo.keywords @> '["${keyword}"]'`);
     console.log(`   - Limit: ${limit}`);
 
     const results = await db
@@ -5923,10 +5926,16 @@ export class DatabaseStorage implements IStorage {
         title: articles.title,
         slug: articles.slug,
         publishedAt: articles.publishedAt,
-        categoryId: articles.categoryId,
-        views: articles.views,
+        imageUrl: articles.imageUrl,
+        categoryId: categories.id,
+        category: {
+          nameAr: categories.nameAr,
+          slug: categories.slug,
+          color: categories.color,
+        }
       })
       .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(and(...conditions))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
@@ -5935,7 +5944,7 @@ export class DatabaseStorage implements IStorage {
     
     // Log each result
     results.forEach((article, index) => {
-      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..."`);
+      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." [Image: ${article.imageUrl ? '✓' : '✗'}]`);
     });
 
     return results;
