@@ -40,7 +40,7 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
       const data = await res.json();
       return data.items || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -50,9 +50,9 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
           <Skeleton className="h-6 w-6 rounded-full" />
           <Skeleton className="h-6 w-48" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={config.layoutStyle === 'list' ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'}>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-lg" />
+            <Skeleton key={i} className={config.layoutStyle === 'list' ? 'h-32' : 'h-48'} />
           ))}
         </div>
       </div>
@@ -74,7 +74,6 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
 
   return (
     <section className="space-y-4" dir="rtl" data-testid={`smart-block-${config.id}`}>
-      {/* Header with custom color */}
       <div className="flex items-center gap-2">
         <div 
           className="flex items-center justify-center w-6 h-6 rounded-full"
@@ -91,8 +90,17 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
         </h2>
       </div>
 
-      {/* Mobile View: Vertical List */}
-      <Card className="overflow-hidden lg:hidden" data-testid={`smart-block-mobile-card-${config.id}`}>
+      {config.layoutStyle === 'grid' && <GridLayout articles={articles} blockId={config.id} />}
+      {config.layoutStyle === 'list' && <ListLayout articles={articles} blockId={config.id} />}
+      {config.layoutStyle === 'featured' && <FeaturedLayout articles={articles} blockId={config.id} />}
+    </section>
+  );
+}
+
+function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
+  return (
+    <>
+      <Card className="overflow-hidden lg:hidden" data-testid={`smart-block-mobile-card-${blockId}`}>
         <CardContent className="p-0">
           <div className="divide-y">
             {articles.map((article) => {
@@ -111,7 +119,6 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
                   >
                     <div className="p-4 hover-elevate active-elevate-2 transition-all">
                       <div className="flex gap-3">
-                        {/* Image */}
                         {article.imageUrl && (
                           <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
                             <img
@@ -123,9 +130,7 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
                           </div>
                         )}
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0 space-y-2">
-                          {/* Category */}
                           {article.category && (
                             <Badge 
                               variant="outline" 
@@ -140,12 +145,10 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
                             </Badge>
                           )}
 
-                          {/* Title */}
                           <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-smart-article-title-${article.id}`}>
                             {article.title}
                           </h4>
 
-                          {/* Meta Info */}
                           {timeAgo && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
@@ -163,7 +166,6 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
         </CardContent>
       </Card>
 
-      {/* Desktop View: Grid */}
       <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.map((article) => {
           const timeAgo = article.publishedAt
@@ -191,7 +193,6 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
                 )}
                 
                 <CardContent className="p-4 space-y-3">
-                  {/* Category */}
                   {article.category && (
                     <Badge 
                       variant="outline"
@@ -205,12 +206,10 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
                     </Badge>
                   )}
 
-                  {/* Title */}
                   <h3 className="font-bold text-lg line-clamp-2 leading-snug" data-testid={`text-smart-article-title-desktop-${article.id}`}>
                     {article.title}
                   </h3>
 
-                  {/* Time */}
                   {timeAgo && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
@@ -223,6 +222,191 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
           );
         })}
       </div>
-    </section>
+    </>
+  );
+}
+
+function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
+  return (
+    <div className="space-y-4" data-testid={`smart-block-list-${blockId}`}>
+      {articles.map((article) => {
+        const timeAgo = article.publishedAt
+          ? formatDistanceToNow(new Date(article.publishedAt), {
+              addSuffix: true,
+              locale: arSA,
+            })
+          : null;
+
+        return (
+          <Link key={article.id} href={`/article/${article.slug}`}>
+            <Card 
+              className="cursor-pointer overflow-hidden hover-elevate active-elevate-2"
+              data-testid={`card-smart-article-list-${article.id}`}
+            >
+              <CardContent className="p-0">
+                <div className="flex gap-4 p-4 md:gap-6 md:p-6">
+                  {article.imageUrl && (
+                    <div className="relative flex-shrink-0 w-32 h-24 md:w-48 md:h-36 rounded-lg overflow-hidden">
+                      <img
+                        src={article.imageUrl}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0 space-y-3">
+                    {article.category && (
+                      <Badge 
+                        variant="outline"
+                        style={{ 
+                          borderColor: article.category.color || undefined,
+                          color: article.category.color || undefined,
+                        }}
+                        data-testid={`badge-smart-article-list-category-${article.id}`}
+                      >
+                        {article.category.nameAr}
+                      </Badge>
+                    )}
+
+                    <h3 className="font-bold text-xl md:text-2xl line-clamp-2 leading-snug hover:text-primary transition-colors" data-testid={`text-smart-article-list-title-${article.id}`}>
+                      {article.title}
+                    </h3>
+
+                    {timeAgo && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {timeAgo}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
+  if (articles.length === 0) return null;
+
+  const [featured, ...rest] = articles;
+  const featuredTimeAgo = featured.publishedAt
+    ? formatDistanceToNow(new Date(featured.publishedAt), {
+        addSuffix: true,
+        locale: arSA,
+      })
+    : null;
+
+  return (
+    <div className="space-y-6" data-testid={`smart-block-featured-${blockId}`}>
+      <Link href={`/article/${featured.slug}`}>
+        <Card 
+          className="cursor-pointer overflow-hidden hover-elevate active-elevate-2"
+          data-testid={`card-smart-article-featured-main-${featured.id}`}
+        >
+          {featured.imageUrl && (
+            <div className="relative h-64 md:h-96 overflow-hidden">
+              <img
+                src={featured.imageUrl}
+                alt={featured.title}
+                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                loading="lazy"
+              />
+            </div>
+          )}
+          
+          <CardContent className="p-6 space-y-4">
+            {featured.category && (
+              <Badge 
+                variant="outline"
+                className="text-base"
+                style={{ 
+                  borderColor: featured.category.color || undefined,
+                  color: featured.category.color || undefined,
+                }}
+                data-testid={`badge-smart-article-featured-category-${featured.id}`}
+              >
+                {featured.category.nameAr}
+              </Badge>
+            )}
+
+            <h3 className="font-bold text-2xl md:text-4xl leading-snug hover:text-primary transition-colors" data-testid={`text-smart-article-featured-title-${featured.id}`}>
+              {featured.title}
+            </h3>
+
+            {featuredTimeAgo && (
+              <div className="flex items-center gap-2 text-base text-muted-foreground">
+                <Clock className="h-5 w-5" />
+                {featuredTimeAgo}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+
+      {rest.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {rest.slice(0, 3).map((article) => {
+            const timeAgo = article.publishedAt
+              ? formatDistanceToNow(new Date(article.publishedAt), {
+                  addSuffix: true,
+                  locale: arSA,
+                })
+              : null;
+
+            return (
+              <Link key={article.id} href={`/article/${article.slug}`}>
+                <Card 
+                  className="cursor-pointer h-full overflow-hidden hover-elevate active-elevate-2"
+                  data-testid={`card-smart-article-featured-${article.id}`}
+                >
+                  {article.imageUrl && (
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={article.imageUrl}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  
+                  <CardContent className="p-4 space-y-3">
+                    {article.category && (
+                      <Badge 
+                        variant="outline"
+                        style={{ 
+                          borderColor: article.category.color || undefined,
+                          color: article.category.color || undefined,
+                        }}
+                        data-testid={`badge-smart-article-featured-sub-category-${article.id}`}
+                      >
+                        {article.category.nameAr}
+                      </Badge>
+                    )}
+
+                    <h4 className="font-bold text-base line-clamp-2 leading-snug" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
+                      {article.title}
+                    </h4>
+
+                    {timeAgo && (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {timeAgo}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
