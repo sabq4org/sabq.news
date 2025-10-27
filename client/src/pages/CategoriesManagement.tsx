@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -209,13 +209,15 @@ export default function CategoriesManagement() {
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
-    select: (data) => {
-      // Sort by displayOrder
-      const sorted = [...data].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-      setLocalCategories(sorted);
-      return sorted;
-    },
   });
+
+  // Update local categories when data changes
+  useEffect(() => {
+    if (categories.length > 0) {
+      const sorted = [...categories].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setLocalCategories(sorted);
+    }
+  }, [categories]);
 
   // Reorder mutation
   const reorderMutation = useMutation({
