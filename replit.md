@@ -20,10 +20,12 @@ The frontend utilizes Next.js 15, React 18, Vite, Wouter for routing, and TypeSc
   - Hashed assets (JS/CSS from Vite): `public, max-age=31536000, immutable` (1 year)
   - Images & Fonts: `public, max-age=2592000` (30 days)
   - HTML files: `public, max-age=0, must-revalidate` (always fresh)
-  - API v1 endpoints: `public, max-age=300` (5 minutes)
-  - Regular API: `private, max-age=60` (1 minute)
-  - Mutations (POST/PUT/DELETE): `no-store`
-- **React Query Configuration:** Zero caching (`staleTime: 0`, `gcTime: 0`, `refetchOnWindowFocus: false`) per user requirement for real-time data freshness. All mutations use `removeQueries()` + `refetchQueries()` pattern to ensure immediate server state reflection.
+  - **API endpoints: NO cache** - All API requests return fresh data
+- **React Query Configuration:** 
+  - Global config: Zero caching (`staleTime: 0`, `gcTime: 0`, `refetchOnWindowFocus: false`) per user requirement for real-time data freshness
+  - All mutations use `removeQueries()` + `refetchQueries()` pattern to ensure immediate server state reflection
+  - All component-level `staleTime` and `refetchInterval` overrides removed to ensure consistent zero-cache behavior
+  - HTTP cache headers: All API endpoints use `no-store, no-cache, must-revalidate` with `Pragma: no-cache` and `Expires: 0` to prevent browser/proxy caching
 
 **Article Ordering System:**
 - **Display Order Priority:** All homepage queries (hero, breaking, editor picks, deep dives, all published) prioritize `displayOrder` (DESC) before fallback sorting criteria (publishedAt, views, createdAt)
