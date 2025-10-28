@@ -137,19 +137,12 @@ app.use((req, res, next) => {
   else if (path.endsWith('.html') || path === '/') {
     res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
   }
-  // API routes - short cache for GET, no cache for mutations
+  // API routes - NO cache for real-time data freshness (per user requirement)
   else if (path.startsWith('/api/')) {
-    if (req.method === 'GET') {
-      // Cache public API data for 5 minutes
-      if (path.startsWith('/api/v1/')) {
-        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
-      } else {
-        res.setHeader('Cache-Control', 'private, max-age=60'); // 1 minute
-      }
-    } else {
-      // No cache for POST/PUT/DELETE
-      res.setHeader('Cache-Control', 'no-store');
-    }
+    // NO cache for all API requests
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
   
   next();
