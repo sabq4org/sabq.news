@@ -2664,3 +2664,143 @@ export type InsertInternalAnnouncement = z.infer<typeof insertInternalAnnounceme
 export type UpdateInternalAnnouncement = z.infer<typeof updateInternalAnnouncementSchema>;
 export type InsertInternalAnnouncementVersion = z.infer<typeof insertInternalAnnouncementVersionSchema>;
 export type InsertInternalAnnouncementMetric = z.infer<typeof insertInternalAnnouncementMetricSchema>;
+
+// ————————————————————————————————————————————————————————————————————
+// Sabq Shorts (Reels) - Short-form video news content
+// ————————————————————————————————————————————————————————————————————
+
+export const shorts = pgTable("shorts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  slug: text("slug").notNull().unique(),
+  
+  // Video files
+  coverImage: text("cover_image").notNull(), // poster/placeholder
+  hlsUrl: text("hls_url"), // m3u8 for ABR streaming
+  mp4Url: text("mp4_url"), // fallback for browsers without HLS support
+  
+  // Metadata
+  duration: integer("duration"), // in seconds
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
+  reporterId: varchar("reporter_id").references(() => users.id),
+  
+  // Publishing
+  status: text("status").default("draft").notNull(), // draft, scheduled, published, archived
+  publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
+  scheduledAt: timestamp("scheduled_at"),
+  publishedAt: timestamp("published_at"),
+  
+  // Stats (cached for performance)
+  views: integer("views").default(0).notNull(),
+  likes: integer("likes").default(0).notNull(),
+  shares: integer("shares").default(0).notNull(),
+  comments: integer("comments").default(0).notNull(),
+  avgWatchTime: real("avg_watch_time").default(0), // in seconds
+  completionRate: real("completion_rate").default(0), // percentage
+  
+  // Ordering & visibility
+  displayOrder: integer("display_order").default(0).notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("shorts_status_idx").on(table.status),
+  index("shorts_published_at_idx").on(table.publishedAt),
+  index("shorts_display_order_idx").on(table.displayOrder),
+  index("shorts_reporter_idx").on(table.reporterId),
+  index("shorts_category_idx").on(table.categoryId),
+]);
+
+// Analytics tracking for shorts
+export const shortAnalytics = pgTable("short_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shortId: varchar("short_id").references(() => shorts.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'set null' }),
+  sessionId: text("session_id"), // for anonymous users
+  
+  // Event type
+  eventType: text("event_type").notNull(), // view, like, unlike, share, comment, watch_time
+  
+  // Watch time tracking
+  watchTime: integer("watch_time"), // seconds watched
+  watchPercentage: real("watch_percentage"), // percentage of video watched
+  
+  // Metadata
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+}, (table) => [
+  index("short_analytics_short_idx").on(table.shortId),
+  index("short_analytics_user_idx").on(table.userId),
+  index("short_analytics_event_idx").on(table.eventType),
+  index("short_analytics_occurred_at_idx").on(table.occurredAt),
+]);
+
+// Relations
+export const shortsRelations = relations(shorts, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [shorts.categoryId],
+    references: [categories.id],
+  }),
+  reporter: one(users, {
+    fields: [shorts.reporterId],
+    references: [users.id],
+  }),
+  analytics: many(shortAnalytics),
+}));
+
+export const shortAnalyticsRelations = relations(shortAnalytics, ({ one }) => ({
+  short: one(shorts, {
+    fields: [shortAnalytics.shortId],
+    references: [shorts.id],
+  }),
+  user: one(users, {
+    fields: [shortAnalytics.userId],
+    references: [users.id],
+  }),
+}));
+
+// Types
+export type Short = typeof shorts.$inferSelect;
+export type ShortAnalytic = typeof shortAnalytics.$inferSelect;
+
+export type ShortWithDetails = Short & {
+  category?: Category;
+  reporter?: User;
+  analytics?: ShortAnalytic[];
+};
+
+// Zod Schemas
+export const insertShortSchema = createInsertSchema(shorts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+  views: true,
+  likes: true,
+  shares: true,
+  comments: true,
+  avgWatchTime: true,
+  completionRate: true,
+}).extend({
+  title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل").max(200, "العنوان يجب ألا يتجاوز 200 حرف"),
+  coverImage: z.string().url("رابط صورة الغلاف يجب أن يكون صحيح"),
+  status: z.enum(["draft", "scheduled", "published", "archived"]).default("draft"),
+  publishType: z.enum(["instant", "scheduled"]).default("instant"),
+});
+
+export const updateShortSchema = insertShortSchema.partial();
+
+export const insertShortAnalyticSchema = createInsertSchema(shortAnalytics).omit({
+  id: true,
+  occurredAt: true,
+}).extend({
+  eventType: z.enum(["view", "like", "unlike", "share", "comment", "watch_time"]),
+});
+
+export type InsertShort = z.infer<typeof insertShortSchema>;
+export type UpdateShort = z.infer<typeof updateShortSchema>;
+export type InsertShortAnalytic = z.infer<typeof insertShortAnalyticSchema>;
