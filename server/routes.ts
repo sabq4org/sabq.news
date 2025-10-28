@@ -2927,7 +2927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query = query.where(eq(articles.isFeatured, featured === "true"));
       }
 
-      query = query.orderBy(desc(articles.displayOrder), desc(articles.createdAt));
+      query = query.orderBy(desc(articles.createdAt));
 
       const results = await query;
 
