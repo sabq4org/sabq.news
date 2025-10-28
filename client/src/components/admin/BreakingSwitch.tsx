@@ -26,7 +26,8 @@ export function BreakingSwitch({ articleId, initialValue }: BreakingSwitchProps)
         method: "POST",
       });
 
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       
       toast({
         title: checked ? "تم التمييز كخبر عاجل" : "تم إلغاء التمييز كخبر عاجل",

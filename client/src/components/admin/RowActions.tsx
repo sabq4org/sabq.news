@@ -28,6 +28,8 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         method: "POST",
       });
       
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles/metrics"] });
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles/metrics"] });
       
@@ -53,6 +55,8 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         method: "POST",
       });
       
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles/metrics"] });
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles/metrics"] });
       
@@ -85,6 +89,7 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         headers: { "Content-Type": "application/json" },
       });
       
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       
       toast({
