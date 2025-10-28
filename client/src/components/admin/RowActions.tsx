@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Star, Archive, Trash2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,9 +12,15 @@ interface RowActionsProps {
   onDelete: () => void;
 }
 
-export function RowActions({ articleId, status, onEdit, isFeatured, onDelete }: RowActionsProps) {
+export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFeatured, onDelete }: RowActionsProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(initialIsFeatured);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setIsFeatured(initialIsFeatured);
+  }, [initialIsFeatured]);
 
   const handleArchive = async () => {
     setIsLoading(true);
@@ -67,21 +73,29 @@ export function RowActions({ articleId, status, onEdit, isFeatured, onDelete }: 
   };
 
   const handleFeature = async () => {
+    const previousValue = isFeatured;
+    
+    // Optimistic update
+    setIsFeatured(!isFeatured);
     setIsLoading(true);
+    
     try {
       await apiRequest(`/api/admin/articles/${articleId}/feature`, {
         method: "POST",
-        body: JSON.stringify({ featured: !isFeatured }),
+        body: JSON.stringify({ featured: !previousValue }),
         headers: { "Content-Type": "application/json" },
       });
       
       queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
       
       toast({
-        title: isFeatured ? "تم إلغاء التمييز" : "تم التمييز",
-        description: isFeatured ? "تم إلغاء تمييز المقال بنجاح" : "تم تمييز المقال بنجاح",
+        title: !previousValue ? "تم التمييز" : "تم إلغاء التمييز",
+        description: !previousValue ? "تم تمييز المقال بنجاح" : "تم إلغاء تمييز المقال بنجاح",
       });
     } catch (error: any) {
+      // Revert on error
+      setIsFeatured(previousValue);
+      
       toast({
         title: "خطأ",
         description: error.message || "فشل تحديث حالة التمييز",
