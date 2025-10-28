@@ -401,9 +401,6 @@ export default function ShortsEditor() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="" data-testid="select-category-none">
-                              بدون قسم
-                            </SelectItem>
                             {categories.map((category) => (
                               <SelectItem
                                 key={category.id}
@@ -438,9 +435,6 @@ export default function ShortsEditor() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="" data-testid="select-reporter-none">
-                              بدون مراسل
-                            </SelectItem>
                             {reporters.map((reporter) => (
                               <SelectItem
                                 key={reporter.id}
