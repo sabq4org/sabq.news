@@ -2279,6 +2279,7 @@ export class DatabaseStorage implements IStorage {
       aiSummary: row.ai_summary,
       aiGenerated: row.ai_generated,
       isFeatured: row.is_featured,
+      displayOrder: row.display_order || 0,
       views: row.views,
       seo: row.seo,
       publishedAt: row.published_at,
@@ -2315,6 +2316,10 @@ export class DatabaseStorage implements IStorage {
         emailVerified: row.author_email_verified || false,
         phoneVerified: row.author_phone_verified || false,
         verificationBadge: row.author_verification_badge || 'none',
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        twoFactorMethod: 'authenticator',
         lastActivityAt: row.author_last_activity_at || null,
         suspendedUntil: row.author_suspended_until || null,
         suspensionReason: row.author_suspension_reason || null,
@@ -2357,7 +2362,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt), desc(articles.views))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.views))
       .limit(3);
 
     return results.map((r) => ({
@@ -2393,7 +2398,7 @@ export class DatabaseStorage implements IStorage {
           eq(articles.hideFromHomepage, false)
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -2429,7 +2434,7 @@ export class DatabaseStorage implements IStorage {
           eq(articles.hideFromHomepage, false)
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -2465,7 +2470,7 @@ export class DatabaseStorage implements IStorage {
           eq(articles.hideFromHomepage, false)
         )
       )
-      .orderBy(desc(articles.views), desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.views), desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -2500,7 +2505,7 @@ export class DatabaseStorage implements IStorage {
         eq(articles.hideFromHomepage, false),
         sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`
       ))
-      .orderBy(desc(articles.createdAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.createdAt))
       .limit(limit);
 
     return results.map((r) => ({

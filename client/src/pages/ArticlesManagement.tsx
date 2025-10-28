@@ -391,8 +391,9 @@ export default function ArticlesManagement() {
         headers: { "Content-Type": "application/json" },
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       toast({
         title: "تم التحديث",
         description: "تم تحديث ترتيب المقالات بنجاح",
