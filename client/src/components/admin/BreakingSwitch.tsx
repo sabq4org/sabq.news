@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -11,11 +11,6 @@ interface BreakingSwitchProps {
 export function BreakingSwitch({ articleId, initialValue }: BreakingSwitchProps) {
   const [isBreaking, setIsBreaking] = useState(initialValue);
   const { toast } = useToast();
-
-  // Sync local state with prop when cache updates
-  useEffect(() => {
-    setIsBreaking(initialValue);
-  }, [initialValue]);
 
   const handleToggle = async (checked: boolean) => {
     const previousValue = isBreaking;
