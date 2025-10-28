@@ -11491,28 +11491,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const pageNum = Math.max(1, parseInt(page as string));
         const limitNum = Math.min(100, Math.max(1, parseInt(limit as string)));
+        const offset = (pageNum - 1) * limitNum;
 
-        const filters: any = {
+        // Build where conditions
+        const conditions = [];
+        if (status) {
+          conditions.push(eq(shorts.status, status));
+        }
+        if (categoryId) {
+          conditions.push(eq(shorts.categoryId, categoryId));
+        }
+        if (reporterId) {
+          conditions.push(eq(shorts.reporterId, reporterId));
+        }
+
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+        // Get total count
+        const [{ count }] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(shorts)
+          .where(whereClause);
+
+        // Get shorts with relations - ADMIN MODE: Order by createdAt DESC (newest first)
+        const results = await db
+          .select({
+            short: shorts,
+            category: categories,
+            reporter: users,
+          })
+          .from(shorts)
+          .leftJoin(categories, eq(shorts.categoryId, categories.id))
+          .leftJoin(users, eq(shorts.reporterId, users.id))
+          .where(whereClause)
+          .orderBy(desc(shorts.createdAt))
+          .limit(limitNum)
+          .offset(offset);
+
+        const shortsWithDetails = results.map(r => ({
+          ...r.short,
+          category: r.category || undefined,
+          reporter: r.reporter || undefined,
+        }));
+
+        res.json({
+          shorts: shortsWithDetails,
+          total: count,
           page: pageNum,
           limit: limitNum,
-        };
-
-        // Allow filtering by any status for admin
-        if (status) {
-          filters.status = status as string;
-        }
-
-        if (categoryId) {
-          filters.categoryId = categoryId as string;
-        }
-
-        if (reporterId) {
-          filters.reporterId = reporterId as string;
-        }
-
-        const result = await storage.getAllShorts(filters);
-
-        res.json(result);
+          totalPages: Math.ceil(count / limitNum),
+        });
       } catch (error: any) {
         console.error("Error fetching admin shorts:", error);
         res.status(500).json({ message: "فشل في جلب الشورتس" });
