@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Star, Archive, Trash2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,10 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isFeatured, setIsFeatured] = useState(initialIsFeatured);
+
+  useEffect(() => {
+    setIsFeatured(initialIsFeatured);
+  }, [initialIsFeatured]);
 
   const handleArchive = async () => {
     setIsLoading(true);
