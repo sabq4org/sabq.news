@@ -120,7 +120,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                     <div className="p-4 hover-elevate active-elevate-2 transition-all">
                       <div className="flex gap-3">
                         {article.imageUrl && (
-                          <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                          <div className="relative flex-shrink-0 w-24 h-20 rounded overflow-hidden">
                             <img
                               src={article.imageUrl}
                               alt={article.title}
@@ -166,7 +166,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
         </CardContent>
       </Card>
 
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {articles.map((article) => {
           const timeAgo = article.publishedAt
             ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -228,7 +228,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
 function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
-    <div className="space-y-6" data-testid={`smart-block-list-${blockId}`}>
+    <div className="space-y-3" data-testid={`smart-block-list-${blockId}`}>
       {articles.map((article) => {
         const timeAgo = article.publishedAt
           ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -299,7 +299,7 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
   const sideArticles = rest.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4" data-testid={`smart-block-featured-${blockId}`}>
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-2" data-testid={`smart-block-featured-${blockId}`}>
       <Link href={`/article/${featured.slug}`} className="lg:col-span-3">
         <Card 
           className="group cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative border-0"
@@ -353,14 +353,14 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
       </Link>
 
       {sideArticles.length > 0 && (
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4 h-80 md:h-96">
+        <div className="lg:col-span-2 grid grid-cols-2 gap-2 h-80 md:h-96">
           {sideArticles.map((article) => (
             <Link key={article.id} href={`/article/${article.slug}`} className="col-span-2 lg:col-span-1">
               <div 
-                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative rounded-lg h-full"
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative rounded h-full"
                 data-testid={`card-smart-article-featured-${article.id}`}
               >
-                <div className="relative h-full overflow-hidden bg-muted rounded-lg">
+                <div className="relative h-full overflow-hidden bg-muted rounded">
                   {article.imageUrl ? (
                     <img
                       src={article.imageUrl}
