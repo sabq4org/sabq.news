@@ -166,6 +166,14 @@ import {
   type InternalAnnouncementMetric,
   type InsertInternalAnnouncementMetric,
   type InternalAnnouncementWithDetails,
+  shorts,
+  shortAnalytics,
+  type Short,
+  type ShortWithDetails,
+  type InsertShort,
+  type UpdateShort,
+  type ShortAnalytic,
+  type InsertShortAnalytic,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -769,6 +777,71 @@ export interface IStorage {
   
   // Scheduled tasks
   processScheduledAnnouncements(): Promise<void>;
+
+  // ============================================
+  // Sabq Shorts (Reels) Operations - سبق شورتس
+  // ============================================
+  
+  // Get all shorts with filters and pagination
+  getAllShorts(filters?: {
+    status?: string;
+    categoryId?: string;
+    reporterId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    shorts: ShortWithDetails[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+
+  // Get single short by ID with relations
+  getShortById(id: string): Promise<ShortWithDetails | undefined>;
+
+  // Get single short by slug for public viewing
+  getShortBySlug(slug: string): Promise<ShortWithDetails | undefined>;
+
+  // Create new short
+  createShort(short: InsertShort): Promise<Short>;
+
+  // Update existing short
+  updateShort(id: string, updates: UpdateShort): Promise<Short>;
+
+  // Delete short (soft delete by setting status=archived)
+  deleteShort(id: string): Promise<Short>;
+
+  // Increment view count
+  incrementShortViews(id: string): Promise<void>;
+
+  // Increment like count
+  likeShort(id: string): Promise<Short>;
+
+  // Increment share count
+  shareShort(id: string): Promise<Short>;
+
+  // Record analytics event (view, watch_time, etc.)
+  trackShortAnalytic(data: InsertShortAnalytic): Promise<ShortAnalytic>;
+
+  // Get analytics for a short
+  getShortAnalytics(shortId: string, filters?: {
+    eventType?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    totalViews: number;
+    totalLikes: number;
+    totalShares: number;
+    uniqueViewers: number;
+    averageWatchTime: number;
+    completionRate: number;
+    eventsByType: { eventType: string; count: number }[];
+    viewsByDay: { date: string; count: number }[];
+  }>;
+
+  // Get featured shorts for homepage block
+  getFeaturedShorts(limit?: number): Promise<ShortWithDetails[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -6821,6 +6894,351 @@ export class DatabaseStorage implements IStorage {
           lte(internalAnnouncements.endAt, now)
         )
       );
+  }
+
+  // ============================================
+  // Sabq Shorts (Reels) Operations - سبق شورتس
+  // ============================================
+
+  async getAllShorts(filters?: {
+    status?: string;
+    categoryId?: string;
+    reporterId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    shorts: ShortWithDetails[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(shorts.status, filters.status));
+    }
+    if (filters?.categoryId) {
+      conditions.push(eq(shorts.categoryId, filters.categoryId));
+    }
+    if (filters?.reporterId) {
+      conditions.push(eq(shorts.reporterId, filters.reporterId));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(shorts)
+      .where(whereClause);
+
+    // Get shorts with relations
+    const results = await db
+      .select({
+        short: shorts,
+        category: categories,
+        reporter: users,
+      })
+      .from(shorts)
+      .leftJoin(categories, eq(shorts.categoryId, categories.id))
+      .leftJoin(users, eq(shorts.reporterId, users.id))
+      .where(whereClause)
+      .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt))
+      .limit(limit)
+      .offset(offset);
+
+    const shortsWithDetails: ShortWithDetails[] = results.map(r => ({
+      ...r.short,
+      category: r.category || undefined,
+      reporter: r.reporter || undefined,
+    }));
+
+    return {
+      shorts: shortsWithDetails,
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    };
+  }
+
+  async getShortById(id: string): Promise<ShortWithDetails | undefined> {
+    const [result] = await db
+      .select({
+        short: shorts,
+        category: categories,
+        reporter: users,
+      })
+      .from(shorts)
+      .leftJoin(categories, eq(shorts.categoryId, categories.id))
+      .leftJoin(users, eq(shorts.reporterId, users.id))
+      .where(eq(shorts.id, id));
+
+    if (!result) return undefined;
+
+    return {
+      ...result.short,
+      category: result.category || undefined,
+      reporter: result.reporter || undefined,
+    };
+  }
+
+  async getShortBySlug(slug: string): Promise<ShortWithDetails | undefined> {
+    const [result] = await db
+      .select({
+        short: shorts,
+        category: categories,
+        reporter: users,
+      })
+      .from(shorts)
+      .leftJoin(categories, eq(shorts.categoryId, categories.id))
+      .leftJoin(users, eq(shorts.reporterId, users.id))
+      .where(
+        and(
+          eq(shorts.slug, slug),
+          eq(shorts.status, 'published')
+        )
+      );
+
+    if (!result) return undefined;
+
+    return {
+      ...result.short,
+      category: result.category || undefined,
+      reporter: result.reporter || undefined,
+    };
+  }
+
+  async createShort(data: InsertShort): Promise<Short> {
+    const [short] = await db.insert(shorts).values(data).returning();
+    return short;
+  }
+
+  async updateShort(id: string, updates: UpdateShort): Promise<Short> {
+    const [short] = await db
+      .update(shorts)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(shorts.id, id))
+      .returning();
+
+    return short;
+  }
+
+  async deleteShort(id: string): Promise<Short> {
+    const [short] = await db
+      .update(shorts)
+      .set({
+        status: 'archived',
+        updatedAt: new Date(),
+      })
+      .where(eq(shorts.id, id))
+      .returning();
+
+    return short;
+  }
+
+  async incrementShortViews(id: string): Promise<void> {
+    await db
+      .update(shorts)
+      .set({
+        views: sql`${shorts.views} + 1`,
+      })
+      .where(eq(shorts.id, id));
+  }
+
+  async likeShort(id: string): Promise<Short> {
+    const [short] = await db
+      .update(shorts)
+      .set({
+        likes: sql`${shorts.likes} + 1`,
+      })
+      .where(eq(shorts.id, id))
+      .returning();
+
+    return short;
+  }
+
+  async shareShort(id: string): Promise<Short> {
+    const [short] = await db
+      .update(shorts)
+      .set({
+        shares: sql`${shorts.shares} + 1`,
+      })
+      .where(eq(shorts.id, id))
+      .returning();
+
+    return short;
+  }
+
+  async trackShortAnalytic(data: InsertShortAnalytic): Promise<ShortAnalytic> {
+    const [analytic] = await db
+      .insert(shortAnalytics)
+      .values(data)
+      .returning();
+
+    return analytic;
+  }
+
+  async getShortAnalytics(shortId: string, filters?: {
+    eventType?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    totalViews: number;
+    totalLikes: number;
+    totalShares: number;
+    uniqueViewers: number;
+    averageWatchTime: number;
+    completionRate: number;
+    eventsByType: { eventType: string; count: number }[];
+    viewsByDay: { date: string; count: number }[];
+  }> {
+    // Build where conditions for analytics
+    const conditions = [eq(shortAnalytics.shortId, shortId)];
+    
+    if (filters?.eventType) {
+      conditions.push(eq(shortAnalytics.eventType, filters.eventType));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(shortAnalytics.occurredAt, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(shortAnalytics.occurredAt, filters.endDate));
+    }
+
+    const whereClause = and(...conditions);
+
+    // Get total views count
+    const [viewsResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'view')
+        )
+      );
+
+    // Get unique viewers
+    const [uniqueViewersResult] = await db
+      .select({ count: sql<number>`count(DISTINCT COALESCE(${shortAnalytics.userId}, ${shortAnalytics.sessionId}))::int` })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'view')
+        )
+      );
+
+    // Get average watch time
+    const [watchTimeResult] = await db
+      .select({ 
+        avgWatchTime: sql<number>`COALESCE(AVG(${shortAnalytics.watchTime}), 0)::int`
+      })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'watch_time')
+        )
+      );
+
+    // Get the short to calculate completion rate
+    const short = await this.getShortById(shortId);
+    const videoDuration = short?.duration || 1;
+    const completionRate = watchTimeResult.avgWatchTime / videoDuration;
+
+    // Get events by type
+    const eventsByType = await db
+      .select({
+        eventType: shortAnalytics.eventType,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(shortAnalytics)
+      .where(eq(shortAnalytics.shortId, shortId))
+      .groupBy(shortAnalytics.eventType);
+
+    // Get views by day
+    const viewsByDay = await db
+      .select({
+        date: sql<string>`DATE(${shortAnalytics.occurredAt})::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'view')
+        )
+      )
+      .groupBy(sql`DATE(${shortAnalytics.occurredAt})`)
+      .orderBy(sql`DATE(${shortAnalytics.occurredAt})`);
+
+    // Get likes and shares counts
+    const [likesResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'like')
+        )
+      );
+
+    const [sharesResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(shortAnalytics)
+      .where(
+        and(
+          eq(shortAnalytics.shortId, shortId),
+          eq(shortAnalytics.eventType, 'share')
+        )
+      );
+
+    return {
+      totalViews: viewsResult.count,
+      totalLikes: likesResult.count,
+      totalShares: sharesResult.count,
+      uniqueViewers: uniqueViewersResult.count,
+      averageWatchTime: watchTimeResult.avgWatchTime,
+      completionRate,
+      eventsByType,
+      viewsByDay,
+    };
+  }
+
+  async getFeaturedShorts(limit: number = 10): Promise<ShortWithDetails[]> {
+    const results = await db
+      .select({
+        short: shorts,
+        category: categories,
+        reporter: users,
+      })
+      .from(shorts)
+      .leftJoin(categories, eq(shorts.categoryId, categories.id))
+      .leftJoin(users, eq(shorts.reporterId, users.id))
+      .where(
+        and(
+          eq(shorts.status, 'published'),
+          eq(shorts.isFeatured, true)
+        )
+      )
+      .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt))
+      .limit(limit);
+
+    return results.map(r => ({
+      ...r.short,
+      category: r.category || undefined,
+      reporter: r.reporter || undefined,
+    }));
   }
 }
 
