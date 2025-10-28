@@ -356,11 +356,11 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
         <div className="lg:col-span-2 grid grid-cols-2 gap-2 h-80 md:h-96">
           {sideArticles.map((article) => (
             <Link key={article.id} href={`/article/${article.slug}`} className="col-span-2 lg:col-span-1">
-              <div 
-                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative rounded-md h-full"
+              <Card 
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0 h-full"
                 data-testid={`card-smart-article-featured-${article.id}`}
               >
-                <div className="relative h-full overflow-hidden bg-muted rounded-md">
+                <div className="relative h-full overflow-hidden bg-muted">
                   {article.imageUrl ? (
                     <img
                       src={article.imageUrl}
@@ -380,7 +380,7 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                     </h4>
                   </div>
                 </div>
-              </div>
+              </Card>
             </Link>
           ))}
         </div>
