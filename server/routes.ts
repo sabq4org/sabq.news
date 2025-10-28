@@ -11695,7 +11695,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 14. GET /api/admin/shorts/:id/analytics - Get analytics for a short
+  // 14. POST /api/admin/shorts/upload - Get upload URL for shorts files (images/videos)
+  app.post("/api/admin/shorts/upload",
+    requireAuth,
+    requireAnyPermission('shorts:create', 'shorts:edit', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const objectStorageService = new ObjectStorageService();
+        const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+        res.json({ uploadURL });
+      } catch (error: any) {
+        console.error("Error getting upload URL for shorts:", error);
+        res.status(500).json({ message: "فشل في الحصول على رابط الرفع" });
+      }
+    }
+  );
+
+  // 15. GET /api/admin/shorts/:id/analytics - Get analytics for a short
   app.get("/api/admin/shorts/:id/analytics",
     requireAuth,
     requireAnyPermission('shorts:view', 'shorts:manage'),

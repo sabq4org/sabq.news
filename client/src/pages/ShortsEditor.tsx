@@ -31,7 +31,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowRight, Loader2, Save } from "lucide-react";
+import { ArrowRight, Loader2, Save, Upload } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { Category, User } from "@shared/schema";
 
 // Form validation schema based on insertShortSchema
@@ -493,40 +494,52 @@ export default function ShortsEditor() {
                     name="coverImage"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>رابط صورة الغلاف *</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="https://example.com/cover.jpg"
-                            dir="ltr"
-                            data-testid="input-cover-image"
-                          />
-                        </FormControl>
+                        <FormLabel>صورة الغلاف *</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/cover.jpg"
+                              dir="ltr"
+                              data-testid="input-cover-image"
+                              className="flex-1"
+                            />
+                          </FormControl>
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={10485760}
+                            allowedFileTypes={['.jpg', '.jpeg', '.png', '.gif', '.webp']}
+                            onGetUploadParameters={async () => {
+                              const response = await fetch('/api/admin/shorts/upload', {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                              if (!response.ok) throw new Error('Failed to get upload URL');
+                              const data = await response.json();
+                              return {
+                                method: 'PUT' as const,
+                                url: data.uploadURL,
+                              };
+                            }}
+                            onComplete={(result) => {
+                              const uploadedUrl = result.successful?.[0]?.uploadURL;
+                              if (uploadedUrl) {
+                                form.setValue('coverImage', uploadedUrl);
+                                toast({
+                                  title: "تم رفع الصورة بنجاح",
+                                  description: "تم رفع صورة الغلاف بنجاح",
+                                });
+                              }
+                            }}
+                            size="default"
+                            variant="outline"
+                          >
+                            <Upload className="h-4 w-4 ml-2" />
+                            رفع
+                          </ObjectUploader>
+                        </div>
                         <FormDescription>
-                          يمكنك رفع الصورة واستخدام الرابط هنا
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* HLS URL */}
-                  <FormField
-                    control={form.control}
-                    name="hlsUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>رابط HLS (m3u8)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="https://example.com/video.m3u8"
-                            dir="ltr"
-                            data-testid="input-hls-url"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          للبث التكيفي (اختياري)
+                          صيغ مدعومة: JPG, PNG, GIF, WebP (حد أقصى 10 ميجابايت)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -539,17 +552,110 @@ export default function ShortsEditor() {
                     name="mp4Url"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>رابط MP4 *</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="https://example.com/video.mp4"
-                            dir="ltr"
-                            data-testid="input-mp4-url"
-                          />
-                        </FormControl>
+                        <FormLabel>فيديو MP4 *</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/video.mp4"
+                              dir="ltr"
+                              data-testid="input-mp4-url"
+                              className="flex-1"
+                            />
+                          </FormControl>
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={524288000}
+                            allowedFileTypes={['.mp4', '.mov', '.avi']}
+                            onGetUploadParameters={async () => {
+                              const response = await fetch('/api/admin/shorts/upload', {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                              if (!response.ok) throw new Error('Failed to get upload URL');
+                              const data = await response.json();
+                              return {
+                                method: 'PUT' as const,
+                                url: data.uploadURL,
+                              };
+                            }}
+                            onComplete={(result) => {
+                              const uploadedUrl = result.successful?.[0]?.uploadURL;
+                              if (uploadedUrl) {
+                                form.setValue('mp4Url', uploadedUrl);
+                                toast({
+                                  title: "تم رفع الفيديو بنجاح",
+                                  description: "تم رفع فيديو MP4 بنجاح",
+                                });
+                              }
+                            }}
+                            size="default"
+                            variant="outline"
+                          >
+                            <Upload className="h-4 w-4 ml-2" />
+                            رفع
+                          </ObjectUploader>
+                        </div>
                         <FormDescription>
-                          للمتصفحات التي لا تدعم HLS
+                          صيغ مدعومة: MP4, MOV, AVI (حد أقصى 500 ميجابايت)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* HLS URL */}
+                  <FormField
+                    control={form.control}
+                    name="hlsUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ملف HLS (m3u8) - اختياري</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/video.m3u8"
+                              dir="ltr"
+                              data-testid="input-hls-url"
+                              className="flex-1"
+                            />
+                          </FormControl>
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={52428800}
+                            allowedFileTypes={['.m3u8', '.ts']}
+                            onGetUploadParameters={async () => {
+                              const response = await fetch('/api/admin/shorts/upload', {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                              if (!response.ok) throw new Error('Failed to get upload URL');
+                              const data = await response.json();
+                              return {
+                                method: 'PUT' as const,
+                                url: data.uploadURL,
+                              };
+                            }}
+                            onComplete={(result) => {
+                              const uploadedUrl = result.successful?.[0]?.uploadURL;
+                              if (uploadedUrl) {
+                                form.setValue('hlsUrl', uploadedUrl);
+                                toast({
+                                  title: "تم رفع ملف HLS بنجاح",
+                                  description: "تم رفع ملف البث التكيفي بنجاح",
+                                });
+                              }
+                            }}
+                            size="default"
+                            variant="outline"
+                          >
+                            <Upload className="h-4 w-4 ml-2" />
+                            رفع
+                          </ObjectUploader>
+                        </div>
+                        <FormDescription>
+                          للبث التكيفي - صيغ مدعومة: m3u8, ts (حد أقصى 50 ميجابايت)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
