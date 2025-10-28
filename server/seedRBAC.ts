@@ -63,6 +63,13 @@ export async function seedRBAC() {
     { code: "mirqab.delete", label: "Delete Mirqab Content", labelAr: "حذف محتوى المرقاب", module: "mirqab" },
     { code: "mirqab.publish", label: "Publish Mirqab Content", labelAr: "نشر محتوى المرقاب", module: "mirqab" },
     { code: "mirqab.manage_settings", label: "Manage Mirqab Settings", labelAr: "إدارة إعدادات المرقاب", module: "mirqab" },
+
+    // Shorts permissions (سبق قصير - Vertical Video Reels)
+    { code: "shorts:view", label: "View Shorts", labelAr: "عرض الشورتس", module: "shorts" },
+    { code: "shorts:create", label: "Create Shorts", labelAr: "إنشاء الشورتس", module: "shorts" },
+    { code: "shorts:edit", label: "Edit Shorts", labelAr: "تعديل الشورتس", module: "shorts" },
+    { code: "shorts:delete", label: "Delete Shorts", labelAr: "حذف الشورتس", module: "shorts" },
+    { code: "shorts:manage", label: "Manage Shorts", labelAr: "إدارة الشورتس", module: "shorts" },
   ];
 
   const insertedPermissions = await db
@@ -141,6 +148,7 @@ export async function seedRBAC() {
       "system.view_logs", "system.manage_themes",
       "muqtarib.manage", "muqtarib.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.delete", "mirqab.publish", "mirqab.manage_settings",
+      "shorts:view", "shorts:create", "shorts:edit", "shorts:delete", "shorts:manage",
     ],
     
     editor: [
@@ -152,12 +160,14 @@ export async function seedRBAC() {
       "staff.view",
       "muqtarib.manage", "muqtarib.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
+      "shorts:view", "shorts:create", "shorts:edit", "shorts:manage",
     ],
     
     reporter: [
       "articles.view", "articles.create", "articles.edit_own",
       "categories.view",
       "comments.view",
+      "shorts:view", "shorts:create", "shorts:edit",
     ],
     
     comments_moderator: [
