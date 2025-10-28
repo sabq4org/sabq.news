@@ -88,6 +88,8 @@ import {
   audioNewsletters,
   audioNewsletterArticles,
   audioNewsletterListens,
+  shorts,
+  shortAnalytics,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -139,6 +141,9 @@ import {
   updateInternalAnnouncementSchema,
   insertInternalAnnouncementVersionSchema,
   insertInternalAnnouncementMetricSchema,
+  insertShortSchema,
+  updateShortSchema,
+  insertShortAnalyticSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -11192,6 +11197,516 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(analytics);
       } catch (error: any) {
         console.error("Error fetching analytics:", error);
+        res.status(500).json({ message: "فشل في جلب التحليلات" });
+      }
+    }
+  );
+
+  // ============================================================
+  // SABQ SHORTS (REELS) API ROUTES - سبق شورتس
+  // ============================================================
+
+  // ============================================================
+  // PUBLIC ENDPOINTS (No auth required)
+  // ============================================================
+
+  // 1. GET /api/shorts - List all published shorts with pagination and filters
+  app.get("/api/shorts", async (req, res) => {
+    try {
+      const { 
+        page = "1", 
+        limit = "20", 
+        categoryId, 
+        reporterId 
+      } = req.query;
+
+      const pageNum = Math.max(1, parseInt(page as string));
+      const limitNum = Math.min(50, Math.max(1, parseInt(limit as string)));
+
+      const filters: any = {
+        status: "published",
+        page: pageNum,
+        limit: limitNum,
+      };
+
+      if (categoryId) {
+        filters.categoryId = categoryId as string;
+      }
+
+      if (reporterId) {
+        filters.reporterId = reporterId as string;
+      }
+
+      const result = await storage.getAllShorts(filters);
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error fetching shorts:", error);
+      res.status(500).json({ message: "فشل في جلب الشورتس" });
+    }
+  });
+
+  // 2. GET /api/shorts/featured - Get featured shorts for homepage block
+  app.get("/api/shorts/featured", async (req, res) => {
+    try {
+      const { limit = "10" } = req.query;
+      const limitNum = Math.min(20, Math.max(1, parseInt(limit as string)));
+
+      const featuredShorts = await storage.getFeaturedShorts(limitNum);
+
+      res.json({
+        shorts: featuredShorts,
+        total: featuredShorts.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching featured shorts:", error);
+      res.status(500).json({ message: "فشل في جلب الشورتس المميزة" });
+    }
+  });
+
+  // 3. GET /api/shorts/:id - Get single short by ID
+  app.get("/api/shorts/:id", async (req, res) => {
+    try {
+      const shortId = req.params.id;
+
+      const short = await storage.getShortById(shortId);
+
+      if (!short) {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Only return published shorts for public endpoint
+      if (short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      res.json(short);
+    } catch (error: any) {
+      console.error("Error fetching short:", error);
+      res.status(500).json({ message: "فشل في جلب الشورت" });
+    }
+  });
+
+  // 4. GET /api/shorts/slug/:slug - Get single short by slug
+  app.get("/api/shorts/slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+
+      const short = await storage.getShortBySlug(slug);
+
+      if (!short) {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Only return published shorts for public endpoint
+      if (short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      res.json(short);
+    } catch (error: any) {
+      console.error("Error fetching short by slug:", error);
+      res.status(500).json({ message: "فشل في جلب الشورت" });
+    }
+  });
+
+  // 5. POST /api/shorts/:id/view - Track view event
+  app.post("/api/shorts/:id/view", async (req, res) => {
+    try {
+      const shortId = req.params.id;
+      const userId = (req as any).user?.id || null;
+
+      // Check if short exists and is published
+      const short = await storage.getShortById(shortId);
+      if (!short || short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Increment view count
+      await storage.incrementShortViews(shortId);
+
+      // Track analytics event
+      await storage.trackShortAnalytic({
+        shortId,
+        userId,
+        eventType: "view",
+      });
+
+      res.status(201).json({ message: "تم تسجيل المشاهدة" });
+    } catch (error: any) {
+      console.error("Error tracking view:", error);
+      res.status(500).json({ message: "فشل في تسجيل المشاهدة" });
+    }
+  });
+
+  // 6. POST /api/shorts/:id/like - Like a short
+  app.post("/api/shorts/:id/like", async (req, res) => {
+    try {
+      const shortId = req.params.id;
+      const userId = (req as any).user?.id || null;
+
+      // Check if short exists and is published
+      const short = await storage.getShortById(shortId);
+      if (!short || short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Increment like count
+      const updated = await storage.likeShort(shortId);
+
+      // Track analytics event
+      await storage.trackShortAnalytic({
+        shortId,
+        userId,
+        eventType: "like",
+      });
+
+      res.json({ 
+        message: "تم الإعجاب بالشورت",
+        likes: updated.likes 
+      });
+    } catch (error: any) {
+      console.error("Error liking short:", error);
+      res.status(500).json({ message: "فشل في الإعجاب بالشورت" });
+    }
+  });
+
+  // 7. POST /api/shorts/:id/unlike - Unlike a short (decrement like count)
+  app.post("/api/shorts/:id/unlike", async (req, res) => {
+    try {
+      const shortId = req.params.id;
+      const userId = (req as any).user?.id || null;
+
+      // Check if short exists and is published
+      const short = await storage.getShortById(shortId);
+      if (!short || short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Decrement like count (we'll use the database directly for this)
+      const [updated] = await db
+        .update(shorts)
+        .set({ 
+          likes: sql`GREATEST(0, ${shorts.likes} - 1)` 
+        })
+        .where(eq(shorts.id, shortId))
+        .returning();
+
+      // Track analytics event
+      await storage.trackShortAnalytic({
+        shortId,
+        userId,
+        eventType: "unlike",
+      });
+
+      res.json({ 
+        message: "تم إلغاء الإعجاب بالشورت",
+        likes: updated.likes 
+      });
+    } catch (error: any) {
+      console.error("Error unliking short:", error);
+      res.status(500).json({ message: "فشل في إلغاء الإعجاب بالشورت" });
+    }
+  });
+
+  // 8. POST /api/shorts/:id/share - Track share event
+  app.post("/api/shorts/:id/share", async (req, res) => {
+    try {
+      const shortId = req.params.id;
+      const userId = (req as any).user?.id || null;
+      const { platform } = req.body;
+
+      // Check if short exists and is published
+      const short = await storage.getShortById(shortId);
+      if (!short || short.status !== "published") {
+        return res.status(404).json({ message: "الشورت غير موجود" });
+      }
+
+      // Increment share count
+      const updated = await storage.shareShort(shortId);
+
+      // Track analytics event with platform info
+      await storage.trackShortAnalytic({
+        shortId,
+        userId,
+        eventType: "share",
+      });
+
+      res.status(201).json({ 
+        message: "تم تسجيل المشاركة",
+        shares: updated.shares 
+      });
+    } catch (error: any) {
+      console.error("Error tracking share:", error);
+      res.status(500).json({ message: "فشل في تسجيل المشاركة" });
+    }
+  });
+
+  // 9. POST /api/analytics/short - Track watch time and other analytics
+  app.post("/api/analytics/short", async (req, res) => {
+    try {
+      const validatedData = insertShortAnalyticSchema.parse(req.body);
+      const userId = (req as any).user?.id || null;
+
+      // Add userId if authenticated
+      const analyticData = {
+        ...validatedData,
+        userId,
+      };
+
+      const analytic = await storage.trackShortAnalytic(analyticData);
+
+      res.status(201).json(analytic);
+    } catch (error: any) {
+      console.error("Error tracking analytics:", error);
+      
+      if (error.name === "ZodError") {
+        return res.status(400).json({ 
+          message: "بيانات غير صالحة",
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "فشل في تسجيل التحليلات" });
+    }
+  });
+
+  // ============================================================
+  // ADMIN/REPORTER ENDPOINTS (Auth required)
+  // ============================================================
+
+  // 10. GET /api/admin/shorts - List all shorts for admin panel (with all statuses)
+  app.get("/api/admin/shorts",
+    requireAuth,
+    requireAnyPermission('shorts:view', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const { 
+          page = "1", 
+          limit = "20", 
+          status,
+          categoryId, 
+          reporterId 
+        } = req.query;
+
+        const pageNum = Math.max(1, parseInt(page as string));
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit as string)));
+
+        const filters: any = {
+          page: pageNum,
+          limit: limitNum,
+        };
+
+        // Allow filtering by any status for admin
+        if (status) {
+          filters.status = status as string;
+        }
+
+        if (categoryId) {
+          filters.categoryId = categoryId as string;
+        }
+
+        if (reporterId) {
+          filters.reporterId = reporterId as string;
+        }
+
+        const result = await storage.getAllShorts(filters);
+
+        res.json(result);
+      } catch (error: any) {
+        console.error("Error fetching admin shorts:", error);
+        res.status(500).json({ message: "فشل في جلب الشورتس" });
+      }
+    }
+  );
+
+  // 11. POST /api/admin/shorts - Create new short
+  app.post("/api/admin/shorts",
+    requireAuth,
+    requireAnyPermission('shorts:create', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        // Validate request body
+        const validatedData = insertShortSchema.parse(req.body);
+
+        // Create short with current user as author if not specified
+        const shortData = {
+          ...validatedData,
+          reporterId: validatedData.reporterId || userId,
+        };
+
+        const newShort = await storage.createShort(shortData);
+
+        // Log activity
+        await logActivity({
+          userId,
+          action: 'create',
+          entityType: 'short',
+          entityId: newShort.id,
+          newValue: { 
+            title: newShort.title, 
+            status: newShort.status,
+            categoryId: newShort.categoryId 
+          },
+        });
+
+        res.status(201).json(newShort);
+      } catch (error: any) {
+        console.error("Error creating short:", error);
+        
+        if (error.name === "ZodError") {
+          return res.status(400).json({ 
+            message: "بيانات غير صالحة",
+            errors: error.errors 
+          });
+        }
+        
+        res.status(500).json({ message: "فشل في إنشاء الشورت" });
+      }
+    }
+  );
+
+  // 12. PUT /api/admin/shorts/:id - Update short
+  app.put("/api/admin/shorts/:id",
+    requireAuth,
+    requireAnyPermission('shorts:edit', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        const shortId = req.params.id;
+
+        // Check if short exists
+        const existing = await storage.getShortById(shortId);
+        if (!existing) {
+          return res.status(404).json({ message: "الشورت غير موجود" });
+        }
+
+        // Validate request body
+        const validatedData = updateShortSchema.parse(req.body);
+
+        // Update short
+        const updated = await storage.updateShort(shortId, validatedData);
+
+        // Log activity
+        await logActivity({
+          userId,
+          action: 'update',
+          entityType: 'short',
+          entityId: shortId,
+          oldValue: { 
+            title: existing.title,
+            status: existing.status 
+          },
+          newValue: { 
+            title: updated.title,
+            status: updated.status 
+          },
+        });
+
+        res.json(updated);
+      } catch (error: any) {
+        console.error("Error updating short:", error);
+        
+        if (error.name === "ZodError") {
+          return res.status(400).json({ 
+            message: "بيانات غير صالحة",
+            errors: error.errors 
+          });
+        }
+        
+        res.status(500).json({ message: "فشل في تحديث الشورت" });
+      }
+    }
+  );
+
+  // 13. DELETE /api/admin/shorts/:id - Delete short (soft delete)
+  app.delete("/api/admin/shorts/:id",
+    requireAuth,
+    requireAnyPermission('shorts:delete', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        const shortId = req.params.id;
+
+        // Check if short exists
+        const existing = await storage.getShortById(shortId);
+        if (!existing) {
+          return res.status(404).json({ message: "الشورت غير موجود" });
+        }
+
+        // Soft delete (set status to archived)
+        const deleted = await storage.deleteShort(shortId);
+
+        // Log activity
+        await logActivity({
+          userId,
+          action: 'delete',
+          entityType: 'short',
+          entityId: shortId,
+          oldValue: { 
+            title: existing.title,
+            status: existing.status 
+          },
+          newValue: { 
+            status: 'archived' 
+          },
+        });
+
+        res.json(deleted);
+      } catch (error: any) {
+        console.error("Error deleting short:", error);
+        res.status(500).json({ message: "فشل في حذف الشورت" });
+      }
+    }
+  );
+
+  // 14. GET /api/admin/shorts/:id/analytics - Get analytics for a short
+  app.get("/api/admin/shorts/:id/analytics",
+    requireAuth,
+    requireAnyPermission('shorts:view', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const shortId = req.params.id;
+        const { eventType, startDate, endDate } = req.query;
+
+        // Check if short exists
+        const existing = await storage.getShortById(shortId);
+        if (!existing) {
+          return res.status(404).json({ message: "الشورت غير موجود" });
+        }
+
+        const filters: any = {};
+
+        if (eventType) {
+          filters.eventType = eventType as string;
+        }
+
+        if (startDate) {
+          filters.startDate = new Date(startDate as string);
+        }
+
+        if (endDate) {
+          filters.endDate = new Date(endDate as string);
+        }
+
+        const analytics = await storage.getShortAnalytics(shortId, filters);
+
+        res.json(analytics);
+      } catch (error: any) {
+        console.error("Error fetching short analytics:", error);
         res.status(500).json({ message: "فشل في جلب التحليلات" });
       }
     }
