@@ -88,6 +88,7 @@ import AnnouncementVersions from "@/pages/AnnouncementVersions";
 import AnnouncementAnalytics from "@/pages/AnnouncementAnalytics";
 import AIPublisher from "@/pages/AIPublisher";
 import AIPolicy from "@/pages/AIPolicy";
+import ShortsPage from "@/pages/ShortsPage";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -113,6 +114,7 @@ function Router() {
       <Route path="/ai-policy" component={AIPolicy} />
       <Route path="/news" component={NewsPage} />
       <Route path="/categories" component={CategoriesListPage} />
+      <Route path="/shorts" component={ShortsPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
