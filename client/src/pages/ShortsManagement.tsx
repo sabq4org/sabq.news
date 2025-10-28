@@ -265,7 +265,7 @@ export default function ShortsManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl md:text-2xl font-bold" data-testid="text-total-shorts">
-                  {metrics.total.toLocaleString("ar-EG")}
+                  {metrics.total.toLocaleString("en-US")}
                 </div>
               </CardContent>
             </Card>
@@ -278,7 +278,7 @@ export default function ShortsManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl md:text-2xl font-bold text-green-600" data-testid="text-published-shorts">
-                  {metrics.published.toLocaleString("ar-EG")}
+                  {metrics.published.toLocaleString("en-US")}
                 </div>
               </CardContent>
             </Card>
@@ -291,7 +291,7 @@ export default function ShortsManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl md:text-2xl font-bold text-blue-600" data-testid="text-total-views">
-                  {metrics.totalViews.toLocaleString("ar-EG")}
+                  {metrics.totalViews.toLocaleString("en-US")}
                 </div>
               </CardContent>
             </Card>
@@ -304,7 +304,7 @@ export default function ShortsManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl md:text-2xl font-bold text-pink-600" data-testid="text-total-likes">
-                  {metrics.totalLikes.toLocaleString("ar-EG")}
+                  {metrics.totalLikes.toLocaleString("en-US")}
                 </div>
               </CardContent>
             </Card>
@@ -492,7 +492,7 @@ export default function ShortsManagement() {
                           <div className="flex items-center gap-1">
                             <Eye className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm" data-testid={`text-views-${short.id}`}>
-                              {short.views.toLocaleString("ar-EG")}
+                              {short.views.toLocaleString("en-US")}
                             </span>
                           </div>
                         </TableCell>
@@ -502,7 +502,7 @@ export default function ShortsManagement() {
                           <div className="flex items-center gap-1">
                             <ThumbsUp className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm" data-testid={`text-likes-${short.id}`}>
-                              {short.likes.toLocaleString("ar-EG")}
+                              {short.likes.toLocaleString("en-US")}
                             </span>
                           </div>
                         </TableCell>

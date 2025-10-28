@@ -37,7 +37,7 @@ type ShortItem = {
   reporter?: { id: string; firstName?: string; lastName?: string; profileImageUrl?: string };
 };
 
-const fmt = new Intl.NumberFormat("ar-SA");
+const fmt = new Intl.NumberFormat("en-US");
 
 // Keyboard controls hook
 function useKeyControls(opts: {

@@ -153,11 +153,11 @@ export function ShortsHomeBlock() {
               <div className="flex items-center gap-4 text-white/80 text-sm">
                 <div className="flex items-center gap-1" data-testid={`short-views-${featuredShort.id}`}>
                   <Eye className="h-4 w-4" />
-                  <span>{featuredShort.views.toLocaleString('ar-SA')}</span>
+                  <span>{featuredShort.views.toLocaleString('en-US')}</span>
                 </div>
                 <div className="flex items-center gap-1" data-testid={`short-likes-${featuredShort.id}`}>
                   <Heart className="h-4 w-4" />
-                  <span>{featuredShort.likes.toLocaleString('ar-SA')}</span>
+                  <span>{featuredShort.likes.toLocaleString('en-US')}</span>
                 </div>
               </div>
 
