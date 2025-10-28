@@ -3070,6 +3070,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         articleData.publishedAt = new Date();
       }
 
+      // Auto-assign high displayOrder (timestamp in seconds) if not set - makes new articles appear first
+      if (articleData.displayOrder === undefined || articleData.displayOrder === null || articleData.displayOrder === 0) {
+        articleData.displayOrder = Math.floor(Date.now() / 1000);
+      }
+
       const [newArticle] = await db
         .insert(articles)
         .values(articleData)
@@ -11563,10 +11568,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedData = insertShortSchema.parse(req.body);
 
         // Create short with current user as author if not specified
-        const shortData = {
+        const shortData: any = {
           ...validatedData,
           reporterId: validatedData.reporterId || userId,
         };
+
+        // Auto-assign high displayOrder (timestamp in seconds) if not set - makes new shorts appear first
+        if (shortData.displayOrder === undefined || shortData.displayOrder === null || shortData.displayOrder === 0) {
+          shortData.displayOrder = Math.floor(Date.now() / 1000);
+        }
 
         const newShort = await storage.createShort(shortData);
 
