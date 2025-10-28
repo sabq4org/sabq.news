@@ -28,8 +28,8 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         method: "POST",
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles/metrics"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles/metrics"] });
       
       toast({
         title: "تم الأرشفة",
@@ -53,8 +53,8 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         method: "POST",
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles/metrics"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles/metrics"] });
       
       toast({
         title: "تم النشر",
@@ -85,7 +85,7 @@ export function RowActions({ articleId, status, onEdit, isFeatured: initialIsFea
         headers: { "Content-Type": "application/json" },
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       
       toast({
         title: !previousValue ? "تم التمييز" : "تم إلغاء التمييز",
