@@ -79,7 +79,6 @@ interface AIInsightsData {
 export function AIInsightsBlock() {
   const { data: insights, isLoading } = useQuery<AIInsightsData>({
     queryKey: ["/api/ai-insights"],
-    refetchInterval: 6 * 60 * 60 * 1000, // Refresh every 6 hours
   });
 
   if (isLoading) {

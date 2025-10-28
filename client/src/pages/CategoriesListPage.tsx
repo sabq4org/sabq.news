@@ -28,7 +28,6 @@ export default function CategoriesListPage() {
       if (!res.ok) throw new Error("Failed to fetch categories");
       return res.json();
     },
-    staleTime: 60000,
   });
 
   return (

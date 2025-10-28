@@ -28,7 +28,6 @@ interface AIInsightsData {
 export function MomentAIInsights() {
   const { data, isLoading } = useQuery<AIInsightsData>({
     queryKey: ["/api/moment/ai-insights"],
-    refetchInterval: 60000, // Refresh every minute
   });
 
   if (isLoading) {

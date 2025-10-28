@@ -57,7 +57,6 @@ export function TrendingKeywords() {
 
   const { data: keywords, isLoading, error } = useQuery<TrendingKeyword[]>({
     queryKey: ["/api/trending-keywords"],
-    refetchInterval: 600000,
   });
 
   if (isLoading) {

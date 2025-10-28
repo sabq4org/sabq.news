@@ -40,7 +40,6 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
       const data = await res.json();
       return data.items || [];
     },
-    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {

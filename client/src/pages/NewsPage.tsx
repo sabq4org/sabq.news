@@ -24,7 +24,6 @@ export default function NewsPage() {
 
   const { data: articles = [], isLoading } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles"],
-    staleTime: 30000,
   });
 
   // Calculate pagination

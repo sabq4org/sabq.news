@@ -111,9 +111,6 @@ export default function Home() {
 
   const { data: homepage, isLoading, error } = useQuery<HomepageData>({
     queryKey: ["/api/homepage"],
-    staleTime: 60000,
-    refetchInterval: 120000,
-    retry: 3,
   });
 
   // Fetch smart blocks for each placement
@@ -125,7 +122,6 @@ export default function Home() {
       if (!res.ok) return [];
       return await res.json();
     },
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: blocksAboveAllNews } = useQuery<SmartBlock[]>({
@@ -136,7 +132,6 @@ export default function Home() {
       if (!res.ok) return [];
       return await res.json();
     },
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: blocksBetweenAllAndMurqap } = useQuery<SmartBlock[]>({
@@ -147,7 +142,6 @@ export default function Home() {
       if (!res.ok) return [];
       return await res.json();
     },
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: blocksAboveFooter } = useQuery<SmartBlock[]>({
@@ -158,7 +152,6 @@ export default function Home() {
       if (!res.ok) return [];
       return await res.json();
     },
-    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
