@@ -23,6 +23,12 @@ The frontend utilizes Next.js 15, React 18, Vite, Wouter for routing, and TypeSc
   - API v1 endpoints: `public, max-age=300` (5 minutes)
   - Regular API: `private, max-age=60` (1 minute)
   - Mutations (POST/PUT/DELETE): `no-store`
+- **React Query Configuration:** Zero caching (`staleTime: 0`, `gcTime: 0`, `refetchOnWindowFocus: false`) per user requirement for real-time data freshness. All mutations use `removeQueries()` + `refetchQueries()` pattern to ensure immediate server state reflection.
+
+**Article Ordering System:**
+- **Display Order Priority:** All homepage queries (hero, breaking, editor picks, deep dives, all published) prioritize `displayOrder` (DESC) before fallback sorting criteria (publishedAt, views, createdAt)
+- **Drag & Drop Persistence:** Admin panel article reordering uses batch update to `display_order` column, with immediate cache invalidation and server refetch
+- **Mutation Pattern:** `PUT /api/admin/articles/order` accepts `{ articleIds: string[] }` and assigns displayOrder based on array position (first = highest value)
 
 ### Feature Specifications
 Key features include:
