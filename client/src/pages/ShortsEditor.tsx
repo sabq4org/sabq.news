@@ -171,9 +171,9 @@ export default function ShortsEditor() {
 
   // Fetch existing short data when editing
   const { data: shortData, isLoading: shortLoading } = useQuery<ShortWithDetails>({
-    queryKey: ["/api/shorts", shortId],
+    queryKey: ["/api/admin/shorts", shortId],
     queryFn: async () => {
-      const response = await fetch(`/api/shorts/${shortId}`, {
+      const response = await fetch(`/api/admin/shorts/${shortId}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch short");
@@ -221,12 +221,12 @@ export default function ShortsEditor() {
       };
 
       if (isEditMode) {
-        return await apiRequest(`/api/shorts/${shortId}`, {
+        return await apiRequest(`/api/admin/shorts/${shortId}`, {
           method: "PUT",
           body: JSON.stringify(payload),
         });
       } else {
-        return await apiRequest("/api/shorts", {
+        return await apiRequest("/api/admin/shorts", {
           method: "POST",
           body: JSON.stringify(payload),
         });

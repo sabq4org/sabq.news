@@ -11628,7 +11628,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // 13. DELETE /api/admin/shorts/:id - Delete short (soft delete)
+  // 13. GET /api/admin/shorts/:id - Get single short (any status) for editing
+  app.get("/api/admin/shorts/:id",
+    requireAuth,
+    requireAnyPermission('shorts:view', 'shorts:edit', 'shorts:manage'),
+    async (req: any, res) => {
+      try {
+        const shortId = req.params.id;
+
+        const short = await storage.getShortById(shortId);
+
+        if (!short) {
+          return res.status(404).json({ message: "الشورت غير موجود" });
+        }
+
+        res.json(short);
+      } catch (error: any) {
+        console.error("Error fetching short:", error);
+        res.status(500).json({ message: "فشل في جلب الشورت" });
+      }
+    }
+  );
+
+  // 14. DELETE /api/admin/shorts/:id - Delete short (soft delete)
   app.delete("/api/admin/shorts/:id",
     requireAuth,
     requireAnyPermission('shorts:delete', 'shorts:manage'),
