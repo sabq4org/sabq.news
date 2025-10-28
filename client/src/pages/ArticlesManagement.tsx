@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,12 +26,29 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatusCards } from "@/components/admin/StatusCards";
 import { BreakingSwitch } from "@/components/admin/BreakingSwitch";
 import { RowActions } from "@/components/admin/RowActions";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Article = {
   id: string;
@@ -66,6 +83,37 @@ type Category = {
   nameEn: string;
 };
 
+function SortableRow({ article, children }: { article: Article; children: React.ReactNode }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: article.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className="border-b border-border hover:bg-muted/30"
+      data-testid={`row-article-${article.id}`}
+    >
+      <td className="py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-${article.id}`} />
+      </td>
+      {children}
+    </tr>
+  );
+}
+
 export default function ArticlesManagement() {
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
@@ -81,6 +129,17 @@ export default function ArticlesManagement() {
   // State for bulk selection
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+
+  // State for drag and drop
+  const [localArticles, setLocalArticles] = useState<Article[]>([]);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch metrics
   const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
@@ -123,6 +182,11 @@ export default function ArticlesManagement() {
     queryKey: ["/api/categories"],
     enabled: !!user,
   });
+
+  // Update local articles when articles change
+  useEffect(() => {
+    setLocalArticles(articles);
+  }, [articles]);
 
   // Publish mutation
   const publishMutation = useMutation({
@@ -318,6 +382,32 @@ export default function ArticlesManagement() {
     },
   });
 
+  // Update articles order mutation
+  const updateOrderMutation = useMutation({
+    mutationFn: async (articleOrders: Array<{ id: string; displayOrder: number }>) => {
+      return await apiRequest("/api/admin/articles/update-order", {
+        method: "POST",
+        body: JSON.stringify({ articleOrders }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث ترتيب المقالات بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل تحديث الترتيب",
+        variant: "destructive",
+      });
+      setLocalArticles(articles);
+    },
+  });
+
   // Selection handlers
   const toggleArticleSelection = (articleId: string) => {
     setSelectedArticles(prev => {
@@ -351,6 +441,28 @@ export default function ArticlesManagement() {
 
   const handleEdit = (article: Article) => {
     setLocation(`/dashboard/articles/${article.id}`);
+  };
+
+  // Drag end handler
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = localArticles.findIndex((article) => article.id === active.id);
+    const newIndex = localArticles.findIndex((article) => article.id === over.id);
+
+    const newArticles = arrayMove(localArticles, oldIndex, newIndex);
+    setLocalArticles(newArticles);
+
+    const articleOrders = newArticles.map((article, index) => ({
+      id: article.id,
+      displayOrder: newArticles.length - index,
+    }));
+
+    updateOrderMutation.mutate(articleOrders);
   };
 
   const getStatusBadge = (status: string) => {
@@ -515,88 +627,96 @@ export default function ArticlesManagement() {
               <div className="p-8 text-center text-muted-foreground">
                 جاري التحميل...
               </div>
-            ) : articles.length === 0 ? (
+            ) : localArticles.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 لا توجد مقالات
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50 border-b border-border">
-                    <tr>
-                      <th className="text-center py-3 px-4 w-12">
-                        <Checkbox
-                          checked={articles.length > 0 && selectedArticles.size === articles.length}
-                          onCheckedChange={toggleSelectAll}
-                          data-testid="checkbox-select-all"
-                        />
-                      </th>
-                      <th className="text-right py-3 px-4 font-medium">العنوان</th>
-                      <th className="text-right py-3 px-4 font-medium">الكاتب</th>
-                      <th className="text-right py-3 px-4 font-medium">التصنيف</th>
-                      <th className="text-right py-3 px-4 font-medium">عاجل</th>
-                      <th className="text-right py-3 px-4 font-medium">المشاهدات</th>
-                      <th className="text-right py-3 px-4 font-medium">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {articles.map((article) => (
-                      <tr
-                        key={article.id}
-                        className="border-b border-border hover:bg-muted/30"
-                        data-testid={`row-article-${article.id}`}
-                      >
-                        <td className="py-3 px-4 text-center">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <table className="w-full">
+                    <thead className="bg-muted/50 border-b border-border">
+                      <tr>
+                        <th className="text-center py-3 px-2 w-10" data-testid="header-drag"></th>
+                        <th className="text-center py-3 px-4 w-12">
                           <Checkbox
-                            checked={selectedArticles.has(article.id)}
-                            onCheckedChange={() => toggleArticleSelection(article.id)}
-                            data-testid={`checkbox-article-${article.id}`}
+                            checked={localArticles.length > 0 && selectedArticles.size === localArticles.length}
+                            onCheckedChange={toggleSelectAll}
+                            data-testid="checkbox-select-all"
                           />
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="font-medium max-w-md truncate inline-block">{article.title}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={article.author?.profileImageUrl || ""} />
-                              <AvatarFallback className="text-xs">
-                                {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              {article.author?.firstName || article.author?.email}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm">{article.category?.nameAr || "-"}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <BreakingSwitch 
-                            articleId={article.id}
-                            initialValue={article.newsType === "breaking"}
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <ViewsCount 
-                            views={article.views}
-                            iconClassName="h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <RowActions 
-                            articleId={article.id}
-                            status={article.status}
-                            onEdit={() => handleEdit(article)}
-                            isFeatured={article.isFeatured}
-                            onDelete={() => setDeletingArticle(article)}
-                          />
-                        </td>
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium">العنوان</th>
+                        <th className="text-right py-3 px-4 font-medium">الكاتب</th>
+                        <th className="text-right py-3 px-4 font-medium">التصنيف</th>
+                        <th className="text-right py-3 px-4 font-medium">عاجل</th>
+                        <th className="text-right py-3 px-4 font-medium">المشاهدات</th>
+                        <th className="text-right py-3 px-4 font-medium">الإجراءات</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      <SortableContext
+                        items={localArticles.map(a => a.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {localArticles.map((article) => (
+                          <SortableRow key={article.id} article={article}>
+                            <td className="py-3 px-4 text-center">
+                              <Checkbox
+                                checked={selectedArticles.has(article.id)}
+                                onCheckedChange={() => toggleArticleSelection(article.id)}
+                                data-testid={`checkbox-article-${article.id}`}
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-medium max-w-md truncate inline-block">{article.title}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={article.author?.profileImageUrl || ""} />
+                                  <AvatarFallback className="text-xs">
+                                    {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">
+                                  {article.author?.firstName || article.author?.email}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm">{article.category?.nameAr || "-"}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <BreakingSwitch 
+                                articleId={article.id}
+                                initialValue={article.newsType === "breaking"}
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <ViewsCount 
+                                views={article.views}
+                                iconClassName="h-4 w-4"
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <RowActions 
+                                articleId={article.id}
+                                status={article.status}
+                                onEdit={() => handleEdit(article)}
+                                isFeatured={article.isFeatured}
+                                onDelete={() => setDeletingArticle(article)}
+                              />
+                            </td>
+                          </SortableRow>
+                        ))}
+                      </SortableContext>
+                    </tbody>
+                  </table>
+                </DndContext>
               </div>
             )}
           </div>
