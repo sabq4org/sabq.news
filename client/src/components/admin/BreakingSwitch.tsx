@@ -45,7 +45,7 @@ export function BreakingSwitch({ articleId, initialValue }: BreakingSwitchProps)
     <Switch
       checked={isBreaking}
       onCheckedChange={handleToggle}
-      className={`h-5 w-9 ${isBreaking ? "data-[state=checked]:bg-red-600" : ""}`}
+      className="h-5 w-9 data-[state=checked]:bg-red-600 dark:data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
       data-testid={`switch-breaking-${articleId}`}
     />
   );
