@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
+import { ShortsHomeBlock } from "@/components/ShortsHomeBlock";
 import { TrendingKeywords } from "@/components/TrendingKeywords";
 import { FollowedKeywordsBlock } from "@/components/FollowedKeywordsBlock";
 import { SmartSummaryBlock } from "@/components/SmartSummaryBlock";
@@ -242,6 +243,11 @@ export default function Home() {
             {/* AI Insights Block (مؤشرات الأسبوع) */}
             <div className="scroll-fade-in">
               <AIInsightsBlock />
+            </div>
+
+            {/* Shorts Home Block (سبق قصير) */}
+            <div className="scroll-fade-in">
+              <ShortsHomeBlock />
             </div>
           </div>
         </div>

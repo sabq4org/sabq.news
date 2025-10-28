@@ -89,6 +89,7 @@ import AnnouncementAnalytics from "@/pages/AnnouncementAnalytics";
 import AIPublisher from "@/pages/AIPublisher";
 import AIPolicy from "@/pages/AIPolicy";
 import ShortsPage from "@/pages/ShortsPage";
+import ShortsManagement from "@/pages/ShortsManagement";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -175,6 +176,11 @@ function Router() {
       <Route path="/dashboard/announcements/:id/versions" component={AnnouncementVersions} />
       <Route path="/dashboard/announcements/:id/analytics" component={AnnouncementAnalytics} />
       <Route path="/dashboard/announcements/:id" component={AnnouncementDetail} />
+      
+      {/* Shorts dashboard */}
+      <Route path="/dashboard/shorts" component={ShortsManagement} />
+      <Route path="/dashboard/shorts/new" component={ComingSoon} />
+      <Route path="/dashboard/shorts/:id" component={ComingSoon} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
