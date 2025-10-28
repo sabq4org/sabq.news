@@ -90,6 +90,7 @@ import AIPublisher from "@/pages/AIPublisher";
 import AIPolicy from "@/pages/AIPolicy";
 import ShortsPage from "@/pages/ShortsPage";
 import ShortsManagement from "@/pages/ShortsManagement";
+import ShortsEditor from "@/pages/ShortsEditor";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -179,8 +180,8 @@ function Router() {
       
       {/* Shorts dashboard */}
       <Route path="/dashboard/shorts" component={ShortsManagement} />
-      <Route path="/dashboard/shorts/new" component={ComingSoon} />
-      <Route path="/dashboard/shorts/:id" component={ComingSoon} />
+      <Route path="/dashboard/shorts/new" component={ShortsEditor} />
+      <Route path="/dashboard/shorts/:id" component={ShortsEditor} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
