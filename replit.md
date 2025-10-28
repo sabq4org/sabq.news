@@ -27,8 +27,11 @@ The frontend utilizes Next.js 15, React 18, Vite, Wouter for routing, and TypeSc
   - All component-level `staleTime` and `refetchInterval` overrides removed to ensure consistent zero-cache behavior
   - HTTP cache headers: All API endpoints use `no-store, no-cache, must-revalidate` with `Pragma: no-cache` and `Expires: 0` to prevent browser/proxy caching
 
-**Article Ordering System:**
-- **Display Order Priority:** All homepage queries (hero, breaking, editor picks, deep dives, all published) prioritize `displayOrder` (DESC) before fallback sorting criteria (publishedAt, views, createdAt)
+**Article & Shorts Ordering System:**
+- **Admin Dashboard:** Articles and shorts management pages (`/api/admin/articles`, `/api/admin/shorts`) sort by `createdAt DESC` to show newest items first
+- **Homepage Display:** All public-facing queries (hero, breaking, editor picks, deep dives, all published, shorts feed) prioritize `displayOrder DESC` before fallback sorting criteria (publishedAt, views, createdAt)
+- **Auto-Assignment:** New articles/shorts receive `displayOrder = Math.floor(Date.now() / 1000)` (Unix timestamp in seconds) if not explicitly set, ensuring they appear first on homepage
+- **Manual Override:** Editors can manually set `displayOrder` during creation/editing to customize homepage positioning
 - **Drag & Drop Persistence:** Admin panel article reordering uses batch update to `display_order` column, with immediate cache invalidation and server refetch
 - **Mutation Pattern:** `PUT /api/admin/articles/order` accepts `{ articleIds: string[] }` and assigns displayOrder based on array position (first = highest value)
 
