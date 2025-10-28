@@ -3761,7 +3761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update articles order
-  app.post("/api/admin/articles/update-order", requireAuth, requirePermission("articles.edit"), async (req: any, res) => {
+  app.post("/api/admin/articles/update-order", requireAuth, requirePermission("articles.edit_any"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
