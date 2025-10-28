@@ -108,6 +108,7 @@ export const articles = pgTable("articles", {
   aiGenerated: boolean("ai_generated").default(false),
   isFeatured: boolean("is_featured").default(false).notNull(),
   views: integer("views").default(0).notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
   seo: jsonb("seo").$type<{
     metaTitle?: string;
     metaDescription?: string;

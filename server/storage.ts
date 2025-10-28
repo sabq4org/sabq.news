@@ -1492,7 +1492,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
 
     return results.map((r) => ({
       ...r.article,
@@ -1686,6 +1686,15 @@ export class DatabaseStorage implements IStorage {
       .update(articles)
       .set({ views: sql`${articles.views} + 1` })
       .where(eq(articles.id, id));
+  }
+
+  async updateArticlesOrder(articleOrders: Array<{ id: string; displayOrder: number }>): Promise<void> {
+    for (const { id, displayOrder } of articleOrders) {
+      await db
+        .update(articles)
+        .set({ displayOrder, updatedAt: new Date() })
+        .where(eq(articles.id, id));
+    }
   }
 
   async getFeaturedArticle(userId?: string): Promise<ArticleWithDetails | undefined> {

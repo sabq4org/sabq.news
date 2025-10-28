@@ -3760,6 +3760,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update articles order
+  app.post("/api/admin/articles/update-order", requireAuth, requirePermission("articles.edit"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleOrders } = req.body;
+
+      if (!Array.isArray(articleOrders) || articleOrders.length === 0) {
+        return res.status(400).json({ message: "Article orders are required" });
+      }
+
+      await storage.updateArticlesOrder(articleOrders);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "articles_reordered",
+        entityType: "article",
+        entityId: "bulk",
+        newValue: { count: articleOrders.length },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Successfully updated article order" });
+    } catch (error) {
+      console.error("Error updating article order:", error);
+      res.status(500).json({ message: "Failed to update article order" });
+    }
+  });
+
   // ============================================================
   // ADMIN ACTIVITY LOGS ROUTES
   // ============================================================
