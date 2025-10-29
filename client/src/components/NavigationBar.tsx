@@ -67,8 +67,7 @@ export function NavigationBar() {
                 {smartCategories.map((category) => (
                   <Link key={category.id} href={`/category/${category.slug}`}>
                     <Badge
-                      variant="default"
-                      className="cursor-pointer hover-elevate active-elevate-2 h-8 sm:min-h-8 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition-all duration-200 whitespace-nowrap"
+                      className="cursor-pointer hover-elevate active-elevate-2 h-8 sm:min-h-8 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition-all duration-200 whitespace-nowrap bg-gradient-to-l from-purple-500/90 to-pink-500/90 dark:from-purple-500/80 dark:to-pink-500/80 text-white border-0 shadow-sm"
                       data-testid={`badge-nav-smart-${category.slug}`}
                     >
                       {category.icon && <span className="text-sm sm:text-base">{category.icon}</span>}
