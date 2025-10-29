@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,7 @@ export default function QuadCategoriesBlockSettings() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: settings || {
+    defaultValues: {
       config: {
         sections: [
           { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
@@ -72,9 +73,11 @@ export default function QuadCategoriesBlockSettings() {
   });
 
   // Update form when settings load
-  if (settings && !form.formState.isDirty) {
-    form.reset(settings);
-  }
+  useEffect(() => {
+    if (settings && !form.formState.isDirty) {
+      form.reset(settings);
+    }
+  }, [settings]);
 
   // Save mutation
   const saveMutation = useMutation({
