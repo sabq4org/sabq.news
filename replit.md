@@ -69,6 +69,12 @@ Core data models encompass Users, Articles, Categories, Comments, Reactions, Boo
 ### Mobile App Support
 Native mobile app support is achieved via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens. The design is mobile-optimized with RTL support, safe area, and touch target optimization, utilizing Capacitor plugins for essential functionalities.
 
+**Mobile Responsive Design Optimizations (2025-10-29):**
+- **NavigationBar Mobile**: Accessible badges (h-8/32px vs h-9/36px desktop), reduced padding (px-2.5 vs px-4), smaller text (text-xs vs text-sm), category labels preserved for recognition
+- **AI Article Cards Mobile**: 50% smaller images (aspect-2/1 vs 16/9), standard accessible buttons (size="sm"), 25% reduced padding (p-3 vs p-4), readable titles (text-base vs text-lg), bookmark/comments hidden on mobile, maintained 32px+ touch targets
+- **Breakpoints**: Mobile-first (<640px), sm:640px+ for tablet/desktop transitions
+- **Accessibility**: All interactive elements maintain minimum 32px touch targets, text minimum 12px, labels preserved for screen readers
+
 ## External Dependencies
 
 **Authentication & Identity**

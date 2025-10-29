@@ -35,12 +35,12 @@ export function NavigationBar() {
         {coreCategories.length > 0 && (
           <div className="border-b border-border/50">
             <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex gap-1.5 sm:gap-2 py-2.5 sm:py-3" dir="rtl">
+              <div className="flex gap-1.5 sm:gap-2 py-2 sm:py-2.5" dir="rtl">
                 {coreCategories.map((category) => (
                   <Link key={category.id} href={`/category/${category.slug}`}>
                     <Badge
                       variant="secondary"
-                      className="cursor-pointer hover-elevate active-elevate-2 min-h-9 px-3 sm:px-4 py-2 text-sm flex items-center gap-1.5 transition-all duration-200 whitespace-nowrap"
+                      className="cursor-pointer hover-elevate active-elevate-2 h-8 sm:min-h-9 px-2.5 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition-all duration-200 whitespace-nowrap"
                       data-testid={`badge-nav-core-${category.slug}`}
                     >
                       {category.icon && <span className="text-base sm:text-lg">{category.icon}</span>}
@@ -68,7 +68,7 @@ export function NavigationBar() {
                   <Link key={category.id} href={`/category/${category.slug}`}>
                     <Badge
                       variant="default"
-                      className="cursor-pointer hover-elevate active-elevate-2 min-h-8 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5 transition-all duration-200 whitespace-nowrap"
+                      className="cursor-pointer hover-elevate active-elevate-2 h-8 sm:min-h-8 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition-all duration-200 whitespace-nowrap"
                       data-testid={`badge-nav-smart-${category.slug}`}
                     >
                       {category.icon && <span className="text-sm sm:text-base">{category.icon}</span>}

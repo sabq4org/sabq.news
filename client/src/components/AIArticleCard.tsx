@@ -138,28 +138,23 @@ export function AIArticleCard({
     );
   }
 
-  // Grid variant (default) - AI Enhanced
+  // Grid variant (default) - AI Enhanced with Mobile Optimization
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
       whileHover={{ scale: 1.02 }}
+      className="h-full"
     >
       <Card 
-        className="group overflow-hidden border-2 border-primary/20 dark:border-primary/10 relative hover-elevate active-elevate-2 h-full bg-gradient-to-br from-primary/5 via-background to-accent/5" 
+        className="group border-2 border-primary/20 dark:border-primary/10 relative h-full bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col md:flex-col" 
         data-testid={`card-ai-article-${article.id}`}
       >
-        {/* Animated AI Gradient Border on Hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[shimmer_3s_linear_infinite]" style={{ padding: '2px' }}>
-            <div className="absolute inset-[2px] bg-card dark:bg-background rounded-lg" />
-          </div>
-        </div>
-
-        <div className="relative z-10">
+        <div className="relative z-10 flex flex-col md:flex-col h-full">
           <Link href={`/article/${article.slug}`}>
-            <div className="relative aspect-[16/9] overflow-hidden">
+            {/* Mobile: Smaller Image | Desktop: Standard */}
+            <div className="relative aspect-[2/1] sm:aspect-[16/9] overflow-hidden">
               {article.imageUrl ? (
                 <img
                   src={article.imageUrl}
@@ -172,31 +167,30 @@ export function AIArticleCard({
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               
-              {/* AI Badge */}
+              {/* Compact AI Badge for Mobile */}
               <Badge 
-                className="absolute top-3 right-3 bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 gap-1 shadow-lg" 
+                className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 gap-1 shadow-lg text-xs px-2" 
                 data-testid={`badge-ai-${article.id}`}
               >
                 <Sparkles className="h-3 w-3" />
-                <span className="text-xs">AI</span>
+                <span>AI</span>
               </Badge>
 
-              {/* Reason Badge */}
+              {/* Compact Reason Badge */}
               {reasonBadge && (
                 <Badge 
-                  className={`absolute top-3 left-3 ${reasonBadge.color} border gap-1 backdrop-blur-sm`}
+                  className={`absolute top-2 sm:top-3 left-2 sm:left-3 ${reasonBadge.color} border gap-1 backdrop-blur-sm text-xs px-2`}
                   data-testid={`badge-reason-${article.id}`}
                 >
-                  {reasonBadge.icon}
-                  <span className="text-xs">{reasonBadge.label}</span>
+                  <span>{reasonBadge.label}</span>
                 </Badge>
               )}
             </div>
           </Link>
 
-          <CardContent className="p-4 relative">
-            {/* AI Score Bar */}
-            <div className="mb-3 flex items-center gap-2">
+          <CardContent className="p-3 sm:p-4 relative flex-1 flex flex-col">
+            {/* Compact AI Score Bar */}
+            <div className="mb-2 sm:mb-3 flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
@@ -212,13 +206,13 @@ export function AIArticleCard({
             </div>
 
             <Link href={`/article/${article.slug}`}>
-              <h3 className="text-lg font-semibold mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
                 {article.title}
               </h3>
             </Link>
 
             {article.storyId && article.storyTitle && (
-              <div className="mb-3" onClick={(e) => e.preventDefault()}>
+              <div className="mb-2 sm:mb-3 hidden sm:block" onClick={(e) => e.preventDefault()}>
                 <FollowStoryButton 
                   storyId={article.storyId} 
                   storyTitle={article.storyTitle}
@@ -226,12 +220,12 @@ export function AIArticleCard({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-3 border-t border-primary/10">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-primary/10 mt-auto">
+              <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
                 {timeAgo && (
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {timeAgo}
+                    <span>{timeAgo}</span>
                   </span>
                 )}
                 <ViewsCount 
@@ -244,7 +238,6 @@ export function AIArticleCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover-elevate"
                   onClick={(e) => {
                     e.preventDefault();
                     onReact?.(article.id);
@@ -257,7 +250,7 @@ export function AIArticleCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover-elevate"
+                  className="max-sm:hidden"
                   onClick={(e) => {
                     e.preventDefault();
                     onBookmark?.(article.id);
@@ -271,7 +264,7 @@ export function AIArticleCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover-elevate"
+                    className="max-sm:hidden"
                     onClick={(e) => e.stopPropagation()}
                     data-testid={`button-comments-${article.id}`}
                   >
