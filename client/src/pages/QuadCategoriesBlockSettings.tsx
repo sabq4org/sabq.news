@@ -3,6 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -112,32 +113,35 @@ export default function QuadCategoriesBlockSettings() {
 
   if (settingsLoading || categoriesLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-96" />
-        <div className="grid gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-64 w-full" />
-          ))}
+      <DashboardLayout>
+        <div className="container mx-auto p-6 space-y-6">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
+          <div className="grid gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-64 w-full" />
+            ))}
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   const activeCategories = categoriesData?.filter((c) => c.status === "active") || [];
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl" data-testid="quad-categories-settings-page">
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="page-title">
-            بلوك التصنيفات الرباعية
-          </h1>
-          <p className="text-muted-foreground mt-2" data-testid="page-description">
-            إعدادات عرض 4 تصنيفات في بلوك واحد على الصفحة الرئيسية
-          </p>
-        </div>
+    <DashboardLayout>
+      <div className="container mx-auto p-6 max-w-6xl" data-testid="quad-categories-settings-page">
+        <div className="space-y-6">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold" data-testid="page-title">
+              بلوك التصنيفات الرباعية
+            </h1>
+            <p className="text-muted-foreground mt-2" data-testid="page-description">
+              إعدادات عرض 4 تصنيفات في بلوك واحد على الصفحة الرئيسية
+            </p>
+          </div>
 
         <Separator />
 
@@ -410,6 +414,7 @@ export default function QuadCategoriesBlockSettings() {
           </form>
         </Form>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
