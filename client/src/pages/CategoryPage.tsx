@@ -84,26 +84,27 @@ export default function CategoryPage() {
 
       {/* Hero Section */}
       {category.heroImageUrl ? (
-        <div className="relative h-64 md:h-80 lg:h-96 overflow-hidden">
+        <div className="relative h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden">
           <img
             src={category.heroImageUrl}
             alt={category.nameAr}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          {/* Dark overlay for both themes - stronger on light mode */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 dark:from-black/80 dark:via-black/40 dark:to-transparent" />
           <div className="absolute inset-0 flex items-end">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 {category.icon && (
-                  <span className="text-4xl">{category.icon}</span>
+                  <span className="text-3xl sm:text-4xl">{category.icon}</span>
                 )}
-                <h1 className="text-4xl md:text-5xl font-bold text-white">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
                   {category.nameAr}
                 </h1>
                 {getCategoryTypeBadge(category.type) && (
                   <Badge 
                     variant={getCategoryTypeBadge(category.type)!.variant}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
                     data-testid="badge-category-type"
                   >
                     {getCategoryTypeBadge(category.type)!.icon}
@@ -112,7 +113,7 @@ export default function CategoryPage() {
                 )}
               </div>
               {category.description && (
-                <p className="text-lg text-white/90 max-w-3xl mb-3">
+                <p className="text-sm sm:text-base md:text-lg text-white/95 max-w-3xl mb-2 sm:mb-3 leading-relaxed">
                   {category.description}
                 </p>
               )}
@@ -120,33 +121,33 @@ export default function CategoryPage() {
               {(category.type === "dynamic" || category.type === "smart" || category.type === "seasonal") && (
                 <div className="flex flex-wrap gap-2">
                   {category.features?.realtime && (
-                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-realtime">
-                      <Flame className="h-3 w-3 mr-1" />
-                      مباشر
+                    <Badge variant="secondary" className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-feature-realtime">
+                      <Flame className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                      <span className="text-sm">مباشر</span>
                     </Badge>
                   )}
                   {category.features?.trending && (
-                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-trending">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      رائج
+                    <Badge variant="secondary" className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-feature-trending">
+                      <TrendingUp className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                      <span className="text-sm">رائج</span>
                     </Badge>
                   )}
                   {category.features?.ai_powered && (
-                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-ai">
-                      <Bot className="h-3 w-3 mr-1" />
-                      ذكاء اصطناعي
+                    <Badge variant="secondary" className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-feature-ai">
+                      <Bot className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                      <span className="text-sm">ذكاء اصطناعي</span>
                     </Badge>
                   )}
                   {category.features?.breaking_news && (
-                    <Badge variant="default" className="bg-red-500/90 text-white backdrop-blur-sm" data-testid="badge-feature-breaking">
-                      <Zap className="h-3 w-3 mr-1" />
-                      عاجل
+                    <Badge variant="default" className="bg-red-500/95 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-feature-breaking">
+                      <Zap className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                      <span className="text-sm">عاجل</span>
                     </Badge>
                   )}
                   {category.type === "dynamic" && category.updateInterval && (
-                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-update-interval">
-                      <Clock className="h-3 w-3 mr-1" />
-                      يتحدث كل {formatUpdateInterval(category.updateInterval)}
+                    <Badge variant="secondary" className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-update-interval">
+                      <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                      <span className="text-sm">يتحدث كل {formatUpdateInterval(category.updateInterval)}</span>
                     </Badge>
                   )}
                 </div>
@@ -155,19 +156,19 @@ export default function CategoryPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-b">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5 border-b">
+          <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               {category.icon && (
-                <span className="text-4xl">{category.icon}</span>
+                <span className="text-3xl sm:text-4xl">{category.icon}</span>
               )}
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
                 {category.nameAr}
               </h1>
               {getCategoryTypeBadge(category.type) && (
                 <Badge 
                   variant={getCategoryTypeBadge(category.type)!.variant}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
                   data-testid="badge-category-type"
                 >
                   {getCategoryTypeBadge(category.type)!.icon}
@@ -176,7 +177,7 @@ export default function CategoryPage() {
               )}
             </div>
             {category.description && (
-              <p className="text-lg text-muted-foreground max-w-3xl mb-3">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mb-2 sm:mb-3 leading-relaxed">
                 {category.description}
               </p>
             )}
@@ -184,33 +185,33 @@ export default function CategoryPage() {
             {(category.type === "dynamic" || category.type === "smart" || category.type === "seasonal") && (
               <div className="flex flex-wrap gap-2">
                 {category.features?.realtime && (
-                  <Badge variant="secondary" data-testid="badge-feature-realtime">
-                    <Flame className="h-3 w-3 mr-1" />
-                    مباشر
+                  <Badge variant="secondary" className="min-h-8 px-3 py-1.5" data-testid="badge-feature-realtime">
+                    <Flame className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="text-sm">مباشر</span>
                   </Badge>
                 )}
                 {category.features?.trending && (
-                  <Badge variant="secondary" data-testid="badge-feature-trending">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    رائج
+                  <Badge variant="secondary" className="min-h-8 px-3 py-1.5" data-testid="badge-feature-trending">
+                    <TrendingUp className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="text-sm">رائج</span>
                   </Badge>
                 )}
                 {category.features?.ai_powered && (
-                  <Badge variant="secondary" data-testid="badge-feature-ai">
-                    <Bot className="h-3 w-3 mr-1" />
-                    ذكاء اصطناعي
+                  <Badge variant="secondary" className="min-h-8 px-3 py-1.5" data-testid="badge-feature-ai">
+                    <Bot className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="text-sm">ذكاء اصطناعي</span>
                   </Badge>
                 )}
                 {category.features?.breaking_news && (
-                  <Badge variant="default" className="bg-red-500 text-white" data-testid="badge-feature-breaking">
-                    <Zap className="h-3 w-3 mr-1" />
-                    عاجل
+                  <Badge variant="default" className="bg-red-600 dark:bg-red-500 text-white min-h-8 px-3 py-1.5" data-testid="badge-feature-breaking">
+                    <Zap className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="text-sm">عاجل</span>
                   </Badge>
                 )}
                 {category.type === "dynamic" && category.updateInterval && (
-                  <Badge variant="secondary" data-testid="badge-update-interval">
-                    <Clock className="h-3 w-3 mr-1" />
-                    يتحدث كل {formatUpdateInterval(category.updateInterval)}
+                  <Badge variant="secondary" className="min-h-8 px-3 py-1.5" data-testid="badge-update-interval">
+                    <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="text-sm">يتحدث كل {formatUpdateInterval(category.updateInterval)}</span>
                   </Badge>
                 )}
               </div>
@@ -220,24 +221,24 @@ export default function CategoryPage() {
       )}
 
       {/* Articles Grid */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">
+      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold">
             آخر الأخبار
             {articles.length > 0 && (
-              <Badge variant="secondary" className="mr-2">
-                {articles.length}
+              <Badge variant="secondary" className="mr-2 min-h-7 px-2.5">
+                {articles.length.toLocaleString('en-US')}
               </Badge>
             )}
           </h2>
         </div>
 
         {articlesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Card key={i}>
-                <Skeleton className="w-full h-48" />
-                <CardContent className="p-4 space-y-3">
+                <Skeleton className="w-full h-44 sm:h-48" />
+                <CardContent className="p-3 sm:p-4 space-y-3">
                   <Skeleton className="h-6 w-20" />
                   <Skeleton className="h-8 w-full" />
                   <Skeleton className="h-16 w-full" />
@@ -247,13 +248,13 @@ export default function CategoryPage() {
             ))}
           </div>
         ) : articles.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">
+          <div className="text-center py-16 sm:py-20">
+            <p className="text-muted-foreground text-base sm:text-lg">
               لا توجد مقالات في هذا التصنيف حالياً
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {articles.map((article) => (
               <Link key={article.id} href={`/article/${article.slug}`}>
                 <Card 
@@ -261,7 +262,7 @@ export default function CategoryPage() {
                   data-testid={`card-article-${article.id}`}
                 >
                   {article.imageUrl && (
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-44 sm:h-48 overflow-hidden">
                       <img
                         src={article.imageUrl}
                         alt={article.title}
@@ -270,16 +271,16 @@ export default function CategoryPage() {
                       {article.category && (
                         <Badge 
                           variant="default" 
-                          className="absolute top-3 right-3 shadow-md" 
+                          className="absolute top-2 sm:top-3 right-2 sm:right-3 shadow-md text-xs min-h-7 px-2.5" 
                           data-testid={`badge-category-${article.id}`}
                         >
                           {article.category.icon} {article.category.nameAr}
                         </Badge>
                       )}
                       {article.aiSummary && (
-                        <div className="absolute top-3 left-3">
-                          <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                            <Sparkles className="h-3 w-3 mr-1" />
+                        <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
+                          <Badge variant="secondary" className="bg-primary/90 text-primary-foreground text-xs min-h-7 px-2.5">
+                            <Sparkles className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
                             ذكاء اصطناعي
                           </Badge>
                         </div>
@@ -287,26 +288,26 @@ export default function CategoryPage() {
                     </div>
                   )}
                   
-                  <CardContent className="p-4 space-y-3">
+                  <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                     
                     <h3 
-                      className="font-bold text-lg line-clamp-2 text-foreground"
+                      className="font-bold text-base sm:text-lg line-clamp-2 text-foreground leading-snug"
                       data-testid={`text-article-title-${article.id}`}
                     >
                       {article.title}
                     </h3>
                     
                     {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {article.excerpt}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-xs text-muted-foreground pt-1 sm:pt-2">
                       {article.publishedAt && (
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>
+                          <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
+                          <span className="leading-tight">
                             {formatDistanceToNow(new Date(article.publishedAt), {
                               addSuffix: true,
                               locale: ar,
@@ -317,7 +318,7 @@ export default function CategoryPage() {
                       
                       <ViewsCount 
                         views={article.views || 0}
-                        iconClassName="h-3 w-3"
+                        iconClassName="h-3.5 w-3.5 sm:h-3 sm:w-3"
                       />
                     </div>
                   </CardContent>
