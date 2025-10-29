@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
+import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -429,6 +430,16 @@ app.use((req, res, next) => {
         } catch (error) {
           console.error("[Server] ⚠️  Error starting seasonal categories job:", error);
           console.error("[Server] Server will continue running without seasonal categories automation");
+        }
+      });
+
+      // Start Dynamic Categories Job (updates "الآن" every 5 minutes)
+      setImmediate(() => {
+        try {
+          startDynamicCategoriesJob();
+        } catch (error) {
+          console.error("[Server] ⚠️  Error starting dynamic categories job:", error);
+          console.error("[Server] Server will continue running without dynamic categories automation");
         }
       });
     });

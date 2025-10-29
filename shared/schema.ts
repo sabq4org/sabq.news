@@ -219,6 +219,19 @@ export const bookmarks = pgTable("bookmarks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Smart/Dynamic category assignments (auto-populated by AI)
+export const articleSmartCategories = pgTable("article_smart_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }).notNull(),
+  score: real("score").default(1.0).notNull(), // Relevance score (0.0-1.0) for ranking
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("idx_article_smart_category_unique").on(table.articleId, table.categoryId),
+  index("idx_article_smart_category_id").on(table.categoryId),
+  index("idx_article_smart_article_id").on(table.articleId),
+]);
+
 // User preferences for recommendations
 export const userPreferences = pgTable("user_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
