@@ -303,6 +303,14 @@ export const navConfig: NavItem[] = [
         icon: Grid3x3,
         roles: ["admin"],
       },
+      {
+        id: "quad_categories_block",
+        labelKey: "nav.quad_categories_block",
+        labelAr: "بلوك التصنيفات الرباعية",
+        path: "/dashboard/blocks/quad-categories",
+        icon: SquareStack,
+        roles: ["admin"],
+      },
     ],
   },
 
