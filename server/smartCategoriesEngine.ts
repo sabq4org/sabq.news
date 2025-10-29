@@ -56,6 +56,41 @@ function hijriToDate(hy: number, hm: number, hd: number): Date {
 }
 
 /**
+ * الحصول على آخر يوم في شهر هجري معين (29 أو 30)
+ * Get the last day of a Hijri month (29 or 30 days)
+ */
+function getHijriMonthLength(year: number, month: number): number {
+  // Try day 30 first
+  try {
+    const greg30 = toGregorian(year, month, 30);
+    const hijri30 = toHijri(greg30.gy, greg30.gm, greg30.gd);
+    
+    // If month is still the same, this month has 30 days
+    if (hijri30.hm === month && hijri30.hy === year) {
+      return 30;
+    }
+  } catch {
+    // Day 30 doesn't exist or conversion failed, try day 29
+  }
+  
+  // Try day 29
+  try {
+    const greg29 = toGregorian(year, month, 29);
+    const hijri29 = toHijri(greg29.gy, greg29.gm, greg29.gd);
+    
+    // If month is still the same, this month has 29 days
+    if (hijri29.hm === month && hijri29.hy === year) {
+      return 29;
+    }
+  } catch {
+    // Shouldn't happen, but default to 30
+  }
+  
+  // Default to 30 (shouldn't reach here)
+  return 30;
+}
+
+/**
  * التحقق من فعالية تصنيف موسمي بناءً على التاريخ الهجري
  * Check if seasonal category should be active based on Hijri date
  */
@@ -72,53 +107,49 @@ function shouldActivateHijriCategory(
     return false;
   }
   
-  // Convert current date to Hijri
+  const activateDaysBefore = seasonalRules.activateDaysBefore || 0;
+  const deactivateDaysAfter = seasonalRules.deactivateDaysAfter || 0;
+  
+  // Get current Hijri date
   const currentHijri = toHijri(
     currentDate.getFullYear(),
     currentDate.getMonth() + 1,
     currentDate.getDate()
   );
   
-  // Determine target year(s) to check
+  // Determine which years to check
   const yearsToCheck: number[] = [];
   
   if (seasonalRules.hijriYear && seasonalRules.hijriYear !== "auto") {
     // Specific year provided
     yearsToCheck.push(parseInt(seasonalRules.hijriYear, 10));
   } else {
-    // Auto mode: find nearest future occurrence
-    // Check current year, next year, and year after (covers multi-year gaps)
-    yearsToCheck.push(currentHijri.hy);
-    yearsToCheck.push(currentHijri.hy + 1);
-    yearsToCheck.push(currentHijri.hy + 2);
+    // Auto mode: check current and next 9 years (covers long gaps)
+    for (let i = 0; i < 10; i++) {
+      yearsToCheck.push(currentHijri.hy + i);
+    }
   }
-  
-  const activateDaysBefore = seasonalRules.activateDaysBefore || 0;
-  const deactivateDaysAfter = seasonalRules.deactivateDaysAfter || 0;
   
   // Check each candidate year
   for (const targetYear of yearsToCheck) {
-    // Month start in Gregorian (handles 29-30 day months correctly)
+    // Get month boundaries
     const monthStart = hijriToDate(targetYear, targetMonthNumber, 1);
+    const monthLength = getHijriMonthLength(targetYear, targetMonthNumber);
+    const monthEnd = hijriToDate(targetYear, targetMonthNumber, monthLength);
     
-    // Find the last day of this Hijri month by probing
-    // (Hijri months can be 29 or 30 days)
-    let lastDay = 30;
-    try {
-      hijriToDate(targetYear, targetMonthNumber, 30);
-    } catch {
-      lastDay = 29;
-    }
-    
-    const monthEnd = hijriToDate(targetYear, targetMonthNumber, lastDay);
-    
-    // Calculate activation window using ISO dates (precise day arithmetic)
+    // Calculate activation window with offsets
     const activationStart = addDaysToDate(monthStart, -activateDaysBefore);
     const deactivationEnd = addDaysToDate(monthEnd, deactivateDaysAfter);
     
     // Check if current date falls within this window
     if (currentDate >= activationStart && currentDate <= deactivationEnd) {
       return true;
+    }
+    
+    // If we're in auto mode and already past this occurrence's deactivation window,
+    // continue to next year. If in specific-year mode, stop here.
+    if (seasonalRules.hijriYear && seasonalRules.hijriYear !== "auto") {
+      break;
     }
   }
   
