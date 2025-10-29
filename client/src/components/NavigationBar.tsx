@@ -1,11 +1,16 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Category } from "@shared/schema";
 
 export function NavigationBar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   const { data: coreCategories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories/smart", "core", "active"],
     queryFn: async () => {
@@ -27,6 +32,33 @@ export function NavigationBar() {
       );
     },
   });
+
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          // Hide when scrolling down past 100px
+          if (currentScrollY > 100) {
+            setIsScrolled(true);
+          } else {
+            setIsScrolled(false);
+          }
+          
+          setLastScrollY(currentScrollY);
+          ticking = false;
+        });
+        
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="w-full border-b bg-background sticky top-16 z-40 shadow-sm">
@@ -56,7 +88,15 @@ export function NavigationBar() {
 
         {/* Smart Navigation - Smart/Dynamic/Seasonal Categories */}
         {smartCategories.length > 0 && (
-          <div className="bg-gradient-to-l from-primary/15 via-primary/8 to-accent/10 dark:from-primary/8 dark:via-primary/5 dark:to-accent/5">
+          <div 
+            className={cn(
+              "bg-gradient-to-l from-primary/15 via-primary/8 to-accent/10 dark:from-primary/8 dark:via-primary/5 dark:to-accent/5",
+              "transition-all duration-300 ease-in-out overflow-hidden",
+              isScrolled ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
+            )}
+            data-scrolled={isScrolled}
+            data-testid="nav-smart-categories-container"
+          >
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex gap-1.5 sm:gap-2 py-2 sm:py-2.5" dir="rtl">
                 <div className="flex items-center gap-1.5 px-2 sm:px-3 text-xs font-semibold text-foreground/70 dark:text-muted-foreground whitespace-nowrap">
