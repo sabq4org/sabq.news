@@ -141,25 +141,38 @@ async function updateNowCategory() {
       }
     });
 
-    // Clear existing assignments for this category
-    await db
-      .delete(articleSmartCategories)
-      .where(eq(articleSmartCategories.categoryId, nowCategory.id));
-
-    // Insert new assignments
+    // Insert new assignments within a transaction to avoid momentary gaps
     const assignments = Array.from(scoredArticles.values()).slice(0, 30); // Max 30 articles
 
-    if (assignments.length > 0) {
-      await db.insert(articleSmartCategories).values(
-        assignments.map(item => ({
-          articleId: item.id,
-          categoryId: nowCategory.id,
-          score: item.score,
-        }))
-      );
+    await db.transaction(async (tx) => {
+      // Clear existing assignments for this category
+      await tx
+        .delete(articleSmartCategories)
+        .where(eq(articleSmartCategories.categoryId, nowCategory.id));
 
+      // Insert new assignments
+      if (assignments.length > 0) {
+        await tx.insert(articleSmartCategories).values(
+          assignments.map(item => ({
+            articleId: item.id,
+            categoryId: nowCategory.id,
+            score: item.score,
+          }))
+        );
+      }
+    });
+
+    // Telemetry logging
+    console.log(`[Dynamic Categories] 📊 "الآن" update complete:`, {
+      breakingCount: breakingNews.length,
+      trendingCount: trendingArticles.length,
+      featuredCount: recentFeatured.length,
+      finalAssigned: assignments.length,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (assignments.length > 0) {
       console.log(`[Dynamic Categories] ✅ Updated "الآن" with ${assignments.length} articles`);
-      console.log(`[Dynamic Categories]    Breaking: ${breakingNews.length}, Trending: ${trendingArticles.length}, Featured: ${recentFeatured.length}`);
     } else {
       console.log('[Dynamic Categories] ℹ️ No articles matched criteria for "الآن"');
     }
