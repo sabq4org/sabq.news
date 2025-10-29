@@ -1,0 +1,27 @@
+[Error] Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy. (sabq.replit.app, line 1, x2)
+[Error] TypeError: a.map is not a function. (In 'a.map(A=>i.jsx(ct,{href:`/article/${A.slug}`,children:i.jsxs(ne,{className:"group hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden","data-testid":`card-article-${A.id}`,children:[A.imageUrl&&i.jsxs("div",{className:"relative h-48 overflow-hidden",children:[i.jsx("img",{src:A.imageUrl,alt:A.title,className:"w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"}),A.category&&i.jsxs(Me,{variant:"default",className:"absolute top-3 right-3 shadow-md","data-testid":`badge-category-${A.id}`,children:[A.category.icon," ",A.category.nameAr]}),A.aiSummary&&i.jsx("div",{className:"absolute top-3 left-3",children:i.jsxs(Me,{variant:"secondary",className:"bg-primary/90 text-primary-foreground",children:[i.jsx(jn,{className:"h-3 w-3 mr-1"}),"ذكاء اصطناعي"]})})]}),i.jsxs(ae,{className:"p-4 space-y-3",children:[i.jsx("h3",{className:"font-bold text-lg line-clamp-2 text-foreground","data-testid":`text-article-title-${A.id}`,children:A.title}),A.excerpt&&i.jsx("p",{className:"text-sm text-muted-foreground line-clamp-2",children:A.excerpt}),i.jsxs("div",{className:"flex items-center gap-4 text-xs text-muted-foreground pt-2",children:[A.publishedAt&&i.jsxs("div",{className:"flex items-center gap-1",children:[i.jsx(ur,{className:"h-3 w-3"}),i.jsx("span",{children:Wr(new Date(A.publishedAt),{addSuffix:!0,locale:tr})})]}),i.jsx(Ql,{views:A.views||0,iconClassName:"h-3 w-3"})]})]})]})},A.id))', 'a.map' is undefined)
+jLt — index-BgqtvMHf.js:8005:19372
+d0e — index-BgqtvMHf.js:38:17156
+hfe — index-BgqtvMHf.js:40:3173
+oPe — index-BgqtvMHf.js:40:40152
+yot — index-BgqtvMHf.js:40:40075
+Hee — index-BgqtvMHf.js:40:39922
+kfe — index-BgqtvMHf.js:40:36235
+Jwe — index-BgqtvMHf.js:40:37049
+Lg — index-BgqtvMHf.js:38:3324
+(anonymous function) — index-BgqtvMHf.js:40:34534
+
+	ffe (index-BgqtvMHf.js:40:169)
+	(anonymous function) (index-BgqtvMHf.js:40:398)
+	Twe (index-BgqtvMHf.js:38:15668)
+	Gwe (index-BgqtvMHf.js:40:32300)
+	rPe (index-BgqtvMHf.js:40:31715)
+	Aot (index-BgqtvMHf.js:40:31259)
+	vot (index-BgqtvMHf.js:40:41302)
+	x2 (index-BgqtvMHf.js:40:40646)
+	Jwe (index-BgqtvMHf.js:40:37197)
+	Lg (index-BgqtvMHf.js:38:3324)
+	(anonymous function) (index-BgqtvMHf.js:40:34534)
+[Error] TypeError: a.map is not a function. (In 'a.map(A=>i.jsx(ct,{href:`/article/${A.slug}`,children:i.jsxs(ne,{className:"group hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden","data-testid":`card-article-${A.id}`,children:[A.imageUrl&&i.jsxs("div",{className:"relative h-48 overflow-hidden",children:[i.jsx("img",{src:A.imageUrl,alt:A.title,className:"w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"}),A.category&&i.jsxs(Me,{variant:"default",className:"absolute top-3 right-3 shadow-md","data-testid":`badge-category-${A.id}`,children:[A.category.icon," ",A.category.nameAr]}),A.aiSummary&&i.jsx("div",{className:"absolute top-3 left-3",children:i.jsxs(Me,{variant:"secondary",className:"bg-primary/90 text-primary-foreground",children:[i.jsx(jn,{className:"h-3 w-3 mr-1"}),"ذكاء اصطناعي"]})})]}),i.jsxs(ae,{className:"p-4 space-y-3",children:[i.jsx("h3",{className:"font-bold text-lg line-clamp-2 text-foreground","data-testid":`text-article-title-${A.id}`,children:A.title}),A.excerpt&&i.jsx("p",{className:"text-sm text-muted-foreground line-clamp-2",children:A.excerpt}),i.jsxs("div",{className:"flex items-center gap-4 text-xs text-muted-foreground pt-2",children:[A.publishedAt&&i.jsxs("div",{className:"flex items-center gap-1",children:[i.jsx(ur,{className:"h-3 w-3"}),i.jsx("span",{children:Wr(new Date(A.publishedAt),{addSuffix:!0,locale:tr})})]}),i.jsx(Ql,{views:A.views||0,iconClassName:"h-3 w-3"})]})]})]})},A.id))', 'a.map' is undefined)
+	Lg (index-BgqtvMHf.js:38:3418)
+	(anonymous function) (index-BgqtvMHf.js:40:34534)
