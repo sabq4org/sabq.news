@@ -4,12 +4,34 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Sparkles } from "lucide-react";
+import { Clock, Sparkles, Flame, Brain, Calendar, Zap, TrendingUp, Bot } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Helper function to get category type badge
+function getCategoryTypeBadge(type?: string) {
+  switch (type) {
+    case "dynamic":
+      return { label: "ديناميكي", icon: <Zap className="h-3 w-3" />, variant: "default" as const };
+    case "smart":
+      return { label: "ذكي", icon: <Brain className="h-3 w-3" />, variant: "default" as const };
+    case "seasonal":
+      return { label: "موسمي", icon: <Calendar className="h-3 w-3" />, variant: "secondary" as const };
+    default:
+      return null;
+  }
+}
+
+// Helper function to format update interval
+function formatUpdateInterval(seconds?: number) {
+  if (!seconds) return null;
+  if (seconds < 60) return `${seconds} ثانية`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes} دقيقة`;
+}
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -78,11 +100,56 @@ export default function CategoryPage() {
                 <h1 className="text-4xl md:text-5xl font-bold text-white">
                   {category.nameAr}
                 </h1>
+                {getCategoryTypeBadge(category.type) && (
+                  <Badge 
+                    variant={getCategoryTypeBadge(category.type)!.variant}
+                    className="flex items-center gap-1"
+                    data-testid="badge-category-type"
+                  >
+                    {getCategoryTypeBadge(category.type)!.icon}
+                    {getCategoryTypeBadge(category.type)!.label}
+                  </Badge>
+                )}
               </div>
               {category.description && (
-                <p className="text-lg text-white/90 max-w-3xl">
+                <p className="text-lg text-white/90 max-w-3xl mb-3">
                   {category.description}
                 </p>
+              )}
+              {/* Smart Category Features */}
+              {(category.type === "dynamic" || category.type === "smart" || category.type === "seasonal") && (
+                <div className="flex flex-wrap gap-2">
+                  {category.features?.realtime && (
+                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-realtime">
+                      <Flame className="h-3 w-3 mr-1" />
+                      مباشر
+                    </Badge>
+                  )}
+                  {category.features?.trending && (
+                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-trending">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      رائج
+                    </Badge>
+                  )}
+                  {category.features?.ai_powered && (
+                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-feature-ai">
+                      <Bot className="h-3 w-3 mr-1" />
+                      ذكاء اصطناعي
+                    </Badge>
+                  )}
+                  {category.features?.breaking_news && (
+                    <Badge variant="default" className="bg-red-500/90 text-white backdrop-blur-sm" data-testid="badge-feature-breaking">
+                      <Zap className="h-3 w-3 mr-1" />
+                      عاجل
+                    </Badge>
+                  )}
+                  {category.type === "dynamic" && category.updateInterval && (
+                    <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm" data-testid="badge-update-interval">
+                      <Clock className="h-3 w-3 mr-1" />
+                      يتحدث كل {formatUpdateInterval(category.updateInterval)}
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -97,11 +164,56 @@ export default function CategoryPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-foreground">
                 {category.nameAr}
               </h1>
+              {getCategoryTypeBadge(category.type) && (
+                <Badge 
+                  variant={getCategoryTypeBadge(category.type)!.variant}
+                  className="flex items-center gap-1"
+                  data-testid="badge-category-type"
+                >
+                  {getCategoryTypeBadge(category.type)!.icon}
+                  {getCategoryTypeBadge(category.type)!.label}
+                </Badge>
+              )}
             </div>
             {category.description && (
-              <p className="text-lg text-muted-foreground max-w-3xl">
+              <p className="text-lg text-muted-foreground max-w-3xl mb-3">
                 {category.description}
               </p>
+            )}
+            {/* Smart Category Features */}
+            {(category.type === "dynamic" || category.type === "smart" || category.type === "seasonal") && (
+              <div className="flex flex-wrap gap-2">
+                {category.features?.realtime && (
+                  <Badge variant="secondary" data-testid="badge-feature-realtime">
+                    <Flame className="h-3 w-3 mr-1" />
+                    مباشر
+                  </Badge>
+                )}
+                {category.features?.trending && (
+                  <Badge variant="secondary" data-testid="badge-feature-trending">
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    رائج
+                  </Badge>
+                )}
+                {category.features?.ai_powered && (
+                  <Badge variant="secondary" data-testid="badge-feature-ai">
+                    <Bot className="h-3 w-3 mr-1" />
+                    ذكاء اصطناعي
+                  </Badge>
+                )}
+                {category.features?.breaking_news && (
+                  <Badge variant="default" className="bg-red-500 text-white" data-testid="badge-feature-breaking">
+                    <Zap className="h-3 w-3 mr-1" />
+                    عاجل
+                  </Badge>
+                )}
+                {category.type === "dynamic" && category.updateInterval && (
+                  <Badge variant="secondary" data-testid="badge-update-interval">
+                    <Clock className="h-3 w-3 mr-1" />
+                    يتحدث كل {formatUpdateInterval(category.updateInterval)}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
         </div>
