@@ -34,38 +34,27 @@ export function NavigationBar() {
   });
 
   useEffect(() => {
-    let ticking = false;
-    
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          
-          // Hide when scrolling down past 100px
-          if (currentScrollY > 100) {
-            setIsScrolled(true);
-          } else {
-            setIsScrolled(false);
-          }
-          
-          setLastScrollY(currentScrollY);
-          ticking = false;
-        });
-        
-        ticking = true;
-      }
+      const currentScrollY = window.scrollY;
+      const shouldHide = currentScrollY > 100;
+      
+      setIsScrolled(shouldHide);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    // Set initial state
+    handleScroll();
+    
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <div className="w-full border-b bg-background sticky top-16 z-40 shadow-sm">
-      <div className="container mx-auto px-3 sm:px-6 lg:px-8">
-        {/* Primary Navigation - Core Categories */}
-        {coreCategories.length > 0 && (
-          <div className="border-b border-border/50">
+    <div className="w-full border-b bg-background">
+      {/* Core Categories - Always Visible & Sticky */}
+      {coreCategories.length > 0 && (
+        <div className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm">
+          <div className="container mx-auto px-3 sm:px-6 lg:px-8">
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex gap-1.5 sm:gap-2 py-2 sm:py-2.5" dir="rtl">
                 {coreCategories.map((category) => (
@@ -84,19 +73,21 @@ export function NavigationBar() {
               <ScrollBar orientation="horizontal" className="h-1.5" />
             </ScrollArea>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Smart Navigation - Smart/Dynamic/Seasonal Categories */}
-        {smartCategories.length > 0 && (
-          <div 
-            className={cn(
-              "bg-gradient-to-l from-primary/15 via-primary/8 to-accent/10 dark:from-primary/8 dark:via-primary/5 dark:to-accent/5",
-              "transition-all duration-300 ease-in-out overflow-hidden",
-              isScrolled ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
-            )}
-            data-scrolled={isScrolled}
-            data-testid="nav-smart-categories-container"
-          >
+      {/* Smart Categories - Hides on Scroll */}
+      {smartCategories.length > 0 && (
+        <div 
+          className={cn(
+            "bg-gradient-to-l from-primary/15 via-primary/8 to-accent/10 dark:from-primary/8 dark:via-primary/5 dark:to-accent/5",
+            "transition-all duration-300 ease-in-out overflow-hidden",
+            isScrolled ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
+          )}
+          data-scrolled={isScrolled}
+          data-testid="nav-smart-categories-container"
+        >
+          <div className="container mx-auto px-3 sm:px-6 lg:px-8">
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex gap-1.5 sm:gap-2 py-2 sm:py-2.5" dir="rtl">
                 <div className="flex items-center gap-1.5 px-2 sm:px-3 text-xs font-semibold text-foreground/70 dark:text-muted-foreground whitespace-nowrap">
@@ -119,8 +110,8 @@ export function NavigationBar() {
               <ScrollBar orientation="horizontal" className="h-1.5" />
             </ScrollArea>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
