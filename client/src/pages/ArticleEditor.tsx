@@ -91,9 +91,12 @@ export default function ArticleEditor() {
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: allCategories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  // Filter to show only core categories (exclude smart, dynamic, seasonal)
+  const categories = allCategories.filter(cat => cat.type === "core" || !cat.type);
 
   const { data: article } = useQuery<ArticleWithDetails>({
     queryKey: isNewArticle ? ["article-editor-new"] : ["/api/dashboard/articles", id],
