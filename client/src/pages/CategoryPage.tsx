@@ -10,6 +10,8 @@ import { Link } from "wouter";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { AIArticleCard } from "@/components/AIArticleCard";
+import { motion } from "framer-motion";
 
 // Helper function to get category type badge
 function getCategoryTypeBadge(type?: string) {
@@ -78,6 +80,9 @@ export default function CategoryPage() {
     );
   }
 
+  // Check if this is a smart category (AI-powered)
+  const isSmartCategory = category.type === "smart" || category.type === "dynamic" || category.type === "seasonal";
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} />
@@ -92,16 +97,43 @@ export default function CategoryPage() {
           />
           {/* Dark overlay for both themes - stronger on light mode */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 dark:from-black/80 dark:via-black/40 dark:to-transparent" />
+          {/* AI Gradient Overlay for Smart Categories */}
+          {isSmartCategory && (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/20 mix-blend-overlay" />
+          )}
           <div className="absolute inset-0 flex items-end">
             <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                {isSmartCategory && (
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  >
+                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </motion.div>
+                )}
                 {category.icon && (
                   <span className="text-3xl sm:text-4xl">{category.icon}</span>
                 )}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
                   {category.nameAr}
                 </h1>
-                {getCategoryTypeBadge(category.type) && (
+                {isSmartCategory ? (
+                  <Badge 
+                    className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                    data-testid="badge-category-type"
+                  >
+                    <Brain className="h-3.5 w-3.5" />
+                    اختيار ذكي
+                  </Badge>
+                ) : getCategoryTypeBadge(category.type) && (
                   <Badge 
                     variant={getCategoryTypeBadge(category.type)!.variant}
                     className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
@@ -118,7 +150,7 @@ export default function CategoryPage() {
                 </p>
               )}
               {/* Smart Category Features */}
-              {(category.type === "dynamic" || category.type === "smart" || category.type === "seasonal") && (
+              {isSmartCategory && (
                 <div className="flex flex-wrap gap-2">
                   {category.features?.realtime && (
                     <Badge variant="secondary" className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5" data-testid="badge-feature-realtime">
@@ -156,16 +188,45 @@ export default function CategoryPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5 border-b">
-          <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className={`${isSmartCategory ? 'bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 dark:from-primary/8 dark:via-accent/5 dark:to-primary/3' : 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5'} border-b relative overflow-hidden`}>
+          {/* Animated AI Grid Pattern for Smart Categories */}
+          {isSmartCategory && (
+            <div className="absolute inset-0 opacity-20 dark:opacity-10">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            </div>
+          )}
+          <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              {isSmartCategory && (
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 3
+                  }}
+                >
+                  <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                </motion.div>
+              )}
               {category.icon && (
                 <span className="text-3xl sm:text-4xl">{category.icon}</span>
               )}
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
                 {category.nameAr}
               </h1>
-              {getCategoryTypeBadge(category.type) && (
+              {isSmartCategory ? (
+                <Badge 
+                  className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                  data-testid="badge-category-type"
+                >
+                  <Brain className="h-3.5 w-3.5" />
+                  اختيار ذكي
+                </Badge>
+              ) : getCategoryTypeBadge(category.type) && (
                 <Badge 
                   variant={getCategoryTypeBadge(category.type)!.variant}
                   className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
@@ -253,7 +314,37 @@ export default function CategoryPage() {
               لا توجد مقالات في هذا التصنيف حالياً
             </p>
           </div>
+        ) : isSmartCategory ? (
+          // AI-Powered Articles Grid for Smart Categories
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {articles.map((article, index) => {
+              // Determine selection reason based on article properties
+              let selectionReason: "breaking" | "trending" | "featured" | "recommended" = "recommended";
+              if (article.newsType === "breaking") {
+                selectionReason = "breaking";
+              } else if (article.views && article.views > 500) {
+                selectionReason = "trending";
+              } else if (article.isFeatured) {
+                selectionReason = "featured";
+              }
+              
+              // Calculate AI score (simulated based on engagement)
+              const engagementScore = (article.views || 0) + (article.reactionsCount || 0) * 10 + (article.commentsCount || 0) * 15;
+              const normalizedScore = Math.min(0.95, Math.max(0.70, 0.70 + (engagementScore / 1000) * 0.25));
+              
+              return (
+                <AIArticleCard 
+                  key={article.id}
+                  article={article}
+                  aiScore={normalizedScore}
+                  selectionReason={selectionReason}
+                  variant="grid"
+                />
+              );
+            })}
+          </div>
         ) : (
+          // Standard Articles Grid for Regular Categories
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {articles.map((article) => (
               <Link key={article.id} href={`/article/${article.slug}`}>
