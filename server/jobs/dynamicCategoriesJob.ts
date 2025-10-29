@@ -85,7 +85,13 @@ async function updateNowCategory() {
         gte(articles.publishedAt, twentyFourHoursAgo)
       ))
       .groupBy(articles.id, articles.title, articles.publishedAt, articles.views)
-      .orderBy(desc(sql`engagementScore`))
+      .orderBy(desc(sql`
+        cast(
+          (${articles.views} * 1.0) + 
+          (count(distinct ${reactions.id}) * 10.0) + 
+          (count(distinct ${comments.id}) * 15.0)
+        as int)
+      `))
       .limit(20);
 
     // Get recent featured articles

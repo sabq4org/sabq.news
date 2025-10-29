@@ -92,6 +92,7 @@ import {
   shorts,
   shortAnalytics,
   quadCategoriesSettings,
+  articleSmartCategories,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -1817,11 +1818,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Category not found" });
       }
 
-      const articles = await storage.getArticles({ 
-        categoryId: category.id,
-        status: "published"
-      });
-      res.json(articles);
+      let articlesList;
+
+      // For smart/dynamic categories, use articleSmartCategories table
+      if (category.type === "dynamic" || category.type === "smart") {
+        const smartAssignments = await db
+          .select({
+            article: articles,
+            score: articleSmartCategories.score,
+          })
+          .from(articleSmartCategories)
+          .innerJoin(articles, eq(articles.id, articleSmartCategories.articleId))
+          .where(and(
+            eq(articleSmartCategories.categoryId, category.id),
+            eq(articles.status, "published")
+          ))
+          .orderBy(desc(articleSmartCategories.score), desc(articles.publishedAt));
+
+        articlesList = smartAssignments.map(item => item.article);
+      } else {
+        // For core/seasonal categories, use traditional categoryId
+        articlesList = await storage.getArticles({ 
+          categoryId: category.id,
+          status: "published"
+        });
+      }
+
+      res.json({ articles: articlesList, total: articlesList.length });
     } catch (error) {
       console.error("Error fetching category articles:", error);
       res.status(500).json({ message: "Failed to fetch articles" });
