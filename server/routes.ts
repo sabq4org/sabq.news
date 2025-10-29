@@ -24,6 +24,8 @@ import { randomUUID } from "crypto";
 import { checkUserStatus } from "./userStatusMiddleware";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 // Rate limiters for authentication and sensitive operations
 const authLimiter = rateLimit({
@@ -2063,6 +2065,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting category:", error);
       res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Seed smart categories from config (admin only, for production deployment)
+  app.post("/api/admin/categories/seed-smart", requireAuth, requireRole("admin"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      console.log("[Smart Categories Seed] 🌱 Starting smart categories seed...");
+
+      // Read smart categories config
+      const configPath = join(process.cwd(), "server", "smart-categories-config.json");
+      const configData = readFileSync(configPath, "utf-8");
+      const smartCategoriesConfig = JSON.parse(configData);
+
+      const smartCategories = smartCategoriesConfig.categories.filter(
+        (cat: any) => cat.type !== "core"
+      );
+
+      let insertedCount = 0;
+      let updatedCount = 0;
+      const results = [];
+
+      for (const categoryConfig of smartCategories) {
+        try {
+          // Check if category exists
+          const existingCategories = await storage.getAllCategories();
+          const existing = existingCategories.find((c: any) => c.slug === categoryConfig.slug);
+
+          if (existing) {
+            // Update existing category
+            await storage.updateCategory(existing.id, {
+              nameAr: categoryConfig.nameAr,
+              nameEn: categoryConfig.nameEn,
+              description: categoryConfig.description,
+              icon: categoryConfig.icon,
+              type: categoryConfig.type,
+              updateInterval: categoryConfig.updateInterval,
+              features: categoryConfig.features,
+              seasonalRules: categoryConfig.seasonalRules,
+              autoActivate: categoryConfig.autoActivate,
+              status: categoryConfig.status || "active",
+            });
+            updatedCount++;
+            results.push({ slug: categoryConfig.slug, action: "updated" });
+            console.log(`   ✓ Updated: ${categoryConfig.nameAr} (${categoryConfig.slug})`);
+          } else {
+            // Insert new category
+            const newCategory = await storage.createCategory({
+              nameAr: categoryConfig.nameAr,
+              nameEn: categoryConfig.nameEn,
+              slug: categoryConfig.slug,
+              description: categoryConfig.description,
+              icon: categoryConfig.icon,
+              type: categoryConfig.type,
+              updateInterval: categoryConfig.updateInterval,
+              features: categoryConfig.features,
+              seasonalRules: categoryConfig.seasonalRules,
+              autoActivate: categoryConfig.autoActivate,
+              status: categoryConfig.status || "active",
+            });
+            insertedCount++;
+            results.push({ slug: categoryConfig.slug, action: "inserted", id: newCategory.id });
+            console.log(`   ✓ Inserted: ${categoryConfig.nameAr} (${categoryConfig.slug})`);
+          }
+        } catch (error) {
+          console.error(`   ✗ Error processing ${categoryConfig.slug}:`, error);
+          results.push({ slug: categoryConfig.slug, action: "error", error: String(error) });
+        }
+      }
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "seeded",
+        entityType: "category",
+        entityId: "bulk",
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason: `Seeded ${insertedCount} new and updated ${updatedCount} existing smart categories (total: ${smartCategories.length})`,
+        },
+      });
+
+      console.log(`[Smart Categories Seed] ✅ Completed: ${insertedCount} inserted, ${updatedCount} updated`);
+
+      res.json({
+        success: true,
+        message: `تم إضافة/تحديث ${insertedCount + updatedCount} تصنيف ذكي بنجاح`,
+        inserted: insertedCount,
+        updated: updatedCount,
+        total: smartCategories.length,
+        results,
+      });
+    } catch (error) {
+      console.error("[Smart Categories Seed] Error:", error);
+      res.status(500).json({ message: "فشل في تحديث التصنيفات الذكية" });
     }
   });
 
