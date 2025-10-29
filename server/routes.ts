@@ -90,6 +90,7 @@ import {
   audioNewsletterListens,
   shorts,
   shortAnalytics,
+  quadCategoriesSettings,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -144,6 +145,7 @@ import {
   insertShortSchema,
   updateShortSchema,
   insertShortAnalyticSchema,
+  insertQuadCategoriesSettingsSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -12215,6 +12217,303 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /openapi.json - OpenAPI 3.0 specification
   app.get("/openapi.json", (req, res) => {
     res.sendFile("openapi.json", { root: "./public" });
+  });
+
+  // ==================== Quad Categories Block APIs ====================
+  
+  // GET /api/blocks/quad-categories - Get quad categories block data for frontend
+  app.get("/api/blocks/quad-categories", async (req, res) => {
+    try {
+      // Get active settings
+      const [settings] = await db
+        .select()
+        .from(quadCategoriesSettings)
+        .where(eq(quadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        return res.json({ items: [] });
+      }
+
+      const config = settings.config;
+      const items = [];
+
+      // Process each section
+      for (const section of config.sections) {
+        const category = await db
+          .select()
+          .from(categories)
+          .where(and(
+            eq(categories.slug, section.categorySlug),
+            eq(categories.status, "active")
+          ))
+          .limit(1);
+
+        if (!category.length) continue;
+
+        const cat = category[0];
+
+        // Calculate stats based on statType
+        let stats: { label: string; value: number; trend?: string } = { label: "", value: 0 };
+        
+        if (section.statType === "dailyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(articles)
+            .where(and(
+              eq(articles.categoryId, cat.id),
+              eq(articles.status, "published"),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            ));
+          stats = { label: "أخبار اليوم", value: count[0]?.count || 0 };
+        } else if (section.statType === "weeklyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(articles)
+            .where(and(
+              eq(articles.categoryId, cat.id),
+              eq(articles.status, "published"),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '7 days'`)
+            ));
+          stats = { label: "هذا الأسبوع", value: count[0]?.count || 0 };
+        } else if (section.statType === "totalViews") {
+          const sum = await db
+            .select({ total: sql<number>`COALESCE(SUM(${articles.views}), 0)::int` })
+            .from(articles)
+            .where(and(
+              eq(articles.categoryId, cat.id),
+              eq(articles.status, "published")
+            ));
+          stats = { label: "إجمالي المشاهدات", value: sum[0]?.total || 0 };
+        } else if (section.statType === "engagementRate") {
+          // Calculate engagement rate based on reactions and comments
+          const result = await db
+            .select({
+              totalViews: sql<number>`COALESCE(SUM(${articles.views}), 0)::int`,
+              totalReactions: sql<number>`COALESCE(COUNT(DISTINCT ${reactions.id}), 0)::int`,
+              totalComments: sql<number>`COALESCE(COUNT(DISTINCT ${comments.id}), 0)::int`,
+            })
+            .from(articles)
+            .leftJoin(reactions, eq(reactions.articleId, articles.id))
+            .leftJoin(comments, eq(comments.articleId, articles.id))
+            .where(and(
+              eq(articles.categoryId, cat.id),
+              eq(articles.status, "published")
+            ));
+
+          const totalViews = result[0]?.totalViews || 0;
+          const totalEngagements = (result[0]?.totalReactions || 0) + (result[0]?.totalComments || 0);
+          const engagementRate = totalViews > 0 ? Math.round((totalEngagements / totalViews) * 100) : 0;
+          
+          stats = { label: "معدل التفاعل", value: engagementRate };
+        }
+
+        // Get articles based on headlineMode
+        let articlesQuery = db
+          .select({
+            article: articles,
+            author: users,
+          })
+          .from(articles)
+          .leftJoin(users, eq(articles.authorId, users.id))
+          .where(and(
+            eq(articles.categoryId, cat.id),
+            eq(articles.status, "published")
+          ))
+          .$dynamic();
+
+        if (section.headlineMode === "mostViewed") {
+          articlesQuery = articlesQuery.orderBy(desc(articles.views), desc(articles.publishedAt));
+        } else if (section.headlineMode === "editorsPick") {
+          articlesQuery = articlesQuery
+            .where(and(
+              eq(articles.categoryId, cat.id),
+              eq(articles.status, "published"),
+              eq(articles.isFeatured, true)
+            ))
+            .orderBy(desc(articles.publishedAt));
+        } else {
+          articlesQuery = articlesQuery.orderBy(desc(articles.publishedAt));
+        }
+
+        const articlesList = await articlesQuery.limit(section.listSize + 1);
+
+        if (!articlesList.length) continue;
+
+        // Featured article (first one)
+        const featuredData = articlesList[0];
+        const timeDiff = featuredData.article.publishedAt 
+          ? Date.now() - new Date(featuredData.article.publishedAt).getTime()
+          : 0;
+        const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+        const isFresh = hoursAgo <= config.freshHours;
+
+        let badge = null;
+        if (config.badges.breaking && featuredData.article.newsType === "breaking") {
+          badge = "عاجل";
+        } else if (config.badges.analysis && featuredData.article.articleType === "analysis") {
+          badge = "تحليل";
+        }
+
+        const featured = {
+          id: featuredData.article.id,
+          title: featuredData.article.title,
+          image: featuredData.article.imageUrl,
+          href: `/article/${featuredData.article.slug}`,
+          meta: {
+            age: hoursAgo < 1 ? "منذ دقائق" : hoursAgo < 24 ? `منذ ${hoursAgo}س` : `منذ ${Math.floor(hoursAgo / 24)}ي`,
+            readMins: 3,
+            views: featuredData.article.views,
+            badge: isFresh && hoursAgo < 2 ? "جديد" : badge,
+          },
+        };
+
+        // List items (remaining articles)
+        const list = articlesList.slice(1).map((item) => {
+          const timeDiff = item.article.publishedAt 
+            ? Date.now() - new Date(item.article.publishedAt).getTime()
+            : 0;
+          const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+
+          return {
+            id: item.article.id,
+            title: item.article.title,
+            href: `/article/${item.article.slug}`,
+            meta: {
+              views: item.article.views,
+              age: hoursAgo < 1 ? "دقائق" : hoursAgo < 24 ? `${hoursAgo}س` : `${Math.floor(hoursAgo / 24)}ي`,
+            },
+          };
+        });
+
+        items.push({
+          category: {
+            slug: cat.slug,
+            name: cat.nameAr,
+            icon: cat.icon || "folder",
+          },
+          stats,
+          featured,
+          list,
+          teaser: section.teaser || "",
+        });
+      }
+
+      res.json({
+        items,
+        mobileCarousel: config.mobileCarousel,
+      });
+    } catch (error) {
+      console.error("Error fetching quad categories block:", error);
+      res.status(500).json({ message: "فشل تحميل بلوك التصنيفات" });
+    }
+  });
+
+  // GET /api/admin/blocks/quad-categories/settings - Get current settings (admin)
+  app.get("/api/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const [settings] = await db
+        .select()
+        .from(quadCategoriesSettings)
+        .where(eq(quadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        // Return default configuration
+        return res.json({
+          config: {
+            sections: [
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+            ],
+            mobileCarousel: true,
+            freshHours: 12,
+            badges: {
+              exclusive: true,
+              breaking: true,
+              analysis: true,
+            },
+          },
+          isActive: true,
+        });
+      }
+
+      res.json({
+        config: settings.config,
+        isActive: settings.isActive,
+      });
+    } catch (error) {
+      console.error("Error fetching quad categories settings:", error);
+      res.status(500).json({ message: "فشل تحميل الإعدادات" });
+    }
+  });
+
+  // PUT /api/admin/blocks/quad-categories/settings - Update settings (admin)
+  app.put("/api/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const validated = insertQuadCategoriesSettingsSchema.parse(req.body);
+
+      // Deactivate existing settings
+      await db
+        .update(quadCategoriesSettings)
+        .set({ isActive: false })
+        .where(eq(quadCategoriesSettings.isActive, true));
+
+      // Create new settings
+      const [newSettings] = await db
+        .insert(quadCategoriesSettings)
+        .values({
+          config: validated.config,
+          isActive: true,
+        })
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId: (req.user as any).id,
+        action: "quad_categories_settings_update",
+        entityType: "quad_categories_settings",
+        entityId: newSettings.id,
+        newValue: { config: validated.config },
+      });
+
+      res.json({
+        message: "تم حفظ الإعدادات بنجاح",
+        settings: newSettings,
+      });
+    } catch (error: any) {
+      console.error("Error updating quad categories settings:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل حفظ الإعدادات" });
+    }
   });
 
   const httpServer = createServer(app);

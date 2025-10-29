@@ -91,6 +91,7 @@ import AIPolicy from "@/pages/AIPolicy";
 import ShortsPage from "@/pages/ShortsPage";
 import ShortsManagement from "@/pages/ShortsManagement";
 import ShortsEditor from "@/pages/ShortsEditor";
+import QuadCategoriesBlockSettings from "@/pages/QuadCategoriesBlockSettings";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -182,6 +183,9 @@ function Router() {
       <Route path="/dashboard/shorts" component={ShortsManagement} />
       <Route path="/dashboard/shorts/new" component={ShortsEditor} />
       <Route path="/dashboard/shorts/:id" component={ShortsEditor} />
+      
+      {/* Quad Categories Block Settings */}
+      <Route path="/dashboard/blocks/quad-categories" component={QuadCategoriesBlockSettings} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />

@@ -13,6 +13,7 @@ import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
+import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -271,6 +272,11 @@ export default function Home() {
               />
             </div>
           )}
+
+          {/* Quad Categories Block */}
+          <div className="scroll-fade-in">
+            <QuadCategoriesBlock />
+          </div>
         </div>
 
         {/* Visual Separator */}
