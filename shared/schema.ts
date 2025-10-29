@@ -2804,3 +2804,57 @@ export const insertShortAnalyticSchema = createInsertSchema(shortAnalytics).omit
 export type InsertShort = z.infer<typeof insertShortSchema>;
 export type UpdateShort = z.infer<typeof updateShortSchema>;
 export type InsertShortAnalytic = z.infer<typeof insertShortAnalyticSchema>;
+
+// Quad Categories Block Settings
+export const quadCategoriesSettings = pgTable("quad_categories_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  // Configuration JSON
+  config: jsonb("config").$type<{
+    sections: Array<{
+      categorySlug: string;
+      headlineMode: "latest" | "mostViewed" | "editorsPick";
+      statType: "dailyCount" | "weeklyCount" | "totalViews" | "engagementRate";
+      teaser?: string;
+      listSize: number;
+    }>;
+    mobileCarousel: boolean;
+    freshHours: number;
+    badges: {
+      exclusive: boolean;
+      breaking: boolean;
+      analysis: boolean;
+    };
+  }>().notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type QuadCategoriesSettings = typeof quadCategoriesSettings.$inferSelect;
+
+export const insertQuadCategoriesSettingsSchema = createInsertSchema(quadCategoriesSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  config: z.object({
+    sections: z.array(z.object({
+      categorySlug: z.string(),
+      headlineMode: z.enum(["latest", "mostViewed", "editorsPick"]),
+      statType: z.enum(["dailyCount", "weeklyCount", "totalViews", "engagementRate"]),
+      teaser: z.string().optional(),
+      listSize: z.number().min(3).max(8),
+    })).length(4, "يجب اختيار 4 تصنيفات بالضبط"),
+    mobileCarousel: z.boolean(),
+    freshHours: z.number().min(1).max(72),
+    badges: z.object({
+      exclusive: z.boolean(),
+      breaking: z.boolean(),
+      analysis: z.boolean(),
+    }),
+  }),
+});
+
+export type InsertQuadCategoriesSettings = z.infer<typeof insertQuadCategoriesSettingsSchema>;
