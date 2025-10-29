@@ -211,7 +211,7 @@ export function AIInsightsBlock() {
                 {/* Trend with MiniChart */}
                 <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
                   <MiniChart trend={insight.trend} color={insight.chartColor} />
-                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-[10px] font-medium">
+                  <div className="flex items-center gap-1 text-foreground/70 dark:text-foreground/80 text-[10px] font-medium">
                     <TrendingUp className="h-2.5 w-2.5" />
                     <span>{insight.trend}</span>
                   </div>
@@ -267,7 +267,7 @@ export function AIInsightsBlock() {
                 {/* Trend with MiniChart */}
                 <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
                   <MiniChart trend={insight.trend} color={insight.chartColor} />
-                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
+                  <div className="flex items-center gap-1 text-foreground/70 dark:text-foreground/80 text-xs font-medium">
                     <TrendingUp className="h-3 w-3" />
                     <span className="text-xs">{insight.trend}</span>
                   </div>
