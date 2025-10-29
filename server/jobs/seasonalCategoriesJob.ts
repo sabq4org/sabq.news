@@ -10,7 +10,7 @@ import { updateSeasonalCategories } from "../smartCategoriesEngine";
 /**
  * جدولة وظيفة تحديث التصنيفات الموسمية
  * Schedule seasonal categories update job
- * Runs every 6 hours: 0 */6 * * *
+ * Runs every 6 hours (cron: 0 star-slash-6 star star star)
  */
 export function startSeasonalCategoriesJob() {
   // Run every 6 hours

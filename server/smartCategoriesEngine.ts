@@ -166,19 +166,34 @@ function shouldActivateGregorianCategory(
 ): boolean {
   // Check by month
   if (seasonalRules.gregorianMonth) {
-    const currentMonth = currentDate.getMonth() + 1;
     const targetMonth = seasonalRules.gregorianMonth;
     const activateDaysBefore = seasonalRules.activateDaysBefore || 0;
     const deactivateDaysAfter = seasonalRules.deactivateDaysAfter || 0;
     
-    // Calculate date ranges
-    const activationDate = new Date(currentDate.getFullYear(), targetMonth - 1, 1);
-    activationDate.setDate(activationDate.getDate() - activateDaysBefore);
+    // Check previous year, current year, and next year to handle all cross-year scenarios
+    // Example: Jan 5 2025 with target December (+10 days) needs 2024 window
+    // Example: Dec 25 2025 with target January (+10 days) needs 2026 window
+    const yearsToCheck = [
+      currentDate.getFullYear() - 1,
+      currentDate.getFullYear(),
+      currentDate.getFullYear() + 1
+    ];
     
-    const deactivationDate = new Date(currentDate.getFullYear(), targetMonth, 0); // Last day of target month
-    deactivationDate.setDate(deactivationDate.getDate() + deactivateDaysAfter);
+    for (const year of yearsToCheck) {
+      // Calculate activation window for this year
+      const activationDate = new Date(year, targetMonth - 1, 1);
+      activationDate.setDate(activationDate.getDate() - activateDaysBefore);
+      
+      const deactivationDate = new Date(year, targetMonth, 0); // Last day of target month
+      deactivationDate.setDate(deactivationDate.getDate() + deactivateDaysAfter);
+      
+      // Check if current date falls within this window
+      if (currentDate >= activationDate && currentDate <= deactivationDate) {
+        return true;
+      }
+    }
     
-    return currentDate >= activationDate && currentDate <= deactivationDate;
+    return false;
   }
   
   // Check by date range

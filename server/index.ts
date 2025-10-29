@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
+import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -424,7 +425,6 @@ app.use((req, res, next) => {
       // Start Seasonal Categories Job
       setImmediate(() => {
         try {
-          const { startSeasonalCategoriesJob } = require("./jobs/seasonalCategoriesJob");
           startSeasonalCategoriesJob();
         } catch (error) {
           console.error("[Server] ⚠️  Error starting seasonal categories job:", error);
