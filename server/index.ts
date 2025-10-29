@@ -420,6 +420,17 @@ app.use((req, res, next) => {
           console.error("[Server] Server will continue running without job queue");
         }
       });
+
+      // Start Seasonal Categories Job
+      setImmediate(() => {
+        try {
+          const { startSeasonalCategoriesJob } = require("./jobs/seasonalCategoriesJob");
+          startSeasonalCategoriesJob();
+        } catch (error) {
+          console.error("[Server] ⚠️  Error starting seasonal categories job:", error);
+          console.error("[Server] Server will continue running without seasonal categories automation");
+        }
+      });
     });
 
     // Handle server errors

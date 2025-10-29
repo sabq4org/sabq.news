@@ -71,7 +71,7 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// News categories
+// News categories (with Smart Categories support)
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nameAr: text("name_ar").notNull(),
@@ -83,7 +83,53 @@ export const categories = pgTable("categories", {
   heroImageUrl: text("hero_image_url"),
   displayOrder: integer("display_order").default(0),
   status: text("status").default("active").notNull(),
+  
+  // Smart Categories fields
+  type: text("type").default("core").notNull(), // core, dynamic, smart, seasonal
+  autoActivate: boolean("auto_activate").default(false).notNull(),
+  updateInterval: integer("update_interval"), // in seconds, for dynamic categories
+  seasonalRules: jsonb("seasonal_rules").$type<{
+    hijriMonth?: string;
+    hijriYear?: string | "auto";
+    gregorianMonth?: number;
+    dateRange?: {
+      start: string;
+      end: string;
+    };
+    activateDaysBefore?: number;
+    deactivateDaysAfter?: number;
+  }>(),
+  features: jsonb("features").$type<{
+    realtime?: boolean;
+    ai_powered?: boolean;
+    trending?: boolean;
+    breaking_news?: boolean;
+    personalized?: boolean;
+    recommendation_engine?: boolean;
+    learning?: boolean;
+    data_visualization?: boolean;
+    ai_analysis?: boolean;
+    interactive?: boolean;
+    charts?: boolean;
+    long_form?: boolean;
+    expert_analysis?: boolean;
+    ai_summary?: boolean;
+    audio_version?: boolean;
+    opinion?: boolean;
+    authors?: boolean;
+    audio_newsletter?: boolean;
+    [key: string]: boolean | undefined;
+  }>(),
+  aiConfig: jsonb("ai_config").$type<{
+    promptTemplate?: string;
+    modelVersion?: string;
+    maxArticles?: number;
+    refreshStrategy?: string;
+    [key: string]: any;
+  }>(),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Articles (supports both news and opinion pieces)
@@ -912,7 +958,14 @@ export const banUserSchema = z.object({
   isPermanent: z.boolean().default(false),
   duration: z.number().int().positive().optional(), // in days, only if not permanent
 });
-export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
+export const insertCategorySchema = createInsertSchema(categories).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true 
+}).extend({
+  type: z.enum(["core", "dynamic", "smart", "seasonal"]).default("core"),
+  status: z.enum(["active", "inactive"]).default("active"),
+});
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
   id: true, 
   createdAt: true, 
