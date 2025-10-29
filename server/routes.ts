@@ -23,6 +23,7 @@ import multer from "multer";
 import { randomUUID } from "crypto";
 import { checkUserStatus } from "./userStatusMiddleware";
 import rateLimit from "express-rate-limit";
+import { z } from "zod";
 
 // Rate limiters for authentication and sensitive operations
 const authLimiter = rateLimit({
@@ -12217,6 +12218,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /openapi.json - OpenAPI 3.0 specification
   app.get("/openapi.json", (req, res) => {
     res.sendFile("openapi.json", { root: "./public" });
+  });
+
+  // ==================== Smart Categories APIs ====================
+  
+  // GET /api/categories/smart - Get all active smart/dynamic/seasonal categories with article counts
+  app.get("/api/categories/smart", async (req, res) => {
+    try {
+      const now = new Date();
+      
+      // Get only smart, dynamic, and seasonal categories (not core)
+      const activeCategories = await db
+        .select({
+          id: categories.id,
+          nameAr: categories.nameAr,
+          nameEn: categories.nameEn,
+          slug: categories.slug,
+          type: categories.type,
+          icon: categories.icon,
+          description: categories.description,
+          displayOrder: categories.displayOrder,
+          features: categories.features,
+        })
+        .from(categories)
+        .where(
+          and(
+            eq(categories.status, "active"),
+            inArray(categories.type, ["smart", "dynamic", "seasonal"])
+          )
+        )
+        .orderBy(desc(categories.displayOrder));
+
+      // Get article counts for each category
+      const categoriesWithCounts = await Promise.all(
+        activeCategories.map(async (category) => {
+          const [{ count }] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(articles)
+            .where(
+              and(
+                eq(articles.categoryId, category.id),
+                eq(articles.status, "published")
+              )
+            );
+
+          return {
+            ...category,
+            articleCount: count || 0,
+          };
+        })
+      );
+
+      res.json(categoriesWithCounts);
+    } catch (error) {
+      console.error("[Smart Categories] Error fetching smart categories:", error);
+      res.status(500).json({ message: "فشل في جلب التصنيفات الذكية" });
+    }
+  });
+
+  // GET /api/admin/categories/smart - Get all smart categories (admin)
+  app.get("/api/admin/categories/smart", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
+    try {
+      const allCategories = await db
+        .select()
+        .from(categories)
+        .orderBy(desc(categories.displayOrder));
+
+      res.json(allCategories);
+    } catch (error) {
+      console.error("[Smart Categories Admin] Error fetching categories:", error);
+      res.status(500).json({ message: "فشل في جلب التصنيفات" });
+    }
+  });
+
+  // POST /api/admin/categories/smart - Create new smart category (admin)
+  app.post("/api/admin/categories/smart", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
+    try {
+      // Validate with Zod schema
+      const validated = insertCategorySchema.parse(req.body);
+
+      // Check if slug already exists
+      const existing = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.slug, validated.slug))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.status(400).json({ message: "التصنيف بهذا الـ slug موجود بالفعل" });
+      }
+
+      // Create new category with auto-assigned displayOrder
+      const insertData: any = {
+        ...validated,
+        displayOrder: validated.displayOrder ?? Math.floor(Date.now() / 1000),
+      };
+      
+      const [newCategory] = await db
+        .insert(categories)
+        .values(insertData)
+        .returning();
+
+      res.json(newCategory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("[Smart Categories Admin] Error creating category:", error);
+      res.status(500).json({ message: "فشل في إنشاء التصنيف" });
+    }
+  });
+
+  // PUT /api/admin/categories/smart/:id - Update smart category (admin)
+  app.put("/api/admin/categories/smart/:id", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Validate with Zod schema (partial update allowed)
+      const validated = insertCategorySchema.partial().parse(req.body);
+
+      // Remove id/timestamps from validated data
+      delete (validated as any).id;
+      delete (validated as any).createdAt;
+      delete (validated as any).updatedAt;
+
+      const updateData: any = validated;
+
+      const [updated] = await db
+        .update(categories)
+        .set(updateData)
+        .where(eq(categories.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "التصنيف غير موجود" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("[Smart Categories Admin] Error updating category:", error);
+      res.status(500).json({ message: "فشل في تحديث التصنيف" });
+    }
+  });
+
+  // DELETE /api/admin/categories/smart/:id - Delete smart category (admin)
+  app.delete("/api/admin/categories/smart/:id", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Check if category has articles
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(eq(articles.categoryId, id));
+
+      if (count > 0) {
+        return res.status(400).json({ 
+          message: `لا يمكن حذف التصنيف لأنه يحتوي على ${count} مقال/مقالات` 
+        });
+      }
+
+      await db.delete(categories).where(eq(categories.id, id));
+
+      res.json({ message: "تم حذف التصنيف بنجاح" });
+    } catch (error) {
+      console.error("[Smart Categories Admin] Error deleting category:", error);
+      res.status(500).json({ message: "فشل في حذف التصنيف" });
+    }
+  });
+
+  // POST /api/admin/categories/smart/sync - Manually sync seasonal categories (admin)
+  app.post("/api/admin/categories/smart/sync", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
+    try {
+      const { updateSeasonalCategories } = await import("./smartCategoriesEngine");
+      const result = await updateSeasonalCategories();
+
+      res.json({
+        message: "تم تحديث التصنيفات الموسمية بنجاح",
+        activated: result.activated,
+        deactivated: result.deactivated,
+      });
+    } catch (error) {
+      console.error("[Smart Categories Admin] Error syncing categories:", error);
+      res.status(500).json({ message: "فشل في مزامنة التصنيفات" });
+    }
   });
 
   // ==================== Quad Categories Block APIs ====================

@@ -6,40 +6,53 @@
 import { db } from "./db";
 import { categories, type Category } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import HijriDate, { toHijri, toGregorian } from "hijri-converter";
 
-interface HijriDate {
-  year: number;
-  month: string;
-  day: number;
+/**
+ * الأشهر الهجرية بالأسماء العربية
+ * Hijri months in Arabic names
+ */
+const HIJRI_MONTHS = [
+  "محرم",         // 1
+  "صفر",          // 2
+  "ربيع الأول",   // 3
+  "ربيع الآخر",   // 4
+  "جمادى الأولى", // 5
+  "جمادى الآخرة", // 6
+  "رجب",          // 7
+  "شعبان",        // 8
+  "رمضان",        // 9
+  "شوال",         // 10
+  "ذو القعدة",    // 11
+  "ذو الحجة"      // 12
+];
+
+/**
+ * تحويل اسم الشهر الهجري العربي إلى رقمه
+ * Convert Arabic Hijri month name to number (1-12)
+ */
+function getHijriMonthNumber(monthName: string): number {
+  const index = HIJRI_MONTHS.indexOf(monthName);
+  return index >= 0 ? index + 1 : -1;
 }
 
 /**
- * تحويل تاريخ ميلادي إلى هجري (تقريبي)
- * Convert Gregorian to Hijri (approximate)
+ * إضافة أيام إلى تاريخ ميلادي والحصول على تاريخ ميلادي جديد
+ * Add days to a Gregorian date (using ISO dates for precision)
  */
-function gregorianToHijri(date: Date): HijriDate {
-  // Simplified conversion - in production, use a proper library like moment-hijri
-  const gregorianYear = date.getFullYear();
-  const gregorianMonth = date.getMonth() + 1;
-  const gregorianDay = date.getDate();
-  
-  // Approximate conversion (Hijri year is ~354 days)
-  const hijriYear = Math.floor((gregorianYear - 622) * 1.030684);
-  
-  // Hijri months (Arabic names)
-  const hijriMonths = [
-    "محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة",
-    "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
-  ];
-  
-  // Approximate month calculation
-  const monthIndex = Math.floor((gregorianMonth - 1) * 0.97) % 12;
-  
-  return {
-    year: hijriYear,
-    month: hijriMonths[monthIndex],
-    day: gregorianDay
-  };
+function addDaysToDate(date: Date, days: number): Date {
+  const newDate = new Date(date);
+  newDate.setDate(newDate.getDate() + days);
+  return newDate;
+}
+
+/**
+ * تحويل تاريخ هجري إلى ميلادي
+ * Convert Hijri date to Gregorian Date object
+ */
+function hijriToDate(hy: number, hm: number, hd: number): Date {
+  const greg = toGregorian(hy, hm, hd);
+  return new Date(greg.gy, greg.gm - 1, greg.gd);
 }
 
 /**
@@ -52,19 +65,62 @@ function shouldActivateHijriCategory(
 ): boolean {
   if (!seasonalRules.hijriMonth) return false;
   
-  const hijri = gregorianToHijri(currentDate);
-  const targetMonth = seasonalRules.hijriMonth;
+  // Get target month number
+  const targetMonthNumber = getHijriMonthNumber(seasonalRules.hijriMonth);
+  if (targetMonthNumber === -1) {
+    console.error(`[Smart Categories] Invalid Hijri month: ${seasonalRules.hijriMonth}`);
+    return false;
+  }
+  
+  // Convert current date to Hijri
+  const currentHijri = toHijri(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    currentDate.getDate()
+  );
+  
+  // Determine target year(s) to check
+  const yearsToCheck: number[] = [];
+  
+  if (seasonalRules.hijriYear && seasonalRules.hijriYear !== "auto") {
+    // Specific year provided
+    yearsToCheck.push(parseInt(seasonalRules.hijriYear, 10));
+  } else {
+    // Auto mode: find nearest future occurrence
+    // Check current year, next year, and year after (covers multi-year gaps)
+    yearsToCheck.push(currentHijri.hy);
+    yearsToCheck.push(currentHijri.hy + 1);
+    yearsToCheck.push(currentHijri.hy + 2);
+  }
+  
   const activateDaysBefore = seasonalRules.activateDaysBefore || 0;
   const deactivateDaysAfter = seasonalRules.deactivateDaysAfter || 0;
   
-  // Simple check: is current Hijri month matching?
-  // In production, implement proper date range checking
-  if (hijri.month === targetMonth) {
-    return true;
+  // Check each candidate year
+  for (const targetYear of yearsToCheck) {
+    // Month start in Gregorian (handles 29-30 day months correctly)
+    const monthStart = hijriToDate(targetYear, targetMonthNumber, 1);
+    
+    // Find the last day of this Hijri month by probing
+    // (Hijri months can be 29 or 30 days)
+    let lastDay = 30;
+    try {
+      hijriToDate(targetYear, targetMonthNumber, 30);
+    } catch {
+      lastDay = 29;
+    }
+    
+    const monthEnd = hijriToDate(targetYear, targetMonthNumber, lastDay);
+    
+    // Calculate activation window using ISO dates (precise day arithmetic)
+    const activationStart = addDaysToDate(monthStart, -activateDaysBefore);
+    const deactivationEnd = addDaysToDate(monthEnd, deactivateDaysAfter);
+    
+    // Check if current date falls within this window
+    if (currentDate >= activationStart && currentDate <= deactivationEnd) {
+      return true;
+    }
   }
-  
-  // Check if we should activate early (days before)
-  // TODO: Implement proper Hijri date arithmetic
   
   return false;
 }
