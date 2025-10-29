@@ -24,8 +24,6 @@ import { randomUUID } from "crypto";
 import { checkUserStatus } from "./userStatusMiddleware";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 // Rate limiters for authentication and sensitive operations
 const authLimiter = rateLimit({
@@ -2078,14 +2076,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Smart Categories Seed] 🌱 Starting smart categories seed...");
 
-      // Read smart categories config
-      const configPath = join(process.cwd(), "server", "smart-categories-config.json");
-      const configData = readFileSync(configPath, "utf-8");
-      const smartCategoriesConfig = JSON.parse(configData);
-
-      const smartCategories = smartCategoriesConfig.categories.filter(
-        (cat: any) => cat.type !== "core"
-      );
+      // Smart categories configuration (embedded for production compatibility)
+      const smartCategories = [
+        {
+          nameAr: "الآن",
+          nameEn: "Now",
+          slug: "now",
+          description: "موجز فوري للأخبار والاتجاهات الحية - يتحدث تلقائياً كل 5 دقائق",
+          icon: "🔥",
+          type: "dynamic",
+          status: "active",
+          autoActivate: true,
+          updateInterval: 300,
+          features: { realtime: true, ai_powered: true, trending: true, breaking_news: true }
+        },
+        {
+          nameAr: "مختارات AI",
+          nameEn: "AI Picks",
+          slug: "ai-picks",
+          description: "مختارات ذكية مخصصة لك بناءً على اهتماماتك وسلوكك القرائي",
+          icon: "✨",
+          type: "dynamic",
+          status: "active",
+          autoActivate: true,
+          features: { personalized: true, ai_powered: true, recommendation_engine: true, learning: true }
+        },
+        {
+          nameAr: "رؤى وبيانات",
+          nameEn: "Insights & Data",
+          slug: "insights-data",
+          description: "تحليلات بيانية تفاعلية تعتمد على الذكاء الاصطناعي - رسوم بيانية وتصورات ذكية",
+          icon: "📊",
+          type: "smart",
+          status: "active",
+          autoActivate: true,
+          features: { data_visualization: true, ai_analysis: true, interactive: true, charts: true }
+        },
+        {
+          nameAr: "التحليل العميق",
+          nameEn: "Deep Analysis",
+          slug: "deep-analysis",
+          description: "تحليلات معمقة ومقالات طويلة تغطي القضايا المعقدة بشكل شامل",
+          icon: "🧠",
+          type: "smart",
+          status: "active",
+          autoActivate: false,
+          features: { long_form: true, expert_analysis: true, ai_summary: true, audio_version: true }
+        },
+        {
+          nameAr: "رمضان الذكي",
+          nameEn: "Smart Ramadan",
+          slug: "smart-ramadan",
+          description: "تغطية شاملة لشهر رمضان بتقنيات ذكية - برامج، أنشطة، إفطار، صحة",
+          icon: "🌙",
+          type: "seasonal",
+          status: "inactive",
+          autoActivate: true,
+          seasonalRules: {
+            hijriMonth: "رمضان",
+            activateDaysBefore: 7,
+            deactivateDaysAfter: 3,
+            hijriYear: "auto"
+          },
+          features: { prayer_times: true, ramadan_programs: true, iftar_recipes: true, charity: true }
+        },
+        {
+          nameAr: "الحج والعمرة",
+          nameEn: "Hajj & Umrah",
+          slug: "hajj-umrah",
+          description: "دليل شامل للحج والعمرة - أخبار، إرشادات، خدمات ذكية",
+          icon: "🕋",
+          type: "seasonal",
+          status: "inactive",
+          autoActivate: true,
+          seasonalRules: {
+            hijriMonth: "ذو الحجة",
+            activateDaysBefore: 30,
+            deactivateDaysAfter: 5,
+            hijriYear: "auto"
+          },
+          features: { guides: true, services: true, live_updates: true, safety: true }
+        },
+        {
+          nameAr: "كأس العالم",
+          nameEn: "World Cup",
+          slug: "world-cup",
+          description: "تغطية حية وشاملة لكأس العالم - مباريات، تحليلات، إحصائيات",
+          icon: "🏆",
+          type: "seasonal",
+          status: "inactive",
+          autoActivate: false,
+          seasonalRules: {
+            dateRange: { start: "2026-06-01", end: "2026-07-20" }
+          },
+          features: { live_scores: true, match_analysis: true, stats: true, predictions: true }
+        },
+        {
+          nameAr: "الميزانية والاقتصاد",
+          nameEn: "Budget & Economy",
+          slug: "budget",
+          description: "تحليل ميزانية الدولة والتوجهات الاقتصادية",
+          icon: "💰",
+          type: "seasonal",
+          status: "inactive",
+          autoActivate: true,
+          seasonalRules: {
+            gregorianMonth: 12,
+            activateDaysBefore: 15,
+            deactivateDaysAfter: 7
+          },
+          features: { budget_analysis: true, infographics: true, expert_opinions: true, data_viz: true }
+        }
+      ];
 
       let insertedCount = 0;
       let updatedCount = 0;
@@ -2104,12 +2206,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               nameEn: categoryConfig.nameEn,
               description: categoryConfig.description,
               icon: categoryConfig.icon,
-              type: categoryConfig.type,
+              type: categoryConfig.type as "core" | "dynamic" | "smart" | "seasonal",
               updateInterval: categoryConfig.updateInterval,
-              features: categoryConfig.features,
-              seasonalRules: categoryConfig.seasonalRules,
+              features: categoryConfig.features as any,
+              seasonalRules: categoryConfig.seasonalRules as any,
               autoActivate: categoryConfig.autoActivate,
-              status: categoryConfig.status || "active",
+              status: (categoryConfig.status || "active") as "active" | "inactive",
             });
             updatedCount++;
             results.push({ slug: categoryConfig.slug, action: "updated" });
@@ -2122,12 +2224,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               slug: categoryConfig.slug,
               description: categoryConfig.description,
               icon: categoryConfig.icon,
-              type: categoryConfig.type,
+              type: categoryConfig.type as "core" | "dynamic" | "smart" | "seasonal",
               updateInterval: categoryConfig.updateInterval,
-              features: categoryConfig.features,
-              seasonalRules: categoryConfig.seasonalRules,
+              features: categoryConfig.features as any,
+              seasonalRules: categoryConfig.seasonalRules as any,
               autoActivate: categoryConfig.autoActivate,
-              status: categoryConfig.status || "active",
+              status: (categoryConfig.status || "active") as "active" | "inactive",
             });
             insertedCount++;
             results.push({ slug: categoryConfig.slug, action: "inserted", id: newCategory.id });
