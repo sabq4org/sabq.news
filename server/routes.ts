@@ -1879,7 +1879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(categories)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(categories.displayOrder));
+        .orderBy(categories.displayOrder);
 
       // Get article counts for each category
       const categoriesWithCounts = await Promise.all(
@@ -2086,6 +2086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "🔥",
           type: "dynamic",
           status: "active",
+          displayOrder: 1,
           autoActivate: true,
           updateInterval: 300,
           features: { realtime: true, ai_powered: true, trending: true, breaking_news: true }
@@ -2098,6 +2099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "✨",
           type: "dynamic",
           status: "active",
+          displayOrder: 2,
           autoActivate: true,
           features: { personalized: true, ai_powered: true, recommendation_engine: true, learning: true }
         },
@@ -2109,6 +2111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "📊",
           type: "smart",
           status: "active",
+          displayOrder: 3,
           autoActivate: true,
           features: { data_visualization: true, ai_analysis: true, interactive: true, charts: true }
         },
@@ -2120,6 +2123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "🧠",
           type: "smart",
           status: "active",
+          displayOrder: 4,
           autoActivate: false,
           features: { long_form: true, expert_analysis: true, ai_summary: true, audio_version: true }
         },
@@ -2131,6 +2135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "🌙",
           type: "seasonal",
           status: "inactive",
+          displayOrder: 100,
           autoActivate: true,
           seasonalRules: {
             hijriMonth: "رمضان",
@@ -2148,6 +2153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "🕋",
           type: "seasonal",
           status: "inactive",
+          displayOrder: 101,
           autoActivate: true,
           seasonalRules: {
             hijriMonth: "ذو الحجة",
@@ -2165,6 +2171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "🏆",
           type: "seasonal",
           status: "inactive",
+          displayOrder: 102,
           autoActivate: false,
           seasonalRules: {
             dateRange: { start: "2026-06-01", end: "2026-07-20" }
@@ -2179,6 +2186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icon: "💰",
           type: "seasonal",
           status: "inactive",
+          displayOrder: 103,
           autoActivate: true,
           seasonalRules: {
             gregorianMonth: 12,
@@ -2207,6 +2215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               description: categoryConfig.description,
               icon: categoryConfig.icon,
               type: categoryConfig.type as "core" | "dynamic" | "smart" | "seasonal",
+              displayOrder: categoryConfig.displayOrder,
               updateInterval: categoryConfig.updateInterval,
               features: categoryConfig.features as any,
               seasonalRules: categoryConfig.seasonalRules as any,
@@ -2225,6 +2234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               description: categoryConfig.description,
               icon: categoryConfig.icon,
               type: categoryConfig.type as "core" | "dynamic" | "smart" | "seasonal",
+              displayOrder: categoryConfig.displayOrder,
               updateInterval: categoryConfig.updateInterval,
               features: categoryConfig.features as any,
               seasonalRules: categoryConfig.seasonalRules as any,

@@ -1463,7 +1463,7 @@ export class DatabaseStorage implements IStorage {
 
   // Category operations
   async getAllCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(categories.nameAr);
+    return await db.select().from(categories).orderBy(categories.displayOrder);
   }
 
   async getCategoriesWithStats(): Promise<Array<Category & {
