@@ -138,144 +138,78 @@ export function AIArticleCard({
     );
   }
 
-  // Grid variant (default) - AI Enhanced with Mobile Optimization
+  // Grid variant (default) - Simple Clean Design
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ scale: 1.02 }}
-      className="h-full"
-    >
+    <Link href={`/article/${article.slug}`}>
       <Card 
-        className="group border-2 border-primary/20 dark:border-primary/10 relative h-full bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col md:flex-col" 
+        className="group hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden" 
         data-testid={`card-ai-article-${article.id}`}
       >
-        <div className="relative z-10 flex flex-col md:flex-col h-full">
-          <Link href={`/article/${article.slug}`}>
-            {/* Mobile: Smaller Image | Desktop: Standard */}
-            <div className="relative aspect-[2/1] sm:aspect-[16/9] overflow-hidden">
-              {article.imageUrl ? (
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
-              {/* Compact AI Badge for Mobile */}
+        {article.imageUrl && (
+          <div className="relative h-44 sm:h-48 overflow-hidden">
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+            />
+            
+            {/* Simple Smart Selection Badge */}
+            {reasonBadge && (
               <Badge 
-                className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 gap-1 shadow-lg text-xs px-2" 
-                data-testid={`badge-ai-${article.id}`}
+                className={`absolute top-2 sm:top-3 right-2 sm:right-3 ${reasonBadge.color} shadow-md text-xs px-2`}
+                data-testid={`badge-reason-${article.id}`}
               >
-                <Sparkles className="h-3 w-3" />
-                <span>AI</span>
+                {reasonBadge.icon}
+                <span className="mr-1">{reasonBadge.label}</span>
               </Badge>
-
-              {/* Compact Reason Badge */}
-              {reasonBadge && (
-                <Badge 
-                  className={`absolute top-2 sm:top-3 left-2 sm:left-3 ${reasonBadge.color} border gap-1 backdrop-blur-sm text-xs px-2`}
-                  data-testid={`badge-reason-${article.id}`}
-                >
-                  <span>{reasonBadge.label}</span>
-                </Badge>
-              )}
-            </div>
-          </Link>
-
-          <CardContent className="p-3 sm:p-4 relative flex-1 flex flex-col">
-            {/* Compact AI Score Bar */}
-            <div className="mb-2 sm:mb-3 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${scorePercentage}%` }}
-                  transition={{ duration: 1, delay: 0.2 }}
-                />
-              </div>
-              <div className="flex items-center gap-1 text-xs font-bold text-primary">
-                <Brain className="h-3 w-3" />
-                <span>{scorePercentage}%</span>
-              </div>
-            </div>
-
-            <Link href={`/article/${article.slug}`}>
-              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
-                {article.title}
-              </h3>
-            </Link>
-
-            {article.storyId && article.storyTitle && (
-              <div className="mb-2 sm:mb-3 hidden sm:block" onClick={(e) => e.preventDefault()}>
-                <FollowStoryButton 
-                  storyId={article.storyId} 
-                  storyTitle={article.storyTitle}
-                />
-              </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-primary/10 mt-auto">
-              <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
-                {timeAgo && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{timeAgo}</span>
-                  </span>
-                )}
-                <ViewsCount 
-                  views={article.views || 0}
-                  iconClassName="h-3 w-3"
-                />
-              </div>
+            {article.category && !reasonBadge && (
+              <Badge 
+                variant="default" 
+                className="absolute top-2 sm:top-3 right-2 sm:right-3 shadow-md text-xs px-2" 
+                data-testid={`badge-category-${article.id}`}
+              >
+                {article.category.icon} {article.category.nameAr}
+              </Badge>
+            )}
+          </div>
+        )}
 
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onReact?.(article.id);
-                  }}
-                  data-testid={`button-react-${article.id}`}
-                >
-                  <Heart className={`h-4 w-4 ${article.hasReacted ? 'fill-red-500 text-red-500' : ''}`} />
-                </Button>
+        <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+          <h3 className="text-base sm:text-lg font-semibold line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+            {article.title}
+          </h3>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="max-sm:hidden"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onBookmark?.(article.id);
-                  }}
-                  data-testid={`button-bookmark-${article.id}`}
-                >
-                  <Bookmark className={`h-4 w-4 ${article.isBookmarked ? 'fill-current' : ''}`} />
-                </Button>
-
-                <Link href={`/article/${article.slug}#comments`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="max-sm:hidden"
-                    onClick={(e) => e.stopPropagation()}
-                    data-testid={`button-comments-${article.id}`}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+          {article.storyId && article.storyTitle && (
+            <div className="hidden sm:block" onClick={(e) => e.preventDefault()}>
+              <FollowStoryButton 
+                storyId={article.storyId} 
+                storyTitle={article.storyTitle}
+              />
             </div>
-          </CardContent>
-        </div>
+          )}
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto">
+            {article.author && (
+              <span className="font-medium truncate">
+                {article.author.firstName} {article.author.lastName}
+              </span>
+            )}
+            {timeAgo && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {timeAgo}
+              </span>
+            )}
+            <ViewsCount 
+              views={article.views || 0}
+              iconClassName="h-3 w-3"
+            />
+          </div>
+        </CardContent>
       </Card>
-    </motion.div>
+    </Link>
   );
 }

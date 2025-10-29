@@ -72,7 +72,7 @@ Native mobile app support is achieved via Capacitor 7.4.4, with configured iOS a
 **Mobile Responsive Design Optimizations (2025-10-29):**
 - **NavigationBar Mobile**: Accessible badges (h-8/32px vs h-9/36px desktop), reduced padding (px-2.5 vs px-4), smaller text (text-xs vs text-sm), category labels preserved for recognition
 - **Smart Category Badges**: Purple-to-pink gradient (from-purple-500/90 to-pink-500/90) replacing dark blue primary color for lighter, more vibrant appearance with white text and subtle shadow
-- **AI Article Cards Mobile**: 50% smaller images (aspect-2/1 vs 16/9), standard accessible buttons (size="sm"), 25% reduced padding (p-3 vs p-4), readable titles (text-base vs text-lg), bookmark/comments hidden on mobile, maintained 32px+ touch targets
+- **AI Article Cards Redesign**: Simplified to clean, professional design without fake AI scores. Removed gradient backgrounds, colored borders, AI score bars (fake 70% percentages), and animation spam. Now uses simple Card design with ONE badge (selection reason or category), title, optional story button, and clean metadata (author, time, views). Trustworthy appearance matching regular article cards.
 - **Breakpoints**: Mobile-first (<640px), sm:640px+ for tablet/desktop transitions
 - **Accessibility**: All interactive elements maintain minimum 32px touch targets, text minimum 12px, labels preserved for screen readers
 
