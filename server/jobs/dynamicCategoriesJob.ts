@@ -144,21 +144,32 @@ async function updateNowCategory() {
     // Insert new assignments within a transaction to avoid momentary gaps
     const assignments = Array.from(scoredArticles.values()).slice(0, 30); // Max 30 articles
 
+    // Use transaction to ensure atomic delete+insert
     await db.transaction(async (tx) => {
       // Clear existing assignments for this category
       await tx
         .delete(articleSmartCategories)
         .where(eq(articleSmartCategories.categoryId, nowCategory.id));
 
-      // Insert new assignments
+      // Insert new assignments (if any)
       if (assignments.length > 0) {
-        await tx.insert(articleSmartCategories).values(
-          assignments.map(item => ({
-            articleId: item.id,
-            categoryId: nowCategory.id,
-            score: item.score,
-          }))
-        );
+        // Use individual inserts with onConflictDoUpdate to handle duplicates
+        for (const item of assignments) {
+          await tx
+            .insert(articleSmartCategories)
+            .values({
+              articleId: item.id,
+              categoryId: nowCategory.id,
+              score: item.score,
+            })
+            .onConflictDoUpdate({
+              target: [articleSmartCategories.articleId, articleSmartCategories.categoryId],
+              set: {
+                score: item.score,
+                assignedAt: new Date(),
+              },
+            });
+        }
       }
     });
 
