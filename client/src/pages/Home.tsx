@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { NavigationBar } from "@/components/NavigationBar";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
@@ -160,6 +161,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
+        <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-1">
           <Skeleton className="w-full h-[400px] md:h-[500px] rounded-lg" />
           <div className="space-y-4">
@@ -180,6 +182,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
+        <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
             <p className="text-destructive text-lg mb-4">
@@ -199,6 +202,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         <Header user={user} />
+        <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">
@@ -214,6 +218,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       <Header user={user} />
+      <NavigationBar />
 
       <main className="flex-1">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">

@@ -1828,6 +1828,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/categories/smart - Get categories with filtering support
+  app.get("/api/categories/smart", async (req, res) => {
+    try {
+      const { type, status } = req.query;
+      
+      // Build where conditions
+      const conditions: any[] = [];
+      
+      // Filter by type if provided
+      if (type && typeof type === "string") {
+        if (type === "all") {
+          // No type filter
+        } else if (type === "core") {
+          conditions.push(eq(categories.type, "core"));
+        } else if (type === "smart") {
+          conditions.push(eq(categories.type, "smart"));
+        } else if (type === "dynamic") {
+          conditions.push(eq(categories.type, "dynamic"));
+        } else if (type === "seasonal") {
+          conditions.push(eq(categories.type, "seasonal"));
+        } else {
+          conditions.push(inArray(categories.type, ["smart", "dynamic", "seasonal"]));
+        }
+      } else {
+        // Default: only smart, dynamic, and seasonal (not core)
+        conditions.push(inArray(categories.type, ["smart", "dynamic", "seasonal"]));
+      }
+      
+      // Filter by status if provided
+      if (status && typeof status === "string") {
+        conditions.push(eq(categories.status, status));
+      } else {
+        // Default: only active
+        conditions.push(eq(categories.status, "active"));
+      }
+      
+      const filteredCategories = await db
+        .select({
+          id: categories.id,
+          nameAr: categories.nameAr,
+          nameEn: categories.nameEn,
+          slug: categories.slug,
+          type: categories.type,
+          icon: categories.icon,
+          description: categories.description,
+          displayOrder: categories.displayOrder,
+          status: categories.status,
+          features: categories.features,
+        })
+        .from(categories)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(categories.displayOrder));
+
+      // Get article counts for each category
+      const categoriesWithCounts = await Promise.all(
+        filteredCategories.map(async (category) => {
+          const [{ count }] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(articles)
+            .where(
+              and(
+                eq(articles.categoryId, category.id),
+                eq(articles.status, "published")
+              )
+            );
+
+          return {
+            ...category,
+            articleCount: count || 0,
+          };
+        })
+      );
+
+      res.json(categoriesWithCounts);
+    } catch (error) {
+      console.error("[Smart Categories] Error fetching smart categories:", error);
+      res.status(500).json({ message: "فشل في جلب التصنيفات الذكية" });
+    }
+  });
+
   // Get single category by ID
   app.get("/api/categories/:id", async (req, res) => {
     try {
@@ -12222,60 +12302,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== Smart Categories APIs ====================
   
-  // GET /api/categories/smart - Get all active smart/dynamic/seasonal categories with article counts
-  app.get("/api/categories/smart", async (req, res) => {
-    try {
-      const now = new Date();
-      
-      // Get only smart, dynamic, and seasonal categories (not core)
-      const activeCategories = await db
-        .select({
-          id: categories.id,
-          nameAr: categories.nameAr,
-          nameEn: categories.nameEn,
-          slug: categories.slug,
-          type: categories.type,
-          icon: categories.icon,
-          description: categories.description,
-          displayOrder: categories.displayOrder,
-          features: categories.features,
-        })
-        .from(categories)
-        .where(
-          and(
-            eq(categories.status, "active"),
-            inArray(categories.type, ["smart", "dynamic", "seasonal"])
-          )
-        )
-        .orderBy(desc(categories.displayOrder));
-
-      // Get article counts for each category
-      const categoriesWithCounts = await Promise.all(
-        activeCategories.map(async (category) => {
-          const [{ count }] = await db
-            .select({ count: sql<number>`count(*)::int` })
-            .from(articles)
-            .where(
-              and(
-                eq(articles.categoryId, category.id),
-                eq(articles.status, "published")
-              )
-            );
-
-          return {
-            ...category,
-            articleCount: count || 0,
-          };
-        })
-      );
-
-      res.json(categoriesWithCounts);
-    } catch (error) {
-      console.error("[Smart Categories] Error fetching smart categories:", error);
-      res.status(500).json({ message: "فشل في جلب التصنيفات الذكية" });
-    }
-  });
-
   // GET /api/admin/categories/smart - Get all smart categories (admin)
   app.get("/api/admin/categories/smart", requireAuth, requireAnyPermission("categories.edit"), async (req, res) => {
     try {
