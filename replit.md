@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered Arabic news platform leveraging React, Express, and PostgreSQL to provide intelligent article summarization, personalized recommendations, and comprehensive content management. Its core purpose is to deliver a cutting-edge news consumption experience, specifically targeting the Arabic-speaking market with RTL-first design, dynamic content delivery, user profiling, and advanced theme management. The platform aims to enrich the news experience through AI-driven personalization and content enrichment, holding significant market potential in the Arabic-speaking demographic.
+Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. Its main goal is to deliver an advanced news experience for the Arabic-speaking market by providing AI-driven article summarization, personalized recommendations, and comprehensive content management. The platform features an RTL-first design, dynamic content delivery, user profiling, and advanced theme management, aiming to enrich news consumption through AI and content enrichment.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,81 +9,33 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features an RTL-first design system with custom theming for light/dark modes using Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a content creator dashboard with a WYSIWYG editor, all designed responsively. A comprehensive publishing templates system, with 21 production templates covering various content types, ensures flexible and accessible content presentation with Framer Motion animations.
+The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 production templates) ensures flexible content presentation with Framer Motion animations. Mobile responsiveness is achieved through a mobile-first approach, ensuring accessible touch targets and text sizes. The footer design incorporates an "AI-Powered Smart Footer" with live AI metrics, intelligent navigation, and dynamic smart category badges, using neural gradients and micro-animations.
 
 ### Technical Implementations
-The frontend utilizes Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Session-based authentication is managed by Passport.js with a local strategy and bcrypt. PostgreSQL, hosted on Neon serverless, serves as the database, accessed via Drizzle ORM. File storage is handled by Google Cloud Storage via Replit Object Storage, and Server-Sent Events (SSE) power real-time features.
-
-**Performance Optimizations:**
-- **Gzip Compression:** All responses (API + static assets) compressed using gzip middleware (level 6, 1KB threshold) for 60-70% bandwidth reduction
-- **Smart Caching Strategy:** 
-  - Hashed assets (JS/CSS from Vite): `public, max-age=31536000, immutable` (1 year)
-  - Images & Fonts: `public, max-age=2592000` (30 days)
-  - HTML files: `public, max-age=0, must-revalidate` (always fresh)
-  - **API endpoints: NO cache** - All API requests return fresh data
-- **React Query Configuration:** 
-  - Global config: Zero caching (`staleTime: 0`, `gcTime: 0`, `refetchOnWindowFocus: false`) per user requirement for real-time data freshness
-  - All mutations use `removeQueries()` + `refetchQueries()` pattern to ensure immediate server state reflection
-  - All component-level `staleTime` and `refetchInterval` overrides removed to ensure consistent zero-cache behavior
-  - HTTP cache headers: All API endpoints use `no-store, no-cache, must-revalidate` with `Pragma: no-cache` and `Expires: 0` to prevent browser/proxy caching
-
-**Article & Shorts Ordering System:**
-- **Admin Dashboard:** Articles and shorts management pages (`/api/admin/articles`, `/api/admin/shorts`) sort by `createdAt DESC` to show newest items first
-- **Homepage Display:** All public-facing queries (hero, breaking, editor picks, deep dives, all published, shorts feed) prioritize `displayOrder DESC` before fallback sorting criteria (publishedAt, views, createdAt)
-- **Auto-Assignment:** New articles/shorts receive `displayOrder = Math.floor(Date.now() / 1000)` (Unix timestamp in seconds) if not explicitly set, ensuring they appear first on homepage
-- **Manual Override:** Editors can manually set `displayOrder` during creation/editing to customize homepage positioning
-- **Drag & Drop Persistence:** Admin panel article reordering uses batch update to `display_order` column, with immediate cache invalidation and server refetch
-- **Mutation Pattern:** `PUT /api/admin/articles/order` accepts `{ articleIds: string[] }` and assigns displayOrder based on array position (first = highest value)
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication uses Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (via Replit Object Storage) handles file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include gzip compression for all responses and a smart caching strategy that prioritizes fresh data by explicitly disabling HTTP caching for API endpoints and configuring TanStack Query for zero caching.
 
 ### Feature Specifications
 Key features include:
-- **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 7 system roles, 49 granular permissions across 9 modules, multi-role assignment, and secure user creation with activity logging.
-- **Content Management:** Comprehensive lifecycle management for articles, news, users, and categories, including a comment moderation system and an advanced article editor with AI-powered title/summary generation, SEO management, and reporter assignment. Articles management dashboard features bulk operations with select-all checkbox functionality, enabling bulk archival and permanent deletion of archived articles with proper confirmations.
+- **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 7 roles and 49 granular permissions.
+- **Content Management:** Lifecycle management for articles, news, users, and categories, including comment moderation, an advanced article editor with AI-powered title/summary generation, SEO, and bulk operations.
 - **Muqtarib (مُقترب) Section:** A thematic system for diverse article perspectives.
-- **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform offering Sabq Index, Next Stories, Radar, and Algorithm Writes, with dedicated RBAC, full CRUD capabilities, and rich visualizations.
-- **Advanced Internal Announcements System:** A production-grade announcement platform with multi-announcement support, versioning system (auto-snapshots on updates with restore capability), scheduling (auto-publish/expire via cron), audience targeting (roles + specific users), multi-channel distribution (dashboard/email/mobile/web), priority levels (critical/high/medium/low), rich content editor with attachments, comprehensive analytics tracking (impressions, unique views, dismissals, clicks, CTR), and archival management.
-- **A/B Testing System:** A comprehensive platform for content optimization, experiment management, and real-time tracking.
-- **AI-Powered Features:** Includes an AI ChatBot Assistant, Audio Summary (Text-to-Speech), Credibility Score Analysis, Daily Briefs, an Intelligent Recommendation System using OpenAI embeddings, Story Tracking & Following, Keyword Following, and AI Insights Block.
-- **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline with daily insights, live statistics, and trending topics. A Smart Notifications System offers intelligent, real-time pushes via SSE.
-- **Reporter Profile System:** Dedicated pages for staff and reporters showcasing their work, performance KPIs, and writing specializations.
-- **Audio Newsletters (النشرات الصوتية):** An AI-powered text-to-speech news briefing system with ElevenLabs integration, asynchronous generation, RSS/Podcast feed, and analytics tracking.
-- **Quick Audio News Briefs (الأخبار الصوتية السريعة):** A lightweight system for generating and publishing short audio snippets to the homepage, integrated with ElevenLabs and using a background job queue.
-- **Sabq Shorts (سبق قصير) - Vertical Video Reels System:** A full-featured short-form video news platform similar to TikTok/Instagram Reels, featuring vertical swipe navigation (9:16 aspect ratio), HLS video streaming with MP4 fallback, interactive engagement (likes, shares, comments), analytics tracking (views, watch time, completion rate), homepage featured block, dedicated /shorts fullscreen feed with keyboard controls, and comprehensive admin dashboard with filtering, search, and content management. Supports RBAC with dedicated shorts permissions (shorts:view, shorts:create, shorts:edit, shorts:delete, shorts:manage).
-- **Quad Categories Block (بلوك التصنيفات الرباعية):** A customizable homepage block displaying 4 category columns in a responsive grid layout. Features include: configurable stat types (dailyCount, weeklyCount, totalViews, engagementRate), headline modes (latest, mostViewed, editorsPick), mobile carousel with swipe navigation, customizable badges (breaking, exclusive, analysis), fresh content indicators based on configurable hours threshold, teaser text support, and adjustable article list size (3-8 articles). Admin interface located at `/dashboard/blocks/quad-categories` under "المحتوى الذكي" section. Supports full RBAC with admin-only access.
-- **Smart Categories System (نظام التصنيفات الذكية):** An intelligent categorization system with three category types: Core (fixed categories like محليات، العالم with manual assignment), Dynamic/AI (contextual categories like الآن، مختارات AI with automated population), and Seasonal (time-based like رمضان الذكي، الحج والعمرة). Features automated article assignment via background job running every 5 minutes, junction table (articleSmartCategories) for smart category memberships with relevance scoring, and transaction-wrapped updates to prevent data gaps. The "الآن" category uses intelligent selection prioritizing breaking news (score 1.0), trending articles with high engagement (0.95-0.8), and recent featured content (0.85-0.7), with comprehensive telemetry logging for monitoring. API endpoints intelligently route to junction table for dynamic/smart categories while using traditional categoryId for core categories.
-- **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs and AI applications, including comprehensive article metadata, licensing information, and usage rights. Features Schema.org JSON-LD structured data on article pages, developer documentation (/ai-publisher), AI usage policy page (/ai-policy), and machine-readable policy (/.well-known/ai-usage.json). Full OpenAPI 3.0 specification available at /openapi.json. Endpoints include: /api/v1/articles (list), /api/v1/articles/:id (detail), /api/v1/search (search), /api/v1/breaking (breaking news), /api/v1/categories (categories).
+- **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform with Sabq Index, Next Stories, Radar, and Algorithm Writes.
+- **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, multi-channel distribution, priority levels, rich content editor, and analytics.
+- **A/B Testing System:** For content optimization and experiment management.
+- **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Credibility Score Analysis, Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, and AI Insights Block.
+- **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline, and a Smart Notifications System offers real-time pushes via SSE.
+- **Reporter Profile System:** Dedicated pages for staff and reporters.
+- **Audio Newsletters (النشرات الصوتية) & Quick Audio News Briefs:** AI-powered text-to-speech news briefing systems with ElevenLabs integration.
+- **Sabq Shorts (سبق قصير) - Vertical Video Reels System:** A full-featured short-form video news platform with vertical swipe navigation, HLS streaming, interactive engagement, analytics, and admin dashboard.
+- **Quad Categories Block:** Customizable homepage block displaying 4 category columns with configurable content and admin interface.
+- **Smart Categories System:** Intelligent categorization with Core, Dynamic/AI, and Seasonal types, featuring automated article assignment via background jobs, relevance scoring, and intelligent selection algorithms for categories like "الآن".
+- **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including comprehensive article metadata, Schema.org JSON-LD structured data, developer documentation, and OpenAPI 3.0 specification.
 
 ### System Design Choices
-Core data models encompass Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and specialized Al-Mirqab forecasting tables. AI integration extensively uses OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic, date-validated, and page-specific theme application. A Content Import System parses RSS feeds with AI for summarization.
-
-**Smart Categories Architecture:**
-- Categories have three types: `core` (manual assignment via `articles.categoryId`), `dynamic`/`smart` (auto-populated via `articleSmartCategories` junction table), and `seasonal` (time-based activation)
-- Junction table `articleSmartCategories` stores smart category memberships with `score` (0.0-1.0 relevance) and `assignedAt` timestamp
-- Background job (`dynamicCategoriesJob.ts`) runs every 5 minutes, using transaction-wrapped delete+insert pattern to prevent data gaps
-- "الآن" selection algorithm: (1) Breaking news articles get 1.0-0.98 scores, (2) Trending articles (high engagement in 24h) get 0.95-0.8 scores, (3) Recent featured articles get 0.85-0.7 scores
-- Engagement score formula: `views + (reactions × 10) + (comments × 15)` to weight quality interactions
-- API routing: `/api/categories/:slug/articles` checks category type and reads from junction table for smart/dynamic or from `categoryId` for core/seasonal
-- Category display order: smart (1-4), core (10+), seasonal (100+) ensures proper homepage positioning
-- Telemetry logging tracks breakingCount, trendingCount, featuredCount, and finalAssigned for monitoring and tuning
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content.
 
 ### Mobile App Support
-Native mobile app support is achieved via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens. The design is mobile-optimized with RTL support, safe area, and touch target optimization, utilizing Capacitor plugins for essential functionalities.
-
-**Mobile Responsive Design Optimizations (2025-10-29):**
-- **NavigationBar Mobile**: Accessible badges (h-8/32px vs h-9/36px desktop), reduced padding (px-2.5 vs px-4), smaller text (text-xs vs text-sm), category labels preserved for recognition
-- **Smart Category Badges**: Purple-to-pink gradient (from-purple-500/90 to-pink-500/90) replacing dark blue primary color for lighter, more vibrant appearance with white text and subtle shadow
-- **AI Article Cards Redesign**: Simplified to clean, professional design without fake AI scores. Removed gradient backgrounds, colored borders, AI score bars (fake 70% percentages), and animation spam. Now uses simple Card design with ONE badge (selection reason or category), title, optional story button, and clean metadata (author, time, views). Trustworthy appearance matching regular article cards.
-- **Breakpoints**: Mobile-first (<640px), sm:640px+ for tablet/desktop transitions
-- **Accessibility**: All interactive elements maintain minimum 32px touch targets, text minimum 12px, labels preserved for screen readers
-
-**AI-Powered Smart Footer (2025-10-30):**
-The footer redesign reflects Sabq Smart's AI-powered identity through a 3-tier architecture:
-- **Tier 1: Intelligence Hero Banner** - AI gradient background with animated shimmer effect, displaying live metrics (articles processed, AI signals active, smart categories count) via `/api/ai-metrics` endpoint, brand tagline "إخبارك بذكاء اصطناعي", contact info, and CTA button to AI Publisher documentation
-- **Tier 2: Intelligent Navigation Cards** - 4 asymmetrical card tiles (Core News, Smart Services, Visual Content, AI & Development) with glow-on-hover borders, animated icons (pulse, float effects), and organized navigation links
-- **Tier 3: Smart Categories Strip** - Dynamic badges for active smart categories with hover effects and direct category links
-- **Tier 4: Utility Bar** - Minimalist base with copyright, Sabq-AI-Use-1.0 license, social media icons, and compact legal links
-- **Visual Design**: Neural blue-to-violet gradient (--ai-primary to --ai-secondary), glassmorphism cards, ai-glow-border effects, micro-animations (ai-pulse-icon, ai-float-icon) with prefers-reduced-motion support
-- **Technical**: Schema.org NewsMediaOrganization structured data, RTL-optimized layout, all numbers in English digits (toLocaleString('en-US')), Lucide React icons throughout, fully responsive grid (1-col mobile, 2-col tablet, 4-col desktop)
+Native mobile app support is enabled via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens.
 
 ## External Dependencies
 
