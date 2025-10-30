@@ -155,7 +155,7 @@ export function Footer() {
               <div className="flex flex-wrap gap-4 text-sm">
                 <a 
                   href="mailto:info@sabq.sa"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors min-h-8 py-1"
                   data-testid="footer-email"
                 >
                   <Mail className="h-4 w-4" />
@@ -163,7 +163,7 @@ export function Footer() {
                 </a>
                 <a 
                   href="tel:+966123456789"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors min-h-8 py-1"
                   data-testid="footer-phone"
                 >
                   <Phone className="h-4 w-4" />
@@ -254,7 +254,7 @@ export function Footer() {
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link min-h-8 py-1"
                           data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
                         >
                           <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
@@ -263,7 +263,7 @@ export function Footer() {
                       ) : (
                         <Link
                           href={link.href}
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link min-h-8 py-1"
                           data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
                         >
                           <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
@@ -280,7 +280,7 @@ export function Footer() {
 
         {/* Smart Categories Strip */}
         {topCategories.length > 0 && (
-          <div className="border-t border-b border-border/50 py-6 mb-8">
+          <div className="border-t border-b border-[hsl(var(--ai-primary)/.2)] bg-[hsl(var(--ai-primary)/.05)] py-6 mb-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
@@ -291,7 +291,7 @@ export function Footer() {
                   <Link key={category.id} href={`/category/${category.slug}`}>
                     <Badge 
                       variant="secondary" 
-                      className="hover:bg-[hsl(var(--ai-primary)/.1)] hover:text-[hsl(var(--ai-primary))] hover:border-[hsl(var(--ai-primary)/.3)] transition-all cursor-pointer"
+                      className="hover:bg-[hsl(var(--ai-primary)/.1)] hover:text-[hsl(var(--ai-primary))] hover:border-[hsl(var(--ai-primary)/.3)] transition-all cursor-pointer min-h-8"
                       data-testid={`footer-category-${category.slug}`}
                     >
                       {category.nameAr}
@@ -328,7 +328,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-full hover:bg-[hsl(var(--ai-primary)/.1)] text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-all"
+                  className="p-2 rounded-full hover:bg-[hsl(var(--ai-primary)/.1)] text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-all min-w-8 min-h-8 inline-flex items-center justify-center"
                   aria-label={social.name}
                   data-testid={`footer-social-${social.testId}`}
                 >
@@ -339,13 +339,13 @@ export function Footer() {
 
             {/* Right: Legal Links */}
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href="/privacy" className="hover:text-foreground transition-colors" data-testid="footer-link-privacy">
+              <Link href="/privacy" className="hover:text-foreground transition-colors min-h-8 inline-flex items-center py-1" data-testid="footer-link-privacy">
                 الخصوصية
               </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors" data-testid="footer-link-terms">
+              <Link href="/terms" className="hover:text-foreground transition-colors min-h-8 inline-flex items-center py-1" data-testid="footer-link-terms">
                 الشروط
               </Link>
-              <Link href="/cookies" className="hover:text-foreground transition-colors" data-testid="footer-link-cookies">
+              <Link href="/cookies" className="hover:text-foreground transition-colors min-h-8 inline-flex items-center py-1" data-testid="footer-link-cookies">
                 الملفات
               </Link>
             </div>
