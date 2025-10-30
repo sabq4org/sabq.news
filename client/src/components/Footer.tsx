@@ -1,17 +1,31 @@
 import { Link } from "wouter";
 import { 
   Mail, 
-  Phone, 
-  MapPin,
+  Phone,
   ExternalLink,
   ChevronRight,
   Facebook,
   Twitter,
   Instagram,
   Youtube,
-  Linkedin
+  Linkedin,
+  Sparkles,
+  Brain,
+  Zap,
+  TrendingUp,
+  Globe,
+  Database,
+  Code,
+  Shield,
+  Newspaper,
+  LayoutGrid,
+  Mic,
+  Video
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -24,6 +38,12 @@ type Category = {
   displayOrder: number;
 };
 
+type AIMetrics = {
+  articlesProcessed: number;
+  aiSignalsActive: number;
+  smartCategoriesCount: number;
+};
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -31,36 +51,61 @@ export function Footer() {
     queryKey: ["/api/categories"],
   });
 
+  const { data: metrics } = useQuery<AIMetrics>({
+    queryKey: ["/api/ai-metrics"],
+    retry: false,
+  });
+
   const topCategories = categories
     .filter((cat) => cat.status === "active")
     .sort((a, b) => a.displayOrder - b.displayOrder)
-    .slice(0, 6);
+    .slice(0, 4);
 
-  const links = {
-    platform: [
-      { label: "من نحن", href: "/about" },
-      { label: "اتصل بنا", href: "/contact" },
-      { label: "فريق العمل", href: "/team" },
-      { label: "الوظائف", href: "/careers" },
-    ],
-    features: [
-      { label: "لحظة بلحظة", href: "/moment-by-moment" },
-      { label: "مُقترب", href: "/muqtarib" },
-      { label: "المرقاب", href: "/mirqab" },
-      { label: "سبق قصير", href: "/shorts" },
-    ],
-    developers: [
-      { label: "دليل API", href: "/ai-publisher" },
-      { label: "سياسة AI", href: "/ai-policy" },
-      { label: "OpenAPI Spec", href: "/openapi.json", external: true },
-      { label: "AI Usage", href: "/.well-known/ai-usage.json", external: true },
-    ],
-    legal: [
-      { label: "سياسة الخصوصية", href: "/privacy" },
-      { label: "الشروط والأحكام", href: "/terms" },
-      { label: "سياسة الملفات", href: "/cookies" },
-    ],
-  };
+  const navigationCards = [
+    {
+      title: "الأخبار الرئيسية",
+      icon: Newspaper,
+      description: "تغطية شاملة للأحداث",
+      links: [
+        { label: "عاجل", href: "/breaking" },
+        { label: "محليات", href: "/category/local" },
+        { label: "العالم", href: "/category/world" },
+        { label: "اقتصاد", href: "/category/economy" },
+      ],
+    },
+    {
+      title: "الخدمات الذكية",
+      icon: Sparkles,
+      description: "تجربة إخبارية مدعومة بالذكاء الاصطناعي",
+      links: [
+        { label: "لحظة بلحظة", href: "/moment-by-moment" },
+        { label: "مُقترب", href: "/muqtarib" },
+        { label: "المرقاب", href: "/mirqab" },
+        { label: "النشرات الصوتية", href: "/audio-newsletters" },
+      ],
+    },
+    {
+      title: "محتوى مرئي",
+      icon: Video,
+      description: "فيديو وصوتيات",
+      links: [
+        { label: "سبق قصير", href: "/shorts" },
+        { label: "الأخبار الصوتية", href: "/audio-news" },
+        { label: "البودكاست", href: "/podcasts" },
+      ],
+    },
+    {
+      title: "AI & التطوير",
+      icon: Code,
+      description: "موارد للمطورين والذكاء الاصطناعي",
+      links: [
+        { label: "دليل API", href: "/ai-publisher" },
+        { label: "سياسة AI", href: "/ai-policy" },
+        { label: "OpenAPI Spec", href: "/openapi.json", external: true },
+        { label: "AI Usage", href: "/.well-known/ai-usage.json", external: true },
+      ],
+    },
+  ];
 
   const socialLinks = [
     { name: "Facebook", icon: Facebook, href: "https://facebook.com", testId: "facebook" },
@@ -71,7 +116,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-background border-t" data-testid="footer">
+    <footer className="bg-background" data-testid="footer">
       {/* Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({
@@ -89,188 +134,222 @@ export function Footer() {
         })
       }} />
 
-      <div className="container mx-auto px-4 py-12 lg:py-16">
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 mb-12">
-          
-          {/* Brand Section - Takes 3 columns on desktop */}
-          <div className="lg:col-span-3">
-            <Link href="/" data-testid="footer-logo">
-              <img 
-                src={sabqLogo} 
-                alt="سبق الذكية" 
-                className="h-10 w-auto mb-4 transition-opacity hover:opacity-80"
-              />
-            </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              منصة إخبارية عربية ذكية تقدم أحدث الأخبار بدعم من الذكاء الاصطناعي
-            </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-3 text-sm">
-              <a 
-                href="mailto:info@sabq.sa"
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-                data-testid="footer-email"
-              >
-                <Mail className="h-4 w-4" />
-                <span>info@sabq.sa</span>
-              </a>
-              <a 
-                href="tel:+966123456789"
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-                data-testid="footer-phone"
-              >
-                <Phone className="h-4 w-4" />
-                <span dir="ltr">+966 12 345 6789</span>
-              </a>
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4 mt-0.5" />
-                <span>الرياض، المملكة العربية السعودية</span>
+      {/* TIER 1: Hero Intelligence Banner */}
+      <div className="ai-gradient-bg ai-gradient-animate border-t border-b border-border/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left: Branding + Tagline */}
+            <div className="lg:col-span-5">
+              <div className="flex items-center gap-3 mb-4">
+                <Brain className="h-8 w-8 text-[hsl(var(--ai-primary))] ai-pulse-icon" />
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">سبق الذكية</h3>
+                  <p className="text-sm text-muted-foreground">إخبارك بذكاء اصطناعي</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                منصة إخبارية عربية ذكية تقدم أحدث الأخبار بدعم من الذكاء الاصطناعي، مع تحليلات متقدمة وتوصيات شخصية
+              </p>
+              
+              {/* Contact */}
+              <div className="flex flex-wrap gap-4 text-sm">
+                <a 
+                  href="mailto:info@sabq.sa"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                  data-testid="footer-email"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>info@sabq.sa</span>
+                </a>
+                <a 
+                  href="tel:+966123456789"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                  data-testid="footer-phone"
+                >
+                  <Phone className="h-4 w-4" />
+                  <span dir="ltr">+966 12 345 6789</span>
+                </a>
               </div>
             </div>
 
-            {/* Social Media */}
-            <div className="mt-6">
-              <div className="flex items-center gap-3">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.testId}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={social.name}
-                    data-testid={`footer-social-${social.testId}`}
-                  >
-                    <social.icon className="h-5 w-5" />
-                  </a>
+            {/* Center: AI Metrics */}
+            <div className="lg:col-span-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Zap className="h-5 w-5 text-[hsl(var(--ai-primary))] ai-float-icon" />
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {metrics?.articlesProcessed?.toLocaleString('en-US') || '0'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">مقالة معالجة</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <TrendingUp className="h-5 w-5 text-[hsl(var(--ai-secondary))] ai-float-icon" style={{ animationDelay: '0.5s' }} />
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {metrics?.aiSignalsActive?.toLocaleString('en-US') || '0'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">إشارة ذكاء نشطة</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <LayoutGrid className="h-5 w-5 text-[hsl(var(--ai-primary))] ai-float-icon" style={{ animationDelay: '1s' }} />
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {metrics?.smartCategoriesCount?.toLocaleString('en-US') || '0'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">تصنيف ذكي</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: CTA */}
+            <div className="lg:col-span-3 text-center lg:text-left">
+              <Link href="/ai-publisher">
+                <Button 
+                  className="bg-[hsl(var(--ai-primary))] hover:bg-[hsl(var(--ai-primary)/.9)] text-white gap-2"
+                  data-testid="footer-cta-ai-publisher"
+                >
+                  <Globe className="h-4 w-4" />
+                  استكشف API الذكي
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </Link>
+              <p className="text-xs text-muted-foreground mt-2">
+                للمطورين والذكاء الاصطناعي
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* TIER 2: Intelligent Navigation Cards */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {navigationCards.map((card, index) => {
+            const IconComponent = card.icon;
+            return (
+              <Card 
+                key={index}
+                className="p-6 hover-elevate transition-all duration-300 ai-glow-border group"
+                data-testid={`footer-card-${index}`}
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-[hsl(var(--ai-primary)/.1)] text-[hsl(var(--ai-primary))] group-hover:scale-110 transition-transform">
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-foreground mb-1">{card.title}</h4>
+                    <p className="text-xs text-muted-foreground">{card.description}</p>
+                  </div>
+                </div>
+                
+                <ul className="space-y-2">
+                  {card.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      {link.external ? (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                        >
+                          <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                        >
+                          <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Smart Categories Strip */}
+        {topCategories.length > 0 && (
+          <div className="border-t border-b border-border/50 py-6 mb-8">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
+                <span className="text-sm font-medium text-foreground">التصنيفات الذكية</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {topCategories.map((category) => (
+                  <Link key={category.id} href={`/category/${category.slug}`}>
+                    <Badge 
+                      variant="secondary" 
+                      className="hover:bg-[hsl(var(--ai-primary)/.1)] hover:text-[hsl(var(--ai-primary))] hover:border-[hsl(var(--ai-primary)/.3)] transition-all cursor-pointer"
+                      data-testid={`footer-category-${category.slug}`}
+                    >
+                      {category.nameAr}
+                    </Badge>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
+        )}
+      </div>
 
-          {/* Links Sections - 9 columns split into 3 */}
-          
-          {/* Platform */}
-          <div className="lg:col-span-2">
-            <h4 className="font-semibold text-sm mb-4">المنصة</h4>
-            <ul className="space-y-3">
-              {links.platform.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                    data-testid={`footer-link-${link.href.replace('/', '')}`}
-                  >
-                    <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                    {link.label}
-                  </Link>
-                </li>
+      {/* TIER 3: Utility Bar */}
+      <div className="border-t bg-muted/30">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Left: Copyright & License */}
+            <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-muted-foreground">
+              <p data-testid="footer-copyright">
+                © {currentYear.toLocaleString('en-US')} سبق الذكية. جميع الحقوق محفوظة.
+              </p>
+              <Separator orientation="vertical" className="hidden md:block h-4" />
+              <div className="flex items-center gap-2">
+                <Shield className="h-3 w-3" />
+                <span className="text-xs">Sabq-AI-Use-1.0</span>
+              </div>
+            </div>
+
+            {/* Center: Social Links */}
+            <div className="flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.testId}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full hover:bg-[hsl(var(--ai-primary)/.1)] text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-all"
+                  aria-label={social.name}
+                  data-testid={`footer-social-${social.testId}`}
+                >
+                  <social.icon className="h-4 w-4" />
+                </a>
               ))}
-            </ul>
+            </div>
+
+            {/* Right: Legal Links */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <Link href="/privacy" className="hover:text-foreground transition-colors" data-testid="footer-link-privacy">
+                الخصوصية
+              </Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors" data-testid="footer-link-terms">
+                الشروط
+              </Link>
+              <Link href="/cookies" className="hover:text-foreground transition-colors" data-testid="footer-link-cookies">
+                الملفات
+              </Link>
+            </div>
           </div>
-
-          {/* Features */}
-          <div className="lg:col-span-2">
-            <h4 className="font-semibold text-sm mb-4">المميزات</h4>
-            <ul className="space-y-3">
-              {links.features.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                    data-testid={`footer-service-${link.href.replace(/\//g, '').replace(/-/g, '')}`}
-                  >
-                    <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div className="lg:col-span-2">
-            <h4 className="font-semibold text-sm mb-4">الأقسام</h4>
-            <ul className="space-y-3">
-              {topCategories.map((category) => (
-                <li key={category.id}>
-                  <Link
-                    href={`/category/${category.slug}`}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                    data-testid={`footer-category-${category.slug}`}
-                  >
-                    <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                    {category.nameAr}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Developers */}
-          <div className="lg:col-span-2">
-            <h4 className="font-semibold text-sm mb-4">المطورين</h4>
-            <ul className="space-y-3">
-              {links.developers.map((link) => (
-                <li key={link.href}>
-                  {link.external ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                      data-testid={`footer-dev-${link.label.replace(/\s+/g, '-').toLowerCase()}`}
-                    >
-                      <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                      data-testid={`footer-dev-${link.label.replace(/\s+/g, '-').toLowerCase()}`}
-                    >
-                      <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div className="lg:col-span-1">
-            <h4 className="font-semibold text-sm mb-4">قانوني</h4>
-            <ul className="space-y-3">
-              {links.legal.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 group"
-                    data-testid={`footer-link-${link.href.replace('/', '')}`}
-                  >
-                    <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <Separator className="my-8" />
-
-        {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p data-testid="footer-copyright">
-            © {currentYear.toLocaleString('en-US')} سبق الذكية. جميع الحقوق محفوظة.
-          </p>
-          <p className="text-xs">
-            مرخص بموجب Sabq-AI-Use-1.0
-          </p>
         </div>
       </div>
     </footer>

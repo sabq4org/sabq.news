@@ -1931,6 +1931,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get AI metrics for footer
+  app.get("/api/ai-metrics", async (req, res) => {
+    try {
+      // Get total articles processed
+      const [{ articlesCount }] = await db
+        .select({ articlesCount: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(eq(articles.status, "published"));
+
+      // Get active smart categories count
+      const [{ smartCategoriesCount }] = await db
+        .select({ smartCategoriesCount: sql<number>`count(*)::int` })
+        .from(categories)
+        .where(
+          and(
+            inArray(categories.type, ["smart", "dynamic"]),
+            eq(categories.status, "active")
+          )
+        );
+
+      // Mock AI signals active (can be replaced with real data later)
+      const aiSignalsActive = 47;
+
+      res.json({
+        articlesProcessed: articlesCount || 0,
+        aiSignalsActive,
+        smartCategoriesCount: smartCategoriesCount || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching AI metrics:", error);
+      res.status(500).json({ 
+        message: "فشل في جلب مقاييس الذكاء الاصطناعي",
+        articlesProcessed: 0,
+        aiSignalsActive: 0,
+        smartCategoriesCount: 0,
+      });
+    }
+  });
+
   // Get single category by ID
   app.get("/api/categories/:id", async (req, res) => {
     try {
