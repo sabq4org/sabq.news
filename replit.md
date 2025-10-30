@@ -76,6 +76,15 @@ Native mobile app support is achieved via Capacitor 7.4.4, with configured iOS a
 - **Breakpoints**: Mobile-first (<640px), sm:640px+ for tablet/desktop transitions
 - **Accessibility**: All interactive elements maintain minimum 32px touch targets, text minimum 12px, labels preserved for screen readers
 
+**AI-Powered Smart Footer (2025-10-30):**
+The footer redesign reflects Sabq Smart's AI-powered identity through a 3-tier architecture:
+- **Tier 1: Intelligence Hero Banner** - AI gradient background with animated shimmer effect, displaying live metrics (articles processed, AI signals active, smart categories count) via `/api/ai-metrics` endpoint, brand tagline "إخبارك بذكاء اصطناعي", contact info, and CTA button to AI Publisher documentation
+- **Tier 2: Intelligent Navigation Cards** - 4 asymmetrical card tiles (Core News, Smart Services, Visual Content, AI & Development) with glow-on-hover borders, animated icons (pulse, float effects), and organized navigation links
+- **Tier 3: Smart Categories Strip** - Dynamic badges for active smart categories with hover effects and direct category links
+- **Tier 4: Utility Bar** - Minimalist base with copyright, Sabq-AI-Use-1.0 license, social media icons, and compact legal links
+- **Visual Design**: Neural blue-to-violet gradient (--ai-primary to --ai-secondary), glassmorphism cards, ai-glow-border effects, micro-animations (ai-pulse-icon, ai-float-icon) with prefers-reduced-motion support
+- **Technical**: Schema.org NewsMediaOrganization structured data, RTL-optimized layout, all numbers in English digits (toLocaleString('en-US')), Lucide React icons throughout, fully responsive grid (1-col mobile, 2-col tablet, 4-col desktop)
+
 ## External Dependencies
 
 **Authentication & Identity**
