@@ -309,35 +309,37 @@ export function QuadCategoriesBlock() {
   }
 
   return (
-    <div className="space-y-4" data-testid="quad-categories-block">
-      {/* Mobile View: Carousel */}
-      {data.mobileCarousel && (
-        <div className="lg:hidden">
-          <HorizontalCarousel items={data.items} />
-        </div>
-      )}
+    <div className="bg-muted/30 rounded-lg p-6 sm:p-8" data-testid="quad-categories-block">
+      <div className="space-y-6">
+        {/* Mobile View: Carousel */}
+        {data.mobileCarousel && (
+          <div className="lg:hidden">
+            <HorizontalCarousel items={data.items} />
+          </div>
+        )}
 
-      {/* Mobile View: Grid (if carousel disabled) */}
-      {!data.mobileCarousel && (
-        <div className="lg:hidden grid grid-cols-1 gap-4">
+        {/* Mobile View: Grid (if carousel disabled) */}
+        {!data.mobileCarousel && (
+          <div className="lg:hidden grid grid-cols-1 gap-4">
+            {data.items.map((item, index) => (
+              <CategoryColumn key={item.category.slug} data={item} index={index} />
+            ))}
+          </div>
+        )}
+
+        {/* Tablet View: 2 columns */}
+        <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">
           {data.items.map((item, index) => (
             <CategoryColumn key={item.category.slug} data={item} index={index} />
           ))}
         </div>
-      )}
 
-      {/* Tablet View: 2 columns */}
-      <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">
-        {data.items.map((item, index) => (
-          <CategoryColumn key={item.category.slug} data={item} index={index} />
-        ))}
-      </div>
-
-      {/* Desktop View: 4 columns */}
-      <div className="hidden xl:grid grid-cols-4 gap-4">
-        {data.items.map((item, index) => (
-          <CategoryColumn key={item.category.slug} data={item} index={index} />
-        ))}
+        {/* Desktop View: 4 columns */}
+        <div className="hidden xl:grid grid-cols-4 gap-4">
+          {data.items.map((item, index) => (
+            <CategoryColumn key={item.category.slug} data={item} index={index} />
+          ))}
+        </div>
       </div>
     </div>
   );

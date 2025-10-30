@@ -254,7 +254,7 @@ export function Footer() {
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link py-2 md:py-0"
                           data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
                         >
                           <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
@@ -263,7 +263,7 @@ export function Footer() {
                       ) : (
                         <Link
                           href={link.href}
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link"
+                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link py-2 md:py-0"
                           data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
                         >
                           <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
@@ -339,13 +339,13 @@ export function Footer() {
 
             {/* Right: Legal Links */}
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href="/privacy" className="hover:text-foreground transition-colors" data-testid="footer-link-privacy">
+              <Link href="/privacy" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-privacy">
                 الخصوصية
               </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors" data-testid="footer-link-terms">
+              <Link href="/terms" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-terms">
                 الشروط
               </Link>
-              <Link href="/cookies" className="hover:text-foreground transition-colors" data-testid="footer-link-cookies">
+              <Link href="/cookies" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-cookies">
                 الملفات
               </Link>
             </div>
