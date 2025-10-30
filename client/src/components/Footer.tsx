@@ -15,17 +15,15 @@ import {
   TrendingUp,
   Globe,
   Database,
-  Code,
   Shield,
   Newspaper,
   LayoutGrid,
-  Mic,
-  Video
+  Video,
+  Code
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -61,11 +59,10 @@ export function Footer() {
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .slice(0, 4);
 
-  const navigationCards = [
+  const navigationSections = [
     {
       title: "الأخبار الرئيسية",
       icon: Newspaper,
-      description: "تغطية شاملة للأحداث",
       links: [
         { label: "عاجل", href: "/breaking" },
         { label: "محليات", href: "/category/local" },
@@ -76,7 +73,6 @@ export function Footer() {
     {
       title: "الخدمات الذكية",
       icon: Sparkles,
-      description: "تجربة إخبارية مدعومة بالذكاء الاصطناعي",
       links: [
         { label: "لحظة بلحظة", href: "/moment-by-moment" },
         { label: "مُقترب", href: "/muqtarib" },
@@ -87,7 +83,6 @@ export function Footer() {
     {
       title: "محتوى مرئي",
       icon: Video,
-      description: "فيديو وصوتيات",
       links: [
         { label: "سبق قصير", href: "/shorts" },
         { label: "الأخبار الصوتية", href: "/audio-news" },
@@ -95,9 +90,8 @@ export function Footer() {
       ],
     },
     {
-      title: "AI & التطوير",
+      title: "للمطورين",
       icon: Code,
-      description: "موارد للمطورين والذكاء الاصطناعي",
       links: [
         { label: "دليل API", href: "/ai-publisher" },
         { label: "سياسة AI", href: "/ai-policy" },
@@ -134,220 +128,210 @@ export function Footer() {
         })
       }} />
 
-      {/* TIER 1: Hero Intelligence Banner */}
-      <div className="ai-gradient-bg ai-gradient-animate border-t border-b border-border/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left: Branding + Tagline */}
-            <div className="lg:col-span-5">
-              <div className="flex items-center gap-3 mb-4">
-                <Brain className="h-8 w-8 text-[hsl(var(--ai-primary))] ai-pulse-icon" />
-                <div>
-                  <h3 className="text-2xl font-bold text-foreground">سبق الذكية</h3>
-                  <p className="text-sm text-muted-foreground">إخبارك بذكاء اصطناعي</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                منصة إخبارية عربية ذكية تقدم أحدث الأخبار بدعم من الذكاء الاصطناعي، مع تحليلات متقدمة وتوصيات شخصية
-              </p>
-              
-              {/* Contact */}
-              <div className="flex flex-wrap gap-4 text-sm">
-                <a 
-                  href="mailto:info@sabq.sa"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
-                  data-testid="footer-email"
-                >
-                  <Mail className="h-4 w-4" />
-                  <span>info@sabq.sa</span>
-                </a>
-                <a 
-                  href="tel:+966123456789"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
-                  data-testid="footer-phone"
-                >
-                  <Phone className="h-4 w-4" />
-                  <span dir="ltr">+966 12 345 6789</span>
-                </a>
+      {/* Intelligence Banner */}
+      <div className="ai-gradient-bg ai-gradient-animate border-t border-b border-border/50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <Brain className="h-8 w-8 text-[hsl(var(--ai-primary))] ai-pulse-icon" />
+              <div className="text-center lg:text-right">
+                <h3 className="text-xl font-bold text-foreground">سبق الذكية</h3>
+                <p className="text-xs text-muted-foreground">إخبارك بذكاء اصطناعي</p>
               </div>
             </div>
 
-            {/* Center: AI Metrics */}
-            <div className="lg:col-span-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Zap className="h-5 w-5 text-[hsl(var(--ai-primary))] ai-float-icon" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
+            {/* AI Metrics */}
+            <div className="flex items-center gap-8">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Zap className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
+                  <div className="text-lg font-bold text-foreground">
                     {metrics?.articlesProcessed?.toLocaleString('en-US') || '0'}
                   </div>
-                  <div className="text-xs text-muted-foreground">مقالة معالجة</div>
                 </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <TrendingUp className="h-5 w-5 text-[hsl(var(--ai-secondary))] ai-float-icon" style={{ animationDelay: '0.5s' }} />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
+                <div className="text-xs text-muted-foreground">مقالة معالجة</div>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <TrendingUp className="h-4 w-4 text-[hsl(var(--ai-secondary))]" />
+                  <div className="text-lg font-bold text-foreground">
                     {metrics?.aiSignalsActive?.toLocaleString('en-US') || '0'}
                   </div>
-                  <div className="text-xs text-muted-foreground">إشارة ذكاء نشطة</div>
                 </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <LayoutGrid className="h-5 w-5 text-[hsl(var(--ai-primary))] ai-float-icon" style={{ animationDelay: '1s' }} />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
+                <div className="text-xs text-muted-foreground">إشارة ذكية</div>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <LayoutGrid className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
+                  <div className="text-lg font-bold text-foreground">
                     {metrics?.smartCategoriesCount?.toLocaleString('en-US') || '0'}
                   </div>
-                  <div className="text-xs text-muted-foreground">تصنيف ذكي</div>
                 </div>
+                <div className="text-xs text-muted-foreground">تصنيف ذكي</div>
               </div>
             </div>
 
-            {/* Right: CTA */}
-            <div className="lg:col-span-3 text-center lg:text-left">
-              <Link href="/ai-publisher">
-                <Button 
-                  className="bg-[hsl(var(--ai-primary))] hover:bg-[hsl(var(--ai-primary)/.9)] text-white gap-2"
-                  data-testid="footer-cta-ai-publisher"
-                >
-                  <Globe className="h-4 w-4" />
-                  استكشف API الذكي
-                  <ExternalLink className="h-3 w-3" />
-                </Button>
-              </Link>
-              <p className="text-xs text-muted-foreground mt-2">
-                للمطورين والذكاء الاصطناعي
-              </p>
-            </div>
+            {/* CTA */}
+            <Link href="/ai-publisher">
+              <Button 
+                className="bg-[hsl(var(--ai-primary))] hover:bg-[hsl(var(--ai-primary)/.9)] text-white gap-2"
+                data-testid="footer-cta-ai-publisher"
+              >
+                <Globe className="h-4 w-4" />
+                استكشف API
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* TIER 2: Intelligent Navigation Cards */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {navigationCards.map((card, index) => {
-            const IconComponent = card.icon;
-            return (
-              <Card 
-                key={index}
-                className="p-6 hover-elevate transition-all duration-300 ai-glow-border group"
-                data-testid={`footer-card-${index}`}
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-[hsl(var(--ai-primary)/.1)] text-[hsl(var(--ai-primary))] group-hover:scale-110 transition-transform">
-                    <IconComponent className="h-5 w-5" />
+      {/* Main Navigation */}
+      <div className="border-b">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {navigationSections.map((section, index) => {
+              const IconComponent = section.icon;
+              return (
+                <div key={index} data-testid={`footer-section-${index}`}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <IconComponent className="h-5 w-5 text-[hsl(var(--ai-primary))]" />
+                    <h4 className="font-semibold text-foreground">{section.title}</h4>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground mb-1">{card.title}</h4>
-                    <p className="text-xs text-muted-foreground">{card.description}</p>
-                  </div>
+                  <ul className="space-y-3">
+                    {section.links.map((link, linkIndex) => (
+                      <li key={linkIndex}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group py-2 md:py-0"
+                            data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                          >
+                            <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.href}
+                            className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group py-2 md:py-0"
+                            data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                          >
+                            <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover:opacity-100 group-hover:mr-0 transition-all" />
+                            {link.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                
-                <ul className="space-y-2">
-                  {card.links.map((link, linkIndex) => (
-                    <li key={linkIndex}>
-                      {link.external ? (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link py-2 md:py-0"
-                          data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
-                        >
-                          <ExternalLink className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
-                          {link.label}
-                        </a>
-                      ) : (
-                        <Link
-                          href={link.href}
-                          className="text-sm text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors inline-flex items-center gap-1 group/link py-2 md:py-0"
-                          data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
-                        >
-                          <ChevronRight className="h-3 w-3 opacity-0 -mr-4 group-hover/link:opacity-100 group-hover/link:mr-0 transition-all" />
-                          {link.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Smart Categories Strip */}
-        {topCategories.length > 0 && (
-          <div className="border-t border-b border-border/50 py-6 mb-8">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
-                <span className="text-sm font-medium text-foreground">التصنيفات الذكية</span>
+          {/* Smart Categories Strip */}
+          {topCategories.length > 0 && (
+            <div className="border-t border-border/50 pt-6 mt-8">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-[hsl(var(--ai-primary))]" />
+                  <span className="text-sm font-medium text-foreground">التصنيفات الذكية</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {topCategories.map((category) => (
+                    <Link key={category.id} href={`/category/${category.slug}`}>
+                      <Badge 
+                        variant="secondary" 
+                        className="hover:bg-[hsl(var(--ai-primary)/.1)] hover:text-[hsl(var(--ai-primary))] hover:border-[hsl(var(--ai-primary)/.3)] transition-all cursor-pointer"
+                        data-testid={`footer-category-${category.slug}`}
+                      >
+                        {category.nameAr}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {topCategories.map((category) => (
-                  <Link key={category.id} href={`/category/${category.slug}`}>
-                    <Badge 
-                      variant="secondary" 
-                      className="hover:bg-[hsl(var(--ai-primary)/.1)] hover:text-[hsl(var(--ai-primary))] hover:border-[hsl(var(--ai-primary)/.3)] transition-all cursor-pointer"
-                      data-testid={`footer-category-${category.slug}`}
-                    >
-                      {category.nameAr}
-                    </Badge>
-                  </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="bg-muted/20">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Brand Info */}
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <Link href="/" data-testid="footer-logo">
+                <img 
+                  src={sabqLogo} 
+                  alt="سبق الذكية" 
+                  className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
+                />
+              </Link>
+              <div className="flex flex-col md:flex-row items-center gap-3 text-xs text-muted-foreground">
+                <p data-testid="footer-copyright">
+                  © {currentYear.toLocaleString('en-US')} سبق الذكية
+                </p>
+                <Separator orientation="vertical" className="hidden md:block h-3" />
+                <div className="flex items-center gap-1.5">
+                  <Shield className="h-3 w-3" />
+                  <span>Sabq-AI-Use-1.0</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="flex flex-col items-center md:items-start gap-2 text-sm">
+              <a 
+                href="mailto:info@sabq.sa"
+                className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                data-testid="footer-email"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                <span>info@sabq.sa</span>
+              </a>
+              <a 
+                href="tel:+966123456789"
+                className="flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-colors"
+                data-testid="footer-phone"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                <span dir="ltr">+966 12 345 6789</span>
+              </a>
+            </div>
+
+            {/* Social + Legal */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.testId}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full hover:bg-[hsl(var(--ai-primary)/.1)] text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-all"
+                    aria-label={social.name}
+                    data-testid={`footer-social-${social.testId}`}
+                  >
+                    <social.icon className="h-4 w-4" />
+                  </a>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* TIER 3: Utility Bar */}
-      <div className="border-t bg-muted/30">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Left: Copyright & License */}
-            <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-muted-foreground">
-              <p data-testid="footer-copyright">
-                © {currentYear.toLocaleString('en-US')} سبق الذكية. جميع الحقوق محفوظة.
-              </p>
-              <Separator orientation="vertical" className="hidden md:block h-4" />
-              <div className="flex items-center gap-2">
-                <Shield className="h-3 w-3" />
-                <span className="text-xs">Sabq-AI-Use-1.0</span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <Link href="/privacy" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-privacy">
+                  الخصوصية
+                </Link>
+                <Separator orientation="vertical" className="h-3" />
+                <Link href="/terms" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-terms">
+                  الشروط
+                </Link>
+                <Separator orientation="vertical" className="h-3" />
+                <Link href="/cookies" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-cookies">
+                  الملفات
+                </Link>
               </div>
-            </div>
-
-            {/* Center: Social Links */}
-            <div className="flex items-center gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.testId}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full hover:bg-[hsl(var(--ai-primary)/.1)] text-muted-foreground hover:text-[hsl(var(--ai-primary))] transition-all"
-                  aria-label={social.name}
-                  data-testid={`footer-social-${social.testId}`}
-                >
-                  <social.icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
-
-            {/* Right: Legal Links */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href="/privacy" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-privacy">
-                الخصوصية
-              </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-terms">
-                الشروط
-              </Link>
-              <Link href="/cookies" className="hover:text-foreground transition-colors py-2 md:py-0" data-testid="footer-link-cookies">
-                الملفات
-              </Link>
             </div>
           </div>
         </div>
