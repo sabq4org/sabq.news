@@ -75,12 +75,12 @@
   --destructive-foreground: 0 0% 98%;
 
   --input: 220 15% 75%;
-  --ring: 210 90% 45%;
-  --chart-1: 210 90% 45%;
-  --chart-2: 25 85% 55%;
-  --chart-3: 150 70% 45%;
-  --chart-4: 200 80% 50%;
-  --chart-5: 280 70% 55%;
+  --ring: 220 65% 50%;
+  --chart-1: 220 65% 50%;
+  --chart-2: 25 75% 55%;
+  --chart-3: 150 60% 45%;
+  --chart-4: 200 65% 50%;
+  --chart-5: 280 60% 55%;
 
   /* AI Accent Colors - Neural Blue to Violet Gradient */
   --ai-primary: 220 85% 55%;
@@ -206,12 +206,12 @@
   --destructive-foreground: 0 0% 98%;
 
   --input: 220 20% 35%;
-  --ring: 210 80% 60%;
-  --chart-1: 210 80% 65%;
-  --chart-2: 25 85% 65%;
-  --chart-3: 150 70% 60%;
-  --chart-4: 200 80% 65%;
-  --chart-5: 280 70% 65%;
+  --ring: 220 60% 58%;
+  --chart-1: 220 60% 58%;
+  --chart-2: 25 75% 60%;
+  --chart-3: 150 60% 55%;
+  --chart-4: 200 65% 58%;
+  --chart-5: 280 60% 60%;
 
   /* AI Accent Colors - Neural Blue to Violet Gradient (Dark Mode) */
   --ai-primary: 220 75% 65%;
