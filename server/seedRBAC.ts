@@ -116,6 +116,12 @@ export async function seedRBAC() {
       isSystem: false,
     },
     {
+      name: "opinion_author",
+      nameAr: "كاتب مقال رأي",
+      description: "Can write and manage opinion articles",
+      isSystem: false,
+    },
+    {
       name: "reader",
       nameAr: "قارئ",
       description: "Basic reader access",
@@ -173,6 +179,11 @@ export async function seedRBAC() {
     comments_moderator: [
       "comments.view", "comments.approve", "comments.reject", "comments.delete", "comments.restore",
       "articles.view",
+    ],
+    
+    opinion_author: [
+      "articles.view", "articles.create", "articles.edit_own",
+      "categories.view",
     ],
     
     reader: [
