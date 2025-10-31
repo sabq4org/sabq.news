@@ -13,62 +13,62 @@
   --opaque-button-border-intensity: -8; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0, .02);
+  --elevate-2: rgba(0,0,0, .05);
 
-  --background: 60 11% 97%;
+  --background: 0 0% 99%;
 
-  --foreground: 220 20% 15%;
+  --foreground: 220 18% 20%;
 
-  --border: 220 10% 88%;
+  --border: 220 12% 90%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 220 20% 15%;
+  --card-foreground: 220 18% 20%;
 
-  --card-border: 220 8% 92%;
+  --card-border: 220 10% 94%;
 
-  --sidebar: 220 5% 96%;
+  --sidebar: 220 8% 97%;
 
-  --sidebar-foreground: 220 20% 15%;
+  --sidebar-foreground: 220 18% 20%;
 
-  --sidebar-border: 220 8% 89%;
+  --sidebar-border: 220 10% 92%;
 
-  --sidebar-primary: 210 90% 45%;
+  --sidebar-primary: 220 65% 50%;
 
-  --sidebar-primary-foreground: 210 90% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 6% 92%;
+  --sidebar-accent: 220 8% 94%;
 
-  --sidebar-accent-foreground: 220 20% 15%;
+  --sidebar-accent-foreground: 220 18% 20%;
 
-  --sidebar-ring: 210 90% 45%;
+  --sidebar-ring: 220 65% 50%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 220 20% 15%;
+  --popover-foreground: 220 18% 20%;
 
-  --popover-border: 220 10% 91%;
+  --popover-border: 220 12% 92%;
 
-  --primary: 210 90% 45%;
+  --primary: 220 65% 50%;
 
-  --primary-foreground: 210 90% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 6% 94%;
+  --secondary: 220 8% 95%;
 
-  --secondary-foreground: 220 20% 15%;
+  --secondary-foreground: 220 18% 20%;
 
-  --muted: 220 8% 95%;
+  --muted: 220 10% 96%;
 
-  --muted-foreground: 220 15% 40%;
+  --muted-foreground: 220 15% 45%;
 
-  --footer: 220 12% 85%;
+  --footer: 220 12% 88%;
 
-  --footer-foreground: 220 20% 15%;
+  --footer-foreground: 220 18% 20%;
 
-  --accent: 25 85% 95%;
+  --accent: 25 75% 92%;
 
-  --accent-foreground: 25 85% 35%;
+  --accent-foreground: 25 70% 35%;
 
   --destructive: 0 75% 50%;
 
@@ -144,62 +144,62 @@
   --opaque-button-border-intensity: 9;  /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .07);
 
-  --background: 220 25% 8%;
+  --background: 220 22% 10%;
 
-  --foreground: 0 0% 95%;
+  --foreground: 0 0% 96%;
 
-  --border: 220 20% 18%;
+  --border: 220 18% 20%;
 
-  --card: 220 20% 12%;
+  --card: 220 20% 14%;
 
-  --card-foreground: 0 0% 95%;
+  --card-foreground: 0 0% 96%;
 
-  --card-border: 220 18% 16%;
+  --card-border: 220 18% 18%;
 
-  --sidebar: 220 22% 10%;
+  --sidebar: 220 22% 12%;
 
-  --sidebar-foreground: 0 0% 95%;
+  --sidebar-foreground: 0 0% 96%;
 
-  --sidebar-border: 220 20% 14%;
+  --sidebar-border: 220 20% 16%;
 
-  --sidebar-primary: 210 80% 60%;
+  --sidebar-primary: 220 60% 58%;
 
-  --sidebar-primary-foreground: 210 90% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 18% 15%;
+  --sidebar-accent: 220 18% 16%;
 
-  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-accent-foreground: 0 0% 96%;
 
-  --sidebar-ring: 210 80% 60%;
+  --sidebar-ring: 220 60% 58%;
 
-  --popover: 220 20% 12%;
+  --popover: 220 20% 14%;
 
-  --popover-foreground: 0 0% 95%;
+  --popover-foreground: 0 0% 96%;
 
-  --popover-border: 220 18% 16%;
+  --popover-border: 220 18% 18%;
 
-  --primary: 210 80% 60%;
+  --primary: 220 60% 58%;
 
-  --primary-foreground: 210 90% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 18% 18%;
+  --secondary: 220 18% 20%;
 
-  --secondary-foreground: 0 0% 95%;
+  --secondary-foreground: 0 0% 96%;
 
-  --muted: 220 18% 15%;
+  --muted: 220 18% 18%;
 
   --muted-foreground: 220 10% 70%;
 
-  --footer: 220 20% 12%;
+  --footer: 220 20% 14%;
 
-  --footer-foreground: 0 0% 95%;
+  --footer-foreground: 0 0% 96%;
 
-  --accent: 25 85% 20%;
+  --accent: 25 70% 25%;
 
-  --accent-foreground: 25 85% 85%;
+  --accent-foreground: 25 75% 88%;
 
   --destructive: 0 75% 50%;
 

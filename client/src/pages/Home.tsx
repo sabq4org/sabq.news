@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { NavigationBar } from "@/components/NavigationBar";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { AIRecommendationsCarousel } from "@/components/AIRecommendationsCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
 import { ShortsHomeBlock } from "@/components/ShortsHomeBlock";
 import { TrendingKeywords } from "@/components/TrendingKeywords";
@@ -224,7 +225,7 @@ export default function Home() {
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
           {/* Hero Section */}
           {homepage.hero && homepage.hero.length > 0 && (
-            <div className="mb-20">
+            <div className="mb-12">
               <HeroCarousel articles={homepage.hero} />
             </div>
           )}
@@ -233,6 +234,13 @@ export default function Home() {
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
           ))}
+        </div>
+
+        {/* AI Recommendations Carousel */}
+        <AIRecommendationsCarousel />
+
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-8">
+          {/* Placeholder for more content */}
         </div>
 
         {/* Visual Separator + AI Section with soft gradient background */}
