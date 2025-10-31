@@ -4,7 +4,6 @@ import { Header } from "@/components/Header";
 import { NavigationBar } from "@/components/NavigationBar";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { AIRecommendationsCarousel } from "@/components/AIRecommendationsCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
 import { ShortsHomeBlock } from "@/components/ShortsHomeBlock";
 import { TrendingKeywords } from "@/components/TrendingKeywords";
@@ -25,80 +24,34 @@ import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/sch
 
 function AudioBriefsSection() {
   const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   
-  const { data: briefs, isLoading } = useQuery<AudioNewsBrief[]>({
+  const { data: briefs } = useQuery<AudioNewsBrief[]>({
     queryKey: ['/api/audio-briefs/published'],
   });
-
-  if (isLoading) {
-    return (
-      <section className="py-12 bg-gradient-to-br from-primary/5 to-accent/5" dir="rtl">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Headphones className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-40 rounded-2xl" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
   
   if (!briefs || briefs.length === 0) return null;
   
   return (
-    <section className="py-12 bg-gradient-to-br from-primary/5 to-accent/5" dir="rtl">
+    <section className="py-8 bg-gradient-to-l from-primary/5 to-accent/5" dir="rtl">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Headphones className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold">الأخبار الصوتية</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              نشرات صوتية يومية من فريق سبق الإخباري
-            </p>
-          </div>
+        <div className="flex items-center gap-3 mb-6">
+          <Headphones className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold">الأخبار الصوتية</h2>
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {briefs.map((brief, index) => (
+          {briefs.map((brief) => (
             <div
               key={brief.id}
-              className="group relative p-6 bg-card border rounded-2xl hover-elevate cursor-pointer transition-all"
+              className="p-4 bg-card border rounded-lg hover-elevate cursor-pointer"
               onClick={() => setSelectedBrief(brief)}
-              onMouseEnter={() => setActiveIndex(index)}
               data-testid={`audio-brief-${brief.id}`}
             >
-              {/* Waveform Animation */}
-              <div className="absolute top-4 left-4 flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((bar) => (
-                  <div
-                    key={bar}
-                    className="w-1 bg-primary rounded-full transition-all"
-                    style={{
-                      height: activeIndex === index ? `${Math.random() * 20 + 10}px` : '12px',
-                      animation: activeIndex === index ? `pulse ${Math.random() * 0.5 + 0.5}s ease-in-out infinite` : 'none',
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-start gap-3 mt-8">
+              <div className="flex items-start gap-3">
                 <Button
                   size="icon"
                   variant="default"
-                  className="shrink-0 group-hover:scale-110 transition-transform"
+                  className="shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedBrief(brief);
@@ -108,17 +61,14 @@ function AudioBriefsSection() {
                   <Play className="h-4 w-4" />
                 </Button>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold line-clamp-2 mb-2">{brief.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                  <h3 className="font-semibold line-clamp-2 mb-1">{brief.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {brief.content}
                   </p>
                   {brief.duration && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        <span>{Math.floor(brief.duration / 60)}:{(brief.duration % 60).toString().padStart(2, '0')}</span>
-                      </div>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {Math.floor(brief.duration / 60)}:{(brief.duration % 60).toString().padStart(2, '0')}
+                    </p>
                   )}
                 </div>
               </div>
@@ -131,12 +81,7 @@ function AudioBriefsSection() {
         <Dialog open={!!selectedBrief} onOpenChange={() => setSelectedBrief(null)}>
           <DialogContent className="max-w-2xl" dir="rtl">
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Headphones className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-xl font-bold">{selectedBrief.title}</h2>
-              </div>
+              <h2 className="text-xl font-bold">{selectedBrief.title}</h2>
               <p className="text-muted-foreground">{selectedBrief.content}</p>
               <AudioPlayer
                 newsletterId={selectedBrief.id}
@@ -279,7 +224,7 @@ export default function Home() {
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
           {/* Hero Section */}
           {homepage.hero && homepage.hero.length > 0 && (
-            <div className="mb-12">
+            <div className="mb-20">
               <HeroCarousel articles={homepage.hero} />
             </div>
           )}
@@ -288,13 +233,6 @@ export default function Home() {
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
           ))}
-        </div>
-
-        {/* AI Recommendations Carousel */}
-        <AIRecommendationsCarousel />
-
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-8">
-          {/* Placeholder for more content */}
         </div>
 
         {/* Visual Separator + AI Section with soft gradient background */}

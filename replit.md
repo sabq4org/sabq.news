@@ -6,29 +6,6 @@ Sabq Smart is an AI-powered Arabic news platform built with React, Express, and 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes
-
-### Homepage Redesign (October 31, 2025)
-**Visual Identity Update:**
-- Updated color system from bright blue (210 90% 45%) to calm royal blue (220 65% 50%) for a professional, soothing aesthetic
-- Changed background from beige (60 11% 97%) to pure white (0 0% 99%) for improved readability
-- Reduced elevation shadows (elevate-1 from .03 to .02) for subtler interactions
-- Applied same calm palette principles to dark mode
-
-**New Components:**
-- **AIRecommendationsCarousel:** Horizontal carousel showcasing AI-powered article recommendations with Framer Motion animations, RTL support, loading skeletons, and empty states
-- **Enhanced AudioBriefsSection:** Redesigned with waveform animations, improved card design, and better loading states
-- **Enhanced ShortsHomeBlock:** Added Framer Motion animations for smooth transitions and modern feel
-
-**New API Endpoints:**
-- `/api/recommendations/ai` - Smart recommendations endpoint that serves personalized content for logged-in users or featured articles for anonymous visitors
-
-**Design Improvements:**
-- All numbers display in English digits using toLocaleString('en-US')
-- Increased whitespace and improved visual hierarchy
-- Smooth Framer Motion animations throughout
-- Better empty/error state handling across components
-
 ## System Architecture
 
 ### UI/UX Decisions

@@ -13,74 +13,74 @@
   --opaque-button-border-intensity: -8; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .02);
-  --elevate-2: rgba(0,0,0, .05);
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
 
-  --background: 0 0% 99%;
+  --background: 60 11% 97%;
 
-  --foreground: 220 18% 20%;
+  --foreground: 220 20% 15%;
 
-  --border: 220 12% 90%;
+  --border: 220 10% 88%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 220 18% 20%;
+  --card-foreground: 220 20% 15%;
 
-  --card-border: 220 10% 94%;
+  --card-border: 220 8% 92%;
 
-  --sidebar: 220 8% 97%;
+  --sidebar: 220 5% 96%;
 
-  --sidebar-foreground: 220 18% 20%;
+  --sidebar-foreground: 220 20% 15%;
 
-  --sidebar-border: 220 10% 92%;
+  --sidebar-border: 220 8% 89%;
 
-  --sidebar-primary: 220 65% 50%;
+  --sidebar-primary: 210 90% 45%;
 
-  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-primary-foreground: 210 90% 98%;
 
-  --sidebar-accent: 220 8% 94%;
+  --sidebar-accent: 220 6% 92%;
 
-  --sidebar-accent-foreground: 220 18% 20%;
+  --sidebar-accent-foreground: 220 20% 15%;
 
-  --sidebar-ring: 220 65% 50%;
+  --sidebar-ring: 210 90% 45%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 220 18% 20%;
+  --popover-foreground: 220 20% 15%;
 
-  --popover-border: 220 12% 92%;
+  --popover-border: 220 10% 91%;
 
-  --primary: 220 65% 50%;
+  --primary: 210 90% 45%;
 
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 210 90% 98%;
 
-  --secondary: 220 8% 95%;
+  --secondary: 220 6% 94%;
 
-  --secondary-foreground: 220 18% 20%;
+  --secondary-foreground: 220 20% 15%;
 
-  --muted: 220 10% 96%;
+  --muted: 220 8% 95%;
 
-  --muted-foreground: 220 15% 45%;
+  --muted-foreground: 220 15% 40%;
 
-  --footer: 220 12% 88%;
+  --footer: 220 12% 85%;
 
-  --footer-foreground: 220 18% 20%;
+  --footer-foreground: 220 20% 15%;
 
-  --accent: 25 75% 92%;
+  --accent: 25 85% 95%;
 
-  --accent-foreground: 25 70% 35%;
+  --accent-foreground: 25 85% 35%;
 
   --destructive: 0 75% 50%;
 
   --destructive-foreground: 0 0% 98%;
 
   --input: 220 15% 75%;
-  --ring: 220 65% 50%;
-  --chart-1: 220 65% 50%;
-  --chart-2: 25 75% 55%;
-  --chart-3: 150 60% 45%;
-  --chart-4: 200 65% 50%;
-  --chart-5: 280 60% 55%;
+  --ring: 210 90% 45%;
+  --chart-1: 210 90% 45%;
+  --chart-2: 25 85% 55%;
+  --chart-3: 150 70% 45%;
+  --chart-4: 200 80% 50%;
+  --chart-5: 280 70% 55%;
 
   /* AI Accent Colors - Neural Blue to Violet Gradient */
   --ai-primary: 220 85% 55%;
@@ -144,74 +144,74 @@
   --opaque-button-border-intensity: 9;  /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255,255,255, .03);
-  --elevate-2: rgba(255,255,255, .07);
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
 
-  --background: 220 22% 10%;
+  --background: 220 25% 8%;
 
-  --foreground: 0 0% 96%;
+  --foreground: 0 0% 95%;
 
-  --border: 220 18% 20%;
+  --border: 220 20% 18%;
 
-  --card: 220 20% 14%;
+  --card: 220 20% 12%;
 
-  --card-foreground: 0 0% 96%;
+  --card-foreground: 0 0% 95%;
 
-  --card-border: 220 18% 18%;
+  --card-border: 220 18% 16%;
 
-  --sidebar: 220 22% 12%;
+  --sidebar: 220 22% 10%;
 
-  --sidebar-foreground: 0 0% 96%;
+  --sidebar-foreground: 0 0% 95%;
 
-  --sidebar-border: 220 20% 16%;
+  --sidebar-border: 220 20% 14%;
 
-  --sidebar-primary: 220 60% 58%;
+  --sidebar-primary: 210 80% 60%;
 
-  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-primary-foreground: 210 90% 98%;
 
-  --sidebar-accent: 220 18% 16%;
+  --sidebar-accent: 220 18% 15%;
 
-  --sidebar-accent-foreground: 0 0% 96%;
+  --sidebar-accent-foreground: 0 0% 95%;
 
-  --sidebar-ring: 220 60% 58%;
+  --sidebar-ring: 210 80% 60%;
 
-  --popover: 220 20% 14%;
+  --popover: 220 20% 12%;
 
-  --popover-foreground: 0 0% 96%;
+  --popover-foreground: 0 0% 95%;
 
-  --popover-border: 220 18% 18%;
+  --popover-border: 220 18% 16%;
 
-  --primary: 220 60% 58%;
+  --primary: 210 80% 60%;
 
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 210 90% 98%;
 
-  --secondary: 220 18% 20%;
+  --secondary: 220 18% 18%;
 
-  --secondary-foreground: 0 0% 96%;
+  --secondary-foreground: 0 0% 95%;
 
-  --muted: 220 18% 18%;
+  --muted: 220 18% 15%;
 
   --muted-foreground: 220 10% 70%;
 
-  --footer: 220 20% 14%;
+  --footer: 220 20% 12%;
 
-  --footer-foreground: 0 0% 96%;
+  --footer-foreground: 0 0% 95%;
 
-  --accent: 25 70% 25%;
+  --accent: 25 85% 20%;
 
-  --accent-foreground: 25 75% 88%;
+  --accent-foreground: 25 85% 85%;
 
   --destructive: 0 75% 50%;
 
   --destructive-foreground: 0 0% 98%;
 
   --input: 220 20% 35%;
-  --ring: 220 60% 58%;
-  --chart-1: 220 60% 58%;
-  --chart-2: 25 75% 60%;
-  --chart-3: 150 60% 55%;
-  --chart-4: 200 65% 58%;
-  --chart-5: 280 60% 60%;
+  --ring: 210 80% 60%;
+  --chart-1: 210 80% 65%;
+  --chart-2: 25 85% 65%;
+  --chart-3: 150 70% 60%;
+  --chart-4: 200 80% 65%;
+  --chart-5: 280 70% 65%;
 
   /* AI Accent Colors - Neural Blue to Violet Gradient (Dark Mode) */
   --ai-primary: 220 75% 65%;

@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Film, Play, Eye, Heart, ChevronLeft, Sparkles } from "lucide-react";
+import { Film, Play, Eye, Heart, ChevronLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 
 interface ShortItem {
   id: string;
@@ -75,21 +74,10 @@ export function ShortsHomeBlock() {
     : '';
 
   return (
-    <motion.div 
-      className="space-y-3" 
-      data-testid="shorts-home-block"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="space-y-3" data-testid="shorts-home-block">
       {/* Header */}
-      <motion.div 
-        className="flex items-center gap-2"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
+      <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
           <Film className="h-3.5 w-3.5 text-white" />
         </div>
         <div>
@@ -100,98 +88,91 @@ export function ShortsHomeBlock() {
             محتوى مرئي سريع ومميز
           </p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Featured Short Card + View More Button */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         {/* Vertical Card (9:16 aspect ratio) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <Link href="/shorts">
-            <Card 
-              className="group relative w-full sm:w-[280px] aspect-[9/16] overflow-hidden cursor-pointer hover-elevate border-2 shadow-xl"
-              data-testid={`short-card-${featuredShort.id}`}
-            >
-              {/* Cover Image */}
-              <div className="absolute inset-0">
-                <img 
-                  src={featuredShort.coverImage} 
-                  alt={featuredShort.title}
-                  className="w-full h-full object-cover"
-                  data-testid={`short-cover-${featuredShort.id}`}
-                />
-                
-                {/* Gradient Overlay for better text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        <Link href="/shorts">
+          <Card 
+            className="group relative w-full sm:w-[280px] aspect-[9/16] overflow-hidden cursor-pointer hover-elevate border-2"
+            data-testid={`short-card-${featuredShort.id}`}
+          >
+            {/* Cover Image */}
+            <div className="absolute inset-0">
+              <img 
+                src={featuredShort.coverImage} 
+                alt={featuredShort.title}
+                className="w-full h-full object-cover"
+                data-testid={`short-cover-${featuredShort.id}`}
+              />
+              
+              {/* Gradient Overlay for better text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            </div>
+
+            {/* Play Button Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Play className="h-8 w-8 text-white fill-white" data-testid={`play-button-${featuredShort.id}`} />
               </div>
+            </div>
 
-              {/* Play Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play className="h-8 w-8 text-white fill-white" data-testid={`play-button-${featuredShort.id}`} />
-                </div>
-              </div>
-
-              {/* Content Overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-4 space-y-3">
-                {/* Category Badge */}
-                {featuredShort.category && (
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-white/20 text-white backdrop-blur-sm border-0"
-                    data-testid={`short-category-${featuredShort.id}`}
-                  >
-                    {featuredShort.category.nameAr}
-                  </Badge>
-                )}
-
-                {/* Title */}
-                <h3 
-                  className="text-white font-bold text-lg line-clamp-2"
-                  data-testid={`short-title-${featuredShort.id}`}
+            {/* Content Overlay */}
+            <div className="absolute inset-x-0 bottom-0 p-4 space-y-3">
+              {/* Category Badge */}
+              {featuredShort.category && (
+                <Badge 
+                  variant="secondary" 
+                  className="bg-white/20 text-white backdrop-blur-sm border-0"
+                  data-testid={`short-category-${featuredShort.id}`}
                 >
-                  {featuredShort.title}
-                </h3>
+                  {featuredShort.category.nameAr}
+                </Badge>
+              )}
 
-                {/* Reporter Name */}
-                {reporterName && (
-                  <p 
-                    className="text-white/90 text-sm"
-                    data-testid={`short-reporter-${featuredShort.id}`}
-                  >
-                    {reporterName}
-                  </p>
-                )}
+              {/* Title */}
+              <h3 
+                className="text-white font-bold text-lg line-clamp-2"
+                data-testid={`short-title-${featuredShort.id}`}
+              >
+                {featuredShort.title}
+              </h3>
 
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-white/80 text-sm">
-                  <div className="flex items-center gap-1" data-testid={`short-views-${featuredShort.id}`}>
-                    <Eye className="h-4 w-4" />
-                    <span>{featuredShort.views.toLocaleString('en-US')}</span>
-                  </div>
-                  <div className="flex items-center gap-1" data-testid={`short-likes-${featuredShort.id}`}>
-                    <Heart className="h-4 w-4" />
-                    <span>{featuredShort.likes.toLocaleString('en-US')}</span>
-                  </div>
+              {/* Reporter Name */}
+              {reporterName && (
+                <p 
+                  className="text-white/90 text-sm"
+                  data-testid={`short-reporter-${featuredShort.id}`}
+                >
+                  {reporterName}
+                </p>
+              )}
+
+              {/* Stats */}
+              <div className="flex items-center gap-4 text-white/80 text-sm">
+                <div className="flex items-center gap-1" data-testid={`short-views-${featuredShort.id}`}>
+                  <Eye className="h-4 w-4" />
+                  <span>{featuredShort.views.toLocaleString('en-US')}</span>
                 </div>
-
-                {/* Duration Badge (if available) */}
-                {featuredShort.duration && (
-                  <div 
-                    className="absolute top-4 left-4 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm"
-                    data-testid={`short-duration-${featuredShort.id}`}
-                  >
-                    {Math.floor(featuredShort.duration / 60)}:{(featuredShort.duration % 60).toString().padStart(2, '0')}
-                  </div>
-                )}
+                <div className="flex items-center gap-1" data-testid={`short-likes-${featuredShort.id}`}>
+                  <Heart className="h-4 w-4" />
+                  <span>{featuredShort.likes.toLocaleString('en-US')}</span>
+                </div>
               </div>
-            </Card>
-          </Link>
-        </motion.div>
+
+              {/* Duration Badge (if available) */}
+              {featuredShort.duration && (
+                <div 
+                  className="absolute top-4 left-4 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm"
+                  data-testid={`short-duration-${featuredShort.id}`}
+                >
+                  {Math.floor(featuredShort.duration / 60)}:{(featuredShort.duration % 60).toString().padStart(2, '0')}
+                </div>
+              )}
+            </div>
+          </Card>
+        </Link>
 
         {/* View More Button */}
         <Link href="/shorts">
@@ -205,6 +186,6 @@ export function ShortsHomeBlock() {
           </Button>
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }

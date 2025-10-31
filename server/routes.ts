@@ -4288,42 +4288,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
-  // AI RECOMMENDATIONS ROUTE
-  // ============================================================
-
-  app.get("/api/recommendations/ai", async (req: any, res) => {
-    try {
-      const userId = req.user?.id;
-      const limit = parseInt(req.query.limit as string) || 5;
-
-      let recommendations;
-      
-      if (userId) {
-        // Get personalized recommendations for logged-in users
-        recommendations = await getPersonalizedRecommendations(userId, limit);
-      } else {
-        // Get trending articles for anonymous users
-        recommendations = await db
-          .select()
-          .from(articles)
-          .where(
-            and(
-              eq(articles.status, "published"),
-              eq(articles.isFeatured, true)
-            )
-          )
-          .orderBy(desc(articles.views))
-          .limit(limit);
-      }
-
-      res.json(recommendations);
-    } catch (error) {
-      console.error("Error fetching AI recommendations:", error);
-      res.status(500).json({ message: "Failed to fetch recommendations" });
-    }
-  });
-
-  // ============================================================
   // TRENDING KEYWORDS ROUTE
   // ============================================================
 
