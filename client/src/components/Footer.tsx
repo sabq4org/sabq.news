@@ -129,7 +129,7 @@ export function Footer() {
       }} />
 
       {/* Intelligence Banner */}
-      <div className="border-b border-border/20">
+      <div>
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             {/* Brand */}
@@ -187,7 +187,7 @@ export function Footer() {
       </div>
 
       {/* Main Navigation */}
-      <div className="border-b border-border/20">
+      <div>
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {navigationSections.map((section, index) => {
