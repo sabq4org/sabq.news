@@ -2505,7 +2505,10 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(articles.status, "published"),
           eq(articles.hideFromHomepage, false),
-          ne(articles.articleType, "opinion")
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, "opinion")
+          )
         )
       )
       .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
