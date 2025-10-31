@@ -17,6 +17,8 @@ import CategoryPage from "@/pages/CategoryPage";
 import KeywordPage from "@/pages/KeywordPage";
 import NewsPage from "@/pages/NewsPage";
 import CategoriesListPage from "@/pages/CategoriesListPage";
+import OpinionPage from "@/pages/OpinionPage";
+import OpinionDetailPage from "@/pages/OpinionDetailPage";
 import Dashboard from "@/pages/Dashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
@@ -117,6 +119,8 @@ function Router() {
       <Route path="/ai-publisher" component={AIPublisher} />
       <Route path="/ai-policy" component={AIPolicy} />
       <Route path="/news" component={NewsPage} />
+      <Route path="/opinion" component={OpinionPage} />
+      <Route path="/opinion/:slug" component={OpinionDetailPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/shorts" component={ShortsPage} />
       <Route path="/login" component={Login} />

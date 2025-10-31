@@ -13308,10 +13308,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Convert all timestamp fields from strings to Date objects if provided
+      const updateData: any = { ...parsed.data };
+      
+      // Convert timestamp fields (if they exist and are strings)
+      const timestampFields = ['publishedAt', 'scheduledAt'];
+      timestampFields.forEach(field => {
+        if (updateData[field] && typeof updateData[field] === 'string') {
+          updateData[field] = new Date(updateData[field]);
+        }
+      });
+
       const [updatedArticle] = await db
         .update(articles)
         .set({
-          ...parsed.data,
+          ...updateData,
           updatedAt: new Date(),
         })
         .where(eq(articles.id, articleId))
@@ -13580,7 +13591,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             articleTitle: updatedArticle.title,
             articleSlug: updatedArticle.slug,
             categoryId: updatedArticle.categoryId,
-            articleType: "opinion",
           },
         });
       } catch (notificationError) {
