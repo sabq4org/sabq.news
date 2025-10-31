@@ -95,6 +95,7 @@ import ShortsManagement from "@/pages/ShortsManagement";
 import ShortsEditor from "@/pages/ShortsEditor";
 import QuadCategoriesBlockSettings from "@/pages/QuadCategoriesBlockSettings";
 import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
+import OpinionManagement from "@/pages/dashboard/OpinionManagement";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -199,6 +200,7 @@ function Router() {
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />
+      <Route path="/dashboard/opinion" component={OpinionManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />

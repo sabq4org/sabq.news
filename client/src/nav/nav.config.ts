@@ -36,6 +36,7 @@ import {
   Grid3x3,
   Podcast,
   Megaphone,
+  BookOpen,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -77,6 +78,14 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/articles/new",
         icon: PlusCircle,
         roles: ["admin", "editor", "author"],
+      },
+      {
+        id: "opinion",
+        labelKey: "nav.opinion",
+        labelAr: "مقالات الرأي",
+        path: "/dashboard/opinion",
+        icon: BookOpen,
+        roles: ["admin", "editor", "opinion_author"],
       },
       {
         id: "categories",
