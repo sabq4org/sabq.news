@@ -46,9 +46,12 @@ export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
   const [location, navigate] = useLocation();
   
-  // Extract id from params or URL directly
-  const id = params.id || location.split('/').pop();
-  const isNewArticle = id === "new" || location.endsWith("/articles/new");
+  // Extract pathname without query string
+  const pathname = location.split('?')[0];
+  const isNewArticle = pathname.endsWith('/article/new') || pathname.endsWith('/articles/new');
+  
+  // Extract id from params or pathname
+  const id = params.id || pathname.split('/').pop();
   
   // Extract query parameters from URL
   const queryParams = new URLSearchParams(location.split('?')[1] || '');
@@ -56,6 +59,7 @@ export default function ArticleEditor() {
   
   console.log('[ArticleEditor] params:', params);
   console.log('[ArticleEditor] location:', location);
+  console.log('[ArticleEditor] pathname:', pathname);
   console.log('[ArticleEditor] extracted id:', id);
   console.log('[ArticleEditor] isNewArticle:', isNewArticle);
   console.log('[ArticleEditor] type query param:', typeParam);
@@ -259,16 +263,12 @@ export default function ArticleEditor() {
       
       const articleData: any = {
         title,
-        subtitle,
         slug,
         content,
         excerpt,
         categoryId: categoryId || null,
-        reporterId: validReporterId,
         imageUrl: imageUrl || "",
         articleType,
-        newsType,
-        isFeatured: newsType === "featured",
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
         hideFromHomepage,
@@ -281,6 +281,18 @@ export default function ArticleEditor() {
           keywords: keywords,
         },
       };
+
+      // Add fields specific to news articles (not for opinion)
+      if (articleType !== "opinion") {
+        articleData.subtitle = subtitle;
+        articleData.reporterId = validReporterId;
+        articleData.newsType = newsType;
+        articleData.isFeatured = newsType === "featured";
+      } else {
+        // Opinion articles always use regular newsType
+        articleData.newsType = "regular";
+        articleData.isFeatured = false;
+      }
 
       // For new articles, set publishedAt based on publish settings
       if (isNewArticle) {
@@ -566,27 +578,29 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
-            {/* Subtitle */}
-            <Card>
-              <CardHeader>
-                <CardTitle>العنوان الفرعي</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="عنوان فرعي (اختياري)..."
-                  maxLength={120}
-                  data-testid="input-subtitle"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {(subtitle || "").length}/120 حرف
-                  {(subtitle || "").length > 100 && (
-                    <span className="text-amber-500 mr-2">قريب من الحد الأقصى</span>
-                  )}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Subtitle - Hidden for opinion articles */}
+            {articleType !== "opinion" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>العنوان الفرعي</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    value={subtitle}
+                    onChange={(e) => setSubtitle(e.target.value)}
+                    placeholder="عنوان فرعي (اختياري)..."
+                    maxLength={120}
+                    data-testid="input-subtitle"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {(subtitle || "").length}/120 حرف
+                    {(subtitle || "").length > 100 && (
+                      <span className="text-amber-500 mr-2">قريب من الحد الأقصى</span>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Featured Image */}
             <Card>
@@ -704,58 +718,60 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
-            {/* News Type */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  نوع الخبر
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={newsType} onValueChange={(value: any) => setNewsType(value)}>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="breaking" id="breaking" />
-                    <Label htmlFor="breaking" className="flex items-center gap-2 cursor-pointer">
-                      خبر عاجل
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="featured" id="featured" />
-                    <Label htmlFor="featured" className="flex items-center gap-2 cursor-pointer">
-                      خبر مميز
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="regular" id="regular" />
-                    <Label htmlFor="regular" className="flex items-center gap-2 cursor-pointer">
-                      خبر عادي
-                    </Label>
-                  </div>
-                </RadioGroup>
-                
-                {/* Hide from Homepage Option */}
-                <div className="pt-4 border-t mt-4">
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <Checkbox 
-                      id="hideFromHomepage"
-                      checked={hideFromHomepage}
-                      onCheckedChange={(checked) => setHideFromHomepage(checked as boolean)}
-                      data-testid="checkbox-hide-from-homepage"
-                    />
-                    <Label htmlFor="hideFromHomepage" className="flex items-center gap-2 cursor-pointer text-sm">
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">إخفاء من الواجهة الرئيسية</div>
-                        <div className="text-xs text-muted-foreground">
-                          المقال سينشر لكن لن يظهر في الصفحة الرئيسية
+            {/* News Type - Hidden for opinion articles */}
+            {articleType !== "opinion" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    نوع الخبر
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={newsType} onValueChange={(value: any) => setNewsType(value)}>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <RadioGroupItem value="breaking" id="breaking" />
+                      <Label htmlFor="breaking" className="flex items-center gap-2 cursor-pointer">
+                        خبر عاجل
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <RadioGroupItem value="featured" id="featured" />
+                      <Label htmlFor="featured" className="flex items-center gap-2 cursor-pointer">
+                        خبر مميز
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <RadioGroupItem value="regular" id="regular" />
+                      <Label htmlFor="regular" className="flex items-center gap-2 cursor-pointer">
+                        خبر عادي
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  
+                  {/* Hide from Homepage Option */}
+                  <div className="pt-4 border-t mt-4">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox 
+                        id="hideFromHomepage"
+                        checked={hideFromHomepage}
+                        onCheckedChange={(checked) => setHideFromHomepage(checked as boolean)}
+                        data-testid="checkbox-hide-from-homepage"
+                      />
+                      <Label htmlFor="hideFromHomepage" className="flex items-center gap-2 cursor-pointer text-sm">
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">إخفاء من الواجهة الرئيسية</div>
+                          <div className="text-xs text-muted-foreground">
+                            المقال سينشر لكن لن يظهر في الصفحة الرئيسية
+                          </div>
                         </div>
-                      </div>
-                    </Label>
+                      </Label>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Category */}
             <Card>
@@ -779,18 +795,20 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
-            {/* Reporter */}
-            <Card>
-              <CardHeader>
-                <CardTitle>المراسل</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReporterSelect
-                  value={reporterId}
-                  onChange={setReporterId}
-                />
-              </CardContent>
-            </Card>
+            {/* Reporter - Hidden for opinion articles */}
+            {articleType !== "opinion" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>المراسل</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ReporterSelect
+                    value={reporterId}
+                    onChange={setReporterId}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Publishing */}
             <Card>
