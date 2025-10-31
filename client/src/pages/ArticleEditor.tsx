@@ -492,7 +492,7 @@ const generateSlug = (text: string) => {
               </Link>
             </Button>
             <h1 className="text-2xl font-bold">
-              {isNewArticle ? "مقال جديد" : "تحرير المقال"}
+              {isNewArticle ? "خبر جديد" : "تحرير الخبر"}
             </h1>
           </div>
 

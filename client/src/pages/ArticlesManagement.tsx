@@ -506,7 +506,7 @@ export default function ArticlesManagement() {
             data-testid="button-create-article"
           >
             <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            مقال جديد
+            خبر جديد
           </Button>
         </div>
 

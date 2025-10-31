@@ -6,6 +6,7 @@ export const ROLE_NAMES = {
   ADMIN: "admin",
   EDITOR: "editor",
   REPORTER: "reporter",
+  OPINION_AUTHOR: "opinion_author",
   COMMENTS_MODERATOR: "comments_moderator",
   MEDIA_MANAGER: "media_manager",
   READER: "reader",
@@ -16,6 +17,7 @@ export const ROLE_LABELS_AR = {
   [ROLE_NAMES.ADMIN]: "مسؤول",
   [ROLE_NAMES.EDITOR]: "محرر",
   [ROLE_NAMES.REPORTER]: "مراسل",
+  [ROLE_NAMES.OPINION_AUTHOR]: "كاتب مقال رأي",
   [ROLE_NAMES.COMMENTS_MODERATOR]: "مشرف تعليقات",
   [ROLE_NAMES.MEDIA_MANAGER]: "مدير وسائط",
   [ROLE_NAMES.READER]: "قارئ",
@@ -26,6 +28,7 @@ export const ROLE_LABELS_EN = {
   [ROLE_NAMES.ADMIN]: "Admin",
   [ROLE_NAMES.EDITOR]: "Editor",
   [ROLE_NAMES.REPORTER]: "Reporter",
+  [ROLE_NAMES.OPINION_AUTHOR]: "Opinion Author",
   [ROLE_NAMES.COMMENTS_MODERATOR]: "Comments Moderator",
   [ROLE_NAMES.MEDIA_MANAGER]: "Media Manager",
   [ROLE_NAMES.READER]: "Reader",
@@ -36,6 +39,7 @@ export const ROLE_DESCRIPTIONS_AR = {
   [ROLE_NAMES.ADMIN]: "إدارة المستخدمين والموافقات التحريرية والإعدادات العامة",
   [ROLE_NAMES.EDITOR]: "إنشاء وتحرير ونشر المحتوى وإدارة الوسائط والتصنيفات",
   [ROLE_NAMES.REPORTER]: "إنشاء وتحرير المقالات الخاصة فقط دون صلاحيات النشر، مع إمكانية رفع الوسائط ومتابعة التعليقات والإحصائيات على مقالاته",
+  [ROLE_NAMES.OPINION_AUTHOR]: "كتابة وتحرير مقالات الرأي الخاصة فقط وإرسالها للمراجعة، دون صلاحيات النشر المباشر",
   [ROLE_NAMES.COMMENTS_MODERATOR]: "إدارة التعليقات: الموافقة والرفض والحظر",
   [ROLE_NAMES.MEDIA_MANAGER]: "إدارة المكتبة الإعلامية والألبومات",
   [ROLE_NAMES.READER]: "مستخدم عادي بدون صلاحيات تحريرية",
@@ -122,6 +126,18 @@ export const PERMISSION_CODES = {
   AUDIO_BRIEFS_PUBLISH: "audio_briefs.publish",
   AUDIO_BRIEFS_GENERATE: "audio_briefs.generate",
   AUDIO_BRIEFS_MANAGE_ALL: "audio_briefs.manage_all",
+  
+  // Opinion Articles - مقالات الرأي
+  OPINION_VIEW: "opinion.view",
+  OPINION_CREATE: "opinion.create",
+  OPINION_EDIT_OWN: "opinion.edit_own",
+  OPINION_EDIT_ANY: "opinion.edit_any",
+  OPINION_SUBMIT_REVIEW: "opinion.submit_review",
+  OPINION_REVIEW: "opinion.review",
+  OPINION_PUBLISH: "opinion.publish",
+  OPINION_REJECT: "opinion.reject",
+  OPINION_DELETE_OWN: "opinion.delete_own",
+  OPINION_DELETE_ANY: "opinion.delete_any",
   
   // System
   SYSTEM_VIEW_AUDIT: "system.view_audit",
@@ -211,6 +227,17 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
     PERMISSION_CODES.MEDIA_UPLOAD,
     PERMISSION_CODES.COMMENTS_VIEW_OWN, // عرض التعليقات على مقالاته فقط
     PERMISSION_CODES.ANALYTICS_VIEW_OWN, // عرض إحصائيات مقالاته فقط
+  ],
+  
+  [ROLE_NAMES.OPINION_AUTHOR]: [
+    PERMISSION_CODES.OPINION_VIEW,
+    PERMISSION_CODES.OPINION_CREATE,
+    PERMISSION_CODES.OPINION_EDIT_OWN,
+    PERMISSION_CODES.OPINION_SUBMIT_REVIEW,
+    PERMISSION_CODES.OPINION_DELETE_OWN,
+    PERMISSION_CODES.MEDIA_VIEW,
+    PERMISSION_CODES.MEDIA_UPLOAD,
+    PERMISSION_CODES.ANALYTICS_VIEW_OWN,
   ],
   
   [ROLE_NAMES.COMMENTS_MODERATOR]: [
