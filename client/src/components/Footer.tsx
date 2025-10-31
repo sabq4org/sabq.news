@@ -129,7 +129,7 @@ export function Footer() {
       }} />
 
       {/* Intelligence Banner */}
-      <div className="ai-gradient-bg ai-gradient-animate border-t border-b border-border/50">
+      <div className="bg-muted/20 border-t border-b border-border/50">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             {/* Brand */}
@@ -187,7 +187,7 @@ export function Footer() {
       </div>
 
       {/* Main Navigation */}
-      <div className="border-b">
+      <div className="bg-muted/20 border-b border-border/50">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {navigationSections.map((section, index) => {
