@@ -13006,6 +13006,658 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // Opinion Articles Routes - مقالات الرأي
+  // ============================================================================
+
+  // Public: Get all published opinion articles
+  app.get("/api/opinion", async (req, res) => {
+    try {
+      const { page = 1, limit = 12, authorId, search } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      let query = db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+            bio: users.bio,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(
+          and(
+            eq(articles.articleType, "opinion"),
+            eq(articles.status, "published")
+          )
+        )
+        .$dynamic();
+
+      if (authorId) {
+        query = query.where(eq(articles.authorId, authorId as string));
+      }
+
+      if (search) {
+        query = query.where(
+          or(
+            ilike(articles.title, `%${search}%`),
+            ilike(articles.content, `%${search}%`),
+            ilike(articles.excerpt, `%${search}%`)
+          )
+        );
+      }
+
+      const results = await query
+        .orderBy(desc(articles.publishedAt))
+        .limit(Number(limit))
+        .offset(offset);
+
+      const formattedArticles = results.map((row) => ({
+        ...row.article,
+        category: row.category,
+        author: row.author,
+      }));
+
+      // Get total count for pagination
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(articles)
+        .where(
+          and(
+            eq(articles.articleType, "opinion"),
+            eq(articles.status, "published")
+          )
+        );
+
+      res.json({
+        articles: formattedArticles,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: count,
+          totalPages: Math.ceil(count / Number(limit)),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching opinion articles:", error);
+      res.status(500).json({ message: "Failed to fetch opinion articles" });
+    }
+  });
+
+  // Public: Get single opinion article by slug
+  app.get("/api/opinion/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+
+      const [result] = await db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+            bio: users.bio,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(
+          and(
+            eq(articles.slug, slug),
+            eq(articles.articleType, "opinion"),
+            eq(articles.status, "published")
+          )
+        )
+        .limit(1);
+
+      if (!result) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // Increment view count
+      await db
+        .update(articles)
+        .set({ views: sql`${articles.views} + 1` })
+        .where(eq(articles.id, result.article.id));
+
+      res.json({
+        ...result.article,
+        category: result.category,
+        author: result.author,
+      });
+    } catch (error) {
+      console.error("Error fetching opinion article:", error);
+      res.status(500).json({ message: "Failed to fetch opinion article" });
+    }
+  });
+
+  // Dashboard: Get all opinion articles (for authors and editors)
+  app.get("/api/dashboard/opinion", requireAuth, requireAnyPermission("opinion.view", "opinion.edit_own"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userPermissions = await getUserPermissions(userId);
+      const { page = 1, limit = 20, status, reviewStatus, search } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      let query = db
+        .select({
+          article: articles,
+          category: categories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(eq(articles.articleType, "opinion"))
+        .$dynamic();
+
+      // If user can only view their own, filter by authorId
+      if (!userPermissions.includes("opinion.edit_any") && userPermissions.includes("opinion.edit_own")) {
+        query = query.where(eq(articles.authorId, userId));
+      }
+
+      if (status && status !== "all") {
+        query = query.where(eq(articles.status, status as string));
+      }
+
+      if (reviewStatus && reviewStatus !== "all") {
+        query = query.where(eq(articles.reviewStatus, reviewStatus as string));
+      }
+
+      if (search) {
+        query = query.where(
+          or(
+            ilike(articles.title, `%${search}%`),
+            ilike(articles.content, `%${search}%`),
+            ilike(articles.excerpt, `%${search}%`)
+          )
+        );
+      }
+
+      const results = await query
+        .orderBy(desc(articles.createdAt))
+        .limit(Number(limit))
+        .offset(offset);
+
+      const formattedArticles = results.map((row) => ({
+        ...row.article,
+        category: row.category,
+        author: row.author,
+      }));
+
+      res.json({
+        articles: formattedArticles,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching opinion articles:", error);
+      res.status(500).json({ message: "Failed to fetch opinion articles" });
+    }
+  });
+
+  // Dashboard: Create new opinion article
+  app.post("/api/dashboard/opinion", requireAuth, requirePermission("opinion.create"), async (req: any, res) => {
+    try {
+      const authorId = req.user?.id;
+      if (!authorId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const requestData = { ...req.body, articleType: "opinion" };
+      const parsed = insertArticleSchema.safeParse(requestData);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid article data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      const articleData: any = {
+        ...parsed.data,
+        authorId,
+        articleType: "opinion",
+      };
+
+      const [newArticle] = await db
+        .insert(articles)
+        .values(articleData)
+        .returning();
+
+      await logActivity({
+        userId: authorId,
+        action: "created_opinion",
+        entityType: "article",
+        entityId: newArticle.id,
+        newValue: newArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.status(201).json(newArticle);
+    } catch (error) {
+      console.error("Error creating opinion article:", error);
+      res.status(500).json({ message: "Failed to create opinion article" });
+    }
+  });
+
+  // Dashboard: Update opinion article
+  app.patch("/api/dashboard/opinion/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion")
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // Check permissions
+      const userPermissions = await getUserPermissions(userId);
+      const canEditOwn = userPermissions.includes("opinion.edit_own");
+      const canEditAny = userPermissions.includes("opinion.edit_any");
+
+      if (!canEditAny && (!canEditOwn || existingArticle.authorId !== userId)) {
+        return res.status(403).json({ message: "You don't have permission to edit this opinion article" });
+      }
+
+      const parsed = updateArticleSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "updated_opinion",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error updating opinion article:", error);
+      res.status(500).json({ message: "Failed to update opinion article" });
+    }
+  });
+
+  // Dashboard: Submit opinion article for review
+  app.post("/api/dashboard/opinion/:id/submit-review", requireAuth, requirePermission("opinion.submit_review"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion"),
+            eq(articles.authorId, userId)
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      if (existingArticle.reviewStatus === "pending_review") {
+        return res.status(400).json({ message: "Article is already pending review" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          reviewStatus: "pending_review",
+          status: "draft",
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "submitted_for_review",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error submitting opinion for review:", error);
+      res.status(500).json({ message: "Failed to submit opinion for review" });
+    }
+  });
+
+  // Dashboard: Approve opinion article
+  app.post("/api/dashboard/opinion/:id/approve", requireAuth, requirePermission("opinion.review"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const { reviewNotes } = req.body;
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion")
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          reviewStatus: "approved",
+          reviewedBy: userId,
+          reviewedAt: new Date(),
+          reviewNotes: reviewNotes || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "approved_opinion",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error approving opinion article:", error);
+      res.status(500).json({ message: "Failed to approve opinion article" });
+    }
+  });
+
+  // Dashboard: Reject opinion article
+  app.post("/api/dashboard/opinion/:id/reject", requireAuth, requirePermission("opinion.reject"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const { reviewNotes } = req.body;
+
+      if (!reviewNotes) {
+        return res.status(400).json({ message: "Review notes are required when rejecting" });
+      }
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion")
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          reviewStatus: "rejected",
+          reviewedBy: userId,
+          reviewedAt: new Date(),
+          reviewNotes,
+          status: "draft",
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "rejected_opinion",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error rejecting opinion article:", error);
+      res.status(500).json({ message: "Failed to reject opinion article" });
+    }
+  });
+
+  // Dashboard: Publish opinion article
+  app.post("/api/dashboard/opinion/:id/publish", requireAuth, requirePermission("opinion.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion")
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // Check if article is approved or user has override permission
+      if (existingArticle.reviewStatus !== "approved") {
+        return res.status(400).json({ message: "Article must be approved before publishing" });
+      }
+
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          status: "published",
+          publishedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "published_opinion",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      // Send notifications for published opinion article
+      try {
+        await createNotification({
+          type: "NEW_ARTICLE",
+          data: {
+            articleId: updatedArticle.id,
+            articleTitle: updatedArticle.title,
+            articleSlug: updatedArticle.slug,
+            categoryId: updatedArticle.categoryId,
+            articleType: "opinion",
+          },
+        });
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+      }
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error publishing opinion article:", error);
+      res.status(500).json({ message: "Failed to publish opinion article" });
+    }
+  });
+
+  // Dashboard: Delete opinion article
+  app.delete("/api/dashboard/opinion/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [existingArticle] = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.articleType, "opinion")
+          )
+        )
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // Check permissions
+      const userPermissions = await getUserPermissions(userId);
+      const canDeleteOwn = userPermissions.includes("opinion.delete_own");
+      const canDeleteAny = userPermissions.includes("opinion.delete_any");
+
+      if (!canDeleteAny && (!canDeleteOwn || existingArticle.authorId !== userId)) {
+        return res.status(403).json({ message: "You don't have permission to delete this opinion article" });
+      }
+
+      // Soft delete by archiving
+      const [updatedArticle] = await db
+        .update(articles)
+        .set({
+          status: "archived",
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "deleted_opinion",
+        entityType: "article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Opinion article deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting opinion article:", error);
+      res.status(500).json({ message: "Failed to delete opinion article" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
