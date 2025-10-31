@@ -15,6 +15,7 @@ import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
+import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -277,6 +278,11 @@ export default function Home() {
               />
             </div>
           )}
+
+          {/* Opinion Articles Block */}
+          <div className="scroll-fade-in">
+            <OpinionArticlesBlock />
+          </div>
 
           {/* Quad Categories Block */}
           <div className="scroll-fade-in">
