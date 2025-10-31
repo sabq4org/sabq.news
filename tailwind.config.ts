@@ -41,6 +41,10 @@ export default {
           foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
           border: "var(--muted-border)",
         },
+        footer: {
+          DEFAULT: "hsl(var(--footer) / <alpha-value>)",
+          foreground: "hsl(var(--footer-foreground) / <alpha-value>)",
+        },
         accent: {
           DEFAULT: "hsl(var(--accent) / <alpha-value>)",
           foreground: "hsl(var(--accent-foreground) / <alpha-value>)",

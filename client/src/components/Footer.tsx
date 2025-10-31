@@ -110,7 +110,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-background" data-testid="footer">
+    <footer className="bg-footer text-footer-foreground border-t border-border/60" data-testid="footer">
       {/* Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({
@@ -129,7 +129,7 @@ export function Footer() {
       }} />
 
       {/* Intelligence Banner */}
-      <div className="bg-muted/20 border-t border-b border-border/50">
+      <div className="border-b border-border/20">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             {/* Brand */}
@@ -187,7 +187,7 @@ export function Footer() {
       </div>
 
       {/* Main Navigation */}
-      <div className="bg-muted/20 border-b border-border/50">
+      <div className="border-b border-border/20">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {navigationSections.map((section, index) => {
@@ -258,7 +258,7 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="bg-muted/20">
+      <div>
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Brand Info */}

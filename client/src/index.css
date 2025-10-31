@@ -62,6 +62,10 @@
 
   --muted-foreground: 220 15% 40%;
 
+  --footer: 220 12% 85%;
+
+  --footer-foreground: 220 20% 15%;
+
   --accent: 25 85% 95%;
 
   --accent-foreground: 25 85% 35%;
@@ -188,6 +192,10 @@
   --muted: 220 18% 15%;
 
   --muted-foreground: 220 10% 70%;
+
+  --footer: 220 20% 12%;
+
+  --footer-foreground: 0 0% 95%;
 
   --accent: 25 85% 20%;
 
