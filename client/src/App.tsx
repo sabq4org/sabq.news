@@ -198,6 +198,7 @@ function Router() {
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
+      <Route path="/dashboard/article/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/opinion" component={OpinionManagement} />
