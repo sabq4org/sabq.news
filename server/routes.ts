@@ -13183,7 +13183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Get all opinion articles (for authors and editors)
-  app.get("/api/dashboard/opinion", requireAuth, requireAnyPermission("opinion.view", "opinion.edit_own"), async (req: any, res) => {
+  app.get("/api/dashboard/opinion", requireAuth, requireAnyPermission("articles.view", "articles.edit_own"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const userPermissions = await getUserPermissions(userId);
@@ -13256,7 +13256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Create new opinion article
-  app.post("/api/dashboard/opinion", requireAuth, requirePermission("opinion.create"), async (req: any, res) => {
+  app.post("/api/dashboard/opinion", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
     try {
       const authorId = req.user?.id;
       if (!authorId) {
@@ -13387,7 +13387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Submit opinion article for review
-  app.post("/api/dashboard/opinion/:id/submit-review", requireAuth, requirePermission("opinion.submit_review"), async (req: any, res) => {
+  app.post("/api/dashboard/opinion/:id/submit-review", requireAuth, requirePermission("articles.edit_own"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -13447,7 +13447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Approve opinion article
-  app.post("/api/dashboard/opinion/:id/approve", requireAuth, requirePermission("opinion.review"), async (req: any, res) => {
+  app.post("/api/dashboard/opinion/:id/approve", requireAuth, requirePermission("articles.edit_any"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -13505,7 +13505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Reject opinion article
-  app.post("/api/dashboard/opinion/:id/reject", requireAuth, requirePermission("opinion.reject"), async (req: any, res) => {
+  app.post("/api/dashboard/opinion/:id/reject", requireAuth, requirePermission("articles.edit_any"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -13568,7 +13568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard: Publish opinion article
-  app.post("/api/dashboard/opinion/:id/publish", requireAuth, requirePermission("opinion.publish"), async (req: any, res) => {
+  app.post("/api/dashboard/opinion/:id/publish", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
