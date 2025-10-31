@@ -50,10 +50,15 @@ export default function ArticleEditor() {
   const id = params.id || location.split('/').pop();
   const isNewArticle = id === "new" || location.endsWith("/articles/new");
   
+  // Extract query parameters from URL
+  const queryParams = new URLSearchParams(location.split('?')[1] || '');
+  const typeParam = queryParams.get('type') as "news" | "opinion" | "analysis" | "column" | null;
+  
   console.log('[ArticleEditor] params:', params);
   console.log('[ArticleEditor] location:', location);
   console.log('[ArticleEditor] extracted id:', id);
   console.log('[ArticleEditor] isNewArticle:', isNewArticle);
+  console.log('[ArticleEditor] type query param:', typeParam);
 
   // Article fields
   const [title, setTitle] = useState("");
@@ -63,6 +68,9 @@ export default function ArticleEditor() {
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [reporterId, setReporterId] = useState<string | null>(null);
+  const [articleType, setArticleType] = useState<"news" | "opinion" | "analysis" | "column">(
+    typeParam || "news"
+  );
   
   // Debug: Track reporterId changes
   useEffect(() => {
@@ -131,6 +139,7 @@ export default function ArticleEditor() {
         article.imageUrl.match(/^https?:\/\/.+/) || article.imageUrl.startsWith('/')
       ) ? article.imageUrl : "";
       setImageUrl(validImageUrl);
+      setArticleType((article.articleType as any) || "news");
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
@@ -257,6 +266,7 @@ export default function ArticleEditor() {
         categoryId: categoryId || null,
         reporterId: validReporterId,
         imageUrl: imageUrl || "",
+        articleType,
         newsType,
         isFeatured: newsType === "featured",
         publishType,
@@ -671,6 +681,29 @@ const generateSlug = (text: string) => {
 
           {/* Settings Sidebar - 30% */}
           <div className="lg:col-span-3 space-y-6">
+            {/* Article Type */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  نوع المحتوى
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select value={articleType} onValueChange={(value: any) => setArticleType(value)}>
+                  <SelectTrigger data-testid="select-article-type">
+                    <SelectValue placeholder="اختر نوع المحتوى" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="news">خبر</SelectItem>
+                    <SelectItem value="opinion">مقال رأي</SelectItem>
+                    <SelectItem value="analysis">تحليل</SelectItem>
+                    <SelectItem value="column">عمود</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
             {/* News Type */}
             <Card>
               <CardHeader>
@@ -684,21 +717,18 @@ const generateSlug = (text: string) => {
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <RadioGroupItem value="breaking" id="breaking" />
                     <Label htmlFor="breaking" className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xl">🔴</span>
                       خبر عاجل
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <RadioGroupItem value="featured" id="featured" />
                     <Label htmlFor="featured" className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xl">⭐</span>
                       خبر مميز
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <RadioGroupItem value="regular" id="regular" />
                     <Label htmlFor="regular" className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xl">⚪</span>
                       خبر عادي
                     </Label>
                   </div>
