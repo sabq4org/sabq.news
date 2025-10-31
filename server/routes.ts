@@ -3363,7 +3363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new article
   app.post("/api/admin/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
     try {
-      const authorId = req.user?.id;
+      let authorId = req.user?.id;
       if (!authorId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -3384,6 +3384,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Invalid article data",
           errors: parsed.error.flatten(),
         });
+      }
+
+      // Validate and set opinionAuthorId for opinion articles
+      if (parsed.data.articleType === 'opinion' && req.body.opinionAuthorId) {
+        const opinionAuthorId = req.body.opinionAuthorId;
+        
+        // Check if user exists
+        const [opinionAuthor] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, opinionAuthorId))
+          .limit(1);
+        
+        if (!opinionAuthor) {
+          return res.status(422).json({ 
+            message: "كاتب الرأي المحدد غير موجود" 
+          });
+        }
+
+        // Check if user has opinion_author role
+        const authorRoles = await db
+          .select({
+            roleName: roles.name,
+          })
+          .from(userRoles)
+          .innerJoin(roles, eq(userRoles.roleId, roles.id))
+          .where(eq(userRoles.userId, opinionAuthorId));
+        
+        const hasOpinionAuthorRole = authorRoles.some(r => r.roleName === 'opinion_author');
+        
+        if (!hasOpinionAuthorRole) {
+          return res.status(422).json({ 
+            message: "المستخدم المحدد ليس كاتب رأي" 
+          });
+        }
+
+        // Use the selected opinion author as the authorId
+        authorId = opinionAuthorId;
       }
 
       // Validate reporterId if provided

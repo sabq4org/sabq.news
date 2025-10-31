@@ -41,6 +41,7 @@ import type { Category, ArticleWithDetails } from "@shared/schema";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
 import { ReporterSelect } from "@/components/ReporterSelect";
+import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 
 export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
@@ -72,6 +73,7 @@ export default function ArticleEditor() {
   const [excerpt, setExcerpt] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [reporterId, setReporterId] = useState<string | null>(null);
+  const [opinionAuthorId, setOpinionAuthorId] = useState<string | null>(null);
   const [articleType, setArticleType] = useState<"news" | "opinion" | "analysis" | "column">(
     typeParam || "news"
   );
@@ -138,6 +140,10 @@ export default function ArticleEditor() {
         validated: validReporterId,
       });
       setReporterId(validReporterId);
+      // Set opinionAuthorId from article.authorId for opinion articles
+      if (article.articleType === "opinion") {
+        setOpinionAuthorId(article.authorId || null);
+      }
       // Validate imageUrl - accept http/https URLs or relative paths starting with /
       const validImageUrl = article.imageUrl && (
         article.imageUrl.match(/^https?:\/\/.+/) || article.imageUrl.startsWith('/')
@@ -292,6 +298,10 @@ export default function ArticleEditor() {
         // Opinion articles always use regular newsType
         articleData.newsType = "regular";
         articleData.isFeatured = false;
+        // Add opinionAuthorId for opinion articles
+        if (opinionAuthorId) {
+          articleData.opinionAuthorId = opinionAuthorId;
+        }
       }
 
       // For new articles, set publishedAt based on publish settings
@@ -805,6 +815,21 @@ const generateSlug = (text: string) => {
                   <ReporterSelect
                     value={reporterId}
                     onChange={setReporterId}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Opinion Author - Shown only for opinion articles */}
+            {articleType === "opinion" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>كاتب المقال</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <OpinionAuthorSelect
+                    value={opinionAuthorId}
+                    onChange={setOpinionAuthorId}
                   />
                 </CardContent>
               </Card>
