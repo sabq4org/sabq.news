@@ -175,16 +175,21 @@ export function CommentSection({
                 />
               </div>
             </div>
-            <div className="flex justify-start">
-              <Button 
-                type="submit" 
-                disabled={!newComment.trim()}
-                className="gap-2"
-                data-testid="button-submit-comment"
-              >
-                <Send className="h-4 w-4" />
-                نشر التعليق
-              </Button>
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={!newComment.trim()}
+                  className="gap-2"
+                  data-testid="button-submit-comment"
+                >
+                  <Send className="h-4 w-4" />
+                  نشر التعليق
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-left">
+                سيتم مراجعة تعليقك من قبل فريق التحرير للتأكد من التزامه بمعايير المجتمع ونشره في أقرب وقت
+              </p>
             </div>
           </form>
         ) : (
