@@ -290,12 +290,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
           )}
 
           <div
-            className={cn(
-              "rounded-lg p-3 text-right",
-              isOwnMessage
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted"
-            )}
+            className="rounded-lg p-3 text-right bg-muted/30"
             data-testid={`content-${message.id}`}
           >
             {message.contentType === "rich_text" ? (
@@ -364,58 +359,16 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
             </div>
           )}
 
-          {showActions && (
-            <div
-              className="flex items-center gap-1 mt-2"
-              data-testid={`actions-${message.id}`}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onReply(message.id)}
-                data-testid={`button-reply-${message.id}`}
-              >
-                <Reply className="h-3 w-3 ml-1" />
-                رد
-              </Button>
-              {message.replyCount !== undefined && message.replyCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowThread(true)}
-                  data-testid={`button-view-thread-${message.id}`}
-                >
-                  <MessageSquare className="h-3 w-3 ml-1" />
-                  {message.replyCount.toLocaleString("en-US")} {message.replyCount === 1 ? "رد" : "ردود"}
-                </Button>
-              )}
+          {showReactionPicker && (
+            <div className="mt-2">
               <ReactionPicker
                 messageId={message.id}
                 channelId={channelId}
-                onReactionSelect={(emoji) => onReact(message.id, emoji)}
+                onReactionSelect={(emoji) => {
+                  onReact(message.id, emoji);
+                  setShowReactionPicker(false);
+                }}
               />
-              {isOwnMessage && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onEdit(message.id)}
-                    data-testid={`button-edit-${message.id}`}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => onDelete(message.id)}
-                    data-testid={`button-delete-${message.id}`}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </>
-              )}
             </div>
           )}
 

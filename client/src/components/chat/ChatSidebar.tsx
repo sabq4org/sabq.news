@@ -96,7 +96,7 @@ function ChannelItem({
         )}
         data-testid={`channel-item-${channel.id}`}
       >
-        <div className="flex items-start gap-3 flex-row-reverse">
+        <div className="flex items-start gap-3">
           <div className="relative">
             {channel.type === "direct" ? (
               <>
