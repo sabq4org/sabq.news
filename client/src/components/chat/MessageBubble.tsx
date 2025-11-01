@@ -79,7 +79,7 @@ function formatMessageTime(date: Date): string {
 
 function renderContentWithMentions(content: string, mentions?: string[]) {
   if (!mentions || mentions.length === 0) {
-    return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+    return <p className="text-sm whitespace-pre-wrap text-right">{content}</p>;
   }
 
   const parts: (string | JSX.Element)[] = [];
@@ -115,7 +115,7 @@ function renderContentWithMentions(content: string, mentions?: string[]) {
     parts.push(content.slice(lastIndex));
   }
 
-  return <div className="text-sm whitespace-pre-wrap">{parts}</div>;
+  return <div className="text-sm whitespace-pre-wrap text-right">{parts}</div>;
 }
 
 export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
@@ -172,6 +172,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       data-testid={`message-${message.id}`}
+      dir="rtl"
     >
       <div className={cn("flex gap-3 max-w-[80%]", isOwnMessage && "flex-row-reverse")}>
         <Avatar className="h-10 w-10" data-testid={`avatar-${message.id}`}>
@@ -180,7 +181,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-right">
             <span
               className="font-medium text-sm"
               data-testid={`sender-name-${message.id}`}
@@ -211,7 +212,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
 
           {message.replyTo && (
             <div
-              className="p-2 border-r-2 border-primary bg-muted/50 rounded text-sm"
+              className="p-2 border-r-2 border-primary bg-muted/50 rounded text-sm text-right"
               data-testid={`reply-to-${message.id}`}
             >
               <p className="font-medium text-xs text-muted-foreground">
@@ -223,7 +224,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
 
           <div
             className={cn(
-              "rounded-lg p-3",
+              "rounded-lg p-3 text-right",
               isOwnMessage
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted"
