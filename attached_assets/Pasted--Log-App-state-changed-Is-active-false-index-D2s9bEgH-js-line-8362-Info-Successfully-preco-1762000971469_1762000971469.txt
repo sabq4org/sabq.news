@@ -1,0 +1,38 @@
+[Log] App state changed. Is active? – false (index-D2s9bEgH.js, line 8362)
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Log] [ChatWS] Skipping connection - user not authenticated (index-D2s9bEgH.js, line 7748)
+[Log] [ChatWS] User authenticated, connecting... (index-D2s9bEgH.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.replit.app/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D2s9bEgH.js:7748:151698)
+[Log] [ChatWS] Disconnected (index-D2s9bEgH.js, line 7748)
+[Log] [ChatWS] Reconnecting... (1/5) (index-D2s9bEgH.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.replit.app/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D2s9bEgH.js:7748:151698)
+[Log] [ChatWS] Disconnected (index-D2s9bEgH.js, line 7748)
+[Log] [ChatWS] Reconnecting... (2/5) (index-D2s9bEgH.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.replit.app/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D2s9bEgH.js:7748:151698)
+[Log] [ChatWS] Disconnected (index-D2s9bEgH.js, line 7748)
+[Log] [ChatWS] Reconnecting... (3/5) (index-D2s9bEgH.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.replit.app/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D2s9bEgH.js:7748:151698)
+[Log] [ChatWS] Disconnected (index-D2s9bEgH.js, line 7748)
+[Log] [Nav] Item clicked: – {id: "chat", path: "/dashboard/chat", timestamp: "2025-11-01T12:42:34.727Z"} (index-D2s9bEgH.js, line 8005)
+[Log] New chat clicked (index-D2s9bEgH.js, line 8356)
+[Log] [ChatWS] Reconnecting... (4/5) (index-D2s9bEgH.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.replit.app/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D2s9bEgH.js:7748:151698)
+[Log] [ChatWS] Disconnected (index-D2s9bEgH.js, line 7748)
+[Log] New channel clicked (index-D2s9bEgH.js, line 8356)
+[Log] New chat clicked (index-D2s9bEgH.js, line 8356)
