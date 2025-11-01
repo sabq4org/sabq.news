@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 production templates) ensures flexible content presentation with Framer Motion animations. Mobile responsiveness is achieved through a mobile-first approach, ensuring accessible touch targets (minimum 32px) and text sizes.
 
 **Navigation Design:**
-- **NavigationBar (Homepage):** Displays sticky Core Categories navigation bar only. Smart Categories strip has been removed for cleaner, simpler design.
+- **NavigationBar (Homepage):** Displays sticky Core Categories navigation bar. Hidden on mobile devices (phones/tablets), visible only on desktop (md breakpoint and above). Smart Categories strip has been removed for cleaner, simpler design.
 - **Footer:** Redesigned with column-based layout (NO Card components) to differentiate from news article cards. Features three-tier structure: (1) Intelligence Banner with live AI metrics, (2) Navigation columns with icons and links, (3) Bottom bar with brand, contact, and social/legal links. All numbers displayed in English digits (toLocaleString('en-US')).
 
 ### Technical Implementations
