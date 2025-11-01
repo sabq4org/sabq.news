@@ -42,6 +42,7 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
 import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
+import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 
 export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
@@ -83,6 +84,7 @@ export default function ArticleEditor() {
     console.log('[ArticleEditor] reporterId state changed to:', reporterId);
   }, [reporterId]);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageFocalPoint, setImageFocalPoint] = useState<{ x: number; y: number } | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
   
   // New fields
@@ -149,6 +151,7 @@ export default function ArticleEditor() {
         article.imageUrl.match(/^https?:\/\/.+/) || article.imageUrl.startsWith('/')
       ) ? article.imageUrl : "";
       setImageUrl(validImageUrl);
+      setImageFocalPoint((article as any).imageFocalPoint || null);
       setArticleType((article.articleType as any) || "news");
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
@@ -274,6 +277,7 @@ export default function ArticleEditor() {
         excerpt,
         categoryId: categoryId || null,
         imageUrl: imageUrl || "",
+        imageFocalPoint: imageFocalPoint || null,
         articleType,
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
@@ -653,6 +657,15 @@ const generateSlug = (text: string) => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Focal Point Picker - Show only when image is uploaded */}
+            {imageUrl && (
+              <ImageFocalPointPicker
+                imageUrl={imageUrl}
+                currentFocalPoint={imageFocalPoint || undefined}
+                onFocalPointChange={(point) => setImageFocalPoint(point)}
+              />
+            )}
 
             {/* Content Editor */}
             <Card>
