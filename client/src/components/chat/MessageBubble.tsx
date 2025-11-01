@@ -7,11 +7,20 @@ import {
   MessageSquare,
   Check,
   CheckCheck,
+  MoreVertical,
+  Smile,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ReactionPicker } from "./ReactionPicker";
 import { ThreadView } from "./ThreadView";
 import { AttachmentPreview } from "./AttachmentPreview";
@@ -130,8 +139,8 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
   onRegisterRef,
   onReplySelect,
 }, ref) => {
-  const [showActions, setShowActions] = useState(false);
   const [showThread, setShowThread] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
   const isOwnMessage = message.senderId === currentUserId;
   const internalRef = useRef<HTMLDivElement>(null);
 
@@ -166,16 +175,77 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
     <div
       ref={ref || internalRef}
       className="group relative rounded-lg transition-colors"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
       data-testid={`message-${message.id}`}
       dir="rtl"
     >
       <div className="flex gap-3 max-w-[80%]">
-        <Avatar className="h-10 w-10 flex-shrink-0" data-testid={`avatar-${message.id}`}>
-          <AvatarImage src={message.senderAvatar} />
-          <AvatarFallback>{message.senderName?.charAt(0) || "?"}</AvatarFallback>
-        </Avatar>
+        <div className="flex gap-2 items-start">
+          <Avatar className="h-10 w-10 flex-shrink-0" data-testid={`avatar-${message.id}`}>
+            <AvatarImage src={message.senderAvatar} />
+            <AvatarFallback>{message.senderName?.charAt(0) || "?"}</AvatarFallback>
+          </Avatar>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                data-testid={`button-message-menu-${message.id}`}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem
+                onClick={() => onReply(message.id)}
+                data-testid={`menu-reply-${message.id}`}
+              >
+                <Reply className="h-4 w-4 ml-2" />
+                رد
+              </DropdownMenuItem>
+              
+              {message.replyCount !== undefined && message.replyCount > 0 && (
+                <DropdownMenuItem
+                  onClick={() => setShowThread(true)}
+                  data-testid={`menu-view-thread-${message.id}`}
+                >
+                  <MessageSquare className="h-4 w-4 ml-2" />
+                  عرض الردود ({message.replyCount.toLocaleString("en-US")})
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuItem
+                onClick={() => setShowReactionPicker(!showReactionPicker)}
+                data-testid={`menu-react-${message.id}`}
+              >
+                <Smile className="h-4 w-4 ml-2" />
+                إضافة تفاعل
+              </DropdownMenuItem>
+              
+              {isOwnMessage && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onEdit(message.id)}
+                    data-testid={`menu-edit-${message.id}`}
+                  >
+                    <Edit className="h-4 w-4 ml-2" />
+                    تعديل
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onDelete(message.id)}
+                    className="text-destructive focus:text-destructive"
+                    data-testid={`menu-delete-${message.id}`}
+                  >
+                    <Trash2 className="h-4 w-4 ml-2" />
+                    حذف
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2 text-right">
