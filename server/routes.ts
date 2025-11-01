@@ -14844,7 +14844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // إضافة المرفقات لكل رسالة وتحويل البيانات للواجهة
       const messagesWithAttachments = await Promise.all(
-        messages.map(async (message) => {
+        messages.map(async (message: any) => {
           const attachments = await storage.chatStorage.getMessageAttachments(message.id);
           return {
             id: message.id,
@@ -15344,7 +15344,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const pinnedMessages = await storage.chatStorage.getPinnedMessages(channelId);
       
-      res.json(pinnedMessages);
+      // تحويل البيانات للواجهة
+      const formattedPinnedMessages = pinnedMessages.map((message: any) => ({
+        id: message.id,
+        content: message.content,
+        contentType: message.contentType,
+        senderId: message.userId,
+        senderName: message.senderName || "مستخدم غير معروف",
+        senderAvatar: message.senderAvatar,
+        timestamp: message.createdAt,
+        reactions: message.metadata?.reactions || [],
+        isPinned: message.isPinned,
+        isEdited: message.isEdited,
+        mentions: message.metadata?.mentions || [],
+      }));
+      
+      res.json(formattedPinnedMessages);
     } catch (error) {
       console.error("خطأ في جلب الرسائل المثبتة:", error);
       res.status(500).json({ message: "حدث خطأ في الخادم" });
