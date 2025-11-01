@@ -176,7 +176,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
       <div className={cn("flex gap-3 max-w-[80%]", isOwnMessage && "flex-row-reverse")}>
         <Avatar className="h-10 w-10" data-testid={`avatar-${message.id}`}>
           <AvatarImage src={message.senderAvatar} />
-          <AvatarFallback>{message.senderName.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{message.senderName?.charAt(0) || "?"}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-2">
@@ -185,7 +185,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
               className="font-medium text-sm"
               data-testid={`sender-name-${message.id}`}
             >
-              {message.senderName}
+              {message.senderName || "مستخدم غير معروف"}
             </span>
             <span
               className="text-xs text-muted-foreground"
@@ -215,7 +215,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
               data-testid={`reply-to-${message.id}`}
             >
               <p className="font-medium text-xs text-muted-foreground">
-                رد على {message.replyTo.senderName}
+                رد على {message.replyTo.senderName || "مستخدم غير معروف"}
               </p>
               <p className="text-xs truncate">{message.replyTo.content}</p>
             </div>
