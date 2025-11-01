@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Paperclip, Smile, Mic, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useChatWebSocket } from "@/contexts/ChatWebSocketContext";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   Popover,
@@ -11,21 +12,23 @@ import {
 
 interface MessageComposerProps {
   onSend: (content: string, attachments?: File[]) => void;
-  onTyping?: () => void;
+  channelId?: string;
   placeholder?: string;
 }
 
 export function MessageComposer({
   onSend,
-  onTyping,
+  channelId,
   placeholder = "اكتب رسالة...",
 }: MessageComposerProps) {
   const [content, setContent] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const { sendTypingStart, sendTypingStop } = useChatWebSocket();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -37,14 +40,26 @@ export function MessageComposer({
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
 
-    if (onTyping) {
+    if (channelId && e.target.value.trim()) {
+      if (!isTyping) {
+        setIsTyping(true);
+        sendTypingStart(channelId);
+      }
+
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      onTyping();
+
       typingTimeoutRef.current = setTimeout(() => {
-        // Stop typing indicator
-      }, 1000);
+        setIsTyping(false);
+        sendTypingStop(channelId);
+      }, 3000);
+    } else if (channelId && isTyping) {
+      setIsTyping(false);
+      sendTypingStop(channelId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     }
   };
 
@@ -73,6 +88,14 @@ export function MessageComposer({
     const trimmedContent = content.trim();
     if (!trimmedContent && attachments.length === 0) return;
 
+    if (channelId && isTyping) {
+      sendTypingStop(channelId);
+      setIsTyping(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+
     onSend(trimmedContent, attachments);
     setContent("");
     setAttachments([]);
@@ -80,6 +103,17 @@ export function MessageComposer({
       textareaRef.current.style.height = "auto";
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (channelId && isTyping) {
+        sendTypingStop(channelId);
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [channelId, isTyping, sendTypingStop]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

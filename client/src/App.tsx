@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ChatWebSocketProvider } from "@/contexts/ChatWebSocketContext";
 import AIChatBot from "@/components/AIChatBot";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
@@ -262,11 +263,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <AIChatBot />
-        </TooltipProvider>
+        <ChatWebSocketProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <AIChatBot />
+          </TooltipProvider>
+        </ChatWebSocketProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
