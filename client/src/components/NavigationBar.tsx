@@ -16,8 +16,8 @@ export function NavigationBar() {
   });
 
   return (
-    <div className="w-full border-b bg-background">
-      {/* Core Categories - Always Visible & Sticky */}
+    <div className="w-full border-b bg-background hidden md:block">
+      {/* Core Categories - Desktop Only */}
       {coreCategories.length > 0 && (
         <div className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm">
           <div className="container mx-auto px-3 sm:px-6 lg:px-8">
