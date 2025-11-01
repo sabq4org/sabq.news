@@ -27,6 +27,13 @@ export function ChatWebSocketProvider({ children }: { children: ReactNode }) {
       return;
     }
     
+    // Disable WebSocket in production (Autoscale limitation)
+    const isProduction = window.location.hostname.includes('replit.app');
+    if (isProduction) {
+      console.log('[ChatWS] WebSocket disabled in production (Autoscale limitation)');
+      return;
+    }
+    
     console.log('[ChatWS] User authenticated, connecting...');
     chatWebSocket.connect();
     
