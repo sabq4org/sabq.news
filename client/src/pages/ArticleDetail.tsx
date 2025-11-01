@@ -5,6 +5,7 @@ import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { CredibilityIndicator } from "@/components/CredibilityIndicator";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
+import { RelatedOpinionsSection } from "@/components/RelatedOpinionsSection";
 import StoryTimeline from "@/components/StoryTimeline";
 import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
@@ -685,6 +686,17 @@ export default function ArticleDetail() {
 
             {/* AI-Powered Smart Recommendations */}
             <AIRecommendationsBlock articleSlug={slug} />
+
+            {/* Related Opinion Articles */}
+            {article?.category && (
+              <RelatedOpinionsSection
+                categoryId={article.category.id}
+                categoryName={article.category.nameAr}
+                categoryColor={article.category.color || undefined}
+                excludeArticleId={article.id}
+                limit={5}
+              />
+            )}
 
             {relatedArticles.length > 0 && (
               <RecommendationsWidget

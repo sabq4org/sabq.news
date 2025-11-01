@@ -62,14 +62,14 @@ function OpinionCard({ article, categoryColor }: { article: OpinionArticle; cate
                 src={article.author.profileImageUrl}
                 alt={authorName}
                 className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2"
-                style={{ ringColor: categoryColor || 'var(--primary)' }}
+                style={{ ['--tw-ring-color' as any]: categoryColor || 'var(--primary)' }}
               />
             ) : (
               <div 
                 className="h-12 w-12 rounded-full flex items-center justify-center ring-2 ring-offset-2"
                 style={{ 
                   backgroundColor: categoryColor ? `${categoryColor}20` : 'var(--muted)',
-                  ringColor: categoryColor || 'var(--primary)'
+                  ['--tw-ring-color' as any]: categoryColor || 'var(--primary)'
                 }}
               >
                 <User className="h-6 w-6" style={{ color: categoryColor || 'var(--muted-foreground)' }} />
@@ -133,10 +133,10 @@ function HorizontalCarousel({
     const container = scrollRef.current;
     const cardWidth = container.scrollWidth / articles.length;
     
-    if (direction === 'right' && currentIndex < articles.length - 1) {
+    if (direction === 'left' && currentIndex < articles.length - 1) {
       setCurrentIndex(currentIndex + 1);
       container.scrollTo({ left: (currentIndex + 1) * cardWidth, behavior: 'smooth' });
-    } else if (direction === 'left' && currentIndex > 0) {
+    } else if (direction === 'right' && currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       container.scrollTo({ left: (currentIndex - 1) * cardWidth, behavior: 'smooth' });
     }
@@ -166,20 +166,20 @@ function HorizontalCarousel({
       {articles.length > 1 && (
         <>
           <button
-            onClick={() => scroll('right')}
-            disabled={currentIndex === 0}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
-            data-testid="carousel-prev"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          <button
             onClick={() => scroll('left')}
             disabled={currentIndex === articles.length - 1}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
             data-testid="carousel-next"
           >
             <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            disabled={currentIndex === 0}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
+            data-testid="carousel-prev"
+          >
+            <ChevronRight className="w-5 h-5" />
           </button>
         </>
       )}

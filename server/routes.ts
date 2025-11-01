@@ -13370,7 +13370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           score: sql<number>`
             (EXTRACT(EPOCH FROM (NOW() - ${articles.publishedAt})) / 86400)::numeric * -1 +
             (${articles.views}::numeric / 100) +
-            (COALESCE(${articles.featured}, false)::int * 10)
+            (COALESCE(${articles.isFeatured}, false)::int * 10)
           `.as('score'),
         })
         .from(articles)
