@@ -96,6 +96,8 @@ import ShortsEditor from "@/pages/ShortsEditor";
 import QuadCategoriesBlockSettings from "@/pages/QuadCategoriesBlockSettings";
 import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
 import OpinionManagement from "@/pages/dashboard/OpinionManagement";
+import Chat from "@/pages/dashboard/Chat";
+import ChatAdmin from "@/pages/dashboard/ChatAdmin";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -195,6 +197,10 @@ function Router() {
       
       {/* Smart Categories Management */}
       <Route path="/dashboard/smart-categories" component={SmartCategoriesManagement} />
+      
+      {/* Chat */}
+      <Route path="/dashboard/chat" component={Chat} />
+      <Route path="/dashboard/chat-admin" component={ChatAdmin} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />

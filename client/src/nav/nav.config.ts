@@ -138,6 +138,24 @@ export const navConfig: NavItem[] = [
     ],
   },
 
+  // ===== الدردشة / Chat =====
+  {
+    id: "chat",
+    labelKey: "nav.chat",
+    labelAr: "المحادثات",
+    path: "/dashboard/chat",
+    icon: MessageSquare,
+    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+  },
+  {
+    id: "chat_admin",
+    labelKey: "nav.chat_admin",
+    labelAr: "إدارة الدردشة",
+    path: "/dashboard/chat-admin",
+    icon: Shield,
+    roles: ["admin"],
+  },
+
   // ===== الذكاء الاصطناعي / AI =====
   {
     id: "ai",
