@@ -176,6 +176,8 @@ import {
   type InsertShortAnalytic,
 } from "@shared/schema";
 
+import { IChatStorage, DbChatStorage } from "./chat-storage";
+
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -842,9 +844,21 @@ export interface IStorage {
 
   // Get featured shorts for homepage block
   getFeaturedShorts(limit?: number): Promise<ShortWithDetails[]>;
+
+  // ==========================================
+  // Chat System - نظام الدردشة
+  // ==========================================
+  chatStorage: IChatStorage;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Chat storage instance
+  public chatStorage: IChatStorage;
+
+  constructor() {
+    this.chatStorage = new DbChatStorage();
+  }
+
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
