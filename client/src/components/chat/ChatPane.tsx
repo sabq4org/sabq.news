@@ -77,7 +77,7 @@ export function ChatPane({
   });
 
   const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
-    queryKey: ["/api/chat/messages", channelId, page],
+    queryKey: [`/api/chat/channels/${channelId}/messages`, page],
   });
 
   const { data: pinnedMessages } = useQuery<Message[]>({
@@ -100,7 +100,7 @@ export function ChatPane({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", channelId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chat/channels/${channelId}/messages`] });
     },
     onError: (error: any) => {
       toast({

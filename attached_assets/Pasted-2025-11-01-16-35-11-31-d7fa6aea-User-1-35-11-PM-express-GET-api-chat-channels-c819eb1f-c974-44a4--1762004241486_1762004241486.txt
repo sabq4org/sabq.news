@@ -1,0 +1,108 @@
+2025-11-01 16:35:11.31
+d7fa6aea
+User
+1:35:11 PM [express] GET /api/chat/channels/c819eb1f-c974-44a4-9346-5ed4768a7326/pinned-messages 200…
+2025-11-01 16:35:11.31
+d7fa6aea
+User
+1:35:11 PM [express] GET /api/chat/channels/c819eb1f-c974-44a4-9346-5ed4768a7326 200 in 113ms :: {"i…
+2025-11-01 16:35:13.16
+d7fa6aea
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-01 16:35:13.16
+d7fa6aea
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-01 16:35:13.17
+d7fa6aea
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-01 16:35:13.18
+d7fa6aea
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-01 16:35:13.18
+d7fa6aea
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-01 16:35:13.19
+d7fa6aea
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-01 16:35:13.21
+d7fa6aea
+User
+1:35:13 PM [express] GET /api/chat/messages/544362a1-5bef-47c8-9548-1566b7bddab6/1 200 in 63ms
+2025-11-01 16:35:13.25
+d7fa6aea
+User
+1:35:13 PM [express] GET /api/chat/channels/544362a1-5bef-47c8-9548-1566b7bddab6/pinned-messages 200…
+2025-11-01 16:35:13.25
+d7fa6aea
+User
+1:35:13 PM [express] GET /api/chat/channels/544362a1-5bef-47c8-9548-1566b7bddab6 200 in 114ms :: {"i…
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+],
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+response: PassThrough {
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+_events: {
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+close: undefined,
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+error: [Array],
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+prefinish: [Function: prefinish],
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+finish: undefined,
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+drain: undefined,
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+data: [Function (anonymous)],
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+end: [Function (anonymous)],
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+readable: undefined,
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+unpipe: undefined
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+},
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+_readableState: ReadableState {
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+highWaterMark: 16384,
+2025-11-01 16:35:32.82
+d7fa6aea
+User
+buffer: [],
