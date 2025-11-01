@@ -37,6 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Copy, Check } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface AddUserDialogProps {
   open: boolean;
@@ -75,6 +76,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
       firstName: "",
       lastName: "",
       phoneNumber: "",
+      profileImageUrl: null,
       roleIds: [],
       status: "active",
       emailVerified: false,
@@ -226,6 +228,24 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                     />
                   </FormControl>
                   <FormMessage data-testid="error-phoneNumber" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="profileImageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel data-testid="label-profileImage">الصورة الشخصية</FormLabel>
+                  <FormControl>
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={createUserMutation.isPending}
+                    />
+                  </FormControl>
+                  <FormMessage data-testid="error-profileImage" />
                 </FormItem>
               )}
             />
