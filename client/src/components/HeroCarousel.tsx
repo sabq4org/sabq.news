@@ -54,6 +54,11 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
     }).format(dateObj);
   };
 
+  const getObjectPosition = (article: any) => {
+    const focalPoint = article.imageFocalPoint;
+    return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
+  };
+
   return (
     <>
       <div className="relative w-full overflow-hidden rounded-lg bg-card" dir="rtl">
@@ -70,7 +75,8 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       <img
                         src={article.imageUrl}
                         alt={article.title}
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: getObjectPosition(article) }}
                         loading="eager"
                       />
                     </div>
@@ -150,7 +156,8 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         <img
                           src={article.imageUrl}
                           alt={article.title}
-                          className="w-full h-full object-cover object-center"
+                          className="w-full h-full object-cover"
+                          style={{ objectPosition: getObjectPosition(article) }}
                           loading="eager"
                         />
                       ) : (
@@ -246,7 +253,8 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: getObjectPosition(article) }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />

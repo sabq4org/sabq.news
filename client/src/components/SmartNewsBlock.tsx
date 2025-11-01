@@ -123,8 +123,13 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                             <img
                               src={article.imageUrl}
                               alt={article.title}
-                              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
+                              style={{
+                                objectPosition: (article as any).imageFocalPoint
+                                  ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                  : 'center'
+                              }}
                             />
                           </div>
                         )}
@@ -187,6 +192,11 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                       loading="lazy"
+                      style={{
+                        objectPosition: (article as any).imageFocalPoint
+                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                          : 'center'
+                      }}
                     />
                   </div>
                 )}
@@ -251,6 +261,11 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         loading="lazy"
+                        style={{
+                          objectPosition: (article as any).imageFocalPoint
+                            ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                            : 'center'
+                        }}
                       />
                     </div>
                   )}
@@ -311,6 +326,11 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                 alt={featured.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
+                style={{
+                  objectPosition: (featured as any).imageFocalPoint
+                    ? `${(featured as any).imageFocalPoint.x}% ${(featured as any).imageFocalPoint.y}%`
+                    : 'center'
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
@@ -366,6 +386,11 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
+                      style={{
+                        objectPosition: (article as any).imageFocalPoint
+                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                          : 'center'
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">

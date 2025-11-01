@@ -58,8 +58,13 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                               <img
                                 src={article.imageUrl}
                                 alt={article.title}
-                                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 loading="lazy"
+                                style={{
+                                  objectPosition: (article as any).imageFocalPoint
+                                    ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                    : 'center'
+                                }}
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
@@ -153,6 +158,11 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     src={article.imageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover"
+                    style={{
+                      objectPosition: (article as any).imageFocalPoint
+                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                        : 'center'
+                    }}
                   />
                   {article.newsType === "breaking" ? (
                     <Badge 

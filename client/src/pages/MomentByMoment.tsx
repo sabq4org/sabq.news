@@ -274,6 +274,11 @@ function TimelineItem({ activity, isLast }: { activity: Activity; isLast: boolea
                     alt={activity.target.title}
                     className="w-full h-32 object-cover rounded-md"
                     data-testid={`img-target-${activity.id}`}
+                    style={{
+                      objectPosition: (activity.target as any).imageFocalPoint
+                        ? `${(activity.target as any).imageFocalPoint.x}% ${(activity.target as any).imageFocalPoint.y}%`
+                        : 'center'
+                    }}
                   />
                 </div>
               )}

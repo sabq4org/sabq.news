@@ -70,6 +70,11 @@ function FeaturedCard({ data }: { data: CategoryColumnData["featured"] }) {
               alt={data.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
+              style={{
+                objectPosition: (data as any).imageFocalPoint
+                  ? `${(data as any).imageFocalPoint.x}% ${(data as any).imageFocalPoint.y}%`
+                  : 'center'
+              }}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />

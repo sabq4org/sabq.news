@@ -135,6 +135,11 @@ export default function OpinionPage() {
                               src={article.imageUrl}
                               alt={article.title}
                               className="w-full h-full object-cover"
+                              style={{
+                                objectPosition: (article as any).imageFocalPoint
+                                  ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                  : 'center'
+                              }}
                             />
                             <Badge 
                               variant="default" 

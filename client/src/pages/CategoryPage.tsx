@@ -358,6 +358,11 @@ export default function CategoryPage() {
                         src={article.imageUrl}
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          objectPosition: (article as any).imageFocalPoint
+                            ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                            : 'center'
+                        }}
                       />
                       {article.category && (
                         <Badge 

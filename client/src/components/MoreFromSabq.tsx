@@ -49,6 +49,11 @@ export function MoreFromSabq() {
                         src={featuredArticle.imageUrl}
                         alt={featuredArticle.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        style={{
+                          objectPosition: (featuredArticle as any).imageFocalPoint
+                            ? `${(featuredArticle as any).imageFocalPoint.x}% ${(featuredArticle as any).imageFocalPoint.y}%`
+                            : 'center'
+                        }}
                       />
                     </div>
                   )}

@@ -89,6 +89,11 @@ export default function StoryTimeline({ storyId }: StoryTimelineProps) {
                             alt={link.article.title}
                             className="w-24 h-24 object-cover rounded"
                             data-testid={`img-article-${link.articleId}`}
+                            style={{
+                              objectPosition: (link.article as any).imageFocalPoint
+                                ? `${(link.article as any).imageFocalPoint.x}% ${(link.article as any).imageFocalPoint.y}%`
+                                : 'center'
+                            }}
                           />
                         )}
                         <div className="flex-1 min-w-0">

@@ -39,7 +39,12 @@ export function DeepDiveSection({ articles }: DeepDiveSectionProps) {
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover object-center"
+                    className="w-full h-full object-cover"
+                    style={{
+                      objectPosition: (article as any).imageFocalPoint
+                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                        : 'center'
+                    }}
                   />
                   <div className="absolute top-2 left-2">
                     <Badge variant="default" className="bg-primary">
