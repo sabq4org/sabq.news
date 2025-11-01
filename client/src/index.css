@@ -16,80 +16,80 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 60 11% 97%;
+  --background: 214 32% 96%;
 
-  --foreground: 220 20% 15%;
+  --foreground: 222 47% 11%;
 
-  --border: 220 10% 88%;
+  --border: 220 13% 91%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 220 20% 15%;
+  --card-foreground: 222 47% 11%;
 
-  --card-border: 220 8% 92%;
+  --card-border: 220 13% 93%;
 
-  --sidebar: 220 5% 96%;
+  --sidebar: 214 32% 97%;
 
-  --sidebar-foreground: 220 20% 15%;
+  --sidebar-foreground: 222 47% 11%;
 
-  --sidebar-border: 220 8% 89%;
+  --sidebar-border: 220 13% 92%;
 
-  --sidebar-primary: 210 90% 45%;
+  --sidebar-primary: 221 67% 33%;
 
-  --sidebar-primary-foreground: 210 90% 98%;
+  --sidebar-primary-foreground: 210 40% 98%;
 
-  --sidebar-accent: 220 6% 92%;
+  --sidebar-accent: 214 32% 94%;
 
-  --sidebar-accent-foreground: 220 20% 15%;
+  --sidebar-accent-foreground: 222 47% 11%;
 
-  --sidebar-ring: 210 90% 45%;
+  --sidebar-ring: 221 67% 33%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 220 20% 15%;
+  --popover-foreground: 222 47% 11%;
 
-  --popover-border: 220 10% 91%;
+  --popover-border: 220 13% 93%;
 
-  --primary: 210 90% 45%;
+  --primary: 221 67% 33%;
 
-  --primary-foreground: 210 90% 98%;
+  --primary-foreground: 210 40% 98%;
 
-  --secondary: 220 6% 94%;
+  --secondary: 214 32% 94%;
 
-  --secondary-foreground: 220 20% 15%;
+  --secondary-foreground: 222 47% 11%;
 
-  --muted: 220 8% 95%;
+  --muted: 214 32% 95%;
 
-  --muted-foreground: 220 15% 40%;
+  --muted-foreground: 215 16% 47%;
 
-  --footer: 220 12% 85%;
+  --footer: 214 32% 94%;
 
-  --footer-foreground: 220 20% 15%;
+  --footer-foreground: 222 47% 11%;
 
-  --accent: 25 85% 95%;
+  --accent: 221 83% 96%;
 
-  --accent-foreground: 25 85% 35%;
+  --accent-foreground: 221 67% 33%;
 
   --destructive: 0 75% 50%;
 
   --destructive-foreground: 0 0% 98%;
 
-  --input: 220 15% 75%;
-  --ring: 210 90% 45%;
-  --chart-1: 210 90% 45%;
-  --chart-2: 25 85% 55%;
-  --chart-3: 150 70% 45%;
-  --chart-4: 200 80% 50%;
-  --chart-5: 280 70% 55%;
+  --input: 215 16% 70%;
+  --ring: 221 67% 33%;
+  --chart-1: 221 67% 33%;
+  --chart-2: 221 83% 60%;
+  --chart-3: 215 20% 55%;
+  --chart-4: 220 30% 60%;
+  --chart-5: 215 25% 50%;
 
-  /* AI Accent Colors - Neural Blue to Violet Gradient */
-  --ai-primary: 220 85% 55%;
-  --ai-primary-foreground: 220 90% 98%;
-  --ai-secondary: 265 75% 60%;
-  --ai-secondary-foreground: 265 90% 98%;
-  --ai-glow: 220 85% 55%;
-  --ai-background: 220 95% 97%;
-  --ai-background-muted: 220 90% 95%;
+  /* AI Accent Colors - Professional Blue Tones */
+  --ai-primary: 221 67% 33%;
+  --ai-primary-foreground: 210 40% 98%;
+  --ai-secondary: 221 83% 60%;
+  --ai-secondary-foreground: 210 40% 98%;
+  --ai-glow: 221 67% 33%;
+  --ai-background: 210 40% 98%;
+  --ai-background-muted: 214 32% 96%;
 
   --font-sans: 'Inter', sans-serif;
   --font-serif: Georgia, serif;
