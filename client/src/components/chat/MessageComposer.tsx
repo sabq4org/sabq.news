@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Smile, Send, Shield } from "lucide-react";
+import { Smile, Send, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
@@ -293,10 +293,14 @@ export function MessageComposer({
             variant="default"
             size="icon"
             onClick={handleSend}
-            disabled={!content.trim() && attachments.length === 0}
+            disabled={(!content.trim() && attachments.length === 0) || isChecking}
             data-testid="button-send"
           >
-            <Send className="h-4 w-4" />
+            {isChecking ? (
+              <Loader2 className="h-4 w-4 animate-spin" data-testid="loading-icon" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

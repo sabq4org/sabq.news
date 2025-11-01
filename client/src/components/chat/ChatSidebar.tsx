@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Search,
   Plus,
   Hash,
   MessageSquarePlus,
+  MoreVertical,
+  Pin,
+  PinOff,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +16,25 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { usePresence } from "@/hooks/usePresence";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface Channel {
   id: string;
   name: string;
+  displayName?: string;
   type: "channel" | "direct";
+  isPinned?: boolean;
   unreadCount: number;
   lastMessage?: {
     content: string;
@@ -57,91 +72,152 @@ function ChannelItem({
   channel,
   isActive,
   onClick,
+  onPin,
+  onDelete,
   userPresence,
 }: {
   channel: Channel;
   isActive: boolean;
   onClick: () => void;
+  onPin: () => void;
+  onDelete: () => void;
   userPresence?: 'online' | 'offline' | 'away';
 }) {
   const hasOnlineMembers = (channel.membersOnline || 0) > 0;
+  const displayName = channel.displayName || channel.name;
 
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full p-3 rounded-md text-right transition-colors hover-elevate active-elevate-2",
-        isActive && "bg-accent"
-      )}
-      data-testid={`channel-item-${channel.id}`}
-    >
-      <div className="flex items-start gap-3">
-        <div className="relative">
-          {channel.type === "direct" ? (
-            <>
-              <Avatar className="h-10 w-10" data-testid={`avatar-${channel.id}`}>
-                <AvatarImage src={channel.avatarUrl} />
-                <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              {userPresence && (
-                <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
-                  <PresenceIndicator status={userPresence} size="sm" />
-                </div>
-              )}
-            </>
-          ) : (
-            <div
-              className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"
-              data-testid={`channel-icon-${channel.id}`}
-            >
-              <Hash className="h-5 w-5 text-muted-foreground" />
-              {hasOnlineMembers && (
-                <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
-                  <PresenceIndicator status="online" size="sm" />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <span
-              className="font-medium text-sm truncate"
-              data-testid={`channel-name-${channel.id}`}
-            >
-              {channel.name}
-            </span>
-            {channel.unreadCount > 0 && (
-              <Badge
-                variant="default"
-                className="rounded-full h-5 min-w-5 px-1.5 text-xs"
-                data-testid={`unread-badge-${channel.id}`}
+    <div className="relative group">
+      <button
+        onClick={onClick}
+        className={cn(
+          "w-full p-3 rounded-md text-right transition-colors hover-elevate active-elevate-2",
+          isActive && "bg-accent"
+        )}
+        data-testid={`channel-item-${channel.id}`}
+      >
+        <div className="flex items-start gap-3">
+          <div className="relative">
+            {channel.type === "direct" ? (
+              <>
+                <Avatar className="h-10 w-10" data-testid={`avatar-${channel.id}`}>
+                  <AvatarImage src={channel.avatarUrl} />
+                  <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                {userPresence && (
+                  <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                    <PresenceIndicator status={userPresence} size="sm" />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div
+                className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"
+                data-testid={`channel-icon-${channel.id}`}
               >
-                {channel.unreadCount.toLocaleString("en-US")}
-              </Badge>
+                <Hash className="h-5 w-5 text-muted-foreground" />
+                {hasOnlineMembers && (
+                  <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                    <PresenceIndicator status="online" size="sm" />
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          {channel.lastMessage && (
-            <div className="flex items-center justify-between gap-2">
-              <p
-                className="text-xs text-muted-foreground truncate"
-                data-testid={`last-message-${channel.id}`}
-              >
-                {channel.lastMessage.content}
-              </p>
-              <span
-                className="text-xs text-muted-foreground whitespace-nowrap"
-                data-testid={`last-message-time-${channel.id}`}
-              >
-                {formatMessageTime(new Date(channel.lastMessage.timestamp))}
-              </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {channel.isPinned && (
+                  <Pin className="h-3 w-3 text-muted-foreground flex-shrink-0" data-testid={`pin-icon-${channel.id}`} />
+                )}
+                <span
+                  className="font-medium text-sm truncate"
+                  data-testid={`channel-name-${channel.id}`}
+                >
+                  {displayName}
+                </span>
+              </div>
+              {channel.unreadCount > 0 && (
+                <Badge
+                  variant="default"
+                  className="rounded-full h-5 min-w-5 px-1.5 text-xs"
+                  data-testid={`unread-badge-${channel.id}`}
+                >
+                  {channel.unreadCount.toLocaleString("en-US")}
+                </Badge>
+              )}
             </div>
-          )}
+
+            {channel.lastMessage && (
+              <div className="flex items-center justify-between gap-2">
+                <p
+                  className="text-xs text-muted-foreground truncate"
+                  data-testid={`last-message-${channel.id}`}
+                >
+                  {channel.lastMessage.content}
+                </p>
+                <span
+                  className="text-xs text-muted-foreground whitespace-nowrap"
+                  data-testid={`last-message-time-${channel.id}`}
+                >
+                  {formatMessageTime(new Date(channel.lastMessage.timestamp))}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
+      </button>
+
+      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`button-menu-${channel.id}`}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" data-testid={`menu-content-${channel.id}`}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin();
+              }}
+              data-testid={`menu-pin-${channel.id}`}
+            >
+              {channel.isPinned ? (
+                <>
+                  <PinOff className="ml-2 h-4 w-4" />
+                  إلغاء التثبيت
+                </>
+              ) : (
+                <>
+                  <Pin className="ml-2 h-4 w-4" />
+                  تثبيت
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-destructive focus:text-destructive"
+              data-testid={`menu-delete-${channel.id}`}
+            >
+              <Trash2 className="ml-2 h-4 w-4" />
+              حذف المحادثة
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -153,14 +229,60 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { getUserPresence } = usePresence();
+  const { toast } = useToast();
 
   const { data: channels, isLoading } = useQuery<Channel[]>({
     queryKey: ["/api/chat/channels"],
   });
 
-  const filteredChannels = channels?.filter((channel) =>
-    channel.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const pinMutation = useMutation({
+    mutationFn: async (channelId: string) => {
+      return await apiRequest(`/api/chat/channels/${channelId}/pin`, {
+        method: 'PATCH',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/channels"] });
+      toast({
+        title: "تم بنجاح",
+        description: "تم تحديث حالة التثبيت",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث حالة التثبيت",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (channelId: string) => {
+      return await apiRequest(`/api/chat/channels/${channelId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/channels"] });
+      toast({
+        title: "تم بنجاح",
+        description: "تم حذف المحادثة",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حذف المحادثة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredChannels = channels?.filter((channel) => {
+    const searchName = channel.displayName || channel.name;
+    return searchName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="flex flex-col h-full bg-background border-l" dir="rtl">
@@ -219,6 +341,8 @@ export function ChatSidebar({
                 channel={channel}
                 isActive={channel.id === currentChannelId}
                 onClick={() => onChannelSelect(channel.id)}
+                onPin={() => pinMutation.mutate(channel.id)}
+                onDelete={() => deleteMutation.mutate(channel.id)}
                 userPresence={channel.userId ? getUserPresence(channel.userId) : undefined}
               />
             ))

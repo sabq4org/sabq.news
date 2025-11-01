@@ -18,12 +18,19 @@ export function useToxicityCheck() {
 
     setIsChecking(true);
     try {
+      // Add timeout of 2 seconds for faster response
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      
       const response = await fetch('/api/chat/ai/check-toxicity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ content }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         return { allowed: true };
@@ -43,7 +50,12 @@ export function useToxicityCheck() {
       
       return { allowed: true };
     } catch (error) {
-      console.error('خطأ في فحص المحتوى:', error);
+      // If timeout or error, allow the message to be sent
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('فحص المحتوى استغرق وقتاً طويلاً، تم السماح بالإرسال');
+      } else {
+        console.error('خطأ في فحص المحتوى:', error);
+      }
       return { allowed: true };
     } finally {
       setIsChecking(false);

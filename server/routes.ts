@@ -14445,7 +14445,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const channels = await storage.chatStorage.getChannelsByUserId(userId);
       
-      res.json(channels);
+      // For direct messages, get recipient user info
+      const channelsWithDisplayNames = await Promise.all(
+        channels.map(async (channel) => {
+          if (channel.type === 'direct' && channel.metadata?.recipientUserId) {
+            const recipientId = channel.metadata.recipientUserId as string;
+            const [recipient] = await db
+              .select({
+                firstName: users.firstName,
+                lastName: users.lastName,
+                profileImageUrl: users.profileImageUrl,
+              })
+              .from(users)
+              .where(eq(users.id, recipientId))
+              .limit(1);
+            
+            if (recipient) {
+              return {
+                ...channel,
+                displayName: `${recipient.firstName || ''} ${recipient.lastName || ''}`.trim() || recipientId,
+                avatarUrl: recipient.profileImageUrl || channel.avatarUrl,
+              };
+            }
+          }
+          
+          return {
+            ...channel,
+            displayName: channel.name || channel.id,
+          };
+        })
+      );
+      
+      // Sort to show pinned channels first
+      const sortedChannels = channelsWithDisplayNames.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+      
+      res.json(sortedChannels);
     } catch (error) {
       console.error("خطأ في جلب القنوات:", error);
       res.status(500).json({ message: "حدث خطأ في الخادم" });
@@ -14501,7 +14539,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE /api/chat/channels/:channelId - حذف قناة
+  // PATCH /api/chat/channels/:channelId/pin - تبديل حالة التثبيت
+  app.patch("/api/chat/channels/:channelId/pin", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتثبيت هذه القناة" });
+      }
+      
+      const channel = await storage.chatStorage.getChannelById(channelId);
+      if (!channel) {
+        return res.status(404).json({ message: "القناة غير موجودة" });
+      }
+      
+      const updated = await storage.chatStorage.updateChannel(channelId, {
+        isPinned: !channel.isPinned,
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("خطأ في تثبيت القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/channels/:channelId - حذف قناة (أرشفة)
   app.delete("/api/chat/channels/:channelId", isAuthenticated, async (req: any, res) => {
     try {
       const { channelId } = req.params;
@@ -14512,7 +14577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "غير مسموح لك بحذف هذه القناة" });
       }
       
-      await storage.chatStorage.deleteChannel(channelId);
+      await storage.chatStorage.archiveChannel(channelId);
       
       res.json({ message: "تم حذف القناة بنجاح" });
     } catch (error) {

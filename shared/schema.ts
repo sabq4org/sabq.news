@@ -2957,6 +2957,7 @@ export const chatChannels = pgTable("chat_channels", {
   isPrivate: boolean("is_private").default(true).notNull(),
   createdBy: varchar("created_by").references(() => users.id).notNull(),
   avatarUrl: text("avatar_url"),
+  isPinned: boolean("is_pinned").default(false).notNull(),
   settings: jsonb("settings").$type<{
     slowMode?: number; // seconds between messages
     retention?: number; // days to keep messages
