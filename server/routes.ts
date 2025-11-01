@@ -2873,7 +2873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db
         .update(users)
         .set({ 
-          password: hashedPassword,
+          passwordHash: hashedPassword,
           updatedAt: new Date()
         })
         .where(eq(users.id, targetUserId));
@@ -2887,7 +2887,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           ip: req.ip,
           userAgent: req.get("user-agent"),
-          targetEmail: user.email,
         },
       });
 

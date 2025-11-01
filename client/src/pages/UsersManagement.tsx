@@ -11,6 +11,7 @@ import {
   Trash2,
   Search,
   Users,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,6 +115,8 @@ export default function UsersManagement() {
     userId: string;
     currentRoles: string[];
   } | null>(null);
+  const [resettingPassword, setResettingPassword] = useState<UserListItem | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(adminUpdateUserSchema),
@@ -202,6 +205,34 @@ export default function UsersManagement() {
     },
   });
 
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ id, password }: { id: string; password: string }) => {
+      return await apiRequest(`/api/admin/users/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ newPassword: password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: () => {
+      setResettingPassword(null);
+      setNewPassword("");
+      toast({
+        title: "تم إعادة تعيين كلمة المرور",
+        description: "تم إعادة تعيين كلمة المرور بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إعادة تعيين كلمة المرور",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handlers
   const handleEdit = (user: UserListItem) => {
     setEditingUser(user);
@@ -238,6 +269,19 @@ export default function UsersManagement() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleResetPassword = () => {
+    if (!resettingPassword || !newPassword) return;
+    if (newPassword.length < 8) {
+      toast({
+        title: "خطأ",
+        description: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+        variant: "destructive",
+      });
+      return;
+    }
+    resetPasswordMutation.mutate({ id: resettingPassword.id, password: newPassword });
   };
 
   // Status badge
@@ -397,6 +441,18 @@ export default function UsersManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => {
+                                setResettingPassword(user);
+                                setNewPassword("");
+                              }}
+                              disabled={user.id === (globalThis as any).__currentUserId}
+                              data-testid={`button-reset-password-${user.id}`}
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setDeletingUser(user)}
                               disabled={user.id === (globalThis as any).__currentUserId}
                               data-testid={`button-delete-${user.id}`}
@@ -443,6 +499,52 @@ export default function UsersManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resettingPassword} onOpenChange={(open) => !open && setResettingPassword(null)}>
+        <DialogContent data-testid="dialog-reset-password">
+          <DialogHeader>
+            <DialogTitle>إعادة تعيين كلمة المرور</DialogTitle>
+            <DialogDescription>
+              إعادة تعيين كلمة المرور للمستخدم "{resettingPassword?.email}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="new-password" className="text-sm font-medium">
+                كلمة المرور الجديدة
+              </label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                data-testid="input-new-password"
+              />
+              <p className="text-xs text-muted-foreground">
+                يجب أن تكون كلمة المرور 8 أحرف على الأقل
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setResettingPassword(null)}
+              data-testid="button-cancel-reset"
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleResetPassword}
+              disabled={resetPasswordMutation.isPending || !newPassword || newPassword.length < 8}
+              data-testid="button-confirm-reset"
+            >
+              {resetPasswordMutation.isPending ? "جاري إعادة التعيين..." : "إعادة تعيين"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add User Dialog */}
       <AddUserDialog
