@@ -54,15 +54,15 @@
 
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 214 32% 94%;
+  --secondary: 221 83% 60%;
 
-  --secondary-foreground: 222 47% 11%;
+  --secondary-foreground: 210 40% 98%;
 
   --muted: 214 32% 95%;
 
   --muted-foreground: 215 16% 47%;
 
-  --footer: 214 32% 94%;
+  --footer: 210 40% 98%;
 
   --footer-foreground: 222 47% 11%;
 
@@ -165,15 +165,15 @@
 
   --sidebar-border: 220 20% 14%;
 
-  --sidebar-primary: 210 80% 60%;
+  --sidebar-primary: 221 75% 55%;
 
-  --sidebar-primary-foreground: 210 90% 98%;
+  --sidebar-primary-foreground: 210 40% 98%;
 
   --sidebar-accent: 220 18% 15%;
 
   --sidebar-accent-foreground: 0 0% 95%;
 
-  --sidebar-ring: 210 80% 60%;
+  --sidebar-ring: 221 75% 55%;
 
   --popover: 220 20% 12%;
 
@@ -181,25 +181,25 @@
 
   --popover-border: 220 18% 16%;
 
-  --primary: 210 80% 60%;
+  --primary: 221 75% 55%;
 
-  --primary-foreground: 210 90% 98%;
+  --primary-foreground: 210 40% 98%;
 
-  --secondary: 220 18% 18%;
+  --secondary: 221 83% 65%;
 
-  --secondary-foreground: 0 0% 95%;
+  --secondary-foreground: 210 40% 98%;
 
   --muted: 220 18% 15%;
 
   --muted-foreground: 220 10% 70%;
 
-  --footer: 220 20% 12%;
+  --footer: 220 20% 10%;
 
   --footer-foreground: 0 0% 95%;
 
-  --accent: 25 85% 20%;
+  --accent: 221 83% 25%;
 
-  --accent-foreground: 25 85% 85%;
+  --accent-foreground: 210 40% 98%;
 
   --destructive: 0 75% 50%;
 
@@ -207,20 +207,20 @@
 
   --input: 220 20% 35%;
   --ring: 210 80% 60%;
-  --chart-1: 210 80% 65%;
-  --chart-2: 25 85% 65%;
-  --chart-3: 150 70% 60%;
-  --chart-4: 200 80% 65%;
-  --chart-5: 280 70% 65%;
+  --chart-1: 221 75% 55%;
+  --chart-2: 221 83% 65%;
+  --chart-3: 215 20% 55%;
+  --chart-4: 220 30% 60%;
+  --chart-5: 215 25% 50%;
 
-  /* AI Accent Colors - Neural Blue to Violet Gradient (Dark Mode) */
-  --ai-primary: 220 75% 65%;
-  --ai-primary-foreground: 220 90% 98%;
-  --ai-secondary: 265 65% 70%;
-  --ai-secondary-foreground: 265 90% 98%;
-  --ai-glow: 220 75% 65%;
-  --ai-background: 220 30% 10%;
-  --ai-background-muted: 220 25% 12%;
+  /* AI Accent Colors - Professional Blue Tones (Dark Mode) */
+  --ai-primary: 221 75% 55%;
+  --ai-primary-foreground: 210 40% 98%;
+  --ai-secondary: 221 83% 65%;
+  --ai-secondary-foreground: 210 40% 98%;
+  --ai-glow: 221 75% 55%;
+  --ai-background: 220 25% 10%;
+  --ai-background-muted: 220 20% 12%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.15);
   --shadow-xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.20);
