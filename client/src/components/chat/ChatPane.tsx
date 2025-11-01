@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Search, Pin, Settings, Users, Loader2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -83,6 +85,31 @@ export function ChatPane({
   });
 
   const pinnedCount = pinnedMessages?.length || 0;
+  const { toast } = useToast();
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data: { content: string; attachments?: any[]; mentions?: string[] }) => {
+      return await apiRequest(`/api/chat/channels/${channelId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: data.content,
+          contentType: "text",
+          attachments: data.attachments || [],
+          mentions: data.mentions || [],
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", channelId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "فشل إرسال الرسالة",
+        description: error.message || "حدث خطأ أثناء إرسال الرسالة",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     if (scrollRef.current && page === 1) {
@@ -98,8 +125,8 @@ export function ChatPane({
   };
 
   const handleSendMessage = (content: string, attachments?: any[], mentions?: string[]) => {
-    // Implementation will be handled by parent or mutation
     console.log("Send message:", content, attachments, mentions);
+    sendMessageMutation.mutate({ content, attachments, mentions });
   };
 
   const handleReply = (messageId: string) => {
