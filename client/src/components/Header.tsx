@@ -305,29 +305,50 @@ export function Header({ user, onMenuClick }: HeaderProps) {
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="right" className="w-[280px]">
           <SheetHeader>
-            <SheetTitle className="text-right">التصنيفات</SheetTitle>
+            <SheetTitle className="text-right">القائمة</SheetTitle>
           </SheetHeader>
           <div className="mt-6 space-y-1">
+            {/* Main Sections */}
             <Link href="/">
               <span
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
                 onClick={() => setMobileMenuOpen(false)}
-                data-testid="link-mobile-category-all"
+                data-testid="link-mobile-home"
               >
-                الكل
+                الرئيسية
               </span>
             </Link>
-            {categories.map((category) => (
-              <Link key={category.id} href={`/category/${category.slug}`}>
-                <span
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`link-mobile-category-${category.slug}`}
-                >
-                  {category.nameAr}
-                </span>
-              </Link>
-            ))}
+            <Link href="/news">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-news"
+              >
+                الأخبار
+              </span>
+            </Link>
+
+            {/* Categories Section */}
+            <div className="pt-4 pb-2">
+              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                التصنيفات
+              </h3>
+            </div>
+            {categories
+              .filter((cat) => cat.status === "active" && cat.type === "core")
+              .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+              .map((category) => (
+                <Link key={category.id} href={`/category/${category.slug}`}>
+                  <span
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`link-mobile-category-${category.slug}`}
+                  >
+                    {category.icon && <span className="text-lg">{category.icon}</span>}
+                    {category.nameAr}
+                  </span>
+                </Link>
+              ))}
           </div>
         </SheetContent>
       </Sheet>
