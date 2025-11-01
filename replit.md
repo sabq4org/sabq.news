@@ -13,7 +13,16 @@ The platform features an RTL-first design with custom light/dark theming and Ara
 
 **Navigation Design:**
 - **NavigationBar (Homepage):** Displays sticky Core Categories navigation bar. Hidden on mobile devices (phones/tablets), visible only on desktop (md breakpoint and above). Smart Categories strip has been removed for cleaner, simpler design.
+- **Mobile Menu:** Reorganized to show "الرئيسية" (Home), "الأخبار" (News), and all core categories filtered and sorted by displayOrder.
 - **Footer:** Redesigned with column-based layout (NO Card components) to differentiate from news article cards. Features three-tier structure: (1) Intelligence Banner with live AI metrics, (2) Navigation columns with icons and links, (3) Bottom bar with brand, contact, and social/legal links. All numbers displayed in English digits (toLocaleString('en-US')).
+
+**Dashboard Design - Official Editorial Style:**
+The dashboard has been redesigned to reflect a professional editorial newsroom aesthetic, moving from playful colors to a refined, trust-inspiring interface:
+- **Color Palette:** Official editorial colors - Primary Blue (#3B82F6), Slate Gray (#64748B), Deep Navy (#1E293B), Pure White (#FFFFFF), Light Slate (#E5E9F2)
+- **Welcome Block:** Clean white background with right-side blue accent bar, icon contained in gradient box, professional typography with improved contrast (WCAG AA compliant)
+- **Activity Indicators:** Translucent card backgrounds (white/50) with backdrop-blur, soft gradient icon containers, alternating blue/gray accent bars for visual rhythm
+- **Typography:** All headlines in Deep Navy (#1E293B), secondary text in slate tones for hierarchy
+- **All Numbers:** Displayed in English digits using toLocaleString('en-US') for international readability
 
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication uses Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (via Replit Object Storage) handles file storage, and Server-Sent Events (SSE) enable real-time features. 

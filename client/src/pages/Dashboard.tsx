@@ -206,22 +206,24 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Welcome Section with Greeting */}
-        <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20" data-testid="card-welcome">
+        {/* Welcome Section with Greeting - Official Editorial Style */}
+        <Card className="bg-white dark:bg-slate-900 border-r-4 border-r-[#3B82F6] shadow-sm" data-testid="card-welcome">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <Sparkles className="h-6 w-6 text-primary" data-testid="icon-sparkles" />
-                  <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-greeting">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#2563EB] flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-white" data-testid="icon-sparkles" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-[#1E293B] dark:text-slate-100" data-testid="text-greeting">
                     {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
                   </h2>
                 </div>
-                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
+                <p className="text-slate-600 dark:text-slate-400 text-base leading-relaxed max-w-2xl pr-12" data-testid="text-motivational-quote">
                   {motivationalQuote}
                 </p>
               </div>
-              <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
+              <div className="flex flex-col items-start md:items-end gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   <span data-testid="text-current-time">
@@ -329,22 +331,24 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Today's Activity Stats */}
+        {/* Today's Activity Stats - Official Editorial Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
+          <Card data-testid="card-views-today-stats" className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-r-4 border-r-[#3B82F6] shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
-              <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
+              <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">المشاهدات اليوم</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#3B82F6]/10 to-[#2563EB]/5 flex items-center justify-center">
+                <Activity className="h-4 w-4 text-[#3B82F6]" data-testid="icon-views-today" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold text-primary" data-testid="text-views-today">
-                    {stats?.articles.viewsToday || 0}
+                  <div className="text-2xl font-bold text-[#1E293B] dark:text-slate-100" data-testid="text-views-today">
+                    {(stats?.articles.viewsToday || 0).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
+                  <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="text-views-today-description">
                     مشاهدة جديدة اليوم
                   </p>
                 </>
@@ -352,20 +356,22 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
+          <Card data-testid="card-active-today-stats" className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-r-4 border-r-[#64748B] shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
-              <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
+              <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">القراء النشطون اليوم</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#64748B]/10 to-[#475569]/5 flex items-center justify-center">
+                <Users className="h-4 w-4 text-[#64748B]" data-testid="icon-active-today" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold text-chart-2" data-testid="text-active-today">
-                    {stats?.users.activeToday || 0}
+                  <div className="text-2xl font-bold text-[#1E293B] dark:text-slate-100" data-testid="text-active-today">
+                    {(stats?.users.activeToday || 0).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-active-today-description">
+                  <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="text-active-today-description">
                     زائر نشط حالياً
                   </p>
                 </>
@@ -373,42 +379,46 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
+          <Card data-testid="card-reads-today-stats" className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-r-4 border-r-[#3B82F6] shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
-              <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
+              <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">القراءات اليوم</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#3B82F6]/10 to-[#2563EB]/5 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-[#3B82F6]" data-testid="icon-reads-today" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold text-chart-3" data-testid="text-reads-today">
-                    {stats?.engagement.readsToday || 0}
+                  <div className="text-2xl font-bold text-[#1E293B] dark:text-slate-100" data-testid="text-reads-today">
+                    {(stats?.engagement.readsToday || 0).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
-                    من {stats?.engagement.totalReads || 0} إجمالي
+                  <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="text-reads-today-description">
+                    من {(stats?.engagement.totalReads || 0).toLocaleString('en-US')} إجمالي
                   </p>
                 </>
               )}
             </CardContent>
           </Card>
 
-          <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
+          <Card data-testid="card-engagement-today-stats" className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-r-4 border-r-[#64748B] shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
-              <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
+              <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">التفاعل اليوم</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#64748B]/10 to-[#475569]/5 flex items-center justify-center">
+                <Heart className="h-4 w-4 text-[#64748B]" data-testid="icon-engagement-today" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold text-chart-4" data-testid="text-engagement-today">
-                    {stats?.reactions.todayCount || 0}
+                  <div className="text-2xl font-bold text-[#1E293B] dark:text-slate-100" data-testid="text-engagement-today">
+                    {(stats?.reactions.todayCount || 0).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
-                    من {stats?.reactions.total || 0} إجمالي
+                  <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="text-engagement-today-description">
+                    من {(stats?.reactions.total || 0).toLocaleString('en-US')} إجمالي
                   </p>
                 </>
               )}
