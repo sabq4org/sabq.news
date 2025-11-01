@@ -1,0 +1,222 @@
+import { useRef, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Pin, Settings, Users, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessageBubble } from "./MessageBubble";
+import { MessageComposer } from "./MessageComposer";
+
+interface Message {
+  id: string;
+  content: string;
+  contentType: "text" | "rich_text";
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  timestamp: Date;
+  attachments?: Array<{
+    id: string;
+    type: "image" | "file";
+    url: string;
+    name: string;
+    size?: number;
+  }>;
+  reactions?: Array<{
+    emoji: string;
+    userIds: string[];
+    count: number;
+  }>;
+  isPinned?: boolean;
+  isEdited?: boolean;
+  replyTo?: {
+    id: string;
+    senderName: string;
+    content: string;
+  };
+}
+
+interface Channel {
+  id: string;
+  name: string;
+  memberCount: number;
+  type: "channel" | "direct";
+}
+
+interface ChatPaneProps {
+  channelId: string;
+  currentUserId: string;
+  onSearchClick: () => void;
+  onSettingsClick: () => void;
+}
+
+export function ChatPane({
+  channelId,
+  currentUserId,
+  onSearchClick,
+  onSettingsClick,
+}: ChatPaneProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const { data: channel, isLoading: channelLoading } = useQuery<Channel>({
+    queryKey: ["/api/chat/channels", channelId],
+  });
+
+  const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
+    queryKey: ["/api/chat/messages", channelId, page],
+  });
+
+  useEffect(() => {
+    if (scrollRef.current && page === 1) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, page]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop === 0 && hasMore && !messagesLoading) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const handleSendMessage = async (content: string, attachments?: File[]) => {
+    // Implementation will be handled by parent or mutation
+    console.log("Send message:", content, attachments);
+  };
+
+  const handleReply = (messageId: string) => {
+    console.log("Reply to:", messageId);
+  };
+
+  const handleReact = (messageId: string, emoji: string) => {
+    console.log("React:", messageId, emoji);
+  };
+
+  const handleEdit = (messageId: string) => {
+    console.log("Edit:", messageId);
+  };
+
+  const handleDelete = (messageId: string) => {
+    console.log("Delete:", messageId);
+  };
+
+  if (channelLoading) {
+    return (
+      <div className="flex flex-col h-full" dir="rtl">
+        <div className="border-b p-4">
+          <Skeleton className="h-6 w-48" />
+        </div>
+        <div className="flex-1 p-4 space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-background" dir="rtl">
+      <div
+        className="border-b p-4 flex items-center justify-between gap-4"
+        data-testid="chat-header"
+      >
+        <div className="flex items-center gap-3">
+          <div>
+            <h2
+              className="font-semibold text-lg"
+              data-testid="channel-name"
+            >
+              {channel?.name}
+            </h2>
+            {channel?.type === "channel" && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-3 w-3" />
+                <span data-testid="member-count">
+                  {channel.memberCount.toLocaleString("en-US")} أعضاء
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSearchClick}
+            data-testid="button-search"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid="button-pin"
+          >
+            <Pin className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSettingsClick}
+            data-testid="button-settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="p-4 space-y-4"
+          data-testid="messages-container"
+        >
+          {messagesLoading && page > 1 && (
+            <div className="flex justify-center py-2" data-testid="loading-more">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {messages && messages.length > 0 ? (
+            messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                currentUserId={currentUserId}
+                onReply={handleReply}
+                onReact={handleReact}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            !messagesLoading && (
+              <div
+                className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground"
+                data-testid="empty-messages"
+              >
+                <p className="text-sm">لا توجد رسائل بعد</p>
+                <p className="text-xs mt-2">ابدأ المحادثة بإرسال أول رسالة</p>
+              </div>
+            )
+          )}
+        </div>
+      </ScrollArea>
+
+      <div className="border-t p-4" data-testid="message-composer-container">
+        <MessageComposer onSend={handleSendMessage} />
+      </div>
+    </div>
+  );
+}
