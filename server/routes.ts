@@ -2684,11 +2684,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Update user status if provided
-      if (parsed.data.status !== undefined) {
+      // Build update object with all provided fields
+      const updateData: any = {};
+      if (parsed.data.firstName !== undefined) updateData.firstName = parsed.data.firstName;
+      if (parsed.data.lastName !== undefined) updateData.lastName = parsed.data.lastName;
+      if (parsed.data.phoneNumber !== undefined) updateData.phoneNumber = parsed.data.phoneNumber || null;
+      if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl;
+      if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
+      if (parsed.data.emailVerified !== undefined) updateData.emailVerified = parsed.data.emailVerified;
+      if (parsed.data.phoneVerified !== undefined) updateData.phoneVerified = parsed.data.phoneVerified;
+      if (parsed.data.verificationBadge !== undefined) updateData.verificationBadge = parsed.data.verificationBadge;
+
+      // Update user data if there are any fields to update
+      if (Object.keys(updateData).length > 0) {
         await db
           .update(users)
-          .set({ status: parsed.data.status })
+          .set(updateData)
           .where(eq(users.id, targetUserId));
       }
 

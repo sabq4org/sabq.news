@@ -938,6 +938,10 @@ export const updateUserSchema = z.object({
 });
 
 export const adminUpdateUserSchema = z.object({
+  firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
+  lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
+  phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
+  profileImageUrl: z.string().nullable().optional(),
   status: z.enum(["active", "pending", "suspended", "banned", "locked", "deleted"], {
     errorMap: () => ({ message: "الحالة يجب أن تكون: نشط، معلق، محظور، أو مقفل" })
   }).optional(),
