@@ -3570,6 +3570,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         articleData.displayOrder = Math.floor(Date.now() / 1000);
       }
 
+      // Check for duplicate slug and append suffix if needed
+      let finalSlug = articleData.slug;
+      let slugSuffix = 1;
+      let slugExists = true;
+      
+      while (slugExists) {
+        const [existingArticle] = await db
+          .select({ id: articles.id })
+          .from(articles)
+          .where(eq(articles.slug, finalSlug))
+          .limit(1);
+        
+        if (existingArticle) {
+          slugSuffix++;
+          finalSlug = `${articleData.slug}-${slugSuffix}`;
+        } else {
+          slugExists = false;
+        }
+      }
+      
+      articleData.slug = finalSlug;
+
       const [newArticle] = await db
         .insert(articles)
         .values(articleData)
