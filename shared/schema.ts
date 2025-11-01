@@ -933,7 +933,7 @@ export const updateUserSchema = z.object({
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
   bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
-  profileImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  profileImageUrl: z.string().optional().or(z.literal("")),
   isProfileComplete: z.boolean().optional(),
 });
 
@@ -953,7 +953,7 @@ export const adminCreateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل"),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل"),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
-  profileImageUrl: z.string().url("رابط الصورة غير صحيح").nullable().optional(),
+  profileImageUrl: z.string().nullable().optional(),
   roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),
   status: z.enum(["active", "pending", "suspended", "banned", "locked"]).default("active"),
   emailVerified: z.boolean().default(false),
