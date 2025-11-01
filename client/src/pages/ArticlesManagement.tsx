@@ -500,7 +500,7 @@ export default function ArticlesManagement() {
             </p>
           </div>
           <Button
-            onClick={() => setLocation("/dashboard/articles/new")}
+            onClick={() => setLocation("/dashboard/articles/new?type=news")}
             className="gap-2 w-full sm:w-auto"
             size="sm"
             data-testid="button-create-article"
