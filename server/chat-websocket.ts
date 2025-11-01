@@ -421,6 +421,17 @@ export class ChatWebSocketServer {
   }
 
   /**
+   * إرسال إشعار لمستخدم محدد
+   */
+  public sendNotification(userId: string, notification: any) {
+    console.log('[WebSocket] Sending notification to user:', userId);
+    this.sendToUser(userId, {
+      type: 'notification',
+      notification,
+    });
+  }
+
+  /**
    * الحصول على عدد المتصلين
    */
   public getConnectionStats() {

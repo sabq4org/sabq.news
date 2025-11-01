@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Smile, Mic, Send } from "lucide-react";
+import { Smile, Send, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
@@ -8,11 +8,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { MentionPicker } from "./MentionPicker";
+import { FileUploadButton } from "./FileUploadButton";
+import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
+import { AttachmentPreview } from "./AttachmentPreview";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { useToxicityCheck } from "@/hooks/useToxicityCheck";
+
+interface UploadedFile {
+  url: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  type: 'image' | 'video' | 'audio' | 'document' | 'file';
+  preview?: string;
+}
 
 interface MessageComposerProps {
-  onSend: (content: string, attachments?: File[], mentions?: string[]) => void;
+  onSend: (content: string, attachments?: UploadedFile[], mentions?: string[]) => void;
   channelId?: string;
   placeholder?: string;
 }
@@ -23,17 +46,22 @@ export function MessageComposer({
   placeholder = "اكتب رسالة...",
 }: MessageComposerProps) {
   const [content, setContent] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const [mentions, setMentions] = useState<string[]>([]);
+  const [showToxicityWarning, setShowToxicityWarning] = useState(false);
+  const [toxicityWarning, setToxicityWarning] = useState<{
+    message: string;
+    suggestion?: string;
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { startTyping, stopTyping } = useTypingIndicator({
     channelId,
     debounceMs: 3000,
   });
+  const { checkContent, isChecking } = useToxicityCheck();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -92,9 +120,19 @@ export function MessageComposer({
     textareaRef.current?.focus();
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setAttachments((prev) => [...prev, ...files]);
+  const handleFileUploaded = (file: UploadedFile) => {
+    setAttachments((prev) => [...prev, file]);
+  };
+
+  const handleVoiceNoteSent = (data: { url: string; duration: number; size: number }) => {
+    const voiceNote: UploadedFile = {
+      url: data.url,
+      name: `Voice Note - ${new Date().toLocaleTimeString('ar-SA')}`,
+      size: data.size,
+      mimeType: 'audio/webm',
+      type: 'audio',
+    };
+    setAttachments((prev) => [...prev, voiceNote]);
   };
 
   const handleRemoveAttachment = (index: number) => {
@@ -129,9 +167,20 @@ export function MessageComposer({
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmedContent = content.trim();
     if (!trimmedContent && attachments.length === 0) return;
+
+    const toxicityResult = await checkContent(trimmedContent);
+    
+    if (!toxicityResult.allowed) {
+      setToxicityWarning({
+        message: toxicityResult.message || 'هذه الرسالة قد تحتوي على محتوى غير لائق',
+        suggestion: toxicityResult.suggestion,
+      });
+      setShowToxicityWarning(true);
+      return;
+    }
 
     stopTyping();
 
@@ -144,6 +193,28 @@ export function MessageComposer({
     }
   };
 
+  const handleForceSend = () => {
+    const trimmedContent = content.trim();
+    stopTyping();
+    onSend(trimmedContent, attachments, mentions.length > 0 ? mentions : undefined);
+    setContent("");
+    setAttachments([]);
+    setMentions([]);
+    setShowToxicityWarning(false);
+    setToxicityWarning(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
+  const handleUseSuggestion = () => {
+    if (toxicityWarning?.suggestion) {
+      setContent(toxicityWarning.suggestion);
+    }
+    setShowToxicityWarning(false);
+    setToxicityWarning(null);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -151,34 +222,14 @@ export function MessageComposer({
     }
   };
 
-  const handleVoiceNote = () => {
-    console.log("Voice note recording");
-    // Implementation for voice recording
-  };
-
   return (
     <div className="space-y-3" dir="rtl">
       {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2" data-testid="attachments-preview">
-          {attachments.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm"
-              data-testid={`attachment-preview-${index}`}
-            >
-              <span className="truncate max-w-[200px]">{file.name}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 w-5 p-0"
-                onClick={() => handleRemoveAttachment(index)}
-                data-testid={`button-remove-attachment-${index}`}
-              >
-                ×
-              </Button>
-            </div>
-          ))}
-        </div>
+        <AttachmentPreview
+          attachments={attachments}
+          onRemove={handleRemoveAttachment}
+          variant="compact"
+        />
       )}
 
       <div className="flex items-end gap-2">
@@ -205,22 +256,10 @@ export function MessageComposer({
         </div>
 
         <div className="flex items-center gap-1">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-            data-testid="input-file"
+          <FileUploadButton
+            onFileUploaded={handleFileUploaded}
+            disabled={false}
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            data-testid="button-attach"
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
 
           <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
             <PopoverTrigger asChild>
@@ -245,14 +284,10 @@ export function MessageComposer({
             </PopoverContent>
           </Popover>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleVoiceNote}
-            data-testid="button-voice"
-          >
-            <Mic className="h-4 w-4" />
-          </Button>
+          <VoiceNoteRecorder
+            onVoiceNoteSent={handleVoiceNoteSent}
+            disabled={false}
+          />
 
           <Button
             variant="default"
@@ -269,6 +304,49 @@ export function MessageComposer({
       <p className="text-xs text-muted-foreground text-center">
         اضغط Enter للإرسال، Shift+Enter لسطر جديد
       </p>
+
+      <AlertDialog open={showToxicityWarning} onOpenChange={setShowToxicityWarning}>
+        <AlertDialogContent dir="rtl" data-testid="toxicity-warning-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-destructive" />
+              تحذير: محتوى غير مناسب
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {toxicityWarning?.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {toxicityWarning?.suggestion && (
+            <div className="p-3 bg-muted rounded-md space-y-2">
+              <p className="text-sm font-medium">بديل مقترح:</p>
+              <p className="text-sm" data-testid="toxicity-suggestion">
+                {toxicityWarning.suggestion}
+              </p>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-send">
+              إلغاء
+            </AlertDialogCancel>
+            {toxicityWarning?.suggestion && (
+              <Button
+                variant="outline"
+                onClick={handleUseSuggestion}
+                data-testid="button-use-suggestion"
+              >
+                استخدام البديل
+              </Button>
+            )}
+            <AlertDialogAction
+              onClick={handleForceSend}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-force-send"
+            >
+              إرسال على أي حال
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -7,21 +7,70 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export async function apiRequest<T = any>(
   url: string,
   options?: {
     method?: string;
-    body?: string;
+    body?: string | FormData;
     headers?: Record<string, string>;
+    isFormData?: boolean;
+    onUploadProgress?: (progress: { loaded: number; total: number }) => void;
   }
-): Promise<any> {
+): Promise<T> {
+  // Use XMLHttpRequest for FormData with progress tracking
+  if (options?.isFormData && options.body instanceof FormData) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && options.onUploadProgress) {
+          options.onUploadProgress({ loaded: e.loaded, total: e.total });
+        }
+      });
+
+      xhr.addEventListener('load', async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const contentType = xhr.getResponseHeader("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              resolve(xhr.response);
+            }
+          } catch (error) {
+            reject(new Error(`Failed to parse response: ${error}`));
+          }
+        } else {
+          reject(new Error(`${xhr.status}: ${xhr.responseText || xhr.statusText}`));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error'));
+      });
+
+      xhr.open(options?.method || 'POST', url);
+      xhr.withCredentials = true;
+      
+      // Don't set Content-Type for FormData - browser will set it with boundary
+      if (options?.headers) {
+        Object.entries(options.headers).forEach(([key, value]) => {
+          xhr.setRequestHeader(key, value);
+        });
+      }
+
+      xhr.send(options.body);
+    });
+  }
+
+  // Standard fetch for non-FormData requests
   const res = await fetch(url, {
     method: options?.method || "GET",
     headers: {
-      ...(options?.body ? { "Content-Type": "application/json" } : {}),
+      ...(options?.body && typeof options.body === 'string' ? { "Content-Type": "application/json" } : {}),
       ...(options?.headers || {}),
     },
-    body: options?.body,
+    body: typeof options?.body === 'string' ? options.body : undefined,
     credentials: "include",
   });
 
@@ -32,7 +81,7 @@ export async function apiRequest(
     return await res.json();
   }
   
-  return res;
+  return res as T;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

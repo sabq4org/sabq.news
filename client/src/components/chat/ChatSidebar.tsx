@@ -4,7 +4,6 @@ import {
   Search,
   Plus,
   Hash,
-  Circle,
   MessageSquarePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { PresenceIndicator } from "./PresenceIndicator";
+import { usePresence } from "@/hooks/usePresence";
 
 interface Channel {
   id: string;
@@ -28,6 +29,7 @@ interface Channel {
   membersOnline?: number;
   totalMembers?: number;
   avatarUrl?: string;
+  userId?: string;
 }
 
 interface ChatSidebarProps {
@@ -55,10 +57,12 @@ function ChannelItem({
   channel,
   isActive,
   onClick,
+  userPresence,
 }: {
   channel: Channel;
   isActive: boolean;
   onClick: () => void;
+  userPresence?: 'online' | 'offline' | 'away';
 }) {
   const hasOnlineMembers = (channel.membersOnline || 0) > 0;
 
@@ -74,23 +78,29 @@ function ChannelItem({
       <div className="flex items-start gap-3">
         <div className="relative">
           {channel.type === "direct" ? (
-            <Avatar className="h-10 w-10" data-testid={`avatar-${channel.id}`}>
-              <AvatarImage src={channel.avatarUrl} />
-              <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <>
+              <Avatar className="h-10 w-10" data-testid={`avatar-${channel.id}`}>
+                <AvatarImage src={channel.avatarUrl} />
+                <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              {userPresence && (
+                <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                  <PresenceIndicator status={userPresence} size="sm" />
+                </div>
+              )}
+            </>
           ) : (
             <div
               className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"
               data-testid={`channel-icon-${channel.id}`}
             >
               <Hash className="h-5 w-5 text-muted-foreground" />
+              {hasOnlineMembers && (
+                <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                  <PresenceIndicator status="online" size="sm" />
+                </div>
+              )}
             </div>
-          )}
-          {hasOnlineMembers && (
-            <Circle
-              className="h-3 w-3 fill-green-500 text-green-500 absolute bottom-0 left-0"
-              data-testid={`presence-${channel.id}`}
-            />
           )}
         </div>
 
@@ -142,6 +152,7 @@ export function ChatSidebar({
   onNewChannel,
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { getUserPresence } = usePresence();
 
   const { data: channels, isLoading } = useQuery<Channel[]>({
     queryKey: ["/api/chat/channels"],
@@ -208,6 +219,7 @@ export function ChatSidebar({
                 channel={channel}
                 isActive={channel.id === currentChannelId}
                 onClick={() => onChannelSelect(channel.id)}
+                userPresence={channel.userId ? getUserPresence(channel.userId) : undefined}
               />
             ))
           ) : (

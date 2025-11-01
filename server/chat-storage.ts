@@ -11,6 +11,7 @@ import {
   chatPinnedMessages,
   chatModerationLogs,
   chatRetentionPolicies,
+  chatNotifications,
   users,
   type ChatChannel,
   type ChatMember,
@@ -22,6 +23,7 @@ import {
   type ChatPinnedMessage,
   type ChatModerationLog,
   type ChatRetentionPolicy,
+  type ChatNotification,
   type InsertChatChannel,
   type UpdateChatChannel,
   type InsertChatMember,
@@ -32,6 +34,7 @@ import {
   type InsertChatReaction,
   type InsertChatMention,
   type InsertChatModerationLog,
+  type InsertChatNotification,
   type InsertChatRetentionPolicy,
   type ChatChannelWithDetails,
   type ChatMessageWithDetails,
@@ -350,6 +353,50 @@ export interface IChatStorage {
    * تطبيق سياسات الاحتفاظ وحذف الرسائل القديمة
    */
   applyRetentionPolicies(): Promise<void>;
+  
+  // ==========================================
+  // Notifications - الإشعارات
+  // ==========================================
+  
+  /**
+   * إنشاء إشعار جديد
+   * @param notification بيانات الإشعار
+   * @returns الإشعار المُنشأ
+   */
+  createNotification(notification: any): Promise<any>;
+  
+  /**
+   * الحصول على إشعارات المستخدم
+   * @param userId معرف المستخدم
+   * @param unreadOnly فلترة غير المقروءة فقط
+   * @returns قائمة الإشعارات
+   */
+  getUserNotifications(userId: string, unreadOnly?: boolean): Promise<any[]>;
+  
+  /**
+   * تمييز إشعار كمقروء
+   * @param notificationId معرف الإشعار
+   */
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  
+  /**
+   * تمييز جميع إشعارات المستخدم كمقروءة
+   * @param userId معرف المستخدم
+   */
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  
+  /**
+   * الحصول على عدد الإشعارات غير المقروءة
+   * @param userId معرف المستخدم
+   * @returns عدد الإشعارات غير المقروءة
+   */
+  getUnreadNotificationsCount(userId: string): Promise<number>;
+  
+  /**
+   * حذف إشعار
+   * @param notificationId معرف الإشعار
+   */
+  deleteNotification(notificationId: string): Promise<void>;
 }
 
 /**
@@ -365,7 +412,7 @@ export class DbChatStorage implements IChatStorage {
   async createChannel(channel: InsertChatChannel): Promise<SelectChatChannel> {
     const [newChannel] = await db
       .insert(chatChannels)
-      .values(channel)
+      .values([channel as any])
       .returning();
     
     if (!newChannel) {
@@ -379,6 +426,7 @@ export class DbChatStorage implements IChatStorage {
       role: "owner",
       canPost: true,
       canInvite: true,
+      notificationPreference: 'all',
     });
     
     return newChannel;
@@ -421,7 +469,7 @@ export class DbChatStorage implements IChatStorage {
     const [updated] = await db
       .update(chatChannels)
       .set({
-        ...data,
+        ...data as any,
         updatedAt: new Date(),
       })
       .where(eq(chatChannels.id, channelId))
@@ -574,7 +622,7 @@ export class DbChatStorage implements IChatStorage {
     
     const [newMessage] = await db
       .insert(chatMessages)
-      .values(message)
+      .values([message as any])
       .returning();
     
     if (!newMessage) {
@@ -893,14 +941,11 @@ export class DbChatStorage implements IChatStorage {
   ): Promise<SelectChatMention[]> {
     const { unreadOnly = false } = options;
     
-    let query = db
-      .select()
-      .from(chatMentions)
-      .where(eq(chatMentions.mentionedUserId, userId));
+    let conditions = [eq(chatMentions.mentionedUserId, userId)];
     
     if (unreadOnly) {
       // الإشارات غير المقروءة فقط
-      query = query.where(
+      conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${chatReadReceipts}
           WHERE ${chatReadReceipts.messageId} = ${chatMentions.messageId}
@@ -909,7 +954,11 @@ export class DbChatStorage implements IChatStorage {
       );
     }
     
-    return await query.orderBy(desc(chatMentions.createdAt));
+    return await db
+      .select()
+      .from(chatMentions)
+      .where(and(...conditions))
+      .orderBy(desc(chatMentions.createdAt));
   }
   
   // ==========================================
@@ -979,6 +1028,32 @@ export class DbChatStorage implements IChatStorage {
     
     return result?.count || 0;
   }
+
+  async getMessageReadReceipts(messageId: string): Promise<Array<{
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+    readAt: Date;
+  }>> {
+    const receipts = await db
+      .select({
+        userId: chatReadReceipts.userId,
+        userName: users.firstName,
+        userAvatar: users.profileImageUrl,
+        readAt: chatReadReceipts.readAt,
+      })
+      .from(chatReadReceipts)
+      .innerJoin(users, eq(users.id, chatReadReceipts.userId))
+      .where(eq(chatReadReceipts.messageId, messageId))
+      .orderBy(desc(chatReadReceipts.readAt));
+    
+    return receipts.map(r => ({
+      userId: r.userId,
+      userName: r.userName || 'مستخدم',
+      userAvatar: r.userAvatar || undefined,
+      readAt: r.readAt,
+    }));
+  }
   
   // ==========================================
   // Attachments - المرفقات
@@ -987,7 +1062,7 @@ export class DbChatStorage implements IChatStorage {
   async createAttachment(attachment: InsertChatAttachment): Promise<SelectChatAttachment> {
     const [newAttachment] = await db
       .insert(chatAttachments)
-      .values(attachment)
+      .values([attachment as any])
       .returning();
     
     if (!newAttachment) {
@@ -1052,7 +1127,7 @@ export class DbChatStorage implements IChatStorage {
   async logModeration(log: InsertChatModerationLog): Promise<SelectChatModerationLog> {
     const [newLog] = await db
       .insert(chatModerationLogs)
-      .values(log)
+      .values([log as any])
       .returning();
     
     if (!newLog) {
@@ -1117,5 +1192,94 @@ export class DbChatStorage implements IChatStorage {
         })
         .where(and(...conditions));
     }
+  }
+
+  // ==========================================
+  // Pinned Messages - الرسائل المثبتة
+  // ==========================================
+  
+  async getPinnedMessages(channelId: string): Promise<SelectChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(and(
+        eq(chatMessages.channelId, channelId),
+        eq(chatMessages.isPinned, true),
+        eq(chatMessages.isDeleted, false)
+      ))
+      .orderBy(desc(chatMessages.pinnedAt));
+  }
+  
+  // ==========================================
+  // Notifications - الإشعارات
+  // ==========================================
+  
+  async createNotification(notification: InsertChatNotification): Promise<ChatNotification> {
+    const [newNotification] = await db
+      .insert(chatNotifications)
+      .values(notification)
+      .returning();
+    
+    if (!newNotification) {
+      throw new Error("فشل إنشاء الإشعار");
+    }
+    
+    return newNotification;
+  }
+  
+  async getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<ChatNotification[]> {
+    const conditions = [eq(chatNotifications.userId, userId)];
+    
+    if (unreadOnly) {
+      conditions.push(eq(chatNotifications.isRead, false));
+    }
+    
+    return await db
+      .select()
+      .from(chatNotifications)
+      .where(and(...conditions))
+      .orderBy(desc(chatNotifications.createdAt))
+      .limit(50);
+  }
+  
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db
+      .update(chatNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: new Date() 
+      })
+      .where(eq(chatNotifications.id, notificationId));
+  }
+  
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(chatNotifications)
+      .set({ 
+        isRead: true, 
+        readAt: new Date() 
+      })
+      .where(and(
+        eq(chatNotifications.userId, userId),
+        eq(chatNotifications.isRead, false)
+      ));
+  }
+  
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(chatNotifications)
+      .where(and(
+        eq(chatNotifications.userId, userId),
+        eq(chatNotifications.isRead, false)
+      ));
+    
+    return result[0]?.count || 0;
+  }
+  
+  async deleteNotification(notificationId: string): Promise<void> {
+    await db
+      .delete(chatNotifications)
+      .where(eq(chatNotifications.id, notificationId));
   }
 }

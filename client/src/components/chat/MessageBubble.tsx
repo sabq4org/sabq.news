@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, forwardRef } from "react";
 import {
   Reply,
   Edit,
   Trash2,
   Pin,
-  File,
-  Download,
   MessageSquare,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ReactionPicker } from "./ReactionPicker";
 import { ThreadView } from "./ThreadView";
+import { AttachmentPreview } from "./AttachmentPreview";
+import { ReadReceipts } from "./ReadReceipts";
+import { SmartReplies } from "./SmartReplies";
 
 interface MessageBubbleProps {
   message: {
@@ -25,8 +28,8 @@ interface MessageBubbleProps {
     senderAvatar?: string;
     timestamp: Date;
     attachments?: Array<{
-      id: string;
-      type: "image" | "file";
+      id?: string;
+      type: 'image' | 'video' | 'audio' | 'document' | 'file';
       url: string;
       name: string;
       size?: number;
@@ -45,6 +48,8 @@ interface MessageBubbleProps {
       senderName: string;
       content: string;
     };
+    readCount?: number;
+    isRead?: boolean;
   };
   channelId: string;
   currentUserId: string;
@@ -52,6 +57,9 @@ interface MessageBubbleProps {
   onReact: (messageId: string, emoji: string) => void;
   onEdit: (messageId: string) => void;
   onDelete: (messageId: string) => void;
+  onMarkAsRead?: (messageId: string) => void;
+  onRegisterRef?: (messageId: string, element: HTMLDivElement | null) => void;
+  onReplySelect?: (reply: string) => void;
 }
 
 function formatMessageTime(date: Date): string {
@@ -68,13 +76,6 @@ function formatMessageTime(date: Date): string {
   return date.toLocaleDateString("ar-SA");
 }
 
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return "";
-  const kb = bytes / 1024;
-  const mb = kb / 1024;
-  if (mb >= 1) return `${mb.toFixed(1)} MB`;
-  return `${kb.toFixed(1)} KB`;
-}
 
 function renderContentWithMentions(content: string, mentions?: string[]) {
   if (!mentions || mentions.length === 0) {
@@ -117,7 +118,7 @@ function renderContentWithMentions(content: string, mentions?: string[]) {
   return <div className="text-sm whitespace-pre-wrap">{parts}</div>;
 }
 
-export function MessageBubble({
+export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
   message,
   channelId,
   currentUserId,
@@ -125,15 +126,47 @@ export function MessageBubble({
   onReact,
   onEdit,
   onDelete,
-}: MessageBubbleProps) {
+  onMarkAsRead,
+  onRegisterRef,
+  onReplySelect,
+}, ref) => {
   const [showActions, setShowActions] = useState(false);
   const [showThread, setShowThread] = useState(false);
   const isOwnMessage = message.senderId === currentUserId;
+  const internalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = (typeof ref === 'function' ? null : ref?.current) || internalRef.current;
+    if (!element || isOwnMessage || !onMarkAsRead) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !message.isRead) {
+            onMarkAsRead(message.id);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [message.id, message.isRead, isOwnMessage, onMarkAsRead, ref]);
+
+  useEffect(() => {
+    const element = (typeof ref === 'function' ? null : ref?.current) || internalRef.current;
+    if (onRegisterRef) {
+      onRegisterRef(message.id, element);
+    }
+  }, [message.id, onRegisterRef, ref]);
 
   return (
     <div
+      ref={ref || internalRef}
       className={cn(
-        "group relative",
+        "group relative rounded-lg transition-colors",
         isOwnMessage && "flex justify-start"
       )}
       onMouseEnter={() => setShowActions(true)}
@@ -208,45 +241,10 @@ export function MessageBubble({
           </div>
 
           {message.attachments && message.attachments.length > 0 && (
-            <div className="space-y-2" data-testid={`attachments-${message.id}`}>
-              {message.attachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className="border rounded-lg overflow-hidden"
-                  data-testid={`attachment-${attachment.id}`}
-                >
-                  {attachment.type === "image" ? (
-                    <img
-                      src={attachment.url}
-                      alt={attachment.name}
-                      className="w-full max-h-64 object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-3 p-3 bg-muted">
-                      <File className="h-8 w-8 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {attachment.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(attachment.size)}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        data-testid={`download-${attachment.id}`}
-                      >
-                        <a href={attachment.url} download={attachment.name}>
-                          <Download className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <AttachmentPreview
+              attachments={message.attachments}
+              variant="full"
+            />
           )}
 
           {message.reactions && message.reactions.length > 0 && (
@@ -268,6 +266,33 @@ export function MessageBubble({
                   </Badge>
                 );
               })}
+            </div>
+          )}
+
+          {isOwnMessage && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              {message.readCount !== undefined && message.readCount > 0 ? (
+                <ReadReceipts messageId={message.id} readCount={message.readCount}>
+                  <div
+                    className="flex items-center gap-0.5 cursor-pointer hover-elevate"
+                    data-testid={`message-read-status-${message.id}`}
+                  >
+                    <CheckCheck className="h-3 w-3 text-primary" />
+                    {message.readCount > 0 && (
+                      <span className="text-primary">
+                        {message.readCount.toLocaleString("en-US")}
+                      </span>
+                    )}
+                  </div>
+                </ReadReceipts>
+              ) : (
+                <div
+                  className="flex items-center gap-0.5"
+                  data-testid={`message-sent-status-${message.id}`}
+                >
+                  <Check className="h-3 w-3" />
+                </div>
+              )}
             </div>
           )}
 
@@ -325,6 +350,15 @@ export function MessageBubble({
               )}
             </div>
           )}
+
+          {!isOwnMessage && onReplySelect && (
+            <div className="mt-2">
+              <SmartReplies
+                messageContent={message.content}
+                onReplySelect={onReplySelect}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -339,4 +373,6 @@ export function MessageBubble({
       )}
     </div>
   );
-}
+});
+
+MessageBubble.displayName = "MessageBubble";

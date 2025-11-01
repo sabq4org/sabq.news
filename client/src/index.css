@@ -911,4 +911,24 @@
       animation: none;
     }
   }
+
+  /* Highlight message animation for chat */
+  .highlight-message {
+    animation: highlightFade 2s ease-out;
+  }
+
+  @keyframes highlightFade {
+    0% {
+      background-color: hsl(var(--primary) / 0.2);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .highlight-message {
+      animation: none;
+    }
+  }
 }

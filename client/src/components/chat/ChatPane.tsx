@@ -2,10 +2,16 @@ import { useRef, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Pin, Settings, Users, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
+import { TypingIndicator } from "./TypingIndicator";
+import { SearchDialog } from "./SearchDialog";
+import { PinnedMessagesPanel } from "./PinnedMessagesPanel";
+import { useChannelTyping } from "@/hooks/useChannelTyping";
+import { useMessageScroll } from "@/hooks/useMessageScroll";
 
 interface Message {
   id: string;
@@ -59,6 +65,10 @@ export function ChatPane({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [pinnedPanelOpen, setPinnedPanelOpen] = useState(false);
+  const typingUsers = useChannelTyping(channelId);
+  const { scrollToMessage, registerMessage } = useMessageScroll();
 
   const { data: channel, isLoading: channelLoading } = useQuery<Channel>({
     queryKey: ["/api/chat/channels", channelId],
@@ -67,6 +77,12 @@ export function ChatPane({
   const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/chat/messages", channelId, page],
   });
+
+  const { data: pinnedMessages } = useQuery<Message[]>({
+    queryKey: ["/api/chat/channels", channelId, "pinned-messages"],
+  });
+
+  const pinnedCount = pinnedMessages?.length || 0;
 
   useEffect(() => {
     if (scrollRef.current && page === 1) {
@@ -81,9 +97,9 @@ export function ChatPane({
     }
   };
 
-  const handleSendMessage = async (content: string, attachments?: File[]) => {
+  const handleSendMessage = (content: string, attachments?: any[], mentions?: string[]) => {
     // Implementation will be handled by parent or mutation
-    console.log("Send message:", content, attachments);
+    console.log("Send message:", content, attachments, mentions);
   };
 
   const handleReply = (messageId: string) => {
@@ -152,18 +168,30 @@ export function ChatPane({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onSearchClick}
+            onClick={() => setSearchOpen(true)}
             data-testid="button-search"
           >
             <Search className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            data-testid="button-pin"
-          >
-            <Pin className="h-4 w-4" />
-          </Button>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setPinnedPanelOpen(true)}
+              data-testid="button-pin"
+            >
+              <Pin className="h-4 w-4" />
+            </Button>
+            {pinnedCount > 0 && (
+              <Badge
+                variant="default"
+                className="absolute -top-1 -left-1 h-5 min-w-5 flex items-center justify-center text-xs px-1"
+                data-testid="pinned-count-badge"
+              >
+                {pinnedCount.toLocaleString("en-US")}
+              </Badge>
+            )}
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -192,6 +220,7 @@ export function ChatPane({
             messages.map((message) => (
               <MessageBubble
                 key={message.id}
+                ref={(el) => registerMessage(message.id, el)}
                 message={message}
                 channelId={channelId}
                 currentUserId={currentUserId}
@@ -215,9 +244,30 @@ export function ChatPane({
         </div>
       </ScrollArea>
 
+      {typingUsers.length > 0 && (
+        <TypingIndicator typingUsers={typingUsers} />
+      )}
+
       <div className="border-t p-4" data-testid="message-composer-container">
         <MessageComposer onSend={handleSendMessage} channelId={channelId} />
       </div>
+
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        currentChannelId={channelId}
+        currentUserId={currentUserId}
+        onMessageClick={scrollToMessage}
+      />
+
+      <PinnedMessagesPanel
+        open={pinnedPanelOpen}
+        onOpenChange={setPinnedPanelOpen}
+        channelId={channelId}
+        currentUserId={currentUserId}
+        isAdmin={false}
+        onMessageClick={scrollToMessage}
+      />
     </div>
   );
 }

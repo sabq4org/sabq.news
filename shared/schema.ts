@@ -3146,6 +3146,31 @@ export const chatRetentionPolicies = pgTable("chat_retention_policies", {
   index("chat_retention_policies_enabled_idx").on(table.isEnabled),
 ]);
 
+// Chat Notifications - إشعارات الدردشة
+export const chatNotifications = pgTable("chat_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(), // 'message', 'mention', 'reply', 'reaction'
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "set null" }),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "set null" }),
+  metadata: jsonb("metadata").$type<{
+    senderName?: string;
+    senderAvatar?: string;
+    emoji?: string;
+    [key: string]: any;
+  }>(),
+  isRead: boolean("is_read").default(false).notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_chat_notifications_user_id").on(table.userId),
+  index("idx_chat_notifications_is_read").on(table.isRead),
+  index("idx_chat_notifications_created_at").on(table.createdAt),
+  index("idx_chat_notifications_user_unread").on(table.userId, table.isRead),
+]);
+
 // ============================================
 // Chat System Relations
 // ============================================
@@ -3295,6 +3320,21 @@ export const chatRetentionPoliciesRelations = relations(chatRetentionPolicies, (
   }),
 }));
 
+export const chatNotificationsRelations = relations(chatNotifications, ({ one }) => ({
+  user: one(users, {
+    fields: [chatNotifications.userId],
+    references: [users.id],
+  }),
+  channel: one(chatChannels, {
+    fields: [chatNotifications.channelId],
+    references: [chatChannels.id],
+  }),
+  message: one(chatMessages, {
+    fields: [chatNotifications.messageId],
+    references: [chatMessages.id],
+  }),
+}));
+
 // ============================================
 // Chat System Types
 // ============================================
@@ -3309,6 +3349,7 @@ export type ChatReadReceipt = typeof chatReadReceipts.$inferSelect;
 export type ChatPinnedMessage = typeof chatPinnedMessages.$inferSelect;
 export type ChatModerationLog = typeof chatModerationLogs.$inferSelect;
 export type ChatRetentionPolicy = typeof chatRetentionPolicies.$inferSelect;
+export type ChatNotification = typeof chatNotifications.$inferSelect;
 
 // Extended types with relations
 export type ChatChannelWithDetails = ChatChannel & {
@@ -3451,6 +3492,16 @@ export const insertChatModerationLogSchema = createInsertSchema(chatModerationLo
   ]),
 });
 
+export const insertChatNotificationSchema = createInsertSchema(chatNotifications).omit({
+  id: true,
+  createdAt: true,
+  readAt: true,
+}).extend({
+  type: z.enum(["message", "mention", "reply", "reaction"]),
+  title: z.string().min(1, "عنوان الإشعار مطلوب"),
+  body: z.string().min(1, "محتوى الإشعار مطلوب"),
+});
+
 export const insertChatRetentionPolicySchema = createInsertSchema(chatRetentionPolicies).omit({
   id: true,
   createdAt: true,
@@ -3481,5 +3532,6 @@ export type InsertChatReadReceipt = z.infer<typeof insertChatReadReceiptSchema>;
 export type InsertChatPinnedMessage = z.infer<typeof insertChatPinnedMessageSchema>;
 export type UpdateChatPinnedMessage = z.infer<typeof updateChatPinnedMessageSchema>;
 export type InsertChatModerationLog = z.infer<typeof insertChatModerationLogSchema>;
+export type InsertChatNotification = z.infer<typeof insertChatNotificationSchema>;
 export type InsertChatRetentionPolicy = z.infer<typeof insertChatRetentionPolicySchema>;
 export type UpdateChatRetentionPolicy = z.infer<typeof updateChatRetentionPolicySchema>;

@@ -8,6 +8,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
+import { aiChatService } from "./ai-chat-service";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
 import { notificationBus } from "./notificationBus";
@@ -14125,6 +14126,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
 
   // ==========================================
+  // 0. File Upload Endpoints - رفع الملفات
+  // ==========================================
+
+  // Configure multer for chat file uploads
+  const chatFileUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max for general files
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'video/mp4', 'video/webm',
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm',
+        'application/pdf', 'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مدعوم'));
+      }
+    },
+  });
+
+  // Configure multer for voice notes (stricter limits)
+  const voiceNoteUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 2 * 1024 * 1024, // 2MB max for voice notes
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = [
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف الصوتي غير مدعوم'));
+      }
+    },
+  });
+
+  // Helper function to determine file type
+  function getFileType(mimeType: string): string {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.includes('msword')) return 'document';
+    return 'file';
+  }
+
+  // POST /api/chat/upload - رفع ملف للدردشة
+  app.post("/api/chat/upload", isAuthenticated, chatFileUpload.single("file"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم رفع ملف" });
+      }
+
+      const userId = req.user!.id;
+      const fileType = getFileType(req.file.mimetype);
+      
+      // Additional size validation based on file type
+      const maxSize = fileType === 'image' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ 
+          message: fileType === 'image' 
+            ? 'حجم الصورة كبير جداً. الحد الأقصى 5MB' 
+            : 'حجم الملف كبير جداً. الحد الأقصى 10MB' 
+        });
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(7);
+      const ext = req.file.originalname.split('.').pop();
+      const filename = `${timestamp}-${randomStr}.${ext}`;
+      
+      // Upload to Object Storage in chat-attachments folder
+      const objectStorageService = new ObjectStorageService();
+      const path = `chat-attachments/${filename}`;
+      const result = await objectStorageService.uploadFile(
+        path,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      res.json({
+        url: result.url,
+        name: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        type: fileType,
+      });
+    } catch (error) {
+      console.error("خطأ في رفع الملف:", error);
+      
+      if (error instanceof Error && error.message === 'نوع الملف غير مدعوم') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "حدث خطأ في رفع الملف" });
+    }
+  });
+
+  // POST /api/chat/upload/voice - رفع voice note
+  app.post("/api/chat/upload/voice", isAuthenticated, voiceNoteUpload.single("audio"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم رفع الملف الصوتي" });
+      }
+
+      const userId = req.user!.id;
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(7);
+      const ext = req.file.originalname.split('.').pop() || 'webm';
+      const filename = `${timestamp}-${randomStr}.${ext}`;
+      
+      // Upload to Object Storage in chat-voice-notes folder
+      const objectStorageService = new ObjectStorageService();
+      const path = `chat-voice-notes/${filename}`;
+      const result = await objectStorageService.uploadFile(
+        path,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      res.json({
+        url: result.url,
+        duration: parseInt(req.body.duration) || 0,
+        size: req.file.size,
+      });
+    } catch (error) {
+      console.error("خطأ في رفع الملاحظة الصوتية:", error);
+      
+      if (error instanceof Error && error.message === 'نوع الملف الصوتي غير مدعوم') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "حدث خطأ في رفع الملاحظة الصوتية" });
+    }
+  });
+
+  // ==========================================
   // 1. Channels Endpoints - إدارة القنوات
   // ==========================================
 
@@ -14411,6 +14560,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast new message to all channel members via WebSocket
       if (chatWebSocket) {
         chatWebSocket.broadcastNewMessage(channelId, message);
+      }
+      
+      // إرسال إشعارات لأعضاء القناة
+      try {
+        const members = await storage.chatStorage.getChannelMembers(channelId);
+        const senderName = req.user!.firstName || 'مستخدم';
+        
+        for (const member of members) {
+          if (member.userId !== userId) {
+            const notification = await storage.chatStorage.createNotification({
+              userId: member.userId,
+              type: 'message',
+              title: 'رسالة جديدة',
+              body: message.content.substring(0, 100),
+              channelId,
+              messageId: message.id,
+              metadata: { senderName },
+            });
+            
+            if (chatWebSocket) {
+              chatWebSocket.sendNotification(member.userId, notification);
+            }
+          }
+        }
+      } catch (notifError) {
+        console.error("خطأ في إرسال الإشعارات:", notifError);
       }
       
       res.status(201).json(message);
@@ -14795,6 +14970,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/chat/messages/:messageId/read-receipts - جلب read receipts لرسالة
+  app.get("/api/chat/messages/:messageId/read-receipts", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض read receipts لهذه الرسالة" });
+      }
+      
+      const receipts = await storage.chatStorage.getMessageReadReceipts(messageId);
+      
+      res.json(receipts);
+    } catch (error) {
+      console.error("خطأ في جلب read receipts:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
   // POST /api/chat/channels/:channelId/read - تحديث آخر رسالة مقروءة في قناة
   app.post("/api/chat/channels/:channelId/read", isAuthenticated, async (req: any, res) => {
     try {
@@ -14868,7 +15069,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==========================================
-  // 9. Moderation Endpoints - الإشراف
+  // 9. Pinned Messages Endpoint - الرسائل المثبتة
+  // ==========================================
+
+  // GET /api/chat/channels/:channelId/pinned-messages - جلب الرسائل المثبتة
+  app.get("/api/chat/channels/:channelId/pinned-messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض هذه القناة" });
+      }
+      
+      const pinnedMessages = await storage.chatStorage.getPinnedMessages(channelId);
+      
+      res.json(pinnedMessages);
+    } catch (error) {
+      console.error("خطأ في جلب الرسائل المثبتة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 10. Moderation Endpoints - الإشراف
   // ==========================================
 
   // GET /api/chat/channels/:channelId/moderation-logs - جلب سجلات الإشراف
@@ -14887,6 +15112,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logs);
     } catch (error) {
       console.error("خطأ في جلب سجلات الإشراف:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 11. AI Features - الميزات الذكية
+  // ==========================================
+
+  // POST /api/chat/ai/summarize - تلخيص thread
+  app.post("/api/chat/ai/summarize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.body;
+      
+      if (!messageId) {
+        return res.status(400).json({ message: "messageId مطلوب" });
+      }
+      
+      const thread = await storage.chatStorage.getThreadMessages(messageId);
+      const message = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const messages = [message, ...thread].map(m => ({
+        content: m.content,
+        senderName: 'مستخدم',
+      }));
+      
+      const summary = await aiChatService.summarizeThread(messages);
+      
+      res.json({ summary });
+    } catch (error) {
+      console.error("خطأ في التلخيص:", error);
+      res.status(500).json({ message: "حدث خطأ في التلخيص" });
+    }
+  });
+
+  // POST /api/chat/ai/suggest-replies - اقتراح ردود
+  app.post("/api/chat/ai/suggest-replies", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageContent } = req.body;
+      
+      if (!messageContent) {
+        return res.status(400).json({ message: "messageContent مطلوب" });
+      }
+      
+      const replies = await aiChatService.suggestReplies(messageContent, 3);
+      
+      res.json({ replies });
+    } catch (error) {
+      console.error("خطأ في اقتراح الردود:", error);
+      res.status(500).json({ message: "حدث خطأ في اقتراح الردود" });
+    }
+  });
+
+  // POST /api/chat/ai/check-toxicity - فحص السُمّية
+  app.post("/api/chat/ai/check-toxicity", isAuthenticated, async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "content مطلوب" });
+      }
+      
+      const result = await aiChatService.checkToxicity(content);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("خطأ في فحص السُمّية:", error);
+      res.status(500).json({ message: "حدث خطأ في فحص السُمّية" });
+    }
+  });
+
+  // GET /api/chat/notifications - جلب إشعارات المستخدم
+  app.get("/api/chat/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const unreadOnly = req.query.unreadOnly === 'true';
+      
+      const notifications = await storage.chatStorage.getUserNotifications(userId, unreadOnly);
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error("خطأ في جلب الإشعارات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/notifications/unread-count
+  app.get("/api/chat/notifications/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.chatStorage.getUnreadNotificationsCount(userId);
+      
+      res.json({ count });
+    } catch (error) {
+      console.error("خطأ في جلب عدد الإشعارات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/notifications/:notificationId/read
+  app.post("/api/chat/notifications/:notificationId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const { notificationId } = req.params;
+      
+      await storage.chatStorage.markNotificationAsRead(notificationId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("خطأ في تمييز الإشعار كمقروء:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/notifications/mark-all-read
+  app.post("/api/chat/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      await storage.chatStorage.markAllNotificationsAsRead(userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("خطأ في تمييز جميع الإشعارات كمقروءة:", error);
       res.status(500).json({ message: "حدث خطأ في الخادم" });
     }
   });

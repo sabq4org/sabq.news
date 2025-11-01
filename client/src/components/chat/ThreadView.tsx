@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
+import { ThreadSummary } from "./ThreadSummary";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,10 @@ export function ThreadView({
                         onDelete={handleDelete}
                       />
                     </div>
+
+                    <Separator />
+
+                    <ThreadSummary messageId={messageId} />
 
                     {replies.length > 0 && (
                       <>
