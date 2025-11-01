@@ -1,18 +1,19 @@
 import { useState } from "react";
 import {
   Reply,
-  Smile,
   Edit,
   Trash2,
   Pin,
   File,
   Download,
-  Image as ImageIcon,
+  MessageSquare,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ReactionPicker } from "./ReactionPicker";
+import { ThreadView } from "./ThreadView";
 
 interface MessageBubbleProps {
   message: {
@@ -37,12 +38,15 @@ interface MessageBubbleProps {
     }>;
     isPinned?: boolean;
     isEdited?: boolean;
+    replyCount?: number;
+    mentions?: string[];
     replyTo?: {
       id: string;
       senderName: string;
       content: string;
     };
   };
+  channelId: string;
   currentUserId: string;
   onReply: (messageId: string) => void;
   onReact: (messageId: string, emoji: string) => void;
@@ -72,8 +76,50 @@ function formatFileSize(bytes?: number): string {
   return `${kb.toFixed(1)} KB`;
 }
 
+function renderContentWithMentions(content: string, mentions?: string[]) {
+  if (!mentions || mentions.length === 0) {
+    return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+  }
+
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  const mentionRegex = /@(\w+)/g;
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index));
+    }
+    
+    const username = match[1];
+    if (mentions.includes(username)) {
+      parts.push(
+        <Badge
+          key={match.index}
+          variant="secondary"
+          className="mx-1 text-xs"
+          data-testid={`mention-${username}`}
+        >
+          @{username}
+        </Badge>
+      );
+    } else {
+      parts.push(match[0]);
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+
+  return <div className="text-sm whitespace-pre-wrap">{parts}</div>;
+}
+
 export function MessageBubble({
   message,
+  channelId,
   currentUserId,
   onReply,
   onReact,
@@ -81,6 +127,7 @@ export function MessageBubble({
   onDelete,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
+  const [showThread, setShowThread] = useState(false);
   const isOwnMessage = message.senderId === currentUserId;
 
   return (
@@ -156,7 +203,7 @@ export function MessageBubble({
                 className="prose prose-sm max-w-none"
               />
             ) : (
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              renderContentWithMentions(message.content, message.mentions)
             )}
           </div>
 
@@ -204,21 +251,23 @@ export function MessageBubble({
 
           {message.reactions && message.reactions.length > 0 && (
             <div className="flex flex-wrap gap-1" data-testid={`reactions-${message.id}`}>
-              {message.reactions.map((reaction, idx) => (
-                <Button
-                  key={idx}
-                  variant="outline"
-                  size="sm"
-                  className="h-6 px-2 gap-1 rounded-full"
-                  onClick={() => onReact(message.id, reaction.emoji)}
-                  data-testid={`reaction-${message.id}-${idx}`}
-                >
-                  <span className="text-sm">{reaction.emoji}</span>
-                  <span className="text-xs">
-                    {reaction.count.toLocaleString("en-US")}
-                  </span>
-                </Button>
-              ))}
+              {message.reactions.map((reaction, idx) => {
+                const hasReacted = reaction.userIds.includes(currentUserId);
+                return (
+                  <Badge
+                    key={idx}
+                    variant={hasReacted ? "default" : "secondary"}
+                    className="cursor-pointer hover-elevate gap-1"
+                    onClick={() => onReact(message.id, reaction.emoji)}
+                    data-testid={`reaction-${message.id}-${idx}`}
+                  >
+                    <span>{reaction.emoji}</span>
+                    <span className="mr-1">
+                      {reaction.count.toLocaleString("en-US")}
+                    </span>
+                  </Badge>
+                );
+              })}
             </div>
           )}
 
@@ -236,15 +285,22 @@ export function MessageBubble({
                 <Reply className="h-3 w-3 ml-1" />
                 رد
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => onReact(message.id, "👍")}
-                data-testid={`button-react-${message.id}`}
-              >
-                <Smile className="h-3 w-3" />
-              </Button>
+              {message.replyCount !== undefined && message.replyCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowThread(true)}
+                  data-testid={`button-view-thread-${message.id}`}
+                >
+                  <MessageSquare className="h-3 w-3 ml-1" />
+                  {message.replyCount.toLocaleString("en-US")} {message.replyCount === 1 ? "رد" : "ردود"}
+                </Button>
+              )}
+              <ReactionPicker
+                messageId={message.id}
+                channelId={channelId}
+                onReactionSelect={(emoji) => onReact(message.id, emoji)}
+              />
               {isOwnMessage && (
                 <>
                   <Button
@@ -271,6 +327,16 @@ export function MessageBubble({
           )}
         </div>
       </div>
+
+      {showThread && (
+        <ThreadView
+          messageId={message.id}
+          channelId={channelId}
+          currentUserId={currentUserId}
+          open={showThread}
+          onOpenChange={setShowThread}
+        />
+      )}
     </div>
   );
 }

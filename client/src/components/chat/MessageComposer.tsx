@@ -2,16 +2,17 @@ import { useState, useRef, useEffect } from "react";
 import { Paperclip, Smile, Mic, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useChatWebSocket } from "@/contexts/ChatWebSocketContext";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { MentionPicker } from "./MentionPicker";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 interface MessageComposerProps {
-  onSend: (content: string, attachments?: File[]) => void;
+  onSend: (content: string, attachments?: File[], mentions?: string[]) => void;
   channelId?: string;
   placeholder?: string;
 }
@@ -24,11 +25,15 @@ export function MessageComposer({
   const [content, setContent] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [showMentionPicker, setShowMentionPicker] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState("");
+  const [mentions, setMentions] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
-  const { sendTypingStart, sendTypingStop } = useChatWebSocket();
+  const { startTyping, stopTyping } = useTypingIndicator({
+    channelId,
+    debounceMs: 3000,
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -37,29 +42,41 @@ export function MessageComposer({
     }
   }, [content]);
 
+  const detectMentionTrigger = (text: string, cursorPosition: number) => {
+    const textBeforeCursor = text.slice(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+    
+    if (lastAtIndex === -1) return null;
+    
+    const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+    
+    if (/\s/.test(textAfterAt)) return null;
+    
+    return {
+      searchQuery: textAfterAt,
+      startIndex: lastAtIndex,
+    };
+  };
+
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+    const newContent = e.target.value;
+    setContent(newContent);
 
-    if (channelId && e.target.value.trim()) {
-      if (!isTyping) {
-        setIsTyping(true);
-        sendTypingStart(channelId);
-      }
+    if (channelId && newContent.trim()) {
+      startTyping();
+    } else {
+      stopTyping();
+    }
 
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false);
-        sendTypingStop(channelId);
-      }, 3000);
-    } else if (channelId && isTyping) {
-      setIsTyping(false);
-      sendTypingStop(channelId);
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
+    const cursorPosition = e.target.selectionStart;
+    const mentionTrigger = detectMentionTrigger(newContent, cursorPosition);
+    
+    if (mentionTrigger) {
+      setMentionSearch(mentionTrigger.searchQuery);
+      setShowMentionPicker(true);
+    } else {
+      setShowMentionPicker(false);
+      setMentionSearch("");
     }
   };
 
@@ -84,36 +101,48 @@ export function MessageComposer({
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleMentionSelect = (username: string, userId: string) => {
+    const cursorPosition = textareaRef.current?.selectionStart || content.length;
+    const textBeforeCursor = content.slice(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+    
+    if (lastAtIndex !== -1) {
+      const newContent =
+        content.slice(0, lastAtIndex + 1) +
+        username +
+        " " +
+        content.slice(cursorPosition);
+      setContent(newContent);
+      
+      if (!mentions.includes(username)) {
+        setMentions([...mentions, username]);
+      }
+      
+      setShowMentionPicker(false);
+      setMentionSearch("");
+      
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        const newPosition = lastAtIndex + username.length + 2;
+        textareaRef.current?.setSelectionRange(newPosition, newPosition);
+      }, 0);
+    }
+  };
+
   const handleSend = () => {
     const trimmedContent = content.trim();
     if (!trimmedContent && attachments.length === 0) return;
 
-    if (channelId && isTyping) {
-      sendTypingStop(channelId);
-      setIsTyping(false);
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    }
+    stopTyping();
 
-    onSend(trimmedContent, attachments);
+    onSend(trimmedContent, attachments, mentions.length > 0 ? mentions : undefined);
     setContent("");
     setAttachments([]);
+    setMentions([]);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (channelId && isTyping) {
-        sendTypingStop(channelId);
-      }
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, [channelId, isTyping, sendTypingStop]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -164,6 +193,15 @@ export function MessageComposer({
             rows={1}
             data-testid="input-message"
           />
+          {channelId && (
+            <MentionPicker
+              channelId={channelId}
+              open={showMentionPicker}
+              onOpenChange={setShowMentionPicker}
+              onSelect={handleMentionSelect}
+              searchQuery={mentionSearch}
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-1">

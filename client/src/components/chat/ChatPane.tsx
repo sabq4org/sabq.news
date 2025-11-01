@@ -193,6 +193,7 @@ export function ChatPane({
               <MessageBubble
                 key={message.id}
                 message={message}
+                channelId={channelId}
                 currentUserId={currentUserId}
                 onReply={handleReply}
                 onReact={handleReact}
@@ -215,7 +216,7 @@ export function ChatPane({
       </ScrollArea>
 
       <div className="border-t p-4" data-testid="message-composer-container">
-        <MessageComposer onSend={handleSendMessage} />
+        <MessageComposer onSend={handleSendMessage} channelId={channelId} />
       </div>
     </div>
   );
