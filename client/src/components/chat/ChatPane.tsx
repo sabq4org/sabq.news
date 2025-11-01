@@ -89,7 +89,13 @@ export function ChatPane({
 
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { content: string; attachments?: any[]; mentions?: string[] }) => {
-      return await apiRequest(`/api/chat/channels/${channelId}/messages`, {
+      console.log("🚀 Mutation starting:", {
+        channelId,
+        content: data.content,
+        url: `/api/chat/channels/${channelId}/messages`
+      });
+      
+      const result = await apiRequest(`/api/chat/channels/${channelId}/messages`, {
         method: "POST",
         body: JSON.stringify({
           content: data.content,
@@ -98,11 +104,16 @@ export function ChatPane({
           mentions: data.mentions || [],
         }),
       });
+      
+      console.log("✅ Mutation success:", result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("✅ onSuccess callback:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/chat/channels/${channelId}/messages`] });
     },
     onError: (error: any) => {
+      console.error("❌ Mutation error:", error);
       toast({
         title: "فشل إرسال الرسالة",
         description: error.message || "حدث خطأ أثناء إرسال الرسالة",
@@ -126,7 +137,13 @@ export function ChatPane({
 
   const handleSendMessage = (content: string, attachments?: any[], mentions?: string[]) => {
     console.log("Send message:", content, attachments, mentions);
+    console.log("Mutation state:", {
+      isPending: sendMessageMutation.isPending,
+      isError: sendMessageMutation.isError,
+      error: sendMessageMutation.error
+    });
     sendMessageMutation.mutate({ content, attachments, mentions });
+    console.log("Mutation called");
   };
 
   const handleReply = (messageId: string) => {
