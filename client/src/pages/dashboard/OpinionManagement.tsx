@@ -82,9 +82,17 @@ export default function OpinionManagement() {
   const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
 
-  const { data: articles, isLoading } = useQuery<OpinionArticle[]>({
+  const { data, isLoading } = useQuery<{
+    articles: OpinionArticle[];
+    pagination: {
+      page: number;
+      limit: number;
+    };
+  }>({
     queryKey: ["/api/dashboard/opinion"],
   });
+
+  const articles = data?.articles;
 
   const approveMutation = useMutation({
     mutationFn: async (articleId: string) => {
