@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { chatWebSocket } from '@/lib/chat-websocket';
 
 interface ChatWebSocketContextValue {
@@ -14,7 +15,19 @@ const ChatWebSocketContext = createContext<ChatWebSocketContextValue | null>(nul
 export function ChatWebSocketProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+  
   useEffect(() => {
+    // Only connect if user is authenticated
+    if (!user) {
+      console.log('[ChatWS] Skipping connection - user not authenticated');
+      return;
+    }
+    
+    console.log('[ChatWS] User authenticated, connecting...');
     chatWebSocket.connect();
     
     const unsubConnected = chatWebSocket.on('connected', () => {
@@ -30,7 +43,7 @@ export function ChatWebSocketProvider({ children }: { children: ReactNode }) {
       unsubDisconnected();
       chatWebSocket.disconnect();
     };
-  }, []);
+  }, [user]);
   
   return (
     <ChatWebSocketContext.Provider
