@@ -4,7 +4,19 @@ import { eq, and, lte, isNull, sql } from "drizzle-orm";
 import { notificationQueue, notificationsInbox, notificationMetrics, articles } from "@shared/schema";
 import { storage } from "./storage";
 
+let isProcessingQueue = false;
+let isPublishing = false;
+let isProcessingAnnouncements = false;
+let isProcessingDigests = false;
+let isProcessingRecommendations = false;
+
 async function processNotificationQueue() {
+  if (isProcessingQueue) {
+    console.log("[NotificationWorker] ⏭️ Skipping - already processing");
+    return;
+  }
+  
+  isProcessingQueue = true;
   try {
     console.log("[NotificationWorker] Starting queue processing...");
 
@@ -117,7 +129,8 @@ async function processNotificationQueue() {
     console.log("[NotificationWorker] Queue processing completed");
   } catch (error) {
     console.error("[NotificationWorker] Error in queue processing:", error);
-    // Don't throw - just log and continue
+  } finally {
+    isProcessingQueue = false;
   }
 }
 
@@ -156,6 +169,12 @@ async function cleanupOldNotifications() {
 }
 
 async function publishScheduledArticles() {
+  if (isPublishing) {
+    console.log("[ScheduledPublisher] ⏭️ Skipping - already publishing");
+    return;
+  }
+  
+  isPublishing = true;
   try {
     console.log("[ScheduledPublisher] Checking for scheduled articles...");
 
@@ -233,21 +252,37 @@ async function publishScheduledArticles() {
     }
   } catch (error) {
     console.error("[ScheduledPublisher] ❌ Error in scheduled publishing:", error);
+  } finally {
+    isPublishing = false;
   }
 }
 
 // Daily digest processor
 async function processDailyDigestsWorker() {
+  if (isProcessingDigests) {
+    console.log("[DigestWorker] ⏭️ Skipping - already processing");
+    return;
+  }
+  
+  isProcessingDigests = true;
   try {
     const { processDailyDigests } = await import('./digestService');
     await processDailyDigests();
   } catch (error) {
     console.error("[DigestWorker] Error processing daily digests:", error);
+  } finally {
+    isProcessingDigests = false;
   }
 }
 
 // Smart recommendation processor
 async function processRecommendationsWorker() {
+  if (isProcessingRecommendations) {
+    console.log("🤖 [REC WORKER] ⏭️ Skipping - already processing");
+    return;
+  }
+  
+  isProcessingRecommendations = true;
   try {
     console.log("🤖 [REC WORKER] Starting recommendation processing...");
     
@@ -281,6 +316,8 @@ async function processRecommendationsWorker() {
     console.log(`✅ [REC WORKER] Processed ${processed} users, ${successful} successful`);
   } catch (error) {
     console.error("[REC WORKER] Error in recommendation processing:", error);
+  } finally {
+    isProcessingRecommendations = false;
   }
 }
 
@@ -358,9 +395,17 @@ export function startNotificationWorker() {
 
 // Process scheduled announcements (auto-publish and auto-expire)
 async function processScheduledAnnouncements() {
+  if (isProcessingAnnouncements) {
+    console.log("[AnnouncementScheduler] ⏭️ Skipping - already processing");
+    return;
+  }
+  
+  isProcessingAnnouncements = true;
   try {
     await storage.processScheduledAnnouncements();
   } catch (error) {
     console.error("[AnnouncementScheduler] Error processing scheduled announcements:", error);
+  } finally {
+    isProcessingAnnouncements = false;
   }
 }

@@ -14,6 +14,8 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, gte, sql, inArray } from "drizzle-orm";
 
+let isUpdating = false;
+
 /**
  * خوارزمية ذكية لاختيار مقالات "الآن"
  * Algorithm: Breaking + Trending + Recent (last 24 hours)
@@ -197,6 +199,12 @@ async function updateNowCategory() {
  * Update all dynamic categories
  */
 export async function updateDynamicCategories() {
+  if (isUpdating) {
+    console.log('[Dynamic Categories] ⏭️ Skipping - already updating');
+    return;
+  }
+  
+  isUpdating = true;
   try {
     console.log('[Dynamic Categories] 🔄 Starting update cycle...');
     
@@ -207,20 +215,22 @@ export async function updateDynamicCategories() {
     console.log('[Dynamic Categories] ✅ Update cycle complete');
   } catch (error) {
     console.error('[Dynamic Categories] ❌ Error in update cycle:', error);
+  } finally {
+    isUpdating = false;
   }
 }
 
 /**
- * تشغيل job كل 5 دقائق
- * Start job that runs every 5 minutes
+ * تشغيل job كل 15 دقيقة (تقليل الضغط)
+ * Start job that runs every 15 minutes (reduced load)
  */
 export function startDynamicCategoriesJob() {
-  // Run every 5 minutes
-  const job = cron.schedule("*/5 * * * *", async () => {
+  // Run every 15 minutes (reduced from 5 minutes for better performance)
+  const job = cron.schedule("*/15 * * * *", async () => {
     await updateDynamicCategories();
   });
 
-  console.log('[Dynamic Categories Job] ⏰ Job scheduled (every 5 minutes)');
+  console.log('[Dynamic Categories Job] ⏰ Job scheduled (every 15 minutes)');
 
   // Run immediately on startup
   console.log('[Dynamic Categories Job] 🚀 Running initial update...');
