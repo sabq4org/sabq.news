@@ -103,11 +103,35 @@ export function ChatPane({
       queryClient.invalidateQueries({ queryKey: [`/api/chat/channels/${channelId}/messages`] });
     },
     onError: (error: any) => {
-      toast({
-        title: "فشل إرسال الرسالة",
-        description: error.message || "حدث خطأ أثناء إرسال الرسالة",
-        variant: "destructive",
-      });
+      const is401 = error.message?.startsWith('401');
+      
+      if (is401) {
+        toast({
+          title: "انتهت صلاحية الجلسة",
+          description: "يرجى تسجيل الدخول مرة أخرى للمتابعة",
+          variant: "destructive",
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const currentPath = window.location.pathname + window.location.search;
+                localStorage.setItem('redirectAfterLogin', currentPath);
+                window.location.href = '/login';
+              }}
+              data-testid="button-login-redirect"
+            >
+              تسجيل الدخول
+            </Button>
+          ),
+        });
+      } else {
+        toast({
+          title: "فشل إرسال الرسالة",
+          description: error.message || "حدث خطأ أثناء إرسال الرسالة",
+          variant: "destructive",
+        });
+      }
     },
   });
 

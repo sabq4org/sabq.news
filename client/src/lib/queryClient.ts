@@ -1,8 +1,35 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+
+function handleSessionExpiration() {
+  // Store current URL for redirect after login
+  const currentPath = window.location.pathname + window.location.search;
+  if (currentPath !== '/login') {
+    localStorage.setItem('redirectAfterLogin', currentPath);
+  }
+  
+  // Show toast message
+  toast({
+    title: "انتهت صلاحية جلستك",
+    description: "يرجى تسجيل الدخول مرة أخرى",
+    variant: "destructive",
+  });
+  
+  // Redirect to login after 2 seconds
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 2000);
+}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    
+    // Handle 401 Unauthorized - session expired
+    if (res.status === 401) {
+      handleSessionExpiration();
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -41,6 +68,10 @@ export async function apiRequest<T = any>(
             reject(new Error(`Failed to parse response: ${error}`));
           }
         } else {
+          // Handle 401 Unauthorized - session expired
+          if (xhr.status === 401) {
+            handleSessionExpiration();
+          }
           reject(new Error(`${xhr.status}: ${xhr.responseText || xhr.statusText}`));
         }
       });
