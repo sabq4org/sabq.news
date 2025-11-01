@@ -54,6 +54,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { adminUpdateUserSchema } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AddUserDialog } from "@/components/AddUserDialog";
+import { EditUserDialog } from "@/components/EditUserDialog";
 import { RolesPanel } from "@/components/RolesPanel";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
@@ -415,59 +416,11 @@ export default function UsersManagement() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent data-testid="dialog-edit">
-          <DialogHeader>
-            <DialogTitle>تعديل المستخدم</DialogTitle>
-            <DialogDescription>
-              قم بتعديل حالة المستخدم
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الحالة *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-status">
-                          <SelectValue placeholder="اختر الحالة" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">نشط</SelectItem>
-                        <SelectItem value="suspended">معلق</SelectItem>
-                        <SelectItem value="banned">محظور</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditingUser(null)}
-                  data-testid="button-cancel"
-                >
-                  إلغاء
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  data-testid="button-submit"
-                >
-                  {updateMutation.isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <EditUserDialog 
+        open={!!editingUser} 
+        onOpenChange={(open) => !open && setEditingUser(null)}
+        userId={editingUser?.id || null}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
