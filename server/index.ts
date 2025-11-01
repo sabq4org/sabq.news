@@ -60,13 +60,18 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: isDevelopment 
           ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] // Vite needs these in dev
-          : ["'self'"], // Production: no unsafe directives
-        styleSrc: isDevelopment
-          ? ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"] 
-          : ["'self'", "https://fonts.googleapis.com"], // Production: allow Google Fonts
+          : ["'self'", "'unsafe-inline'"], // Production: allow inline scripts for Vite
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow inline styles for Vite
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-        connectSrc: ["'self'", "https://api.openai.com", "https://api.elevenlabs.io", "https://storage.googleapis.com"],
+        connectSrc: [
+          "'self'",
+          "ws:", // WebSocket in development
+          "wss:", // WebSocket in production
+          "https://api.openai.com",
+          "https://api.elevenlabs.io",
+          "https://storage.googleapis.com"
+        ],
         mediaSrc: ["'self'", "https:", "blob:"],
         objectSrc: ["'none'"],
         frameSrc: ["'self'"],
