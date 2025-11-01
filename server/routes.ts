@@ -2615,15 +2615,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phoneNumber: users.phoneNumber,
           profileImageUrl: users.profileImageUrl,
           status: users.status,
+          emailVerified: users.emailVerified,
+          phoneVerified: users.phoneVerified,
           isProfileComplete: users.isProfileComplete,
           createdAt: users.createdAt,
-          roleName: roles.name,
-          roleNameAr: roles.nameAr,
-          roleId: roles.id,
         })
         .from(users)
-        .leftJoin(userRoles, eq(users.id, userRoles.userId))
-        .leftJoin(roles, eq(userRoles.roleId, roles.id))
         .where(eq(users.id, userId))
         .limit(1);
 
@@ -2631,7 +2628,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json(user);
+      const userRolesData = await db
+        .select({
+          id: roles.id,
+          name: roles.name,
+          nameAr: roles.nameAr,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, userId));
+
+      res.json({
+        ...user,
+        roles: userRolesData,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
