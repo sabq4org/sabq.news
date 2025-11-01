@@ -2,6 +2,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { getObjectAclPolicy } from "./objectAcl";
@@ -14407,6 +14408,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const message = await storage.chatStorage.createMessage(validatedData);
       
+      // Broadcast new message to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastNewMessage(channelId, message);
+      }
+      
       res.status(201).json(message);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -14486,6 +14492,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const message = await storage.chatStorage.updateMessage(messageId, content);
       
+      // Broadcast message update to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastMessageUpdate(existingMessage.channelId, messageId, content);
+      }
+      
       res.json(message);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -14521,6 +14532,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: "delete_message",
         reason: "تم حذف الرسالة من قبل المستخدم",
       });
+      
+      // Broadcast message deletion to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastMessageDelete(existingMessage.channelId, messageId);
+      }
       
       res.json({ message: "تم حذف الرسالة بنجاح" });
     } catch (error) {
@@ -14656,6 +14672,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const reaction = await storage.chatStorage.addReaction(validatedData);
       
+      // Broadcast reaction to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastReaction(existingMessage.channelId, messageId, reaction);
+      }
+      
       res.status(201).json(reaction);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -14761,6 +14782,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.chatStorage.markAsRead(messageId, userId);
+      
+      // Broadcast read receipt to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastReadReceipt(existingMessage.channelId, messageId, userId);
+      }
       
       res.json({ message: "تم تمييز الرسالة كمقروءة" });
     } catch (error) {
