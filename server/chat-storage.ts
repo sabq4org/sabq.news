@@ -709,12 +709,34 @@ export class DbChatStorage implements IChatStorage {
       }
     }
     
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: chatMessages.id,
+        channelId: chatMessages.channelId,
+        userId: chatMessages.userId,
+        content: chatMessages.content,
+        contentType: chatMessages.contentType,
+        parentMessageId: chatMessages.parentMessageId,
+        isPinned: chatMessages.isPinned,
+        pinnedBy: chatMessages.pinnedBy,
+        pinnedAt: chatMessages.pinnedAt,
+        isEdited: chatMessages.isEdited,
+        isDeleted: chatMessages.isDeleted,
+        deletedBy: chatMessages.deletedBy,
+        deletedAt: chatMessages.deletedAt,
+        metadata: chatMessages.metadata,
+        createdAt: chatMessages.createdAt,
+        senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        senderEmail: users.email,
+        senderAvatar: users.profileImageUrl,
+      })
       .from(chatMessages)
+      .leftJoin(users, eq(chatMessages.userId, users.id))
       .where(and(...conditions))
-      .orderBy(desc(chatMessages.createdAt))
+      .orderBy(asc(chatMessages.createdAt))
       .limit(limit);
+    
+    return results as any;
   }
   
   async updateMessage(messageId: string, content: string): Promise<SelectChatMessage> {
@@ -1195,15 +1217,37 @@ export class DbChatStorage implements IChatStorage {
   // ==========================================
   
   async getPinnedMessages(channelId: string): Promise<SelectChatMessage[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: chatMessages.id,
+        channelId: chatMessages.channelId,
+        userId: chatMessages.userId,
+        content: chatMessages.content,
+        contentType: chatMessages.contentType,
+        parentMessageId: chatMessages.parentMessageId,
+        isPinned: chatMessages.isPinned,
+        pinnedBy: chatMessages.pinnedBy,
+        pinnedAt: chatMessages.pinnedAt,
+        isEdited: chatMessages.isEdited,
+        isDeleted: chatMessages.isDeleted,
+        deletedBy: chatMessages.deletedBy,
+        deletedAt: chatMessages.deletedAt,
+        metadata: chatMessages.metadata,
+        createdAt: chatMessages.createdAt,
+        senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        senderEmail: users.email,
+        senderAvatar: users.profileImageUrl,
+      })
       .from(chatMessages)
+      .leftJoin(users, eq(chatMessages.userId, users.id))
       .where(and(
         eq(chatMessages.channelId, channelId),
         eq(chatMessages.isPinned, true),
         eq(chatMessages.isDeleted, false)
       ))
       .orderBy(desc(chatMessages.pinnedAt));
+    
+    return results as any;
   }
   
   // ==========================================
