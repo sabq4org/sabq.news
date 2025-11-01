@@ -141,6 +141,10 @@ export const articles = pgTable("articles", {
   content: text("content").notNull(),
   excerpt: text("excerpt"),
   imageUrl: text("image_url"),
+  imageFocalPoint: jsonb("image_focal_point").$type<{
+    x: number; // percentage 0-100 from left
+    y: number; // percentage 0-100 from top
+  }>(),
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
