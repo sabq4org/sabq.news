@@ -78,10 +78,12 @@ export function ChatPane({
 
   const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: [`/api/chat/channels/${channelId}/messages`],
+    refetchInterval: 3000,
   });
 
   const { data: pinnedMessages } = useQuery<Message[]>({
     queryKey: [`/api/chat/channels/${channelId}/pinned-messages`],
+    refetchInterval: 10000,
   });
 
   const pinnedCount = pinnedMessages?.length || 0;
@@ -101,6 +103,7 @@ export function ChatPane({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chat/channels/${channelId}/messages`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/channels"] });
     },
     onError: (error: any) => {
       const is401 = error.message?.startsWith('401');

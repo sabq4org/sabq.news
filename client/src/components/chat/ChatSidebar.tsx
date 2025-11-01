@@ -233,6 +233,7 @@ export function ChatSidebar({
 
   const { data: channels, isLoading } = useQuery<Channel[]>({
     queryKey: ["/api/chat/channels"],
+    refetchInterval: 5000,
   });
 
   const pinMutation = useMutation({
