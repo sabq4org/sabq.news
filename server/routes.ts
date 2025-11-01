@@ -16,7 +16,7 @@ import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { db } from "./db";
-import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable } from "drizzle-orm";
+import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable, isNull, ne } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -3254,6 +3254,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(categories, eq(articles.categoryId, categories.id))
         .leftJoin(users, eq(articles.authorId, users.id))
         .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
+        .where(
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, "opinion")
+          )
+        )
         .$dynamic();
 
       if (search) {
@@ -12791,7 +12797,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(and(
               eq(articles.categoryId, cat.id),
               eq(articles.status, "published"),
-              gte(articles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '24 hours'`),
+              or(
+                isNull(articles.articleType),
+                ne(articles.articleType, "opinion")
+              )
             ));
           stats = { label: "أخبار اليوم", value: count[0]?.count || 0 };
         } else if (section.statType === "weeklyCount") {
@@ -12801,7 +12811,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(and(
               eq(articles.categoryId, cat.id),
               eq(articles.status, "published"),
-              gte(articles.publishedAt, sql`NOW() - INTERVAL '7 days'`)
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '7 days'`),
+              or(
+                isNull(articles.articleType),
+                ne(articles.articleType, "opinion")
+              )
             ));
           stats = { label: "هذا الأسبوع", value: count[0]?.count || 0 };
         } else if (section.statType === "totalViews") {
@@ -12810,7 +12824,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .from(articles)
             .where(and(
               eq(articles.categoryId, cat.id),
-              eq(articles.status, "published")
+              eq(articles.status, "published"),
+              or(
+                isNull(articles.articleType),
+                ne(articles.articleType, "opinion")
+              )
             ));
           stats = { label: "إجمالي المشاهدات", value: sum[0]?.total || 0 };
         } else if (section.statType === "engagementRate") {
@@ -12826,7 +12844,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .leftJoin(comments, eq(comments.articleId, articles.id))
             .where(and(
               eq(articles.categoryId, cat.id),
-              eq(articles.status, "published")
+              eq(articles.status, "published"),
+              or(
+                isNull(articles.articleType),
+                ne(articles.articleType, "opinion")
+              )
             ));
 
           const totalViews = result[0]?.totalViews || 0;
@@ -12846,7 +12868,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .leftJoin(users, eq(articles.authorId, users.id))
           .where(and(
             eq(articles.categoryId, cat.id),
-            eq(articles.status, "published")
+            eq(articles.status, "published"),
+            or(
+              isNull(articles.articleType),
+              ne(articles.articleType, "opinion")
+            )
           ))
           .$dynamic();
 
@@ -13242,8 +13268,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         author: row.author,
       }));
 
+      // Calculate metrics
+      let metricsQuery = db
+        .select({ id: articles.id, status: articles.status, reviewStatus: articles.reviewStatus })
+        .from(articles)
+        .where(eq(articles.articleType, "opinion"))
+        .$dynamic();
+
+      // Apply same permission filter for metrics
+      if (!userPermissions.includes("opinion.edit_any") && userPermissions.includes("opinion.edit_own")) {
+        metricsQuery = metricsQuery.where(eq(articles.authorId, userId));
+      }
+
+      const allOpinionArticles = await metricsQuery;
+
+      const metrics = {
+        total: allOpinionArticles.length,
+        pending_review: allOpinionArticles.filter(a => a.reviewStatus === "pending_review").length,
+        approved: allOpinionArticles.filter(a => a.reviewStatus === "approved").length,
+        published: allOpinionArticles.filter(a => a.status === "published").length,
+      };
+
       res.json({
         articles: formattedArticles,
+        metrics,
         pagination: {
           page: Number(page),
           limit: Number(limit),

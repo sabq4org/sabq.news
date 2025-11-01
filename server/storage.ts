@@ -1551,6 +1551,14 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
+    // Exclude opinion articles from regular news feeds
+    conditions.push(
+      or(
+        isNull(articles.articleType),
+        ne(articles.articleType, 'opinion')
+      )
+    );
+
     const reporterAlias = aliasedTable(users, 'reporter');
     
     const results = await db
@@ -1784,7 +1792,15 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(eq(articles.status, "published"))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
+          )
+        )
+      )
       .orderBy(desc(articles.views), desc(articles.publishedAt))
       .limit(1);
 
@@ -1802,6 +1818,10 @@ export class DatabaseStorage implements IStorage {
     const conditions = [
       eq(articles.status, "published"),
       ne(articles.id, articleId),
+      or(
+        isNull(articles.articleType),
+        ne(articles.articleType, 'opinion')
+      ),
     ];
 
     if (categoryId) {
@@ -2211,7 +2231,16 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(and(eq(articles.status, "published"), inArray(articles.categoryId, categoryIds)))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          inArray(articles.categoryId, categoryIds),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
+          )
+        )
+      )
       .orderBy(desc(articles.publishedAt))
       .limit(6);
 
@@ -2295,6 +2324,7 @@ export class DatabaseStorage implements IStorage {
         WHERE a.status = 'published'
           AND a.hide_from_homepage = false
           AND a.id NOT IN (SELECT article_id FROM recently_read_articles)
+          AND (a.article_type IS NULL OR a.article_type != 'opinion')
           AND (
             EXISTS (SELECT 1 FROM user_interests_weights WHERE category_id = a.category_id)
             OR NOT EXISTS (SELECT 1 FROM user_interests_weights)
@@ -2432,6 +2462,10 @@ export class DatabaseStorage implements IStorage {
           or(
             eq(articles.newsType, "breaking"),
             eq(articles.isFeatured, true)
+          ),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
           )
         )
       )
@@ -2468,7 +2502,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(articles.status, "published"),
-          eq(articles.hideFromHomepage, false)
+          eq(articles.hideFromHomepage, false),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
+          )
         )
       )
       .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
@@ -2544,7 +2582,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(articles.status, "published"),
-          eq(articles.hideFromHomepage, false)
+          eq(articles.hideFromHomepage, false),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
+          )
         )
       )
       .orderBy(desc(articles.displayOrder), desc(articles.views), desc(articles.publishedAt))
@@ -2580,7 +2622,11 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(articles.status, "published"),
         eq(articles.hideFromHomepage, false),
-        sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`
+        sql`${articles.aiSummary} IS NOT NULL AND LENGTH(${articles.content}) > 200`,
+        or(
+          isNull(articles.articleType),
+          ne(articles.articleType, 'opinion')
+        )
       ))
       .orderBy(desc(articles.displayOrder), desc(articles.createdAt))
       .limit(limit);
@@ -4102,7 +4148,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(articleAngles.angleId, angle.id),
-          eq(articles.status, "published")
+          eq(articles.status, "published"),
+          or(
+            isNull(articles.articleType),
+            ne(articles.articleType, 'opinion')
+          )
         )
       )
       .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
@@ -5986,6 +6036,11 @@ export class DatabaseStorage implements IStorage {
     
     const conditions = [
       eq(articles.status, 'published'),
+      // Exclude opinion articles
+      or(
+        isNull(articles.articleType),
+        ne(articles.articleType, 'opinion')
+      ),
       // Search in seo.keywords JSONB array OR in title/excerpt
       or(
         sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`,
