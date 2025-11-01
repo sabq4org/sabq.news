@@ -53,7 +53,7 @@ export default function OpinionPage() {
       totalPages: number;
     };
   }>({
-    queryKey: ["/api/opinion", currentPage, limit],
+    queryKey: [`/api/opinion?page=${currentPage}&limit=${limit}`],
   });
 
   const handlePageChange = (page: number) => {
