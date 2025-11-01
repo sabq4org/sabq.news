@@ -22,7 +22,6 @@ interface User {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
   profileImageUrl?: string;
 }
 
@@ -85,10 +84,7 @@ export function NewChatDialog({
   const filteredUsers = users.filter((user) => {
     const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
     const query = searchQuery.toLowerCase();
-    return (
-      fullName.includes(query) ||
-      user.email.toLowerCase().includes(query)
-    );
+    return fullName.includes(query);
   });
 
   const handleUserSelect = (userId: string) => {
@@ -173,9 +169,6 @@ export function NewChatDialog({
                       <div className="flex-1 text-right">
                         <p className="font-medium">
                           {user.firstName} {user.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.email}
                         </p>
                       </div>
                     </button>

@@ -14349,8 +14349,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUserId = req.user!.id;
       const searchQuery = req.query.search as string | undefined;
       
+      // Build where conditions
+      const conditions = [
+        ne(users.id, currentUserId),
+        eq(users.status, "active")
+      ];
+      
+      // Add search filter if provided
+      if (searchQuery && searchQuery.trim()) {
+        const searchPattern = `%${searchQuery.trim()}%`;
+        conditions.push(
+          or(
+            ilike(users.firstName, searchPattern),
+            ilike(users.lastName, searchPattern)
+          )!
+        );
+      }
+      
       // Get users except current user, limited fields for privacy
-      let query = db
+      const allUsers = await db
         .select({
           id: users.id,
           firstName: users.firstName,
@@ -14358,24 +14375,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: users.profileImageUrl,
         })
         .from(users)
-        .where(and(
-          ne(users.id, currentUserId),
-          eq(users.status, "active")
-        ))
+        .where(and(...conditions))
         .limit(50);
-      
-      // Add search filter if provided
-      if (searchQuery && searchQuery.trim()) {
-        const searchPattern = `%${searchQuery.trim()}%`;
-        query = query.where(
-          or(
-            ilike(users.firstName, searchPattern),
-            ilike(users.lastName, searchPattern)
-          )
-        ) as typeof query;
-      }
-      
-      const allUsers = await query;
       
       res.json(allUsers);
     } catch (error) {

@@ -2968,6 +2968,7 @@ export const chatChannels = pgTable("chat_channels", {
     pinnedCount?: number;
     lastActivity?: string;
     memberCount?: number;
+    recipientUserId?: string; // For direct messages
   }>(),
   status: text("status").notNull().default("active"), // 'active', 'archived', 'deleted'
   archivedAt: timestamp("archived_at"),
