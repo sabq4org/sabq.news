@@ -200,32 +200,8 @@ export default function Dashboard() {
     );
   }
 
-  // Check if user has permission to view admin dashboard
-  if (!hasRole(user, "system_admin", "admin", "editor")) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="max-w-md w-full" data-testid="card-unauthorized">
-            <CardHeader>
-              <CardTitle className="text-center text-destructive" data-testid="heading-unauthorized">
-                غير مصرح
-              </CardTitle>
-              <CardDescription className="text-center" data-testid="text-unauthorized-description">
-                لا تملك صلاحية الوصول إلى لوحة التحكم الرئيسية.
-                <br />
-                هذه الصفحة متاحة فقط للمحررين والمسؤولين.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <Button asChild data-testid="button-back-home">
-                <Link href="/">العودة للرئيسية</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  // Allow access to dashboard for all staff roles
+  // The nav system will automatically filter menu items based on role permissions
 
   return (
     <DashboardLayout>

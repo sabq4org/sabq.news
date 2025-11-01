@@ -51,7 +51,7 @@ export const navConfig: NavItem[] = [
     labelAr: "نظرة عامة",
     path: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
     meta: { exact: true },
   },
 
@@ -145,7 +145,7 @@ export const navConfig: NavItem[] = [
     labelAr: "المحادثات",
     path: "/dashboard/chat",
     icon: MessageSquare,
-    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
   },
   {
     id: "chat_admin",
