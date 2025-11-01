@@ -309,7 +309,7 @@ export function QuadCategoriesBlock() {
   }
 
   return (
-    <div className="bg-muted/30 rounded-lg p-6 sm:p-8" data-testid="quad-categories-block">
+    <div data-testid="quad-categories-block">
       <div className="space-y-6">
         {/* Mobile View: Carousel */}
         {data.mobileCarousel && (
