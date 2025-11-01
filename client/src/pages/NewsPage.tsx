@@ -5,16 +5,12 @@ import { Footer } from "@/components/Footer";
 import { NewsAnalyticsHero } from "@/components/NewsAnalyticsHero";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import { SmartFilterBar } from "@/components/SmartFilterBar";
+import { ArticleCard } from "@/components/ArticleCard";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
-import { ViewsCount } from "@/components/ViewsCount";
-import { Link } from "wouter";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import type { ArticleWithDetails, Category } from "@shared/schema";
-import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
 
 const ARTICLES_PER_PAGE = 20;
 
@@ -214,12 +210,12 @@ export default function NewsPage() {
           )}
         </div>
 
-        {/* Articles Grid */}
+        {/* Articles Grid - Professional Layout */}
         {articlesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Card key={i}>
-                <Skeleton className="w-full h-48" />
+              <Card key={i} className="overflow-hidden rounded-xl">
+                <Skeleton className="w-full aspect-[4/3]" />
                 <CardContent className="p-4 space-y-3">
                   <Skeleton className="h-6 w-20" />
                   <Skeleton className="h-8 w-full" />
@@ -248,80 +244,13 @@ export default function NewsPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentArticles.map((article) => (
-                <Link key={article.id} href={`/article/${article.slug}`}>
-                  <Card 
-                    className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden group"
-                    data-testid={`card-article-${article.id}`}
-                  >
-                    {article.imageUrl && (
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          style={{
-                            objectPosition: (article as any).imageFocalPoint
-                              ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                              : 'center'
-                          }}
-                        />
-                        {article.category && (
-                          <Badge 
-                            variant="default" 
-                            className="absolute top-3 right-3 shadow-md" 
-                            data-testid={`badge-category-${article.id}`}
-                          >
-                            {article.category.icon} {article.category.nameAr}
-                          </Badge>
-                        )}
-                        {article.aiSummary && (
-                          <div className="absolute top-3 left-3">
-                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                              <Sparkles className="h-3 w-3 ml-1" />
-                              AI
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <CardContent className="p-4 space-y-3">
-                      <h3 
-                        className="font-bold text-lg line-clamp-2 text-foreground"
-                        data-testid={`text-article-title-${article.id}`}
-                      >
-                        {article.title}
-                      </h3>
-                      
-                      {article.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                        {article.publishedAt && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {formatDistanceToNow(new Date(article.publishedAt), {
-                                addSuffix: true,
-                                locale: ar,
-                              })}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <ViewsCount 
-                          views={article.views || 0}
-                          iconClassName="h-3 w-3"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  variant="grid"
+                />
               ))}
             </div>
 

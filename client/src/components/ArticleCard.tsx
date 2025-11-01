@@ -1,12 +1,21 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Clock, 
   Heart, 
   MessageCircle, 
   Bookmark,
-  Sparkles 
+  Sparkles,
+  Brain,
+  TrendingUp,
+  Eye
 } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
@@ -17,7 +26,7 @@ import FollowStoryButton from "./FollowStoryButton";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
-  variant?: "grid" | "featured" | "list";
+  variant?: "grid" | "featured" | "list" | "compact";
   onReact?: (articleId: string) => void;
   onBookmark?: (articleId: string) => void;
 }
@@ -40,16 +49,26 @@ export function ArticleCard({
     return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
   };
 
+  // Smart AI Indicator
+  const getAIInsight = () => {
+    if (article.aiGenerated) return { icon: Brain, text: "محتوى مُنشأ بالذكاء الاصطناعي" };
+    if ((article.reactionsCount || 0) > 100) return { icon: TrendingUp, text: "تفاعل عالي من القراء" };
+    if ((article.views || 0) > 500) return { icon: Eye, text: "الأكثر مشاهدة" };
+    return null;
+  };
+
+  const aiInsight = getAIInsight();
+
   if (variant === "featured") {
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
-        <Card className="group overflow-hidden border border-card-border">
+        <Card className="group overflow-hidden border border-border/60 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             {article.imageUrl ? (
               <img
                 src={article.imageUrl}
                 alt={article.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 style={{ objectPosition: getObjectPosition() }}
                 loading="lazy"
               />
@@ -60,17 +79,31 @@ export function ArticleCard({
             
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
               {article.category && (
-                <Badge variant="default" className="text-xs sm:text-sm" data-testid={`badge-category-${article.id}`}>
+                <Badge 
+                  className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs sm:text-sm shadow-md" 
+                  data-testid={`badge-category-${article.id}`}
+                >
                   {article.category.icon} {article.category.nameAr}
                 </Badge>
               )}
-              {article.aiGenerated && (
-                <Badge variant="secondary" className="gap-1 text-xs sm:text-sm" data-testid={`badge-ai-${article.id}`}>
-                  <Sparkles className="h-3 w-3" />
-                  ذكاء اصطناعي
-                </Badge>
-              )}
             </div>
+
+            {aiInsight && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                      <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 gap-1.5 shadow-lg">
+                        <aiInsight.icon className="h-3.5 w-3.5" />
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-sm">{aiInsight.text}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
@@ -96,44 +129,114 @@ export function ArticleCard({
     );
   }
 
+  if (variant === "compact") {
+    return (
+      <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
+        <Card className="group overflow-hidden border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300">
+          <CardContent className="p-3">
+            <div className="flex items-start gap-2 mb-2">
+              {article.category && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] px-1.5 py-0.5 border-primary/20 text-primary"
+                  data-testid={`badge-category-${article.id}`}
+                >
+                  {article.category.nameAr}
+                </Badge>
+              )}
+              {aiInsight && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 border-primary/20">
+                        <aiInsight.icon className="h-2.5 w-2.5 text-primary" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{aiInsight.text}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+            
+            <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2" data-testid={`text-title-${article.id}`}>
+              {article.title}
+            </h3>
+
+            <div className="flex items-center justify-between text-[10px] text-slate-500">
+              {timeAgo && <span>{timeAgo}</span>}
+              <ViewsCount 
+                views={article.views || 0}
+                iconClassName="h-2.5 w-2.5"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  }
+
   if (variant === "list") {
     return (
-      <Card className="group border border-card-border">
+      <Card className="group border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300">
         <CardContent className="p-4">
           <div className="flex gap-4">
             <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
-              {article.imageUrl ? (
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-32 h-32 object-cover rounded-md"
-                  style={{ objectPosition: getObjectPosition() }}
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-md" />
-              )}
+              <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                {article.imageUrl ? (
+                  <img
+                    src={article.imageUrl}
+                    alt={article.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    style={{ objectPosition: getObjectPosition() }}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+                )}
+                {article.category && (
+                  <div className="absolute bottom-2 right-2">
+                    <Badge 
+                      className="bg-primary/90 backdrop-blur-sm text-white border-0 text-[10px] px-2 py-0.5"
+                      data-testid={`badge-category-${article.id}`}
+                    >
+                      {article.category.nameAr}
+                    </Badge>
+                  </div>
+                )}
+              </div>
             </Link>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2 mb-2">
-                {article.category && (
-                  <Badge variant="outline" className="text-xs" data-testid={`badge-category-${article.id}`}>
-                    {article.category.nameAr}
-                  </Badge>
-                )}
-                {article.aiGenerated && (
-                  <Badge variant="outline" className="text-xs gap-1" data-testid={`badge-ai-${article.id}`}>
-                    <Sparkles className="h-3 w-3" />
-                  </Badge>
+                {aiInsight && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="text-xs gap-1 border-primary/20" data-testid={`badge-ai-${article.id}`}>
+                          <aiInsight.icon className="h-3 w-3 text-primary" />
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-sm">{aiInsight.text}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
 
               <Link href={`/article/${article.slug}`}>
-                <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+                <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
                   {article.title}
                 </h3>
               </Link>
+
+              {article.aiSummary && (
+                <p className="text-sm text-[#475569] line-clamp-2 mb-3 leading-relaxed">
+                  {article.aiSummary}
+                </p>
+              )}
 
               {article.storyId && article.storyTitle && (
                 <div className="mb-3" onClick={(e) => e.preventDefault()}>
@@ -145,7 +248,7 @@ export function ArticleCard({
               )}
 
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 text-xs text-slate-500">
                   {timeAgo && <span>{timeAgo}</span>}
                   <ViewsCount 
                     views={article.views || 0}
@@ -165,7 +268,7 @@ export function ArticleCard({
                     data-testid={`button-react-${article.id}`}
                   >
                     <Heart className={`h-4 w-4 ${article.hasReacted ? 'fill-red-500 text-red-500' : ''}`} />
-                    <span className="text-xs">{article.reactionsCount || 0}</span>
+                    <span className="text-xs">{(article.reactionsCount || 0).toLocaleString('en-US')}</span>
                   </Button>
 
                   <Button
@@ -189,51 +292,67 @@ export function ArticleCard({
     );
   }
 
-  // Grid variant (default)
+  // Grid variant (default) - Professional News Card
   return (
-    <Card className="group overflow-hidden border border-card-border" data-testid={`card-article-${article.id}`}>
+    <Card className="group overflow-hidden border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 bg-white dark:bg-card" data-testid={`card-article-${article.id}`}>
       <Link href={`/article/${article.slug}`}>
-        <div className="relative aspect-[16/9] overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden">
           {article.imageUrl ? (
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-103"
               style={{ objectPosition: getObjectPosition() }}
               loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
+          {/* Category Badge with Overlay */}
           {article.category && (
-            <Badge 
-              variant="default" 
-              className="absolute top-3 right-3" 
-              data-testid={`badge-category-${article.id}`}
-            >
-              {article.category.icon} {article.category.nameAr}
-            </Badge>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
+              <Badge 
+                className="bg-primary backdrop-blur-sm text-white border-0 text-xs shadow-lg"
+                data-testid={`badge-category-${article.id}`}
+              >
+                {article.category.icon} {article.category.nameAr}
+              </Badge>
+            </div>
           )}
-          {article.aiGenerated && (
-            <Badge 
-              variant="secondary" 
-              className="absolute top-3 left-3 gap-1" 
-              data-testid={`badge-ai-${article.id}`}
-            >
-              <Sparkles className="h-3 w-3" />
-            </Badge>
+          
+          {/* AI Smart Indicator */}
+          {aiInsight && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 gap-1.5 shadow-lg hover:bg-white/20 transition-colors">
+                      <aiInsight.icon className="h-3.5 w-3.5" />
+                    </Badge>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-sm">{aiInsight.text}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </Link>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 bg-white dark:bg-card">
         <Link href={`/article/${article.slug}`}>
-          <h3 className="text-lg font-semibold mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+          <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
             {article.title}
           </h3>
         </Link>
+
+        {article.aiSummary && (
+          <p className="text-sm text-[#475569] dark:text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+            {article.aiSummary}
+          </p>
+        )}
 
         {article.storyId && article.storyTitle && (
           <div className="mb-3" onClick={(e) => e.preventDefault()}>
@@ -244,8 +363,8 @@ export function ArticleCard({
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-3 border-t">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-muted-foreground">
             {timeAgo && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
