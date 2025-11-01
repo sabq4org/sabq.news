@@ -131,22 +131,20 @@ function HorizontalCarousel({
     if (!scrollRef.current) return;
     
     const container = scrollRef.current;
-    const cardWidth = container.scrollWidth / articles.length;
+    const scrollAmount = container.clientWidth * 0.8;
     
-    if (direction === 'left' && currentIndex < articles.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      container.scrollTo({ left: (currentIndex + 1) * cardWidth, behavior: 'smooth' });
-    } else if (direction === 'right' && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      container.scrollTo({ left: (currentIndex - 1) * cardWidth, behavior: 'smooth' });
+    if (direction === 'left') {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
+        className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
         style={{ scrollSnapType: 'x mandatory' }}
       >
         {articles.map((article, index) => (
@@ -155,61 +153,34 @@ function HorizontalCarousel({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="flex-shrink-0 w-[85vw] max-w-sm snap-start"
+            className="flex-shrink-0 w-[85vw] sm:w-[45vw] md:w-[380px] lg:w-[420px] snap-start"
           >
             <OpinionCard article={article} categoryColor={categoryColor} />
           </motion.div>
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Show on hover or focus */}
       {articles.length > 1 && (
         <>
           <button
             onClick={() => scroll('left')}
-            disabled={currentIndex === articles.length - 1}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background border-2 border-border shadow-lg flex items-center justify-center hover-elevate active-elevate-2 z-10 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
             data-testid="carousel-next"
+            aria-label="التالي"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
           </button>
           <button
             onClick={() => scroll('right')}
-            disabled={currentIndex === 0}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover-elevate active-elevate-2 z-10"
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background border-2 border-border shadow-lg flex items-center justify-center hover-elevate active-elevate-2 z-10 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
             data-testid="carousel-prev"
+            aria-label="السابق"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </>
       )}
-
-      {/* Indicators */}
-      <div className="flex justify-center gap-1.5 mt-2">
-        {articles.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              setCurrentIndex(index);
-              if (scrollRef.current) {
-                const cardWidth = scrollRef.current.scrollWidth / articles.length;
-                scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
-              }
-            }}
-            className={`h-1.5 rounded-full transition-all ${
-              index === currentIndex 
-                ? 'w-6' 
-                : 'w-1.5 bg-muted-foreground/30'
-            }`}
-            style={{ 
-              backgroundColor: index === currentIndex 
-                ? categoryColor || 'var(--primary)' 
-                : undefined 
-            }}
-            data-testid={`carousel-indicator-${index}`}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -218,9 +189,9 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-4">
       <Skeleton className="h-8 w-64" />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex gap-4 md:gap-6 overflow-x-hidden">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-3">
+          <div key={i} className="flex-shrink-0 w-[85vw] sm:w-[45vw] md:w-[380px] lg:w-[420px] space-y-3">
             <Skeleton className="h-12 w-12 rounded-full" />
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-4 w-full" />
@@ -298,38 +269,8 @@ export function RelatedOpinionsSection({
           </Link>
         </div>
 
-        {/* Mobile: Carousel */}
-        <div className="lg:hidden">
-          <HorizontalCarousel articles={data.articles} categoryColor={categoryColor} />
-        </div>
-
-        {/* Desktop: Grid */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-6">
-          {data.articles.map((article, index) => (
-            <motion.div
-              key={article.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <OpinionCard article={article} categoryColor={categoryColor} />
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Mobile: View More Button */}
-        <div className="md:hidden flex justify-center">
-          <Link href={`/opinion?category=${categoryId}`}>
-            <Button 
-              variant="outline" 
-              className="gap-2 w-full" 
-              data-testid="button-view-more-opinions-mobile"
-            >
-              عرض جميع مقالات الرأي
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+        {/* Horizontal Carousel - All Sizes */}
+        <HorizontalCarousel articles={data.articles} categoryColor={categoryColor} />
       </div>
     </section>
   );
