@@ -13333,6 +13333,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public: Get related opinion articles by category (smart recommendations)
+  app.get("/api/opinion/related/category/:categoryId", async (req, res) => {
+    try {
+      const { categoryId } = req.params;
+      const { excludeId, limit = 5 } = req.query;
+
+      // Build query for opinion articles in the same category
+      let query = db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          excerpt: articles.excerpt,
+          slug: articles.slug,
+          imageUrl: articles.imageUrl,
+          publishedAt: articles.publishedAt,
+          views: articles.views,
+          categoryId: articles.categoryId,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+            bio: users.bio,
+          },
+          category: {
+            id: categories.id,
+            nameAr: categories.nameAr,
+            nameEn: categories.nameEn,
+            slug: categories.slug,
+            color: categories.color,
+            icon: categories.icon,
+          },
+          // Smart ranking score: recent + popular
+          score: sql<number>`
+            (EXTRACT(EPOCH FROM (NOW() - ${articles.publishedAt})) / 86400)::numeric * -1 +
+            (${articles.views}::numeric / 100) +
+            (COALESCE(${articles.featured}, false)::int * 10)
+          `.as('score'),
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(
+          and(
+            eq(articles.categoryId, categoryId as string),
+            eq(articles.articleType, "opinion"),
+            eq(articles.status, "published"),
+            excludeId ? sql`${articles.id} != ${excludeId}` : undefined
+          )
+        )
+        .orderBy(sql`score DESC`)
+        .limit(Number(limit));
+
+      const results = await query;
+
+      res.json({
+        articles: results.map(r => ({
+          id: r.id,
+          title: r.title,
+          excerpt: r.excerpt,
+          slug: r.slug,
+          imageUrl: r.imageUrl,
+          publishedAt: r.publishedAt,
+          views: r.views,
+          author: r.author,
+          category: r.category,
+        })),
+        total: results.length,
+      });
+    } catch (error) {
+      console.error("Error fetching related opinion articles:", error);
+      res.status(500).json({ message: "Failed to fetch related opinion articles" });
+    }
+  });
+
   // Dashboard: Get all opinion articles (for authors and editors)
   app.get("/api/dashboard/opinion", requireAuth, requireAnyPermission("articles.view", "articles.edit_own"), async (req: any, res) => {
     try {
