@@ -77,11 +77,11 @@ export function ChatPane({
   });
 
   const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
-    queryKey: [`/api/chat/channels/${channelId}/messages`, page],
+    queryKey: [`/api/chat/channels/${channelId}/messages`],
   });
 
   const { data: pinnedMessages } = useQuery<Message[]>({
-    queryKey: ["/api/chat/channels", channelId, "pinned-messages"],
+    queryKey: [`/api/chat/channels/${channelId}/pinned-messages`],
   });
 
   const pinnedCount = pinnedMessages?.length || 0;
