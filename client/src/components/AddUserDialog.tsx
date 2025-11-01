@@ -144,7 +144,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]" data-testid="dialog-add-user" dir="rtl">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col" data-testid="dialog-add-user" dir="rtl">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title">إنشاء مستخدم جديد</DialogTitle>
             <DialogDescription data-testid="dialog-description">
@@ -153,7 +153,8 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
           </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="space-y-4 overflow-y-auto flex-1 px-1">
             <FormField
               control={form.control}
               name="email"
@@ -366,8 +367,9 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                 )}
               />
             </div>
+          </div>
 
-            <DialogFooter>
+          <DialogFooter className="mt-4">
               <Button
                 type="button"
                 variant="outline"

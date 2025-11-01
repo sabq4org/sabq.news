@@ -164,7 +164,7 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]" data-testid="dialog-edit-user" dir="rtl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col" data-testid="dialog-edit-user" dir="rtl">
         <DialogHeader>
           <DialogTitle data-testid="dialog-title">تعديل بيانات المستخدم</DialogTitle>
           <DialogDescription data-testid="dialog-description">
@@ -178,7 +178,8 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+              <div className="space-y-4 overflow-y-auto flex-1 px-1">
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -371,8 +372,9 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
                   )}
                 />
               </div>
+            </div>
 
-              <DialogFooter>
+            <DialogFooter className="mt-4">
                 <Button
                   type="button"
                   variant="outline"
