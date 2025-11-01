@@ -216,8 +216,8 @@ export default function ArticleDetail() {
       }
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug, "comments"] });
       toast({
-        title: "تم إضافة التعليق",
-        description: "تم نشر تعليقك بنجاح",
+        title: "شكراً لمشاركتك",
+        description: "سيتم مراجعة تعليقك من قبل فريق التحرير للتأكد من التزامه بمعايير المجتمع ونشره في أقرب وقت",
       });
     },
     onError: (error: Error) => {
