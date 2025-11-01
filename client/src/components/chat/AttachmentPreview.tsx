@@ -22,8 +22,8 @@ function formatFileSize(bytes?: number): string {
   if (!bytes) return '';
   const kb = bytes / 1024;
   const mb = kb / 1024;
-  if (mb >= 1) return `${mb.toFixed(1)} MB`;
-  return `${kb.toFixed(1)} KB`;
+  if (mb >= 1) return `${mb.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
+  return `${kb.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} KB`;
 }
 
 function formatDuration(seconds: number): string {

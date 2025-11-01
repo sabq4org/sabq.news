@@ -14265,13 +14265,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(7);
+      // Generate unique filename with nanoid
+      const { nanoid } = await import('nanoid');
+      const uniqueId = nanoid(12);
       const ext = req.file.originalname.split('.').pop();
-      const filename = `${timestamp}-${randomStr}.${ext}`;
+      const filename = `${uniqueId}.${ext}`;
       
-      // Upload to Object Storage in chat-attachments folder
+      // Upload to Object Storage in chat-attachments folder (PRIVATE_OBJECT_DIR)
       const objectStorageService = new ObjectStorageService();
       const path = `chat-attachments/${filename}`;
       const result = await objectStorageService.uploadFile(
@@ -14281,6 +14281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       res.json({
+        id: uniqueId,
         url: result.url,
         name: req.file.originalname,
         size: req.file.size,
@@ -14746,6 +14747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { channelId } = req.params;
       const userId = req.user!.id;
+      const { attachments, ...messageData } = req.body;
       
       const isMember = await storage.chatStorage.isMember(channelId, userId);
       if (!isMember) {
@@ -14753,16 +14755,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertChatMessageSchema.parse({
-        ...req.body,
+        ...messageData,
         channelId,
         userId,
       });
       
       const message = await storage.chatStorage.createMessage(validatedData);
       
+      // إنشاء سجلات المرفقات إذا وُجدت
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        for (const attachment of attachments) {
+          await storage.chatStorage.createAttachment({
+            messageId: message.id,
+            type: attachment.type || 'file',
+            fileName: attachment.name,
+            fileUrl: attachment.url,
+            fileSize: attachment.size,
+            mimeType: attachment.mimeType,
+          });
+        }
+      }
+      
+      // Get message with attachments for response
+      const messageAttachments = await storage.chatStorage.getMessageAttachments(message.id);
+      const messageWithAttachments = {
+        ...message,
+        attachments: messageAttachments,
+      };
+      
       // Broadcast new message to all channel members via WebSocket
       if (chatWebSocket) {
-        chatWebSocket.broadcastNewMessage(channelId, message);
+        chatWebSocket.broadcastNewMessage(channelId, messageWithAttachments);
       }
       
       // إرسال إشعارات لأعضاء القناة
@@ -14791,7 +14814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("خطأ في إرسال الإشعارات:", notifError);
       }
       
-      res.status(201).json(message);
+      res.status(201).json(messageWithAttachments);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -14819,7 +14842,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         after: after as string,
       });
       
-      res.json(messages);
+      // إضافة المرفقات لكل رسالة
+      const messagesWithAttachments = await Promise.all(
+        messages.map(async (message) => {
+          const attachments = await storage.chatStorage.getMessageAttachments(message.id);
+          return {
+            ...message,
+            attachments,
+          };
+        })
+      );
+      
+      res.json(messagesWithAttachments);
     } catch (error) {
       console.error("خطأ في جلب الرسائل:", error);
       res.status(500).json({ message: "حدث خطأ في الخادم" });
@@ -14843,7 +14877,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "غير مسموح لك بعرض هذه الرسالة" });
       }
       
-      res.json(message);
+      // إضافة المرفقات
+      const attachments = await storage.chatStorage.getMessageAttachments(messageId);
+      const messageWithAttachments = {
+        ...message,
+        attachments,
+      };
+      
+      res.json(messageWithAttachments);
     } catch (error) {
       console.error("خطأ في جلب الرسالة:", error);
       res.status(500).json({ message: "حدث خطأ في الخادم" });
