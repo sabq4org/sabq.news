@@ -2437,7 +2437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
       const objectId = randomUUID();
-      const fullPath = `${publicPath}/uploads/profile-images/${objectId}.${fileExtension}`;
+      const relativePath = `uploads/profile-images/${objectId}.${fileExtension}`;
+      const fullPath = `${publicPath}/${relativePath}`;
 
       console.log("[Profile Image Upload] Uploading to path:", fullPath);
 
@@ -2451,13 +2452,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType: req.file.mimetype,
       });
 
-      const publicUrl = `https://storage.googleapis.com/${bucketName}/${objectName}`;
+      const proxyUrl = `/public-objects/${relativePath}`;
 
-      console.log("[Profile Image Upload] Success. Public URL:", publicUrl);
+      console.log("[Profile Image Upload] Success. Proxy URL:", proxyUrl);
 
       res.json({ 
         success: true,
-        url: publicUrl
+        url: proxyUrl
       });
     } catch (error: any) {
       console.error("Error uploading profile image:", error);
