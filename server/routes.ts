@@ -2415,35 +2415,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: req.file.size
       });
 
-      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
-      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
-
-      if (!bucketId) {
-        throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');
-      }
-
       const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
       const objectId = randomUUID();
-      const objectPath = `uploads/profile-images/${objectId}.${fileExtension}`;
+      const relativePath = `uploads/profile-images/${objectId}.${fileExtension}`;
 
-      console.log("[Profile Image Upload] Uploading to bucket:", bucketId, "path:", objectPath);
+      const objectStorageService = new ObjectStorageService();
+      const result = await objectStorageService.uploadFile(
+        relativePath,
+        req.file.buffer,
+        req.file.mimetype
+      );
 
-      const { objectStorageClient } = await import('./objectStorage');
-      const bucket = objectStorageClient.bucket(bucketId);
-      const file = bucket.file(objectPath);
-
-      await file.save(req.file.buffer, {
-        contentType: req.file.mimetype,
-        predefinedAcl: 'publicRead',
-      });
-
-      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
-
-      console.log("[Profile Image Upload] Success. Public URL:", publicUrl);
+      console.log("[Profile Image Upload] Success. Public URL:", result.url);
 
       res.json({ 
         success: true,
-        url: publicUrl
+        url: result.url
       });
     } catch (error: any) {
       console.error("Error uploading profile image:", error);
