@@ -39,6 +39,21 @@ Key features include:
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content.
 
+**Opinion/News Separation Architecture:**
+The platform enforces strict separation between opinion articles (articleType = 'opinion') and news articles. All news-serving storage methods and API endpoints apply the filtering pattern `or(isNull(articles.articleType), ne(articles.articleType, 'opinion'))` to exclude opinion articles from:
+- Public news feeds (`/api/news`, `/api/homepage`)
+- Hero, breaking news, editor picks, and deep-dive sections
+- Smart categories, recommendations, and personalized feeds
+- Related articles and keyword search results
+- QuadCategoriesBlock and SmartNewsBlock components
+
+Opinion articles remain accessible exclusively through:
+- Public opinion listing (`/api/opinion`) and detail pages (`/opinion/[slug]`)
+- Opinion dashboard management (`/api/dashboard/opinion`)
+- User-personal data (bookmarks, likes, reading history)
+
+This architecture ensures content integrity across the platform while maintaining complete editorial workflows for both content types.
+
 ### Mobile App Support
 Native mobile app support is enabled via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens.
 
