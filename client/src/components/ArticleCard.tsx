@@ -35,6 +35,11 @@ export function ArticleCard({
       })
     : null;
 
+  const getObjectPosition = () => {
+    const focalPoint = (article as any).imageFocalPoint;
+    return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
+  };
+
   if (variant === "featured") {
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
@@ -44,7 +49,8 @@ export function ArticleCard({
               <img
                 src={article.imageUrl}
                 alt={article.title}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: getObjectPosition() }}
                 loading="lazy"
               />
             ) : (
@@ -100,7 +106,8 @@ export function ArticleCard({
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-32 h-32 object-cover object-center rounded-md"
+                  className="w-32 h-32 object-cover rounded-md"
+                  style={{ objectPosition: getObjectPosition() }}
                   loading="lazy"
                 />
               ) : (
@@ -191,7 +198,8 @@ export function ArticleCard({
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover"
+              style={{ objectPosition: getObjectPosition() }}
               loading="lazy"
             />
           ) : (
