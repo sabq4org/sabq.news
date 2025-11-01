@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { ChatPane } from "@/components/chat/ChatPane";
+import { NewChatDialog } from "@/components/chat/NewChatDialog";
+import { NewChannelDialog } from "@/components/chat/NewChannelDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
@@ -17,6 +19,8 @@ interface Channel {
 export default function Chat() {
   const { user, isLoading: authLoading } = useAuth({ redirectToLogin: true });
   const [selectedChannelId, setSelectedChannelId] = useState<string | undefined>();
+  const [newChatDialogOpen, setNewChatDialogOpen] = useState(false);
+  const [newChannelDialogOpen, setNewChannelDialogOpen] = useState(false);
 
   const { data: channels, isLoading: channelsLoading } = useQuery<Channel[]>({
     queryKey: ["/api/chat/channels"],
@@ -29,10 +33,16 @@ export default function Chat() {
 
   const handleNewChat = () => {
     console.log("New chat clicked");
+    setNewChatDialogOpen(true);
   };
 
   const handleNewChannel = () => {
     console.log("New channel clicked");
+    setNewChannelDialogOpen(true);
+  };
+
+  const handleChannelCreated = (channelId: string) => {
+    setSelectedChannelId(channelId);
   };
 
   const handleBackToChannels = () => {
@@ -63,6 +73,16 @@ export default function Chat() {
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-8rem)]" dir="rtl">
+        <NewChatDialog
+          open={newChatDialogOpen}
+          onOpenChange={setNewChatDialogOpen}
+          onChannelCreated={handleChannelCreated}
+        />
+        <NewChannelDialog
+          open={newChannelDialogOpen}
+          onOpenChange={setNewChannelDialogOpen}
+          onChannelCreated={handleChannelCreated}
+        />
         <div className="flex h-full" data-testid="chat-container">
           <div
             className={`

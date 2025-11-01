@@ -14340,6 +14340,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==========================================
+  // 0. Users Endpoint - للبحث عن المستخدمين
+  // ==========================================
+
+  // GET /api/chat/users - جلب قائمة المستخدمين للدردشة (محدودة)
+  app.get("/api/chat/users", isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user!.id;
+      const searchQuery = req.query.search as string | undefined;
+      
+      // Get users except current user, limited fields for privacy
+      let query = db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(users)
+        .where(and(
+          ne(users.id, currentUserId),
+          eq(users.status, "active")
+        ))
+        .limit(50);
+      
+      // Add search filter if provided
+      if (searchQuery && searchQuery.trim()) {
+        const searchPattern = `%${searchQuery.trim()}%`;
+        query = query.where(
+          or(
+            ilike(users.firstName, searchPattern),
+            ilike(users.lastName, searchPattern)
+          )
+        ) as typeof query;
+      }
+      
+      const allUsers = await query;
+      
+      res.json(allUsers);
+    } catch (error) {
+      console.error("خطأ في جلب المستخدمين:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
   // 1. Channels Endpoints - إدارة القنوات
   // ==========================================
 
@@ -14348,12 +14393,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       
-      const validatedData = insertChatChannelSchema.parse({
-        ...req.body,
-        createdBy: userId,
-      });
+      // For direct messages, generate a name from participant IDs
+      let channelData = { ...req.body };
+      if (channelData.type === "direct" && channelData.metadata?.recipientUserId) {
+        const recipientId = channelData.metadata.recipientUserId;
+        // Check if direct channel already exists between these two users
+        const existingChannels = await storage.chatStorage.getChannelsByUserId(userId);
+        const existingDirectChannel = existingChannels.find(ch => 
+          ch.type === "direct" && 
+          ch.metadata?.recipientUserId === recipientId
+        );
+        
+        if (existingDirectChannel) {
+          return res.status(200).json(existingDirectChannel);
+        }
+        
+        channelData.name = `direct_${userId}_${recipientId}`;
+      }
+      
+      const validatedData = insertChatChannelSchema.parse(channelData);
       
       const channel = await storage.chatStorage.createChannel(validatedData);
+      
+      // For direct messages, add the recipient as a member
+      if (channel.type === "direct" && channel.metadata?.recipientUserId) {
+        await storage.chatStorage.addMember({
+          channelId: channel.id,
+          userId: channel.metadata.recipientUserId as string,
+          role: "member",
+          canPost: true,
+          canInvite: false,
+          notificationPreference: 'all',
+        });
+      }
       
       res.status(201).json(channel);
     } catch (error) {
