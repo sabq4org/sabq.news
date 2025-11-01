@@ -2831,6 +2831,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset user password (admin only)
+  app.post("/api/admin/users/:id/reset-password", requireAuth, requirePermission("users.update"), async (req: any, res) => {
+    try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const targetUserId = req.params.id;
+
+      // Prevent self-password reset
+      if (targetUserId === adminUserId) {
+        return res.status(403).json({ message: "Cannot reset your own password" });
+      }
+
+      const { newPassword } = req.body;
+
+      if (!newPassword || typeof newPassword !== 'string') {
+        return res.status(400).json({ message: "New password is required" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long" });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await db
+        .update(users)
+        .set({ 
+          password: hashedPassword,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, targetUserId));
+
+      // Log activity
+      await logActivity({
+        userId: adminUserId,
+        action: "reset_password",
+        entityType: "user",
+        entityId: targetUserId,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          targetEmail: user.email,
+        },
+      });
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // ============================================================
   // RBAC ROUTES - User & Role Management
   // ============================================================
