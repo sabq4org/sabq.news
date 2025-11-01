@@ -87,7 +87,7 @@ function ChannelItem({
   const displayName = channel.displayName || channel.name;
 
   return (
-    <div className="relative group">
+    <div className="relative group" dir="rtl">
       <button
         onClick={onClick}
         className={cn(
@@ -96,7 +96,7 @@ function ChannelItem({
         )}
         data-testid={`channel-item-${channel.id}`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 flex-row-reverse">
           <div className="relative">
             {channel.type === "direct" ? (
               <>
@@ -105,7 +105,7 @@ function ChannelItem({
                   <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 {userPresence && (
-                  <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                  <div className="absolute bottom-0 right-0" data-testid={`presence-${channel.id}`}>
                     <PresenceIndicator status={userPresence} size="sm" />
                   </div>
                 )}
@@ -117,7 +117,7 @@ function ChannelItem({
               >
                 <Hash className="h-5 w-5 text-muted-foreground" />
                 {hasOnlineMembers && (
-                  <div className="absolute bottom-0 left-0" data-testid={`presence-${channel.id}`}>
+                  <div className="absolute bottom-0 right-0" data-testid={`presence-${channel.id}`}>
                     <PresenceIndicator status="online" size="sm" />
                   </div>
                 )}
@@ -169,7 +169,7 @@ function ChannelItem({
         </div>
       </button>
 
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

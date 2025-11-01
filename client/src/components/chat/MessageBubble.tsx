@@ -165,17 +165,14 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({
   return (
     <div
       ref={ref || internalRef}
-      className={cn(
-        "group relative rounded-lg transition-colors",
-        isOwnMessage && "flex justify-start"
-      )}
+      className="group relative rounded-lg transition-colors"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       data-testid={`message-${message.id}`}
       dir="rtl"
     >
-      <div className={cn("flex gap-3 max-w-[80%]", isOwnMessage && "flex-row-reverse")}>
-        <Avatar className="h-10 w-10" data-testid={`avatar-${message.id}`}>
+      <div className="flex gap-3 max-w-[80%]">
+        <Avatar className="h-10 w-10 flex-shrink-0" data-testid={`avatar-${message.id}`}>
           <AvatarImage src={message.senderAvatar} />
           <AvatarFallback>{message.senderName?.charAt(0) || "?"}</AvatarFallback>
         </Avatar>
