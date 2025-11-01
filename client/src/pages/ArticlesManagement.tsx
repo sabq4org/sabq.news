@@ -500,13 +500,13 @@ export default function ArticlesManagement() {
             </p>
           </div>
           <Button
-            onClick={() => setLocation("/dashboard/articles/new?type=news")}
+            onClick={() => setLocation("/dashboard/articles/new")}
             className="gap-2 w-full sm:w-auto"
             size="sm"
             data-testid="button-create-article"
           >
             <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            خبر جديد
+            مقال جديد
           </Button>
         </div>
 
@@ -651,6 +651,7 @@ export default function ArticlesManagement() {
                           />
                         </th>
                         <th className="text-right py-3 px-4 font-medium">العنوان</th>
+                        <th className="text-right py-3 px-4 font-medium">النوع</th>
                         <th className="text-right py-3 px-4 font-medium">الكاتب</th>
                         <th className="text-right py-3 px-4 font-medium">التصنيف</th>
                         <th className="text-right py-3 px-4 font-medium">عاجل</th>
@@ -674,6 +675,9 @@ export default function ArticlesManagement() {
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-medium max-w-md truncate inline-block">{article.title}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              {getTypeBadge(article.articleType || "news")}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -772,6 +776,11 @@ export default function ArticlesManagement() {
                     <span className="text-muted-foreground">
                       {article.category?.nameAr || "-"}
                     </span>
+                  </div>
+
+                  {/* Article Type */}
+                  <div>
+                    {getTypeBadge(article.articleType || "news")}
                   </div>
 
                   {/* Badges and Views */}

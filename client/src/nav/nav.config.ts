@@ -66,7 +66,7 @@ export const navConfig: NavItem[] = [
       {
         id: "articles",
         labelKey: "nav.articles",
-        labelAr: "الأخبار",
+        labelAr: "الأخبار والمقالات",
         path: "/dashboard/articles",
         icon: FileText,
         roles: ["admin", "editor", "author", "reviewer"],
@@ -74,18 +74,10 @@ export const navConfig: NavItem[] = [
       {
         id: "new_article",
         labelKey: "nav.new_article",
-        labelAr: "خبر جديد",
+        labelAr: "مقال جديد",
         path: "/dashboard/articles/new",
         icon: PlusCircle,
         roles: ["admin", "editor", "author"],
-      },
-      {
-        id: "opinion",
-        labelKey: "nav.opinion",
-        labelAr: "مقالات الرأي",
-        path: "/dashboard/opinion",
-        icon: BookOpen,
-        roles: ["admin", "editor", "opinion_author"],
       },
       {
         id: "categories",

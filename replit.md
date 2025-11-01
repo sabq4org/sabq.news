@@ -22,7 +22,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 Key features include:
 - **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles (including opinion_author) and granular permissions.
 - **Content Management:** Lifecycle management for articles, news, users, and categories, including comment moderation, an advanced article editor with AI-powered title/summary generation, SEO, and bulk operations.
-- **Opinion Articles System:** A complete editorial workflow for opinion content with dedicated author role (opinion_author), review workflow (pending_review, approved, rejected, needs_changes), public listing and detail pages (/opinion, /opinion/[slug]), and comprehensive dashboard management (/dashboard/opinion) with review actions and publish controls.
+- **Multi-Type Article System:** Support for multiple article types (news, opinion, analysis, column) with unified dashboard management, type-based badges for clear distinction, and dedicated author role (opinion_author) for opinion content. Public pages maintain separation with dedicated opinion listing (/opinion) and detail pages (/opinion/[slug]).
 - **Muqtarib (مُقترب) Section:** A thematic system for diverse article perspectives.
 - **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform with Sabq Index, Next Stories, Radar, and Algorithm Writes.
 - **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, multi-channel distribution, priority levels, rich content editor, and analytics.
@@ -39,8 +39,16 @@ Key features include:
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content.
 
-**Opinion/News Separation Architecture:**
-The platform enforces strict separation between opinion articles (articleType = 'opinion') and news articles. All news-serving storage methods and API endpoints apply the filtering pattern `or(isNull(articles.articleType), ne(articles.articleType, 'opinion'))` to exclude opinion articles from:
+**Content Management Architecture:**
+The platform supports multiple article types (news, opinion, analysis, column) with intelligent categorization:
+
+**Dashboard Management:**
+- **Unified Management Interface:** `/dashboard/articles` displays ALL article types (news, opinion, analysis, column) in a single interface titled "الأخبار والمقالات" (News & Articles)
+- **Article Type Distinction:** Each article displays a type badge (خبر/رأي/تحليل/عمود) to clearly differentiate between content types
+- **No Separate Opinion Section:** The separate "مقالات الرأي" section has been removed from the dashboard navigation for simplified management
+
+**Frontend Separation:**
+The platform maintains strict separation on the public-facing website. All news-serving storage methods and API endpoints apply the filtering pattern `or(isNull(articles.articleType), ne(articles.articleType, 'opinion'))` to exclude opinion articles from:
 - Public news feeds (`/api/news`, `/api/homepage`)
 - Hero, breaking news, editor picks, and deep-dive sections
 - Smart categories, recommendations, and personalized feeds
@@ -49,10 +57,9 @@ The platform enforces strict separation between opinion articles (articleType = 
 
 Opinion articles remain accessible exclusively through:
 - Public opinion listing (`/api/opinion`) and detail pages (`/opinion/[slug]`)
-- Opinion dashboard management (`/api/dashboard/opinion`)
 - User-personal data (bookmarks, likes, reading history)
 
-This architecture ensures content integrity across the platform while maintaining complete editorial workflows for both content types.
+This architecture ensures simplified content management in the dashboard while maintaining content integrity and separation on the public-facing website.
 
 ### Mobile App Support
 Native mobile app support is enabled via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens.

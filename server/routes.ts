@@ -3254,12 +3254,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(categories, eq(articles.categoryId, categories.id))
         .leftJoin(users, eq(articles.authorId, users.id))
         .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-        .where(
-          or(
-            isNull(articles.articleType),
-            ne(articles.articleType, "opinion")
-          )
-        )
         .$dynamic();
 
       if (search) {
