@@ -1307,6 +1307,10 @@ export const updateArticleSchema = z.object({
     z.string().startsWith("/", "رابط الصورة غير صحيح"),
     z.literal("")
   ]).optional(),
+  imageFocalPoint: z.object({
+    x: z.number().min(0).max(100),
+    y: z.number().min(0).max(100),
+  }).nullable().optional(),
   categoryId: z.union([
     z.string().uuid("معرف التصنيف غير صحيح"),
     z.literal(""),
