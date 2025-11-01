@@ -14445,27 +14445,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const channels = await storage.chatStorage.getChannelsByUserId(userId);
       
-      // For direct messages, get recipient user info
+      // For direct messages, get the other participant's info
       const channelsWithDisplayNames = await Promise.all(
         channels.map(async (channel) => {
-          if (channel.type === 'direct' && channel.metadata?.recipientUserId) {
-            const recipientId = channel.metadata.recipientUserId as string;
-            const [recipient] = await db
-              .select({
-                firstName: users.firstName,
-                lastName: users.lastName,
-                profileImageUrl: users.profileImageUrl,
-              })
-              .from(users)
-              .where(eq(users.id, recipientId))
-              .limit(1);
+          if (channel.type === 'direct') {
+            // Get all members of this channel
+            const members = await storage.chatStorage.getChannelMembers(channel.id);
             
-            if (recipient) {
-              return {
-                ...channel,
-                displayName: `${recipient.firstName || ''} ${recipient.lastName || ''}`.trim() || recipientId,
-                avatarUrl: recipient.profileImageUrl || channel.avatarUrl,
-              };
+            // Find the other user (not the current user)
+            const otherMember = members.find(m => m.userId !== userId);
+            
+            if (otherMember) {
+              const [otherUser] = await db
+                .select({
+                  id: users.id,
+                  firstName: users.firstName,
+                  lastName: users.lastName,
+                  profileImageUrl: users.profileImageUrl,
+                })
+                .from(users)
+                .where(eq(users.id, otherMember.userId))
+                .limit(1);
+              
+              if (otherUser) {
+                return {
+                  ...channel,
+                  displayName: `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || otherUser.id,
+                  avatarUrl: otherUser.profileImageUrl || channel.avatarUrl,
+                  userId: otherUser.id,
+                };
+              }
             }
           }
           
