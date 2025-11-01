@@ -2387,6 +2387,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USERS MANAGEMENT ROUTES
   // ============================================================
 
+  // Upload profile image endpoint (for admin/user)
+  const profileImageUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB max
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مسموح. الأنواع المسموحة: JPG, PNG, WEBP, GIF'));
+      }
+    },
+  });
+
+  app.post("/api/upload/profile-image", isAuthenticated, strictLimiter, profileImageUpload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم اختيار ملف" });
+      }
+
+      console.log("[Profile Image Upload] File received:", {
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
+      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
+
+      if (!bucketId) {
+        throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');
+      }
+
+      const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
+      const objectId = randomUUID();
+      const objectPath = `uploads/profile-images/${objectId}.${fileExtension}`;
+
+      console.log("[Profile Image Upload] Uploading to bucket:", bucketId, "path:", objectPath);
+
+      const { objectStorageClient } = await import('./objectStorage');
+      const bucket = objectStorageClient.bucket(bucketId);
+      const file = bucket.file(objectPath);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+        predefinedAcl: 'publicRead',
+      });
+
+      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+
+      console.log("[Profile Image Upload] Success. Public URL:", publicUrl);
+
+      res.json({ 
+        success: true,
+        url: publicUrl
+      });
+    } catch (error: any) {
+      console.error("Error uploading profile image:", error);
+      
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "الملف كبير جداً. الحد الأقصى 5MB" });
+      }
+      
+      if (error.message?.includes('نوع الملف')) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: "فشل في رفع الصورة" });
+    }
+  });
+
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
