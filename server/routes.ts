@@ -2873,8 +2873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db
         .update(users)
         .set({ 
-          passwordHash: hashedPassword,
-          updatedAt: new Date()
+          passwordHash: hashedPassword
         })
         .where(eq(users.id, targetUserId));
 

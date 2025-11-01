@@ -203,6 +203,13 @@ export interface IChatStorage {
    */
   unpinMessage(messageId: string): Promise<void>;
   
+  /**
+   * الحصول على الرسائل المثبتة في القناة
+   * @param channelId معرف القناة
+   * @returns قائمة الرسائل المثبتة
+   */
+  getPinnedMessages(channelId: string): Promise<SelectChatMessage[]>;
+  
   // ==========================================
   // Threads - المحادثات الفرعية
   // ==========================================
@@ -285,6 +292,13 @@ export interface IChatStorage {
    * @returns عدد الرسائل غير المقروءة
    */
   getUnreadCount(channelId: string, userId: string): Promise<number>;
+  
+  /**
+   * الحصول على read receipts لرسالة معينة
+   * @param messageId معرف الرسالة
+   * @returns قائمة read receipts
+   */
+  getMessageReadReceipts(messageId: string): Promise<SelectChatReadReceipt[]>;
   
   // ==========================================
   // Attachments - المرفقات
@@ -1029,30 +1043,12 @@ export class DbChatStorage implements IChatStorage {
     return result?.count || 0;
   }
 
-  async getMessageReadReceipts(messageId: string): Promise<Array<{
-    userId: string;
-    userName: string;
-    userAvatar?: string;
-    readAt: Date;
-  }>> {
-    const receipts = await db
-      .select({
-        userId: chatReadReceipts.userId,
-        userName: users.firstName,
-        userAvatar: users.profileImageUrl,
-        readAt: chatReadReceipts.readAt,
-      })
+  async getMessageReadReceipts(messageId: string): Promise<SelectChatReadReceipt[]> {
+    return await db
+      .select()
       .from(chatReadReceipts)
-      .innerJoin(users, eq(users.id, chatReadReceipts.userId))
       .where(eq(chatReadReceipts.messageId, messageId))
       .orderBy(desc(chatReadReceipts.readAt));
-    
-    return receipts.map(r => ({
-      userId: r.userId,
-      userName: r.userName || 'مستخدم',
-      userAvatar: r.userAvatar || undefined,
-      readAt: r.readAt,
-    }));
   }
   
   // ==========================================
@@ -1217,7 +1213,7 @@ export class DbChatStorage implements IChatStorage {
   async createNotification(notification: InsertChatNotification): Promise<ChatNotification> {
     const [newNotification] = await db
       .insert(chatNotifications)
-      .values(notification)
+      .values([notification])
       .returning();
     
     if (!newNotification) {
