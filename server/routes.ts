@@ -14842,13 +14842,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         after: after as string,
       });
       
-      // إضافة المرفقات لكل رسالة
+      // إضافة المرفقات لكل رسالة وتحويل البيانات للواجهة
       const messagesWithAttachments = await Promise.all(
         messages.map(async (message) => {
           const attachments = await storage.chatStorage.getMessageAttachments(message.id);
           return {
-            ...message,
+            id: message.id,
+            content: message.content,
+            contentType: message.contentType,
+            senderId: message.userId,
+            senderName: message.senderName || "مستخدم غير معروف",
+            senderAvatar: message.senderAvatar,
+            timestamp: message.createdAt,
             attachments,
+            reactions: message.metadata?.reactions || [],
+            isPinned: message.isPinned,
+            isEdited: message.isEdited,
+            mentions: message.metadata?.mentions || [],
+            replyTo: message.parentMessageId ? {
+              id: message.parentMessageId,
+              senderName: message.metadata?.replyTo?.senderName || "",
+              content: message.metadata?.replyTo?.content || "",
+            } : undefined,
           };
         })
       );
