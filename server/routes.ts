@@ -2404,6 +2404,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/upload/profile-image", isAuthenticated, strictLimiter, profileImageUpload.single('file'), async (req: any, res) => {
+    const parseObjectPath = (path: string): { bucketName: string; objectName: string } => {
+      if (!path.startsWith("/")) {
+        path = `/${path}`;
+      }
+      const pathParts = path.split("/");
+      if (pathParts.length < 3) {
+        throw new Error("Invalid path: must contain at least a bucket name");
+      }
+      const bucketName = pathParts[1];
+      const objectName = pathParts.slice(2).join("/");
+      return { bucketName, objectName };
+    };
+
     try {
       if (!req.file) {
         return res.status(400).json({ message: "لم يتم اختيار ملف" });
@@ -2415,22 +2428,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: req.file.size
       });
 
+      const publicObjectPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+      const publicPath = publicObjectPaths.split(',')[0];
+      
+      if (!publicPath) {
+        throw new Error('PUBLIC_OBJECT_SEARCH_PATHS not configured');
+      }
+
       const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
       const objectId = randomUUID();
-      const relativePath = `uploads/profile-images/${objectId}.${fileExtension}`;
+      const fullPath = `${publicPath}/uploads/profile-images/${objectId}.${fileExtension}`;
 
-      const objectStorageService = new ObjectStorageService();
-      const result = await objectStorageService.uploadFile(
-        relativePath,
-        req.file.buffer,
-        req.file.mimetype
-      );
+      console.log("[Profile Image Upload] Uploading to path:", fullPath);
 
-      console.log("[Profile Image Upload] Success. Public URL:", result.url);
+      const { objectStorageClient } = await import('./objectStorage');
+
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+      });
+
+      const publicUrl = `https://storage.googleapis.com/${bucketName}/${objectName}`;
+
+      console.log("[Profile Image Upload] Success. Public URL:", publicUrl);
 
       res.json({ 
         success: true,
-        url: result.url
+        url: publicUrl
       });
     } catch (error: any) {
       console.error("Error uploading profile image:", error);

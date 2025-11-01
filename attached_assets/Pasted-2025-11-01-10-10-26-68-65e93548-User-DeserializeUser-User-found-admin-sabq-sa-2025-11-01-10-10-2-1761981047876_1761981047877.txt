@@ -1,0 +1,81 @@
+2025-11-01 10:10:26.68
+65e93548
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-01 10:10:26.68
+65e93548
+User
+[Profile Image Upload] File received: { originalName: 'IMG_2357.jpeg', mimetype: 'image/jpeg', size: 136397 }
+2025-11-01 10:10:27.04
+65e93548
+User
+Error uploading profile image: ApiError: The member bindings allUsers and allAuthenticatedUsers are not allowed since public access prevention is enforced.
+2025-11-01 10:10:27.04
+65e93548
+User
+at new ApiError (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:85:15)
+2025-11-01 10:10:27.04
+65e93548
+User
+at Util.parseHttpRespBody (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:222:38)
+2025-11-01 10:10:27.04
+65e93548
+User
+at Util.handleResp (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:162:30)
+2025-11-01 10:10:27.04
+65e93548
+User
+at file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:552:22
+2025-11-01 10:10:27.04
+65e93548
+User
+at onResponse (/home/runner/workspace/node_modules/retry-request/index.js:259:7)
+2025-11-01 10:10:27.04
+65e93548
+User
+at /home/runner/workspace/node_modules/teeny-request/build/src/index.js:226:13
+2025-11-01 10:10:27.04
+65e93548
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-11-01 10:10:27.04
+65e93548
+User
+code: 412,
+2025-11-01 10:10:27.04
+65e93548
+User
+errors: [
+2025-11-01 10:10:27.04
+65e93548
+User
+{
+2025-11-01 10:10:27.04
+65e93548
+User
+message: 'The member bindings allUsers and allAuthenticatedUsers are not allowed since public access prevention is enforced.',
+2025-11-01 10:10:27.04
+65e93548
+User
+domain: 'global',
+2025-11-01 10:10:27.04
+65e93548
+User
+reason: 'conditionNotMet',
+2025-11-01 10:10:27.04
+65e93548
+User
+locationType: 'header',
+2025-11-01 10:10:27.04
+65e93548
+User
+location: 'If-Match'
+2025-11-01 10:10:27.04
+65e93548
+User
+}
+2025-11-01 10:10:27.04
+65e93548
+User
+],
+
