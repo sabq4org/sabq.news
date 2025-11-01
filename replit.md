@@ -16,7 +16,15 @@ The platform features an RTL-first design with custom light/dark theming and Ara
 - **Footer:** Redesigned with column-based layout (NO Card components) to differentiate from news article cards. Features three-tier structure: (1) Intelligence Banner with live AI metrics, (2) Navigation columns with icons and links, (3) Bottom bar with brand, contact, and social/legal links. All numbers displayed in English digits (toLocaleString('en-US')).
 
 ### Technical Implementations
-The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication uses Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (via Replit Object Storage) handles file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include gzip compression for all responses and a smart caching strategy that prioritizes fresh data by explicitly disabling HTTP caching for API endpoints and configuring TanStack Query for zero caching.
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication uses Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (via Replit Object Storage) handles file storage, and Server-Sent Events (SSE) enable real-time features. 
+
+**Performance Optimizations:**
+- Gzip compression for all responses
+- Smart HTTP caching strategy (aggressive for assets, zero for API endpoints)
+- TanStack Query configured with zero caching for fresh data
+- Background jobs with locking mechanism to prevent concurrent execution and database blocking
+- Dynamic categories update every 15 minutes (optimized from 5 minutes for 66% reduction in database load)
+- Content Security Policy (CSP) configured to allow WebSocket connections (ws:/wss:) and Vite inline styles for production deployment
 
 ### Feature Specifications
 Key features include:
