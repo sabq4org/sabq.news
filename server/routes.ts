@@ -4536,9 +4536,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/trending-keywords", async (req, res) => {
     try {
-      // Fetch published articles from the last 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      // Fetch published articles from the last 24 hours (1 day)
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
       const recentArticles = await db
         .select({
@@ -4549,7 +4549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(articles.status, "published"),
-            gte(articles.publishedAt, sevenDaysAgo)
+            gte(articles.publishedAt, oneDayAgo)
           )
         );
 

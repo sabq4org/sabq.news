@@ -61,19 +61,19 @@ export function TrendingKeywords() {
 
   if (isLoading) {
     return (
-      <section className="space-y-4" dir="rtl">
+      <section className="space-y-3" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-5 w-5 text-primary" />
+          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-muted-foreground">
-          الكلمات الأكثر تداولًا خلال الـ 7 أيام الماضية
+        <p className="text-sm text-muted-foreground">
+          خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-28 rounded-full" />
+        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24 rounded-full" />
           ))}
         </div>
       </section>
@@ -82,17 +82,17 @@ export function TrendingKeywords() {
 
   if (error) {
     return (
-      <section className="space-y-4" dir="rtl">
+      <section className="space-y-3" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-5 w-5 text-primary" />
+          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-muted-foreground">
-          الكلمات الأكثر تداولًا خلال الـ 7 أيام الماضية
+        <p className="text-sm text-muted-foreground">
+          خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
+        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
           <p className="text-sm text-muted-foreground">حدث خطأ أثناء تحميل الكلمات المتداولة</p>
         </div>
       </section>
@@ -101,21 +101,21 @@ export function TrendingKeywords() {
 
   if (!keywords || keywords.length === 0) {
     return (
-      <section className="space-y-4" dir="rtl">
+      <section className="space-y-3" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-5 w-5 text-primary" />
+          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-muted-foreground">
-          الكلمات الأكثر تداولًا خلال الـ 7 أيام الماضية
+        <p className="text-sm text-muted-foreground">
+          خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
-          <div className="flex flex-col items-center justify-center py-4 w-full">
-            <Search className="h-8 w-8 text-muted-foreground/50 mb-2" />
+        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+          <div className="flex flex-col items-center justify-center py-3 w-full">
+            <Search className="h-6 w-6 text-muted-foreground/50 mb-2" />
             <p className="text-sm text-muted-foreground">
-              لا توجد كلمات متداولة حاليًا — تابع آخر الأخبار لمعرفة ما يشغل القراء
+              لا توجد كلمات متداولة حاليًا
             </p>
           </div>
         </div>
@@ -124,21 +124,22 @@ export function TrendingKeywords() {
   }
 
   return (
-    <section className="space-y-4" dir="rtl">
+    <section className="space-y-3" dir="rtl">
       <div className="flex items-center gap-2">
-        <Hash className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl md:text-3xl font-bold" data-testid="heading-trending-keywords">
+        <Hash className="h-5 w-5 text-primary" />
+        <h2 className="text-xl md:text-2xl font-bold" data-testid="heading-trending-keywords">
           الكلمات الأكثر تداولًا
         </h2>
       </div>
       
-      <p className="text-muted-foreground">
-        الكلمات الأكثر تداولًا خلال الـ 7 أيام الماضية
+      <p className="text-sm text-muted-foreground">
+        خلال الـ 24 ساعة الماضية
       </p>
 
-      <div className="flex flex-wrap gap-3 p-4 sm:p-6 bg-card rounded-lg border shadow-sm">
+      <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border shadow-sm">
         {keywords
           .filter((item) => item.keyword && typeof item.keyword === 'string' && item.keyword.trim())
+          .slice(0, 8)
           .map((item) => {
             const styles = getCategoryStyles(item.category);
             
@@ -152,19 +153,19 @@ export function TrendingKeywords() {
               >
                 <motion.button
                   onClick={() => setLocation(`/keyword/${encodeURIComponent(item.keyword)}`)}
-                  className={`${styles.bg} border border-gray-200 dark:border-gray-700 hover-elevate active-elevate-2 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium`}
+                  className={`${styles.bg} border border-gray-200 dark:border-gray-700 hover-elevate active-elevate-2 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all duration-200 cursor-pointer text-sm font-medium`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   data-testid={`trending-keyword-${item.keyword}`}
                   aria-label={`الكلمة المفتاحية ${item.keyword} مع ${item.count} ${item.count === 1 ? 'مقال' : 'مقالات'}`}
                 >
-                  <span className={`${styles.text} font-semibold`}>#{item.keyword}</span>
-                  <span className={`${styles.badge} px-2 py-0.5 rounded-full text-xs font-semibold ${styles.text}`}>
+                  <span className={`${styles.text} font-semibold text-sm`}>#{item.keyword}</span>
+                  <span className={`${styles.badge} px-1.5 py-0.5 rounded-full text-xs font-semibold ${styles.text}`}>
                     {item.count}
                   </span>
                 </motion.button>
-                <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
+                <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" className="h-7 w-7" />
               </motion.div>
             );
           })}
