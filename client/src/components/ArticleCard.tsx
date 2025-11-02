@@ -62,7 +62,7 @@ export function ArticleCard({
   if (variant === "featured") {
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
-        <Card className="group overflow-hidden border border-border/60 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+        <Card className="group overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 !border-0 !bg-transparent">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             {article.imageUrl ? (
               <img
@@ -132,7 +132,7 @@ export function ArticleCard({
   if (variant === "compact") {
     return (
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
-        <Card className="group overflow-hidden border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300">
+        <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent">
           <CardContent className="p-3">
             <div className="flex items-start gap-2 mb-2">
               {article.category && (
@@ -179,7 +179,7 @@ export function ArticleCard({
 
   if (variant === "list") {
     return (
-      <Card className="group border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300">
+      <Card className="group rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent">
         <CardContent className="p-4">
           <div className="flex gap-4">
             <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
@@ -294,7 +294,7 @@ export function ArticleCard({
 
   // Grid variant (default) - Professional News Card
   return (
-    <Card className="group overflow-hidden border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 bg-white dark:bg-card" data-testid={`card-article-${article.id}`}>
+    <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent" data-testid={`card-article-${article.id}`}>
       <Link href={`/article/${article.slug}`}>
         <div className="relative aspect-[4/3] overflow-hidden">
           {article.imageUrl ? (
@@ -341,7 +341,7 @@ export function ArticleCard({
         </div>
       </Link>
 
-      <CardContent className="p-4 bg-white dark:bg-card">
+      <CardContent className="p-4">
         <Link href={`/article/${article.slug}`}>
           <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
             {article.title}
@@ -363,7 +363,7 @@ export function ArticleCard({
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className="flex items-center justify-between pt-3">
           <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-muted-foreground">
             {timeAgo && (
               <span className="flex items-center gap-1">
