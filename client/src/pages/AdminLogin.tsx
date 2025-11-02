@@ -95,7 +95,7 @@ export default function AdminLogin() {
       setIsVerifying2FA(true);
       await apiRequest("/api/2fa/verify", {
         method: "POST",
-        body: JSON.stringify({ code: twoFactorCode }),
+        body: JSON.stringify({ token: twoFactorCode }),
       });
 
       // Fetch user data to verify staff access
