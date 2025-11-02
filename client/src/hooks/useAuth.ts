@@ -21,6 +21,56 @@ export function hasRole(user: { role?: string; roles?: string[] } | null | undef
   return rolesToCheck.some(roleToCheck => userRoles.includes(roleToCheck));
 }
 
+// Check if user is staff (has any role beyond reader)
+export function isStaff(user: User | null | undefined): boolean {
+  return hasRole(user, 'super_admin', 'admin', 'editor', 'reporter', 'opinion_author', 'moderator', 'content_creator');
+}
+
+// Role hierarchy for redirection priority (higher index = higher priority)
+const ROLE_HIERARCHY = [
+  'reader',           // 0 - lowest priority
+  'content_creator',  // 1
+  'moderator',        // 2
+  'opinion_author',   // 3
+  'reporter',         // 4
+  'editor',           // 5
+  'admin',            // 6
+  'super_admin',      // 7 - highest priority
+];
+
+// Get the highest role based on hierarchy
+export function getHighestRole(user: User | null | undefined): string {
+  if (!user) return 'reader';
+  
+  const userRoles = user.roles || [user.role].filter(Boolean);
+  let highestRole = 'reader';
+  let highestPriority = -1;
+
+  for (const role of userRoles) {
+    if (!role) continue;
+    const priority = ROLE_HIERARCHY.indexOf(role);
+    if (priority > highestPriority) {
+      highestPriority = priority;
+      highestRole = role;
+    }
+  }
+
+  return highestRole;
+}
+
+// Get default redirect path based on user's highest role
+export function getDefaultRedirectPath(user: User | null | undefined): string {
+  if (!user) return '/';
+  
+  // Staff members go to dashboard
+  if (isStaff(user)) {
+    return '/dashboard';
+  }
+  
+  // Regular readers go to home
+  return '/';
+}
+
 export function useAuth(options?: { redirectToLogin?: boolean }) {
   const redirectToLogin = options?.redirectToLogin ?? false;
 

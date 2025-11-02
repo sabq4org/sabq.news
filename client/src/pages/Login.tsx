@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
 import { LogIn } from "lucide-react";
 
 const loginSchema = z.object({
@@ -49,13 +50,19 @@ export default function Login() {
         return;
       }
 
+      // Fetch user data to determine redirect path
+      const userData = await queryClient.fetchQuery<User>({
+        queryKey: ["/api/auth/user"],
+      });
+
       toast({
         title: "مرحباً بك!",
         description: "تم تسجيل الدخول بنجاح",
       });
 
-      // Redirect to home page for regular users
-      window.location.href = "/";
+      // Smart redirect based on user role
+      const redirectPath = getDefaultRedirectPath(userData);
+      window.location.href = redirectPath;
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",

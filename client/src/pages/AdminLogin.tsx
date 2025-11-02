@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
 import { Shield, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -53,9 +54,22 @@ export default function AdminLogin() {
         return;
       }
 
-      // Invalidate user query to fetch fresh data
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
+      // Fetch user data to verify staff access and determine redirect
+      const userData = await queryClient.fetchQuery<User>({
+        queryKey: ["/api/auth/user"],
+      });
+
+      // Verify user is staff
+      if (!isStaff(userData)) {
+        toast({
+          variant: "destructive",
+          title: "خطأ في الصلاحيات",
+          description: "هذه البوابة مخصصة للإدارة والصحفيين فقط",
+        });
+        window.location.href = "/";
+        return;
+      }
+
       toast({
         title: "مرحباً بك!",
         description: "تم تسجيل الدخول بنجاح",
@@ -84,9 +98,22 @@ export default function AdminLogin() {
         body: JSON.stringify({ code: twoFactorCode }),
       });
 
-      // Invalidate user query to fetch fresh data
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
+      // Fetch user data to verify staff access
+      const userData = await queryClient.fetchQuery<User>({
+        queryKey: ["/api/auth/user"],
+      });
+
+      // Verify user is staff
+      if (!isStaff(userData)) {
+        toast({
+          variant: "destructive",
+          title: "خطأ في الصلاحيات",
+          description: "هذه البوابة مخصصة للإدارة والصحفيين فقط",
+        });
+        window.location.href = "/";
+        return;
+      }
+
       toast({
         title: "مرحباً بك!",
         description: "تم التحقق بنجاح",

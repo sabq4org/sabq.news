@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth, hasRole } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import {
   FileText,
   Users,
@@ -131,7 +132,7 @@ function getRandomMotivationalQuote(): string {
   return MOTIVATIONAL_QUOTES[randomIndex];
 }
 
-export default function Dashboard() {
+function Dashboard() {
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   const { data: stats, isLoading } = useQuery<AdminDashboardStats>({
@@ -716,5 +717,14 @@ export default function Dashboard() {
         </Card>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Wrap with Protected Route for staff-only access
+export default function ProtectedDashboard() {
+  return (
+    <ProtectedRoute requireStaff={true}>
+      <Dashboard />
+    </ProtectedRoute>
   );
 }
