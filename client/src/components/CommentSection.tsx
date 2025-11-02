@@ -56,8 +56,11 @@ export function CommentSection({
     return 'م';
   };
 
-  const renderComment = (comment: CommentWithUser, isReply = false) => {
+  const renderComment = (comment: CommentWithUser, depth = 0) => {
     const repliesCount = comment.replies?.length || 0;
+    const isReply = depth > 0;
+    const maxDepth = 3; // Maximum nesting levels allowed
+    const canReply = depth < maxDepth;
     
     return (
       <div 
@@ -110,7 +113,7 @@ export function CommentSection({
               </p>
             </div>
 
-            {currentUser && !isReply && (
+            {currentUser && canReply && (
               <div className="flex items-center gap-2 mt-2">
                 <Button
                   variant="ghost"
@@ -163,7 +166,7 @@ export function CommentSection({
 
             {comment.replies && comment.replies.length > 0 && (
               <div className="mt-3">
-                {comment.replies.map((reply) => renderComment(reply, true))}
+                {comment.replies.map((reply) => renderComment(reply, depth + 1))}
               </div>
             )}
           </div>

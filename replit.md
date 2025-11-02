@@ -28,8 +28,9 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 
 ### Feature Specifications
 Key features include:
-- **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles (including opinion_author) and granular permissions.
+- **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles (including opinion_author) and granular permissions. Hybrid authentication with separate login pages (/login for readers, /admin/login for staff) powered by unified backend service with intelligent role-based redirection.
 - **Content Management:** Lifecycle management for articles, news, users, and categories, including comment moderation, an advanced article editor with AI-powered title/summary generation, SEO, and bulk operations.
+- **Comments & Engagement:** Nested comment system with reply functionality, visual distinction for replies (vertical accent line, "رد" badge, lighter background), reply counters, and real-time comment moderation workflow.
 - **Multi-Type Article System:** Support for multiple article types (news, opinion, analysis, column) with unified dashboard management, type-based badges for clear distinction, and dedicated author role (opinion_author) for opinion content. Public pages maintain separation with dedicated opinion listing (/opinion) and detail pages (/opinion/[slug]).
 - **Muqtarib (مُقترب) Section:** A thematic system for diverse article perspectives.
 - **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform with Sabq Index, Next Stories, Radar, and Algorithm Writes.
