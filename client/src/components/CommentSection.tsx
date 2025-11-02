@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Send } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MessageCircle, Send, CornerDownLeft } from "lucide-react";
 import type { CommentWithUser } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -55,98 +56,121 @@ export function CommentSection({
     return 'م';
   };
 
-  const renderComment = (comment: CommentWithUser, isReply = false) => (
-    <div 
-      key={comment.id} 
-      className={`${isReply ? 'mr-8 mt-3' : 'mb-4'}`}
-      data-testid={`comment-${comment.id}`}
-    >
-      <div className="flex gap-3">
-        <Avatar className="h-10 w-10 flex-shrink-0">
-          <AvatarImage 
-            src={comment.user.profileImageUrl || ""} 
-            alt={`${comment.user.firstName || ""} ${comment.user.lastName || ""}`.trim() || comment.user.email || ""}
-            className="object-cover"
-          />
-          <AvatarFallback className="bg-primary/10 text-primary text-sm">
-            {getInitials(comment.user.firstName, comment.user.lastName, comment.user.email)}
-          </AvatarFallback>
-        </Avatar>
+  const renderComment = (comment: CommentWithUser, isReply = false) => {
+    const repliesCount = comment.replies?.length || 0;
+    
+    return (
+      <div 
+        key={comment.id} 
+        className={`${isReply ? 'mr-8 mt-3 relative' : 'mb-4'}`}
+        data-testid={`comment-${comment.id}`}
+      >
+        {isReply && (
+          <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-primary/20" />
+        )}
+        <div className="flex gap-3">
+          <Avatar className={`${isReply ? 'h-8 w-8' : 'h-10 w-10'} flex-shrink-0`}>
+            <AvatarImage 
+              src={comment.user.profileImageUrl || ""} 
+              alt={`${comment.user.firstName || ""} ${comment.user.lastName || ""}`.trim() || comment.user.email || ""}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+              {getInitials(comment.user.firstName, comment.user.lastName, comment.user.email)}
+            </AvatarFallback>
+          </Avatar>
 
-        <div className="flex-1 min-w-0">
-          <div className="bg-muted rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
-                {comment.user.firstName && comment.user.lastName
-                  ? `${comment.user.firstName} ${comment.user.lastName}`
-                  : comment.user.email}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(comment.createdAt), {
-                  addSuffix: true,
-                  locale: arSA,
-                })}
-              </span>
+          <div className="flex-1 min-w-0">
+            <div className={`${isReply ? 'bg-muted/50' : 'bg-muted'} rounded-lg p-4 relative`}>
+              {isReply && (
+                <Badge 
+                  variant="secondary" 
+                  className="absolute top-2 left-2 text-xs gap-1"
+                  data-testid={`badge-reply-${comment.id}`}
+                >
+                  <CornerDownLeft className="h-3 w-3" />
+                  رد
+                </Badge>
+              )}
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`font-medium ${isReply ? 'text-xs' : 'text-sm'}`} data-testid={`text-comment-author-${comment.id}`}>
+                  {comment.user.firstName && comment.user.lastName
+                    ? `${comment.user.firstName} ${comment.user.lastName}`
+                    : comment.user.email}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(comment.createdAt), {
+                    addSuffix: true,
+                    locale: arSA,
+                  })}
+                </span>
+              </div>
+              <p className={`${isReply ? 'text-xs' : 'text-sm'} leading-relaxed whitespace-pre-wrap`} data-testid={`text-comment-content-${comment.id}`}>
+                {comment.content}
+              </p>
             </div>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap" data-testid={`text-comment-content-${comment.id}`}>
-              {comment.content}
-            </p>
-          </div>
 
-          {currentUser && !isReply && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 text-xs hover-elevate"
-              onClick={() => setReplyingTo(comment.id)}
-              data-testid={`button-reply-${comment.id}`}
-            >
-              رد
-            </Button>
-          )}
-
-          {replyingTo === comment.id && (
-            <div className="mt-3 flex gap-2">
-              <Textarea
-                placeholder="اكتب ردك..."
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                className="min-h-[80px]"
-                data-testid={`textarea-reply-${comment.id}`}
-              />
-              <div className="flex flex-col gap-2">
+            {currentUser && !isReply && (
+              <div className="flex items-center gap-2 mt-2">
                 <Button
-                  size="sm"
-                  onClick={() => handleReply(comment.id)}
-                  disabled={!replyContent.trim()}
-                  data-testid={`button-submit-reply-${comment.id}`}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
                   variant="ghost"
-                  onClick={() => {
-                    setReplyingTo(null);
-                    setReplyContent("");
-                  }}
-                  data-testid={`button-cancel-reply-${comment.id}`}
+                  size="sm"
+                  className="text-xs hover-elevate gap-1"
+                  onClick={() => setReplyingTo(comment.id)}
+                  data-testid={`button-reply-${comment.id}`}
                 >
-                  إلغاء
+                  <MessageCircle className="h-3 w-3" />
+                  رد
+                  {repliesCount > 0 && (
+                    <span className="text-muted-foreground">({repliesCount.toLocaleString('en-US')})</span>
+                  )}
                 </Button>
               </div>
-            </div>
-          )}
+            )}
 
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-3">
-              {comment.replies.map((reply) => renderComment(reply, true))}
-            </div>
-          )}
+            {replyingTo === comment.id && (
+              <div className="mt-3 flex gap-2">
+                <Textarea
+                  placeholder="اكتب ردك..."
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  className="min-h-[80px]"
+                  data-testid={`textarea-reply-${comment.id}`}
+                />
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleReply(comment.id)}
+                    disabled={!replyContent.trim()}
+                    data-testid={`button-submit-reply-${comment.id}`}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setReplyContent("");
+                    }}
+                    data-testid={`button-cancel-reply-${comment.id}`}
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="mt-3">
+                {comment.replies.map((reply) => renderComment(reply, true))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Card id="comments">
