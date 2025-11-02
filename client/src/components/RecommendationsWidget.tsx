@@ -45,11 +45,10 @@ export function RecommendationsWidget({
 
             return (
               <Link key={article.id} href={`/article/${article.slug}`}>
-                <a 
-                  className="block group"
+                <div 
+                  className="block group p-4 hover-elevate active-elevate-2 transition-all"
                   data-testid={`link-recommendation-${article.id}`}
                 >
-                  <div className="p-4 hover-elevate active-elevate-2 transition-all">
                     <div className="flex gap-3">
                       {/* Image */}
                       <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
@@ -118,8 +117,7 @@ export function RecommendationsWidget({
                         </div>
                       </div>
                     </div>
-                  </div>
-                </a>
+                </div>
               </Link>
             );
           })}

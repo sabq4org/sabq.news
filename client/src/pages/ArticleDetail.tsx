@@ -11,6 +11,9 @@ import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
 import { ExportPdfButton } from "@/components/ExportPdfButton";
 import { ArticlePdfView } from "@/components/ArticlePdfView";
+import { TableOfContents } from "@/components/TableOfContents";
+import { ArticleMetaSidebar } from "@/components/ArticleMetaSidebar";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -25,7 +28,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import {
   Heart,
   Bookmark,
-  Share2,
+  Hash,
   Clock,
   Sparkles,
   ChevronRight,
@@ -38,7 +41,7 @@ import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import DOMPurify from "isomorphic-dompurify";
 
 export default function ArticleDetail() {
@@ -46,6 +49,7 @@ export default function ArticleDetail() {
   const { toast } = useToast();
   const { logBehavior } = useBehaviorTracking();
   const [, setLocation] = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
   
   // Text-to-speech hook
   const { speak, cancel, isSpeaking, isSupported } = useTextToSpeech({
@@ -69,6 +73,26 @@ export default function ArticleDetail() {
   const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles", slug, "related"],
   });
+
+  // Calculate word count and reading time
+  const { wordCount, readingTime } = useMemo(() => {
+    if (!article?.content) return { wordCount: 0, readingTime: 0 };
+    
+    // Remove HTML tags and extract text
+    const textContent = article.content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // Count words (split by whitespace)
+    const words = textContent.split(/\s+/).filter(word => word.length > 0);
+    const count = words.length;
+    
+    // Calculate reading time (200 words per minute)
+    const time = Math.ceil(count / 200);
+    
+    return { wordCount: count, readingTime: time };
+  }, [article?.content]);
 
   const { logArticleView } = useArticleReadTracking({
     articleId: article?.id || "",
@@ -243,20 +267,6 @@ export default function ArticleDetail() {
 
   const handleBookmark = async () => {
     bookmarkMutation.mutate();
-  };
-
-  const handleShare = async () => {
-    if (navigator.share && article) {
-      try {
-        await navigator.share({
-          title: article.title,
-          text: article.excerpt || "",
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log("Share failed:", err);
-      }
-    }
   };
 
   const handleComment = async (content: string, parentId?: string) => {
@@ -515,7 +525,7 @@ export default function ArticleDetail() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Heart className="h-4 w-4" />
-                    {article.reactionsCount || 0}
+                    {(article.reactionsCount || 0).toLocaleString('en-US')}
                   </span>
                 </div>
               </div>
@@ -579,16 +589,20 @@ export default function ArticleDetail() {
             {/* Keywords */}
             {article.seo?.keywords && article.seo.keywords.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground">الكلمات المفتاحية</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  الكلمات المفتاحية
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {article.seo.keywords.map((keyword, index) => (
                     <Badge 
                       key={index}
                       variant="secondary"
-                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300 hover:scale-105"
+                      className="cursor-pointer hover-elevate active-elevate-2 gap-1"
                       onClick={() => setLocation(`/keyword/${encodeURIComponent(keyword)}`)}
                       data-testid={`badge-keyword-${index}`}
                     >
+                      <Hash className="h-3 w-3" />
                       {keyword}
                     </Badge>
                   ))}
@@ -598,6 +612,7 @@ export default function ArticleDetail() {
 
             {/* Article Content */}
             <div 
+              ref={contentRef}
               className="prose prose-lg dark:prose-invert max-w-none leading-loose"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
               data-testid="content-article-body"
@@ -614,7 +629,7 @@ export default function ArticleDetail() {
                 data-testid="button-article-react"
               >
                 <Heart className={article.hasReacted ? 'fill-current' : ''} />
-                إعجاب ({article.reactionsCount || 0})
+                إعجاب ({(article.reactionsCount || 0).toLocaleString('en-US')})
               </Button>
 
               <Button
@@ -627,15 +642,13 @@ export default function ArticleDetail() {
                 حفظ
               </Button>
 
-              <Button
+              <SocialShareButtons
+                title={article.title}
+                description={article.excerpt || article.aiSummary || ''}
+                url={window.location.href}
                 variant="outline"
-                className="gap-2 hover-elevate"
-                onClick={handleShare}
-                data-testid="button-article-share"
-              >
-                <Share2 />
-                مشاركة
-              </Button>
+                size="default"
+              />
 
               <ExportPdfButton
                 articleSlug={article.slug}
@@ -674,7 +687,17 @@ export default function ArticleDetail() {
           </article>
 
           {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:sticky lg:top-24">
+            {/* Article Meta Sidebar */}
+            <ArticleMetaSidebar 
+              article={article} 
+              wordCount={wordCount}
+              readingTime={readingTime}
+            />
+
+            {/* Table of Contents */}
+            <TableOfContents contentRef={contentRef} />
+
             {/* Credibility Indicator */}
             {article.credibilityScore && article.credibilityAnalysis && article.credibilityLastUpdated ? (
               <CredibilityIndicator
