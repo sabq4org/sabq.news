@@ -129,21 +129,11 @@ export default function OpinionPage() {
                         className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden flex flex-col"
                         data-testid={`card-opinion-${article.id}`}
                       >
-                        {article.imageUrl && (
-                          <div className="relative h-48 overflow-hidden">
-                            <img
-                              src={article.imageUrl}
-                              alt={article.title}
-                              className="w-full h-full object-cover"
-                              style={{
-                                objectPosition: (article as any).imageFocalPoint
-                                  ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                  : 'center'
-                              }}
-                            />
+                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge 
                               variant="default" 
-                              className="absolute top-3 right-3 shadow-md bg-primary/90"
+                              className="shadow-sm"
                               data-testid={`badge-opinion-type-${article.id}`}
                             >
                               <BookOpen className="h-3 w-3 ml-1" />
@@ -152,16 +142,14 @@ export default function OpinionPage() {
                             {article.category && (
                               <Badge 
                                 variant="secondary" 
-                                className="absolute top-3 left-3 shadow-md"
+                                className="shadow-sm"
                                 data-testid={`badge-category-${article.id}`}
                               >
                                 {article.category.icon} {article.category.nameAr}
                               </Badge>
                             )}
                           </div>
-                        )}
-                        
-                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col">
+                          
                           <div className="flex items-center gap-3">
                             {article.author?.profileImageUrl ? (
                               <img 

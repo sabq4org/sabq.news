@@ -295,42 +295,23 @@ export function ArticleCard({
   // Grid variant (default) - Professional News Card
   return (
     <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent" data-testid={`card-article-${article.id}`}>
-      <Link href={`/article/${article.slug}`}>
-        <div className="relative aspect-[4/3] overflow-hidden">
-          {article.imageUrl ? (
-            <img
-              src={article.imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-103"
-              style={{ objectPosition: getObjectPosition() }}
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
-          )}
-          
-          {/* Category Badge with Overlay */}
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           {article.category && (
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
-              <Badge 
-                className="bg-primary backdrop-blur-sm text-white border-0 text-xs shadow-lg"
-                data-testid={`badge-category-${article.id}`}
-              >
-                {article.category.icon} {article.category.nameAr}
-              </Badge>
-            </div>
+            <Badge 
+              className="text-xs"
+              data-testid={`badge-category-${article.id}`}
+            >
+              {article.category.icon} {article.category.nameAr}
+            </Badge>
           )}
-          
-          {/* AI Smart Indicator */}
           {aiInsight && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 gap-1.5 shadow-lg hover:bg-white/20 transition-colors">
-                      <aiInsight.icon className="h-3.5 w-3.5" />
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className="text-xs gap-1 border-primary/20" data-testid={`badge-ai-${article.id}`}>
+                    <aiInsight.icon className="h-3 w-3 text-primary" />
+                  </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-sm">{aiInsight.text}</p>
@@ -339,9 +320,7 @@ export function ArticleCard({
             </TooltipProvider>
           )}
         </div>
-      </Link>
 
-      <CardContent className="p-4">
         <Link href={`/article/${article.slug}`}>
           <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
             {article.title}
