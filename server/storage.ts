@@ -1981,10 +1981,36 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions))
       .orderBy(comments.createdAt);
 
-    return results.map((r) => ({
+    const allComments = results.map((r) => ({
       ...r.comment,
       user: r.user!,
+      replies: [] as CommentWithUser[],
     }));
+
+    // Build nested structure: organize replies under parent comments
+    const commentMap = new Map<string, CommentWithUser>();
+    const topLevelComments: CommentWithUser[] = [];
+
+    // First pass: create a map of all comments
+    allComments.forEach(comment => {
+      commentMap.set(comment.id, comment);
+    });
+
+    // Second pass: organize into parent-child relationships
+    allComments.forEach(comment => {
+      if (comment.parentId) {
+        // This is a reply
+        const parent = commentMap.get(comment.parentId);
+        if (parent) {
+          parent.replies!.push(comment);
+        }
+      } else {
+        // This is a top-level comment
+        topLevelComments.push(comment);
+      }
+    });
+
+    return topLevelComments;
   }
 
   async createComment(comment: InsertComment): Promise<Comment> {
