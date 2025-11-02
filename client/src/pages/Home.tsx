@@ -283,11 +283,11 @@ export default function Home() {
           <div className="scroll-fade-in">
             <OpinionArticlesBlock />
           </div>
+        </div>
 
-          {/* Quad Categories Block */}
-          <div className="scroll-fade-in">
-            <QuadCategoriesBlock />
-          </div>
+        {/* Quad Categories Block - Full Width */}
+        <div className="scroll-fade-in">
+          <QuadCategoriesBlock />
         </div>
 
         {/* Visual Separator */}

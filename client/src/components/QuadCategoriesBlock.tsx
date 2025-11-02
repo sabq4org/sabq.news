@@ -317,10 +317,10 @@ export function QuadCategoriesBlock() {
   return (
     <div 
       data-testid="quad-categories-block"
-      className="relative -mx-4 sm:-mx-6 lg:-mx-8"
+      className="w-full"
       style={data.backgroundColor ? { backgroundColor: data.backgroundColor } : undefined}
     >
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-6">
           {/* Mobile View: Carousel */}
           {data.mobileCarousel && (
