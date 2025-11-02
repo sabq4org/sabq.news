@@ -525,11 +525,11 @@ export default function ArticleDetail() {
 
             {/* Featured Image */}
             {article.imageUrl && (
-              <div className="relative overflow-hidden rounded-lg">
+              <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-muted">
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-full max-h-[600px] object-contain bg-muted"
+                  className="w-full h-full object-cover"
                   data-testid="img-article-featured"
                 />
               </div>
