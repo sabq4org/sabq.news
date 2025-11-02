@@ -92,7 +92,7 @@ export function OpinionArticlesBlock() {
 
             return (
               <Link key={article.id} href={`/opinion/${article.slug}`}>
-                <Card className="h-full hover-elevate active-elevate-2 overflow-hidden" data-testid={`opinion-card-${article.id}`}>
+                <Card className="h-full hover-elevate active-elevate-2 overflow-hidden !border-0 !bg-transparent" data-testid={`opinion-card-${article.id}`}>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="default" className="gap-1">

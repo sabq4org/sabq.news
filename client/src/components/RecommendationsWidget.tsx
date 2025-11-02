@@ -21,7 +21,7 @@ export function RecommendationsWidget({
   if (articles.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden !border-0 !bg-transparent">
       <CardHeader className="bg-gradient-to-br from-primary/5 to-accent/5 border-b space-y-2 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="p-2 rounded-lg bg-primary/10">

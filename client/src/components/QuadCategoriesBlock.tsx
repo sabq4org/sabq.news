@@ -178,7 +178,7 @@ function CategoryColumn({ data, index }: { data: CategoryColumnData; index: numb
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-card border border-border rounded-xl p-4"
+      className="rounded-xl p-4 shadow-sm"
       data-testid={`category-column-${data.category.slug}`}
     >
       <ColumnHeader 

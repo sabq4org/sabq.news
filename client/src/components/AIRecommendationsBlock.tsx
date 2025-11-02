@@ -52,7 +52,7 @@ export function AIRecommendationsBlock({ articleSlug }: AIRecommendationsBlockPr
 
   if (isLoading) {
     return (
-      <Card className="overflow-hidden border-2 border-primary/20">
+      <Card className="overflow-hidden !border-0 !bg-transparent shadow-lg">
         <CardHeader className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 pb-4">
           <div className="flex items-center justify-between">
             <Skeleton className="h-6 w-48" />
@@ -84,7 +84,7 @@ export function AIRecommendationsBlock({ articleSlug }: AIRecommendationsBlockPr
 
   return (
     <Card 
-      className="overflow-hidden border-2 border-primary/20 shadow-lg hover:shadow-xl transition-shadow duration-300" 
+      className="overflow-hidden !border-0 !bg-transparent shadow-lg hover:shadow-xl transition-shadow duration-300" 
       data-testid="card-ai-recommendations"
     >
       {/* Header with gradient background */}

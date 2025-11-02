@@ -99,7 +99,7 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
 function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
     <>
-      <Card className="overflow-hidden lg:hidden" data-testid={`smart-block-mobile-card-${blockId}`}>
+      <Card className="overflow-hidden lg:hidden !border-0 !bg-transparent" data-testid={`smart-block-mobile-card-${blockId}`}>
         <CardContent className="p-0">
           <div className="divide-y">
             {articles.map((article) => {
@@ -182,7 +182,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
           return (
             <Link key={article.id} href={`/article/${article.slug}`}>
               <Card 
-                className="cursor-pointer h-full overflow-hidden border border-card-border hover-elevate active-elevate-2"
+                className="cursor-pointer h-full overflow-hidden !border-0 !bg-transparent hover-elevate active-elevate-2"
                 data-testid={`card-smart-article-${article.id}`}
               >
                 {article.imageUrl && (
@@ -249,7 +249,7 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
         return (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="cursor-pointer overflow-hidden hover-elevate active-elevate-2"
+              className="cursor-pointer overflow-hidden hover-elevate active-elevate-2 !border-0 !bg-transparent"
               data-testid={`card-smart-article-list-${article.id}`}
             >
               <CardContent className="p-0">
@@ -316,7 +316,7 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-2" data-testid={`smart-block-featured-${blockId}`}>
       <Link href={`/article/${featured.slug}`} className="lg:col-span-3">
         <Card 
-          className="group cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative border-0"
+          className="group cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative !border-0 !bg-transparent"
           data-testid={`card-smart-article-featured-main-${featured.id}`}
         >
           <div className="relative h-80 md:h-96 overflow-hidden bg-muted">
@@ -376,7 +376,7 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
           {sideArticles.map((article) => (
             <Link key={article.id} href={`/article/${article.slug}`} className="col-span-2 lg:col-span-1">
               <Card 
-                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0 h-full"
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative !border-0 !bg-transparent h-full"
                 data-testid={`card-smart-article-featured-${article.id}`}
               >
                 <div className="relative h-full overflow-hidden bg-muted">
