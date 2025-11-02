@@ -526,10 +526,22 @@ export default function ArticleDetail() {
             {/* Featured Image */}
             {article.imageUrl && (
               <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-muted">
+                {/* Blurred background image */}
+                <div 
+                  className="absolute inset-0 w-full h-full"
+                  style={{
+                    backgroundImage: `url(${article.imageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(40px)',
+                    transform: 'scale(1.1)',
+                  }}
+                />
+                {/* Main image */}
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-full h-full object-cover"
+                  className="relative w-full h-full object-contain z-10"
                   data-testid="img-article-featured"
                 />
               </div>
