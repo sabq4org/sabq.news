@@ -165,7 +165,7 @@ export function TrendingKeywords() {
                     {item.count}
                   </span>
                 </motion.button>
-                <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" className="h-7 w-7" />
+                <FollowKeywordButton keyword={item.keyword} variant="ghost" size="icon" />
               </motion.div>
             );
           })}
