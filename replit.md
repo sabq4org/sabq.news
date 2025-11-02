@@ -41,7 +41,7 @@ Key features include:
 - **Reporter Profile System:** Dedicated pages for staff and reporters.
 - **Audio Newsletters (النشرات الصوتية) & Quick Audio News Briefs:** AI-powered text-to-speech news briefing systems with ElevenLabs integration.
 - **Sabq Shorts (سبق قصير) - Vertical Video Reels System:** A full-featured short-form video news platform with vertical swipe navigation, HLS streaming, interactive engagement, analytics, and admin dashboard.
-- **Quad Categories Block:** Customizable homepage block displaying 4 category columns with configurable content and admin interface.
+- **Quad Categories Block:** Customizable homepage block displaying 4 category columns with configurable content, admin interface, and optional full-width background color.
 - **Smart Categories System:** Intelligent categorization with Core, Dynamic/AI, and Seasonal types, featuring automated article assignment via background jobs, relevance scoring, and intelligent selection algorithms for categories like "الآن".
 - **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including comprehensive article metadata, Schema.org JSON-LD structured data, developer documentation, and OpenAPI 3.0 specification.
 

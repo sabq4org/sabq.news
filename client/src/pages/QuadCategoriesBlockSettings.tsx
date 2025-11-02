@@ -34,6 +34,7 @@ const formSchema = z.object({
       breaking: z.boolean(),
       analysis: z.boolean(),
     }),
+    backgroundColor: z.string().optional(),
   }),
 });
 
@@ -69,6 +70,7 @@ export default function QuadCategoriesBlockSettings() {
           breaking: true,
           analysis: true,
         },
+        backgroundColor: undefined,
       },
     },
   });
@@ -396,6 +398,53 @@ export default function QuadCategoriesBlockSettings() {
                     )}
                   />
                 </div>
+
+                <Separator />
+
+                {/* Background Color */}
+                <FormField
+                  control={form.control}
+                  name="config.backgroundColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>لون خلفية البلوك (اختياري)</FormLabel>
+                      <div className="flex gap-3 items-center">
+                        <FormControl>
+                          <Input 
+                            type="color"
+                            {...field}
+                            value={field.value || "#ffffff"}
+                            className="w-20 h-10 cursor-pointer"
+                            data-testid="background-color-picker"
+                          />
+                        </FormControl>
+                        <Input 
+                          type="text"
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder="#ffffff"
+                          className="flex-1"
+                          data-testid="background-color-input"
+                        />
+                        {field.value && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => field.onChange(undefined)}
+                            data-testid="clear-background-color"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <FormDescription>
+                        اختر لون خلفية للبلوك. الخلفية ستمتد على كامل عرض الصفحة. اترك فارغاً لاستخدام الخلفية الافتراضية.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 

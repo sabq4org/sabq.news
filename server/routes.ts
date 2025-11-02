@@ -13312,6 +13312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         items,
         mobileCarousel: config.mobileCarousel,
+        backgroundColor: config.backgroundColor,
       });
     } catch (error) {
       console.error("Error fetching quad categories block:", error);
@@ -13369,6 +13370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               breaking: true,
               analysis: true,
             },
+            backgroundColor: undefined,
           },
           isActive: true,
         });

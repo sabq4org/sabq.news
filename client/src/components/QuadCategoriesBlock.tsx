@@ -52,6 +52,7 @@ interface CategoryColumnData {
 interface QuadCategoriesData {
   items: CategoryColumnData[];
   mobileCarousel: boolean;
+  backgroundColor?: string;
 }
 
 // Featured Card Component
@@ -314,36 +315,42 @@ export function QuadCategoriesBlock() {
   }
 
   return (
-    <div data-testid="quad-categories-block">
-      <div className="space-y-6">
-        {/* Mobile View: Carousel */}
-        {data.mobileCarousel && (
-          <div className="lg:hidden">
-            <HorizontalCarousel items={data.items} />
-          </div>
-        )}
+    <div 
+      data-testid="quad-categories-block"
+      className="relative -mx-4 sm:-mx-6 lg:-mx-8"
+      style={data.backgroundColor ? { backgroundColor: data.backgroundColor } : undefined}
+    >
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Mobile View: Carousel */}
+          {data.mobileCarousel && (
+            <div className="lg:hidden">
+              <HorizontalCarousel items={data.items} />
+            </div>
+          )}
 
-        {/* Mobile View: Grid (if carousel disabled) */}
-        {!data.mobileCarousel && (
-          <div className="lg:hidden grid grid-cols-1 gap-4">
+          {/* Mobile View: Grid (if carousel disabled) */}
+          {!data.mobileCarousel && (
+            <div className="lg:hidden grid grid-cols-1 gap-4">
+              {data.items.map((item, index) => (
+                <CategoryColumn key={item.category.slug} data={item} index={index} />
+              ))}
+            </div>
+          )}
+
+          {/* Tablet View: 2 columns */}
+          <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">
             {data.items.map((item, index) => (
               <CategoryColumn key={item.category.slug} data={item} index={index} />
             ))}
           </div>
-        )}
 
-        {/* Tablet View: 2 columns */}
-        <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">
-          {data.items.map((item, index) => (
-            <CategoryColumn key={item.category.slug} data={item} index={index} />
-          ))}
-        </div>
-
-        {/* Desktop View: 4 columns */}
-        <div className="hidden xl:grid grid-cols-4 gap-4">
-          {data.items.map((item, index) => (
-            <CategoryColumn key={item.category.slug} data={item} index={index} />
-          ))}
+          {/* Desktop View: 4 columns */}
+          <div className="hidden xl:grid grid-cols-4 gap-4">
+            {data.items.map((item, index) => (
+              <CategoryColumn key={item.category.slug} data={item} index={index} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -2909,6 +2909,7 @@ export const quadCategoriesSettings = pgTable("quad_categories_settings", {
       breaking: boolean;
       analysis: boolean;
     };
+    backgroundColor?: string;
   }>().notNull(),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -2937,6 +2938,7 @@ export const insertQuadCategoriesSettingsSchema = createInsertSchema(quadCategor
       breaking: z.boolean(),
       analysis: z.boolean(),
     }),
+    backgroundColor: z.string().optional(),
   }),
 });
 
