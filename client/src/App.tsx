@@ -99,6 +99,7 @@ import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
 import OpinionManagement from "@/pages/dashboard/OpinionManagement";
 import Chat from "@/pages/dashboard/Chat";
 import ChatAdmin from "@/pages/dashboard/ChatAdmin";
+import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -128,6 +129,7 @@ function Router() {
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/shorts" component={ShortsPage} />
       <Route path="/login" component={Login} />
+      <Route path="/admin/login" component={AdminLogin} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />

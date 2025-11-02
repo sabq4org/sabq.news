@@ -41,18 +41,21 @@ export default function Login() {
       
       // Check if 2FA is required
       if (response.requires2FA) {
-        // Redirect to 2FA verification page
-        navigate("/2fa-verify");
+        toast({
+          title: "التحقق بخطوتين مطلوب",
+          description: "يرجى استخدام صفحة تسجيل دخول الإدارة",
+        });
+        navigate("/admin/login");
         return;
       }
 
       toast({
-        title: "نجح تسجيل الدخول",
-        description: "مرحباً بك في سبق الذكية",
+        title: "مرحباً بك!",
+        description: "تم تسجيل الدخول بنجاح",
       });
 
-      // Force full page reload to ensure session cookie is properly set
-      window.location.href = "/dashboard";
+      // Redirect to home page for regular users
+      window.location.href = "/";
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",
@@ -65,17 +68,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4" dir="rtl">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-              <LogIn className="w-8 h-8 text-primary-foreground" />
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <LogIn className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">تسجيل الدخول</CardTitle>
-          <CardDescription>
-            سجّل دخولك للوصول إلى لوحة التحكم
+          <CardTitle className="text-3xl font-bold">سبق الذكية</CardTitle>
+          <CardDescription className="text-right">
+            سجل الدخول للوصول إلى حسابك
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -152,6 +155,18 @@ export default function Login() {
                   data-testid="link-register"
                 >
                   إنشاء حساب جديد
+                </button>
+              </div>
+
+              <div className="text-center pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2">هل أنت من الإدارة أو الصحفيين؟</p>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/login")}
+                  className="text-sm text-primary hover:underline font-medium"
+                  data-testid="link-admin-login"
+                >
+                  تسجيل دخول الإدارة
                 </button>
               </div>
             </form>
