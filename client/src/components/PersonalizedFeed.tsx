@@ -30,7 +30,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
       </p>
 
       {/* Mobile View: Vertical List (like RecommendationsWidget) */}
-      <Card className="overflow-hidden lg:hidden !border-0 !bg-transparent">
+      <Card className="overflow-hidden lg:hidden">
         <CardContent className="p-0">
           <div className="divide-y">
             {articles.map((article, index) => {
@@ -147,7 +147,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className={`cursor-pointer h-full overflow-hidden !border-0 !bg-transparent ${
+              className={`cursor-pointer h-full overflow-hidden border border-card-border ${
                 article.newsType === "breaking" ? "bg-destructive/5" : ""
               }`}
               data-testid={`card-article-${article.id}`}
