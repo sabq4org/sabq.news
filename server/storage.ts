@@ -7564,9 +7564,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCalendarEvent(id: string, updates: UpdateCalendarEvent): Promise<CalendarEvent> {
+    // تحويل التواريخ من strings إلى Date objects
+    const processedUpdates: any = { ...updates };
+    
+    if (processedUpdates.dateStart && typeof processedUpdates.dateStart === 'string') {
+      processedUpdates.dateStart = new Date(processedUpdates.dateStart);
+    }
+    
+    if (processedUpdates.dateEnd && typeof processedUpdates.dateEnd === 'string') {
+      processedUpdates.dateEnd = new Date(processedUpdates.dateEnd);
+    }
+    
     const [updated] = await db
       .update(calendarEvents)
-      .set({ ...updates, updatedAt: new Date() } as any)
+      .set({ ...processedUpdates, updatedAt: new Date() } as any)
       .where(eq(calendarEvents.id, id))
       .returning();
 
