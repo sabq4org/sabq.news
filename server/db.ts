@@ -21,11 +21,13 @@ try {
 
   console.log("🔗 Initializing database connection...");
   
+  // Optimized connection pool settings for high performance
   pool = new Pool({ 
     connectionString: process.env.DATABASE_URL,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    max: 20, // Increased from 10 for better concurrency
+    idleTimeoutMillis: 20000, // 20s - release idle connections faster
+    connectionTimeoutMillis: 10000, // 10s timeout for new connections
+    allowExitOnIdle: false, // Keep pool alive
   });
   
   db = drizzle({ client: pool, schema });
