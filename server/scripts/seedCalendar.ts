@@ -17,8 +17,7 @@ export interface SeedEvent {
   tags: string[];
   reminders?: Array<{
     fireWhen: number;
-    channels: string[];
-    message: string;
+    channel: string;
   }>;
 }
 
@@ -91,8 +90,8 @@ const globalEvents: Omit<SeedEvent, 'type'>[] = [
 
 // المناسبات الوطنية السعودية - Saudi National Events
 const saudiNationalEvents: Omit<SeedEvent, 'type'>[] = [
-  { title: "اليوم الوطني السعودي", description: "ذكرى توحيد المملكة العربية السعودية على يد الملك عبدالعزيز", dateStart: getDateForYear(9, 23), importance: 5, tags: ["سعودية", "وطني", "احتفال"], reminders: [{ fireWhen: 7, channels: ["IN_APP", "EMAIL"], message: "اقتراب اليوم الوطني السعودي" }] },
-  { title: "يوم التأسيس السعودي", description: "ذكرى تأسيس الدولة السعودية الأولى على يد الإمام محمد بن سعود", dateStart: getDateForYear(2, 22), importance: 5, tags: ["سعودية", "تأسيس", "تاريخ"], reminders: [{ fireWhen: 7, channels: ["IN_APP", "EMAIL"], message: "اقتراب يوم التأسيس السعودي" }] },
+  { title: "اليوم الوطني السعودي", description: "ذكرى توحيد المملكة العربية السعودية على يد الملك عبدالعزيز", dateStart: getDateForYear(9, 23), importance: 5, tags: ["سعودية", "وطني", "احتفال"], reminders: [{ fireWhen: 7, channel: "IN_APP" }, { fireWhen: 7, channel: "EMAIL" }] },
+  { title: "يوم التأسيس السعودي", description: "ذكرى تأسيس الدولة السعودية الأولى على يد الإمام محمد بن سعود", dateStart: getDateForYear(2, 22), importance: 5, tags: ["سعودية", "تأسيس", "تاريخ"], reminders: [{ fireWhen: 7, channel: "IN_APP" }, { fireWhen: 7, channel: "EMAIL" }] },
   { title: "يوم العلم السعودي", description: "احتفال بالعلم الوطني السعودي", dateStart: getDateForYear(3, 11), importance: 4, tags: ["سعودية", "علم", "رمز_وطني"] },
   { title: "يوم الوطن العربي السعودي", description: "احتفال بدور السعودية في العالم العربي", dateStart: getDateForYear(9, 23), importance: 4, tags: ["سعودية", "عربي"] },
   { title: "يوم بيعة الملك سلمان", description: "ذكرى بيعة خادم الحرمين الشريفين الملك سلمان بن عبدالعزيز", dateStart: getDateForYear(4, 3), importance: 5, tags: ["سعودية", "ملك", "بيعة"] },
@@ -224,10 +223,8 @@ export async function seedCalendarEvents() {
             id: randomUUID(),
             eventId: insertedEvent.id,
             fireWhen: reminder.fireWhen,
-            channels: reminder.channels,
-            message: reminder.message,
+            channel: reminder.channel,
             enabled: true,
-            createdAt: new Date(),
           });
           reminderCount++;
         }
@@ -254,3 +251,14 @@ export async function seedCalendarEvents() {
     events: allEvents.length
   };
 }
+
+// تشغيل السكريبت
+seedCalendarEvents()
+  .then((result) => {
+    console.log(`\n✨ تم الانتهاء بنجاح! إجمالي ${result.total} حدث من أصل ${result.events}`);
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("❌ خطأ في تعبئة التقويم:", error);
+    process.exit(1);
+  });
