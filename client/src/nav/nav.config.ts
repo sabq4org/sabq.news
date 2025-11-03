@@ -38,6 +38,7 @@ import {
   Megaphone,
   BookOpen,
   Calendar,
+  Link,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -94,6 +95,14 @@ export const navConfig: NavItem[] = [
         labelAr: "الوسوم",
         path: "/dashboard/tags",
         icon: Tag,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "smart_links",
+        labelKey: "nav.smart_links",
+        labelAr: "الروابط الذكية",
+        path: "/dashboard/smart-links",
+        icon: Link,
         roles: ["admin", "editor"],
       },
       {
