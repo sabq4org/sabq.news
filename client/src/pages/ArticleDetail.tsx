@@ -141,15 +141,24 @@ export default function ArticleDetail() {
     const seoImage = article.imageUrl || `${window.location.origin}/og-image.png`;
     const seoUrl = window.location.href;
 
-    // Create or update meta tags
+    // Store original values to restore on cleanup
+    const originalValues = new Map<HTMLMetaElement, string>();
+    const createdTags: HTMLMetaElement[] = [];
+
+    // Create or update meta tags, tracking changes
     const updateMetaTag = (property: string, content: string, isName = false) => {
       const attr = isName ? 'name' : 'property';
       let tag = document.querySelector(`meta[${attr}="${property}"]`) as HTMLMetaElement;
       
       if (!tag) {
+        // New tag - track it for removal on cleanup
         tag = document.createElement('meta');
         tag.setAttribute(attr, property);
         document.head.appendChild(tag);
+        createdTags.push(tag);
+      } else {
+        // Existing tag - store original value for restoration
+        originalValues.set(tag, tag.content);
       }
       
       tag.content = content;
@@ -157,41 +166,35 @@ export default function ArticleDetail() {
     };
 
     // Open Graph Tags
-    const ogTags = [
-      updateMetaTag('og:type', 'article'),
-      updateMetaTag('og:title', seoTitle),
-      updateMetaTag('og:description', seoDescription),
-      updateMetaTag('og:image', seoImage),
-      updateMetaTag('og:url', seoUrl),
-      updateMetaTag('og:site_name', 'صحيفة سبق الإلكترونية'),
-      updateMetaTag('og:locale', 'ar_SA'),
-    ];
+    updateMetaTag('og:type', 'article');
+    updateMetaTag('og:title', seoTitle);
+    updateMetaTag('og:description', seoDescription);
+    updateMetaTag('og:image', seoImage);
+    updateMetaTag('og:url', seoUrl);
+    updateMetaTag('og:site_name', 'صحيفة سبق الإلكترونية');
+    updateMetaTag('og:locale', 'ar_SA');
 
     if (article.publishedAt) {
-      ogTags.push(updateMetaTag('article:published_time', article.publishedAt));
+      updateMetaTag('article:published_time', article.publishedAt);
     }
     if (article.updatedAt) {
-      ogTags.push(updateMetaTag('article:modified_time', article.updatedAt));
+      updateMetaTag('article:modified_time', article.updatedAt);
     }
     if (article.category?.nameAr) {
-      ogTags.push(updateMetaTag('article:section', article.category.nameAr));
+      updateMetaTag('article:section', article.category.nameAr);
     }
 
     // Twitter Cards
-    const twitterTags = [
-      updateMetaTag('twitter:card', 'summary_large_image', true),
-      updateMetaTag('twitter:title', seoTitle, true),
-      updateMetaTag('twitter:description', seoDescription, true),
-      updateMetaTag('twitter:image', seoImage, true),
-    ];
+    updateMetaTag('twitter:card', 'summary_large_image', true);
+    updateMetaTag('twitter:title', seoTitle, true);
+    updateMetaTag('twitter:description', seoDescription, true);
+    updateMetaTag('twitter:image', seoImage, true);
 
     // SEO Meta Tags
-    const seoTags = [
-      updateMetaTag('description', seoDescription, true),
-    ];
+    updateMetaTag('description', seoDescription, true);
 
     if (article.seo?.keywords && article.seo.keywords.length > 0) {
-      seoTags.push(updateMetaTag('keywords', article.seo.keywords.join(', '), true));
+      updateMetaTag('keywords', article.seo.keywords.join(', '), true);
     }
 
     // Image Alt Text
@@ -199,11 +202,19 @@ export default function ArticleDetail() {
       updateMetaTag('twitter:image:alt', article.seo.imageAlt, true);
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount - restore original values or remove created tags
     return () => {
-      [...ogTags, ...twitterTags, ...seoTags].forEach(tag => {
-        if (tag && tag.parentNode) {
+      // Remove newly created tags
+      createdTags.forEach(tag => {
+        if (tag.parentNode) {
           tag.parentNode.removeChild(tag);
+        }
+      });
+      
+      // Restore original values for existing tags
+      originalValues.forEach((originalContent, tag) => {
+        if (tag.parentNode) {
+          tag.content = originalContent;
         }
       });
     };
