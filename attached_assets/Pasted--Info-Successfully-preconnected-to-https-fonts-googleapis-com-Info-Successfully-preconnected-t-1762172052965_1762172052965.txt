@@ -1,0 +1,45 @@
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Log] [ChatWS] Skipping connection - user not authenticated (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] User authenticated, connecting... (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] Reconnecting... (1/5) (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] Reconnecting... (2/5) (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] App state changed. Is active? – false (index-Bwz-ypln.js, line 8362)
+[Log] [ChatWS] Reconnecting... (3/5) (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] Reconnecting... (4/5) (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] Reconnecting... (5/5) (index-Bwz-ypln.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-Bwz-ypln.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-Bwz-ypln.js, line 7748)
+[Log] [ChatWS] Max reconnect attempts reached (index-Bwz-ypln.js, line 7748)
+[Log] App state changed. Is active? – true (index-Bwz-ypln.js, line 8362)
+[Error] Failed to load resource: the server responded with a status of 403 () (smart-terms, line 0)
+> Selected Element
+< <div data-state="open" class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" style="pointer-events: auto;" data-aria-hidden="true" aria-hidden="true"></div>

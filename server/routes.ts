@@ -16124,7 +16124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/entity-types - إنشاء نوع كيان جديد
-  app.post("/api/entity-types", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+  app.post("/api/entity-types", requireAuth, async (req: any, res) => {
     try {
       const result = insertEntityTypeSchema.safeParse(req.body);
       if (!result.success) {
@@ -16164,7 +16164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/smart-entities - إنشاء كيان جديد
-  app.post("/api/smart-entities", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+  app.post("/api/smart-entities", requireAuth, async (req: any, res) => {
     try {
       const result = insertSmartEntitySchema.safeParse(req.body);
       if (!result.success) {
@@ -16204,7 +16204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/smart-terms - إنشاء مصطلح جديد
-  app.post("/api/smart-terms", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+  app.post("/api/smart-terms", requireAuth, async (req: any, res) => {
     try {
       const result = insertSmartTermSchema.safeParse(req.body);
       if (!result.success) {
