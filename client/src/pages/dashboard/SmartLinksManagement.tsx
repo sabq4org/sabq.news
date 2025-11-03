@@ -712,7 +712,9 @@ function EntityTypeDialog({
       nameAr, 
       nameEn, 
       slug,
-      description: description || null 
+      description: description || undefined,
+      displayOrder: 0,
+      status: "active"
     });
   };
 
