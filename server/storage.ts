@@ -7875,6 +7875,19 @@ export class DatabaseStorage implements IStorage {
     return entity;
   }
 
+  async updateSmartEntity(id: string, data: Partial<InsertSmartEntityDb>): Promise<SmartEntity> {
+    const [entity] = await db
+      .update(smartEntities)
+      .set(data)
+      .where(eq(smartEntities.id, id))
+      .returning();
+    return entity;
+  }
+
+  async deleteSmartEntity(id: string): Promise<void> {
+    await db.delete(smartEntities).where(eq(smartEntities.id, id));
+  }
+
   async getSmartTerms(filters?: { category?: string; status?: string }): Promise<SmartTerm[]> {
     const conditions = [];
     

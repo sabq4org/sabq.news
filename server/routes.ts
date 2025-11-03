@@ -16196,6 +16196,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/smart-entities/:id - تحديث كيان
+  app.patch("/api/smart-entities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const entity = await storage.updateSmartEntity(id, req.body);
+      
+      await logActivity({
+        userId: req.user!.id,
+        action: 'smart_entity_updated',
+        entityType: 'smart_entity',
+        entityId: id,
+        newValue: entity,
+      });
+
+      res.json(entity);
+    } catch (error: any) {
+      console.error("خطأ في تحديث الكيان:", error);
+      res.status(500).json({ message: "حدث خطأ في تحديث الكيان" });
+    }
+  });
+
+  // DELETE /api/smart-entities/:id - حذف كيان
+  app.delete("/api/smart-entities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmartEntity(id);
+      
+      await logActivity({
+        userId: req.user!.id,
+        action: 'smart_entity_deleted',
+        entityType: 'smart_entity',
+        entityId: id,
+      });
+
+      res.json({ message: "تم حذف الكيان بنجاح" });
+    } catch (error: any) {
+      console.error("خطأ في حذف الكيان:", error);
+      res.status(500).json({ message: "حدث خطأ في حذف الكيان" });
+    }
+  });
+
   // GET /api/smart-terms - جلب المصطلحات
   app.get("/api/smart-terms", requireAuth, async (req: any, res) => {
     try {
@@ -16348,15 +16389,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "الصورة مطلوبة" });
       }
 
-      const { Storage } = await import('@google-cloud/storage');
-      const bucketName = process.env.BUCKET_ID || '';
-      const storage = new Storage();
-      const bucket = storage.bucket(bucketName);
+      // استخدام ObjectStorageService الموجود
+      const publicSearchPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+      if (!publicSearchPaths) {
+        return res.status(500).json({ message: "Object Storage غير مُعد" });
+      }
+
+      // استخراج bucket name من أول مسار عام
+      const firstPath = publicSearchPaths.split(',')[0].trim();
+      const bucketName = firstPath.split('/')[1]; // /bucket-name/public -> bucket-name
 
       // تحديد مسار الملف
       const timestamp = Date.now();
       const filename = `entities/${timestamp}-${req.file.originalname}`;
-      const file = bucket.file(`public/${filename}`);
+      const file = objectStorageClient.bucket(bucketName).file(`public/${filename}`);
 
       // رفع الملف
       await file.save(req.file.buffer, {
