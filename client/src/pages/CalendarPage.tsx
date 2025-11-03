@@ -248,6 +248,15 @@ function MonthView({ events, currentDate, getImportanceColorSimple }: { events: 
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
+  const today = new Date();
+  const isToday = (day: number) => {
+    return (
+      day === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear()
+    );
+  };
+
   const getEventsForDay = (day: number) => {
     return events.filter(event => {
       const eventStartDate = new Date(event.dateStart);
