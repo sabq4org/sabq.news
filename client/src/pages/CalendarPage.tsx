@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, List, Grid3x3, CalendarDays, Plus, Globe, MapPin, Building2, Star } from "lucide-react";
 import { Link } from "wouter";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 interface CalendarEvent {
   id: string;
@@ -80,15 +81,24 @@ export default function CalendarPage() {
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("ar-SA", {
+    const gregorian = new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
       month: "long",
       year: "numeric",
     }).format(date);
+    
+    const hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+      month: "long",
+      year: "numeric",
+    }).format(date);
+    
+    return { gregorian, hijri };
   };
 
+  const currentDateFormatted = formatDate(currentDate);
+
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">تقويم سبق</h1>
@@ -97,12 +107,6 @@ export default function CalendarPage() {
             </p>
           </div>
 
-          <Link href="/dashboard/calendar/new">
-            <Button data-testid="button-add-event">
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة مناسبة
-            </Button>
-          </Link>
         </div>
 
         <Card>
@@ -117,7 +121,10 @@ export default function CalendarPage() {
                 >
                   ←
                 </Button>
-                <CardTitle className="text-xl">{formatDate(currentDate)}</CardTitle>
+                <div className="flex flex-col items-center">
+                  <CardTitle className="text-xl">{currentDateFormatted.gregorian}</CardTitle>
+                  <p className="text-xs text-muted-foreground">{currentDateFormatted.hijri}</p>
+                </div>
                 <Button
                   variant="outline"
                   size="icon"
@@ -211,7 +218,7 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
@@ -449,3 +456,4 @@ function StatCard({
     </Card>
   );
 }
+

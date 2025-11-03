@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import {
   Calendar,
   Globe,
@@ -96,19 +97,21 @@ export default function CalendarEventDetail() {
 
   if (eventLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">جاري التحميل...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md w-full">
+      <DashboardLayout>
+        <Card className="max-w-md mx-auto">
           <CardHeader>
             <CardTitle>مناسبة غير موجودة</CardTitle>
             <CardDescription>لم يتم العثور على المناسبة المطلوبة</CardDescription>
@@ -122,7 +125,7 @@ export default function CalendarEventDetail() {
             </Link>
           </CardContent>
         </Card>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -159,9 +162,26 @@ export default function CalendarEventDetail() {
     return "bg-blue-500";
   };
 
+  const formatEventDate = (dateInput: string | Date) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const gregorian = new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+    
+    const hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+    
+    return { gregorian, hijri };
+  };
+
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8" dir="rtl">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link href="/dashboard/calendar">
             <Button variant="outline" data-testid="button-back">
@@ -212,13 +232,10 @@ export default function CalendarEventDetail() {
                 <h4 className="font-semibold mb-2 text-sm text-muted-foreground">تاريخ البدء</h4>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {new Date(event.dateStart).toLocaleDateString("ar-SA", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
+                  <div className="flex flex-col">
+                    <span>{formatEventDate(event.dateStart).gregorian}</span>
+                    <span className="text-xs text-muted-foreground">{formatEventDate(event.dateStart).hijri}</span>
+                  </div>
                 </div>
               </div>
 
@@ -227,249 +244,191 @@ export default function CalendarEventDetail() {
                   <h4 className="font-semibold mb-2 text-sm text-muted-foreground">تاريخ الانتهاء</h4>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {new Date(event.dateEnd).toLocaleDateString("ar-SA", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
+                    <div className="flex flex-col">
+                      <span>{formatEventDate(event.dateEnd).gregorian}</span>
+                      <span className="text-xs text-muted-foreground">{formatEventDate(event.dateEnd).hijri}</span>
+                    </div>
                   </div>
                 </div>
               )}
-
-              <div>
-                <h4 className="font-semibold mb-2 text-sm text-muted-foreground">الأولوية</h4>
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {Array.from({ length: event.importance }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                    ))}
-                  </div>
-                  <span className="text-sm">{event.importance} من 5</span>
-                </div>
-              </div>
 
               {event.category && (
                 <div>
                   <h4 className="font-semibold mb-2 text-sm text-muted-foreground">التصنيف</h4>
-                  <Badge variant="secondary">{event.category.nameAr}</Badge>
+                  <Badge variant="outline">{event.category.nameAr}</Badge>
                 </div>
               )}
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm text-muted-foreground">الأهمية</h4>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: event.importance }).map((_, i) => (
+                    <Star key={i} className={`h-4 w-4 fill-current ${getImportanceColor(event.importance).replace('bg-', 'text-')}`} />
+                  ))}
+                  <span className="text-sm text-muted-foreground">({event.importance}/5)</span>
+                </div>
+              </div>
             </div>
 
             {event.tags && event.tags.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <h4 className="font-semibold mb-2 text-sm text-muted-foreground">الوسوم</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {event.tags.map((tag, idx) => (
-                      <Badge key={idx} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+              <div>
+                <h4 className="font-semibold mb-2 text-sm text-muted-foreground">الوسوم</h4>
+                <div className="flex flex-wrap gap-2">
+                  {event.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary">{tag}</Badge>
+                  ))}
                 </div>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>
 
+        {/* AI Drafts Section */}
         <Card>
           <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
-                  مسودات الذكاء الاصطناعي
-                </CardTitle>
-                <CardDescription>
-                  أفكار ومحتوى تحريري مولد بواسطة الذكاء الاصطناعي
-                </CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <CardTitle>مسودات الذكاء الاصطناعي</CardTitle>
               </div>
-
-              <Button
-                onClick={() => generateAiDraft.mutate()}
-                disabled={generateAiDraft.isPending}
-                data-testid="button-generate-ai"
-              >
-                <RefreshCw className={`h-4 w-4 ml-2 ${generateAiDraft.isPending ? "animate-spin" : ""}`} />
-                {aiDraft ? "إعادة التوليد" : "توليد المسودات"}
-              </Button>
+              
+              {!aiDraft && !draftLoading && (
+                <Button
+                  onClick={() => generateAiDraft.mutate()}
+                  disabled={generateAiDraft.isPending}
+                  data-testid="button-generate-ai-draft"
+                >
+                  {generateAiDraft.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 ml-2 animate-spin" />
+                      جاري التوليد...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 ml-2" />
+                      توليد مسودات AI
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
+            <CardDescription>
+              محتوى تحريري مُولَّد تلقائياً بواسطة الذكاء الاصطناعي
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
             {draftLoading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center h-32">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">جاري التحميل...</p>
+                  <p className="text-sm text-muted-foreground">جاري تحميل المسودات...</p>
                 </div>
               </div>
-            ) : aiDraft ? (
+            ) : !aiDraft ? (
+              <div className="text-center py-8">
+                <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground mb-4">
+                  لم يتم توليد مسودات ذكاء اصطناعي لهذه المناسبة بعد
+                </p>
+                <Button
+                  onClick={() => generateAiDraft.mutate()}
+                  disabled={generateAiDraft.isPending}
+                  data-testid="button-generate-ai-draft-empty"
+                >
+                  {generateAiDraft.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 ml-2 animate-spin" />
+                      جاري التوليد...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 ml-2" />
+                      توليد مسودات الآن
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
               <Tabs defaultValue="ideas" className="w-full">
-                <TabsList className="w-full grid grid-cols-3 lg:grid-cols-6">
+                <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
                   <TabsTrigger value="ideas" data-testid="tab-ideas">
-                    <FileText className="h-4 w-4 ml-1" />
-                    الأفكار
+                    <FileText className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">أفكار</span>
                   </TabsTrigger>
                   <TabsTrigger value="headlines" data-testid="tab-headlines">
-                    <Heading className="h-4 w-4 ml-1" />
-                    العناوين
+                    <Heading className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">عناوين</span>
                   </TabsTrigger>
                   <TabsTrigger value="infographic" data-testid="tab-infographic">
-                    <BarChart className="h-4 w-4 ml-1" />
-                    الإنفوجرافيك
+                    <BarChart className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">إنفوجراف</span>
                   </TabsTrigger>
                   <TabsTrigger value="social" data-testid="tab-social">
-                    <MessageSquare className="h-4 w-4 ml-1" />
-                    السوشال
+                    <MessageSquare className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">سوشيال</span>
                   </TabsTrigger>
                   <TabsTrigger value="seo" data-testid="tab-seo">
-                    <Search className="h-4 w-4 ml-1" />
-                    SEO
+                    <Search className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">SEO</span>
                   </TabsTrigger>
-                  <TabsTrigger value="article" data-testid="tab-article">
-                    <PenTool className="h-4 w-4 ml-1" />
-                    المقال
+                  <TabsTrigger value="draft" data-testid="tab-draft">
+                    <PenTool className="h-4 w-4 md:ml-2" />
+                    <span className="hidden md:inline">مسودة</span>
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="ideas" className="space-y-4 mt-6">
-                  {aiDraft.ideas && Array.isArray(aiDraft.ideas) && aiDraft.ideas.length > 0 ? (
-                    aiDraft.ideas.map((idea: any, idx: number) => (
-                      <Card key={idx}>
-                        <CardHeader>
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <CardTitle className="text-lg">{idea.title || `فكرة ${idx + 1}`}</CardTitle>
-                              {idea.type && (
-                                <CardDescription>النوع: {idea.type}</CardDescription>
-                              )}
+                <TabsContent value="ideas" className="mt-6">
+                  {(aiDraft as any).ideas && Array.isArray((aiDraft as any).ideas) ? (
+                    <div className="space-y-3">
+                      {((aiDraft as any).ideas as string[]).map((idea: string, index: number) => (
+                        <Card key={index}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <p className="text-sm leading-relaxed">{idea}</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => createArticleFromIdea.mutate(index)}
+                                disabled={createArticleFromIdea.isPending}
+                                data-testid={`button-create-article-${index}`}
+                              >
+                                إنشاء مقال
+                              </Button>
                             </div>
-                            <Button
-                              size="sm"
-                              onClick={() => createArticleFromIdea.mutate(idx)}
-                              disabled={createArticleFromIdea.isPending}
-                              data-testid={`button-create-article-${idx}`}
-                            >
-                              إنشاء مقال
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {idea.alternateTitle && (
-                            <div>
-                              <h5 className="font-semibold text-sm mb-1">عنوان بديل:</h5>
-                              <p className="text-sm">{idea.alternateTitle}</p>
-                            </div>
-                          )}
-                          
-                          {idea.angle && (
-                            <div>
-                              <h5 className="font-semibold text-sm mb-1">الزاوية:</h5>
-                              <p className="text-sm">{idea.angle}</p>
-                            </div>
-                          )}
-                          
-                          {idea.openingParagraph && (
-                            <div>
-                              <h5 className="font-semibold text-sm mb-1">الفقرة الافتتاحية:</h5>
-                              <p className="text-sm leading-relaxed">{idea.openingParagraph}</p>
-                            </div>
-                          )}
-                          
-                          {idea.keyPoints && idea.keyPoints.length > 0 && (
-                            <div>
-                              <h5 className="font-semibold text-sm mb-2">النقاط الرئيسية:</h5>
-                              <ul className="list-disc list-inside space-y-1">
-                                {idea.keyPoints.map((point: string, i: number) => (
-                                  <li key={i} className="text-sm">{point}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا توجد أفكار متاحة
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">لا توجد أفكار متاحة</p>
                   )}
                 </TabsContent>
 
                 <TabsContent value="headlines" className="mt-6">
-                  {aiDraft.headlines && typeof aiDraft.headlines === "object" ? (
-                    <Card>
-                      <CardContent className="p-6 space-y-4">
-                        {(aiDraft.headlines as any).primary && (
-                          <div>
-                            <h5 className="font-semibold mb-2">العنوان الرئيسي:</h5>
-                            <p className="text-lg font-bold">{(aiDraft.headlines as any).primary}</p>
-                          </div>
-                        )}
-                        
-                        {(aiDraft.headlines as any).secondary && (
-                          <div>
-                            <h5 className="font-semibold mb-2">العنوان الثانوي:</h5>
-                            <p className="text-md">{(aiDraft.headlines as any).secondary}</p>
-                          </div>
-                        )}
-                        
-                        {(aiDraft.headlines as any).alternates && Array.isArray((aiDraft.headlines as any).alternates) && (
-                          <div>
-                            <h5 className="font-semibold mb-2">عناوين بديلة:</h5>
-                            <ul className="space-y-2">
-                              {(aiDraft.headlines as any).alternates.map((alt: string, i: number) => (
-                                <li key={i} className="p-3 bg-muted rounded-md">{alt}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا توجد عناوين متاحة
+                  {(aiDraft as any).headlines && Array.isArray((aiDraft as any).headlines) ? (
+                    <div className="space-y-2">
+                      {((aiDraft as any).headlines as string[]).map((headline: string, index: number) => (
+                        <div key={index} className="p-3 border rounded-md hover-elevate">
+                          <h3 className="font-semibold">{headline}</h3>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">لا توجد عناوين متاحة</p>
                   )}
                 </TabsContent>
 
                 <TabsContent value="infographic" className="mt-6">
-                  {aiDraft.infographic && typeof aiDraft.infographic === "object" ? (
-                    <Card>
-                      <CardContent className="p-6 space-y-4">
-                        {(aiDraft.infographic as any).title && (
-                          <h3 className="text-xl font-bold text-center">{(aiDraft.infographic as any).title}</h3>
-                        )}
-                        
-                        {(aiDraft.infographic as any).subtitle && (
-                          <p className="text-center text-muted-foreground">{(aiDraft.infographic as any).subtitle}</p>
-                        )}
-                        
-                        {(aiDraft.infographic as any).dataPoints && Array.isArray((aiDraft.infographic as any).dataPoints) && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                            {(aiDraft.infographic as any).dataPoints.map((point: any, i: number) => (
-                              <Card key={i}>
-                                <CardContent className="p-4 text-center">
-                                  <div className="text-3xl font-bold text-primary mb-2">
-                                    {point.value}
-                                  </div>
-                                  <p className="text-sm font-semibold">{point.label}</p>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا توجد بيانات إنفوجرافيك متاحة
+                  {(aiDraft as any).infographic ? (
+                    <div className="prose prose-ar max-w-none">
+                      <div className="whitespace-pre-wrap p-4 border rounded-md bg-muted/30">
+                        {(aiDraft as any).infographic}
+                      </div>
                     </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">لا يوجد محتوى إنفوجراف متاح</p>
                   )}
                 </TabsContent>
 
@@ -482,78 +441,47 @@ export default function CalendarEventDetail() {
                             <CardTitle className="text-lg capitalize">{platform}</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="whitespace-pre-wrap">{content as string}</p>
+                            <p className="text-sm whitespace-pre-wrap">{content as string}</p>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا يوجد محتوى سوشال ميديا متاح
-                    </div>
+                    <p className="text-center text-muted-foreground py-8">لا يوجد محتوى سوشيال ميديا متاح</p>
                   )}
                 </TabsContent>
 
                 <TabsContent value="seo" className="mt-6">
-                  {aiDraft.seo && typeof aiDraft.seo === "object" ? (
-                    <Card>
-                      <CardContent className="p-6 space-y-4">
-                        {(aiDraft.seo as any).keywords && Array.isArray((aiDraft.seo as any).keywords) && (
-                          <div>
-                            <h5 className="font-semibold mb-2">الكلمات المفتاحية:</h5>
-                            <div className="flex flex-wrap gap-2">
-                              {(aiDraft.seo as any).keywords.map((keyword: string, i: number) => (
-                                <Badge key={i} variant="secondary">{keyword}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {(aiDraft.seo as any).metaDescription && (
-                          <div>
-                            <h5 className="font-semibold mb-2">وصف الميتا:</h5>
-                            <p className="text-sm">{(aiDraft.seo as any).metaDescription}</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا توجد بيانات SEO متاحة
+                  {(aiDraft as any).seo && typeof (aiDraft as any).seo === "object" ? (
+                    <div className="space-y-4">
+                      {Object.entries((aiDraft as any).seo as object).map(([key, value]) => (
+                        <div key={key} className="p-4 border rounded-md">
+                          <h4 className="font-semibold mb-2 text-sm text-muted-foreground capitalize">{key}</h4>
+                          <p className="text-sm">{value as string}</p>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">لا يوجد محتوى SEO متاح</p>
                   )}
                 </TabsContent>
 
-                <TabsContent value="article" className="mt-6">
+                <TabsContent value="draft" className="mt-6">
                   {(aiDraft as any).articleDraft ? (
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="prose prose-lg max-w-none" dir="rtl">
-                          <div className="whitespace-pre-wrap leading-relaxed">
-                            {(aiDraft as any).articleDraft as string}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      لا توجد مسودة مقال متاحة
+                    <div className="prose prose-ar max-w-none">
+                      <div className="whitespace-pre-wrap p-6 border rounded-md">
+                        {(aiDraft as any).articleDraft}
+                      </div>
                     </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">لا توجد مسودة مقال متاحة</p>
                   )}
                 </TabsContent>
               </Tabs>
-            ) : (
-              <div className="text-center py-12">
-                <Sparkles className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">لم يتم توليد مسودات بعد</h3>
-                <p className="text-muted-foreground mb-4">
-                  اضغط على زر "توليد المسودات" لإنشاء محتوى بواسطة الذكاء الاصطناعي
-                </p>
-              </div>
             )}
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
