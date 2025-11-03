@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Calendar, Save, Bell, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Save, Bell, Plus, Trash2, Clock, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const reminderSchema = z.object({
   channel: z.enum(["IN_APP", "EMAIL", "WHATSAPP", "SLACK"]),
@@ -84,6 +85,70 @@ export default function CalendarEventForm() {
     const updated = [...reminders];
     updated[index] = { ...updated[index], [field]: value };
     setReminders(updated);
+  };
+
+  // حساب وقت التذكير بناءً على تاريخ المناسبة
+  const calculateReminderTime = (daysOffset?: number, hoursOffset?: number): string | null => {
+    const dateStart = form.getValues("dateStart");
+    if (!dateStart) {
+      toast({
+        title: "تنبيه",
+        description: "يرجى اختيار تاريخ المناسبة أولاً",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    const eventDate = new Date(dateStart);
+    const reminderDate = new Date(eventDate);
+
+    if (daysOffset) {
+      reminderDate.setDate(reminderDate.getDate() - daysOffset);
+    }
+    if (hoursOffset) {
+      reminderDate.setHours(reminderDate.getHours() - hoursOffset);
+    }
+
+    // التحقق من أن الوقت في المستقبل
+    const now = new Date();
+    if (reminderDate < now) {
+      toast({
+        title: "تنبيه",
+        description: "وقت التذكير المحسوب في الماضي. يرجى اختيار تاريخ مناسبة في المستقبل.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // تنسيق للـ datetime-local input
+    const year = reminderDate.getFullYear();
+    const month = String(reminderDate.getMonth() + 1).padStart(2, '0');
+    const day = String(reminderDate.getDate()).padStart(2, '0');
+    const hours = String(reminderDate.getHours()).padStart(2, '0');
+    const minutes = String(reminderDate.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // إضافة تذكير سريع
+  const addQuickReminder = (label: string, daysOffset?: number, hoursOffset?: number) => {
+    const scheduledTime = calculateReminderTime(daysOffset, hoursOffset);
+    if (!scheduledTime) return;
+
+    setReminders([
+      ...reminders,
+      {
+        channel: "IN_APP",
+        scheduledFor: scheduledTime,
+        recipients: "",
+        message: `تذكير: ${label}`,
+      },
+    ]);
+
+    toast({
+      title: "تم الإضافة",
+      description: `تم إضافة تذكير ${label}`,
+    });
   };
 
   const createEvent = useMutation({
@@ -358,9 +423,83 @@ export default function CalendarEventForm() {
                       data-testid="button-add-reminder"
                     >
                       <Plus className="h-4 w-4 ml-2" />
-                      إضافة تذكير
+                      إضافة تذكير مخصص
                     </Button>
                   </div>
+
+                  {/* Quick Reminder Buttons */}
+                  <Card className="bg-muted/50">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium text-sm">تذكيرات سريعة</h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          اضغط على أي زر لإضافة تذكير تلقائي قبل موعد المناسبة
+                        </p>
+                        <ScrollArea className="w-full">
+                          <div className="flex gap-2 pb-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addQuickReminder("قبل أسبوع", 7)}
+                              data-testid="button-quick-7days"
+                              className="whitespace-nowrap"
+                            >
+                              <Clock className="h-3 w-3 ml-1" />
+                              قبل أسبوع
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addQuickReminder("قبل 3 أيام", 3)}
+                              data-testid="button-quick-3days"
+                              className="whitespace-nowrap"
+                            >
+                              <Clock className="h-3 w-3 ml-1" />
+                              قبل 3 أيام
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addQuickReminder("قبل يوم", 1)}
+                              data-testid="button-quick-1day"
+                              className="whitespace-nowrap"
+                            >
+                              <Clock className="h-3 w-3 ml-1" />
+                              قبل يوم
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addQuickReminder("قبل 3 ساعات", undefined, 3)}
+                              data-testid="button-quick-3hours"
+                              className="whitespace-nowrap"
+                            >
+                              <Clock className="h-3 w-3 ml-1" />
+                              قبل 3 ساعات
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addQuickReminder("قبل ساعة", undefined, 1)}
+                              data-testid="button-quick-1hour"
+                              className="whitespace-nowrap"
+                            >
+                              <Clock className="h-3 w-3 ml-1" />
+                              قبل ساعة
+                            </Button>
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {reminders.length === 0 ? (
                     <div className="text-center py-8 border-2 border-dashed rounded-lg">

@@ -1,0 +1,46 @@
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Log] [ChatWS] Skipping connection - user not authenticated (index-D_U4nhTr.js, line 7748)
+[Log] [ChatWS] User authenticated, connecting... (index-D_U4nhTr.js, line 7748)
+[Error] TypeError: i.filter is not a function. (In 'i.filter(m=>{const A=new Date(m.dateStart);return A.getMonth()===n.getMonth()&&A.getFullYear()===n.getFullYear()})', 'i.filter' is undefined)
+	Ofe (index-D_U4nhTr.js:40:169)
+	(anonymous function) (index-D_U4nhTr.js:40:398)
+	Wwe (index-D_U4nhTr.js:38:15668)
+	u4e (index-D_U4nhTr.js:40:32300)
+	v7e (index-D_U4nhTr.js:40:31715)
+	$ot (index-D_U4nhTr.js:40:31259)
+	qot (index-D_U4nhTr.js:40:41302)
+	zy (index-D_U4nhTr.js:40:40646)
+	p4e (index-D_U4nhTr.js:40:37197)
+	Zg (index-D_U4nhTr.js:38:3324)
+	(anonymous function) (index-D_U4nhTr.js:40:34534)
+[Error] TypeError: i.filter is not a function. (In 'i.filter(m=>{const A=new Date(m.dateStart);return A.getMonth()===n.getMonth()&&A.getFullYear()===n.getFullYear()})', 'i.filter' is undefined)
+	Zg (index-D_U4nhTr.js:38:3418)
+	(anonymous function) (index-D_U4nhTr.js:40:34534)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: WebSocket is closed before the connection is established.
+	disconnect (index-D_U4nhTr.js:7748:152545)
+	(anonymous function) (index-D_U4nhTr.js:7748:153826)
+	Hfe (index-D_U4nhTr.js:40:22575)
+	MS (index-D_U4nhTr.js:40:24292)
+	Wj (index-D_U4nhTr.js:40:42079)
+	p4e (index-D_U4nhTr.js:40:36932)
+	Zg (index-D_U4nhTr.js:38:3324)
+	(anonymous function) (index-D_U4nhTr.js:40:34534)
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-D_U4nhTr.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D_U4nhTr.js, line 7748)
+[Log] [ChatWS] Reconnecting... (1/5) (index-D_U4nhTr.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-D_U4nhTr.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D_U4nhTr.js, line 7748)
+> Selected Element
+< <html lang="ar" dir="rtl" class="light">…</html>
+[Log] [ChatWS] Reconnecting... (2/5) (index-D_U4nhTr.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D_U4nhTr.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D_U4nhTr.js, line 7748)
