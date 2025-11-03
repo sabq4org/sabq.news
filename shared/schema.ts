@@ -130,7 +130,11 @@ export const categories = pgTable("categories", {
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Performance indexes
+  index("idx_categories_type_status").on(table.type, table.status),
+  index("idx_categories_status").on(table.status),
+]);
 
 // Articles (supports both news and opinion pieces)
 export const articles = pgTable("articles", {
@@ -174,7 +178,14 @@ export const articles = pgTable("articles", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Performance indexes for most common queries
+  index("idx_articles_status_published").on(table.status, table.publishedAt.desc()),
+  index("idx_articles_category_status").on(table.categoryId, table.status),
+  index("idx_articles_author_status").on(table.authorId, table.status),
+  index("idx_articles_type").on(table.articleType),
+  index("idx_articles_published_at").on(table.publishedAt.desc()),
+]);
 
 // RSS feeds for import
 export const rssFeeds = pgTable("rss_feeds", {
@@ -194,7 +205,10 @@ export const readingHistory = pgTable("reading_history", {
   articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   readAt: timestamp("read_at").defaultNow().notNull(),
   readDuration: integer("read_duration"),
-});
+}, (table) => [
+  index("idx_reading_history_user").on(table.userId, table.readAt.desc()),
+  index("idx_reading_history_article").on(table.articleId),
+]);
 
 // Comments with status management
 export const comments = pgTable("comments", {
@@ -208,7 +222,11 @@ export const comments = pgTable("comments", {
   moderatedAt: timestamp("moderated_at"),
   moderationReason: text("moderation_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_comments_article_status").on(table.articleId, table.status),
+  index("idx_comments_user").on(table.userId),
+  index("idx_comments_status").on(table.status),
+]);
 
 // Likes/reactions
 export const reactions = pgTable("reactions", {
@@ -217,7 +235,10 @@ export const reactions = pgTable("reactions", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   type: text("type").notNull().default("like"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_reactions_article").on(table.articleId),
+  index("idx_reactions_user_article").on(table.userId, table.articleId),
+]);
 
 // Bookmarks/saved articles
 export const bookmarks = pgTable("bookmarks", {
