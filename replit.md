@@ -38,6 +38,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 - Background jobs with locking mechanism to prevent concurrent execution and database blocking
 - Dynamic categories update every 15 minutes (optimized from 5 minutes for 66% reduction in database load)
 - Content Security Policy (CSP) configured to allow WebSocket connections (ws:/wss:) and Vite inline styles for production deployment
+- **API Payload Optimization (November 2025):** Homepage endpoints optimized to exclude heavy fields (content, SEO metadata, review data, credibility analysis) from responses, reducing payload size by ~70% while maintaining full functionality through explicit field selection in database queries
 
 ### Feature Specifications
 Key features include:
