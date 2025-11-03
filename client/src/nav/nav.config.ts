@@ -37,6 +37,7 @@ import {
   Podcast,
   Megaphone,
   BookOpen,
+  Calendar,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -133,6 +134,14 @@ export const navConfig: NavItem[] = [
         labelAr: "الأخبار الصوتية السريعة",
         path: "/dashboard/audio-briefs",
         icon: AudioLines,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "calendar",
+        labelKey: "nav.calendar",
+        labelAr: "تقويم سبق",
+        path: "/dashboard/calendar",
+        icon: Calendar,
         roles: ["admin", "editor"],
       },
     ],
