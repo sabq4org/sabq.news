@@ -22,6 +22,8 @@ import {
   Bell,
   Calendar,
   ClipboardList,
+  X,
+  BellRing,
 } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Button } from "@/components/ui/button";
@@ -32,7 +34,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface AdminDashboardStats {
   articles: {
@@ -241,6 +243,9 @@ function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Urgent Reminder Banner */}
+        <UrgentReminderBanner />
 
         {/* Main Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -881,6 +886,118 @@ function UpcomingTasksWidget() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// Component: Urgent Reminder Banner
+function UrgentReminderBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  
+  const { data: reminders, isLoading } = useQuery<Array<{
+    id: string;
+    eventId: string;
+    eventTitle: string;
+    reminderTime: string;
+    channelType: string;
+  }>>({
+    queryKey: ["/api/calendar/upcoming-reminders"],
+  });
+
+  // Filter reminders that are within 1 hour
+  const urgentReminders = useMemo(() => {
+    if (!reminders) return [];
+    
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    
+    return reminders.filter(reminder => {
+      const reminderDate = new Date(reminder.reminderTime);
+      return reminderDate >= now && reminderDate <= oneHourFromNow;
+    });
+  }, [reminders]);
+
+  if (isLoading || dismissed || urgentReminders.length === 0) {
+    return null;
+  }
+
+  const reminder = urgentReminders[0];
+  const reminderDate = new Date(reminder.reminderTime);
+  const now = new Date();
+  const minutesUntil = Math.floor((reminderDate.getTime() - now.getTime()) / (1000 * 60));
+
+  return (
+    <div 
+      className="relative bg-gradient-to-r from-blue-50/80 via-blue-50/50 to-blue-50/80 dark:from-blue-950/30 dark:via-blue-950/20 dark:to-blue-950/30 border-r-4 border-r-blue-400 rounded-lg p-4 shadow-sm"
+      data-testid="banner-urgent-reminder"
+    >
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+            <BellRing className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-pulse" data-testid="icon-bell-ring" />
+          </div>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100" data-testid="text-banner-title">
+                  تذكير قريب جداً
+                </h3>
+                <Badge 
+                  variant="outline" 
+                  className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-700"
+                  data-testid="badge-urgent-time"
+                >
+                  {minutesUntil > 0 ? `بعد ${minutesUntil} دقيقة` : 'الآن'}
+                </Badge>
+              </div>
+              
+              <Link href={`/calendar/${reminder.eventId}`} data-testid="link-reminder-event">
+                <p className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-2 hover:underline" data-testid="text-banner-event">
+                  {reminder.eventTitle}
+                </p>
+              </Link>
+              
+              <div className="flex items-center gap-3 text-xs text-blue-700 dark:text-blue-300">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {reminderDate.toLocaleString('ar-SA', { 
+                    weekday: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+                <span className="text-blue-500 dark:text-blue-400">•</span>
+                <span>
+                  {reminder.channelType === 'IN_APP' ? 'داخل التطبيق' :
+                   reminder.channelType === 'EMAIL' ? 'بريد إلكتروني' : 
+                   reminder.channelType === 'WHATSAPP' ? 'واتساب' :
+                   reminder.channelType === 'SLACK' ? 'سلاك' : 
+                   reminder.channelType}
+                </span>
+              </div>
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDismissed(true)}
+              className="h-8 w-8 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+              data-testid="button-dismiss-banner"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {urgentReminders.length > 1 && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2" data-testid="text-more-reminders">
+              + {urgentReminders.length - 1} تذكير آخر قريب
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
