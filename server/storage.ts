@@ -7653,7 +7653,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getUpcomingReminders(days: number = 7): Promise<Array<CalendarReminder & { event: CalendarEvent }>> {
+  async getUpcomingReminders(days: number = 7): Promise<Array<any>> {
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
@@ -7680,10 +7680,23 @@ export class DatabaseStorage implements IStorage {
       )
       .limit(10);
 
-    return results.map(r => ({
-      ...r.reminder,
-      event: r.event,
-    }));
+    // تحويل البيانات للشكل المتوقع في Frontend
+    return results.map(r => {
+      // حساب وقت التذكير الفعلي
+      const eventDate = new Date(r.event.dateStart);
+      const reminderDate = new Date(eventDate);
+      reminderDate.setDate(eventDate.getDate() - r.reminder.fireWhen);
+
+      return {
+        id: r.reminder.id,
+        eventId: r.reminder.eventId,
+        eventTitle: r.event.title,
+        reminderTime: reminderDate.toISOString(),
+        channelType: r.reminder.channel,
+        fireWhen: r.reminder.fireWhen,
+        enabled: r.reminder.enabled,
+      };
+    });
   }
 
   async getCalendarAiDraft(eventId: string): Promise<CalendarAiDraft | undefined> {
@@ -7721,7 +7734,7 @@ export class DatabaseStorage implements IStorage {
     userId?: string;
     status?: string;
     role?: string;
-  }): Promise<Array<CalendarAssignment & { event?: CalendarEvent; user?: User; assignedByUser?: User }>> {
+  }): Promise<Array<any>> {
     const conditions = [];
 
     if (filters?.eventId) conditions.push(eq(calendarAssignments.eventId, filters.eventId));
@@ -7747,8 +7760,16 @@ export class DatabaseStorage implements IStorage {
       .where(whereClause)
       .orderBy(desc(calendarAssignments.assignedAt));
 
+    // تحويل البيانات للشكل المتوقع في Frontend
     return results.map(r => ({
-      ...r.assignment,
+      id: r.assignment.id,
+      eventId: r.assignment.eventId,
+      eventTitle: r.event?.title || 'مناسبة غير معروفة',
+      role: r.assignment.role,
+      status: r.assignment.status,
+      userId: r.assignment.userId,
+      assignedBy: r.assignment.assignedBy,
+      assignedAt: r.assignment.assignedAt?.toISOString(),
       event: r.event || undefined,
       user: r.user || undefined,
       assignedByUser: r.assignedByUser || undefined,
