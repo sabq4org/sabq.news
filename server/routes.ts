@@ -15596,6 +15596,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/calendar/upcoming-reminders - التذكيرات القادمة
+  app.get("/api/calendar/upcoming-reminders", requireAuth, async (req: any, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string) : 7;
+      const reminders = await storage.getUpcomingReminders(days);
+      res.json(reminders);
+    } catch (error) {
+      console.error("خطأ في جلب التذكيرات القادمة:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب التذكيرات القادمة" });
+    }
+  });
+
+  // GET /api/calendar/my-assignments - المهام المخصصة للمستخدم
+  app.get("/api/calendar/my-assignments", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const status = req.query.status as string | undefined;
+      
+      const assignments = await storage.getCalendarAssignments({
+        userId,
+        status: status || undefined,
+      });
+      
+      res.json(assignments);
+    } catch (error) {
+      console.error("خطأ في جلب المهام:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب المهام" });
+    }
+  });
+
   // GET /api/calendar/:id - تفاصيل حدث
   app.get("/api/calendar/:id", async (req: any, res) => {
     try {

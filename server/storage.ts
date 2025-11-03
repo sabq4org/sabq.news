@@ -897,6 +897,7 @@ export interface IStorage {
   updateCalendarReminder(id: string, updates: any): Promise<any>;
   deleteCalendarReminder(id: string): Promise<void>;
   getRemindersToFire(date: Date): Promise<Array<any>>;
+  getUpcomingReminders(days?: number): Promise<Array<any>>;
   
   // AI Drafts
   getCalendarAiDraft(eventId: string): Promise<any | undefined>;
@@ -7645,6 +7646,39 @@ export class DatabaseStorage implements IStorage {
           sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen} <= ${date}`
         )
       );
+
+    return results.map(r => ({
+      ...r.reminder,
+      event: r.event,
+    }));
+  }
+
+  async getUpcomingReminders(days: number = 7): Promise<Array<CalendarReminder & { event: CalendarEvent }>> {
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+
+    const results = await db
+      .select({
+        reminder: calendarReminders,
+        event: calendarEvents,
+      })
+      .from(calendarReminders)
+      .innerJoin(calendarEvents, eq(calendarReminders.eventId, calendarEvents.id))
+      .where(
+        and(
+          eq(calendarReminders.enabled, true),
+          gte(calendarEvents.dateStart, now),
+          lte(
+            sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen}`,
+            endDate
+          )
+        )
+      )
+      .orderBy(
+        asc(sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen}`)
+      )
+      .limit(10);
 
     return results.map(r => ({
       ...r.reminder,
