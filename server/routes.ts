@@ -13516,53 +13516,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Public: Get single opinion article by slug
-  app.get("/api/opinion/:slug", async (req, res) => {
+  app.get("/api/opinion/:slug", async (req: any, res) => {
     try {
       const { slug } = req.params;
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
 
-      const [result] = await db
-        .select({
-          article: articles,
-          category: categories,
-          author: {
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-            profileImageUrl: users.profileImageUrl,
-            bio: users.bio,
-          },
-        })
-        .from(articles)
-        .leftJoin(categories, eq(articles.categoryId, categories.id))
-        .leftJoin(users, eq(articles.authorId, users.id))
-        .where(
-          and(
-            eq(articles.slug, slug),
-            eq(articles.articleType, "opinion"),
-            eq(articles.status, "published")
-          )
-        )
-        .limit(1);
+      const article = await storage.getArticleBySlug(slug, userId, userRole);
 
-      if (!result) {
+      if (!article || article.articleType !== 'opinion') {
         return res.status(404).json({ message: "Opinion article not found" });
       }
 
-      // Increment view count
-      await db
-        .update(articles)
-        .set({ views: sql`${articles.views} + 1` })
-        .where(eq(articles.id, result.article.id));
+      // Record read if user is logged in
+      if (userId) {
+        await storage.recordArticleRead(userId, article.id);
+      }
 
-      res.json({
-        ...result.article,
-        category: result.category,
-        author: result.author,
-      });
+      // Increment view count
+      await storage.incrementArticleViews(article.id);
+
+      res.json(article);
     } catch (error) {
       console.error("Error fetching opinion article:", error);
       res.status(500).json({ message: "Failed to fetch opinion article" });
+    }
+  });
+
+  // Public: Get comments for an opinion article
+  app.get("/api/opinion/:slug/comments", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      if (!article || article.articleType !== 'opinion') {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // For admins and editors, show all comments (including pending)
+      // For regular users, show only approved comments
+      const showPending = userRole === 'admin' || userRole === 'editor';
+      const comments = await storage.getCommentsByArticle(article.id, showPending);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching opinion comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Public: Get related articles for an opinion article
+  app.get("/api/opinion/:slug/related", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      if (!article || article.articleType !== 'opinion') {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      const related = await storage.getRelatedArticles(article.id, article.categoryId || undefined);
+      res.json(related);
+    } catch (error) {
+      console.error("Error fetching related opinion articles:", error);
+      res.status(500).json({ message: "Failed to fetch related articles" });
     }
   });
 
