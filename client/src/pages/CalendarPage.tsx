@@ -290,13 +290,18 @@ function MonthView({ events, currentDate, getImportanceColorSimple }: { events: 
       
       {days.map((day) => {
         const dayEvents = getEventsForDay(day);
+        const isTodayDay = isToday(day);
         return (
           <div
             key={day}
-            className="min-h-24 p-2 border rounded-md hover-elevate active-elevate-2 cursor-pointer"
+            className={`min-h-24 p-2 border rounded-md hover-elevate active-elevate-2 cursor-pointer ${
+              isTodayDay ? 'bg-primary/10 border-primary' : ''
+            }`}
             data-testid={`calendar-day-${day}`}
           >
-            <div className="font-semibold text-sm mb-1">{day}</div>
+            <div className={`font-semibold text-sm mb-1 ${isTodayDay ? 'text-primary' : ''}`}>
+              {day}
+            </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 2).map((event) => (
                 <Link key={event.id} href={`/dashboard/calendar/events/${event.id}`}>
@@ -329,6 +334,15 @@ function WeekView({ events, currentDate, getImportanceColor, getEventTypeLabel }
     return date;
   });
 
+  const todayDate = new Date();
+  const isToday = (date: Date) => {
+    return (
+      date.getDate() === todayDate.getDate() &&
+      date.getMonth() === todayDate.getMonth() &&
+      date.getFullYear() === todayDate.getFullYear()
+    );
+  };
+
   const getEventsForDay = (date: Date) => {
     return events.filter(event => {
       const eventStartDate = new Date(event.dateStart);
@@ -350,12 +364,19 @@ function WeekView({ events, currentDate, getImportanceColor, getEventTypeLabel }
       {weekDays.map((date, index) => {
         const dayEvents = getEventsForDay(date);
         const dayNames = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+        const isTodayDay = isToday(date);
         
         return (
           <div key={index} className="space-y-2">
-            <div className="text-center p-2 bg-muted rounded-md">
-              <div className="font-semibold text-sm">{dayNames[index]}</div>
-              <div className="text-lg">{date.getDate()}</div>
+            <div className={`text-center p-2 rounded-md ${
+              isTodayDay ? 'bg-primary/10 border border-primary' : 'bg-muted'
+            }`}>
+              <div className={`font-semibold text-sm ${isTodayDay ? 'text-primary' : ''}`}>
+                {dayNames[index]}
+              </div>
+              <div className={`text-lg ${isTodayDay ? 'text-primary' : ''}`}>
+                {date.getDate()}
+              </div>
             </div>
             <div className="space-y-2">
               {dayEvents.map((event) => (
