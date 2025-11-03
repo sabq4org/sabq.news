@@ -11,6 +11,17 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 production templates) ensures flexible content presentation with Framer Motion animations. Mobile responsiveness is achieved through a mobile-first approach, ensuring accessible touch targets (minimum 32px) and text sizes.
 
+**Design System (Updated November 2025):**
+- **Color Palette:** Enhanced with vibrant yet professional tones. Background shifted from neutral gray to soft bluish-white (#F8FAFF) for improved visual appeal. Primary color brightened to create more engaging interactions.
+- **Accent Colors:** New accent system with blue, purple, and green variants for differentiation and visual hierarchy (accent-blue, accent-purple, accent-green).
+- **Dashboard UI:** 
+  - Welcome card features gradient background (indigo-50 → blue-50 → indigo-50) with soft shadows and animated sparkle icon
+  - Stats cards enhanced with colored icon containers, subtle shadows (shadow-indigo-50), and hover elevation effects
+  - Gradient text on greeting for premium feel
+  - All cards have smooth transitions and hover interactions
+- **Calendar System:** Today highlighting in Month and Week views with primary color background (bg-primary/10), border (border-primary), and text styling
+- **Dark Mode:** Fully supported with appropriate color adjustments for all new UI elements
+
 **Navigation Design:**
 - **NavigationBar (Homepage):** Displays sticky Core Categories navigation bar. Hidden on mobile devices (phones/tablets), visible only on desktop (md breakpoint and above). Smart Categories strip has been removed for cleaner, simpler design.
 - **Footer:** Redesigned with column-based layout (NO Card components) to differentiate from news article cards. Features three-tier structure: (1) Intelligence Banner with live AI metrics, (2) Navigation columns with icons and links, (3) Bottom bar with brand, contact, and social/legal links. All numbers displayed in English digits (toLocaleString('en-US')).

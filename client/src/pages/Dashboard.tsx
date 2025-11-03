@@ -213,13 +213,16 @@ function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Welcome Section with Greeting */}
-        <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20" data-testid="card-welcome">
+        <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <Sparkles className="h-6 w-6 text-primary" data-testid="icon-sparkles" />
-                  <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-greeting">
+                  <div className="relative">
+                    <Sparkles className="h-6 w-6 text-primary animate-pulse" data-testid="icon-sparkles" />
+                    <div className="absolute -inset-1 bg-primary/20 rounded-full blur-md animate-pulse"></div>
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-l from-primary to-accent-foreground bg-clip-text text-transparent" data-testid="text-greeting">
                     {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
                   </h2>
                 </div>
@@ -250,10 +253,12 @@ function Dashboard() {
         {/* Main Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Articles Stats */}
-          <Card data-testid="card-articles-stats">
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المقالات</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" data-testid="icon-articles" />
+              <div className="p-2 rounded-md bg-accent-blue/30">
+                <FileText className="h-4 w-4 text-primary" data-testid="icon-articles" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -272,10 +277,12 @@ function Dashboard() {
           </Card>
 
           {/* Users Stats */}
-          <Card data-testid="card-users-stats">
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-users-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المستخدمون</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" data-testid="icon-users" />
+              <div className="p-2 rounded-md bg-accent-purple/30">
+                <Users className="h-4 w-4 text-accent-foreground" data-testid="icon-users" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -294,10 +301,12 @@ function Dashboard() {
           </Card>
 
           {/* Comments Stats */}
-          <Card data-testid="card-comments-stats">
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-comments-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التعليقات</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" data-testid="icon-comments" />
+              <div className="p-2 rounded-md bg-accent-green/30">
+                <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" data-testid="icon-comments" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -316,10 +325,12 @@ function Dashboard() {
           </Card>
 
           {/* Views Stats */}
-          <Card data-testid="card-views-stats">
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-views-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" data-testid="icon-views" />
+              <div className="p-2 rounded-md bg-accent-blue/30">
+                <Eye className="h-4 w-4 text-primary" data-testid="icon-views" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
