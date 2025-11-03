@@ -48,7 +48,7 @@ export default function TermDetail() {
   const termIdentifier = params.identifier || "";
 
   const { data: term, isLoading: termLoading } = useQuery<SmartTerm>({
-    queryKey: ["/api/smart-terms", termIdentifier],
+    queryKey: [`/api/smart-terms/${encodeURIComponent(termIdentifier)}`],
     enabled: !!termIdentifier,
   });
 
@@ -56,7 +56,7 @@ export default function TermDetail() {
     articles: ArticleWithDetails[]; 
     total: number 
   }>({
-    queryKey: ["/api/smart-terms", termIdentifier, "articles"],
+    queryKey: [`/api/smart-terms/${encodeURIComponent(termIdentifier)}/articles`],
     enabled: !!termIdentifier && !!term,
   });
 

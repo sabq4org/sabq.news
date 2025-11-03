@@ -69,7 +69,7 @@ export default function EntityDetail() {
   const slug = params.slug || "";
 
   const { data: entity, isLoading: entityLoading } = useQuery<SmartEntity>({
-    queryKey: ["/api/smart-entities", slug],
+    queryKey: [`/api/smart-entities/${encodeURIComponent(slug)}`],
     enabled: !!slug,
   });
 
@@ -77,7 +77,7 @@ export default function EntityDetail() {
     articles: ArticleWithDetails[]; 
     total: number 
   }>({
-    queryKey: ["/api/smart-entities", slug, "articles"],
+    queryKey: [`/api/smart-entities/${encodeURIComponent(slug)}/articles`],
     enabled: !!slug && !!entity,
   });
 
