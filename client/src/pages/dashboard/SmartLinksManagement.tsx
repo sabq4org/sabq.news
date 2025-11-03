@@ -46,16 +46,18 @@ import { Plus, Pencil, Trash2, Search, Link2, Database, Tag } from "lucide-react
 import type { InsertEntityTypeDb, InsertSmartEntityDb, InsertSmartTermDb } from "@shared/schema";
 
 interface EntityType {
-  id: string;
-  name: string;
+  id: number;
+  nameAr: string;
+  nameEn: string;
+  slug: string;
   description: string | null;
 }
 
 interface SmartEntity {
   id: string;
   name: string;
-  entityTypeId: string;
-  url: string | null;
+  typeId: number;
+  slug: string;
   description: string | null;
   entityTypeName?: string;
 }
@@ -63,8 +65,8 @@ interface SmartEntity {
 interface SmartTerm {
   id: string;
   term: string;
-  entityId: string;
-  entityName?: string;
+  description: string | null;
+  category: string | null;
 }
 
 export default function SmartLinksManagement() {
@@ -75,7 +77,7 @@ export default function SmartLinksManagement() {
   // Entity Types state
   const [entityTypeDialogOpen, setEntityTypeDialogOpen] = useState(false);
   const [editingEntityType, setEditingEntityType] = useState<EntityType | null>(null);
-  const [deleteEntityTypeId, setDeleteEntityTypeId] = useState<string | null>(null);
+  const [deleteEntityTypeId, setDeleteEntityTypeId] = useState<number | null>(null);
 
   // Smart Entities state
   const [entityDialogOpen, setEntityDialogOpen] = useState(false);
@@ -105,7 +107,10 @@ export default function SmartLinksManagement() {
   // Entity Type Mutations
   const createEntityTypeMutation = useMutation({
     mutationFn: async (data: InsertEntityTypeDb) => {
-      return await apiRequest("/api/smart-entities/types", "POST", data);
+      return await apiRequest("/api/smart-entities/types", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
@@ -118,8 +123,11 @@ export default function SmartLinksManagement() {
   });
 
   const updateEntityTypeMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertEntityTypeDb> }) => {
-      return await apiRequest(`/api/smart-entities/types/${id}`, "PATCH", data);
+    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertEntityTypeDb> }) => {
+      return await apiRequest(`/api/smart-entities/types/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
@@ -133,8 +141,10 @@ export default function SmartLinksManagement() {
   });
 
   const deleteEntityTypeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest(`/api/smart-entities/types/${id}`, "DELETE");
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/smart-entities/types/${id}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
@@ -149,7 +159,10 @@ export default function SmartLinksManagement() {
   // Smart Entity Mutations
   const createEntityMutation = useMutation({
     mutationFn: async (data: InsertSmartEntityDb) => {
-      return await apiRequest("/api/smart-entities", "POST", data);
+      return await apiRequest("/api/smart-entities", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities"] });
@@ -163,7 +176,10 @@ export default function SmartLinksManagement() {
 
   const updateEntityMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertSmartEntityDb> }) => {
-      return await apiRequest(`/api/smart-entities/${id}`, "PATCH", data);
+      return await apiRequest(`/api/smart-entities/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities"] });
@@ -178,7 +194,9 @@ export default function SmartLinksManagement() {
 
   const deleteEntityMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/smart-entities/${id}`, "DELETE");
+      return await apiRequest(`/api/smart-entities/${id}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-entities"] });
@@ -193,7 +211,10 @@ export default function SmartLinksManagement() {
   // Smart Term Mutations
   const createTermMutation = useMutation({
     mutationFn: async (data: InsertSmartTermDb) => {
-      return await apiRequest("/api/smart-terms", "POST", data);
+      return await apiRequest("/api/smart-terms", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-terms"] });
@@ -207,7 +228,10 @@ export default function SmartLinksManagement() {
 
   const updateTermMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertSmartTermDb> }) => {
-      return await apiRequest(`/api/smart-terms/${id}`, "PATCH", data);
+      return await apiRequest(`/api/smart-terms/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-terms"] });
@@ -222,7 +246,9 @@ export default function SmartLinksManagement() {
 
   const deleteTermMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/smart-terms/${id}`, "DELETE");
+      return await apiRequest(`/api/smart-terms/${id}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/smart-terms"] });
@@ -236,7 +262,8 @@ export default function SmartLinksManagement() {
 
   // Filter data based on search
   const filteredEntityTypes = entityTypes.filter((type) =>
-    type.name.toLowerCase().includes(searchQuery.toLowerCase())
+    type.nameAr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    type.nameEn.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredEntities = smartEntities.filter((entity) =>
@@ -246,7 +273,7 @@ export default function SmartLinksManagement() {
 
   const filteredTerms = smartTerms.filter((term) =>
     term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (term.entityName && term.entityName.toLowerCase().includes(searchQuery.toLowerCase()))
+    (term.category && term.category.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -326,7 +353,8 @@ export default function SmartLinksManagement() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>الاسم</TableHead>
+                        <TableHead>الاسم العربي</TableHead>
+                        <TableHead>الاسم الإنجليزي</TableHead>
                         <TableHead>الوصف</TableHead>
                         <TableHead className="w-24">الإجراءات</TableHead>
                       </TableRow>
@@ -334,7 +362,8 @@ export default function SmartLinksManagement() {
                     <TableBody>
                       {filteredEntityTypes.map((type) => (
                         <TableRow key={type.id}>
-                          <TableCell className="font-medium">{type.name}</TableCell>
+                          <TableCell className="font-medium">{type.nameAr}</TableCell>
+                          <TableCell className="text-muted-foreground">{type.nameEn}</TableCell>
                           <TableCell className="text-muted-foreground">
                             {type.description || "-"}
                           </TableCell>
@@ -407,7 +436,6 @@ export default function SmartLinksManagement() {
                       <TableRow>
                         <TableHead>الاسم</TableHead>
                         <TableHead>النوع</TableHead>
-                        <TableHead>الرابط</TableHead>
                         <TableHead>الوصف</TableHead>
                         <TableHead className="w-24">الإجراءات</TableHead>
                       </TableRow>
@@ -418,20 +446,6 @@ export default function SmartLinksManagement() {
                           <TableCell className="font-medium">{entity.name}</TableCell>
                           <TableCell className="text-muted-foreground">
                             {entity.entityTypeName || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {entity.url ? (
-                              <a
-                                href={entity.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                              >
-                                {entity.url.substring(0, 40)}...
-                              </a>
-                            ) : (
-                              "-"
-                            )}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {entity.description ? entity.description.substring(0, 50) + "..." : "-"}
@@ -504,7 +518,8 @@ export default function SmartLinksManagement() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>المصطلح</TableHead>
-                        <TableHead>الكيان المرتبط</TableHead>
+                        <TableHead>الفئة</TableHead>
+                        <TableHead>الوصف</TableHead>
                         <TableHead className="w-24">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -513,7 +528,10 @@ export default function SmartLinksManagement() {
                         <TableRow key={term.id}>
                           <TableCell className="font-medium">{term.term}</TableCell>
                           <TableCell className="text-muted-foreground">
-                            {term.entityName || "-"}
+                            {term.category || "-"}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {term.description ? term.description.substring(0, 50) + "..." : "-"}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
@@ -584,7 +602,6 @@ export default function SmartLinksManagement() {
           open={termDialogOpen}
           onOpenChange={setTermDialogOpen}
           term={editingTerm}
-          entities={smartEntities}
           onSave={(data) => {
             if (editingTerm) {
               updateTermMutation.mutate({ id: editingTerm.id, data });
