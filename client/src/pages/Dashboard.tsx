@@ -29,7 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useMemo } from "react";
@@ -771,15 +771,24 @@ function UpcomingRemindersWidget() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-muted-foreground flex items-center gap-1" data-testid={`text-reminder-time-${reminder.id}`}>
                       <Clock className="h-3 w-3" />
-                      {formatDistanceToNow(new Date(reminder.reminderTime), {
-                        addSuffix: true,
-                        locale: arSA,
-                      })}
+                      {(() => {
+                        const reminderDate = new Date(reminder.reminderTime);
+                        const now = new Date();
+                        if (reminderDate > now) {
+                          return `بعد ${formatDistance(reminderDate, now, { locale: arSA })}`;
+                        } else {
+                          return formatDistanceToNow(reminderDate, {
+                            addSuffix: true,
+                            locale: arSA,
+                          });
+                        }
+                      })()}
                     </span>
                     <Badge variant="outline" data-testid={`badge-reminder-channel-${reminder.id}`}>
-                      {reminder.channelType === 'email' ? 'بريد إلكتروني' : 
-                       reminder.channelType === 'sms' ? 'رسالة نصية' :
-                       reminder.channelType === 'push' ? 'إشعار' : 
+                      {reminder.channelType === 'IN_APP' ? 'داخل التطبيق' :
+                       reminder.channelType === 'EMAIL' ? 'بريد إلكتروني' : 
+                       reminder.channelType === 'WHATSAPP' ? 'واتساب' :
+                       reminder.channelType === 'SLACK' ? 'سلاك' : 
                        reminder.channelType}
                     </Badge>
                   </div>
