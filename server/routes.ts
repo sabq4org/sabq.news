@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
-import { getObjectAclPolicy } from "./objectAcl";
+import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
@@ -16389,39 +16389,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "الصورة مطلوبة" });
       }
 
-      // استخدام ObjectStorageService الموجود
-      const publicSearchPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
-      if (!publicSearchPaths) {
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
+      
+      if (!privateObjectDir) {
         return res.status(500).json({ message: "Object Storage غير مُعد" });
       }
-
-      // استخراج bucket name من أول مسار عام
-      // Format: /bucket-name/public
-      const firstPath = publicSearchPaths.split(',')[0].trim();
-      const pathParts = firstPath.split('/').filter(Boolean); // ['bucket-name', 'public']
-      const bucketName = pathParts[0];
 
       // تحديد مسار الملف
       const timestamp = Date.now();
       const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
       const filename = `entities/${timestamp}-${sanitizedFilename}`;
-      const file = objectStorageClient.bucket(bucketName).file(`public/${filename}`);
+      const fullPath = `${privateObjectDir}/${filename}`;
+      
+      // استخراج bucket name و object name
+      const pathParts = fullPath.split('/').filter(Boolean);
+      const bucketName = pathParts[0];
+      const objectName = pathParts.slice(1).join('/');
 
       // رفع الملف
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
       await file.save(req.file.buffer, {
         metadata: {
           contentType: req.file.mimetype,
         },
       });
 
-      // جعل الملف عام
-      await file.makePublic();
+      // جعل الملف عام باستخدام نظام ACL المخصص (بدلاً من makePublic)
+      await setObjectAclPolicy(file, {
+        owner: req.user.id,
+        visibility: "public",
+      });
 
-      // إنشاء رابط الصورة العام
-      const publicUrl = `https://storage.googleapis.com/${bucketName}/public/${filename}`;
+      // إنشاء URL للوصول للملف عبر /objects/ endpoint
+      const objectPath = `/objects/${filename}`;
 
-      console.log(`✅ Image uploaded successfully: ${publicUrl}`);
-      res.json({ imageUrl: publicUrl });
+      console.log(`✅ Image uploaded successfully: ${objectPath}`);
+      res.json({ imageUrl: objectPath });
     } catch (error: any) {
       console.error("خطأ في رفع الصورة:", error);
       res.status(500).json({ message: "حدث خطأ في رفع الصورة: " + error.message });
