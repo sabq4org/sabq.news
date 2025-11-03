@@ -174,6 +174,20 @@ import {
   type UpdateShort,
   type ShortAnalytic,
   type InsertShortAnalytic,
+  calendarEvents,
+  calendarReminders,
+  calendarAiDrafts,
+  calendarAssignments,
+  type CalendarEvent,
+  type CalendarReminder,
+  type CalendarAiDraft,
+  type CalendarAssignment,
+  type InsertCalendarEvent,
+  type UpdateCalendarEvent,
+  type InsertCalendarReminder,
+  type InsertCalendarAiDraft,
+  type InsertCalendarAssignment,
+  type UpdateCalendarAssignment,
 } from "@shared/schema";
 
 import { IChatStorage, DbChatStorage } from "./chat-storage";
@@ -844,6 +858,63 @@ export interface IStorage {
 
   // Get featured shorts for homepage block
   getFeaturedShorts(limit?: number): Promise<ShortWithDetails[]>;
+
+  // ==========================================
+  // Calendar System - تقويم سبق
+  // ==========================================
+  
+  // Calendar Events - CRUD operations
+  getAllCalendarEvents(filters?: {
+    type?: string;
+    importance?: number;
+    dateFrom?: Date;
+    dateTo?: Date;
+    categoryId?: string;
+    tags?: string[];
+    searchQuery?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    events: Array<any>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+  
+  getCalendarEventById(id: string): Promise<any | undefined>;
+  getCalendarEventBySlug(slug: string): Promise<any | undefined>;
+  createCalendarEvent(event: any, reminders?: any[]): Promise<any>;
+  updateCalendarEvent(id: string, updates: any): Promise<any>;
+  deleteCalendarEvent(id: string): Promise<void>;
+  
+  // Upcoming events (7-day lookahead)
+  getUpcomingCalendarEvents(days?: number): Promise<Array<any>>;
+  
+  // Reminders
+  getCalendarReminders(eventId: string): Promise<any[]>;
+  createCalendarReminder(reminder: any): Promise<any>;
+  updateCalendarReminder(id: string, updates: any): Promise<any>;
+  deleteCalendarReminder(id: string): Promise<void>;
+  getRemindersToFire(date: Date): Promise<Array<any>>;
+  
+  // AI Drafts
+  getCalendarAiDraft(eventId: string): Promise<any | undefined>;
+  createCalendarAiDraft(draft: any): Promise<any>;
+  updateCalendarAiDraft(eventId: string, updates: any): Promise<any>;
+  deleteCalendarAiDraft(eventId: string): Promise<void>;
+  
+  // Assignments
+  getCalendarAssignments(filters?: {
+    eventId?: string;
+    userId?: string;
+    status?: string;
+    role?: string;
+  }): Promise<any[]>;
+  createCalendarAssignment(assignment: any): Promise<any>;
+  updateCalendarAssignment(id: string, updates: any): Promise<any>;
+  deleteCalendarAssignment(id: string): Promise<void>;
+  completeCalendarAssignment(id: string): Promise<any>;
 
   // ==========================================
   // Chat System - نظام الدردشة
@@ -7338,6 +7409,349 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       reporter: r.reporter || undefined,
     }));
+  }
+
+  // ============================================
+  // Calendar System Implementation - تقويم سبق
+  // ============================================
+
+  async getAllCalendarEvents(filters?: {
+    type?: string;
+    importance?: number;
+    dateFrom?: Date;
+    dateTo?: Date;
+    categoryId?: string;
+    tags?: string[];
+    searchQuery?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    events: Array<CalendarEvent & { category?: Category | null; createdBy?: User | null }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      type,
+      importance,
+      dateFrom,
+      dateTo,
+      categoryId,
+      tags,
+      searchQuery,
+      page = 1,
+      limit = 50,
+    } = filters || {};
+
+    const conditions = [];
+
+    if (type) conditions.push(eq(calendarEvents.type, type));
+    if (importance !== undefined) conditions.push(eq(calendarEvents.importance, importance));
+    if (dateFrom) conditions.push(gte(calendarEvents.dateStart, dateFrom));
+    if (dateTo) conditions.push(lte(calendarEvents.dateStart, dateTo));
+    if (categoryId) conditions.push(eq(calendarEvents.categoryId, categoryId));
+    if (tags && tags.length > 0) {
+      conditions.push(sql`${calendarEvents.tags} && ${tags}`);
+    }
+    if (searchQuery) {
+      conditions.push(
+        or(
+          ilike(calendarEvents.title, `%${searchQuery}%`),
+          ilike(calendarEvents.description, `%${searchQuery}%`)
+        )!
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(calendarEvents)
+      .where(whereClause);
+
+    const total = countResult.count;
+    const offset = (page - 1) * limit;
+
+    const results = await db
+      .select({
+        event: calendarEvents,
+        category: categories,
+        createdBy: users,
+      })
+      .from(calendarEvents)
+      .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
+      .leftJoin(users, eq(calendarEvents.createdById, users.id))
+      .where(whereClause)
+      .orderBy(asc(calendarEvents.dateStart))
+      .limit(limit)
+      .offset(offset);
+
+    const events = results.map(r => ({
+      ...r.event,
+      category: r.category,
+      createdBy: r.createdBy,
+    }));
+
+    return {
+      events,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getCalendarEventById(id: string): Promise<(CalendarEvent & { category?: Category | null; createdBy?: User | null }) | undefined> {
+    const [result] = await db
+      .select({
+        event: calendarEvents,
+        category: categories,
+        createdBy: users,
+      })
+      .from(calendarEvents)
+      .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
+      .leftJoin(users, eq(calendarEvents.createdById, users.id))
+      .where(eq(calendarEvents.id, id))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      ...result.event,
+      category: result.category,
+      createdBy: result.createdBy,
+    };
+  }
+
+  async getCalendarEventBySlug(slug: string): Promise<(CalendarEvent & { category?: Category | null; createdBy?: User | null }) | undefined> {
+    const [result] = await db
+      .select({
+        event: calendarEvents,
+        category: categories,
+        createdBy: users,
+      })
+      .from(calendarEvents)
+      .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
+      .leftJoin(users, eq(calendarEvents.createdById, users.id))
+      .where(eq(calendarEvents.slug, slug))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      ...result.event,
+      category: result.category,
+      createdBy: result.createdBy,
+    };
+  }
+
+  async createCalendarEvent(event: InsertCalendarEvent, reminders?: InsertCalendarReminder[]): Promise<CalendarEvent> {
+    return await db.transaction(async (tx) => {
+      const [newEvent] = await tx.insert(calendarEvents).values(event as any).returning();
+
+      if (reminders && reminders.length > 0) {
+        const reminderValues = reminders.map(r => ({
+          ...r,
+          eventId: newEvent.id,
+        }));
+        await tx.insert(calendarReminders).values(reminderValues as any);
+      }
+
+      return newEvent;
+    });
+  }
+
+  async updateCalendarEvent(id: string, updates: UpdateCalendarEvent): Promise<CalendarEvent> {
+    const [updated] = await db
+      .update(calendarEvents)
+      .set({ ...updates, updatedAt: new Date() } as any)
+      .where(eq(calendarEvents.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  async deleteCalendarEvent(id: string): Promise<void> {
+    await db.delete(calendarEvents).where(eq(calendarEvents.id, id));
+  }
+
+  async getUpcomingCalendarEvents(days: number = 7): Promise<Array<CalendarEvent & { category?: Category | null }>> {
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+
+    const results = await db
+      .select({
+        event: calendarEvents,
+        category: categories,
+      })
+      .from(calendarEvents)
+      .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
+      .where(
+        and(
+          gte(calendarEvents.dateStart, now),
+          lte(calendarEvents.dateStart, endDate)
+        )
+      )
+      .orderBy(asc(calendarEvents.dateStart));
+
+    return results.map(r => ({
+      ...r.event,
+      category: r.category,
+    }));
+  }
+
+  async getCalendarReminders(eventId: string): Promise<CalendarReminder[]> {
+    return await db
+      .select()
+      .from(calendarReminders)
+      .where(eq(calendarReminders.eventId, eventId))
+      .orderBy(asc(calendarReminders.fireWhen));
+  }
+
+  async createCalendarReminder(reminder: InsertCalendarReminder): Promise<CalendarReminder> {
+    const [newReminder] = await db
+      .insert(calendarReminders)
+      .values(reminder as any)
+      .returning();
+    return newReminder;
+  }
+
+  async updateCalendarReminder(id: string, updates: Partial<InsertCalendarReminder>): Promise<CalendarReminder> {
+    const [updated] = await db
+      .update(calendarReminders)
+      .set(updates as any)
+      .where(eq(calendarReminders.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCalendarReminder(id: string): Promise<void> {
+    await db.delete(calendarReminders).where(eq(calendarReminders.id, id));
+  }
+
+  async getRemindersToFire(date: Date): Promise<Array<CalendarReminder & { event: CalendarEvent }>> {
+    const results = await db
+      .select({
+        reminder: calendarReminders,
+        event: calendarEvents,
+      })
+      .from(calendarReminders)
+      .innerJoin(calendarEvents, eq(calendarReminders.eventId, calendarEvents.id))
+      .where(
+        and(
+          eq(calendarReminders.enabled, true),
+          sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen} <= ${date}`
+        )
+      );
+
+    return results.map(r => ({
+      ...r.reminder,
+      event: r.event,
+    }));
+  }
+
+  async getCalendarAiDraft(eventId: string): Promise<CalendarAiDraft | undefined> {
+    const [draft] = await db
+      .select()
+      .from(calendarAiDrafts)
+      .where(eq(calendarAiDrafts.eventId, eventId))
+      .limit(1);
+    return draft;
+  }
+
+  async createCalendarAiDraft(draft: InsertCalendarAiDraft): Promise<CalendarAiDraft> {
+    const [newDraft] = await db
+      .insert(calendarAiDrafts)
+      .values(draft as any)
+      .returning();
+    return newDraft;
+  }
+
+  async updateCalendarAiDraft(eventId: string, updates: Partial<InsertCalendarAiDraft>): Promise<CalendarAiDraft> {
+    const [updated] = await db
+      .update(calendarAiDrafts)
+      .set({ ...updates, updatedAt: new Date() } as any)
+      .where(eq(calendarAiDrafts.eventId, eventId))
+      .returning();
+    return updated;
+  }
+
+  async deleteCalendarAiDraft(eventId: string): Promise<void> {
+    await db.delete(calendarAiDrafts).where(eq(calendarAiDrafts.eventId, eventId));
+  }
+
+  async getCalendarAssignments(filters?: {
+    eventId?: string;
+    userId?: string;
+    status?: string;
+    role?: string;
+  }): Promise<Array<CalendarAssignment & { event?: CalendarEvent; user?: User; assignedByUser?: User }>> {
+    const conditions = [];
+
+    if (filters?.eventId) conditions.push(eq(calendarAssignments.eventId, filters.eventId));
+    if (filters?.userId) conditions.push(eq(calendarAssignments.userId, filters.userId));
+    if (filters?.status) conditions.push(eq(calendarAssignments.status, filters.status));
+    if (filters?.role) conditions.push(eq(calendarAssignments.role, filters.role));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const assignedByUser = aliasedTable(users, 'assignedByUser');
+
+    const results = await db
+      .select({
+        assignment: calendarAssignments,
+        event: calendarEvents,
+        user: users,
+        assignedByUser,
+      })
+      .from(calendarAssignments)
+      .leftJoin(calendarEvents, eq(calendarAssignments.eventId, calendarEvents.id))
+      .leftJoin(users, eq(calendarAssignments.userId, users.id))
+      .leftJoin(assignedByUser, eq(calendarAssignments.assignedBy, assignedByUser.id))
+      .where(whereClause)
+      .orderBy(desc(calendarAssignments.assignedAt));
+
+    return results.map(r => ({
+      ...r.assignment,
+      event: r.event || undefined,
+      user: r.user || undefined,
+      assignedByUser: r.assignedByUser || undefined,
+    }));
+  }
+
+  async createCalendarAssignment(assignment: InsertCalendarAssignment): Promise<CalendarAssignment> {
+    const [newAssignment] = await db
+      .insert(calendarAssignments)
+      .values(assignment as any)
+      .returning();
+    return newAssignment;
+  }
+
+  async updateCalendarAssignment(id: string, updates: UpdateCalendarAssignment): Promise<CalendarAssignment> {
+    const [updated] = await db
+      .update(calendarAssignments)
+      .set(updates as any)
+      .where(eq(calendarAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCalendarAssignment(id: string): Promise<void> {
+    await db.delete(calendarAssignments).where(eq(calendarAssignments.id, id));
+  }
+
+  async completeCalendarAssignment(id: string): Promise<CalendarAssignment> {
+    const [updated] = await db
+      .update(calendarAssignments)
+      .set({
+        status: 'done',
+        completedAt: new Date(),
+      })
+      .where(eq(calendarAssignments.id, id))
+      .returning();
+    return updated;
   }
 }
 

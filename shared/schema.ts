@@ -3539,3 +3539,238 @@ export type InsertChatModerationLog = z.infer<typeof insertChatModerationLogSche
 export type InsertChatNotification = z.infer<typeof insertChatNotificationSchema>;
 export type InsertChatRetentionPolicy = z.infer<typeof insertChatRetentionPolicySchema>;
 export type UpdateChatRetentionPolicy = z.infer<typeof updateChatRetentionPolicySchema>;
+
+// ============================================
+// Calendar System (Sabq Calendar / تقويم سبق)
+// ============================================
+
+// Calendar Events - Global/National/Internal occasions
+export const calendarEvents = pgTable("calendar_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  dateStart: timestamp("date_start", { withTimezone: true }).notNull(),
+  dateEnd: timestamp("date_end", { withTimezone: true }),
+  timezone: text("timezone").default("Asia/Riyadh").notNull(),
+  type: text("type").notNull(), // GLOBAL, NATIONAL, INTERNAL
+  localeScope: text("locale_scope"), // WORLD, SA, GCC, CUSTOM
+  importance: integer("importance").default(3).notNull(), // 1-5 scale
+  categoryId: varchar("category_id").references(() => categories.id),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`),
+  source: text("source"), // UN, WHO, Manual, ICS import
+  description: text("description"),
+  attachments: jsonb("attachments").$type<{
+    url?: string;
+    type?: string;
+    name?: string;
+    [key: string]: any;
+  }[]>(),
+  
+  // Metadata
+  createdById: varchar("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_calendar_events_date_start").on(table.dateStart),
+  index("idx_calendar_events_type").on(table.type),
+  index("idx_calendar_events_importance").on(table.importance),
+  index("idx_calendar_events_category").on(table.categoryId),
+]);
+
+// Reminders - Notification schedule for events
+export const calendarReminders = pgTable("calendar_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => calendarEvents.id, { onDelete: "cascade" }).notNull(),
+  fireWhen: integer("fire_when").notNull(), // days before event (e.g., 30, 14, 7, 5, 3, 1)
+  channel: text("channel").notNull(), // IN_APP, EMAIL, WHATSAPP, SLACK
+  enabled: boolean("enabled").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_calendar_reminders_event").on(table.eventId),
+  index("idx_calendar_reminders_enabled").on(table.enabled),
+]);
+
+// AI Drafts - Cached AI-generated content for events
+export const calendarAiDrafts = pgTable("calendar_ai_drafts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => calendarEvents.id, { onDelete: "cascade" }).notNull().unique(),
+  ideas: jsonb("ideas").$type<{
+    id?: string;
+    type?: string; // report, feature, explainer, opinion
+    title?: string;
+    alternateTitle?: string;
+    angle?: string;
+    keyPoints?: string[];
+    openingParagraph?: string;
+    sources?: string[];
+    [key: string]: any;
+  }[]>(),
+  headlines: jsonb("headlines").$type<{
+    primary?: string;
+    secondary?: string;
+    alternates?: string[];
+    [key: string]: any;
+  }>(),
+  infographic: jsonb("infographic").$type<{
+    title?: string;
+    subtitle?: string;
+    dataPoints?: Array<{
+      label?: string;
+      value?: string | number;
+      icon?: string;
+    }>;
+    cta?: string;
+    [key: string]: any;
+  }>(),
+  social: jsonb("social").$type<{
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+    hashtags?: string[];
+    [key: string]: any;
+  }>(),
+  seo: jsonb("seo").$type<{
+    keywords?: string[];
+    metaTitle?: string;
+    metaDescription?: string;
+    internalLinks?: string[];
+    [key: string]: any;
+  }>(),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_calendar_ai_drafts_event").on(table.eventId),
+]);
+
+// Assignments - Task assignments for event coverage
+export const calendarAssignments = pgTable("calendar_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => calendarEvents.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  role: text("role").notNull(), // editor, reporter, designer, social
+  status: text("status").default("planned").notNull(), // planned, in_progress, done, cancelled
+  notes: text("notes"),
+  assignedBy: varchar("assigned_by").references(() => users.id),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("idx_calendar_assignments_event").on(table.eventId),
+  index("idx_calendar_assignments_user").on(table.userId),
+  index("idx_calendar_assignments_status").on(table.status),
+]);
+
+// ============================================
+// Calendar System Relations
+// ============================================
+
+export const calendarEventsRelations = relations(calendarEvents, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [calendarEvents.categoryId],
+    references: [categories.id],
+  }),
+  createdBy: one(users, {
+    fields: [calendarEvents.createdById],
+    references: [users.id],
+  }),
+  reminders: many(calendarReminders),
+  aiDraft: one(calendarAiDrafts),
+  assignments: many(calendarAssignments),
+}));
+
+export const calendarRemindersRelations = relations(calendarReminders, ({ one }) => ({
+  event: one(calendarEvents, {
+    fields: [calendarReminders.eventId],
+    references: [calendarEvents.id],
+  }),
+}));
+
+export const calendarAiDraftsRelations = relations(calendarAiDrafts, ({ one }) => ({
+  event: one(calendarEvents, {
+    fields: [calendarAiDrafts.eventId],
+    references: [calendarEvents.id],
+  }),
+}));
+
+export const calendarAssignmentsRelations = relations(calendarAssignments, ({ one }) => ({
+  event: one(calendarEvents, {
+    fields: [calendarAssignments.eventId],
+    references: [calendarEvents.id],
+  }),
+  user: one(users, {
+    fields: [calendarAssignments.userId],
+    references: [users.id],
+  }),
+  assignedByUser: one(users, {
+    fields: [calendarAssignments.assignedBy],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// Calendar System Types
+// ============================================
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type CalendarReminder = typeof calendarReminders.$inferSelect;
+export type CalendarAiDraft = typeof calendarAiDrafts.$inferSelect;
+export type CalendarAssignment = typeof calendarAssignments.$inferSelect;
+
+// ============================================
+// Calendar System Zod Schemas
+// ============================================
+
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "عنوان المناسبة مطلوب").max(500, "العنوان طويل جداً"),
+  slug: z.string().min(1, "الرابط المختصر مطلوب"),
+  dateStart: z.string().or(z.date()),
+  dateEnd: z.string().or(z.date()).optional(),
+  type: z.enum(["GLOBAL", "NATIONAL", "INTERNAL"]),
+  importance: z.number().min(1).max(5).default(3),
+  tags: z.array(z.string()).default([]),
+});
+
+export const updateCalendarEventSchema = insertCalendarEventSchema.partial();
+
+export const insertCalendarReminderSchema = createInsertSchema(calendarReminders).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  fireWhen: z.number().min(0, "الأيام قبل الحدث يجب أن تكون 0 أو أكثر"),
+  channel: z.enum(["IN_APP", "EMAIL", "WHATSAPP", "SLACK"]),
+});
+
+export const insertCalendarAiDraftSchema = createInsertSchema(calendarAiDrafts).omit({
+  id: true,
+  generatedAt: true,
+  updatedAt: true,
+});
+
+export const insertCalendarAssignmentSchema = createInsertSchema(calendarAssignments).omit({
+  id: true,
+  assignedAt: true,
+  completedAt: true,
+}).extend({
+  role: z.enum(["editor", "reporter", "designer", "social"]),
+  status: z.enum(["planned", "in_progress", "done", "cancelled"]).default("planned"),
+});
+
+export const updateCalendarAssignmentSchema = insertCalendarAssignmentSchema.partial().omit({
+  eventId: true,
+  userId: true,
+  assignedBy: true,
+});
+
+// ============================================
+// Calendar System Insert Types
+// ============================================
+
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+export type UpdateCalendarEvent = z.infer<typeof updateCalendarEventSchema>;
+export type InsertCalendarReminder = z.infer<typeof insertCalendarReminderSchema>;
+export type InsertCalendarAiDraft = z.infer<typeof insertCalendarAiDraftSchema>;
+export type InsertCalendarAssignment = z.infer<typeof insertCalendarAssignmentSchema>;
+export type UpdateCalendarAssignment = z.infer<typeof updateCalendarAssignmentSchema>;

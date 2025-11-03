@@ -70,6 +70,14 @@ export async function seedRBAC() {
     { code: "shorts:edit", label: "Edit Shorts", labelAr: "تعديل الشورتس", module: "shorts" },
     { code: "shorts:delete", label: "Delete Shorts", labelAr: "حذف الشورتس", module: "shorts" },
     { code: "shorts:manage", label: "Manage Shorts", labelAr: "إدارة الشورتس", module: "shorts" },
+
+    // Calendar permissions (تقويم سبق - Editorial Calendar)
+    { code: "calendar:view", label: "View Calendar", labelAr: "عرض التقويم", module: "calendar" },
+    { code: "calendar:create", label: "Create Calendar Events", labelAr: "إنشاء أحداث التقويم", module: "calendar" },
+    { code: "calendar:edit", label: "Edit Calendar Events", labelAr: "تعديل أحداث التقويم", module: "calendar" },
+    { code: "calendar:delete", label: "Delete Calendar Events", labelAr: "حذف أحداث التقويم", module: "calendar" },
+    { code: "calendar:assign_tasks", label: "Assign Calendar Tasks", labelAr: "تعيين مهام التقويم", module: "calendar" },
+    { code: "calendar:generate_ai", label: "Generate AI Content", labelAr: "توليد محتوى ذكي", module: "calendar" },
   ];
 
   const insertedPermissions = await db
@@ -155,6 +163,7 @@ export async function seedRBAC() {
       "muqtarib.manage", "muqtarib.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.delete", "mirqab.publish", "mirqab.manage_settings",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:delete", "shorts:manage",
+      "calendar:view", "calendar:create", "calendar:edit", "calendar:delete", "calendar:assign_tasks", "calendar:generate_ai",
     ],
     
     editor: [
@@ -167,6 +176,7 @@ export async function seedRBAC() {
       "muqtarib.manage", "muqtarib.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:manage",
+      "calendar:view", "calendar:create", "calendar:edit", "calendar:assign_tasks", "calendar:generate_ai",
     ],
     
     reporter: [
@@ -174,6 +184,7 @@ export async function seedRBAC() {
       "categories.view",
       "comments.view",
       "shorts:view", "shorts:create", "shorts:edit",
+      "calendar:view", "calendar:create",
     ],
     
     comments_moderator: [
