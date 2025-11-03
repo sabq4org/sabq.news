@@ -41,6 +41,8 @@ import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
 import TagsManagement from "@/pages/TagsManagement";
 import SmartLinksManagement from "@/pages/dashboard/SmartLinksManagement";
+import TermDetail from "@/pages/TermDetail";
+import EntityDetail from "@/pages/EntityDetail";
 import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
@@ -156,6 +158,10 @@ function Router() {
       
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
+      
+      {/* Smart Links pages */}
+      <Route path="/term/:identifier" component={TermDetail} />
+      <Route path="/entity/:slug" component={EntityDetail} />
       
       {/* Audio Newsletters public pages */}
       <Route path="/audio-newsletters" component={AudioNewslettersArchive} />

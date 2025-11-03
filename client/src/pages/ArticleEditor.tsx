@@ -518,72 +518,103 @@ const generateSlug = (text: string) => {
       return;
     }
 
-    // Get the editor's current content as text (without HTML tags)
-    const editorText = editorInstance.state.doc.textContent;
+    // البحث عن النص في المحرر باستخدام regex للدقة
+    const searchText = suggestion.text.trim();
     
-    // Use position and length from AI suggestion for accurate text selection
-    const from = suggestion.position;
-    const to = suggestion.position + suggestion.length;
+    // استخدام findChildren للبحث في عقد المحرر
+    let found = false;
+    const { state } = editorInstance;
     
-    // Verify the text at the suggested position matches
-    const textAtPosition = editorText.substring(from, to);
-    if (textAtPosition !== suggestion.text) {
-      // Fallback: find occurrence closest to original position
-      // Find ALL occurrences in the text
-      const occurrences: number[] = [];
-      let searchIndex = 0;
-      while (searchIndex < editorText.length) {
-        const foundIndex = editorText.indexOf(suggestion.text, searchIndex);
-        if (foundIndex === -1) break;
-        occurrences.push(foundIndex);
-        searchIndex = foundIndex + 1;
-      }
+    state.doc.descendants((node, pos) => {
+      if (found) return false; // توقف بعد إيجاد أول مطابقة
       
-      if (occurrences.length === 0) {
-        toast({
-          title: "لم يتم العثور على النص",
-          description: `النص "${suggestion.text}" غير موجود في المحتوى الحالي`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Find the occurrence closest to the original position
-      let closestOccurrence = occurrences[0];
-      let minDistance = Math.abs(occurrences[0] - suggestion.position);
-      
-      for (const occurrence of occurrences) {
-        const distance = Math.abs(occurrence - suggestion.position);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestOccurrence = occurrence;
+      if (node.isText && node.text) {
+        // البحث عن النص في هذه العقدة
+        const textContent = node.text;
+        const index = textContent.indexOf(searchText);
+        
+        if (index !== -1) {
+          // وجدنا النص! احسب الموقع الدقيق في المحرر
+          const from = pos + index;
+          const to = from + searchText.length;
+          
+          // تطبيق الرابط
+          editorInstance
+            .chain()
+            .focus()
+            .setTextSelection({ from, to })
+            .setLink({ href: url })
+            .run();
+          
+          found = true;
+          
+          toast({
+            title: "تم إضافة الرابط بنجاح",
+            description: `تم ربط "${searchText}" بالرابط المقترح`,
+          });
+          
+          return false; // توقف عن البحث
         }
       }
-      
-      // Use closest occurrence
-      const fallbackFrom = closestOccurrence;
-      const fallbackTo = closestOccurrence + suggestion.text.length;
-      
-      editorInstance
-        .chain()
-        .focus()
-        .setTextSelection({ from: fallbackFrom, to: fallbackTo })
-        .setLink({ href: url })
-        .run();
-    } else {
-      // Use exact position from AI
-      editorInstance
-        .chain()
-        .focus()
-        .setTextSelection({ from, to })
-        .setLink({ href: url })
-        .run();
-    }
-
-    toast({
-      title: "تم إضافة الرابط بنجاح",
-      description: `تم ربط "${suggestion.text}" بالرابط المقترح`,
+      return true; // استمر في البحث
     });
+    
+    if (!found) {
+      // إذا لم نجد النص، جرب البحث بطريقة أخرى
+      const editorText = state.doc.textContent;
+      const index = editorText.indexOf(searchText);
+      
+      if (index !== -1) {
+        // حاول حساب الموقع بناءً على النص الكامل
+        // هذه طريقة احتياطية قد لا تكون دقيقة 100%
+        let charCount = 0;
+        let targetFrom = -1;
+        
+        state.doc.descendants((node, pos) => {
+          if (targetFrom !== -1) return false;
+          
+          if (node.isText && node.text) {
+            const nodeLength = node.text.length;
+            if (charCount + nodeLength > index) {
+              // النص يبدأ في هذه العقدة
+              const localIndex = index - charCount;
+              targetFrom = pos + localIndex;
+              return false;
+            }
+            charCount += nodeLength;
+          }
+          return true;
+        });
+        
+        if (targetFrom !== -1) {
+          const targetTo = targetFrom + searchText.length;
+          
+          editorInstance
+            .chain()
+            .focus()
+            .setTextSelection({ from: targetFrom, to: targetTo })
+            .setLink({ href: url })
+            .run();
+          
+          toast({
+            title: "تم إضافة الرابط بنجاح",
+            description: `تم ربط "${searchText}" بالرابط المقترح`,
+          });
+        } else {
+          toast({
+            title: "لم يتم العثور على النص",
+            description: `النص "${searchText}" غير موجود في المحتوى الحالي`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "لم يتم العثور على النص",
+          description: `النص "${searchText}" غير موجود في المحتوى الحالي`,
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const isSaving = saveArticleMutation.isPending;
