@@ -1,0 +1,89 @@
+2025-11-03 09:06:44.73
+607eb44f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-03 09:06:44.83
+607eb44f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-03 09:06:44.88
+607eb44f
+User
+6:06:44 AM [express] GET /api/chat/notifications/unread-count 200 in 326ms :: {"count":0}
+2025-11-03 09:06:46.54
+3d27317e
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-03 09:06:46.54
+3d27317e
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-03 09:06:46.54
+3d27317e
+User
+📡 User admin-sabq unsubscribed from notification stream
+
+2025-11-03 09:06:46.54
+3d27317e
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-03 09:06:49.05
+3d27317e
+System
+system: received signal terminated
+2025-11-03 09:07:00.01
+607eb44f
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-03 09:07:00.02
+607eb44f
+User
+[NotificationWorker] Starting queue processing...
+2025-11-03 09:07:00.04
+607eb44f
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-03 09:07:00.11
+607eb44f
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-03 09:07:00.11
+607eb44f
+User
+[NotificationWorker] Queue processing completed
+2025-11-03 09:07:06.47
+607eb44f
+User
+6:07:06 AM [express] GET /api/themes/active 200 in 23ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-11-03 09:07:06.91
+607eb44f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-03 09:07:06.93
+607eb44f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-03 09:07:06.96
+607eb44f
+User
+[RBAC] Permission denied for user admin@sabq.sa (admin-sabq): missing calendar:create
+2025-11-03 09:07:06.98
+607eb44f
+User
+6:07:06 AM [express] POST /api/calendar 403 in 251ms :: {"message":"Forbidden - Insufficient permiss…
+2025-11-03 09:07:10.17
+607eb44f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-03 09:07:10.19
+607eb44f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-03 09:07:10.23
+607eb44f
+User
+6:07:10 AM [express] GET /api/themes/active 200 in 86ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-11-03 09:07:10.91
+607eb44f
+User
+[WebSocket] Message received from admin-sabq : ping
