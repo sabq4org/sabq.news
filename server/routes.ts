@@ -16270,6 +16270,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/smart-entities/:slug/articles - جلب المقالات المرتبطة بكيان
+  app.get("/api/smart-entities/:slug/articles", async (req: any, res) => {
+    try {
+      const { slug } = req.params;
+      const { limit = 10 } = req.query;
+      
+      // جلب الكيان أولاً
+      const entities = await storage.getSmartEntities({ status: 'active' });
+      const entity = entities.find(e => e.slug === decodeURIComponent(slug));
+      
+      if (!entity) {
+        return res.status(404).json({ message: "الكيان غير موجود" });
+      }
+      
+      // البحث عن المقالات التي تحتوي على اسم الكيان
+      const articlesData = await storage.getArticles({ 
+        searchQuery: entity.name,
+        status: 'published' 
+      });
+      
+      // تحديد عدد النتائج
+      const limitedArticles = articlesData.slice(0, parseInt(limit as string));
+      
+      res.json({ articles: limitedArticles, total: articlesData.length });
+    } catch (error: any) {
+      console.error("خطأ في جلب المقالات المرتبطة:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب المقالات" });
+    }
+  });
+
+  // GET /api/smart-terms/:identifier/articles - جلب المقالات المرتبطة بمصطلح
+  app.get("/api/smart-terms/:identifier/articles", async (req: any, res) => {
+    try {
+      const { identifier } = req.params;
+      const { limit = 10 } = req.query;
+      
+      // جلب المصطلح أولاً
+      const terms = await storage.getSmartTerms({ status: 'active' });
+      const term = terms.find(t => 
+        t.id === identifier || 
+        t.term.toLowerCase().replace(/\s+/g, '-') === decodeURIComponent(identifier).toLowerCase()
+      );
+      
+      if (!term) {
+        return res.status(404).json({ message: "المصطلح غير موجود" });
+      }
+      
+      // البحث عن المقالات التي تحتوي على المصطلح
+      const articlesData = await storage.getArticles({ 
+        searchQuery: term.term,
+        status: 'published' 
+      });
+      
+      // تحديد عدد النتائج
+      const limitedArticles = articlesData.slice(0, parseInt(limit as string));
+      
+      res.json({ articles: limitedArticles, total: articlesData.length });
+    } catch (error: any) {
+      console.error("خطأ في جلب المقالات المرتبطة:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب المقالات" });
+    }
+  });
+
   // POST /api/smart-links/analyze - تحليل المحتوى واقتراح الروابط الذكية
   app.post("/api/smart-links/analyze", requireAuth, async (req: any, res) => {
     try {
