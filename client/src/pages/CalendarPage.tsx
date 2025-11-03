@@ -107,6 +107,12 @@ export default function CalendarPage() {
             </p>
           </div>
 
+          <Link href="/dashboard/calendar/new">
+            <Button data-testid="button-add-event">
+              <Plus className="h-4 w-4 ml-2" />
+              إضافة مناسبة
+            </Button>
+          </Link>
         </div>
 
         <Card>

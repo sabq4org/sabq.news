@@ -102,6 +102,7 @@ import ChatAdmin from "@/pages/dashboard/ChatAdmin";
 import AdminLogin from "@/pages/AdminLogin";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
+import CalendarEventForm from "@/pages/CalendarEventForm";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -209,6 +210,7 @@ function Router() {
       
       {/* Calendar */}
       <Route path="/dashboard/calendar" component={CalendarPage} />
+      <Route path="/dashboard/calendar/:action" component={CalendarEventForm} />
       <Route path="/dashboard/calendar/events/:id" component={CalendarEventDetail} />
       
       <Route path="/dashboard" component={Dashboard} />
