@@ -40,6 +40,7 @@ import Muqtarib from "@/pages/Muqtarib";
 import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
 import TagsManagement from "@/pages/TagsManagement";
+import SmartLinksManagement from "@/pages/dashboard/SmartLinksManagement";
 import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
@@ -238,6 +239,7 @@ function Router() {
       
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
       <Route path="/dashboard/tags" component={TagsManagement} />
+      <Route path="/dashboard/smart-links" component={SmartLinksManagement} />
       <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={ComingSoon} />

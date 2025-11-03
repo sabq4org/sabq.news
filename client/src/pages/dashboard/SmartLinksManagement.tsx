@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -691,12 +691,29 @@ function EntityTypeDialog({
   onSave: (data: Partial<InsertEntityTypeDb>) => void;
   isPending: boolean;
 }) {
-  const [name, setName] = useState(entityType?.name || "");
+  const [nameAr, setNameAr] = useState(entityType?.nameAr || "");
+  const [nameEn, setNameEn] = useState(entityType?.nameEn || "");
+  const [slug, setSlug] = useState(entityType?.slug || "");
   const [description, setDescription] = useState(entityType?.description || "");
+
+  // Reset form when dialog opens or entityType changes
+  useEffect(() => {
+    if (open) {
+      setNameAr(entityType?.nameAr || "");
+      setNameEn(entityType?.nameEn || "");
+      setSlug(entityType?.slug || "");
+      setDescription(entityType?.description || "");
+    }
+  }, [open, entityType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ name, description: description || null });
+    onSave({ 
+      nameAr, 
+      nameEn, 
+      slug,
+      description: description || null 
+    });
   };
 
   return (
@@ -713,14 +730,36 @@ function EntityTypeDialog({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">الاسم *</Label>
+              <Label htmlFor="nameAr">الاسم العربي *</Label>
               <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="nameAr"
+                value={nameAr}
+                onChange={(e) => setNameAr(e.target.value)}
                 placeholder="مثال: شخصية، منظمة، مكان"
                 required
-                data-testid="input-entity-type-name"
+                data-testid="input-entity-type-name-ar"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nameEn">الاسم الإنجليزي *</Label>
+              <Input
+                id="nameEn"
+                value={nameEn}
+                onChange={(e) => setNameEn(e.target.value)}
+                placeholder="Example: Person, Organization, Location"
+                required
+                data-testid="input-entity-type-name-en"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slug">المعرّف (Slug) *</Label>
+              <Input
+                id="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="person-organization-location"
+                required
+                data-testid="input-entity-type-slug"
               />
             </div>
             <div className="space-y-2">
@@ -766,16 +805,26 @@ function SmartEntityDialog({
   isPending: boolean;
 }) {
   const [name, setName] = useState(entity?.name || "");
-  const [entityTypeId, setEntityTypeId] = useState(entity?.entityTypeId || "");
-  const [url, setUrl] = useState(entity?.url || "");
+  const [typeId, setTypeId] = useState<string>(entity?.typeId?.toString() || "");
+  const [slug, setSlug] = useState(entity?.slug || "");
   const [description, setDescription] = useState(entity?.description || "");
+
+  // Reset form when dialog opens or entity changes
+  useEffect(() => {
+    if (open) {
+      setName(entity?.name || "");
+      setTypeId(entity?.typeId?.toString() || "");
+      setSlug(entity?.slug || "");
+      setDescription(entity?.description || "");
+    }
+  }, [open, entity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       name,
-      entityTypeId,
-      url: url || null,
+      typeId: parseInt(typeId),
+      slug,
       description: description || null,
     });
   };
@@ -806,28 +855,28 @@ function SmartEntityDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="entity-type">النوع *</Label>
-              <Select value={entityTypeId} onValueChange={setEntityTypeId} required>
+              <Select value={typeId} onValueChange={setTypeId} required>
                 <SelectTrigger data-testid="select-entity-type">
                   <SelectValue placeholder="اختر نوع الكيان" />
                 </SelectTrigger>
                 <SelectContent>
                   {entityTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.nameAr}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="entity-url">الرابط</Label>
+              <Label htmlFor="entity-slug">المعرّف (Slug) *</Label>
               <Input
-                id="entity-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                type="url"
-                data-testid="input-entity-url"
+                id="entity-slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="mohammed-bin-salman"
+                required
+                data-testid="input-entity-slug"
               />
             </div>
             <div className="space-y-2">
@@ -861,25 +910,34 @@ function SmartTermDialog({
   open,
   onOpenChange,
   term,
-  entities,
   onSave,
   isPending,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   term: SmartTerm | null;
-  entities: SmartEntity[];
   onSave: (data: Partial<InsertSmartTermDb>) => void;
   isPending: boolean;
 }) {
   const [termText, setTermText] = useState(term?.term || "");
-  const [entityId, setEntityId] = useState(term?.entityId || "");
+  const [category, setCategory] = useState(term?.category || "");
+  const [description, setDescription] = useState(term?.description || "");
+
+  // Reset form when dialog opens or term changes
+  useEffect(() => {
+    if (open) {
+      setTermText(term?.term || "");
+      setCategory(term?.category || "");
+      setDescription(term?.description || "");
+    }
+  }, [open, term]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       term: termText,
-      entityId,
+      category: category || null,
+      description: description || null,
     });
   };
 
@@ -902,25 +960,31 @@ function SmartTermDialog({
                 id="term-text"
                 value={termText}
                 onChange={(e) => setTermText(e.target.value)}
-                placeholder="مثال: ولي العهد، شركة النفط"
+                placeholder="مثال: الذكاء الاصطناعي، الطاقة المتجددة"
                 required
                 data-testid="input-term-text"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="term-entity">الكيان المرتبط *</Label>
-              <Select value={entityId} onValueChange={setEntityId} required>
-                <SelectTrigger data-testid="select-term-entity">
-                  <SelectValue placeholder="اختر الكيان" />
-                </SelectTrigger>
-                <SelectContent>
-                  {entities.map((entity) => (
-                    <SelectItem key={entity.id} value={entity.id}>
-                      {entity.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="term-category">الفئة</Label>
+              <Input
+                id="term-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="مثال: تقنية، اقتصاد، سياسة"
+                data-testid="input-term-category"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="term-description">الوصف</Label>
+              <Textarea
+                id="term-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="وصف المصطلح (اختياري)"
+                rows={3}
+                data-testid="input-term-description"
+              />
             </div>
           </div>
           <DialogFooter>
