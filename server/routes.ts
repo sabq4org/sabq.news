@@ -23,6 +23,14 @@ import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable, isNull, ne }
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
+
+// إعداد multer للتعامل مع رفع الملفات في الذاكرة
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
 import { randomUUID } from "crypto";
 import { checkUserStatus } from "./userStatusMiddleware";
 import rateLimit from "express-rate-limit";
@@ -16330,6 +16338,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("خطأ في جلب المقالات المرتبطة:", error);
       res.status(500).json({ message: "حدث خطأ في جلب المقالات" });
+    }
+  });
+
+  // POST /api/smart-entities/upload-image - رفع صورة كيان
+  app.post("/api/smart-entities/upload-image", requireAuth, upload.single('image'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "الصورة مطلوبة" });
+      }
+
+      const { Storage } = await import('@google-cloud/storage');
+      const bucketName = process.env.BUCKET_ID || '';
+      const storage = new Storage();
+      const bucket = storage.bucket(bucketName);
+
+      // تحديد مسار الملف
+      const timestamp = Date.now();
+      const filename = `entities/${timestamp}-${req.file.originalname}`;
+      const file = bucket.file(`public/${filename}`);
+
+      // رفع الملف
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+        public: true,
+      });
+
+      // إنشاء رابط الصورة
+      const publicUrl = `https://storage.googleapis.com/${bucketName}/public/${filename}`;
+
+      res.json({ imageUrl: publicUrl });
+    } catch (error: any) {
+      console.error("خطأ في رفع الصورة:", error);
+      res.status(500).json({ message: "حدث خطأ في رفع الصورة" });
     }
   });
 

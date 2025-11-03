@@ -1032,18 +1032,45 @@ function SmartEntityDialog({
               <h3 className="font-semibold text-sm">الصورة</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="entity-image">رابط الصورة (URL)</Label>
+                <Label htmlFor="entity-image-file">رفع صورة</Label>
                 <Input
-                  id="entity-image"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  type="url"
-                  data-testid="input-entity-image"
+                  id="entity-image-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    // رفع الصورة
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    try {
+                      const response = await fetch("/api/smart-entities/upload-image", {
+                        method: "POST",
+                        body: formData,
+                        credentials: "include",
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error("فشل رفع الصورة");
+                      }
+                      
+                      const data = await response.json();
+                      setImageUrl(data.imageUrl);
+                      toast({ title: "تم رفع الصورة بنجاح" });
+                    } catch (error) {
+                      toast({ title: "فشل رفع الصورة", variant: "destructive" });
+                    }
+                  }}
+                  data-testid="input-entity-image-file"
                 />
+                <p className="text-xs text-muted-foreground">
+                  اختر صورة بصيغة JPG, PNG, أو GIF
+                </p>
                 {imageUrl && (
                   <div className="mt-2">
-                    <img src={imageUrl} alt="معاينة" className="h-24 w-24 object-cover rounded-md border" />
+                    <img src={imageUrl} alt="معاينة" className="h-32 w-32 object-cover rounded-md border" />
                   </div>
                 )}
               </div>
