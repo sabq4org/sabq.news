@@ -3,7 +3,10 @@
 ## Overview
 Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. Its main goal is to deliver an advanced news experience for the Arabic-speaking market by providing AI-driven article summarization, personalized recommendations, and comprehensive content management. The platform features an RTL-first design, dynamic content delivery, user profiling, and advanced theme management, aiming to enrich news consumption through AI and content enrichment.
 
-**Latest Update (November 2025):** Smart Links system now fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation.
+**Latest Update (November 2025):** 
+- Smart Links system fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation
+- **SEO AI System**: Complete SEO optimization platform with AI-powered analysis, Open Graph & Twitter Cards integration, dynamic XML sitemap, robots.txt, and structured Schema.org data
+- Credibility analysis feature removed from article details
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -50,7 +53,7 @@ Key features include:
 - **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform with Sabq Index, Next Stories, Radar, and Algorithm Writes.
 - **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, multi-channel distribution, priority levels, rich content editor, and analytics.
 - **A/B Testing System:** For content optimization and experiment management.
-- **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Credibility Score Analysis, Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, and AI Insights Block.
+- **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, AI Insights Block, and **SEO AI Assistant** (November 2025) - automated SEO analysis with GPT-5 generating optimized titles, meta descriptions, keywords, social media tags, and improvement suggestions.
 - **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline with clean, simplified interface (November 2025), featuring professional design, live status indicators, and comprehensive AI insights without image displays for optimal performance and user experience. Smart Notifications System offers real-time pushes via SSE.
 - **Reporter Profile System:** Dedicated pages for staff and reporters.
 - **Audio Newsletters (النشرات الصوتية) & Quick Audio News Briefs:** AI-powered text-to-speech news briefing systems with ElevenLabs integration.

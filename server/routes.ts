@@ -6,7 +6,7 @@ import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { aiChatService } from "./ai-chat-service";
@@ -6177,6 +6177,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error analyzing credibility:", error);
       res.status(500).json({ message: "فشل تحليل المصداقية" });
+    }
+  });
+
+  // SEO AI Assistant Endpoint
+  app.post("/api/articles/:id/analyze-seo", isAuthenticated, requirePermission('manage_articles'), async (req: any, res) => {
+    try {
+      const articleId = req.params.id;
+      
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      const seoAnalysis = await analyzeSEO(
+        article.title,
+        article.content,
+        article.excerpt || undefined
+      );
+
+      // Update article with SEO suggestions if provided
+      if (req.body.applyChanges) {
+        const seoData = article.seo ? JSON.parse(article.seo) : {};
+        
+        await db
+          .update(articles)
+          .set({
+            seo: JSON.stringify({
+              ...seoData,
+              title: seoAnalysis.seoTitle,
+              description: seoAnalysis.metaDescription,
+              keywords: seoAnalysis.keywords,
+              ogTitle: seoAnalysis.socialTitle,
+              ogDescription: seoAnalysis.socialDescription,
+              imageAlt: seoAnalysis.imageAltText,
+              lastAnalyzed: new Date().toISOString(),
+              aiScore: seoAnalysis.score,
+            }),
+          })
+          .where(eq(articles.id, articleId));
+      }
+
+      res.json(seoAnalysis);
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+      res.status(500).json({ message: "فشل تحليل SEO" });
     }
   });
 
@@ -16507,6 +16557,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============================================================
   // END SMART LINKS SYSTEM API ENDPOINTS
+  // ============================================================
+
+  // ============================================================
+  // SEO ENDPOINTS - Sitemap & Robots.txt
+  // ============================================================
+
+  // Dynamic XML Sitemap
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.life";
+      
+      // Get all published articles
+      const publishedArticles = await db
+        .select({
+          slug: articles.slug,
+          updatedAt: articles.updatedAt,
+          publishedAt: articles.publishedAt,
+        })
+        .from(articles)
+        .where(eq(articles.status, "published"))
+        .orderBy(desc(articles.publishedAt))
+        .limit(5000); // Limit for performance
+
+      // Get all active categories
+      const activeCategories = await db
+        .select({
+          slug: categories.slug,
+        })
+        .from(categories)
+        .where(eq(categories.status, "active"));
+
+      // Build XML sitemap
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+      // Homepage
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}</loc>\n`;
+      xml += '    <changefreq>hourly</changefreq>\n';
+      xml += '    <priority>1.0</priority>\n';
+      xml += '  </url>\n';
+
+      // Articles
+      for (const article of publishedArticles) {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}/article/${article.slug}</loc>\n`;
+        xml += `    <lastmod>${(article.updatedAt || article.publishedAt || new Date()).toISOString()}</lastmod>\n`;
+        xml += '    <changefreq>daily</changefreq>\n';
+        xml += '    <priority>0.8</priority>\n';
+        xml += '  </url>\n';
+      }
+
+      // Categories
+      for (const category of activeCategories) {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}/category/${category.slug}</loc>\n`;
+        xml += '    <changefreq>daily</changefreq>\n';
+        xml += '    <priority>0.7</priority>\n';
+        xml += '  </url>\n';
+      }
+
+      xml += '</urlset>';
+
+      res.header('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  // Robots.txt
+  app.get("/robots.txt", (req, res) => {
+    const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.life";
+    
+    const robotsTxt = `# Sabq Smart - سبق الذكية
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: ${baseUrl}/sitemap.xml
+
+# Crawl-delay for polite crawlers
+Crawl-delay: 1
+
+# Allow important crawlers full access
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+`;
+
+    res.header('Content-Type', 'text/plain');
+    res.send(robotsTxt);
+  });
+
+  // ============================================================
+  // END SEO ENDPOINTS
   // ============================================================
 
   const httpServer = createServer(app);

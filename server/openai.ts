@@ -326,3 +326,78 @@ ${activitiesText}
     };
   }
 }
+
+export async function analyzeSEO(
+  title: string,
+  content: string,
+  excerpt?: string
+): Promise<{
+  seoTitle: string;
+  metaDescription: string;
+  keywords: string[];
+  socialTitle: string;
+  socialDescription: string;
+  imageAltText: string;
+  suggestions: string[];
+  score: number;
+}> {
+  try {
+    const systemPrompt = `أنت خبير في تحسين محركات البحث (SEO) للمحتوى العربي. مهمتك تحليل المقالات الإخبارية وتقديم توصيات SEO محسّنة.
+
+قم بتحليل المقال وإنشاء:
+1. **seoTitle**: عنوان محسّن لمحركات البحث (50-60 حرف) - جذاب ويحتوي على كلمات مفتاحية
+2. **metaDescription**: وصف meta (150-160 حرف) - ملخص جذاب يشجع على النقر
+3. **keywords**: 5-7 كلمات مفتاحية رئيسية (مصفوفة نصوص)
+4. **socialTitle**: عنوان للمشاركة الاجتماعية (أقصر وأكثر جاذبية - 70 حرف)
+5. **socialDescription**: وصف للمشاركة الاجتماعية (100-120 حرف)
+6. **imageAltText**: نص بديل للصورة البارزة (80-100 حرف) - وصف دقيق للمحتوى
+7. **suggestions**: 3-5 اقتراحات لتحسين SEO (مصفوفة نصوص قصيرة)
+8. **score**: تقييم SEO الحالي من 0-100
+
+معايير التقييم:
+- العنوان يحتوي على كلمات مفتاحية (20 نقطة)
+- طول المحتوى مناسب (20 نقطة)
+- استخدام العناوين الفرعية (20 نقطة)
+- وضوح المعلومات (20 نقطة)
+- جودة اللغة (20 نقطة)
+
+أعد النتيجة بصيغة JSON فقط.`;
+
+    const userContent = `العنوان: ${title}
+
+${excerpt ? `المقدمة: ${excerpt}\n\n` : ''}المحتوى (أول 2000 حرف):
+${content.substring(0, 2000)}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1536,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    return {
+      seoTitle: result.seoTitle || title,
+      metaDescription: result.metaDescription || excerpt || "",
+      keywords: result.keywords || [],
+      socialTitle: result.socialTitle || title,
+      socialDescription: result.socialDescription || excerpt || "",
+      imageAltText: result.imageAltText || title,
+      suggestions: result.suggestions || [],
+      score: result.score || 0,
+    };
+  } catch (error) {
+    console.error("Error analyzing SEO:", error);
+    throw new Error("Failed to analyze SEO");
+  }
+}
