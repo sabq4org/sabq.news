@@ -16228,6 +16228,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/smart-terms/:identifier - جلب مصطلح بناءً على ID أو term
+  app.get("/api/smart-terms/:identifier", async (req: any, res) => {
+    try {
+      const { identifier } = req.params;
+      const terms = await storage.getSmartTerms({ status: 'active' });
+      
+      // البحث بالـ ID أو بالـ term
+      const term = terms.find(t => 
+        t.id === identifier || 
+        t.term.toLowerCase().replace(/\s+/g, '-') === decodeURIComponent(identifier).toLowerCase()
+      );
+      
+      if (!term) {
+        return res.status(404).json({ message: "المصطلح غير موجود" });
+      }
+      
+      res.json(term);
+    } catch (error: any) {
+      console.error("خطأ في جلب المصطلح:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب المصطلح" });
+    }
+  });
+
+  // GET /api/smart-entities/:slug - جلب كيان بناءً على slug
+  app.get("/api/smart-entities/:slug", async (req: any, res) => {
+    try {
+      const { slug } = req.params;
+      const entities = await storage.getSmartEntities({ status: 'active' });
+      
+      const entity = entities.find(e => e.slug === decodeURIComponent(slug));
+      
+      if (!entity) {
+        return res.status(404).json({ message: "الكيان غير موجود" });
+      }
+      
+      res.json(entity);
+    } catch (error: any) {
+      console.error("خطأ في جلب الكيان:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب الكيان" });
+    }
+  });
+
   // POST /api/smart-links/analyze - تحليل المحتوى واقتراح الروابط الذكية
   app.post("/api/smart-links/analyze", requireAuth, async (req: any, res) => {
     try {
