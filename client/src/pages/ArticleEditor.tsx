@@ -103,6 +103,7 @@ export default function ArticleEditor() {
   const [republish, setRepublish] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
 
   const { toast } = useToast();
@@ -427,6 +428,47 @@ export default function ArticleEditor() {
       toast({
         title: "خطأ",
         description: error.message || "فشل في توليد العناوين",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const analyzeSEOMutation = useMutation({
+    mutationFn: async () => {
+      if (!id || isNewArticle) {
+        throw new Error("يجب حفظ المقال أولاً قبل تحليل SEO");
+      }
+      setIsAnalyzingSEO(true);
+      return await apiRequest(`/api/articles/${id}/analyze-seo`, {
+        method: "POST",
+        body: JSON.stringify({ applyChanges: false }),
+      });
+    },
+    onSuccess: (data: {
+      seoTitle: string;
+      metaDescription: string;
+      keywords: string[];
+      socialTitle: string;
+      socialDescription: string;
+      imageAltText: string;
+      suggestions: string[];
+      score: number;
+    }) => {
+      setIsAnalyzingSEO(false);
+      setMetaTitle(data.seoTitle);
+      setMetaDescription(data.metaDescription);
+      setKeywords(data.keywords);
+      
+      toast({
+        title: `تحليل SEO - النتيجة: ${data.score}/100`,
+        description: `تم تحليل المقال وتطبيق التوصيات. ${data.suggestions.length > 0 ? data.suggestions[0] : ''}`,
+      });
+    },
+    onError: (error: Error) => {
+      setIsAnalyzingSEO(false);
+      toast({
+        title: "خطأ في تحليل SEO",
+        description: error.message || "فشل في تحليل SEO",
         variant: "destructive",
       });
     },
@@ -1046,6 +1088,37 @@ const generateSlug = (text: string) => {
                   </TabsList>
                   
                   <TabsContent value="seo" className="space-y-4">
+                    {/* SEO AI Analysis Button */}
+                    {!isNewArticle && (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">تحليل SEO بالذكاء الاصطناعي</p>
+                          <p className="text-xs text-muted-foreground">
+                            احصل على توصيات تلقائية لتحسين ظهور المقال في محركات البحث
+                          </p>
+                        </div>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => analyzeSEOMutation.mutate()}
+                          disabled={isAnalyzingSEO || !id}
+                          data-testid="button-analyze-seo"
+                        >
+                          {isAnalyzingSEO ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                              جاري التحليل...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 ml-2" />
+                              تحليل SEO
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label>عنوان SEO</Label>
                       <Input

@@ -132,6 +132,83 @@ export default function ArticleDetail() {
     };
   }, [article?.id]);
 
+  // Add Open Graph and Twitter Cards meta tags
+  useEffect(() => {
+    if (!article) return;
+
+    const seoTitle = article.seo?.ogTitle || article.seo?.title || article.title;
+    const seoDescription = article.seo?.ogDescription || article.seo?.description || article.excerpt || article.aiSummary || "";
+    const seoImage = article.imageUrl || `${window.location.origin}/og-image.png`;
+    const seoUrl = window.location.href;
+
+    // Create or update meta tags
+    const updateMetaTag = (property: string, content: string, isName = false) => {
+      const attr = isName ? 'name' : 'property';
+      let tag = document.querySelector(`meta[${attr}="${property}"]`) as HTMLMetaElement;
+      
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, property);
+        document.head.appendChild(tag);
+      }
+      
+      tag.content = content;
+      return tag;
+    };
+
+    // Open Graph Tags
+    const ogTags = [
+      updateMetaTag('og:type', 'article'),
+      updateMetaTag('og:title', seoTitle),
+      updateMetaTag('og:description', seoDescription),
+      updateMetaTag('og:image', seoImage),
+      updateMetaTag('og:url', seoUrl),
+      updateMetaTag('og:site_name', 'صحيفة سبق الإلكترونية'),
+      updateMetaTag('og:locale', 'ar_SA'),
+    ];
+
+    if (article.publishedAt) {
+      ogTags.push(updateMetaTag('article:published_time', article.publishedAt));
+    }
+    if (article.updatedAt) {
+      ogTags.push(updateMetaTag('article:modified_time', article.updatedAt));
+    }
+    if (article.category?.nameAr) {
+      ogTags.push(updateMetaTag('article:section', article.category.nameAr));
+    }
+
+    // Twitter Cards
+    const twitterTags = [
+      updateMetaTag('twitter:card', 'summary_large_image', true),
+      updateMetaTag('twitter:title', seoTitle, true),
+      updateMetaTag('twitter:description', seoDescription, true),
+      updateMetaTag('twitter:image', seoImage, true),
+    ];
+
+    // SEO Meta Tags
+    const seoTags = [
+      updateMetaTag('description', seoDescription, true),
+    ];
+
+    if (article.seo?.keywords && article.seo.keywords.length > 0) {
+      seoTags.push(updateMetaTag('keywords', article.seo.keywords.join(', '), true));
+    }
+
+    // Image Alt Text
+    if (article.seo?.imageAlt) {
+      updateMetaTag('twitter:image:alt', article.seo.imageAlt, true);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      [...ogTags, ...twitterTags, ...seoTags].forEach(tag => {
+        if (tag && tag.parentNode) {
+          tag.parentNode.removeChild(tag);
+        }
+      });
+    };
+  }, [article?.id, article?.seo]);
+
   const reactMutation = useMutation({
     mutationFn: async () => {
       if (!article) return;
