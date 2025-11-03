@@ -43,21 +43,21 @@ export default function CalendarEventDetail() {
   const { toast } = useToast();
 
   const { data: event, isLoading: eventLoading } = useQuery<CalendarEvent>({
-    queryKey: [`/api/calendar/events/${eventId}`],
+    queryKey: [`/api/calendar/${eventId}`],
     enabled: !!eventId,
   });
 
   const { data: aiDraft, isLoading: draftLoading } = useQuery<AiDraft>({
-    queryKey: [`/api/calendar/events/${eventId}/ai-drafts`],
+    queryKey: [`/api/calendar/${eventId}/ai-drafts`],
     enabled: !!eventId,
   });
 
   const generateAiDraft = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/calendar/events/${eventId}/ai-drafts/generate`, { method: "POST" });
+      return await apiRequest(`/api/calendar/${eventId}/ai-drafts/generate`, { method: "POST" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/calendar/events/${eventId}/ai-drafts`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/calendar/${eventId}/ai-drafts`] });
       toast({
         title: "تم التوليد بنجاح",
         description: "تم توليد مسودات الذكاء الاصطناعي للمناسبة",
@@ -74,7 +74,7 @@ export default function CalendarEventDetail() {
 
   const createArticleFromIdea = useMutation({
     mutationFn: async (ideaIndex: number) => {
-      return await apiRequest(`/api/calendar/events/${eventId}/create-article`, {
+      return await apiRequest(`/api/calendar/${eventId}/create-article`, {
         method: "POST",
         body: JSON.stringify({ ideaIndex }),
       });

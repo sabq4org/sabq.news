@@ -98,13 +98,13 @@ export default function CalendarEventForm() {
           recipients: r.recipients ? r.recipients.split(",").map(t => t.trim()) : [],
         })),
       };
-      return await apiRequest("/api/calendar/events", {
+      return await apiRequest("/api/calendar", {
         method: "POST",
         body: JSON.stringify(payload),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/calendar/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar"] });
       toast({
         title: "تم الحفظ",
         description: "تم إضافة المناسبة بنجاح",

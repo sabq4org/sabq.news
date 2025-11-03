@@ -28,7 +28,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const { data: events = [], isLoading } = useQuery<CalendarEvent[]>({
-    queryKey: ["/api/calendar/events"],
+    queryKey: ["/api/calendar"],
   });
 
   const getEventIcon = (type: string) => {
