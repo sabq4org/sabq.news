@@ -59,6 +59,20 @@ interface SmartEntity {
   typeId: number;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
+  aliases: string[];
+  metadata?: {
+    birthDate?: string;
+    position?: string;
+    organization?: string;
+    location?: string;
+    website?: string;
+    social?: {
+      twitter?: string;
+      linkedin?: string;
+      instagram?: string;
+    };
+  };
   entityTypeName?: string;
 }
 
@@ -871,73 +885,271 @@ function SmartEntityDialog({
       slug,
       description: description || null,
       imageUrl: imageUrl || null,
-      aliases: aliases ? aliases.split(",").map(a => a.trim()).filter(Boolean) : [],
+      aliases: aliases ? aliases.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
       metadata: Object.keys(metadata).length > 0 ? metadata : null,
       importanceScore: 0.5,
       status: "active",
     });
   };
 
+  const { toast } = useToast();
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+
+  const generateDescription = async () => {
+    if (!name || !typeId) {
+      toast({ title: "الرجاء إدخال الاسم والنوع أولاً", variant: "destructive" });
+      return;
+    }
+
+    setGeneratingDescription(true);
+    try {
+      const entityType = entityTypes.find(t => t.id.toString() === typeId);
+      const context = {
+        name,
+        type: entityType?.nameAr,
+        position,
+        organization,
+        location,
+      };
+      
+      const response = await apiRequest("/api/ai/generate-entity-description", {
+        method: "POST",
+        body: JSON.stringify(context),
+      });
+      
+      setDescription(response.description);
+      toast({ title: "تم توليد التعريف بنجاح" });
+    } catch (error) {
+      toast({ title: "فشل توليد التعريف", variant: "destructive" });
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
               {entity ? "تعديل الكيان الذكي" : "إضافة كيان ذكي جديد"}
             </DialogTitle>
             <DialogDescription>
-              أضف معلومات الكيان الذكي أدناه
+              أضف معلومات الكيان الذكي أدناه. الحقول المطلوبة مشارة بـ *
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="entity-name">الاسم *</Label>
-              <Input
-                id="entity-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="مثال: محمد بن سلمان، أرامكو"
-                required
-                data-testid="input-entity-name"
-              />
+            {/* Basic Info Section */}
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-semibold text-sm">المعلومات الأساسية</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-name">الاسم *</Label>
+                <Input
+                  id="entity-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="مثال: محمد بن سلمان، أرامكو"
+                  required
+                  data-testid="input-entity-name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-type">النوع *</Label>
+                <Select value={typeId} onValueChange={setTypeId} required>
+                  <SelectTrigger data-testid="select-entity-type">
+                    <SelectValue placeholder="اختر نوع الكيان" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {entityTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.nameAr}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-slug">المعرّف (Slug) *</Label>
+                <Input
+                  id="entity-slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="mohammed-bin-salman"
+                  required
+                  data-testid="input-entity-slug"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-aliases">الأسماء المستعارة (مفصولة بفواصل)</Label>
+                <Input
+                  id="entity-aliases"
+                  value={aliases}
+                  onChange={(e) => setAliases(e.target.value)}
+                  placeholder="مثال: MBS, ولي العهد، الأمير محمد"
+                  data-testid="input-entity-aliases"
+                />
+                <p className="text-xs text-muted-foreground">
+                  اكتب الأسماء المستعارة مفصولة بفواصل
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="entity-type">النوع *</Label>
-              <Select value={typeId} onValueChange={setTypeId} required>
-                <SelectTrigger data-testid="select-entity-type">
-                  <SelectValue placeholder="اختر نوع الكيان" />
-                </SelectTrigger>
-                <SelectContent>
-                  {entityTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.nameAr}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            {/* Description Section with AI */}
+            <div className="space-y-4 p-4 border rounded-lg bg-accent/5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">التعريف والوصف</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={generateDescription}
+                  disabled={generatingDescription || !name || !typeId}
+                  data-testid="button-generate-description"
+                >
+                  {generatingDescription ? "جاري التوليد..." : "🤖 توليد تلقائي بالذكاء الاصطناعي"}
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-description">الوصف والتعريف</Label>
+                <Textarea
+                  id="entity-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="وصف وتعريف الكيان (اختياري) - أو استخدم التوليد التلقائي"
+                  rows={4}
+                  data-testid="input-entity-description"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="entity-slug">المعرّف (Slug) *</Label>
-              <Input
-                id="entity-slug"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder="mohammed-bin-salman"
-                required
-                data-testid="input-entity-slug"
-              />
+
+            {/* Media Section */}
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-semibold text-sm">الصورة</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-image">رابط الصورة (URL)</Label>
+                <Input
+                  id="entity-image"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  type="url"
+                  data-testid="input-entity-image"
+                />
+                {imageUrl && (
+                  <div className="mt-2">
+                    <img src={imageUrl} alt="معاينة" className="h-24 w-24 object-cover rounded-md border" />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="entity-description">الوصف</Label>
-              <Textarea
-                id="entity-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="وصف الكيان (اختياري)"
-                rows={3}
-                data-testid="input-entity-description"
-              />
+
+            {/* Metadata Section */}
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-semibold text-sm">معلومات إضافية</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="entity-position">المنصب / الوظيفة</Label>
+                  <Input
+                    id="entity-position"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    placeholder="مثال: ولي العهد، الرئيس التنفيذي"
+                    data-testid="input-entity-position"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="entity-organization">المنظمة / الجهة</Label>
+                  <Input
+                    id="entity-organization"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    placeholder="مثال: الحكومة السعودية، أرامكو"
+                    data-testid="input-entity-organization"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="entity-birthdate">تاريخ الميلاد / التأسيس</Label>
+                  <Input
+                    id="entity-birthdate"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    placeholder="مثال: 31 أغسطس 1985"
+                    data-testid="input-entity-birthdate"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="entity-location">الموقع / المقر</Label>
+                  <Input
+                    id="entity-location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="مثال: الرياض، السعودية"
+                    data-testid="input-entity-location"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="entity-website">الموقع الإلكتروني</Label>
+                <Input
+                  id="entity-website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                  type="url"
+                  data-testid="input-entity-website"
+                />
+              </div>
+            </div>
+
+            {/* Social Media Section */}
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-semibold text-sm">وسائل التواصل الاجتماعي</h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="entity-twitter">تويتر / X</Label>
+                  <Input
+                    id="entity-twitter"
+                    value={twitter}
+                    onChange={(e) => setTwitter(e.target.value)}
+                    placeholder="https://twitter.com/username أو @username"
+                    data-testid="input-entity-twitter"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="entity-linkedin">لينكد إن</Label>
+                  <Input
+                    id="entity-linkedin"
+                    value={linkedin}
+                    onChange={(e) => setLinkedin(e.target.value)}
+                    placeholder="https://linkedin.com/in/username"
+                    data-testid="input-entity-linkedin"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="entity-instagram">انستغرام</Label>
+                  <Input
+                    id="entity-instagram"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="https://instagram.com/username أو @username"
+                    data-testid="input-entity-instagram"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>

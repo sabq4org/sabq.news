@@ -16333,6 +16333,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/ai/generate-entity-description - توليد تعريف تلقائي للكيان
+  app.post("/api/ai/generate-entity-description", requireAuth, async (req: any, res) => {
+    try {
+      const { name, type, position, organization, location } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "اسم الكيان مطلوب" });
+      }
+
+      const openai = await import('openai').then(m => m.default);
+      const client = new openai({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      // بناء السياق للتوليد
+      let context = `اكتب تعريفاً موجزاً ومهنياً باللغة العربية عن "${name}"`;
+      if (type) context += ` (${type})`;
+      if (position) context += `. المنصب: ${position}`;
+      if (organization) context += `. المنظمة: ${organization}`;
+      if (location) context += `. الموقع: ${location}`;
+      context += `.\n\nالتعريف يجب أن يكون:\n- موجز (2-3 جمل)\n- مهني وواقعي\n- يركز على الإنجازات والدور الرئيسي\n- بدون مقدمات أو عناوين`;
+
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "أنت مساعد ذكي متخصص في كتابة تعريفات موجزة ومهنية عن الشخصيات والمنظمات باللغة العربية الفصحى."
+          },
+          {
+            role: "user",
+            content: context
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 200,
+      });
+
+      const description = completion.choices[0]?.message?.content?.trim() || "";
+      
+      res.json({ description });
+    } catch (error: any) {
+      console.error("خطأ في توليد التعريف:", error);
+      res.status(500).json({ message: "حدث خطأ في توليد التعريف" });
+    }
+  });
+
   // POST /api/smart-links/analyze - تحليل المحتوى واقتراح الروابط الذكية
   app.post("/api/smart-links/analyze", requireAuth, async (req: any, res) => {
     try {
