@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Calendar, Save, Bell, Plus, Trash2, Clock, Zap } from "lucide-react";
+import { ArrowLeft, Calendar, Save, Bell, Plus, Trash2, Clock, Zap, X } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -46,10 +46,17 @@ export default function CalendarEventForm() {
   const { toast } = useToast();
   const isNew = params?.action === "new";
   const [reminders, setReminders] = useState<ReminderFormValues[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
 
-  const { data: categories = [] } = useQuery({
+  const { data: categoriesData = [] } = useQuery({
     queryKey: ["/api/categories"],
   });
+
+  // فلترة التصنيفات: التصنيفات الرسمية فقط (ليست SMART أو DYNAMIC)
+  const categories = (categoriesData as any[]).filter((cat: any) => 
+    cat.type === "CORE" || !cat.type
+  );
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -64,6 +71,28 @@ export default function CalendarEventForm() {
       tags: "",
     },
   });
+
+  // Tags Management
+  const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      if (!tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+        setTagInput("");
+      } else {
+        toast({
+          title: "تنبيه",
+          description: "هذا الوسم موجود بالفعل",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
 
   const addReminder = () => {
     setReminders([
@@ -155,7 +184,7 @@ export default function CalendarEventForm() {
     mutationFn: async (data: EventFormValues) => {
       const payload = {
         ...data,
-        tags: data.tags ? data.tags.split(",").map(t => t.trim()) : [],
+        tags: tags, // استخدام tags من state
         categoryId: data.categoryId || null,
         dateEnd: data.dateEnd || null,
         reminders: reminders.map(r => ({
