@@ -346,14 +346,17 @@ export default function CalendarEventForm() {
                     name="dateStart"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>تاريخ البدء *</FormLabel>
+                        <FormLabel>تاريخ ووقت البدء *</FormLabel>
                         <FormControl>
                           <Input
-                            type="date"
+                            type="datetime-local"
                             {...field}
                             data-testid="input-date-start"
                           />
                         </FormControl>
+                        <FormDescription>
+                          حدد التاريخ والوقت الدقيق للمناسبة
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -364,10 +367,10 @@ export default function CalendarEventForm() {
                     name="dateEnd"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>تاريخ الانتهاء (اختياري)</FormLabel>
+                        <FormLabel>تاريخ ووقت الانتهاء (اختياري)</FormLabel>
                         <FormControl>
                           <Input
-                            type="date"
+                            type="datetime-local"
                             {...field}
                             data-testid="input-date-end"
                           />
@@ -409,26 +412,43 @@ export default function CalendarEventForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الوسوم (اختياري)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="افصل بين الوسوم بفاصلة، مثال: صحة، تعليم، تكنولوجيا"
-                          {...field}
-                          data-testid="input-tags"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        افصل بين الوسوم بفاصلة
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-3">
+                  <FormLabel>الكلمات المفتاحية (اختياري)</FormLabel>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="اكتب الكلمة واضغط Enter لإضافتها"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleTagInputKeyDown}
+                      data-testid="input-tags"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      اكتب الكلمة المفتاحية واضغط <kbd className="px-1.5 py-0.5 text-xs border rounded bg-muted">Enter</kbd> لإضافتها
+                    </p>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/50">
+                        {tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="gap-1"
+                            data-testid={`tag-${tag}`}
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-1 hover:text-destructive"
+                              data-testid={`button-remove-tag-${tag}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <Separator />
 

@@ -1,0 +1,60 @@
+Summary
+URL: https://sabq.life/api/calendar
+Status: 403 Forbidden
+Source: Network
+Address: 34.111.179.208:443
+Initiator: 
+index-CADBRXUA.js:48:46814
+
+Request
+POST /api/calendar HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Connection: keep-alive
+Content-Length: 502
+Content-Type: application/json
+Cookie: connect.sid=s%3Ao4MRLDyG7DLkoWYG_ksz-jD9cSWGRZw5.JUYGNGwtXO67tWzElnYNtH6P7FRpDxXU%2Fpe7hXW2Wpo
+Origin: https://sabq.life
+Priority: u=3, i
+Sec-Fetch-Dest: empty
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15
+
+Response
+HTTP/1.1 403 Forbidden
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: https://sabq.life
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+Cache-Control: no-store, no-cache, must-revalidate
+Content-Length: 79
+Content-Security-Policy: default-src 'self';script-src 'self' 'unsafe-inline';style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;img-src 'self' data: https: blob:;font-src 'self' data: https://fonts.gstatic.com;connect-src 'self' ws: wss: https://api.openai.com https://api.elevenlabs.io https://storage.googleapis.com;media-src 'self' https: blob:;object-src 'none';frame-src 'self';base-uri 'self';form-action 'self';upgrade-insecure-requests;frame-ancestors 'self';script-src-attr 'none'
+Content-Type: application/json; charset=utf-8
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: cross-origin
+Date: Mon, 03 Nov 2025 05:51:16 GMT
+ETag: W/"4f-/gTriDb9cjtmdyhGYbqGowWnLf8"
+Expires: 0
+Origin-Agent-Cluster: ?1
+Pragma: no-cache
+Ratelimit-Limit: 300
+Ratelimit-Policy: 300;w=900
+Ratelimit-Remaining: 292
+Ratelimit-Reset: 803
+Referrer-Policy: no-referrer
+Server: Google Frontend
+Strict-Transport-Security: max-age=63072000; includeSubDomains, max-age=31536000; includeSubDomains
+Vary: Origin, Accept-Encoding
+Via: 1.1 google
+X-Cloud-Trace-Context: c1a13d08c2dc8beb6735e58ddcf547ab;o=1
+X-Content-Type-Options: nosniff
+X-Dns-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+
+Request Data
+MIME Type: application/json
+Request Data: 
