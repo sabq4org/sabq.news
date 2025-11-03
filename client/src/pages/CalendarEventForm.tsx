@@ -109,16 +109,23 @@ export default function CalendarEventForm() {
   }, [existingEvent, isEdit, form]);
 
   useEffect(() => {
-    if (existingReminders && existingReminders.length > 0 && isEdit) {
-      const formattedReminders = existingReminders.map((r: any) => ({
-        channel: r.channel,
-        scheduledFor: new Date(r.scheduledFor).toISOString().slice(0, 16),
-        recipients: Array.isArray(r.recipients) ? r.recipients.join(", ") : (r.recipients || ""),
-        message: r.message || "",
-      }));
+    if (existingReminders && existingReminders.length > 0 && isEdit && existingEvent) {
+      const formattedReminders = existingReminders.map((r: any) => {
+        // حساب وقت التذكير من fireWhen وتاريخ الحدث
+        const eventDate = new Date(existingEvent.dateStart);
+        const reminderDate = new Date(eventDate);
+        reminderDate.setDate(eventDate.getDate() - (r.fireWhen || 0));
+        
+        return {
+          channel: r.channel,
+          scheduledFor: reminderDate.toISOString().slice(0, 16),
+          recipients: Array.isArray(r.recipients) ? r.recipients.join(", ") : (r.recipients || ""),
+          message: r.message || "",
+        };
+      });
       setReminders(formattedReminders);
     }
-  }, [existingReminders, isEdit]);
+  }, [existingReminders, isEdit, existingEvent]);
 
   // Tags Management
   const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
