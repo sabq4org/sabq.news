@@ -7669,6 +7669,12 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(calendarReminders.enabled, true),
           gte(calendarEvents.dateStart, now),
+          // وقت التذكير يجب أن يكون في المستقبل
+          gte(
+            sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen}`,
+            now
+          ),
+          // وقت التذكير خلال الأيام القادمة
           lte(
             sql`DATE(${calendarEvents.dateStart}) - INTERVAL '1 day' * ${calendarReminders.fireWhen}`,
             endDate
