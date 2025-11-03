@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -42,6 +42,9 @@ type ReminderFormValues = z.infer<typeof reminderSchema>;
 
 export default function CalendarEventForm() {
   const [, params] = useRoute("/dashboard/calendar/:action");
+  const [, paramsDetail] = useRoute("/dashboard/calendar/events/:id/edit");
+  const eventId = paramsDetail?.id;
+  const isEdit = !!eventId;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const isNew = params?.action === "new";
@@ -59,6 +62,18 @@ export default function CalendarEventForm() {
     return !catType || catType === "core";
   });
 
+  // تحميل بيانات الحدث للتعديل
+  const { data: existingEvent } = useQuery<any>({
+    queryKey: [`/api/calendar/${eventId}`],
+    enabled: isEdit,
+  });
+
+  // تحميل التذكيرات الموجودة
+  const { data: existingReminders = [] } = useQuery<any[]>({
+    queryKey: [`/api/calendar/${eventId}/reminders`],
+    enabled: isEdit,
+  });
+
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -72,6 +87,38 @@ export default function CalendarEventForm() {
       tags: "",
     },
   });
+
+  // useEffect لملء النموذج عند التعديل
+  useEffect(() => {
+    if (existingEvent && isEdit) {
+      form.reset({
+        title: existingEvent.title,
+        description: existingEvent.description || "",
+        type: existingEvent.type,
+        dateStart: new Date(existingEvent.dateStart).toISOString().slice(0, 16),
+        dateEnd: existingEvent.dateEnd ? new Date(existingEvent.dateEnd).toISOString().slice(0, 16) : "",
+        importance: existingEvent.importance,
+        categoryId: existingEvent.categoryId || "",
+        tags: "",
+      });
+      
+      if (existingEvent.tags) {
+        setTags(existingEvent.tags);
+      }
+    }
+  }, [existingEvent, isEdit, form]);
+
+  useEffect(() => {
+    if (existingReminders && existingReminders.length > 0 && isEdit) {
+      const formattedReminders = existingReminders.map((r: any) => ({
+        channel: r.channel,
+        scheduledFor: new Date(r.scheduledFor).toISOString().slice(0, 16),
+        recipients: Array.isArray(r.recipients) ? r.recipients.join(", ") : (r.recipients || ""),
+        message: r.message || "",
+      }));
+      setReminders(formattedReminders);
+    }
+  }, [existingReminders, isEdit]);
 
   // Tags Management
   const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -193,23 +240,34 @@ export default function CalendarEventForm() {
           recipients: r.recipients ? r.recipients.split(",").map(t => t.trim()) : [],
         })),
       };
-      return await apiRequest("/api/calendar", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      
+      if (isEdit) {
+        return await apiRequest(`/api/calendar/${eventId}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        return await apiRequest("/api/calendar", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/calendar"] });
+      if (isEdit) {
+        queryClient.invalidateQueries({ queryKey: [`/api/calendar/${eventId}`] });
+      }
       toast({
-        title: "تم الحفظ",
-        description: "تم إضافة المناسبة بنجاح",
+        title: isEdit ? "تم التحديث" : "تم الحفظ",
+        description: isEdit ? "تم تحديث المناسبة بنجاح" : "تم إضافة المناسبة بنجاح",
       });
       navigate("/dashboard/calendar");
     },
     onError: (error: any) => {
       toast({
         title: "خطأ",
-        description: error.message || "حدث خطأ أثناء حفظ المناسبة",
+        description: error.message || (isEdit ? "حدث خطأ أثناء تحديث المناسبة" : "حدث خطأ أثناء حفظ المناسبة"),
         variant: "destructive",
       });
     },
@@ -230,10 +288,10 @@ export default function CalendarEventForm() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">
-              {isNew ? "إضافة مناسبة جديدة" : "تعديل المناسبة"}
+              {isEdit ? "تعديل مناسبة" : "إضافة مناسبة جديدة"}
             </h1>
             <p className="text-muted-foreground">
-              أضف مناسبة إلى التقويم التحريري
+              {isEdit ? "تحديث بيانات المناسبة في التقويم التحريري" : "أضف مناسبة إلى التقويم التحريري"}
             </p>
           </div>
         </div>
@@ -668,7 +726,9 @@ export default function CalendarEventForm() {
                     data-testid="button-submit"
                   >
                     <Save className="h-4 w-4 ml-2" />
-                    {createEvent.isPending ? "جاري الحفظ..." : "حفظ المناسبة"}
+                    {createEvent.isPending 
+                      ? (isEdit ? "جاري التحديث..." : "جاري الحفظ...") 
+                      : (isEdit ? "تحديث" : "حفظ")}
                   </Button>
                   <Link href="/dashboard/calendar">
                     <Button variant="outline" type="button" data-testid="button-cancel">

@@ -1,10 +1,21 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -41,6 +52,7 @@ export default function CalendarEventDetail() {
   const [, params] = useRoute("/dashboard/calendar/events/:id");
   const eventId = params?.id;
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: event, isLoading: eventLoading } = useQuery<CalendarEvent>({
     queryKey: [`/api/calendar/${eventId}`],
@@ -90,6 +102,27 @@ export default function CalendarEventDetail() {
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء إنشاء المقال",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/calendar/${eventId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar"] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف المناسبة بنجاح",
+      });
+      navigate("/dashboard/calendar");
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل حذف المناسبة",
         variant: "destructive",
       });
     },
@@ -191,14 +224,41 @@ export default function CalendarEventDetail() {
           </Link>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" data-testid="button-edit">
-              <Edit className="h-4 w-4 ml-2" />
-              تعديل
-            </Button>
-            <Button variant="outline" data-testid="button-delete">
-              <Trash2 className="h-4 w-4 ml-2" />
-              حذف
-            </Button>
+            <Link href={`/dashboard/calendar/events/${eventId}/edit`}>
+              <Button variant="outline" data-testid="button-edit">
+                <Edit className="h-4 w-4 ml-2" />
+                تعديل
+              </Button>
+            </Link>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" data-testid="button-delete">
+                  <Trash2 className="h-4 w-4 ml-2" />
+                  حذف
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    هل أنت متأكد من حذف هذه المناسبة؟ لا يمكن التراجع عن هذا الإجراء.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel data-testid="button-delete-cancel">
+                    إلغاء
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteEvent.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="button-delete-confirm"
+                  >
+                    حذف
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 

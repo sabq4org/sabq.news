@@ -212,6 +212,7 @@ function Router() {
       <Route path="/dashboard/calendar" component={CalendarPage} />
       <Route path="/dashboard/calendar/:action" component={CalendarEventForm} />
       <Route path="/dashboard/calendar/events/:id" component={CalendarEventDetail} />
+      <Route path="/dashboard/calendar/events/:id/edit" component={CalendarEventForm} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
