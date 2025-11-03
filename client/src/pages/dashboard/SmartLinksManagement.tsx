@@ -857,6 +857,22 @@ function SmartEntityDialog({
       setTwitter(meta?.social?.twitter || "");
       setLinkedin(meta?.social?.linkedin || "");
       setInstagram(meta?.social?.instagram || "");
+    } else {
+      // Reset form when dialog closes
+      setName("");
+      setTypeId("");
+      setSlug("");
+      setDescription("");
+      setImageUrl("");
+      setAliases("");
+      setPosition("");
+      setOrganization("");
+      setBirthDate("");
+      setLocation("");
+      setWebsite("");
+      setTwitter("");
+      setLinkedin("");
+      setInstagram("");
     }
   }, [open, entity]);
 

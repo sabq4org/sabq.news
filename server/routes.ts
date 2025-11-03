@@ -16396,12 +16396,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // استخراج bucket name من أول مسار عام
+      // Format: /bucket-name/public
       const firstPath = publicSearchPaths.split(',')[0].trim();
-      const bucketName = firstPath.split('/')[1]; // /bucket-name/public -> bucket-name
+      const pathParts = firstPath.split('/').filter(Boolean); // ['bucket-name', 'public']
+      const bucketName = pathParts[0];
 
       // تحديد مسار الملف
       const timestamp = Date.now();
-      const filename = `entities/${timestamp}-${req.file.originalname}`;
+      const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filename = `entities/${timestamp}-${sanitizedFilename}`;
       const file = objectStorageClient.bucket(bucketName).file(`public/${filename}`);
 
       // رفع الملف
@@ -16409,16 +16412,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           contentType: req.file.mimetype,
         },
-        public: true,
       });
 
-      // إنشاء رابط الصورة
+      // جعل الملف عام
+      await file.makePublic();
+
+      // إنشاء رابط الصورة العام
       const publicUrl = `https://storage.googleapis.com/${bucketName}/public/${filename}`;
 
+      console.log(`✅ Image uploaded successfully: ${publicUrl}`);
       res.json({ imageUrl: publicUrl });
     } catch (error: any) {
       console.error("خطأ في رفع الصورة:", error);
-      res.status(500).json({ message: "حدث خطأ في رفع الصورة" });
+      res.status(500).json({ message: "حدث خطأ في رفع الصورة: " + error.message });
     }
   });
 
