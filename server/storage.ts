@@ -188,6 +188,22 @@ import {
   type InsertCalendarAiDraft,
   type InsertCalendarAssignment,
   type UpdateCalendarAssignment,
+  entityTypes,
+  smartEntities,
+  smartTerms,
+  articleSmartLinks,
+  type EntityType,
+  type InsertEntityTypeDb,
+  type SmartEntity,
+  type InsertSmartEntityDb,
+  type SmartTerm,
+  type InsertSmartTermDb,
+  type ArticleSmartLink,
+  type InsertArticleSmartLinkDb,
+  type InsertEntityType,
+  type InsertSmartEntity,
+  type InsertSmartTerm,
+  type InsertArticleSmartLink,
 } from "@shared/schema";
 
 import { IChatStorage, DbChatStorage } from "./chat-storage";
@@ -7824,6 +7840,73 @@ export class DatabaseStorage implements IStorage {
       .where(eq(calendarAssignments.id, id))
       .returning();
     return updated;
+  }
+
+  // =====================================================
+  // SMART LINKS SYSTEM METHODS
+  // =====================================================
+
+  async getEntityTypes(): Promise<EntityType[]> {
+    return await db.select().from(entityTypes).orderBy(entityTypes.displayOrder);
+  }
+
+  async createEntityType(data: InsertEntityTypeDb): Promise<EntityType> {
+    const [entityType] = await db.insert(entityTypes).values(data).returning();
+    return entityType;
+  }
+
+  async getSmartEntities(filters?: { typeId?: number; status?: string }): Promise<SmartEntity[]> {
+    const conditions = [];
+    
+    if (filters?.typeId) conditions.push(eq(smartEntities.typeId, filters.typeId));
+    if (filters?.status) conditions.push(eq(smartEntities.status, filters.status));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    return await db
+      .select()
+      .from(smartEntities)
+      .where(whereClause)
+      .orderBy(desc(smartEntities.usageCount));
+  }
+
+  async createSmartEntity(data: InsertSmartEntityDb): Promise<SmartEntity> {
+    const [entity] = await db.insert(smartEntities).values(data).returning();
+    return entity;
+  }
+
+  async getSmartTerms(filters?: { category?: string; status?: string }): Promise<SmartTerm[]> {
+    const conditions = [];
+    
+    if (filters?.category) conditions.push(eq(smartTerms.category, filters.category));
+    if (filters?.status) conditions.push(eq(smartTerms.status, filters.status));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    return await db
+      .select()
+      .from(smartTerms)
+      .where(whereClause)
+      .orderBy(desc(smartTerms.usageCount));
+  }
+
+  async createSmartTerm(data: InsertSmartTermDb): Promise<SmartTerm> {
+    const [term] = await db.insert(smartTerms).values(data).returning();
+    return term;
+  }
+
+  async incrementEntityUsage(entityId: string): Promise<void> {
+    await db
+      .update(smartEntities)
+      .set({ usageCount: sql`${smartEntities.usageCount} + 1` })
+      .where(eq(smartEntities.id, entityId));
+  }
+
+  async incrementTermUsage(termId: string): Promise<void> {
+    await db
+      .update(smartTerms)
+      .set({ usageCount: sql`${smartTerms.usageCount} + 1` })
+      .where(eq(smartTerms.id, termId));
   }
 }
 

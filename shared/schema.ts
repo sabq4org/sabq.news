@@ -3774,3 +3774,198 @@ export type InsertCalendarReminder = z.infer<typeof insertCalendarReminderSchema
 export type InsertCalendarAiDraft = z.infer<typeof insertCalendarAiDraftSchema>;
 export type InsertCalendarAssignment = z.infer<typeof insertCalendarAssignmentSchema>;
 export type UpdateCalendarAssignment = z.infer<typeof updateCalendarAssignmentSchema>;
+
+// ============================================
+// Smart Links System - Entity Types
+// ============================================
+
+export const entityTypes = pgTable("entity_types", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  nameAr: text("name_ar").notNull().unique(),
+  nameEn: text("name_en").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  icon: text("icon"),
+  color: text("color"),
+  displayOrder: integer("display_order").default(0).notNull(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ============================================
+// Smart Links System - Entities (كيانات)
+// ============================================
+
+export const smartEntities = pgTable("smart_entities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  aliases: text("aliases").array().default([]).notNull(),
+  typeId: integer("type_id").references(() => entityTypes.id).notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  slug: text("slug").notNull().unique(),
+  importanceScore: real("importance_score").default(0.5).notNull(),
+  usageCount: integer("usage_count").default(0).notNull(),
+  metadata: jsonb("metadata").$type<{
+    birthDate?: string;
+    position?: string;
+    organization?: string;
+    location?: string;
+    website?: string;
+    social?: {
+      twitter?: string;
+      linkedin?: string;
+      instagram?: string;
+    };
+    [key: string]: any;
+  }>(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_smart_entities_type").on(table.typeId),
+  index("idx_smart_entities_importance").on(table.importanceScore),
+]);
+
+// ============================================
+// Smart Links System - Terms (مصطلحات)
+// ============================================
+
+export const smartTerms = pgTable("smart_terms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  term: text("term").notNull().unique(),
+  aliases: text("aliases").array().default([]).notNull(),
+  description: text("description"),
+  category: text("category"),
+  usageCount: integer("usage_count").default(0).notNull(),
+  metadata: jsonb("metadata").$type<{
+    definition?: string;
+    relatedTerms?: string[];
+    [key: string]: any;
+  }>(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_smart_terms_category").on(table.category),
+]);
+
+// ============================================
+// Smart Links System - Article Links Junction
+// ============================================
+
+export const articleSmartLinks = pgTable("article_smart_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  entityId: varchar("entity_id").references(() => smartEntities.id, { onDelete: "cascade" }),
+  termId: varchar("term_id").references(() => smartTerms.id, { onDelete: "cascade" }),
+  position: integer("position").notNull(),
+  context: text("context"),
+  autoLinked: boolean("auto_linked").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_article_smart_links_article").on(table.articleId),
+  index("idx_article_smart_links_entity").on(table.entityId),
+  index("idx_article_smart_links_term").on(table.termId),
+]);
+
+// ============================================
+// Smart Links System - Relations
+// ============================================
+
+export const entityTypesRelations = relations(entityTypes, ({ many }) => ({
+  entities: many(smartEntities),
+}));
+
+export const smartEntitiesRelations = relations(smartEntities, ({ one, many }) => ({
+  type: one(entityTypes, {
+    fields: [smartEntities.typeId],
+    references: [entityTypes.id],
+  }),
+  links: many(articleSmartLinks),
+}));
+
+export const smartTermsRelations = relations(smartTerms, ({ many }) => ({
+  links: many(articleSmartLinks),
+}));
+
+export const articleSmartLinksRelations = relations(articleSmartLinks, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleSmartLinks.articleId],
+    references: [articles.id],
+  }),
+  entity: one(smartEntities, {
+    fields: [articleSmartLinks.entityId],
+    references: [smartEntities.id],
+  }),
+  term: one(smartTerms, {
+    fields: [articleSmartLinks.termId],
+    references: [smartTerms.id],
+  }),
+}));
+
+// ============================================
+// Smart Links System - Types
+// ============================================
+
+export type EntityType = typeof entityTypes.$inferSelect;
+export type InsertEntityTypeDb = typeof entityTypes.$inferInsert;
+export type SmartEntity = typeof smartEntities.$inferSelect;
+export type InsertSmartEntityDb = typeof smartEntities.$inferInsert;
+export type SmartTerm = typeof smartTerms.$inferSelect;
+export type InsertSmartTermDb = typeof smartTerms.$inferInsert;
+export type ArticleSmartLink = typeof articleSmartLinks.$inferSelect;
+export type InsertArticleSmartLinkDb = typeof articleSmartLinks.$inferInsert;
+
+// ============================================
+// Smart Links System - Zod Schemas
+// ============================================
+
+export const insertEntityTypeSchema = z.object({
+  nameAr: z.string().min(1, "الاسم بالعربية مطلوب"),
+  nameEn: z.string().min(1, "الاسم بالإنجليزية مطلوب"),
+  slug: z.string().min(1, "الرابط المختصر مطلوب"),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  color: z.string().optional(),
+  displayOrder: z.number().default(0),
+  status: z.string().default("active"),
+});
+
+export const insertSmartEntitySchema = createInsertSchema(smartEntities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "اسم الكيان مطلوب"),
+  slug: z.string().min(1, "الرابط المختصر مطلوب"),
+  typeId: z.number().min(1, "نوع الكيان مطلوب"),
+  aliases: z.array(z.string()).default([]),
+  importanceScore: z.number().min(0).max(1).default(0.5),
+});
+
+export const insertSmartTermSchema = createInsertSchema(smartTerms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  term: z.string().min(1, "المصطلح مطلوب"),
+  aliases: z.array(z.string()).default([]),
+});
+
+export const insertArticleSmartLinkSchema = createInsertSchema(articleSmartLinks).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  articleId: z.string().min(1, "معرف المقال مطلوب"),
+  position: z.number().min(0, "الموقع يجب أن يكون 0 أو أكثر"),
+});
+
+// ============================================
+// Smart Links System - Insert Types
+// ============================================
+
+export type InsertEntityType = z.infer<typeof insertEntityTypeSchema>;
+export type InsertSmartEntity = z.infer<typeof insertSmartEntitySchema>;
+export type InsertSmartTerm = z.infer<typeof insertSmartTermSchema>;
+export type InsertArticleSmartLink = z.infer<typeof insertArticleSmartLinkSchema>;

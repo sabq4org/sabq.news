@@ -96,6 +96,10 @@ import {
   shortAnalytics,
   quadCategoriesSettings,
   articleSmartCategories,
+  entityTypes,
+  smartEntities,
+  smartTerms,
+  articleSmartLinks,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -163,6 +167,10 @@ import {
   insertCalendarReminderSchema,
   insertCalendarAssignmentSchema,
   updateCalendarAssignmentSchema,
+  insertEntityTypeSchema,
+  insertSmartEntitySchema,
+  insertSmartTermSchema,
+  insertArticleSmartLinkSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -16098,6 +16106,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============================================================
   // END CALENDAR SYSTEM API ENDPOINTS
+  // ============================================================
+
+  // ============================================================
+  // SMART LINKS SYSTEM API ENDPOINTS
+  // ============================================================
+
+  // GET /api/entity-types - جلب أنواع الكيانات
+  app.get("/api/entity-types", requireAuth, async (req: any, res) => {
+    try {
+      const types = await storage.getEntityTypes();
+      res.json(types);
+    } catch (error: any) {
+      console.error("خطأ في جلب أنواع الكيانات:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب أنواع الكيانات" });
+    }
+  });
+
+  // POST /api/entity-types - إنشاء نوع كيان جديد
+  app.post("/api/entity-types", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+    try {
+      const result = insertEntityTypeSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: result.error.errors });
+      }
+
+      const entityType = await storage.createEntityType(result.data);
+      
+      await logActivity({
+        userId: req.user!.id,
+        action: 'entity_type_created',
+        entityType: 'entity_type',
+        entityId: entityType.id.toString(),
+        newValue: entityType,
+      });
+
+      res.status(201).json(entityType);
+    } catch (error: any) {
+      console.error("خطأ في إنشاء نوع الكيان:", error);
+      res.status(500).json({ message: "حدث خطأ في إنشاء نوع الكيان" });
+    }
+  });
+
+  // GET /api/smart-entities - جلب الكيانات
+  app.get("/api/smart-entities", requireAuth, async (req: any, res) => {
+    try {
+      const { typeId, status = 'active' } = req.query;
+      const entities = await storage.getSmartEntities({
+        typeId: typeId ? parseInt(typeId) : undefined,
+        status: status as string,
+      });
+      res.json(entities);
+    } catch (error: any) {
+      console.error("خطأ في جلب الكيانات:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب الكيانات" });
+    }
+  });
+
+  // POST /api/smart-entities - إنشاء كيان جديد
+  app.post("/api/smart-entities", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+    try {
+      const result = insertSmartEntitySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: result.error.errors });
+      }
+
+      const entity = await storage.createSmartEntity(result.data);
+      
+      await logActivity({
+        userId: req.user!.id,
+        action: 'smart_entity_created',
+        entityType: 'smart_entity',
+        entityId: entity.id,
+        newValue: entity,
+      });
+
+      res.status(201).json(entity);
+    } catch (error: any) {
+      console.error("خطأ في إنشاء الكيان:", error);
+      res.status(500).json({ message: "حدث خطأ في إنشاء الكيان" });
+    }
+  });
+
+  // GET /api/smart-terms - جلب المصطلحات
+  app.get("/api/smart-terms", requireAuth, async (req: any, res) => {
+    try {
+      const { category, status = 'active' } = req.query;
+      const terms = await storage.getSmartTerms({
+        category: category as string,
+        status: status as string,
+      });
+      res.json(terms);
+    } catch (error: any) {
+      console.error("خطأ في جلب المصطلحات:", error);
+      res.status(500).json({ message: "حدث خطأ في جلب المصطلحات" });
+    }
+  });
+
+  // POST /api/smart-terms - إنشاء مصطلح جديد
+  app.post("/api/smart-terms", requireAuth, requirePermission("content:manage"), async (req: any, res) => {
+    try {
+      const result = insertSmartTermSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: result.error.errors });
+      }
+
+      const term = await storage.createSmartTerm(result.data);
+      
+      await logActivity({
+        userId: req.user!.id,
+        action: 'smart_term_created',
+        entityType: 'smart_term',
+        entityId: term.id,
+        newValue: term,
+      });
+
+      res.status(201).json(term);
+    } catch (error: any) {
+      console.error("خطأ في إنشاء المصطلح:", error);
+      res.status(500).json({ message: "حدث خطأ في إنشاء المصطلح" });
+    }
+  });
+
+  // POST /api/smart-links/analyze - تحليل المحتوى واقتراح الروابط الذكية
+  app.post("/api/smart-links/analyze", requireAuth, async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ message: "المحتوى مطلوب" });
+      }
+
+      // جلب الكيانات والمصطلحات النشطة
+      const entities = await storage.getSmartEntities({ status: 'active' });
+      const terms = await storage.getSmartTerms({ status: 'active' });
+
+      // تحليل المحتوى
+      const { analyzeContent } = await import('./services/smartLinks');
+      const result = await analyzeContent(content, entities, terms);
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("خطأ في تحليل المحتوى:", error);
+      res.status(500).json({ message: "حدث خطأ في تحليل المحتوى" });
+    }
+  });
+
+  // ============================================================
+  // END SMART LINKS SYSTEM API ENDPOINTS
   // ============================================================
 
   const httpServer = createServer(app);
