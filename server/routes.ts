@@ -15954,8 +15954,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /api/calendar/:id/ai-draft - جلب المسودة الذكية
-  app.get("/api/calendar/:id/ai-draft", requireAuth, async (req: any, res) => {
+  // GET /api/calendar/:id/ai-drafts - جلب المسودة الذكية
+  app.get("/api/calendar/:id/ai-drafts", requireAuth, async (req: any, res) => {
     try {
       const { id } = req.params;
       const draft = await storage.getCalendarAiDraft(id);
@@ -15971,8 +15971,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /api/calendar/:id/generate - توليد مسودة ذكية
-  app.post("/api/calendar/:id/generate", requireAuth, requirePermission("calendar:generate_ai"), async (req: any, res) => {
+  // POST /api/calendar/:id/ai-drafts/generate - توليد مسودة ذكية
+  app.post("/api/calendar/:id/ai-drafts/generate", requireAuth, requirePermission("calendar:generate_ai"), async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user!.id;
