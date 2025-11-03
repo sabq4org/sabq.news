@@ -91,7 +91,7 @@ export default function SmartLinksManagement() {
 
   // Fetch Entity Types
   const { data: entityTypes = [], isLoading: entityTypesLoading } = useQuery<EntityType[]>({
-    queryKey: ["/api/smart-entities/types"],
+    queryKey: ["/api/entity-types"],
   });
 
   // Fetch Smart Entities
@@ -107,13 +107,13 @@ export default function SmartLinksManagement() {
   // Entity Type Mutations
   const createEntityTypeMutation = useMutation({
     mutationFn: async (data: InsertEntityTypeDb) => {
-      return await apiRequest("/api/smart-entities/types", {
+      return await apiRequest("/api/entity-types", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/entity-types"] });
       setEntityTypeDialogOpen(false);
       toast({ title: "تم إنشاء نوع الكيان بنجاح" });
     },
@@ -124,13 +124,13 @@ export default function SmartLinksManagement() {
 
   const updateEntityTypeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<InsertEntityTypeDb> }) => {
-      return await apiRequest(`/api/smart-entities/types/${id}`, {
+      return await apiRequest(`/api/entity-types/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/entity-types"] });
       setEntityTypeDialogOpen(false);
       setEditingEntityType(null);
       toast({ title: "تم تحديث نوع الكيان بنجاح" });
@@ -142,12 +142,12 @@ export default function SmartLinksManagement() {
 
   const deleteEntityTypeMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/smart-entities/types/${id}`, {
+      return await apiRequest(`/api/entity-types/${id}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/smart-entities/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/entity-types"] });
       setDeleteEntityTypeId(null);
       toast({ title: "تم حذف نوع الكيان بنجاح" });
     },
@@ -286,8 +286,8 @@ export default function SmartLinksManagement() {
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
+          <TabsList className="grid w-full grid-cols-3" dir="rtl">
             <TabsTrigger value="entity-types" className="gap-2" data-testid="tab-entity-types">
               <Database className="h-4 w-4" />
               أنواع الكيانات
@@ -350,25 +350,25 @@ export default function SmartLinksManagement() {
                     لا توجد أنواع كيانات
                   </div>
                 ) : (
-                  <Table>
+                  <Table dir="rtl">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>الاسم العربي</TableHead>
-                        <TableHead>الاسم الإنجليزي</TableHead>
-                        <TableHead>الوصف</TableHead>
-                        <TableHead className="w-24">الإجراءات</TableHead>
+                        <TableHead className="text-right">الاسم العربي</TableHead>
+                        <TableHead className="text-right">الاسم الإنجليزي</TableHead>
+                        <TableHead className="text-right">الوصف</TableHead>
+                        <TableHead className="w-24 text-right">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredEntityTypes.map((type) => (
                         <TableRow key={type.id}>
-                          <TableCell className="font-medium">{type.nameAr}</TableCell>
-                          <TableCell className="text-muted-foreground">{type.nameEn}</TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="font-medium text-right">{type.nameAr}</TableCell>
+                          <TableCell className="text-muted-foreground text-right">{type.nameEn}</TableCell>
+                          <TableCell className="text-muted-foreground text-right">
                             {type.description || "-"}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -431,27 +431,27 @@ export default function SmartLinksManagement() {
                     لا توجد كيانات ذكية
                   </div>
                 ) : (
-                  <Table>
+                  <Table dir="rtl">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>الاسم</TableHead>
-                        <TableHead>النوع</TableHead>
-                        <TableHead>الوصف</TableHead>
-                        <TableHead className="w-24">الإجراءات</TableHead>
+                        <TableHead className="text-right">الاسم</TableHead>
+                        <TableHead className="text-right">النوع</TableHead>
+                        <TableHead className="text-right">الوصف</TableHead>
+                        <TableHead className="w-24 text-right">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredEntities.map((entity) => (
                         <TableRow key={entity.id}>
-                          <TableCell className="font-medium">{entity.name}</TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="font-medium text-right">{entity.name}</TableCell>
+                          <TableCell className="text-muted-foreground text-right">
                             {entity.entityTypeName || "-"}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground text-right">
                             {entity.description ? entity.description.substring(0, 50) + "..." : "-"}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -514,27 +514,27 @@ export default function SmartLinksManagement() {
                     لا توجد مصطلحات ذكية
                   </div>
                 ) : (
-                  <Table>
+                  <Table dir="rtl">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>المصطلح</TableHead>
-                        <TableHead>الفئة</TableHead>
-                        <TableHead>الوصف</TableHead>
-                        <TableHead className="w-24">الإجراءات</TableHead>
+                        <TableHead className="text-right">المصطلح</TableHead>
+                        <TableHead className="text-right">الفئة</TableHead>
+                        <TableHead className="text-right">الوصف</TableHead>
+                        <TableHead className="w-24 text-right">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredTerms.map((term) => (
                         <TableRow key={term.id}>
-                          <TableCell className="font-medium">{term.term}</TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="font-medium text-right">{term.term}</TableCell>
+                          <TableCell className="text-muted-foreground text-right">
                             {term.category || "-"}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground text-right">
                             {term.description ? term.description.substring(0, 50) + "..." : "-"}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
