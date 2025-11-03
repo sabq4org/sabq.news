@@ -51,7 +51,7 @@ Key features include:
 - **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, multi-channel distribution, priority levels, rich content editor, and analytics.
 - **A/B Testing System:** For content optimization and experiment management.
 - **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Credibility Score Analysis, Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, and AI Insights Block.
-- **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline, and a Smart Notifications System offers real-time pushes via SSE.
+- **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline with redesigned modern interface (November 2025), featuring enhanced animations, gradient designs, live status indicators, and comprehensive AI insights without image displays for cleaner presentation. Smart Notifications System offers real-time pushes via SSE.
 - **Reporter Profile System:** Dedicated pages for staff and reporters.
 - **Audio Newsletters (النشرات الصوتية) & Quick Audio News Briefs:** AI-powered text-to-speech news briefing systems with ElevenLabs integration.
 - **Sabq Shorts (سبق قصير) - Vertical Video Reels System:** A full-featured short-form video news platform with vertical swipe navigation, HLS streaming, interactive engagement, analytics, and admin dashboard.
