@@ -246,7 +246,10 @@ export const bookmarks = pgTable("bookmarks", {
   articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_bookmarks_user").on(table.userId, table.createdAt.desc()),
+  index("idx_bookmarks_article").on(table.articleId),
+]);
 
 // Smart/Dynamic category assignments (auto-populated by AI)
 export const articleSmartCategories = pgTable("article_smart_categories", {
@@ -469,7 +472,11 @@ export const activityLogs = pgTable("activity_logs", {
     reason?: string;
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_activity_logs_user").on(table.userId, table.createdAt.desc()),
+  index("idx_activity_logs_entity").on(table.entityType, table.entityId),
+  index("idx_activity_logs_created").on(table.createdAt.desc()),
+]);
 
 // Notification Templates
 export const notificationTemplates = pgTable("notification_templates", {
@@ -2111,6 +2118,8 @@ export const mirqabEntries = pgTable("mirqab_entries", {
   index("idx_mirqab_entries_type").on(table.entryType),
   index("idx_mirqab_entries_status").on(table.status),
   index("idx_mirqab_entries_author").on(table.authorId),
+  index("idx_mirqab_entries_status_published").on(table.status, table.publishedAt.desc()),
+  index("idx_mirqab_entries_type_status").on(table.entryType, table.status),
 ]);
 
 // SABQ Index - مؤشر سبق
