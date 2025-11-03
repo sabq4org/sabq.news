@@ -60,10 +60,17 @@ export default function CalendarPage() {
   };
 
   const getImportanceColor = (importance: number) => {
-    if (importance >= 5) return "bg-red-500";
-    if (importance >= 4) return "bg-orange-500";
-    if (importance >= 3) return "bg-yellow-500";
-    return "bg-blue-500";
+    if (importance >= 5) return "border-r-red-400 bg-red-50 dark:bg-red-950/30";
+    if (importance >= 4) return "border-r-orange-400 bg-orange-50 dark:bg-orange-950/30";
+    if (importance >= 3) return "border-r-yellow-400 bg-yellow-50 dark:bg-yellow-950/30";
+    return "border-r-blue-400 bg-blue-50 dark:bg-blue-950/30";
+  };
+
+  const getImportanceColorSimple = (importance: number) => {
+    if (importance >= 5) return "bg-red-100 dark:bg-red-900/20 text-red-900 dark:text-red-100";
+    if (importance >= 4) return "bg-orange-100 dark:bg-orange-900/20 text-orange-900 dark:text-orange-100";
+    if (importance >= 3) return "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-100";
+    return "bg-blue-100 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100";
   };
 
   const monthEvents = events.filter(event => {
@@ -173,10 +180,10 @@ export default function CalendarPage() {
             ) : (
               <>
                 {view === "month" && (
-                  <MonthView events={monthEvents} currentDate={currentDate} getImportanceColor={getImportanceColor} />
+                  <MonthView events={monthEvents} currentDate={currentDate} getImportanceColorSimple={getImportanceColorSimple} />
                 )}
                 {view === "week" && (
-                  <WeekView events={monthEvents} currentDate={currentDate} getImportanceColor={getImportanceColor} />
+                  <WeekView events={monthEvents} currentDate={currentDate} getImportanceColor={getImportanceColor} getEventTypeLabel={getEventTypeLabel} />
                 )}
                 {view === "agenda" && (
                   <AgendaView
@@ -230,7 +237,7 @@ export default function CalendarPage() {
   );
 }
 
-function MonthView({ events, currentDate, getImportanceColor }: { events: CalendarEvent[]; currentDate: Date; getImportanceColor: (importance: number) => string }) {
+function MonthView({ events, currentDate, getImportanceColorSimple }: { events: CalendarEvent[]; currentDate: Date; getImportanceColorSimple: (importance: number) => string }) {
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   
@@ -268,7 +275,7 @@ function MonthView({ events, currentDate, getImportanceColor }: { events: Calend
             <div className="space-y-1">
               {dayEvents.slice(0, 2).map((event) => (
                 <Link key={event.id} href={`/dashboard/calendar/events/${event.id}`}>
-                  <div className={`text-xs p-1 rounded truncate ${getImportanceColor(event.importance)}/10`}>
+                  <div className={`text-xs p-1 rounded truncate ${getImportanceColorSimple(event.importance)}`}>
                     {event.title}
                   </div>
                 </Link>
@@ -286,7 +293,7 @@ function MonthView({ events, currentDate, getImportanceColor }: { events: Calend
   );
 }
 
-function WeekView({ events, currentDate, getImportanceColor }: { events: CalendarEvent[]; currentDate: Date; getImportanceColor: (importance: number) => string }) {
+function WeekView({ events, currentDate, getImportanceColor, getEventTypeLabel }: { events: CalendarEvent[]; currentDate: Date; getImportanceColor: (importance: number) => string; getEventTypeLabel: (type: string) => string }) {
   const today = new Date(currentDate);
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
@@ -323,11 +330,11 @@ function WeekView({ events, currentDate, getImportanceColor }: { events: Calenda
             <div className="space-y-2">
               {dayEvents.map((event) => (
                 <Link key={event.id} href={`/dashboard/calendar/events/${event.id}`}>
-                  <Card className={`hover-elevate active-elevate-2 cursor-pointer border-r-4 ${getImportanceColor(event.importance)}`}>
+                  <Card className={`hover-elevate active-elevate-2 cursor-pointer ${getImportanceColor(event.importance)}`}>
                     <CardContent className="p-3">
                       <div className="text-sm font-medium truncate">{event.title}</div>
                       <Badge variant="secondary" className="mt-1 text-xs">
-                        {event.type}
+                        {getEventTypeLabel(event.type)}
                       </Badge>
                     </CardContent>
                   </Card>
