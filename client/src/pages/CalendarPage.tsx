@@ -173,10 +173,10 @@ export default function CalendarPage() {
             ) : (
               <>
                 {view === "month" && (
-                  <MonthView events={monthEvents} currentDate={currentDate} />
+                  <MonthView events={monthEvents} currentDate={currentDate} getImportanceColor={getImportanceColor} />
                 )}
                 {view === "week" && (
-                  <WeekView events={monthEvents} currentDate={currentDate} />
+                  <WeekView events={monthEvents} currentDate={currentDate} getImportanceColor={getImportanceColor} />
                 )}
                 {view === "agenda" && (
                   <AgendaView
@@ -230,7 +230,7 @@ export default function CalendarPage() {
   );
 }
 
-function MonthView({ events, currentDate }: { events: CalendarEvent[]; currentDate: Date }) {
+function MonthView({ events, currentDate, getImportanceColor }: { events: CalendarEvent[]; currentDate: Date; getImportanceColor: (importance: number) => string }) {
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   
@@ -268,7 +268,7 @@ function MonthView({ events, currentDate }: { events: CalendarEvent[]; currentDa
             <div className="space-y-1">
               {dayEvents.slice(0, 2).map((event) => (
                 <Link key={event.id} href={`/dashboard/calendar/events/${event.id}`}>
-                  <div className="text-xs p-1 bg-primary/10 text-primary rounded truncate">
+                  <div className={`text-xs p-1 rounded truncate ${getImportanceColor(event.importance)}/10`}>
                     {event.title}
                   </div>
                 </Link>
@@ -286,7 +286,7 @@ function MonthView({ events, currentDate }: { events: CalendarEvent[]; currentDa
   );
 }
 
-function WeekView({ events, currentDate }: { events: CalendarEvent[]; currentDate: Date }) {
+function WeekView({ events, currentDate, getImportanceColor }: { events: CalendarEvent[]; currentDate: Date; getImportanceColor: (importance: number) => string }) {
   const today = new Date(currentDate);
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
@@ -323,7 +323,7 @@ function WeekView({ events, currentDate }: { events: CalendarEvent[]; currentDat
             <div className="space-y-2">
               {dayEvents.map((event) => (
                 <Link key={event.id} href={`/dashboard/calendar/events/${event.id}`}>
-                  <Card className="hover-elevate active-elevate-2 cursor-pointer">
+                  <Card className={`hover-elevate active-elevate-2 cursor-pointer border-r-4 ${getImportanceColor(event.importance)}`}>
                     <CardContent className="p-3">
                       <div className="text-sm font-medium truncate">{event.title}</div>
                       <Badge variant="secondary" className="mt-1 text-xs">

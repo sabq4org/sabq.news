@@ -1,0 +1,38 @@
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Log] [ChatWS] Skipping connection - user not authenticated (index-CYrvhPgV.js, line 7748)
+[Log] [ChatWS] User authenticated, connecting... (index-CYrvhPgV.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-CYrvhPgV.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-CYrvhPgV.js, line 7748)
+[Error] RangeError: Invalid time value
+	Ofe (index-CYrvhPgV.js:40:169)
+	(anonymous function) (index-CYrvhPgV.js:40:398)
+	Wwe (index-CYrvhPgV.js:38:15668)
+	u4e (index-CYrvhPgV.js:40:32300)
+	v7e (index-CYrvhPgV.js:40:31715)
+	$ot (index-CYrvhPgV.js:40:31259)
+	qot (index-CYrvhPgV.js:40:41302)
+	zy (index-CYrvhPgV.js:40:40646)
+	p4e (index-CYrvhPgV.js:40:37197)
+	Zg (index-CYrvhPgV.js:38:3324)
+	(anonymous function) (index-CYrvhPgV.js:40:34534)
+[Error] RangeError: Invalid time value
+	Zg (index-CYrvhPgV.js:38:3418)
+	(anonymous function) (index-CYrvhPgV.js:40:34534)
+[Log] [ChatWS] Reconnecting... (1/5) (index-CYrvhPgV.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-CYrvhPgV.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-CYrvhPgV.js, line 7748)
+> Selected Element
+< <html lang="ar" dir="rtl" class="light">…</html>
+[Log] [ChatWS] Reconnecting... (2/5) (index-CYrvhPgV.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-CYrvhPgV.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-CYrvhPgV.js, line 7748)
