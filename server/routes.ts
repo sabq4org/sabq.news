@@ -15641,7 +15641,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdById: userId
       };
       
-      const reminders = req.body.reminders || [];
+      // تحويل التذكيرات: من scheduledFor (timestamp) إلى fireWhen (days before)
+      const rawReminders = req.body.reminders || [];
+      const reminders = rawReminders.map((r: any) => {
+        // حساب عدد الأيام بين scheduledFor و dateStart
+        const eventDate = new Date(validatedData.dateStart);
+        const reminderDate = new Date(r.scheduledFor);
+        const diffMs = eventDate.getTime() - reminderDate.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        
+        return {
+          fireWhen: Math.max(0, diffDays), // على الأقل 0 (يوم الحدث نفسه)
+          channel: r.channel || 'IN_APP',
+          enabled: true,
+        };
+      });
       
       const event = await storage.createCalendarEvent(
         eventData as any,
