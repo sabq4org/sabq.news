@@ -221,16 +221,16 @@ export async function updateDynamicCategories() {
 }
 
 /**
- * تشغيل job كل 15 دقيقة (تقليل الضغط)
- * Start job that runs every 15 minutes (reduced load)
+ * تشغيل job كل ساعة (تقليل الضغط بنسبة 75%)
+ * Start job that runs every hour (75% load reduction)
  */
 export function startDynamicCategoriesJob() {
-  // Run every 15 minutes (reduced from 5 minutes for better performance)
-  const job = cron.schedule("*/15 * * * *", async () => {
+  // Run every hour (reduced from 15 minutes for 75% performance improvement)
+  const job = cron.schedule("0 * * * *", async () => {
     await updateDynamicCategories();
   });
 
-  console.log('[Dynamic Categories Job] ⏰ Job scheduled (every 15 minutes)');
+  console.log('[Dynamic Categories Job] ⏰ Job scheduled (every 60 minutes)');
 
   // Run immediately on startup
   console.log('[Dynamic Categories Job] 🚀 Running initial update...');
