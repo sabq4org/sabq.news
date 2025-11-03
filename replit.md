@@ -3,6 +3,8 @@
 ## Overview
 Sabq Smart is an AI-powered Arabic news platform built with React, Express, and PostgreSQL. Its main goal is to deliver an advanced news experience for the Arabic-speaking market by providing AI-driven article summarization, personalized recommendations, and comprehensive content management. The platform features an RTL-first design, dynamic content delivery, user profiling, and advanced theme management, aiming to enrich news consumption through AI and content enrichment.
 
+**Latest Update (November 2025):** Smart Links system now fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -55,6 +57,14 @@ Key features include:
 - **Quad Categories Block:** Customizable homepage block displaying 4 category columns with configurable content, admin interface, and optional full-width background color.
 - **Smart Categories System:** Intelligent categorization with Core, Dynamic/AI, and Seasonal types, featuring automated article assignment via background jobs, relevance scoring, and intelligent selection algorithms for categories like "الآن".
 - **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including comprehensive article metadata, Schema.org JSON-LD structured data, developer documentation, and OpenAPI 3.0 specification.
+- **Smart Links Management System:** Full CRUD operations for AI-powered entity and term recognition with:
+  - Create, Read, Update (PATCH), Delete (DELETE) endpoints
+  - Direct image upload to Object Storage (Google Cloud Storage)
+  - AI-powered auto-description generation via GPT-4o
+  - Rich metadata support (position, organization, birthDate, location, website, social media)
+  - Automatic slug generation and alias management
+  - Entity/term detail pages with related articles
+  - Dashboard management interface with advanced form handling
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content.
