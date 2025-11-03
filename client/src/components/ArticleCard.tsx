@@ -295,37 +295,54 @@ export function ArticleCard({
   // Grid variant (default) - Professional News Card
   return (
     <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent" data-testid={`card-article-${article.id}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          {article.category && (
-            <Badge 
-              className="text-xs"
-              data-testid={`badge-category-${article.id}`}
-            >
-              {article.category.icon} {article.category.nameAr}
-            </Badge>
-          )}
-          {aiInsight && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs gap-1 border-primary/20" data-testid={`badge-ai-${article.id}`}>
-                    <aiInsight.icon className="h-3 w-3 text-primary" />
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-sm">{aiInsight.text}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-
-        <Link href={`/article/${article.slug}`}>
-          <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
-            {article.title}
-          </h3>
+      <CardContent className="p-0">
+        <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
+          <div className="relative aspect-[16/9] overflow-hidden">
+            {article.imageUrl ? (
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                style={{ objectPosition: getObjectPosition() }}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+            )}
+            
+            <div className="absolute top-3 right-3 flex flex-wrap gap-2">
+              {article.category && (
+                <Badge 
+                  className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs shadow-md"
+                  data-testid={`badge-category-${article.id}`}
+                >
+                  {article.category.icon} {article.category.nameAr}
+                </Badge>
+              )}
+              {aiInsight && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 gap-1.5 shadow-lg">
+                        <aiInsight.icon className="h-3.5 w-3.5" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">{aiInsight.text}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          </div>
         </Link>
+
+        <div className="p-4">
+          <Link href={`/article/${article.slug}`}>
+            <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+              {article.title}
+            </h3>
+          </Link>
 
         {article.aiSummary && (
           <p className="text-sm text-[#475569] dark:text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
@@ -396,6 +413,7 @@ export function ArticleCard({
             </Link>
           </div>
         </div>
+      </div>
       </CardContent>
     </Card>
   );
