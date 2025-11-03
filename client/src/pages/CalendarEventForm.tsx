@@ -54,9 +54,10 @@ export default function CalendarEventForm() {
   });
 
   // فلترة التصنيفات: التصنيفات الرسمية فقط (ليست SMART أو DYNAMIC)
-  const categories = (categoriesData as any[]).filter((cat: any) => 
-    cat.type === "CORE" || !cat.type
-  );
+  const categories = (categoriesData as any[]).filter((cat: any) => {
+    const catType = cat.type?.toLowerCase();
+    return !catType || catType === "core";
+  });
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
