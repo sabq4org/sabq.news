@@ -299,11 +299,10 @@ export default function CalendarEventForm() {
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-category">
-                            <SelectValue placeholder="اختر تصنيفاً" />
+                            <SelectValue placeholder="اختر تصنيفاً (اختياري)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">بدون تصنيف</SelectItem>
                           {(categories as any[]).map((cat: any) => (
                             <SelectItem key={cat.id} value={cat.id}>
                               {cat.nameAr}

@@ -1,0 +1,47 @@
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Log] [ChatWS] Skipping connection - user not authenticated (index-D6i4kmlE.js, line 7748)
+[Log] [ChatWS] User authenticated, connecting... (index-D6i4kmlE.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-D6i4kmlE.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D6i4kmlE.js, line 7748)
+[Log] [Nav] Item clicked: – Object (index-D6i4kmlE.js, line 8005)
+Object
+[Log] [ChatWS] Reconnecting... (1/5) (index-D6i4kmlE.js, line 7748)
+[Error] Failed to load resource: the server responded with a status of 404 () (events, line 0)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-D6i4kmlE.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D6i4kmlE.js, line 7748)
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	Ofe (index-D6i4kmlE.js:40:169)
+	(anonymous function) (index-D6i4kmlE.js:40:398)
+	Wwe (index-D6i4kmlE.js:38:15668)
+	u4e (index-D6i4kmlE.js:40:32300)
+	v7e (index-D6i4kmlE.js:40:31715)
+	$ot (index-D6i4kmlE.js:40:31259)
+	qot (index-D6i4kmlE.js:40:41302)
+	zy (index-D6i4kmlE.js:40:40646)
+	p4e (index-D6i4kmlE.js:40:37197)
+	Zg (index-D6i4kmlE.js:38:3324)
+	(anonymous function) (index-D6i4kmlE.js:40:34534)
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	Zg (index-D6i4kmlE.js:38:3418)
+	(anonymous function) (index-D6i4kmlE.js:40:34534)
+[Log] [ChatWS] Reconnecting... (2/5) (index-D6i4kmlE.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event
+Event
+	(anonymous function) (index-D6i4kmlE.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D6i4kmlE.js, line 7748)
+> Selected Element
+< <html lang="ar" dir="rtl" class="light">…</html>
+[Log] [ChatWS] Reconnecting... (3/5) (index-D6i4kmlE.js, line 7748)
+[Error] WebSocket connection to 'wss://sabq.life/ws/chat' failed: There was a bad response from the server.
+[Error] [ChatWS] Error: – Event {isTrusted: true, type: "error", target: WebSocket, …}
+Event {isTrusted: true, type: "error", target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}Event
+	(anonymous function) (index-D6i4kmlE.js:7748:151693)
+[Log] [ChatWS] Disconnected (index-D6i4kmlE.js, line 7748)
