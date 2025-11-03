@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
-import { CredibilityIndicator } from "@/components/CredibilityIndicator";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import { RelatedOpinionsSection } from "@/components/RelatedOpinionsSection";
 import StoryTimeline from "@/components/StoryTimeline";
@@ -31,7 +30,6 @@ import {
   ChevronRight,
   Volume2,
   VolumeX,
-  Shield,
   CheckCircle2,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -261,41 +259,6 @@ export default function ArticleDetail() {
 
   const handleComment = async (content: string, parentId?: string) => {
     commentMutation.mutate({ content, parentId });
-  };
-
-  const credibilityMutation = useMutation({
-    mutationFn: async () => {
-      if (!article) return;
-      return await apiRequest(`/api/articles/${article.id}/analyze-credibility`, {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/articles", slug] });
-      toast({
-        title: "تم التحليل",
-        description: "تم تحليل مصداقية المقال بنجاح",
-      });
-    },
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "تسجيل دخول مطلوب",
-          description: "يجب تسجيل الدخول لتحليل المصداقية",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ",
-          description: error.message || "فشل في تحليل المصداقية",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
-  const handleAnalyzeCredibility = () => {
-    credibilityMutation.mutate();
   };
 
   // Extract text for audio summary
@@ -675,27 +638,6 @@ export default function ArticleDetail() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            {/* Credibility Indicator */}
-            {article.credibilityScore && article.credibilityAnalysis && article.credibilityLastUpdated ? (
-              <CredibilityIndicator
-                score={article.credibilityScore}
-                analysis={article.credibilityAnalysis}
-                lastUpdated={article.credibilityLastUpdated}
-              />
-            ) : (
-              user && (
-                <Button
-                  onClick={handleAnalyzeCredibility}
-                  disabled={credibilityMutation.isPending}
-                  className="w-full gap-2"
-                  data-testid="button-analyze-credibility"
-                >
-                  <Shield className="h-5 w-5" />
-                  {credibilityMutation.isPending ? "جاري التحليل..." : "تحليل المصداقية"}
-                </Button>
-              )
-            )}
-
             {/* AI-Powered Smart Recommendations */}
             <AIRecommendationsBlock articleSlug={slug} />
 

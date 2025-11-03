@@ -126,7 +126,7 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
       <section className="pdf-stats border-t-2 border-gray-300 pt-6 mb-8">
         <h2 className="text-2xl font-bold mb-4">إحصائيات التفاعل</h2>
         
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {/* المشاهدات */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
@@ -149,17 +149,6 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
             </p>
           </div>
 
-          {/* درجة المصداقية */}
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Share2 className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-gray-600">المصداقية</span>
-            </div>
-            <p className="text-2xl font-bold">
-              {article.credibilityScore ? `${article.credibilityScore}%` : 'غير متاح'}
-            </p>
-          </div>
-
           {/* التعليقات */}
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
@@ -171,23 +160,6 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
             </p>
           </div>
         </div>
-
-        {/* درجة المصداقية إن وُجدت */}
-        {article.credibilityScore && (
-          <div className="mt-6 bg-gradient-to-l from-primary/10 to-accent/10 p-4 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold mb-1">درجة المصداقية</h3>
-                <p className="text-sm text-gray-600">
-                  تقييم تلقائي بواسطة الذكاء الاصطناعي
-                </p>
-              </div>
-              <div className="text-4xl font-bold text-primary">
-                {article.credibilityScore}%
-              </div>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* تذييل PDF */}
