@@ -55,7 +55,7 @@ interface AnalyzeResponse {
 interface SmartLinksPanelProps {
   articleContent: string;
   articleId?: string;
-  onAddLink: (text: string, url: string) => void;
+  onAddLink: (suggestion: SmartLinkSuggestion, url: string) => void;
 }
 
 export function SmartLinksPanel({ articleContent, articleId, onAddLink }: SmartLinksPanelProps) {
@@ -112,7 +112,7 @@ export function SmartLinksPanel({ articleContent, articleId, onAddLink }: SmartL
     }
     
     if (url) {
-      onAddLink(suggestion.text, url);
+      onAddLink(suggestion, url);
       toast({
         title: "تم إضافة الرابط",
         description: `تم إضافة رابط "${suggestion.text}"`,

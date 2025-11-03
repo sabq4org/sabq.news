@@ -61,7 +61,6 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
-  onAddSmartLink?: (text: string, url: string) => void;
   editorRef?: (editor: Editor | null) => void;
 }
 
@@ -69,7 +68,6 @@ export function RichTextEditor({
   content, 
   onChange, 
   placeholder = "ابدأ الكتابة...",
-  onAddSmartLink,
   editorRef 
 }: RichTextEditorProps) {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -486,12 +484,12 @@ export function RichTextEditor({
               <Smile className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[280px] p-0 border-0" align="start">
-            <div className="emoji-picker-wrapper">
+          <PopoverContent className="w-[350px] p-0" align="start" side="bottom">
+            <div className="rounded-md overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 searchPlaceHolder="بحث..."
-                width="100%"
+                width={350}
                 height={350}
                 previewConfig={{ showPreview: false }}
                 skinTonesDisabled

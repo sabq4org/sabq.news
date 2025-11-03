@@ -508,7 +508,7 @@ const generateSlug = (text: string) => {
     saveArticleMutation.mutate({ publishNow });
   };
 
-  const handleAddLink = (text: string, url: string) => {
+  const handleAddLink = (suggestion: { text: string; position: number; length: number }, url: string) => {
     if (!editorInstance) {
       toast({
         title: "خطأ",
@@ -521,33 +521,68 @@ const generateSlug = (text: string) => {
     // Get the editor's current content as text (without HTML tags)
     const editorText = editorInstance.state.doc.textContent;
     
-    // Search for the text in the editor
-    const textIndex = editorText.indexOf(text);
+    // Use position and length from AI suggestion for accurate text selection
+    const from = suggestion.position;
+    const to = suggestion.position + suggestion.length;
     
-    if (textIndex === -1) {
-      toast({
-        title: "لم يتم العثور على النص",
-        description: `النص "${text}" غير موجود في المحتوى`,
-        variant: "destructive",
-      });
-      return;
+    // Verify the text at the suggested position matches
+    const textAtPosition = editorText.substring(from, to);
+    if (textAtPosition !== suggestion.text) {
+      // Fallback: find occurrence closest to original position
+      // Find ALL occurrences in the text
+      const occurrences: number[] = [];
+      let searchIndex = 0;
+      while (searchIndex < editorText.length) {
+        const foundIndex = editorText.indexOf(suggestion.text, searchIndex);
+        if (foundIndex === -1) break;
+        occurrences.push(foundIndex);
+        searchIndex = foundIndex + 1;
+      }
+      
+      if (occurrences.length === 0) {
+        toast({
+          title: "لم يتم العثور على النص",
+          description: `النص "${suggestion.text}" غير موجود في المحتوى الحالي`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Find the occurrence closest to the original position
+      let closestOccurrence = occurrences[0];
+      let minDistance = Math.abs(occurrences[0] - suggestion.position);
+      
+      for (const occurrence of occurrences) {
+        const distance = Math.abs(occurrence - suggestion.position);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestOccurrence = occurrence;
+        }
+      }
+      
+      // Use closest occurrence
+      const fallbackFrom = closestOccurrence;
+      const fallbackTo = closestOccurrence + suggestion.text.length;
+      
+      editorInstance
+        .chain()
+        .focus()
+        .setTextSelection({ from: fallbackFrom, to: fallbackTo })
+        .setLink({ href: url })
+        .run();
+    } else {
+      // Use exact position from AI
+      editorInstance
+        .chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .setLink({ href: url })
+        .run();
     }
-
-    // Find the position in the document
-    const from = textIndex;
-    const to = textIndex + text.length;
-
-    // Select the text and add the link
-    editorInstance
-      .chain()
-      .focus()
-      .setTextSelection({ from, to })
-      .setLink({ href: url })
-      .run();
 
     toast({
       title: "تم إضافة الرابط بنجاح",
-      description: `تم إضافة رابط "${text}" إلى المحتوى`,
+      description: `تم ربط "${suggestion.text}" بالرابط المقترح`,
     });
   };
 
@@ -724,7 +759,6 @@ const generateSlug = (text: string) => {
                   onChange={setContent}
                   placeholder="ابدأ بكتابة المقال..."
                   editorRef={setEditorInstance}
-                  onAddSmartLink={handleAddLink}
                 />
               </CardContent>
             </Card>
