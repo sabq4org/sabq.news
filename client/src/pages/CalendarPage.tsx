@@ -74,11 +74,15 @@ export default function CalendarPage() {
   };
 
   const monthEvents = events.filter(event => {
-    const eventDate = new Date(event.dateStart);
-    return (
-      eventDate.getMonth() === currentDate.getMonth() &&
-      eventDate.getFullYear() === currentDate.getFullYear()
-    );
+    const eventStartDate = new Date(event.dateStart);
+    const eventEndDate = event.dateEnd ? new Date(event.dateEnd) : eventStartDate;
+    
+    // Get first and last day of the current month
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
+    
+    // Check if event overlaps with the current month
+    return eventStartDate <= monthEnd && eventEndDate >= monthStart;
   });
 
   const nextMonth = () => {
@@ -246,8 +250,20 @@ function MonthView({ events, currentDate, getImportanceColorSimple }: { events: 
 
   const getEventsForDay = (day: number) => {
     return events.filter(event => {
-      const eventDate = new Date(event.dateStart);
-      return eventDate.getDate() === day;
+      const eventStartDate = new Date(event.dateStart);
+      const eventEndDate = event.dateEnd ? new Date(event.dateEnd) : eventStartDate;
+      
+      // Create date for this day in the current month
+      const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      
+      // Check if this day falls between event start and end dates
+      const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+      const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59);
+      
+      const eventStart = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+      const eventEnd = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate(), 23, 59, 59);
+      
+      return dayStart <= eventEnd && dayEnd >= eventStart;
     });
   };
 
@@ -306,12 +322,17 @@ function WeekView({ events, currentDate, getImportanceColor, getEventTypeLabel }
 
   const getEventsForDay = (date: Date) => {
     return events.filter(event => {
-      const eventDate = new Date(event.dateStart);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
+      const eventStartDate = new Date(event.dateStart);
+      const eventEndDate = event.dateEnd ? new Date(event.dateEnd) : eventStartDate;
+      
+      // Check if this date falls between event start and end dates
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+      
+      const eventStart = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+      const eventEnd = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate(), 23, 59, 59);
+      
+      return dayStart <= eventEnd && dayEnd >= eventStart;
     });
   };
 
