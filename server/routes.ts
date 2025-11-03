@@ -15633,10 +15633,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertCalendarEventSchema.parse(req.body);
       
+      // تحويل التواريخ من string إلى Date
+      const eventData = {
+        ...validatedData,
+        dateStart: new Date(validatedData.dateStart),
+        dateEnd: validatedData.dateEnd ? new Date(validatedData.dateEnd) : undefined,
+        createdById: userId
+      };
+      
       const reminders = req.body.reminders || [];
       
       const event = await storage.createCalendarEvent(
-        { ...validatedData, createdById: userId } as any,
+        eventData as any,
         reminders
       );
 
