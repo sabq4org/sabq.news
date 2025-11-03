@@ -44,82 +44,82 @@ export function RecommendationsWidget({
               : null;
 
             return (
-              <Link key={article.id} href={`/article/${article.slug}`}>
-                <a 
-                  className="block group"
-                  data-testid={`link-recommendation-${article.id}`}
-                >
-                  <div className="p-4 hover-elevate active-elevate-2 transition-all">
-                    <div className="flex gap-3">
-                      {/* Image */}
-                      <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
-                        {article.imageUrl ? (
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
-                            style={{
-                              objectPosition: (article as any).imageFocalPoint
-                                ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                : 'center'
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
-                        )}
-                        {/* Number Badge */}
-                        <div className="absolute bottom-1 left-1">
-                          <Badge 
-                            variant="secondary" 
-                            className="h-5 px-1.5 text-xs font-bold bg-background/90 backdrop-blur-sm"
-                          >
-                            {index + 1}
-                          </Badge>
-                        </div>
+              <Link 
+                key={article.id} 
+                href={`/article/${article.slug}`}
+                className="block group"
+                data-testid={`link-recommendation-${article.id}`}
+              >
+                <div className="p-4 hover-elevate active-elevate-2 transition-all">
+                  <div className="flex gap-3">
+                    {/* Image */}
+                    <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                      {article.imageUrl ? (
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          style={{
+                            objectPosition: (article as any).imageFocalPoint
+                              ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                              : 'center'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+                      )}
+                      {/* Number Badge */}
+                      <div className="absolute bottom-1 left-1">
+                        <Badge 
+                          variant="secondary" 
+                          className="h-5 px-1.5 text-xs font-bold bg-background/90 backdrop-blur-sm"
+                        >
+                          {index + 1}
+                        </Badge>
                       </div>
+                    </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        {/* Category */}
-                        {article.category && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs h-5"
-                            data-testid={`badge-rec-category-${article.id}`}
-                          >
-                            {article.category.icon} {article.category.nameAr}
-                          </Badge>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 space-y-2">
+                      {/* Category */}
+                      {article.category && (
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs h-5"
+                          data-testid={`badge-rec-category-${article.id}`}
+                        >
+                          {article.category.icon} {article.category.nameAr}
+                        </Badge>
+                      )}
+
+                      {/* Title */}
+                      <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-rec-title-${article.id}`}>
+                        {article.title}
+                      </h4>
+
+                      {/* Meta Info */}
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        {timeAgo && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {timeAgo}
+                          </span>
                         )}
-
-                        {/* Title */}
-                        <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-rec-title-${article.id}`}>
-                          {article.title}
-                        </h4>
-
-                        {/* Meta Info */}
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          {timeAgo && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {timeAgo}
-                            </span>
-                          )}
-                          <ViewsCount 
-                            views={article.views || 0}
-                            iconClassName="h-3 w-3"
-                          />
-                          {(article.commentsCount ?? 0) > 0 && (
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />
-                              {article.commentsCount}
-                            </span>
-                          )}
-                        </div>
+                        <ViewsCount 
+                          views={article.views || 0}
+                          iconClassName="h-3 w-3"
+                        />
+                        {(article.commentsCount ?? 0) > 0 && (
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="h-3 w-3" />
+                            {article.commentsCount}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                </a>
+                </div>
               </Link>
             );
           })}
