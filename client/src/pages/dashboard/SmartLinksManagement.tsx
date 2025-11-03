@@ -826,6 +826,9 @@ function SmartEntityDialog({
       typeId: parseInt(typeId),
       slug,
       description: description || null,
+      aliases: [],
+      importanceScore: 0.5,
+      status: "active",
     });
   };
 
@@ -938,6 +941,8 @@ function SmartTermDialog({
       term: termText,
       category: category || null,
       description: description || null,
+      aliases: [],
+      status: "active",
     });
   };
 
