@@ -255,6 +255,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   alt={article.title}
                   className="w-full h-full object-cover"
                   style={{ objectPosition: getObjectPosition(article) }}
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />

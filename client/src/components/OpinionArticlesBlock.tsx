@@ -123,6 +123,7 @@ export function OpinionArticlesBlock() {
                             src={article.author.profileImageUrl}
                             alt={authorName}
                             className="h-6 w-6 rounded-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">

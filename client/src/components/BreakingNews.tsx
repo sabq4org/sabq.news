@@ -65,6 +65,7 @@ export function BreakingNews({ articles }: BreakingNewsProps) {
                   src={article.imageUrl}
                   alt={article.title}
                   className="w-20 h-20 object-cover rounded-md flex-shrink-0"
+                  loading="lazy"
                   style={{
                     objectPosition: (article as any).imageFocalPoint
                       ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`

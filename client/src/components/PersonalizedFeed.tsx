@@ -158,6 +158,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     src={article.imageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                     style={{
                       objectPosition: (article as any).imageFocalPoint
                         ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
