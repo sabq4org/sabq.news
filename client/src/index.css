@@ -34,15 +34,15 @@
 
   --sidebar-border: 220 13% 92%;
 
-  --sidebar-primary: 204 100% 84%;
+  --sidebar-primary: 221 83% 53%;
 
-  --sidebar-primary-foreground: 204 100% 15%;
+  --sidebar-primary-foreground: 210 40% 98%;
 
   --sidebar-accent: 220 100% 97%;
 
   --sidebar-accent-foreground: 223 50% 14%;
 
-  --sidebar-ring: 204 100% 84%;
+  --sidebar-ring: 221 83% 53%;
 
   --popover: 0 0% 100%;
 
@@ -50,13 +50,13 @@
 
   --popover-border: 220 13% 93%;
 
-  --primary: 204 100% 84%;
+  --primary: 221 83% 53%;
 
-  --primary-foreground: 204 100% 15%;
+  --primary-foreground: 210 40% 98%;
 
   --secondary: 217 30% 94%;
 
-  --secondary-foreground: 204 100% 84%;
+  --secondary-foreground: 221 83% 53%;
 
   --muted: 220 100% 97%;
 
@@ -70,7 +70,7 @@
 
   --accent-foreground: 243 75% 59%;
 
-  --accent-blue: 204 100% 88%;
+  --accent-blue: 221 90% 88%;
 
   --accent-purple: 243 75% 88%;
 
@@ -81,19 +81,19 @@
   --destructive-foreground: 0 0% 98%;
 
   --input: 215 16% 70%;
-  --ring: 204 100% 84%;
-  --chart-1: 204 100% 84%;
+  --ring: 221 83% 53%;
+  --chart-1: 221 83% 53%;
   --chart-2: 243 75% 59%;
   --chart-3: 142 76% 50%;
   --chart-4: 199 89% 48%;
   --chart-5: 271 81% 56%;
 
   /* AI Accent Colors - Professional Blue Tones */
-  --ai-primary: 204 100% 84%;
-  --ai-primary-foreground: 204 100% 15%;
+  --ai-primary: 221 83% 53%;
+  --ai-primary-foreground: 210 40% 98%;
   --ai-secondary: 243 75% 59%;
   --ai-secondary-foreground: 210 40% 98%;
-  --ai-glow: 204 100% 84%;
+  --ai-glow: 221 83% 53%;
   --ai-background: 210 40% 98%;
   --ai-background-muted: 220 100% 99%;
 
@@ -171,15 +171,15 @@
 
   --sidebar-border: 220 20% 14%;
 
-  --sidebar-primary: 204 100% 70%;
+  --sidebar-primary: 221 75% 55%;
 
-  --sidebar-primary-foreground: 204 100% 10%;
+  --sidebar-primary-foreground: 210 40% 98%;
 
   --sidebar-accent: 220 18% 15%;
 
   --sidebar-accent-foreground: 0 0% 95%;
 
-  --sidebar-ring: 204 100% 70%;
+  --sidebar-ring: 221 75% 55%;
 
   --popover: 220 20% 12%;
 
@@ -187,9 +187,9 @@
 
   --popover-border: 220 18% 16%;
 
-  --primary: 204 100% 70%;
+  --primary: 221 67% 33%;
 
-  --primary-foreground: 204 100% 10%;
+  --primary-foreground: 210 40% 98%;
 
   --secondary: 217 20% 25%;
 
@@ -212,19 +212,19 @@
   --destructive-foreground: 0 0% 98%;
 
   --input: 220 20% 35%;
-  --ring: 204 100% 70%;
-  --chart-1: 204 100% 70%;
+  --ring: 210 80% 60%;
+  --chart-1: 221 75% 55%;
   --chart-2: 221 83% 65%;
   --chart-3: 215 20% 55%;
   --chart-4: 220 30% 60%;
   --chart-5: 215 25% 50%;
 
   /* AI Accent Colors - Professional Blue Tones (Dark Mode) */
-  --ai-primary: 204 100% 70%;
-  --ai-primary-foreground: 204 100% 10%;
+  --ai-primary: 221 75% 55%;
+  --ai-primary-foreground: 210 40% 98%;
   --ai-secondary: 221 83% 65%;
   --ai-secondary-foreground: 210 40% 98%;
-  --ai-glow: 204 100% 70%;
+  --ai-glow: 221 75% 55%;
   --ai-background: 220 25% 10%;
   --ai-background-muted: 220 20% 12%;
 
