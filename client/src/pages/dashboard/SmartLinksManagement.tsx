@@ -810,6 +810,18 @@ function SmartEntityDialog({
   const [typeId, setTypeId] = useState<string>(entity?.typeId?.toString() || "");
   const [slug, setSlug] = useState(entity?.slug || "");
   const [description, setDescription] = useState(entity?.description || "");
+  const [imageUrl, setImageUrl] = useState(entity?.imageUrl || "");
+  const [aliases, setAliases] = useState(entity?.aliases?.join(", ") || "");
+  
+  // Metadata fields
+  const [position, setPosition] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [website, setWebsite] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [instagram, setInstagram] = useState("");
 
   // Reset form when dialog opens or entity changes
   useEffect(() => {
@@ -818,17 +830,49 @@ function SmartEntityDialog({
       setTypeId(entity?.typeId?.toString() || "");
       setSlug(entity?.slug || "");
       setDescription(entity?.description || "");
+      setImageUrl(entity?.imageUrl || "");
+      setAliases(entity?.aliases?.join(", ") || "");
+      
+      // Load metadata if exists
+      const meta = entity?.metadata as any;
+      setPosition(meta?.position || "");
+      setOrganization(meta?.organization || "");
+      setBirthDate(meta?.birthDate || "");
+      setLocation(meta?.location || "");
+      setWebsite(meta?.website || "");
+      setTwitter(meta?.social?.twitter || "");
+      setLinkedin(meta?.social?.linkedin || "");
+      setInstagram(meta?.social?.instagram || "");
     }
   }, [open, entity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Build metadata object
+    const metadata: any = {};
+    if (position) metadata.position = position;
+    if (organization) metadata.organization = organization;
+    if (birthDate) metadata.birthDate = birthDate;
+    if (location) metadata.location = location;
+    if (website) metadata.website = website;
+    
+    // Add social media if any field is filled
+    if (twitter || linkedin || instagram) {
+      metadata.social = {};
+      if (twitter) metadata.social.twitter = twitter;
+      if (linkedin) metadata.social.linkedin = linkedin;
+      if (instagram) metadata.social.instagram = instagram;
+    }
+    
     onSave({
       name,
       typeId: parseInt(typeId),
       slug,
       description: description || null,
-      aliases: [],
+      imageUrl: imageUrl || null,
+      aliases: aliases ? aliases.split(",").map(a => a.trim()).filter(Boolean) : [],
+      metadata: Object.keys(metadata).length > 0 ? metadata : null,
       importanceScore: 0.5,
       status: "active",
     });
