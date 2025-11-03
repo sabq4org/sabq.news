@@ -13,8 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Calendar, Save } from "lucide-react";
+import { ArrowLeft, Calendar, Save, Bell, Plus, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+const reminderSchema = z.object({
+  channel: z.enum(["IN_APP", "EMAIL", "WHATSAPP", "SLACK"]),
+  scheduledFor: z.string().min(1, "وقت التذكير مطلوب"),
+  recipients: z.string().optional(),
+  message: z.string().optional(),
+});
 
 const eventSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
@@ -28,12 +37,14 @@ const eventSchema = z.object({
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
+type ReminderFormValues = z.infer<typeof reminderSchema>;
 
 export default function CalendarEventForm() {
   const [, params] = useRoute("/dashboard/calendar/:action");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const isNew = params?.action === "new";
+  const [reminders, setReminders] = useState<ReminderFormValues[]>([]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
@@ -53,6 +64,28 @@ export default function CalendarEventForm() {
     },
   });
 
+  const addReminder = () => {
+    setReminders([
+      ...reminders,
+      {
+        channel: "IN_APP",
+        scheduledFor: "",
+        recipients: "",
+        message: "",
+      },
+    ]);
+  };
+
+  const removeReminder = (index: number) => {
+    setReminders(reminders.filter((_, i) => i !== index));
+  };
+
+  const updateReminder = (index: number, field: keyof ReminderFormValues, value: string) => {
+    const updated = [...reminders];
+    updated[index] = { ...updated[index], [field]: value };
+    setReminders(updated);
+  };
+
   const createEvent = useMutation({
     mutationFn: async (data: EventFormValues) => {
       const payload = {
@@ -60,6 +93,10 @@ export default function CalendarEventForm() {
         tags: data.tags ? data.tags.split(",").map(t => t.trim()) : [],
         categoryId: data.categoryId || null,
         dateEnd: data.dateEnd || null,
+        reminders: reminders.map(r => ({
+          ...r,
+          recipients: r.recipients ? r.recipients.split(",").map(t => t.trim()) : [],
+        })),
       };
       return await apiRequest("/api/calendar/events", {
         method: "POST",
@@ -299,6 +336,142 @@ export default function CalendarEventForm() {
                     </FormItem>
                   )}
                 />
+
+                <Separator />
+
+                {/* Reminders Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Bell className="h-5 w-5" />
+                        التذكيرات والإشعارات
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        أضف تذكيرات للمناسبة عبر قنوات مختلفة
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addReminder}
+                      data-testid="button-add-reminder"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة تذكير
+                    </Button>
+                  </div>
+
+                  {reminders.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                      <Bell className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">لم تتم إضافة تذكيرات بعد</p>
+                      <p className="text-sm text-muted-foreground">
+                        اضغط على "إضافة تذكير" لإضافة تذكير جديد
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reminders.map((reminder, index) => (
+                        <Card key={index}>
+                          <CardContent className="p-4">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline">تذكير {index + 1}</Badge>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeReminder(index)}
+                                  data-testid={`button-remove-reminder-${index}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">
+                                    القناة *
+                                  </label>
+                                  <Select
+                                    value={reminder.channel}
+                                    onValueChange={(value) =>
+                                      updateReminder(index, "channel", value)
+                                    }
+                                  >
+                                    <SelectTrigger data-testid={`select-channel-${index}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="IN_APP">
+                                        إشعار داخل التطبيق
+                                      </SelectItem>
+                                      <SelectItem value="EMAIL">بريد إلكتروني</SelectItem>
+                                      <SelectItem value="WHATSAPP">واتساب</SelectItem>
+                                      <SelectItem value="SLACK">سلاك</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">
+                                    وقت التذكير *
+                                  </label>
+                                  <Input
+                                    type="datetime-local"
+                                    value={reminder.scheduledFor}
+                                    onChange={(e) =>
+                                      updateReminder(index, "scheduledFor", e.target.value)
+                                    }
+                                    data-testid={`input-scheduled-${index}`}
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium mb-2 block">
+                                  المستلمون (اختياري)
+                                </label>
+                                <Input
+                                  placeholder="افصل بين الإيميلات/الأرقام بفاصلة"
+                                  value={reminder.recipients}
+                                  onChange={(e) =>
+                                    updateReminder(index, "recipients", e.target.value)
+                                  }
+                                  data-testid={`input-recipients-${index}`}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {reminder.channel === "EMAIL"
+                                    ? "أدخل الإيميلات مفصولة بفاصلة"
+                                    : reminder.channel === "WHATSAPP"
+                                    ? "أدخل أرقام الهواتف مفصولة بفاصلة (مثال: +966501234567)"
+                                    : "أدخل معرفات المستخدمين"}
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium mb-2 block">
+                                  رسالة مخصصة (اختياري)
+                                </label>
+                                <Textarea
+                                  placeholder="رسالة التذكير..."
+                                  rows={2}
+                                  value={reminder.message}
+                                  onChange={(e) =>
+                                    updateReminder(index, "message", e.target.value)
+                                  }
+                                  data-testid={`input-message-${index}`}
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-4">
                   <Button
