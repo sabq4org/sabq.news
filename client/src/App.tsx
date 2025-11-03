@@ -100,6 +100,8 @@ import OpinionManagement from "@/pages/dashboard/OpinionManagement";
 import Chat from "@/pages/dashboard/Chat";
 import ChatAdmin from "@/pages/dashboard/ChatAdmin";
 import AdminLogin from "@/pages/AdminLogin";
+import CalendarPage from "@/pages/CalendarPage";
+import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -204,6 +206,10 @@ function Router() {
       {/* Chat */}
       <Route path="/dashboard/chat" component={Chat} />
       <Route path="/dashboard/chat-admin" component={ChatAdmin} />
+      
+      {/* Calendar */}
+      <Route path="/dashboard/calendar" component={CalendarPage} />
+      <Route path="/dashboard/calendar/events/:id" component={CalendarEventDetail} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
