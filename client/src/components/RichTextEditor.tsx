@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
@@ -61,9 +61,17 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  onAddSmartLink?: (text: string, url: string) => void;
+  editorRef?: (editor: Editor | null) => void;
 }
 
-export function RichTextEditor({ content, onChange, placeholder = "ابدأ الكتابة..." }: RichTextEditorProps) {
+export function RichTextEditor({ 
+  content, 
+  onChange, 
+  placeholder = "ابدأ الكتابة...",
+  onAddSmartLink,
+  editorRef 
+}: RichTextEditorProps) {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -134,6 +142,17 @@ export function RichTextEditor({ content, onChange, placeholder = "ابدأ ال
       };
     }
   }, [editor]);
+
+  useEffect(() => {
+    if (editorRef) {
+      editorRef(editor);
+    }
+    return () => {
+      if (editorRef) {
+        editorRef(null);
+      }
+    };
+  }, [editor, editorRef]);
 
   const handleSetLink = () => {
     if (linkUrl && editor) {

@@ -43,6 +43,8 @@ import { TagInput } from "@/components/TagInput";
 import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
+import { SmartLinksPanel } from "@/components/SmartLinksPanel";
+import type { Editor } from "@tiptap/react";
 
 export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
@@ -101,6 +103,7 @@ export default function ArticleEditor() {
   const [republish, setRepublish] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
 
   const { toast } = useToast();
 
@@ -505,6 +508,49 @@ const generateSlug = (text: string) => {
     saveArticleMutation.mutate({ publishNow });
   };
 
+  const handleAddLink = (text: string, url: string) => {
+    if (!editorInstance) {
+      toast({
+        title: "خطأ",
+        description: "المحرر غير جاهز. الرجاء المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get the editor's current content as text (without HTML tags)
+    const editorText = editorInstance.state.doc.textContent;
+    
+    // Search for the text in the editor
+    const textIndex = editorText.indexOf(text);
+    
+    if (textIndex === -1) {
+      toast({
+        title: "لم يتم العثور على النص",
+        description: `النص "${text}" غير موجود في المحتوى`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the position in the document
+    const from = textIndex;
+    const to = textIndex + text.length;
+
+    // Select the text and add the link
+    editorInstance
+      .chain()
+      .focus()
+      .setTextSelection({ from, to })
+      .setLink({ href: url })
+      .run();
+
+    toast({
+      title: "تم إضافة الرابط بنجاح",
+      description: `تم إضافة رابط "${text}" إلى المحتوى`,
+    });
+  };
+
   const isSaving = saveArticleMutation.isPending;
   const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending;
 
@@ -677,6 +723,8 @@ const generateSlug = (text: string) => {
                   content={content}
                   onChange={setContent}
                   placeholder="ابدأ بكتابة المقال..."
+                  editorRef={setEditorInstance}
+                  onAddSmartLink={handleAddLink}
                 />
               </CardContent>
             </Card>
@@ -714,6 +762,15 @@ const generateSlug = (text: string) => {
                 />
               </CardContent>
             </Card>
+
+            {/* Smart Links Panel */}
+            <div className="h-[600px]" data-testid="smart-links-container">
+              <SmartLinksPanel
+                articleContent={content}
+                articleId={isNewArticle ? undefined : id}
+                onAddLink={handleAddLink}
+              />
+            </div>
           </div>
 
           {/* Settings Sidebar - 30% */}
