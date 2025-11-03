@@ -19,6 +19,9 @@ import {
   AlertCircle,
   Activity,
   Sparkles,
+  Bell,
+  Calendar,
+  ClipboardList,
 } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Button } from "@/components/ui/button";
@@ -655,6 +658,12 @@ function Dashboard() {
           </Card>
         </div>
 
+        {/* Upcoming Reminders and Tasks */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="grid-reminders-tasks">
+          <UpcomingRemindersWidget />
+          <UpcomingTasksWidget />
+        </div>
+
         {/* Top Articles */}
         <Card data-testid="card-top-articles">
           <CardHeader>
@@ -717,6 +726,152 @@ function Dashboard() {
         </Card>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Widget: Upcoming Reminders
+function UpcomingRemindersWidget() {
+  const { data: reminders, isLoading } = useQuery<Array<{
+    id: string;
+    eventId: string;
+    eventTitle: string;
+    reminderTime: string;
+    channelType: string;
+  }>>({
+    queryKey: ["/api/calendar/upcoming-reminders"],
+  });
+
+  return (
+    <Card data-testid="card-upcoming-reminders">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bell className="h-5 w-5" data-testid="icon-reminders" />
+          التذكيرات القادمة
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" data-testid={`skeleton-reminder-${i}`} />
+            ))}
+          </div>
+        ) : reminders && reminders.length > 0 ? (
+          <div className="space-y-3">
+            {reminders.map((reminder) => (
+              <div
+                key={reminder.id}
+                className="p-3 border rounded-lg hover-elevate transition-all"
+                data-testid={`reminder-item-${reminder.id}`}
+              >
+                <div className="flex flex-col gap-2">
+                  <h4 className="font-medium text-sm" data-testid={`text-reminder-title-${reminder.id}`}>
+                    {reminder.eventTitle}
+                  </h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1" data-testid={`text-reminder-time-${reminder.id}`}>
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(reminder.reminderTime), {
+                        addSuffix: true,
+                        locale: arSA,
+                      })}
+                    </span>
+                    <Badge variant="outline" data-testid={`badge-reminder-channel-${reminder.id}`}>
+                      {reminder.channelType === 'email' ? 'بريد إلكتروني' : 
+                       reminder.channelType === 'sms' ? 'رسالة نصية' :
+                       reminder.channelType === 'push' ? 'إشعار' : 
+                       reminder.channelType}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-8" data-testid="text-no-reminders">
+            لا توجد تذكيرات قادمة
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Widget: Upcoming Tasks
+function UpcomingTasksWidget() {
+  const { data: tasks, isLoading } = useQuery<Array<{
+    id: string;
+    eventId: string;
+    eventTitle: string;
+    role: string;
+    status: string;
+  }>>({
+    queryKey: ["/api/calendar/my-assignments"],
+    queryFn: async () => {
+      const response = await fetch("/api/calendar/my-assignments?status=pending");
+      if (!response.ok) {
+        throw new Error("Failed to fetch tasks");
+      }
+      return response.json();
+    },
+  });
+
+  return (
+    <Card data-testid="card-upcoming-tasks">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardList className="h-5 w-5" data-testid="icon-tasks" />
+          المهام القادمة
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" data-testid={`skeleton-task-${i}`} />
+            ))}
+          </div>
+        ) : tasks && tasks.length > 0 ? (
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-3 border rounded-lg hover-elevate transition-all"
+                data-testid={`task-item-${task.id}`}
+              >
+                <div className="flex flex-col gap-2">
+                  <h4 className="font-medium text-sm" data-testid={`text-task-title-${task.id}`}>
+                    {task.eventTitle}
+                  </h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" data-testid={`badge-task-role-${task.id}`}>
+                      {task.role === 'coordinator' ? 'منسق' :
+                       task.role === 'reporter' ? 'مراسل' :
+                       task.role === 'photographer' ? 'مصور' :
+                       task.role === 'editor' ? 'محرر' :
+                       task.role}
+                    </Badge>
+                    <Badge 
+                      variant={task.status === 'pending' ? 'outline' : 'default'}
+                      data-testid={`badge-task-status-${task.id}`}
+                    >
+                      {task.status === 'pending' ? 'معلق' :
+                       task.status === 'in_progress' ? 'قيد التنفيذ' :
+                       task.status === 'completed' ? 'مكتمل' :
+                       task.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-8" data-testid="text-no-tasks">
+            لا توجد مهام قادمة
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
