@@ -15617,6 +15617,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/calendar", requireAuth, requirePermission("calendar:create"), async (req: any, res) => {
     try {
       const userId = req.user!.id;
+      
+      // توليد slug تلقائياً من العنوان إذا لم يكن موجوداً
+      if (!req.body.slug && req.body.title) {
+        const baseSlug = req.body.title
+          .toLowerCase()
+          .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, '') // إبقاء العربية والإنجليزية والأرقام
+          .trim()
+          .replace(/\s+/g, '-') // استبدال المسافات بـ -
+          .substring(0, 100); // الحد الأقصى 100 حرف
+        
+        // إضافة timestamp للتأكد من عدم التكرار
+        req.body.slug = `${baseSlug}-${Date.now()}`;
+      }
+      
       const validatedData = insertCalendarEventSchema.parse(req.body);
       
       const reminders = req.body.reminders || [];
