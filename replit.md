@@ -14,7 +14,7 @@ The platform features an RTL-first design with custom light/dark theming and Ara
 A core architectural decision is the **bilingual system**, which implements:
 -   **Separate Database Architecture:** Independent tables for each language (e.g., `en_categories`, `articles`) for clean separation.
 -   **Language-Specific Dashboards:** Completely separate management interfaces for Arabic (`/dashboard`) and English (`/en/dashboard`), each with its own navigation, layout (RTL/LTR), and content management, ensuring zero content mixing.
--   **API Layer Separation:** Dedicated API endpoints for each language (e.g., `/api/dashboard/*` for Arabic, `/api/en/dashboard/*` for English).
+-   **API Layer Separation:** Dedicated API endpoints for each language (e.g., `/api/dashboard/*` for Arabic, `/api/en/dashboard/*` for English, `/api/en/user/*` for English user data, `/api/en/ai/daily-summary` for English daily activity analysis).
 -   **Shared Resources:** Users, roles, and authentication are shared.
 -   **i18n System:** LanguageContext with translation dictionaries, LanguageSwitcher, and bidirectional routing.
 -   **Unified Design System:** Both languages share the same color palette, components, and design principles, adapting for RTL/LTR.
@@ -38,6 +38,7 @@ Key features include:
 -   **Smart Links Management System:** Full CRUD operations for AI-powered entity and term recognition, direct image upload, AI-powered auto-description generation, rich metadata support, and dashboard management.
 -   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including article metadata, Schema.org JSON-LD, and OpenAPI 3.0 specification.
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
+-   **Locale-Isolated User Pages:** Complete English-specific user profile pages (`/en/profile`, `/en/daily-brief`, `/en/notification-settings`) that query English-only data through dedicated API endpoints (`/api/en/user/*`, `/api/en/ai/daily-summary`), ensuring zero contamination from Arabic content.
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, and Reading History. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, and predictive analysis. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content. Content management supports multiple article types (news, opinion, analysis, column) with a unified dashboard interface and distinct type badges. Public-facing content applies filtering to exclude opinion articles from general news feeds, maintaining separation while opinion articles are accessible via dedicated sections.
