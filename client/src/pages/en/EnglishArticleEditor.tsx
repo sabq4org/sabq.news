@@ -37,7 +37,7 @@ import { SeoPreview } from "@/components/SeoPreview";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Category, ArticleWithDetails } from "@shared/schema";
+import type { Category, ArticleWithDetails, EnCategory } from "@shared/schema";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
 import { ReporterSelect } from "@/components/ReporterSelect";
@@ -113,7 +113,7 @@ export default function EnglishArticleEditor() {
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   // Fetch categories - using English endpoint
-  const { data: allCategories = [] } = useQuery<Category[]>({
+  const { data: allCategories = [] } = useQuery<EnCategory[]>({
     queryKey: ["/api/en/categories"],
   });
 
@@ -1036,7 +1036,7 @@ export default function EnglishArticleEditor() {
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.icon && <span className="mr-2">{category.icon}</span>}
-                        {category.nameEn || category.nameAr}
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
