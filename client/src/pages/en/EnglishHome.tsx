@@ -23,8 +23,8 @@ export default function EnglishHome() {
       <EnglishLayout>
         <div className="container max-w-7xl mx-auto px-4 py-8">
           <Skeleton className="h-12 w-48 mb-8" />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Skeleton key={i} className="h-64" />
             ))}
           </div>
@@ -95,7 +95,7 @@ export default function EnglishHome() {
 
               {/* Other Featured Articles Grid */}
               {featuredArticles.length > 1 && (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   {featuredArticles.slice(1, 7).map((article) => (
                     <Link key={article.id} href={`/en/article/${article.slug}`}>
                       <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-featured-${article.id}`}>
@@ -151,7 +151,7 @@ export default function EnglishHome() {
                 <h2 className="text-2xl md:text-3xl font-bold">Latest News</h2>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {regularArticles.map((article) => (
                   <Link key={article.id} href={`/en/article/${article.slug}`}>
                     <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-article-${article.id}`}>
