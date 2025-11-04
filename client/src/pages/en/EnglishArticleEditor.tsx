@@ -124,6 +124,8 @@ export default function EnglishArticleEditor() {
   const { data: article } = useQuery<ArticleWithDetails>({
     queryKey: isNewArticle ? ["en-article-editor-new"] : ["/api/en/articles", id],
     enabled: !isNewArticle && !!user,
+    refetchOnMount: true, // Always fetch fresh data when opening editor
+    staleTime: 0, // Consider data stale immediately to ensure fresh data
   });
 
   // Load article data when editing

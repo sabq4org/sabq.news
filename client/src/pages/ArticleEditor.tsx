@@ -121,6 +121,8 @@ export default function ArticleEditor() {
   const { data: article } = useQuery<ArticleWithDetails>({
     queryKey: isNewArticle ? ["article-editor-new"] : ["/api/dashboard/articles", id],
     enabled: !isNewArticle && !!user,
+    refetchOnMount: true, // Always fetch fresh data when opening editor
+    staleTime: 0, // Consider data stale immediately to ensure fresh data
   });
 
   // Load article data when editing
