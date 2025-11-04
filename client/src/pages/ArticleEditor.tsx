@@ -474,6 +474,42 @@ export default function ArticleEditor() {
     },
   });
 
+  const generateSmartContentMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/articles/generate-content", {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    onSuccess: (data: {
+      mainTitle: string;
+      subTitle: string;
+      smartSummary: string;
+      keywords: string[];
+      seo: { metaTitle: string; metaDescription: string };
+    }) => {
+      setTitle(data.mainTitle);
+      setSubtitle(data.subTitle);
+      setExcerpt(data.smartSummary);
+      setKeywords(data.keywords);
+      setMetaTitle(data.seo.metaTitle);
+      setMetaDescription(data.seo.metaDescription);
+      setSlug(generateSlug(data.mainTitle));
+      
+      toast({
+        title: "✨ تم التوليد الذكي",
+        description: "تم إنشاء جميع العناصر التحريرية تلقائياً",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: error.message || "فشل توليد المحتوى الذكي",
+      });
+    },
+  });
+
   // UUID validation regex - shared constant to avoid duplication
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -519,6 +555,18 @@ const generateSlug = (text: string) => {
   const handleGenerateTitle = async () => {
     if (!content || typeof content !== 'string' || !content.trim()) return;
     generateTitlesMutation.mutate();
+  };
+
+  const handleGenerateSmartContent = async () => {
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      toast({
+        title: "تنبيه",
+        description: "يجب كتابة محتوى الخبر أولاً",
+        variant: "destructive",
+      });
+      return;
+    }
+    generateSmartContentMutation.mutate();
   };
 
   const handleSave = async (publishNow = false) => {
@@ -660,7 +708,7 @@ const generateSlug = (text: string) => {
   };
 
   const isSaving = saveArticleMutation.isPending;
-  const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending;
+  const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending || generateSmartContentMutation.isPending;
 
   return (
     <DashboardLayout>
@@ -687,6 +735,21 @@ const generateSlug = (text: string) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={handleGenerateSmartContent}
+              disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
+              className="gap-2"
+              data-testid="button-smart-generate"
+              title="توليد جميع العناصر التحريرية تلقائياً"
+            >
+              {generateSmartContentMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4" />
+              )}
+              توليد ذكي
+            </Button>
             <Button
               variant="outline"
               onClick={() => handleSave(false)}

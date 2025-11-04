@@ -401,3 +401,105 @@ ${content.substring(0, 2000)}`;
     throw new Error("Failed to analyze SEO");
   }
 }
+
+export async function generateSmartContent(newsContent: string): Promise<{
+  mainTitle: string;
+  subTitle: string;
+  smartSummary: string;
+  keywords: string[];
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+  };
+}> {
+  try {
+    const systemPrompt = `🎯 الدور: أنت محرر خبير في صحيفة "سبق" السعودية، متخصص في كتابة الأخبار بأسلوب صحفي احترافي وسهل الفهم، يدعم تحسين محركات البحث (SEO) ويجذب القارئ العربي.
+
+✳️ المطلوب منك:
+1. **العنوان الرئيسي:**  
+   - لا يتجاوز 10 كلمات.  
+   - جذّاب، قوي، ومناسب لأسلوب صحيفة "سبق".  
+   - يتضمن كلمة مفتاحية رئيسية.  
+
+2. **العنوان الفرعي:**  
+   - جملة توضيحية قصيرة (15–25 كلمة).  
+   - تكمّل العنوان الرئيسي وتمنح القارئ فكرة واضحة عن مضمون الخبر.  
+
+3. **الموجز الذكي (Summary):**  
+   - فقرة واحدة (40–60 كلمة).  
+   - تشرح الفكرة الأساسية بلغة عربية فصيحة وسلسة.  
+   - يجب أن تحتوي على حقائق واضحة بدون مبالغة.  
+
+4. **الكلمات المفتاحية (Keywords):**  
+   - قائمة من 6–10 كلمات أو عبارات.  
+   - متعلقة مباشرة بالخبر ومهيأة لتحسين الظهور في نتائج البحث.  
+
+5. **تحسين SEO:**  
+   - توليد "Meta Title" و"Meta Description" احترافيين.  
+   - تضمين الكلمات المفتاحية في النصين بطريقة طبيعية.  
+   - ضمان ألا يتجاوز الوصف 160 حرفاً.  
+
+🪄 التوجيهات التحريرية:
+- استخدم لغة عربية فصحى مبسطة وواضحة.  
+- حافظ على الأسلوب الإخباري الرسمي لصحيفة "سبق".  
+- تجنب أي تحيز أو رأي شخصي.  
+- استخدم جُملاً قصيرة ومباشرة.  
+- في حالة الأخبار العاجلة، اجعل العنوان يحتوي على عنصر السرعة أو المفاجأة.
+
+أعد النتيجة بصيغة JSON فقط مع الحقول التالية:
+{
+  "main_title": "",
+  "sub_title": "",
+  "smart_summary": "",
+  "keywords": [],
+  "seo": {
+    "meta_title": "",
+    "meta_description": ""
+  }
+}`;
+
+    const userPrompt = `📦 المدخلات:
+النص الخام أو تفاصيل الخبر:
+
+${newsContent}
+
+قم بتوليد جميع العناصر التحريرية المطلوبة بصيغة JSON.`;
+
+    console.log("[Smart Content] Generating smart content with GPT-5...");
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_completion_tokens: 1024,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    console.log("[Smart Content] Successfully generated content");
+    
+    return {
+      mainTitle: result.main_title || "",
+      subTitle: result.sub_title || "",
+      smartSummary: result.smart_summary || "",
+      keywords: result.keywords || [],
+      seo: {
+        metaTitle: result.seo?.meta_title || "",
+        metaDescription: result.seo?.meta_description || "",
+      },
+    };
+  } catch (error) {
+    console.error("[Smart Content] Error generating smart content:", error);
+    throw new Error("Failed to generate smart content");
+  }
+}

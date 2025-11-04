@@ -6,7 +6,7 @@ import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { aiChatService } from "./ai-chat-service";
@@ -6227,6 +6227,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error analyzing SEO:", error);
       res.status(500).json({ message: "فشل تحليل SEO" });
+    }
+  });
+
+  // Smart Content Generation Endpoint
+  app.post("/api/articles/generate-content", isAuthenticated, requirePermission('manage_articles'), async (req: any, res) => {
+    try {
+      const { content } = req.body;
+
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: "يجب توفير محتوى الخبر" });
+      }
+
+      console.log("[Smart Content API] Generating content for news...");
+      
+      const generatedContent = await generateSmartContent(content);
+
+      console.log("[Smart Content API] Content generated successfully");
+      
+      res.json(generatedContent);
+    } catch (error) {
+      console.error("[Smart Content API] Error generating content:", error);
+      res.status(500).json({ message: "فشل توليد المحتوى الذكي" });
     }
   });
 
