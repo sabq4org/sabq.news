@@ -6,6 +6,7 @@ Sabq Smart is an AI-powered Arabic news platform built with React, Express, and 
 **Latest Update (November 2025):** 
 - Smart Links system fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation
 - **SEO AI System**: Complete SEO optimization platform with AI-powered analysis, Open Graph & Twitter Cards integration, dynamic XML sitemap, robots.txt, and structured Schema.org data
+- **Smart Content Generation**: One-click AI-powered content generation using GPT-5 that automatically produces all editorial elements from raw article content
 - Credibility analysis feature removed from article details
 
 ## User Preferences
@@ -53,7 +54,7 @@ Key features include:
 - **Al-Mirqab (المرقاب) - Future Forecasting System:** An AI-powered predictive analytics platform with Sabq Index, Next Stories, Radar, and Algorithm Writes.
 - **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, multi-channel distribution, priority levels, rich content editor, and analytics.
 - **A/B Testing System:** For content optimization and experiment management.
-- **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, AI Insights Block, and **SEO AI Assistant** (November 2025) - automated SEO analysis with GPT-5 generating optimized titles, meta descriptions, keywords, social media tags, and improvement suggestions.
+- **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, AI Insights Block, **SEO AI Assistant** (November 2025) - automated SEO analysis with GPT-5 generating optimized titles, meta descriptions, keywords, social media tags, and improvement suggestions, and **Smart Content Generation System** (November 2025) - one-click AI-powered content generation using GPT-5 that automatically produces all editorial elements (main title, subtitle, smart summary, keywords, SEO metadata) from raw article content, following Sabq newspaper style guidelines (formal simplified Arabic, journalistic tone, short direct sentences, no bias).
 - **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline with clean, simplified interface (November 2025), featuring professional design, live status indicators, and comprehensive AI insights without image displays for optimal performance and user experience. Smart Notifications System offers real-time pushes via SSE.
 - **Reporter Profile System:** Dedicated pages for staff and reporters.
 - **Audio Newsletters (النشرات الصوتية) & Quick Audio News Briefs:** AI-powered text-to-speech news briefing systems with ElevenLabs integration.
