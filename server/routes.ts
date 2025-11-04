@@ -18028,12 +18028,22 @@ Allow: /
   // POST English Article (Editor/Admin only)
   app.post("/api/en/articles", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log('[EN Article] User not authenticated');
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const user = req.user as User;
     
+    console.log('[EN Article POST] User check:', {
+      userId: user.id,
+      role: user.role,
+      allowedLanguages: user.allowedLanguages,
+      hasEnglish: user.allowedLanguages?.includes('en'),
+      hasValidRole: ['admin', 'editor', 'chief_editor', 'reporter', 'opinion_author'].includes(user.role)
+    });
+    
     if (!user.allowedLanguages?.includes('en') || !['admin', 'editor', 'chief_editor', 'reporter', 'opinion_author'].includes(user.role)) {
+      console.log('[EN Article] Permission denied - Language or role check failed');
       return res.status(403).json({ message: "Insufficient permissions for English content" });
     }
 

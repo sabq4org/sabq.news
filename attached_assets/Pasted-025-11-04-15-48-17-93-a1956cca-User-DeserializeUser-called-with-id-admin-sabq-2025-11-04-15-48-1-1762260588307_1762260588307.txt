@@ -1,0 +1,108 @@
+025-11-04 15:48:17.93
+a1956cca
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:48:17.94
+a1956cca
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:48:17.95
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:17.95
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:17.99
+a1956cca
+User
+12:48:17 PM [express] GET /api/chat/notifications/unread-count 200 in 85ms :: {"count":0}
+2025-11-04 15:48:17.99
+a1956cca
+User
+12:48:17 PM [express] GET /api/chat/notifications 200 in 86ms :: [{"id":"b8e01f8b-633b-40ec-a950-37be…
+2025-11-04 15:48:18.02
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:18.04
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:18.10
+a1956cca
+User
+12:48:18 PM [express] GET /api/announcements/active 200 in 192ms :: []
+2025-11-04 15:48:18.16
+a1956cca
+User
+12:48:18 PM [express] GET /api/admin/users 200 in 239ms :: {"items":[{"id":"buthInkHK0H3Q3Wqn1Zox","n…
+2025-11-04 15:48:29.40
+a1956cca
+User
+12:48:29 PM [express] GET /api/themes/active 200 in 22ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-11-04 15:48:44.81
+a1956cca
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:48:44.84
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:44.96
+a1956cca
+User
+12:48:44 PM [express] POST /api/objects/upload 200 in 305ms :: {"uploadURL":"https://storage.googleap…
+2025-11-04 15:48:47.89
+a1956cca
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:48:47.92
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:48:47.92
+a1956cca
+User
+[Article Image] Received imageURL: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:47.92
+a1956cca
+User
+[ObjectStorage] normalizeObjectEntityPath - Input: https://storage.googleapis.com/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:47.92
+a1956cca
+User
+[ObjectStorage] URL pathname: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:47.92
+a1956cca
+User
+[ObjectStorage] Private dir: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private
+2025-11-04 15:48:47.92
+a1956cca
+User
+[ObjectStorage] Private dir with slash: /replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/.private/
+2025-11-04 15:48:47.92
+a1956cca
+User
+[ObjectStorage] Normalized to: /objects/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:48.05
+a1956cca
+User
+[ObjectStorage] Moving file from private to public:
+2025-11-04 15:48:48.05
+a1956cca
+User
+From: .private/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:48.05
+a1956cca
+User
+To: public/uploads/9690ab0a-6f1f-403d-8a42-09a28713a27f
+2025-11-04 15:48:48.08
+a1956cca
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:48:48.10
+a1956cca
+User
+✅ DeserializeUser: User found: admin@sabq.sa
