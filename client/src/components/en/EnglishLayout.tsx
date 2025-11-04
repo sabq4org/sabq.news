@@ -22,7 +22,7 @@ export function EnglishLayout({ children }: EnglishLayoutProps) {
 
   // Fetch current user
   const { data: user } = useQuery<User>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/user"],
     retry: false,
   });
 
