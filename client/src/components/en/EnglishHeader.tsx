@@ -210,10 +210,13 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild size="icon" variant="ghost" data-testid="button-login-mobile">
-                  <a href="/login">
-                    <User className="h-5 w-5" />
-                  </a>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  data-testid="button-login-mobile"
+                  onClick={() => window.location.href = "/api/login"}
+                >
+                  <User className="h-5 w-5" />
                 </Button>
               )}
             </div>
@@ -293,8 +296,12 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild size="sm" data-testid="button-login">
-                  <a href="/login">Login</a>
+                <Button 
+                  size="sm" 
+                  data-testid="button-login"
+                  onClick={() => window.location.href = "/api/login"}
+                >
+                  Login
                 </Button>
               )}
             </div>
