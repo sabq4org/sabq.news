@@ -18179,6 +18179,154 @@ Allow: /
     }
   });
 
+  // GET English News Analytics
+  app.get("/api/en/news/analytics", async (req, res) => {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const prevMonthStart = new Date(monthAgo.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Get article counts for different periods
+      const [todayCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          gte(enArticles.publishedAt, today),
+          eq(enArticles.status, "published")
+        ));
+
+      const [weekCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          gte(enArticles.publishedAt, weekAgo),
+          eq(enArticles.status, "published")
+        ));
+
+      const [monthCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          gte(enArticles.publishedAt, monthAgo),
+          eq(enArticles.status, "published")
+        ));
+
+      const [prevMonthCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          gte(enArticles.publishedAt, prevMonthStart),
+          sql`${enArticles.publishedAt} < ${monthAgo}`,
+          eq(enArticles.status, "published")
+        ));
+
+      // Calculate growth percentage
+      const growthPercentage = prevMonthCount.count > 0
+        ? ((monthCount.count - prevMonthCount.count) / prevMonthCount.count) * 100
+        : 0;
+
+      // Get most active category
+      const topCategory = await db.select({
+        categoryId: enArticles.categoryId,
+        count: sql<number>`count(*)::int`,
+        name: enCategories.name,
+        icon: enCategories.icon,
+        color: enCategories.color,
+      })
+        .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .where(and(
+          gte(enArticles.publishedAt, monthAgo),
+          eq(enArticles.status, "published")
+        ))
+        .groupBy(enArticles.categoryId, enCategories.name, enCategories.icon, enCategories.color)
+        .orderBy(sql`count(*) DESC`)
+        .limit(1);
+
+      // Get most active author
+      const topAuthor = await db.select({
+        authorId: enArticles.authorId,
+        count: sql<number>`count(*)::int`,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      })
+        .from(enArticles)
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .where(and(
+          gte(enArticles.publishedAt, monthAgo),
+          eq(enArticles.status, "published")
+        ))
+        .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+        .orderBy(sql`count(*) DESC`)
+        .limit(1);
+
+      // Get total views
+      const [totalViewsResult] = await db.select({
+        total: sql<number>`COALESCE(SUM(${enArticles.views}), 0)::int`
+      })
+        .from(enArticles)
+        .where(eq(enArticles.status, "published"));
+
+      // Get total interactions (reactions + bookmarks + comments)
+      const [totalReactions] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(enReactions);
+
+      const [totalBookmarks] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(enBookmarks);
+
+      const [totalComments] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(enComments);
+
+      const totalInteractions = (totalReactions?.count || 0) + 
+                                (totalBookmarks?.count || 0) + 
+                                (totalComments?.count || 0);
+
+      // Generate AI insights
+      const insights = {
+        dailySummary: "Sabq Smart continues to deliver the latest news and analysis to readers",
+        topTopics: [],
+        activityTrend: growthPercentage > 5 ? "Notable growth in activity" : growthPercentage < -5 ? "Decrease in activity" : "Stable activity",
+        keyHighlights: [
+          `${todayCount.count} articles published today`,
+          topCategory[0] ? `${topCategory[0].name} is the most active category` : "Diverse coverage across categories",
+          `${totalInteractions.toLocaleString('en-US')} total interactions`
+        ]
+      };
+
+      res.json({
+        period: {
+          today: todayCount.count || 0,
+          week: weekCount.count || 0,
+          month: monthCount.count || 0,
+        },
+        growth: {
+          percentage: Math.round(growthPercentage * 10) / 10,
+          trend: growthPercentage > 0 ? 'up' : growthPercentage < 0 ? 'down' : 'stable',
+          previousMonth: prevMonthCount.count || 0,
+        },
+        topCategory: topCategory[0] ? {
+          name: topCategory[0].name,
+          icon: topCategory[0].icon,
+          color: topCategory[0].color,
+          count: topCategory[0].count,
+        } : null,
+        topAuthor: topAuthor[0] ? {
+          name: `${topAuthor[0].firstName || ''} ${topAuthor[0].lastName || ''}`.trim(),
+          profileImageUrl: topAuthor[0].profileImageUrl,
+          count: topAuthor[0].count,
+        } : null,
+        totalViews: totalViewsResult.total || 0,
+        totalInteractions,
+        aiInsights: insights,
+      });
+    } catch (error) {
+      console.error("Error fetching EN news analytics:", error);
+      res.status(500).json({ message: "Failed to fetch news analytics" });
+    }
+  });
+
   // GET Single English Article by Slug - with full details
   app.get("/api/en/articles/:slug", async (req: any, res) => {
     try {

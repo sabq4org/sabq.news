@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { EnglishNewsAnalyticsHero } from "@/components/en/EnglishNewsAnalyticsHero";
+import { EnglishAIInsightsPanel } from "@/components/en/EnglishAIInsightsPanel";
+import { EnglishSmartFilterBar } from "@/components/en/EnglishSmartFilterBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +27,11 @@ export default function EnglishNewsPage() {
   const { data: user } = useQuery<{ id: string; firstName?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
+  });
+
+  // Fetch analytics
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<any>({
+    queryKey: ["/api/en/news/analytics"],
   });
 
   // Fetch categories for filter
@@ -114,112 +122,120 @@ export default function EnglishNewsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   return (
     <EnglishLayout>
 
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
+        {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2" data-testid="heading-news">
-            Latest News
+          <h1 className="text-4xl md:text-5xl font-bold mb-3" data-testid="heading-news">
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Smart News
+            </span>
           </h1>
-          <p className="text-muted-foreground">
-            Stay updated with the latest news and updates
+          <p className="text-lg text-muted-foreground">
+            Discover the latest news with AI-powered analytics and insights
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Time Range Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground self-center mr-2">Time:</span>
-            {(['all', 'today', 'week', 'month'] as TimeRange[]).map((range) => (
-              <Button
-                key={range}
-                variant={timeRange === range ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => {
-                  setTimeRange(range);
-                  setCurrentPage(1);
-                }}
-                data-testid={`button-time-${range}`}
-              >
-                {range === 'all' ? 'All Time' : range === 'today' ? 'Today' : range === 'week' ? 'This Week' : 'This Month'}
-              </Button>
+        {/* Analytics Hero Section */}
+        {analyticsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-32 w-full" />
+                </CardContent>
+              </Card>
             ))}
           </div>
+        ) : analytics ? (
+          <EnglishNewsAnalyticsHero analytics={analytics} />
+        ) : null}
 
-          {/* Mood Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground self-center mr-2">Show:</span>
-            {(['all', 'hot', 'trending', 'calm'] as Mood[]).map((m) => (
-              <Button
-                key={m}
-                variant={mood === m ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => {
-                  setMood(m);
-                  setCurrentPage(1);
-                }}
-                data-testid={`button-mood-${m}`}
-              >
-                {m === 'all' ? 'All News' : m === 'hot' ? 'Featured' : m === 'trending' ? 'Trending' : 'Regular'}
-              </Button>
-            ))}
-          </div>
+        {/* AI Insights Panel */}
+        {analytics?.aiInsights && (
+          <EnglishAIInsightsPanel insights={analytics.aiInsights} />
+        )}
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground self-center mr-2">Category:</span>
+        {/* Smart Filter Bar */}
+        <EnglishSmartFilterBar
+          onTimeRangeChange={(range) => {
+            setTimeRange(range);
+            handleFilterChange();
+          }}
+          onMoodChange={(newMood) => {
+            setMood(newMood);
+            handleFilterChange();
+          }}
+          onCategoryChange={(categoryId) => {
+            setSelectedCategory(categoryId);
+            handleFilterChange();
+          }}
+          categories={categories.map(c => ({ id: c.id, name: c.name, icon: c.icon || undefined }))}
+        />
+
+        {/* Results Summary */}
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {currentArticles.length} of {filteredArticles.length} articles
+          </p>
+          {(timeRange !== 'all' || mood !== 'all' || selectedCategory !== 'all') && (
             <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
+              variant="outline"
               size="sm"
               onClick={() => {
+                setTimeRange('all');
+                setMood('all');
                 setSelectedCategory('all');
-                setCurrentPage(1);
+                handleFilterChange();
               }}
-              data-testid="button-category-all"
+              data-testid="button-clear-filters"
             >
-              All Categories
+              Clear Filters
             </Button>
-            {categories.map((cat) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setCurrentPage(1);
-                }}
-                data-testid={`button-category-${cat.id}`}
-              >
-                {cat.name}
-              </Button>
-            ))}
-          </div>
+          )}
         </div>
 
-        {/* Articles Grid */}
+        {/* Articles Grid - Professional Layout */}
         {articlesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
-                <Skeleton className="w-full h-48" />
-                <CardContent className="p-4 space-y-2">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Card key={i} className="overflow-hidden rounded-xl">
+                <Skeleton className="w-full aspect-[4/3]" />
+                <CardContent className="p-4 space-y-3">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-4 w-24" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : currentArticles.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">No articles found</p>
+            <p className="text-muted-foreground text-lg mb-2">
+              No articles match the selected filters
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTimeRange('all');
+                setMood('all');
+                setSelectedCategory('all');
+                handleFilterChange();
+              }}
+            >
+              Show All Articles
+            </Button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentArticles.map((article) => (
                 <Link key={article.id} href={`/en/article/${article.slug}`}>
                   <Card 
@@ -269,50 +285,53 @@ export default function EnglishNewsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2">
+              <div className="mt-12 flex justify-center items-center gap-2">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => {
                     setCurrentPage(prev => Math.max(1, prev - 1));
                     scrollToTop();
                   }}
                   disabled={currentPage === 1}
                   data-testid="button-prev-page"
+                  aria-label="Previous page"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
 
-                {getPageNumbers().map((page, idx) => (
-                  typeof page === 'number' ? (
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+                      ...
+                    </span>
+                  ) : (
                     <Button
-                      key={idx}
-                      variant={currentPage === page ? 'default' : 'outline'}
-                      size="sm"
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="icon"
                       onClick={() => {
-                        setCurrentPage(page);
+                        setCurrentPage(page as number);
                         scrollToTop();
                       }}
                       data-testid={`button-page-${page}`}
+                      className="min-w-9"
                     >
                       {page}
                     </Button>
-                  ) : (
-                    <span key={idx} className="px-2 text-muted-foreground">
-                      {page}
-                    </span>
                   )
                 ))}
 
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => {
                     setCurrentPage(prev => Math.min(totalPages, prev + 1));
                     scrollToTop();
                   }}
                   disabled={currentPage === totalPages}
                   data-testid="button-next-page"
+                  aria-label="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
