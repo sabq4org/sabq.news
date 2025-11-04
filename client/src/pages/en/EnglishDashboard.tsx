@@ -31,6 +31,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { StatsCard } from "@/components/en/dashboard/StatsCard";
+import { ChartCard } from "@/components/en/dashboard/ChartCard";
+import { ActivityCard } from "@/components/en/dashboard/ActivityCard";
 import { formatDistanceToNow, formatDistance } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -251,427 +254,273 @@ function Dashboard() {
         <UrgentReminderBanner />
 
         {/* Main Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {/* Articles Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Articles</CardTitle>
-              <div className="p-2 rounded-md bg-accent-blue/30">
-                <FileText className="h-4 w-4 text-primary" data-testid="icon-articles" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-articles-total">
-                    {stats?.articles.total || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-articles-breakdown">
-                    {stats?.articles.published || 0} published · {stats?.articles.draft || 0} draft · {stats?.articles.scheduled || 0} scheduled
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Users Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-users-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Users</CardTitle>
-              <div className="p-2 rounded-md bg-accent-purple/30">
-                <Users className="h-4 w-4 text-accent-foreground" data-testid="icon-users" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-users-total">
-                    {stats?.users.total || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-users-breakdown">
-                    {stats?.users.active24h || 0} active today · {stats?.users.newThisWeek || 0} new this week
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Comments Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-comments-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Comments</CardTitle>
-              <div className="p-2 rounded-md bg-accent-green/30">
-                <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" data-testid="icon-comments" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-comments-total">
-                    {stats?.comments.total || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-comments-breakdown">
-                    {stats?.comments.pending || 0} pending · {stats?.comments.approved || 0} approved
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Views Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-views-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <div className="p-2 rounded-md bg-accent-blue/30">
-                <Eye className="h-4 w-4 text-primary" data-testid="icon-views" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-views-total">
-                    {stats?.articles.totalViews || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-views-description">
-                    Total article views
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Articles"
+            value={stats?.articles.total || 0}
+            description={`${stats?.articles.published || 0} published · ${stats?.articles.draft || 0} draft · ${stats?.articles.scheduled || 0} scheduled`}
+            icon={FileText}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            isLoading={isLoading}
+            testId="card-articles-stats"
+          />
+          <StatsCard
+            title="Users"
+            value={stats?.users.total || 0}
+            description={`${stats?.users.active24h || 0} active today · ${stats?.users.newThisWeek || 0} new this week`}
+            icon={Users}
+            iconColor="text-purple-600 dark:text-purple-400"
+            iconBgColor="bg-purple-100/50 dark:bg-purple-900/20"
+            isLoading={isLoading}
+            testId="card-users-stats"
+          />
+          <StatsCard
+            title="Comments"
+            value={stats?.comments.total || 0}
+            description={`${stats?.comments.pending || 0} pending · ${stats?.comments.approved || 0} approved`}
+            icon={MessageSquare}
+            iconColor="text-green-600 dark:text-green-400"
+            iconBgColor="bg-green-100/50 dark:bg-green-900/20"
+            isLoading={isLoading}
+            testId="card-comments-stats"
+          />
+          <StatsCard
+            title="Total Views"
+            value={stats?.articles.totalViews || 0}
+            description="Total article views"
+            icon={Eye}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            isLoading={isLoading}
+            testId="card-views-stats"
+          />
         </div>
 
         {/* Today's Activity Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Views Today</CardTitle>
-              <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold text-primary" data-testid="text-views-today">
-                    {stats?.articles.viewsToday || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
-                    new views today
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Readers Today</CardTitle>
-              <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold text-chart-2" data-testid="text-active-today">
-                    {stats?.users.activeToday || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-active-today-description">
-                    visitors active now
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reads Today</CardTitle>
-              <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold text-chart-3" data-testid="text-reads-today">
-                    {stats?.engagement.readsToday || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
-                    of {stats?.engagement.totalReads || 0} total
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Engagement Today</CardTitle>
-              <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold text-chart-4" data-testid="text-engagement-today">
-                    {stats?.reactions.todayCount || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
-                    of {stats?.reactions.total || 0} total
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Views Today"
+            value={stats?.articles.viewsToday || 0}
+            description="new views today"
+            icon={Activity}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            isLoading={isLoading}
+            testId="card-views-today-stats"
+          />
+          <StatsCard
+            title="Active Readers Today"
+            value={stats?.users.activeToday || 0}
+            description="visitors active now"
+            icon={Users}
+            iconColor="text-chart-2"
+            iconBgColor="bg-blue-100/50 dark:bg-blue-900/20"
+            isLoading={isLoading}
+            testId="card-active-today-stats"
+          />
+          <StatsCard
+            title="Reads Today"
+            value={stats?.engagement.readsToday || 0}
+            description={`of ${stats?.engagement.totalReads || 0} total`}
+            icon={FileText}
+            iconColor="text-chart-3"
+            iconBgColor="bg-cyan-100/50 dark:bg-cyan-900/20"
+            isLoading={isLoading}
+            testId="card-reads-today-stats"
+          />
+          <StatsCard
+            title="Engagement Today"
+            value={stats?.reactions.todayCount || 0}
+            description={`of ${stats?.reactions.total || 0} total`}
+            icon={Heart}
+            iconColor="text-chart-4"
+            iconBgColor="bg-pink-100/50 dark:bg-pink-900/20"
+            isLoading={isLoading}
+            testId="card-engagement-today-stats"
+          />
         </div>
 
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card data-testid="card-categories-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              <FolderTree className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-2xl font-bold" data-testid="text-categories-total">
-                  {stats?.categories.total || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-abtests-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">A/B Tests</CardTitle>
-              <FlaskConical className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-abtests-total">
-                    {stats?.abTests.total || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-abtests-running">
-                    {stats?.abTests.running || 0} running
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-avg-time-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Reading Time</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold" data-testid="text-avg-time">
-                    {Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:{String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}
-                  </div>
-                  <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
-                    min:sec per article
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Categories"
+            value={stats?.categories.total || 0}
+            icon={FolderTree}
+            iconColor="text-amber-600 dark:text-amber-400"
+            iconBgColor="bg-amber-100/50 dark:bg-amber-900/20"
+            isLoading={isLoading}
+            testId="card-categories-stats"
+          />
+          <StatsCard
+            title="A/B Tests"
+            value={stats?.abTests.total || 0}
+            description={`${stats?.abTests.running || 0} running`}
+            icon={FlaskConical}
+            iconColor="text-indigo-600 dark:text-indigo-400"
+            iconBgColor="bg-indigo-100/50 dark:bg-indigo-900/20"
+            isLoading={isLoading}
+            testId="card-abtests-stats"
+          />
+          <StatsCard
+            title="Average Reading Time"
+            value={`${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}`}
+            description="min:sec per article"
+            icon={Clock}
+            iconColor="text-teal-600 dark:text-teal-400"
+            iconBgColor="bg-teal-100/50 dark:bg-teal-900/20"
+            isLoading={isLoading}
+            testId="card-avg-time-stats"
+          />
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Articles Distribution */}
-          <Card data-testid="card-articles-chart">
-            <CardHeader>
-              <CardTitle>Articles Distribution</CardTitle>
-              <CardDescription>By Status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[200px] w-full" />
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={articleChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.name}: ${entry.value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {articleChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+          <ChartCard
+            title="Articles Distribution"
+            description="By Status"
+            isLoading={isLoading}
+            testId="card-articles-chart"
+          >
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={articleChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={90}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {articleChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
-          {/* Comments Distribution */}
-          <Card data-testid="card-comments-chart">
-            <CardHeader>
-              <CardTitle>Comments Distribution</CardTitle>
-              <CardDescription>By Status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[200px] w-full" />
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={commentChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+          <ChartCard
+            title="Comments Distribution"
+            description="By Status"
+            isLoading={isLoading}
+            testId="card-comments-chart"
+          >
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={commentChartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="name" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </div>
 
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Articles */}
-          <Card data-testid="card-recent-articles">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Recent Articles</CardTitle>
-                <CardDescription>Last 5 articles created</CardDescription>
-              </div>
+          <ActivityCard
+            title="Recent Articles"
+            description="Last 5 articles created"
+            items={(stats?.recentArticles || []).map(article => ({
+              id: article.id,
+              title: article.title,
+              status: article.status,
+              timestamp: article.createdAt,
+              metadata: { views: article.views }
+            }))}
+            isLoading={isLoading}
+            emptyMessage="No recent articles"
+            testId="card-recent-articles"
+            actions={
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-articles">
                 <Link href="/dashboard/articles">View All</Link>
               </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
+            }
+            renderItem={(item) => (
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-3 p-3 border rounded-lg hover-elevate transition-all"
+                data-testid={`recent-article-${item.id}`}
+              >
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-medium text-sm truncate" data-testid={`text-article-title-${item.id}`}>
+                      {item.title}
+                    </h4>
+                    {item.status && getStatusBadge(item.status)}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(item.timestamp), {
+                        addSuffix: true,
+                        locale: enUS,
+                      })}
+                    </span>
+                    <ViewsCount 
+                      views={item.metadata?.views || 0}
+                      iconClassName="h-3 w-3"
+                    />
+                  </div>
                 </div>
-              ) : stats?.recentArticles && stats.recentArticles.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.recentArticles.map((article) => (
-                    <div
-                      key={article.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all"
-                      data-testid={`recent-article-${article.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium truncate text-sm" data-testid={`text-article-title-${article.id}`}>
-                            {article.title}
-                          </h4>
-                          {getStatusBadge(article.status)}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(new Date(article.createdAt), {
-                              addSuffix: true,
-                              locale: enUS,
-                            })}
-                          </span>
-                          <ViewsCount 
-                            views={article.views}
-                            iconClassName="h-3 w-3"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-articles">
-                  No recent articles
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Recent Comments */}
-          <Card data-testid="card-recent-comments">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Recent Comments</CardTitle>
-                <CardDescription>Last 5 comments</CardDescription>
               </div>
+            )}
+            getStatusBadge={getStatusBadge}
+          />
+
+          <ActivityCard
+            title="Recent Comments"
+            description="Last 5 comments"
+            items={(stats?.recentComments || []).map(comment => ({
+              id: comment.id,
+              title: comment.content.substring(0, 80) + "...",
+              status: comment.status,
+              timestamp: comment.createdAt,
+              metadata: { user: comment.user }
+            }))}
+            isLoading={isLoading}
+            emptyMessage="No recent comments"
+            testId="card-recent-comments"
+            actions={
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
                 <Link href="/dashboard/comments">View All</Link>
               </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
+            }
+            renderItem={(item) => (
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-3 p-3 border rounded-lg hover-elevate transition-all"
+                data-testid={`recent-comment-${item.id}`}
+              >
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm truncate" data-testid={`text-comment-content-${item.id}`}>
+                      {item.title}
+                    </p>
+                    {item.status && getStatusBadge(item.status)}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>
+                      {item.metadata?.user?.firstName || item.metadata?.user?.email || "User"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(item.timestamp), {
+                        addSuffix: true,
+                        locale: enUS,
+                      })}
+                    </span>
+                  </div>
                 </div>
-              ) : stats?.recentComments && stats.recentComments.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.recentComments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all"
-                      data-testid={`recent-comment-${comment.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm truncate" data-testid={`text-comment-content-${comment.id}`}>
-                            {comment.content.substring(0, 80)}...
-                          </p>
-                          {getStatusBadge(comment.status)}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>
-                            {comment.user?.firstName || comment.user?.email || "User"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(new Date(comment.createdAt), {
-                              addSuffix: true,
-                              locale: enUS,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-comments">
-                  No recent comments
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+            getStatusBadge={getStatusBadge}
+          />
         </div>
 
         {/* Upcoming Reminders and Tasks */}
