@@ -121,7 +121,18 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    let url: string;
+    
+    const lastItem = queryKey[queryKey.length - 1];
+    if (typeof lastItem === 'string' && (lastItem === 'ar' || lastItem === 'en')) {
+      const pathParts = queryKey.slice(0, -1);
+      const basePath = pathParts.join("/");
+      url = `${basePath}?language=${lastItem}`;
+    } else {
+      url = queryKey.join("/");
+    }
+
+    const res = await fetch(url, {
       credentials: "include",
     });
 

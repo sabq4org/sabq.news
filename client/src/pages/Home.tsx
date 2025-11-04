@@ -22,6 +22,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { Play, Headphones } from "lucide-react";
 import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function AudioBriefsSection() {
   const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
@@ -108,18 +109,20 @@ interface HomepageData {
 }
 
 export default function Home() {
+  const { language } = useLanguage();
+  
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
 
   const { data: homepage, isLoading, error } = useQuery<HomepageData>({
-    queryKey: ["/api/homepage"],
+    queryKey: ["/api/homepage", language],
   });
 
   // Fetch smart blocks for each placement
   const { data: blocksBelowFeatured } = useQuery<SmartBlock[]>({
-    queryKey: ['/api/smart-blocks', 'below_featured'],
+    queryKey: ['/api/smart-blocks', 'below_featured', language],
     queryFn: async () => {
       const params = new URLSearchParams({ isActive: 'true', placement: 'below_featured' });
       const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
@@ -129,7 +132,7 @@ export default function Home() {
   });
 
   const { data: blocksAboveAllNews } = useQuery<SmartBlock[]>({
-    queryKey: ['/api/smart-blocks', 'above_all_news'],
+    queryKey: ['/api/smart-blocks', 'above_all_news', language],
     queryFn: async () => {
       const params = new URLSearchParams({ isActive: 'true', placement: 'above_all_news' });
       const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
@@ -139,7 +142,7 @@ export default function Home() {
   });
 
   const { data: blocksBetweenAllAndMurqap } = useQuery<SmartBlock[]>({
-    queryKey: ['/api/smart-blocks', 'between_all_and_murqap'],
+    queryKey: ['/api/smart-blocks', 'between_all_and_murqap', language],
     queryFn: async () => {
       const params = new URLSearchParams({ isActive: 'true', placement: 'between_all_and_murqap' });
       const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });
@@ -149,7 +152,7 @@ export default function Home() {
   });
 
   const { data: blocksAboveFooter } = useQuery<SmartBlock[]>({
-    queryKey: ['/api/smart-blocks', 'above_footer'],
+    queryKey: ['/api/smart-blocks', 'above_footer', language],
     queryFn: async () => {
       const params = new URLSearchParams({ isActive: 'true', placement: 'above_footer' });
       const res = await fetch(`/api/smart-blocks?${params}`, { credentials: 'include' });

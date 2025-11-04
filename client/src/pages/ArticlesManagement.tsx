@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -115,6 +116,7 @@ function SortableRow({ article, children }: { article: Article; children: React.
 }
 
 export default function ArticlesManagement() {
+  const { language } = useLanguage();
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -143,7 +145,7 @@ export default function ArticlesManagement() {
 
   // Fetch metrics
   const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
-    queryKey: ["/api/admin/articles/metrics"],
+    queryKey: ["/api/admin/articles/metrics", language],
     queryFn: async () => {
       const response = await fetch("/api/admin/articles/metrics", { credentials: "include" });
       if (!response.ok) {
@@ -159,7 +161,7 @@ export default function ArticlesManagement() {
 
   // Fetch articles with filters
   const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter],
+    queryKey: ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter, language],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
@@ -179,7 +181,7 @@ export default function ArticlesManagement() {
 
   // Fetch categories for filter
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/categories", language],
     enabled: !!user,
   });
 

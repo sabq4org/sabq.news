@@ -36,6 +36,7 @@ import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdminDashboardStats {
   articles: {
@@ -126,10 +127,11 @@ function getRandomMotivationalQuoteKey(): string {
 
 function Dashboard() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   const { data: stats, isLoading } = useQuery<AdminDashboardStats>({
-    queryKey: ["/api/admin/dashboard/stats"],
+    queryKey: ["/api/admin/dashboard/stats", language],
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
