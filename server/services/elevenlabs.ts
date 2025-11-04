@@ -24,14 +24,26 @@ export class ElevenLabsService {
   private apiKey: string;
   private baseUrl = 'https://api.elevenlabs.io/v1';
   
-  // Arabic-compatible voice ID (ElevenLabs Multilingual v2)
-  private defaultVoiceId = 'pNInz6obpgDQGcFmaJgB'; // Adam voice, works with Arabic
+  // Voice Configuration for Arabic News Broadcasting
+  // To use a Saudi-accented voice, replace with voice ID from ElevenLabs marketplace
+  // Popular Saudi voices: Search for "Arabic" + "Saudi" accent in voice library
+  // Examples: "Faisal", "Khalid" (male), "Noura" (female)
+  private defaultVoiceId = 'pNInz6obpgDQGcFmaJgB'; // Adam - multilingual voice
+  
+  // Optimized voice settings for natural Arabic news delivery
+  // These settings balance clarity, consistency, and natural speech patterns
+  private defaultVoiceSettings = {
+    stability: 0.40,           // Lower = more expressive, Higher = more consistent (0.35-0.45 for news)
+    similarity_boost: 0.75,    // How closely to match the voice (0.7-0.8 for natural sound)
+    style: 0.65,               // Style exaggeration (0.6-0.75 for broadcast quality)
+    use_speaker_boost: true    // Enhances clarity and reduces artifacts
+  };
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
-  async textToSpeech(options: TTSOptions): Promise<Buffer> {
+  async textToSpeech(options: TTSOptions, timeoutMs: number = 30000): Promise<Buffer> {
     const voiceId = options.voiceId || this.defaultVoiceId;
     const model = options.model || 'eleven_multilingual_v2';
     
@@ -40,13 +52,12 @@ export class ElevenLabsService {
     const requestBody = {
       text: options.text,
       model_id: model,
-      voice_settings: options.voiceSettings || {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.5,
-        use_speaker_boost: true
-      }
+      voice_settings: options.voiceSettings || this.defaultVoiceSettings
     };
+
+    // Create AbortController for timeout protection
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await fetch(url, {
@@ -56,8 +67,11 @@ export class ElevenLabsService {
           'Content-Type': 'application/json',
           'xi-api-key': this.apiKey
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -67,6 +81,12 @@ export class ElevenLabsService {
       const audioBuffer = await response.arrayBuffer();
       return Buffer.from(audioBuffer);
     } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout: ElevenLabs API did not respond within ${timeoutMs}ms`);
+      }
+      
       console.error('ElevenLabs TTS error:', error);
       throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
