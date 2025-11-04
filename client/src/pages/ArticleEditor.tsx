@@ -736,21 +736,6 @@ const generateSlug = (text: string) => {
 
           <div className="flex items-center gap-2">
             <Button
-              variant="secondary"
-              onClick={handleGenerateSmartContent}
-              disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
-              className="gap-2"
-              data-testid="button-smart-generate"
-              title="توليد جميع العناصر التحريرية تلقائياً"
-            >
-              {generateSmartContentMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Zap className="h-4 w-4" />
-              )}
-              توليد ذكي
-            </Button>
-            <Button
               variant="outline"
               onClick={() => handleSave(false)}
               disabled={isSaving}
@@ -887,7 +872,25 @@ const generateSlug = (text: string) => {
             {/* Content Editor */}
             <Card>
               <CardHeader>
-                <CardTitle>محتوى المقال</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>محتوى المقال</CardTitle>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleGenerateSmartContent}
+                    disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
+                    className="gap-2"
+                    data-testid="button-smart-generate"
+                    title="توليد جميع العناصر التحريرية تلقائياً"
+                  >
+                    {generateSmartContentMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Zap className="h-4 w-4" />
+                    )}
+                    توليد ذكي
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <RichTextEditor
