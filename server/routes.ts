@@ -6176,8 +6176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "المقال غير موجود" });
       }
 
-      // Use smartSummary, aiSummary, or excerpt (in priority order)
-      const textToConvert = article.smartSummary || article.aiSummary || article.excerpt;
+      // Use aiSummary or excerpt (in priority order)
+      const textToConvert = article.aiSummary || article.excerpt;
       
       if (!textToConvert) {
         return res.status(400).json({ message: "الموجز غير متوفر لهذا المقال" });
@@ -6357,22 +6357,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update article with SEO suggestions if provided
       if (req.body.applyChanges) {
-        const seoData = article.seo ? JSON.parse(article.seo) : {};
+        const seoData = article.seo || {};
         
         await db
           .update(articles)
           .set({
-            seo: JSON.stringify({
+            seo: {
               ...seoData,
-              title: seoAnalysis.seoTitle,
-              description: seoAnalysis.metaDescription,
+              metaTitle: seoAnalysis.seoTitle,
+              metaDescription: seoAnalysis.metaDescription,
               keywords: seoAnalysis.keywords,
-              ogTitle: seoAnalysis.socialTitle,
-              ogDescription: seoAnalysis.socialDescription,
-              imageAlt: seoAnalysis.imageAltText,
-              lastAnalyzed: new Date().toISOString(),
-              aiScore: seoAnalysis.score,
-            }),
+            } as any,
           })
           .where(eq(articles.id, articleId));
       }
@@ -6660,19 +6655,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // If status is published and no publishedAt, set it
+      // If status is published, set publishedAt
       const articleData = {
         ...parsed.data,
         authorId,
       };
-      
-      if (articleData.status === 'published' && !articleData.publishedAt) {
-        articleData.publishedAt = new Date();
-      }
 
       const [newArticle] = await db
         .insert(enArticles)
-        .values(articleData)
+        .values([{
+          ...articleData,
+          publishedAt: articleData.status === 'published' ? new Date() : undefined,
+        } as any])
         .returning();
 
       // Log activity
@@ -17087,7 +17081,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: 'calendar_event',
         entityId: event.id,
         newValue: event,
-        metadata: { eventType: event.type }
       });
 
       res.status(201).json(event);
@@ -17193,7 +17186,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: 'calendar_reminder',
         entityId: reminder.id,
         newValue: reminder,
-        metadata: { eventId: id }
       });
 
       res.status(201).json(reminder);
@@ -17263,9 +17255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // إرسال إشعار للمستخدم المعين
       if (assignment.userId) {
         await createNotification({
-          type: 'calendar_assignment',
-          title: `مهمة جديدة: ${event.title}`,
-          titleAr: `مهمة جديدة: ${event.title}`,
+          type: 'NEW_ARTICLE',
           message: `تم تعيينك لدور ${assignment.role} في حدث ${event.title}`,
           messageAr: `تم تعيينك لدور ${assignment.role} في حدث ${event.title}`,
           userId: assignment.userId,
@@ -17280,7 +17270,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: 'calendar_assignment',
         entityId: assignment.id,
         newValue: assignment,
-        metadata: { eventId: id, assignedTo: assignment.userId }
       });
 
       res.status(201).json(assignment);
@@ -17388,19 +17377,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingDraft) {
         savedDraft = await storage.updateCalendarAiDraft(id, {
           editorialIdeas: aiDraft.editorialIdeas,
-          headlines: aiDraft.headlines,
+          headlines: aiDraft.headlines as any,
           infographicData: aiDraft.infographicData,
           socialMedia: aiDraft.socialMedia,
-          seo: aiDraft.seo,
-        });
+          seo: aiDraft.seo as any,
+        } as any);
       } else {
         savedDraft = await storage.createCalendarAiDraft({
           eventId: id,
           editorialIdeas: aiDraft.editorialIdeas,
-          headlines: aiDraft.headlines,
+          headlines: aiDraft.headlines as any,
           infographicData: aiDraft.infographicData,
           socialMedia: aiDraft.socialMedia,
-          seo: aiDraft.seo,
+          seo: aiDraft.seo as any,
         } as any);
       }
 
@@ -17410,7 +17399,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: 'calendar_ai_draft',
         entityId: savedDraft.id,
         newValue: savedDraft,
-        metadata: { eventId: id }
       });
 
       console.log(`[CalendarAI] Draft generated successfully for event: ${event.title}`);
@@ -17422,7 +17410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/calendar/:id/create-article-draft - إنشاء مسودة مقال من الحدث
-  app.post("/api/calendar/:id/create-article-draft", requireAuth, requireAnyPermission(["calendar:generate_ai", "articles:create"]), async (req: any, res) => {
+  app.post("/api/calendar/:id/create-article-draft", requireAuth, requireAnyPermission("calendar:generate_ai", "articles:create"), async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user!.id;
@@ -17470,11 +17458,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: 'article',
         entityId: article.id,
         newValue: article,
-        metadata: { 
-          eventId: id, 
-          eventTitle: event.title,
-          selectedAngle 
-        }
       });
 
       console.log(`[CalendarAI] Article draft created: ${article.id}`);
@@ -17552,7 +17535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات غير صالحة", errors: result.error.errors });
       }
 
-      const entity = await storage.createSmartEntity(result.data);
+      const entity = await storage.createSmartEntity(result.data as any);
       
       await logActivity({
         userId: req.user!.id,
@@ -17633,7 +17616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات غير صالحة", errors: result.error.errors });
       }
 
-      const term = await storage.createSmartTerm(result.data);
+      const term = await storage.createSmartTerm(result.data as any);
       
       await logActivity({
         userId: req.user!.id,
@@ -18392,7 +18375,7 @@ Allow: /
       
       const newArticle = await db
         .insert(enArticles)
-        .values(articleData)
+        .values([articleData as any])
         .returning();
       
       res.json(newArticle[0]);
