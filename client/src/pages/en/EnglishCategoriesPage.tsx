@@ -136,7 +136,7 @@ function SortableCategoryItem({
             >
               {category.status === "active" ? "Active" : "Inactive"}
             </Badge>
-            {category.imageUrl && (
+            {category.heroImageUrl && (
               <Badge variant="outline">
                 Has Image
               </Badge>
@@ -187,7 +187,7 @@ export default function EnglishCategoriesPage() {
       slug: "",
       description: "",
       color: "",
-      imageUrl: "",
+      heroImageUrl: "",
       displayOrder: 0,
       status: "active",
     },
@@ -339,7 +339,7 @@ export default function EnglishCategoriesPage() {
       slug: category.slug,
       description: category.description || "",
       color: category.color || "",
-      imageUrl: category.imageUrl || "",
+      heroImageUrl: category.heroImageUrl || "",
       displayOrder: category.displayOrder || 0,
       status: category.status || "active",
     });
@@ -396,7 +396,7 @@ export default function EnglishCategoriesPage() {
       }) as { objectPath: string };
 
       // Step 4: Set the public URL
-      form.setValue("imageUrl", aclResponse.objectPath);
+      form.setValue("heroImageUrl", aclResponse.objectPath);
 
       toast({
         title: "Image Uploaded",
@@ -604,7 +604,7 @@ export default function EnglishCategoriesPage() {
 
               <FormField
                 control={form.control}
-                name="imageUrl"
+                name="heroImageUrl"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category Image</FormLabel>

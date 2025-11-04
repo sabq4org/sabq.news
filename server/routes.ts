@@ -18184,12 +18184,65 @@ Allow: /
     try {
       const userId = req.user?.id;
       
-      // Get article with category and author joins
+      // Get article with category and author joins - use explicit field selection for proper camelCase mapping
       const results = await db
         .select({
-          article: enArticles,
-          category: enCategories,
-          author: users,
+          // Article fields - explicit selection ensures proper camelCase mapping from snake_case DB columns
+          id: enArticles.id,
+          title: enArticles.title,
+          subtitle: enArticles.subtitle,
+          slug: enArticles.slug,
+          content: enArticles.content,
+          excerpt: enArticles.excerpt,
+          imageUrl: enArticles.imageUrl,
+          imageFocalPoint: enArticles.imageFocalPoint,
+          categoryId: enArticles.categoryId,
+          authorId: enArticles.authorId,
+          reporterId: enArticles.reporterId,
+          articleType: enArticles.articleType,
+          newsType: enArticles.newsType,
+          publishType: enArticles.publishType,
+          scheduledAt: enArticles.scheduledAt,
+          status: enArticles.status,
+          reviewStatus: enArticles.reviewStatus,
+          reviewedBy: enArticles.reviewedBy,
+          reviewedAt: enArticles.reviewedAt,
+          reviewNotes: enArticles.reviewNotes,
+          hideFromHomepage: enArticles.hideFromHomepage,
+          aiSummary: enArticles.aiSummary,
+          smartSummary: enArticles.smartSummary,
+          aiGenerated: enArticles.aiGenerated,
+          isFeatured: enArticles.isFeatured,
+          views: enArticles.views,
+          displayOrder: enArticles.displayOrder,
+          seo: enArticles.seo,
+          publishedAt: enArticles.publishedAt,
+          createdAt: enArticles.createdAt,
+          updatedAt: enArticles.updatedAt,
+          // Category fields
+          category: {
+            id: enCategories.id,
+            name: enCategories.name,
+            slug: enCategories.slug,
+            description: enCategories.description,
+            color: enCategories.color,
+            icon: enCategories.icon,
+            heroImageUrl: enCategories.heroImageUrl,
+            displayOrder: enCategories.displayOrder,
+            status: enCategories.status,
+            type: enCategories.type,
+            createdAt: enCategories.createdAt,
+            updatedAt: enCategories.updatedAt,
+          },
+          // Author fields
+          author: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+            bio: users.bio,
+          },
         })
         .from(enArticles)
         .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
@@ -18202,7 +18255,7 @@ Allow: /
       }
 
       const result = results[0];
-      const article = result.article;
+      const { category, author, ...article } = result;
 
       // Run all queries in parallel for better performance
       const [
@@ -18239,8 +18292,8 @@ Allow: /
       // Return full article details
       const articleWithDetails: EnArticleWithDetails = {
         ...article,
-        category: result.category || undefined,
-        author: result.author || undefined,
+        category: category || undefined,
+        author: author || undefined,
         isBookmarked,
         hasReacted,
         reactionsCount,
