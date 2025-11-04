@@ -182,6 +182,9 @@ import {
   insertSmartEntitySchema,
   insertSmartTermSchema,
   insertArticleSmartLinkSchema,
+  insertEnCategorySchema,
+  insertEnArticleSchema,
+  insertEnCommentSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";

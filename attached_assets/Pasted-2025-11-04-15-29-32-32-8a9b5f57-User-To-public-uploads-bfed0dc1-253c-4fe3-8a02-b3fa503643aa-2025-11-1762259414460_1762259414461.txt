@@ -1,0 +1,113 @@
+2025-11-04 15:29:32.32
+8a9b5f57
+User
+To: public/uploads/bfed0dc1-253c-4fe3-8a02-b3fa503643aa
+2025-11-04 15:29:32.61
+8a9b5f57
+User
+[ObjectStorage] Returning public path: /public-objects/uploads/bfed0dc1-253c-4fe3-8a02-b3fa503643aa
+2025-11-04 15:29:32.61
+8a9b5f57
+User
+[Article Image] Returning objectPath: /public-objects/uploads/bfed0dc1-253c-4fe3-8a02-b3fa503643aa
+2025-11-04 15:29:32.63
+8a9b5f57
+User
+12:29:32 PM [express] PUT /api/article-images 200 in 462ms :: {"objectPath":"/public-objects/uploads/…
+2025-11-04 15:29:33.01
+8a9b5f57
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:29:33.03
+8a9b5f57
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:29:42.29
+8a9b5f57
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:29:42.31
+8a9b5f57
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+Error creating English category: ReferenceError: insertEnCategorySchema is not defined
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+at file:///home/runner/workspace/dist/index.js:18247:22
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+at file:///home/runner/workspace/dist/index.js:9091:5
+2025-11-04 15:29:42.35
+8a9b5f57
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-04 15:29:42.37
+8a9b5f57
+User
+12:29:42 PM [express] POST /api/en/dashboard/categories 500 in 97ms :: {"message":"Failed to create E…
+2025-11-04 15:29:47.18
+8a9b5f57
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:29:47.20
+8a9b5f57
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:29:47.24
+8a9b5f57
+User
+12:29:47 PM [express] GET /api/themes/active 200 in 94ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-11-04 15:29:54.50
+8a9b5f57
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 15:29:54.53
+8a9b5f57
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-04 15:29:54.57
+8a9b5f57
+User
+12:29:54 PM [express] GET /api/chat/notifications/unread-count 200 in 86ms :: {"count":0}
+2025-11-04 15:30:02.18
+8a9b5f57
+User
+[NotificationWorker] Starting queue processing...
+2025-11-04 15:30:02.18
+8a9b5f57
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-04 15:30:04.07
+3414f7c1
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-04 15:30:04.07
+3414f7c1
+User
+[NotificationWorker] Queue processing completed
+2025-11-04 15:30:04.18
+8a9b5f57
+User
+[NotificationWorker] Found 0 notifications to process
+
+2025-11-04 15:30:04.18
+8a9b5f57
+User
+[NotificationWorker] Queue processing completed
+2025-11-04 15:30:05.28
+8a9b5f57
+User
+[ScheduledPublisher] Found 0 articles ready to publish
