@@ -91,8 +91,11 @@ export default function SelectInterests() {
           <p className="text-muted-foreground mb-6">
             سجل الدخول لإكمال ملفك الشخصي واختيار اهتماماتك
           </p>
-          <Button asChild data-testid="button-login-to-select">
-            <a href="/api/login">تسجيل الدخول</a>
+          <Button 
+            onClick={() => window.location.href = "/api/login"}
+            data-testid="button-login-to-select"
+          >
+            تسجيل الدخول
           </Button>
         </div>
       </div>

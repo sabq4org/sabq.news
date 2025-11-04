@@ -217,8 +217,11 @@ export function CommentSection({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <p className="mb-4">سجل الدخول لإضافة تعليق</p>
-            <Button asChild data-testid="button-login-to-comment">
-              <a href="/api/login">تسجيل الدخول</a>
+            <Button 
+              onClick={() => window.location.href = "/api/login"}
+              data-testid="button-login-to-comment"
+            >
+              تسجيل الدخول
             </Button>
           </div>
         )}

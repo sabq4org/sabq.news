@@ -276,8 +276,11 @@ export default function EnglishProfile() {
             <p className="text-muted-foreground mb-8">
               Please log in to view your profile
             </p>
-            <Button asChild data-testid="button-login-profile">
-              <a href="/api/auth/login">Log In</a>
+            <Button 
+              onClick={() => window.location.href = "/api/login"} 
+              data-testid="button-login-profile"
+            >
+              Log In
             </Button>
           </div>
         </main>

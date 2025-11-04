@@ -277,8 +277,11 @@ export default function Profile() {
             <p className="text-muted-foreground mb-8">
               سجل الدخول لعرض ملفك الشخصي
             </p>
-            <Button asChild data-testid="button-login-profile">
-              <a href="/api/auth/login">تسجيل الدخول</a>
+            <Button 
+              onClick={() => window.location.href = "/api/login"} 
+              data-testid="button-login-profile"
+            >
+              تسجيل الدخول
             </Button>
           </div>
         </main>

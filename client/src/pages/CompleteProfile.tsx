@@ -110,8 +110,11 @@ export default function CompleteProfile() {
             <p className="text-muted-foreground mb-8">
               سجل الدخول لإكمال ملفك الشخصي
             </p>
-            <Button asChild data-testid="button-login">
-              <a href="/api/login">تسجيل الدخول</a>
+            <Button 
+              onClick={() => window.location.href = "/api/login"}
+              data-testid="button-login"
+            >
+              تسجيل الدخول
             </Button>
           </div>
         </main>
