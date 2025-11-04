@@ -113,6 +113,7 @@ import EnglishArticleEditor from "@/pages/en/EnglishArticleEditor";
 import EnglishDashboard from "@/pages/en/EnglishDashboard";
 import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
 import EnglishCategoriesPage from "@/pages/en/EnglishCategoriesPage";
+import EnglishCategoriesListPage from "@/pages/en/EnglishCategoriesListPage";
 import EnglishCategoryPage from "@/pages/en/EnglishCategoryPage";
 import EnglishCommentsPage from "@/pages/en/EnglishCommentsPage";
 import EnglishUsersPage from "@/pages/en/EnglishUsersPage";
@@ -137,6 +138,7 @@ function Router() {
         {/* English Version Routes */}
         <Route path="/en" component={EnglishHome} />
         <Route path="/en/news" component={EnglishNewsPage} />
+        <Route path="/en/categories" component={EnglishCategoriesListPage} />
         <Route path="/en/category/:slug" component={EnglishCategoryPage} />
         <Route path="/en/articles/:slug" component={EnglishArticleDetail} />
         <Route path="/en/dashboard/articles/new" component={EnglishArticleEditor} />
