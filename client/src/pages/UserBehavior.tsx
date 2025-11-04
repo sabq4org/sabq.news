@@ -151,7 +151,7 @@ export default function UserBehavior() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="stat-total-users">
-                {data?.totalUsers.toLocaleString('en-US')}
+                {data?.totalUsers}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 مسجلين في المنصة
@@ -166,7 +166,7 @@ export default function UserBehavior() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="stat-reading-time">
-                {data?.readingTimeAvg.toLocaleString('en-US')} دقيقة
+                {data?.readingTimeAvg} دقيقة
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 لكل مقال
@@ -181,7 +181,7 @@ export default function UserBehavior() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="stat-total-reads">
-                {data?.totalReads.toLocaleString('en-US')}
+                {data?.totalReads}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 خلال الفترة المحددة
@@ -223,7 +223,7 @@ export default function UserBehavior() {
                     <span className="font-medium">الإعجابات</span>
                   </div>
                   <span className="text-lg font-bold" data-testid="stat-likes">
-                    {data?.interactionCounts.likes.toLocaleString('en-US')}
+                    {data?.interactionCounts.likes}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
@@ -232,7 +232,7 @@ export default function UserBehavior() {
                     <span className="font-medium">التعليقات</span>
                   </div>
                   <span className="text-lg font-bold" data-testid="stat-comments">
-                    {data?.interactionCounts.comments.toLocaleString('en-US')}
+                    {data?.interactionCounts.comments}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
@@ -241,7 +241,7 @@ export default function UserBehavior() {
                     <span className="font-medium">الحفظ</span>
                   </div>
                   <span className="text-lg font-bold" data-testid="stat-bookmarks">
-                    {data?.interactionCounts.bookmarks.toLocaleString('en-US')}
+                    {data?.interactionCounts.bookmarks}
                   </span>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export default function UserBehavior() {
                           <Icon className="h-4 w-4 text-muted-foreground" />
                           <span>{period.name}</span>
                         </div>
-                        <span className="font-medium">{period.value.toLocaleString('en-US')}</span>
+                        <span className="font-medium">{period.value}</span>
                       </div>
                       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div 
