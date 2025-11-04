@@ -9077,6 +9077,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const limit = parseInt(req.query.limit as string) || 20;
       const unreadOnly = req.query.unreadOnly === 'true'; // القائمة المنسدلة تطلب فقط غير المقروءة
+      const language = (req.query.language as string) || 'ar'; // 'ar' or 'en'
       
       // بناء شروط الاستعلام
       const conditions = unreadOnly 
@@ -9086,16 +9087,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         : eq(notificationsInbox.userId, userId); // كل الإشعارات لصفحة الأرشيف
       
-      const notifications = await db
+      // Fetch all notifications first
+      const allNotifications = await db
         .select()
         .from(notificationsInbox)
         .where(conditions)
         .orderBy(desc(notificationsInbox.createdAt))
-        .limit(limit);
+        .limit(limit * 2); // Get more to account for filtering
 
-      // Get unread count
-      const [unreadResult] = await db
-        .select({ count: sql<number>`count(*)` })
+      // Filter by language based on article metadata
+      const filteredNotifications = await Promise.all(
+        allNotifications.map(async (notification) => {
+          const metadata = notification.metadata as any;
+          const articleId = metadata?.articleId;
+          
+          // If no articleId, it's a system notification - include in both languages
+          if (!articleId) {
+            return notification;
+          }
+          
+          // Check if article exists in the appropriate table
+          if (language === 'en') {
+            // For English, check if article exists in en_articles
+            const [enArticle] = await db
+              .select({ id: enArticles.id })
+              .from(enArticles)
+              .where(eq(enArticles.id, articleId))
+              .limit(1);
+            
+            return enArticle ? notification : null;
+          } else {
+            // For Arabic, check if article exists in articles
+            const [arArticle] = await db
+              .select({ id: articles.id })
+              .from(articles)
+              .where(eq(articles.id, articleId))
+              .limit(1);
+            
+            return arArticle ? notification : null;
+          }
+        })
+      );
+
+      // Remove null entries and limit
+      const notifications = filteredNotifications
+        .filter((n): n is NonNullable<typeof n> => n !== null)
+        .slice(0, limit);
+
+      // Get unread count (also filtered by language)
+      const allUnread = await db
+        .select()
         .from(notificationsInbox)
         .where(
           and(
@@ -9104,9 +9145,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
 
+      // Filter unread by language
+      const filteredUnread = await Promise.all(
+        allUnread.map(async (notification) => {
+          const metadata = notification.metadata as any;
+          const articleId = metadata?.articleId;
+          
+          if (!articleId) return notification;
+          
+          if (language === 'en') {
+            const [enArticle] = await db
+              .select({ id: enArticles.id })
+              .from(enArticles)
+              .where(eq(enArticles.id, articleId))
+              .limit(1);
+            return enArticle ? notification : null;
+          } else {
+            const [arArticle] = await db
+              .select({ id: articles.id })
+              .from(articles)
+              .where(eq(articles.id, articleId))
+              .limit(1);
+            return arArticle ? notification : null;
+          }
+        })
+      );
+
+      const unreadCount = filteredUnread.filter(n => n !== null).length;
+
       res.json({
         notifications,
-        unreadCount: Number(unreadResult?.count || 0),
+        unreadCount,
       });
     } catch (error) {
       console.error("Error fetching notifications:", error);

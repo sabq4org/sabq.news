@@ -2,7 +2,7 @@ import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper } from "lucide-rea
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { NotificationBell } from "@/components/NotificationBell";
+import { EnglishNotificationBell } from "@/components/en/EnglishNotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
@@ -140,7 +140,7 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
               <LanguageSwitcher />
               <ThemeToggle />
               
-              {user && <NotificationBell />}
+              {user && <EnglishNotificationBell />}
 
               {user ? (
                 <DropdownMenu>
@@ -223,7 +223,7 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
               <LanguageSwitcher />
               <ThemeToggle />
               
-              {user && <NotificationBell />}
+              {user && <EnglishNotificationBell />}
 
               {user ? (
                 <DropdownMenu>
