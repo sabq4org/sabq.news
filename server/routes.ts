@@ -1828,6 +1828,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all English categories
+  app.get("/api/en/categories", async (req, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.status, 'active'))
+        .orderBy(asc(enCategories.displayOrder));
+
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching English categories:", error);
+      res.status(500).json({ message: "Failed to fetch English categories" });
+    }
+  });
+
   // Get category by slug
   app.get("/api/categories/slug/:slug", async (req, res) => {
     try {
