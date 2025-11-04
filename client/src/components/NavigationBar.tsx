@@ -16,13 +16,13 @@ export function NavigationBar() {
   });
 
   return (
-    <div className="w-full border-b bg-background hidden md:block">
+    <div className="w-full bg-background hidden md:block">
       {/* Core Categories - Desktop Only */}
       {coreCategories.length > 0 && (
-        <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="sticky top-16 z-40 bg-background border-b">
           <div className="container mx-auto px-6 lg:px-8">
             <ScrollArea className="w-full whitespace-nowrap">
-              <nav className="flex items-center gap-6 py-0" dir="rtl">
+              <nav className="flex items-center gap-8 py-0" dir="rtl">
                 {coreCategories.map((category) => {
                   const isActive = location === `/category/${category.slug}`;
                   return (
@@ -32,34 +32,24 @@ export function NavigationBar() {
                       data-testid={`link-nav-core-${category.slug}`}
                     >
                       <div className={`
-                        group relative py-4 cursor-pointer transition-colors duration-200
+                        relative py-3.5 cursor-pointer transition-colors duration-200
                         ${isActive 
-                          ? 'text-foreground font-semibold' 
-                          : 'text-muted-foreground hover:text-foreground font-medium'
+                          ? 'text-foreground' 
+                          : 'text-muted-foreground hover:text-foreground'
                         }
                       `}>
-                        <div className="flex items-center gap-2">
-                          {category.icon && (
-                            <span className="text-lg opacity-80">{category.icon}</span>
-                          )}
-                          <span className="text-sm tracking-wide">{category.nameAr}</span>
-                        </div>
+                        <span className="text-sm font-medium">{category.nameAr}</span>
                         
                         {/* Active indicator */}
                         {isActive && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                        )}
-                        
-                        {/* Hover indicator */}
-                        {!isActive && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-border opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
                         )}
                       </div>
                     </Link>
                   );
                 })}
               </nav>
-              <ScrollBar orientation="horizontal" className="h-1" />
+              <ScrollBar orientation="horizontal" className="h-0.5" />
             </ScrollArea>
           </div>
         </div>
