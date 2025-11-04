@@ -3,12 +3,19 @@ import { Link } from "wouter";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@shared/schema";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function NavigationBar() {
+  const { language } = useLanguage();
+  
   const { data: coreCategories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories/smart", "core", "active"],
+    queryKey: ["/api/categories/smart", "core", "active", language],
     queryFn: async () => {
-      const params = new URLSearchParams({ type: "core", status: "active" });
+      const params = new URLSearchParams({ 
+        type: "core", 
+        status: "active",
+        language: language 
+      });
       const res = await fetch(`/api/categories/smart?${params}`, { credentials: "include" });
       if (!res.ok) return [];
       return await res.json();

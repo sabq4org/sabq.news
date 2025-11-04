@@ -2,6 +2,7 @@ import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper } from "lucide-rea
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSelector } from "./LanguageSelector";
 import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
@@ -136,6 +137,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Mobile Actions */}
             <div className="md:hidden flex items-center gap-2">
+              <LanguageSelector />
               <ThemeToggle />
               
               {user && <NotificationBell />}
@@ -218,6 +220,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
+              <LanguageSelector />
               <ThemeToggle />
               
               {user && <NotificationBell />}

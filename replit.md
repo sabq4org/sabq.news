@@ -7,6 +7,7 @@ Sabq Smart is an AI-powered Arabic news platform built with React, Express, and 
 - Smart Links system fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation
 - **SEO AI System**: Complete SEO optimization platform with AI-powered analysis, Open Graph & Twitter Cards integration, dynamic XML sitemap, robots.txt, and structured Schema.org data
 - **Smart Content Generation**: One-click AI-powered content generation using GPT-5 that automatically produces all editorial elements from raw article content
+- **Multi-Language Support**: Native multi-language system supporting Arabic (ar) and English (en) with language field in database, API filtering, and language selector UI component
 - Credibility analysis feature removed from article details
 
 ## User Preferences
@@ -95,6 +96,38 @@ Opinion articles remain accessible exclusively through:
 - User-personal data (bookmarks, likes, reading history)
 
 This architecture ensures simplified content management in the dashboard while maintaining content integrity and separation on the public-facing website.
+
+### Multi-Language Support System
+**Architecture (November 2025):**
+The platform implements a hybrid multi-language approach using a single database with language fields:
+
+**Database Schema:**
+- `articles` table: Added `language` field (default: 'ar') with indexes for optimal filtering
+- `categories` table: Added `language` field (default: 'ar')
+- Supported languages: Arabic ('ar'), English ('en')
+- Extensible to support Persian ('fa') and Urdu ('ur') in the future
+
+**API Layer:**
+- All article and category endpoints accept optional `language` query parameter
+- Storage methods (`getAllCategories`, `getArticles`) support language filtering
+- Examples:
+  - `/api/categories?language=en` - English categories only
+  - `/api/articles?language=ar` - Arabic articles only
+  - Without language parameter: returns all content (default behavior)
+
+**Frontend Components:**
+- `LanguageContext`: React Context Provider for global language state management
+- `LanguageSelector`: Dropdown UI component with language switcher (Globe icon)
+- Integrated in Header (both mobile and desktop views)
+- Automatically updates document direction (RTL/LTR) and language attribute
+- Language preference stored in localStorage (key: 'sabq-language')
+
+**Implementation Details:**
+- Language changes trigger query invalidation for fresh data
+- Categories and articles re-fetch automatically when language changes
+- Preserves user language preference across sessions
+- No translation layer - each language has independent content
+- Content creators can publish articles/categories in any supported language
 
 ### Mobile App Support
 Native mobile app support is enabled via Capacitor 7.4.4, with configured iOS and Android platforms, including auto-generated app icons and splash screens.
