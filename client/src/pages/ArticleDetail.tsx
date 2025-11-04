@@ -354,17 +354,27 @@ export default function ArticleDetail() {
       return;
     }
 
-    // If already playing, pause
-    if (isPlaying && audioRef.current) {
+    // If currently playing, stop playback
+    if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reset to beginning
       setIsPlaying(false);
       return;
     }
 
-    // If audio is already loaded, just play
+    // If audio is already loaded but paused, resume playback
     if (audioRef.current && audioRef.current.src) {
-      audioRef.current.play();
-      setIsPlaying(true);
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error('Error resuming audio:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل تشغيل الموجز الصوتي",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -377,29 +387,27 @@ export default function ArticleDetail() {
       const audioUrl = `/api/articles/${slug}/summary-audio?v=${encodeURIComponent(timestamp)}`;
       
       // Create audio element
-      if (!audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
-        
-        // Add event listeners
-        audioRef.current.addEventListener('ended', () => {
-          setIsPlaying(false);
+      audioRef.current = new Audio(audioUrl);
+      
+      // Add event listeners
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+      });
+      
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio playback error:', e);
+        toast({
+          title: "خطأ",
+          description: "فشل تشغيل الموجز الصوتي",
+          variant: "destructive",
         });
-        
-        audioRef.current.addEventListener('error', (e) => {
-          console.error('Audio playback error:', e);
-          toast({
-            title: "خطأ",
-            description: "فشل تشغيل الموجز الصوتي",
-            variant: "destructive",
-          });
-          setIsPlaying(false);
-          setIsLoadingAudio(false);
-        });
-        
-        audioRef.current.addEventListener('canplay', () => {
-          setIsLoadingAudio(false);
-        });
-      }
+        setIsPlaying(false);
+        setIsLoadingAudio(false);
+      });
+      
+      audioRef.current.addEventListener('canplay', () => {
+        setIsLoadingAudio(false);
+      });
       
       await audioRef.current.play();
       setIsPlaying(true);
