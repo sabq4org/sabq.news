@@ -6905,7 +6905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Toggle English article featured status
+  // Toggle English article featured status (PATCH - toggle)
   app.patch("/api/en/dashboard/articles/:id/toggle-featured", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
@@ -6952,6 +6952,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling English featured status:", error);
       res.status(500).json({ message: "Failed to toggle English featured status" });
+    }
+  });
+
+  // Feature/unfeature English article (POST - set specific value)
+  app.post("/api/en/dashboard/articles/:id/feature", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const { featured } = req.body;
+
+      const [article] = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(enArticles)
+        .set({
+          isFeatured: featured,
+          updatedAt: new Date(),
+        })
+        .where(eq(enArticles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: featured ? "featured" : "unfeatured",
+        entityType: "en_article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error updating English featured status:", error);
+      res.status(500).json({ message: "Failed to update English featured status" });
     }
   });
 

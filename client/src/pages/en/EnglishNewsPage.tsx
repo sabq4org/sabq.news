@@ -149,6 +149,25 @@ export default function EnglishNewsPage() {
             ))}
           </div>
 
+          {/* Mood Filter */}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm font-medium text-muted-foreground self-center mr-2">Show:</span>
+            {(['all', 'hot', 'trending', 'calm'] as Mood[]).map((m) => (
+              <Button
+                key={m}
+                variant={mood === m ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setMood(m);
+                  setCurrentPage(1);
+                }}
+                data-testid={`button-mood-${m}`}
+              >
+                {m === 'all' ? 'All News' : m === 'hot' ? 'Featured' : m === 'trending' ? 'Trending' : 'Regular'}
+              </Button>
+            ))}
+          </div>
+
           {/* Category Filter */}
           <div className="flex flex-wrap gap-2">
             <span className="text-sm font-medium text-muted-foreground self-center mr-2">Category:</span>

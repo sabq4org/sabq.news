@@ -2,24 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, Eye } from "lucide-react";
+import { ArrowRight, Clock, Eye, Star, TrendingUp } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
-import type { EnArticle, EnCategory } from "@shared/schema";
+import type { EnArticle } from "@shared/schema";
+import { formatDistanceToNow } from "date-fns";
 
 export default function EnglishHome() {
-  const { data: articles, isLoading: articlesLoading } = useQuery<EnArticle[]>({
+  const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({
     queryKey: ["/api/en/articles"],
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery<EnCategory[]>({
-    queryKey: ["/api/en/categories"],
-  });
+  // Separate featured and regular articles
+  const featuredArticles = articles.filter(article => article.isFeatured && article.status === "published");
+  const regularArticles = articles.filter(article => !article.isFeatured && article.status === "published");
 
-  if (articlesLoading || categoriesLoading) {
+  if (articlesLoading) {
     return (
       <EnglishLayout>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container max-w-7xl mx-auto px-4 py-8">
           <Skeleton className="h-12 w-48 mb-8" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -33,70 +35,177 @@ export default function EnglishHome() {
 
   return (
     <EnglishLayout>
+      <main className="flex-1">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+          
+          {/* Featured News Section */}
+          {featuredArticles.length > 0 && (
+            <section className="scroll-fade-in">
+              <div className="flex items-center gap-3 mb-6">
+                <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+                <h2 className="text-2xl md:text-3xl font-bold">Featured News</h2>
+              </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Latest Articles</h2>
-        </div>
-
-        {/* Articles Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {articles?.map((article) => (
-            <Link key={article.id} href={`/en/articles/${article.slug}`}>
-              <Card className="hover-elevate h-full transition-all cursor-pointer" data-testid={`card-article-${article.id}`}>
-                {article.imageUrl && (
-                  <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img
-                      src={article.imageUrl}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="line-clamp-2 text-lg">
-                    {article.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {article.excerpt && (
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                      {article.excerpt}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {article.publishedAt
-                        ? new Date(article.publishedAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "Draft"}
+              {/* Hero Featured Article */}
+              {featuredArticles[0] && (
+                <Link href={`/en/articles/${featuredArticles[0].slug}`}>
+                  <Card className="hover-elevate active-elevate-2 cursor-pointer mb-8 overflow-hidden" data-testid="card-featured-hero">
+                    <div className="grid md:grid-cols-2 gap-0">
+                      {featuredArticles[0].imageUrl && (
+                        <div className="relative h-64 md:h-full overflow-hidden">
+                          <img
+                            src={featuredArticles[0].imageUrl}
+                            alt={featuredArticles[0].title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute top-4 left-4">
+                            <Badge variant="default" className="gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              Featured
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+                      <CardContent className="p-6 md:p-8 flex flex-col justify-center">
+                        <h3 className="text-2xl md:text-3xl font-bold mb-4 line-clamp-3">
+                          {featuredArticles[0].title}
+                        </h3>
+                        {featuredArticles[0].excerpt && (
+                          <p className="text-muted-foreground mb-6 line-clamp-4">
+                            {featuredArticles[0].excerpt}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {featuredArticles[0].publishedAt && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{formatDistanceToNow(new Date(featuredArticles[0].publishedAt), { addSuffix: true })}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{(featuredArticles[0].views || 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </CardContent>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      {article.views || 0}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                  </Card>
+                </Link>
+              )}
 
-        {(!articles || articles.length === 0) && (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">No articles available yet.</p>
-            <Link href="/dashboard">
-              <Button data-testid="button-create-article">
-                Create First Article <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </Card>
-        )}
-      </div>
+              {/* Other Featured Articles Grid */}
+              {featuredArticles.length > 1 && (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {featuredArticles.slice(1, 7).map((article) => (
+                    <Link key={article.id} href={`/en/articles/${article.slug}`}>
+                      <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-featured-${article.id}`}>
+                        {article.imageUrl && (
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={article.imageUrl}
+                              alt={article.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute top-3 left-3">
+                              <Badge variant="default" className="gap-1">
+                                <Star className="h-3 w-3 fill-current" />
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        <CardContent className="p-5 space-y-3">
+                          <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                            {article.title}
+                          </h3>
+                          {article.excerpt && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">
+                              {article.excerpt}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                            {article.publishedAt && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{(article.views || 0).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Latest Articles Section */}
+          {regularArticles.length > 0 && (
+            <section className="scroll-fade-in">
+              <div className="flex items-center gap-3 mb-6">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl md:text-3xl font-bold">Latest News</h2>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {regularArticles.map((article) => (
+                  <Link key={article.id} href={`/en/articles/${article.slug}`}>
+                    <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-article-${article.id}`}>
+                      {article.imageUrl && (
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                      )}
+                      <CardContent className="p-5 space-y-3">
+                        <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                          {article.title}
+                        </h3>
+                        {article.excerpt && (
+                          <p className="text-sm text-muted-foreground line-clamp-3">
+                            {article.excerpt}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                          {article.publishedAt && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{(article.views || 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Empty State */}
+          {articles.length === 0 && (
+            <Card className="p-12 text-center">
+              <p className="text-muted-foreground mb-4">No articles available yet.</p>
+              <Link href="/en/dashboard">
+                <Button data-testid="button-create-article">
+                  Create First Article <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </Card>
+          )}
+        </div>
+      </main>
 
       {/* Footer */}
       <footer className="border-t bg-card mt-16">
