@@ -187,13 +187,13 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile-mobile">
+                      <a href="/en/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile-mobile">
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings-mobile">
+                      <a href="/en/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings-mobile">
                         <Bell className="mr-2 h-4 w-4" />
                         Notification Settings
                       </a>
@@ -270,13 +270,13 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile">
+                      <a href="/en/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile">
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
+                      <a href="/en/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
                         <Bell className="mr-2 h-4 w-4" />
                         Notification Settings
                       </a>
