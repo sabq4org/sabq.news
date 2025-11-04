@@ -56,6 +56,9 @@ import {
   rolePermissions,
   activityLogs,
   userEvents,
+  enArticles,
+  enCategories,
+  enComments,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -3256,6 +3259,232 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .where(eq(articles.status, "published"))
       .orderBy(desc(articles.views))
+      .limit(5);
+
+    const topArticles = topArticlesData.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+
+    return {
+      articles: {
+        total: Number(articleStats.total),
+        published: Number(articleStats.published),
+        draft: Number(articleStats.draft),
+        archived: Number(articleStats.archived),
+        scheduled: Number(articleStats.scheduled),
+        totalViews: Number(articleStats.totalViews),
+        viewsToday: Number(viewsTodayStats.viewsToday),
+      },
+      users: {
+        total: Number(userStats.total),
+        emailVerified: Number(userStats.emailVerified),
+        active24h: Number(userStats.active24h),
+        newThisWeek: Number(userStats.newThisWeek),
+        activeToday: Number(userStats.activeToday),
+      },
+      comments: {
+        total: Number(commentStats.total),
+        pending: Number(commentStats.pending),
+        approved: Number(commentStats.approved),
+        rejected: Number(commentStats.rejected),
+      },
+      categories: {
+        total: Number(categoriesStats.total),
+      },
+      abTests: {
+        total: Number(abTestsStats.total),
+        running: Number(abTestsStats.running),
+      },
+      reactions: {
+        total: Number(reactionsStats.total),
+        todayCount: Number(reactionsStats.todayCount),
+      },
+      engagement: {
+        averageTimeOnSite: Math.round(Number(engagementStats.avgDuration)),
+        totalReads: Number(engagementStats.totalReads),
+        readsToday: Number(engagementStats.readsToday),
+      },
+      recentArticles,
+      recentComments,
+      topArticles,
+    };
+  }
+
+  // English Admin Dashboard stats
+  async getEnglishAdminDashboardStats(): Promise<{
+    articles: {
+      total: number;
+      published: number;
+      draft: number;
+      archived: number;
+      scheduled: number;
+      totalViews: number;
+      viewsToday: number;
+    };
+    users: {
+      total: number;
+      emailVerified: number;
+      active24h: number;
+      newThisWeek: number;
+      activeToday: number;
+    };
+    comments: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+    };
+    categories: {
+      total: number;
+    };
+    abTests: {
+      total: number;
+      running: number;
+    };
+    reactions: {
+      total: number;
+      todayCount: number;
+    };
+    engagement: {
+      averageTimeOnSite: number;
+      totalReads: number;
+      readsToday: number;
+    };
+    recentArticles: ArticleWithDetails[];
+    recentComments: CommentWithUser[];
+    topArticles: ArticleWithDetails[];
+  }> {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Get article stats with scheduled count
+    const [articleStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        published: sql<number>`count(*) filter (where ${enArticles.status} = 'published')`,
+        draft: sql<number>`count(*) filter (where ${enArticles.status} = 'draft')`,
+        archived: sql<number>`count(*) filter (where ${enArticles.status} = 'archived')`,
+        scheduled: sql<number>`count(*) filter (where ${enArticles.status} = 'scheduled')`,
+        totalViews: sql<number>`coalesce(sum(${enArticles.views}), 0)`,
+      })
+      .from(enArticles);
+
+    // Get views today
+    const [viewsTodayStats] = await db
+      .select({
+        viewsToday: sql<number>`coalesce(count(*), 0)`,
+      })
+      .from(userEvents)
+      .where(and(
+        sql`${userEvents.eventType} = 'view'`,
+        sql`${userEvents.createdAt} >= ${todayStart}`
+      ));
+
+    // Get user stats with active today count
+    const [userStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        emailVerified: sql<number>`count(*) filter (where ${users.emailVerified} = true)`,
+        active24h: sql<number>`count(*) filter (where ${users.lastActivityAt} >= ${yesterday})`,
+        newThisWeek: sql<number>`count(*) filter (where ${users.createdAt} >= ${weekAgo})`,
+        activeToday: sql<number>`count(*) filter (where ${users.lastActivityAt} >= ${todayStart})`,
+      })
+      .from(users)
+      .where(isNull(users.deletedAt));
+
+    // Get comment stats
+    const [commentStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        pending: sql<number>`count(*) filter (where ${enComments.status} = 'pending')`,
+        approved: sql<number>`count(*) filter (where ${enComments.status} = 'approved')`,
+        rejected: sql<number>`count(*) filter (where ${enComments.status} = 'rejected')`,
+      })
+      .from(enComments);
+
+    // Get categories count
+    const [categoriesStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+      })
+      .from(enCategories);
+
+    // Get AB tests stats
+    const [abTestsStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        running: sql<number>`count(*) filter (where ${experiments.status} = 'running')`,
+      })
+      .from(experiments);
+
+    // Get reactions count (total and today)
+    const [reactionsStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        todayCount: sql<number>`count(*) filter (where ${reactions.createdAt} >= ${todayStart})`,
+      })
+      .from(reactions);
+
+    // Get engagement stats
+    const [engagementStats] = await db
+      .select({
+        totalReads: sql<number>`count(*)`,
+        readsToday: sql<number>`count(*) filter (where ${readingHistory.readAt} >= ${todayStart})`,
+        avgDuration: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)`,
+      })
+      .from(readingHistory);
+
+    // Get recent articles (latest 5)
+    const recentArticlesData = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .orderBy(desc(enArticles.createdAt))
+      .limit(5);
+
+    const recentArticles = recentArticlesData.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.author || undefined,
+    }));
+
+    // Get recent comments (latest 5)
+    const recentCommentsData = await db
+      .select({
+        comment: enComments,
+        user: users,
+      })
+      .from(enComments)
+      .innerJoin(users, eq(enComments.userId, users.id))
+      .orderBy(desc(enComments.createdAt))
+      .limit(5);
+
+    const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
+      ...r.comment,
+      user: r.user,
+    }));
+
+    // Get top articles (most viewed, top 5)
+    const topArticlesData = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .where(eq(enArticles.status, "published"))
+      .orderBy(desc(enArticles.views))
       .limit(5);
 
     const topArticles = topArticlesData.map((r) => ({
