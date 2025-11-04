@@ -109,10 +109,14 @@ import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
 import EnglishHome from "@/pages/en/EnglishHome";
 import EnglishArticleDetail from "@/pages/en/EnglishArticleDetail";
+import EnglishArticleEditor from "@/pages/en/EnglishArticleEditor";
 import EnglishDashboard from "@/pages/en/EnglishDashboard";
 import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
 import EnglishCategoriesPage from "@/pages/en/EnglishCategoriesPage";
 import EnglishCategoryPage from "@/pages/en/EnglishCategoryPage";
+import EnglishCommentsPage from "@/pages/en/EnglishCommentsPage";
+import EnglishUsersPage from "@/pages/en/EnglishUsersPage";
+import EnglishArticlesPage from "@/pages/en/EnglishArticlesPage";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -133,9 +137,14 @@ function Router() {
         {/* English Version Routes */}
         <Route path="/en" component={EnglishHome} />
         <Route path="/en/news" component={EnglishNewsPage} />
-        <Route path="/en/categories" component={EnglishCategoriesPage} />
         <Route path="/en/category/:slug" component={EnglishCategoryPage} />
         <Route path="/en/articles/:slug" component={EnglishArticleDetail} />
+        <Route path="/en/dashboard/articles/new" component={EnglishArticleEditor} />
+        <Route path="/en/dashboard/articles/:id/edit" component={EnglishArticleEditor} />
+        <Route path="/en/dashboard/articles" component={EnglishArticlesPage} />
+        <Route path="/en/dashboard/categories" component={EnglishCategoriesPage} />
+        <Route path="/en/dashboard/comments" component={EnglishCommentsPage} />
+        <Route path="/en/dashboard/users" component={EnglishUsersPage} />
         <Route path="/en/dashboard" component={EnglishDashboard} />
         
         {/* Arabic Version Routes */}

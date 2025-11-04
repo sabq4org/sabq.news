@@ -29,7 +29,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useNav, trackNavClick } from "@/nav/useNav";
+import { useEnglishNav, trackNavClick } from "@/nav/useEnglishNav";
 import { AppBreadcrumbs } from "../AppBreadcrumbs";
 import { InternalAnnouncement } from "../InternalAnnouncement";
 import { NotificationBadge } from "../chat/NotificationBadge";
@@ -81,7 +81,7 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
     audioSummaries: false,
   }), []);
   
-  const { treeFiltered, activeItem } = useNav({ 
+  const { treeFiltered, activeItem } = useEnglishNav({ 
     role, 
     flags,
     pathname: location
