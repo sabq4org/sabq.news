@@ -4178,3 +4178,18 @@ export type InsertEnComment = z.infer<typeof insertEnCommentSchema>;
 export type EnReaction = typeof enReactions.$inferSelect;
 export type EnBookmark = typeof enBookmarks.$inferSelect;
 export type EnReadingHistory = typeof enReadingHistory.$inferSelect;
+
+// English Article with full details (similar to ArticleWithDetails for Arabic)
+export type EnArticleWithDetails = EnArticle & {
+  category?: EnCategory;
+  author?: User;
+  commentsCount?: number;
+  reactionsCount?: number;
+  isBookmarked?: boolean;
+  hasReacted?: boolean;
+};
+
+export type EnCommentWithUser = EnComment & {
+  user: User;
+  replies?: EnCommentWithUser[];
+};
