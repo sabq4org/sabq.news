@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Clock, Eye } from "lucide-react";
+import { EnglishLayout } from "@/components/en/EnglishLayout";
 import type { EnArticle, EnCategory } from "@shared/schema";
 
 export default function EnglishHome() {
@@ -17,7 +18,7 @@ export default function EnglishHome() {
 
   if (articlesLoading || categoriesLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <EnglishLayout>
         <div className="container mx-auto px-4 py-8">
           <Skeleton className="h-12 w-48 mb-8" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -26,52 +27,12 @@ export default function EnglishHome() {
             ))}
           </div>
         </div>
-      </div>
+      </EnglishLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="ltr">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Sabq Smart</h1>
-              <p className="text-sm text-muted-foreground mt-1">English Edition</p>
-            </div>
-            <div className="flex gap-2">
-              <Link href="/ar">
-                <Button variant="outline" data-testid="button-switch-arabic">
-                  عربي
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button data-testid="button-login">Login</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Categories */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex gap-2 overflow-x-auto">
-            {categories?.map((category) => (
-              <Button
-                key={category.id}
-                variant="ghost"
-                size="sm"
-                className="whitespace-nowrap"
-                data-testid={`button-category-${category.slug}`}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
+    <EnglishLayout>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -145,6 +106,6 @@ export default function EnglishHome() {
           </div>
         </div>
       </footer>
-    </div>
+    </EnglishLayout>
   );
 }

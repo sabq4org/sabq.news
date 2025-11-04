@@ -16841,6 +16841,68 @@ Allow: /
     }
   });
 
+  // GET English Category by Slug
+  app.get("/api/en/categories/slug/:slug", async (req, res) => {
+    try {
+      const category = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.slug, req.params.slug))
+        .limit(1);
+      
+      if (!category || category.length === 0) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category[0]);
+    } catch (error) {
+      console.error("Error fetching EN category by slug:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // GET English Articles by Category ID
+  app.get("/api/en/categories/:id/articles", async (req, res) => {
+    try {
+      const { limit = 50, offset = 0 } = req.query;
+      
+      const articles = await db
+        .select({
+          id: enArticles.id,
+          title: enArticles.title,
+          subtitle: enArticles.subtitle,
+          slug: enArticles.slug,
+          excerpt: enArticles.excerpt,
+          mainImageUrl: enArticles.imageUrl,
+          imageFocalPoint: enArticles.imageFocalPoint,
+          categoryId: enArticles.categoryId,
+          authorId: enArticles.authorId,
+          articleType: enArticles.articleType,
+          newsType: enArticles.newsType,
+          status: enArticles.status,
+          isFeatured: enArticles.isFeatured,
+          views: enArticles.views,
+          publishedAt: enArticles.publishedAt,
+          createdAt: enArticles.createdAt,
+        })
+        .from(enArticles)
+        .where(
+          and(
+            eq(enArticles.categoryId, req.params.id),
+            eq(enArticles.status, "published")
+          )
+        )
+        .orderBy(desc(enArticles.publishedAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+      
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching EN articles by category:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
   // GET English Articles (with filters)
   app.get("/api/en/articles", async (req, res) => {
     try {
