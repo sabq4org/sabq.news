@@ -16740,6 +16740,438 @@ Allow: /
   // END SEO ENDPOINTS
   // ============================================================
 
+  // ============================================================
+  // ENGLISH VERSION API ENDPOINTS
+  // ============================================================
+
+  // GET English Categories
+  app.get("/api/en/categories", async (req, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.status, "active"))
+        .orderBy(asc(enCategories.displayOrder));
+      
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching EN categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // GET Single English Category
+  app.get("/api/en/categories/:id", async (req, res) => {
+    try {
+      const category = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.id, req.params.id))
+        .limit(1);
+      
+      if (!category || category.length === 0) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category[0]);
+    } catch (error) {
+      console.error("Error fetching EN category:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // POST English Category (Admin only)
+  app.post("/api/en/categories", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+    
+    // Check if user has EN language permission and is admin/editor
+    if (!user.allowedLanguages?.includes('en') || !['admin', 'editor', 'chief_editor'].includes(user.role)) {
+      return res.status(403).json({ message: "Insufficient permissions for English content" });
+    }
+
+    try {
+      const validatedData = insertEnCategorySchema.parse(req.body);
+      
+      const newCategory = await db
+        .insert(enCategories)
+        .values(validatedData)
+        .returning();
+      
+      res.json(newCategory[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating EN category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // PATCH English Category (Admin only)
+  app.patch("/api/en/categories/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+    
+    if (!user.allowedLanguages?.includes('en') || !['admin', 'editor', 'chief_editor'].includes(user.role)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    try {
+      const updated = await db
+        .update(enCategories)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(enCategories.id, req.params.id))
+        .returning();
+      
+      if (!updated || updated.length === 0) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updated[0]);
+    } catch (error) {
+      console.error("Error updating EN category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // GET English Articles (with filters)
+  app.get("/api/en/articles", async (req, res) => {
+    try {
+      const { categoryId, status = "published", limit = 20, offset = 0 } = req.query;
+      
+      let query = db
+        .select({
+          id: enArticles.id,
+          title: enArticles.title,
+          subtitle: enArticles.subtitle,
+          slug: enArticles.slug,
+          excerpt: enArticles.excerpt,
+          imageUrl: enArticles.imageUrl,
+          imageFocalPoint: enArticles.imageFocalPoint,
+          categoryId: enArticles.categoryId,
+          authorId: enArticles.authorId,
+          articleType: enArticles.articleType,
+          newsType: enArticles.newsType,
+          status: enArticles.status,
+          isFeatured: enArticles.isFeatured,
+          views: enArticles.views,
+          publishedAt: enArticles.publishedAt,
+          createdAt: enArticles.createdAt,
+        })
+        .from(enArticles)
+        .$dynamic();
+
+      if (status) {
+        query = query.where(eq(enArticles.status, status as string));
+      }
+
+      if (categoryId) {
+        query = query.where(eq(enArticles.categoryId, categoryId as string));
+      }
+
+      const articles = await query
+        .orderBy(desc(enArticles.publishedAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+      
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching EN articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // GET Single English Article by Slug
+  app.get("/api/en/articles/:slug", async (req, res) => {
+    try {
+      const article = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!article || article.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Increment views
+      await db
+        .update(enArticles)
+        .set({ views: sql`${enArticles.views} + 1` })
+        .where(eq(enArticles.id, article[0].id));
+      
+      res.json(article[0]);
+    } catch (error) {
+      console.error("Error fetching EN article:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  // POST English Article (Editor/Admin only)
+  app.post("/api/en/articles", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+    
+    if (!user.allowedLanguages?.includes('en') || !['admin', 'editor', 'chief_editor', 'reporter', 'opinion_author'].includes(user.role)) {
+      return res.status(403).json({ message: "Insufficient permissions for English content" });
+    }
+
+    try {
+      const validatedData = insertEnArticleSchema.parse({
+        ...req.body,
+        authorId: user.id,
+      });
+      
+      // Set published_at if status is published
+      const articleData = {
+        ...validatedData,
+        publishedAt: validatedData.status === 'published' ? new Date() : null,
+      };
+      
+      const newArticle = await db
+        .insert(enArticles)
+        .values(articleData)
+        .returning();
+      
+      res.json(newArticle[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating EN article:", error);
+      res.status(500).json({ message: "Failed to create article" });
+    }
+  });
+
+  // PATCH English Article
+  app.patch("/api/en/articles/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+    
+    if (!user.allowedLanguages?.includes('en')) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    try {
+      // Check if article exists and user has permission
+      const existing = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, req.params.id))
+        .limit(1);
+      
+      if (!existing || existing.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Only admins and the author can edit
+      if (user.role !== 'admin' && user.id !== existing[0].authorId) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const updateData: any = {
+        ...req.body,
+        updatedAt: new Date(),
+      };
+
+      // Set published_at when status changes to published
+      if (req.body.status === 'published' && existing[0].status !== 'published') {
+        updateData.publishedAt = new Date();
+      }
+
+      const updated = await db
+        .update(enArticles)
+        .set(updateData)
+        .where(eq(enArticles.id, req.params.id))
+        .returning();
+      
+      res.json(updated[0]);
+    } catch (error) {
+      console.error("Error updating EN article:", error);
+      res.status(500).json({ message: "Failed to update article" });
+    }
+  });
+
+  // DELETE English Article
+  app.delete("/api/en/articles/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+    
+    if (!user.allowedLanguages?.includes('en') || !['admin', 'chief_editor'].includes(user.role)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    try {
+      await db
+        .delete(enArticles)
+        .where(eq(enArticles.id, req.params.id));
+      
+      res.json({ message: "Article deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting EN article:", error);
+      res.status(500).json({ message: "Failed to delete article" });
+    }
+  });
+
+  // GET English Comments for Article
+  app.get("/api/en/articles/:articleId/comments", async (req, res) => {
+    try {
+      const comments = await db
+        .select()
+        .from(enComments)
+        .where(
+          and(
+            eq(enComments.articleId, req.params.articleId),
+            eq(enComments.status, "approved")
+          )
+        )
+        .orderBy(desc(enComments.createdAt));
+      
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching EN comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // POST English Comment
+  app.post("/api/en/articles/:articleId/comments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+
+    try {
+      const validatedData = insertEnCommentSchema.parse({
+        ...req.body,
+        articleId: req.params.articleId,
+        userId: user.id,
+      });
+      
+      const newComment = await db
+        .insert(enComments)
+        .values(validatedData)
+        .returning();
+      
+      res.json(newComment[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating EN comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Toggle English Article Reaction (Like)
+  app.post("/api/en/articles/:articleId/reaction", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+
+    try {
+      // Check if reaction exists
+      const existing = await db
+        .select()
+        .from(enReactions)
+        .where(
+          and(
+            eq(enReactions.articleId, req.params.articleId),
+            eq(enReactions.userId, user.id)
+          )
+        )
+        .limit(1);
+      
+      if (existing && existing.length > 0) {
+        // Remove reaction
+        await db
+          .delete(enReactions)
+          .where(eq(enReactions.id, existing[0].id));
+        
+        return res.json({ liked: false });
+      } else {
+        // Add reaction
+        await db
+          .insert(enReactions)
+          .values({
+            articleId: req.params.articleId,
+            userId: user.id,
+            type: "like",
+          });
+        
+        return res.json({ liked: true });
+      }
+    } catch (error) {
+      console.error("Error toggling EN reaction:", error);
+      res.status(500).json({ message: "Failed to toggle reaction" });
+    }
+  });
+
+  // Toggle English Article Bookmark
+  app.post("/api/en/articles/:articleId/bookmark", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+
+    try {
+      const existing = await db
+        .select()
+        .from(enBookmarks)
+        .where(
+          and(
+            eq(enBookmarks.articleId, req.params.articleId),
+            eq(enBookmarks.userId, user.id)
+          )
+        )
+        .limit(1);
+      
+      if (existing && existing.length > 0) {
+        await db
+          .delete(enBookmarks)
+          .where(eq(enBookmarks.id, existing[0].id));
+        
+        return res.json({ bookmarked: false });
+      } else {
+        await db
+          .insert(enBookmarks)
+          .values({
+            articleId: req.params.articleId,
+            userId: user.id,
+          });
+        
+        return res.json({ bookmarked: true });
+      }
+    } catch (error) {
+      console.error("Error toggling EN bookmark:", error);
+      res.status(500).json({ message: "Failed to toggle bookmark" });
+    }
+  });
+
+  // ============================================================
+  // END ENGLISH VERSION API ENDPOINTS
+  // ============================================================
+
   const httpServer = createServer(app);
   return httpServer;
 }

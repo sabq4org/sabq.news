@@ -107,6 +107,8 @@ import AdminLogin from "@/pages/AdminLogin";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
+import EnglishHome from "@/pages/en/EnglishHome";
+import EnglishArticleDetail from "@/pages/en/EnglishArticleDetail";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -124,8 +126,14 @@ function Router() {
     <>
       <ScrollRestoration />
       <Switch>
+        {/* English Version Routes */}
+        <Route path="/en" component={EnglishHome} />
+        <Route path="/en/articles/:slug" component={EnglishArticleDetail} />
+        
+        {/* Arabic Version Routes */}
         <Route path="/" component={Home} />
-      <Route path="/about" component={AboutPage} />
+        <Route path="/ar" component={Home} />
+        <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/ai-publisher" component={AIPublisher} />
