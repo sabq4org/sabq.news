@@ -214,7 +214,7 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                   size="icon" 
                   variant="ghost" 
                   data-testid="button-login-mobile"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/login"}
                 >
                   <User className="h-5 w-5" />
                 </Button>
@@ -299,7 +299,7 @@ export function EnglishHeader({ user, onMenuClick }: EnglishHeaderProps) {
                 <Button 
                   size="sm" 
                   data-testid="button-login"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/login"}
                 >
                   Login
                 </Button>

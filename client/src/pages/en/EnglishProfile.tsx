@@ -277,7 +277,7 @@ export default function EnglishProfile() {
               Please log in to view your profile
             </p>
             <Button 
-              onClick={() => window.location.href = "/api/login"} 
+              onClick={() => window.location.href = "/login"} 
               data-testid="button-login-profile"
             >
               Log In
