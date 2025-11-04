@@ -111,6 +111,8 @@ import {
   enArticles,
   enCategories,
   enComments,
+  enReactions,
+  enBookmarks,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -185,6 +187,8 @@ import {
   insertEnCategorySchema,
   insertEnArticleSchema,
   insertEnCommentSchema,
+  type EnArticleWithDetails,
+  type User,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -18123,29 +18127,163 @@ Allow: /
     }
   });
 
-  // GET Single English Article by Slug
-  app.get("/api/en/articles/:slug", async (req, res) => {
+  // GET Single English Article by Slug - with full details
+  app.get("/api/en/articles/:slug", async (req: any, res) => {
     try {
-      const article = await db
-        .select()
+      const userId = req.user?.id;
+      
+      // Get article with category and author joins
+      const results = await db
+        .select({
+          article: enArticles,
+          category: enCategories,
+          author: users,
+        })
         .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .leftJoin(users, eq(enArticles.authorId, users.id))
         .where(eq(enArticles.slug, req.params.slug))
         .limit(1);
       
-      if (!article || article.length === 0) {
+      if (!results || results.length === 0) {
         return res.status(404).json({ message: "Article not found" });
       }
+
+      const result = results[0];
+      const article = result.article;
+
+      // Run all queries in parallel for better performance
+      const [
+        bookmarkResult,
+        reactionResult,
+        reactionsCountResult,
+        commentsCountResult
+      ] = await Promise.all([
+        userId ? db.select().from(enBookmarks)
+          .where(and(eq(enBookmarks.articleId, article.id), eq(enBookmarks.userId, userId)))
+          .limit(1) : Promise.resolve([]),
+        userId ? db.select().from(enReactions)
+          .where(and(eq(enReactions.articleId, article.id), eq(enReactions.userId, userId)))
+          .limit(1) : Promise.resolve([]),
+        db.select({ count: sql<number>`count(*)` })
+          .from(enReactions)
+          .where(eq(enReactions.articleId, article.id)),
+        db.select({ count: sql<number>`count(*)` })
+          .from(enComments)
+          .where(eq(enComments.articleId, article.id))
+      ]);
+
+      const isBookmarked = bookmarkResult.length > 0;
+      const hasReacted = reactionResult.length > 0;
+      const reactionsCount = Number(reactionsCountResult[0].count);
+      const commentsCount = Number(commentsCountResult[0].count);
 
       // Increment views
       await db
         .update(enArticles)
         .set({ views: sql`${enArticles.views} + 1` })
-        .where(eq(enArticles.id, article[0].id));
+        .where(eq(enArticles.id, article.id));
+
+      // Return full article details
+      const articleWithDetails: EnArticleWithDetails = {
+        ...article,
+        category: result.category || undefined,
+        author: result.author || undefined,
+        isBookmarked,
+        hasReacted,
+        reactionsCount,
+        commentsCount,
+      };
       
-      res.json(article[0]);
+      res.json(articleWithDetails);
     } catch (error) {
       console.error("Error fetching EN article:", error);
       res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  // POST Toggle English Article Reaction
+  app.post("/api/en/articles/:id/react", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const articleId = req.params.id;
+
+      // Check if reaction exists
+      const existing = await db
+        .select()
+        .from(enReactions)
+        .where(
+          and(
+            eq(enReactions.articleId, articleId),
+            eq(enReactions.userId, userId)
+          )
+        )
+        .limit(1);
+      
+      if (existing && existing.length > 0) {
+        // Remove reaction
+        await db
+          .delete(enReactions)
+          .where(eq(enReactions.id, existing[0].id));
+        
+        return res.json({ hasReacted: false });
+      } else {
+        // Add reaction
+        await db
+          .insert(enReactions)
+          .values({
+            articleId: articleId,
+            userId: userId,
+            type: "like",
+          });
+        
+        return res.json({ hasReacted: true });
+      }
+    } catch (error) {
+      console.error("Error toggling EN reaction:", error);
+      res.status(500).json({ message: "Failed to toggle reaction" });
+    }
+  });
+
+  // POST Toggle English Article Bookmark
+  app.post("/api/en/articles/:id/bookmark", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const articleId = req.params.id;
+
+      // Check if bookmark exists
+      const existing = await db
+        .select()
+        .from(enBookmarks)
+        .where(
+          and(
+            eq(enBookmarks.articleId, articleId),
+            eq(enBookmarks.userId, userId)
+          )
+        )
+        .limit(1);
+      
+      if (existing && existing.length > 0) {
+        // Remove bookmark
+        await db
+          .delete(enBookmarks)
+          .where(eq(enBookmarks.id, existing[0].id));
+        
+        return res.json({ isBookmarked: false });
+      } else {
+        // Add bookmark
+        await db
+          .insert(enBookmarks)
+          .values({
+            articleId: articleId,
+            userId: userId,
+          });
+        
+        return res.json({ isBookmarked: true });
+      }
+    } catch (error) {
+      console.error("Error toggling EN bookmark:", error);
+      res.status(500).json({ message: "Failed to toggle bookmark" });
     }
   });
 
