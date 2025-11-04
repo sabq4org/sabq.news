@@ -6384,7 +6384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin dashboard comprehensive stats
+  // Admin dashboard comprehensive stats (Arabic)
   app.get("/api/admin/dashboard/stats", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -6400,6 +6400,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin dashboard stats:", error);
       res.status(500).json({ message: "Failed to fetch admin dashboard stats" });
+    }
+  });
+
+  // Admin dashboard comprehensive stats (English)
+  app.get("/api/en/admin/dashboard/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      // Require admin or editor role
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Get stats from English tables (en_articles, en_categories, en_comments)
+      const [articlesCount, publishedArticles, draftArticles, archivedArticles, scheduledArticles] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(enArticles),
+        db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "published")),
+        db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "draft")),
+        db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "archived")),
+        db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "scheduled")),
+      ]);
+
+      const [totalViews] = await db.select({ sum: sql<number>`coalesce(sum(${enArticles.views}), 0)::int` }).from(enArticles);
+
+      const [categoriesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(enCategories);
+
+      const [commentsCount, approvedComments, pendingComments, rejectedComments] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(enComments),
+        db.select({ count: sql<number>`count(*)::int` }).from(enComments).where(eq(enComments.status, "approved")),
+        db.select({ count: sql<number>`count(*)::int` }).from(enComments).where(eq(enComments.status, "pending")),
+        db.select({ count: sql<number>`count(*)::int` }).from(enComments).where(eq(enComments.status, "rejected")),
+      ]);
+
+      // Get recent English articles
+      const recentArticles = await db
+        .select({
+          id: enArticles.id,
+          title: enArticles.title,
+          status: enArticles.status,
+          views: enArticles.views,
+          createdAt: enArticles.createdAt,
+        })
+        .from(enArticles)
+        .orderBy(desc(enArticles.createdAt))
+        .limit(10);
+
+      // Get recent English comments
+      const recentComments = await db
+        .select({
+          id: enComments.id,
+          content: enComments.content,
+          status: enComments.status,
+          createdAt: enComments.createdAt,
+        })
+        .from(enComments)
+        .orderBy(desc(enComments.createdAt))
+        .limit(10);
+
+      // Get top English articles by views
+      const topArticles = await db
+        .select({
+          id: enArticles.id,
+          title: enArticles.title,
+          views: enArticles.views,
+          createdAt: enArticles.createdAt,
+        })
+        .from(enArticles)
+        .where(eq(enArticles.status, "published"))
+        .orderBy(desc(enArticles.views))
+        .limit(10);
+
+      const stats = {
+        articles: {
+          total: articlesCount[0].count,
+          published: publishedArticles[0].count,
+          draft: draftArticles[0].count,
+          archived: archivedArticles[0].count,
+          scheduled: scheduledArticles[0].count,
+          totalViews: totalViews.sum,
+          viewsToday: 0, // TODO: implement if needed
+        },
+        users: {
+          total: 0, // English version shares users with Arabic
+          emailVerified: 0,
+          active24h: 0,
+          newThisWeek: 0,
+          activeToday: 0,
+        },
+        comments: {
+          total: commentsCount[0].count,
+          pending: pendingComments[0].count,
+          approved: approvedComments[0].count,
+          rejected: rejectedComments[0].count,
+        },
+        categories: {
+          total: categoriesCount[0].count,
+        },
+        abTests: {
+          total: 0,
+          running: 0,
+        },
+        reactions: {
+          total: 0,
+          todayCount: 0,
+        },
+        engagement: {
+          averageTimeOnSite: 0,
+          totalReads: 0,
+          readsToday: 0,
+        },
+        recentArticles,
+        recentComments,
+        topArticles,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching English admin dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch English admin dashboard stats" });
     }
   });
 

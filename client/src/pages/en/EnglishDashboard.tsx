@@ -141,7 +141,7 @@ function Dashboard() {
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   const { data: stats, isLoading } = useQuery<AdminDashboardStats>({
-    queryKey: ["/api/admin/dashboard/stats"],
+    queryKey: ["/api/en/admin/dashboard/stats"],
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
