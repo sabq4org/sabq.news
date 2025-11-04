@@ -11,7 +11,11 @@ import { useLocation } from "wouter";
 
 export default function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+
+  // Detect current language from URL path
+  const isEnglishPage = location.startsWith('/en');
+  const currentLang = isEnglishPage ? 'en' : 'ar';
 
   const switchLanguage = (newLang: "ar" | "en") => {
     setLanguage(newLang);
@@ -20,7 +24,7 @@ export default function LanguageSwitcher() {
     if (newLang === "en") {
       navigate("/en");
     } else {
-      navigate("/ar");
+      navigate("/");
     }
   };
 
@@ -35,7 +39,7 @@ export default function LanguageSwitcher() {
         >
           <Globe className="w-4 h-4" />
           <span className="hidden sm:inline">
-            {language === "ar" ? "العربية" : "English"}
+            {currentLang === "ar" ? "English" : "العربية"}
           </span>
         </Button>
       </DropdownMenuTrigger>
