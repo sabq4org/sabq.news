@@ -1831,13 +1831,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all English categories
   app.get("/api/en/categories", async (req, res) => {
     try {
-      const categories = await db
-        .select()
-        .from(enCategories)
-        .where(eq(enCategories.status, 'active'))
-        .orderBy(asc(enCategories.displayOrder));
+      const withStats = req.query.withStats === 'true';
+      
+      if (withStats) {
+        // Get categories with statistics
+        const allCategories = await db
+          .select()
+          .from(enCategories)
+          .where(eq(enCategories.status, 'active'))
+          .orderBy(asc(enCategories.displayOrder));
 
-      res.json(categories);
+        // Get stats for each category
+        const categoriesWithStats = await Promise.all(
+          allCategories.map(async (category) => {
+            // Count articles
+            const [{ articleCount }] = await db
+              .select({ articleCount: sql<number>`count(*)::int` })
+              .from(enArticles)
+              .where(
+                and(
+                  eq(enArticles.categoryId, category.id),
+                  eq(enArticles.status, "published")
+                )
+              );
+
+            // Sum views
+            const [{ totalViews }] = await db
+              .select({ totalViews: sql<number>`coalesce(sum(${enArticles.views}), 0)::int` })
+              .from(enArticles)
+              .where(
+                and(
+                  eq(enArticles.categoryId, category.id),
+                  eq(enArticles.status, "published")
+                )
+              );
+
+            // Count likes (from reactions table for English articles)
+            const [{ totalLikes }] = await db
+              .select({ totalLikes: sql<number>`count(*)::int` })
+              .from(reactions)
+              .innerJoin(enArticles, eq(enArticles.id, reactions.articleId))
+              .where(
+                and(
+                  eq(enArticles.categoryId, category.id),
+                  eq(enArticles.status, "published"),
+                  eq(reactions.type, "like")
+                )
+              );
+
+            // Count bookmarks
+            const [{ totalBookmarks }] = await db
+              .select({ totalBookmarks: sql<number>`count(*)::int` })
+              .from(bookmarks)
+              .innerJoin(enArticles, eq(enArticles.id, bookmarks.articleId))
+              .where(
+                and(
+                  eq(enArticles.categoryId, category.id),
+                  eq(enArticles.status, "published")
+                )
+              );
+
+            return {
+              ...category,
+              articleCount: articleCount || 0,
+              totalViews: totalViews || 0,
+              totalLikes: totalLikes || 0,
+              totalBookmarks: totalBookmarks || 0,
+            };
+          })
+        );
+
+        res.json(categoriesWithStats);
+      } else {
+        const categories = await db
+          .select()
+          .from(enCategories)
+          .where(eq(enCategories.status, 'active'))
+          .orderBy(asc(enCategories.displayOrder));
+
+        res.json(categories);
+      }
     } catch (error) {
       console.error("Error fetching English categories:", error);
       res.status(500).json({ message: "Failed to fetch English categories" });
