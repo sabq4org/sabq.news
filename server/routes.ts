@@ -19,7 +19,7 @@ import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { db } from "./db";
-import { eq, and, or, desc, ilike, sql, inArray, gte, aliasedTable, isNull, ne } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";

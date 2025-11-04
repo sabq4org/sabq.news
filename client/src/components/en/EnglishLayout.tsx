@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Home, Newspaper, List, Gauge } from "lucide-react";
@@ -11,6 +11,11 @@ interface EnglishLayoutProps {
 
 export function EnglishLayout({ children, showNav = true }: EnglishLayoutProps) {
   const [location] = useLocation();
+
+  // Set English page title
+  useEffect(() => {
+    document.title = "Sabq Smart - Intelligent News Platform";
+  }, []);
 
   const navItems = [
     { href: "/en", label: "Home", icon: Home, testId: "nav-home" },
