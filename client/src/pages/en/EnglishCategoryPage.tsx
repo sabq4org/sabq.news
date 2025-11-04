@@ -125,7 +125,7 @@ export default function EnglishCategoryPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
-              <Link key={article.id} href={`/en/articles/${article.slug}`}>
+              <Link key={article.id} href={`/en/article/${article.slug}`}>
                 <Card 
                   className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden group"
                   data-testid={`card-article-${article.id}`}

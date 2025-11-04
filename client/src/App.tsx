@@ -140,7 +140,7 @@ function Router() {
         <Route path="/en/news" component={EnglishNewsPage} />
         <Route path="/en/categories" component={EnglishCategoriesListPage} />
         <Route path="/en/category/:slug" component={EnglishCategoryPage} />
-        <Route path="/en/articles/:slug" component={EnglishArticleDetail} />
+        <Route path="/en/article/:slug" component={EnglishArticleDetail} />
         <Route path="/en/dashboard/articles/new" component={EnglishArticleEditor} />
         <Route path="/en/dashboard/articles/:id/edit" component={EnglishArticleEditor} />
         <Route path="/en/dashboard/articles" component={EnglishArticlesPage} />

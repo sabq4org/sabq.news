@@ -48,7 +48,7 @@ export default function EnglishHome() {
 
               {/* Hero Featured Article */}
               {featuredArticles[0] && (
-                <Link href={`/en/articles/${featuredArticles[0].slug}`}>
+                <Link href={`/en/article/${featuredArticles[0].slug}`}>
                   <Card className="hover-elevate active-elevate-2 cursor-pointer mb-8 overflow-hidden" data-testid="card-featured-hero">
                     <div className="grid md:grid-cols-2 gap-0">
                       {featuredArticles[0].imageUrl && (
@@ -97,7 +97,7 @@ export default function EnglishHome() {
               {featuredArticles.length > 1 && (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {featuredArticles.slice(1, 7).map((article) => (
-                    <Link key={article.id} href={`/en/articles/${article.slug}`}>
+                    <Link key={article.id} href={`/en/article/${article.slug}`}>
                       <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-featured-${article.id}`}>
                         {article.imageUrl && (
                           <div className="relative h-48 overflow-hidden">
@@ -153,7 +153,7 @@ export default function EnglishHome() {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {regularArticles.map((article) => (
-                  <Link key={article.id} href={`/en/articles/${article.slug}`}>
+                  <Link key={article.id} href={`/en/article/${article.slug}`}>
                     <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-article-${article.id}`}>
                       {article.imageUrl && (
                         <div className="relative h-48 overflow-hidden">
