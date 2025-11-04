@@ -6422,6 +6422,1014 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // ENGLISH DASHBOARD ARTICLES ROUTES
+  // ============================================================
+
+  // Get English articles metrics
+  app.get("/api/en/dashboard/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const [totalResult] = await db.select({ count: sql<number>`count(*)::int` }).from(enArticles);
+      const [publishedResult] = await db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "published"));
+      const [draftResult] = await db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "draft"));
+      const [archivedResult] = await db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "archived"));
+
+      res.json({
+        total: totalResult.count || 0,
+        published: publishedResult.count || 0,
+        draft: draftResult.count || 0,
+        archived: archivedResult.count || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching English articles metrics:", error);
+      res.status(500).json({ message: "Failed to fetch English articles metrics" });
+    }
+  });
+
+  // Get all English articles with filtering (dashboard)
+  app.get("/api/en/dashboard/articles", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { search, status, articleType, categoryId, authorId, featured } = req.query;
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      let query = db
+        .select({
+          article: enArticles,
+          category: enCategories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+          reporter: {
+            id: reporterAlias.id,
+            firstName: reporterAlias.firstName,
+            lastName: reporterAlias.lastName,
+            email: reporterAlias.email,
+            profileImageUrl: reporterAlias.profileImageUrl,
+          },
+        })
+        .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+        .$dynamic();
+
+      if (search) {
+        query = query.where(
+          or(
+            ilike(enArticles.title, `%${search}%`),
+            ilike(enArticles.content, `%${search}%`),
+            ilike(enArticles.excerpt, `%${search}%`)
+          )
+        );
+      }
+
+      if (status && status !== "all") {
+        query = query.where(eq(enArticles.status, status));
+      }
+
+      if (articleType && articleType !== "all") {
+        query = query.where(eq(enArticles.articleType, articleType));
+      }
+
+      if (categoryId) {
+        query = query.where(eq(enArticles.categoryId, categoryId));
+      }
+
+      if (authorId) {
+        query = query.where(eq(enArticles.authorId, authorId));
+      }
+
+      if (featured !== undefined) {
+        query = query.where(eq(enArticles.isFeatured, featured === "true"));
+      }
+
+      query = query.orderBy(desc(enArticles.createdAt));
+
+      const results = await query;
+
+      const formattedArticles = results.map((row) => ({
+        ...row.article,
+        category: row.category,
+        author: row.reporter || row.author,
+      }));
+
+      res.json(formattedArticles);
+    } catch (error) {
+      console.error("Error fetching English articles:", error);
+      res.status(500).json({ message: "Failed to fetch English articles" });
+    }
+  });
+
+  // Create new English article
+  app.post("/api/en/dashboard/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
+    try {
+      let authorId = req.user?.id;
+      if (!authorId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Convert date strings to Date objects before validation
+      const requestData = { ...req.body };
+      if (requestData.publishedAt && typeof requestData.publishedAt === 'string') {
+        requestData.publishedAt = new Date(requestData.publishedAt);
+      }
+      if (requestData.scheduledAt && typeof requestData.scheduledAt === 'string') {
+        requestData.scheduledAt = new Date(requestData.scheduledAt);
+      }
+
+      const parsed = insertEnArticleSchema.safeParse(requestData);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid article data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      // Validate reporterId if provided
+      if (parsed.data.reporterId) {
+        const [reporter] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, parsed.data.reporterId))
+          .limit(1);
+        
+        if (!reporter) {
+          return res.status(422).json({ message: "Reporter not found" });
+        }
+      }
+
+      // If status is published and no publishedAt, set it
+      const articleData = {
+        ...parsed.data,
+        authorId,
+      };
+      
+      if (articleData.status === 'published' && !articleData.publishedAt) {
+        articleData.publishedAt = new Date();
+      }
+
+      const [newArticle] = await db
+        .insert(enArticles)
+        .values(articleData)
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId: authorId,
+        action: "created",
+        entityType: "en_article",
+        entityId: newArticle.id,
+        newValue: newArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.status(201).json(newArticle);
+    } catch (error) {
+      console.error("Error creating English article:", error);
+      res.status(500).json({ message: "Failed to create English article" });
+    }
+  });
+
+  // Update English article
+  app.patch("/api/en/dashboard/articles/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      // Check if article exists
+      const [existingArticle] = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!existingArticle) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Check permissions
+      const userPermissions = await getUserPermissions(userId);
+      const canEditOwn = userPermissions.includes("articles.edit_own");
+      const canEditAny = userPermissions.includes("articles.edit_any");
+
+      if (!canEditAny && (!canEditOwn || existingArticle.authorId !== userId)) {
+        return res.status(403).json({ message: "You don't have permission to edit this article" });
+      }
+
+      const parsed = insertEnArticleSchema.partial().safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      // Validate reporterId if provided
+      if (parsed.data.reporterId) {
+        const [reporter] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, parsed.data.reporterId))
+          .limit(1);
+        
+        if (!reporter) {
+          return res.status(422).json({ message: "Reporter not found" });
+        }
+      }
+
+      // If status is being changed to published, check publish permission
+      if (parsed.data.status === "published" && existingArticle.status !== "published") {
+        const canPublish = userPermissions.includes("articles.publish");
+        if (!canPublish) {
+          return res.status(403).json({ message: "You don't have permission to publish articles" });
+        }
+      }
+
+      // Convert timestamp fields
+      const updateData: any = { ...parsed.data };
+      const timestampFields = ['publishedAt', 'scheduledAt'];
+      timestampFields.forEach(field => {
+        if (updateData[field] && typeof updateData[field] === 'string') {
+          updateData[field] = new Date(updateData[field]);
+        }
+      });
+
+      // Handle republish feature
+      if (req.body.republish === true) {
+        updateData.publishedAt = new Date();
+      } else if (parsed.data.status === "published" && existingArticle.status !== "published" && !updateData.publishedAt) {
+        updateData.publishedAt = new Date();
+      }
+
+      // Convert empty categoryId to null
+      if (updateData.categoryId === "") {
+        updateData.categoryId = null;
+      }
+
+      const [updatedArticle] = await db
+        .update(enArticles)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
+        .where(eq(enArticles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "en_article",
+        entityId: articleId,
+        oldValue: existingArticle,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error updating English article:", error);
+      res.status(500).json({ message: "Failed to update English article" });
+    }
+  });
+
+  // Delete (archive) English article
+  app.delete("/api/en/dashboard/articles/:id", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [article] = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Soft delete by setting status to archived
+      const [updatedArticle] = await db
+        .update(enArticles)
+        .set({
+          status: "archived",
+          updatedAt: new Date(),
+        })
+        .where(eq(enArticles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "archived",
+        entityType: "en_article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English article archived successfully" });
+    } catch (error) {
+      console.error("Error archiving English article:", error);
+      res.status(500).json({ message: "Failed to archive English article" });
+    }
+  });
+
+  // Toggle English article breaking news status
+  app.patch("/api/en/dashboard/articles/:id/toggle-breaking", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      
+      const [article] = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const newNewsType = article.newsType === 'breaking' ? 'standard' : 'breaking';
+
+      const [updatedArticle] = await db
+        .update(enArticles)
+        .set({
+          newsType: newNewsType,
+          updatedAt: new Date(),
+        })
+        .where(eq(enArticles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "toggle_breaking",
+        entityType: "en_article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error toggling English breaking news:", error);
+      res.status(500).json({ message: "Failed to toggle English breaking news" });
+    }
+  });
+
+  // Toggle English article featured status
+  app.patch("/api/en/dashboard/articles/:id/toggle-featured", requireAuth, requirePermission("articles.publish"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      
+      const [article] = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const [updatedArticle] = await db
+        .update(enArticles)
+        .set({
+          isFeatured: !article.isFeatured,
+          updatedAt: new Date(),
+        })
+        .where(eq(enArticles.id, articleId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "toggle_featured",
+        entityType: "en_article",
+        entityId: articleId,
+        oldValue: article,
+        newValue: updatedArticle,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(updatedArticle);
+    } catch (error) {
+      console.error("Error toggling English featured status:", error);
+      res.status(500).json({ message: "Failed to toggle English featured status" });
+    }
+  });
+
+  // Reorder English articles
+  app.post("/api/en/dashboard/articles/reorder", requireAuth, requirePermission("articles.edit_any"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleOrders } = req.body;
+
+      if (!Array.isArray(articleOrders) || articleOrders.length === 0) {
+        return res.status(400).json({ message: "Article orders are required" });
+      }
+
+      // Update each article's displayOrder
+      const updates = articleOrders.map(async ({ id, displayOrder }: any) => {
+        return await db
+          .update(enArticles)
+          .set({ displayOrder, updatedAt: new Date() })
+          .where(eq(enArticles.id, id));
+      });
+
+      await Promise.all(updates);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "reordered",
+        entityType: "en_article",
+        entityId: "bulk",
+        newValue: { count: articleOrders.length },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Successfully reordered English articles" });
+    } catch (error) {
+      console.error("Error reordering English articles:", error);
+      res.status(500).json({ message: "Failed to reorder English articles" });
+    }
+  });
+
+  // Bulk delete (archive) English articles
+  app.post("/api/en/dashboard/articles/bulk-delete", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleIds } = req.body;
+
+      if (!Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: "Article IDs are required" });
+      }
+
+      // Archive articles by setting status to archived
+      await db
+        .update(enArticles)
+        .set({ status: "archived", updatedAt: new Date() })
+        .where(inArray(enArticles.id, articleIds));
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "bulk_archived",
+        entityType: "en_article",
+        entityId: articleIds.join(","),
+        newValue: { count: articleIds.length, articleIds },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: `Successfully archived ${articleIds.length} English articles` });
+    } catch (error) {
+      console.error("Error bulk archiving English articles:", error);
+      res.status(500).json({ message: "Failed to bulk archive English articles" });
+    }
+  });
+
+  // ============================================================
+  // ENGLISH CATEGORIES ROUTES
+  // ============================================================
+
+  // Get all English categories (public)
+  app.get("/api/en/categories", async (req, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.status, "active"))
+        .orderBy(asc(enCategories.displayOrder));
+
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching English categories:", error);
+      res.status(500).json({ message: "Failed to fetch English categories" });
+    }
+  });
+
+  // Get all English categories (dashboard)
+  app.get("/api/en/dashboard/categories", requireAuth, requirePermission("categories.view"), async (req: any, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(enCategories)
+        .orderBy(asc(enCategories.displayOrder));
+
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching English categories:", error);
+      res.status(500).json({ message: "Failed to fetch English categories" });
+    }
+  });
+
+  // Create new English category
+  app.post("/api/en/dashboard/categories", requireAuth, requirePermission("categories.create"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsed = insertEnCategorySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Check if slug already exists
+      const [existingCategory] = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.slug, parsed.data.slug))
+        .limit(1);
+
+      if (existingCategory) {
+        return res.status(409).json({ message: "Category slug already exists" });
+      }
+
+      const [category] = await db
+        .insert(enCategories)
+        .values(parsed.data)
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "created",
+        entityType: "en_category",
+        entityId: category.id,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating English category:", error);
+      res.status(500).json({ message: "Failed to create English category" });
+    }
+  });
+
+  // Update English category
+  app.patch("/api/en/dashboard/categories/:id", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const [oldCategory] = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.id, categoryId))
+        .limit(1);
+
+      if (!oldCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const parsed = insertEnCategorySchema.partial().safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      // Check if slug already exists (excluding current category)
+      if (parsed.data.slug && parsed.data.slug !== oldCategory.slug) {
+        const [existingCategory] = await db
+          .select()
+          .from(enCategories)
+          .where(eq(enCategories.slug, parsed.data.slug))
+          .limit(1);
+
+        if (existingCategory && existingCategory.id !== categoryId) {
+          return res.status(409).json({ message: "Category slug already exists" });
+        }
+      }
+
+      const [category] = await db
+        .update(enCategories)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(enCategories.id, categoryId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "en_category",
+        entityId: categoryId,
+        oldValue: oldCategory,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating English category:", error);
+      res.status(500).json({ message: "Failed to update English category" });
+    }
+  });
+
+  // Delete English category
+  app.delete("/api/en/dashboard/categories/:id", requireAuth, requirePermission("categories.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const [category] = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      // Check if category has articles
+      const [articleCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(eq(enArticles.categoryId, categoryId));
+
+      if (articleCount.count > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete category with ${articleCount.count} articles. Please reassign or delete the articles first.` 
+        });
+      }
+
+      await db.delete(enCategories).where(eq(enCategories.id, categoryId));
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "deleted",
+        entityType: "en_category",
+        entityId: categoryId,
+        oldValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting English category:", error);
+      res.status(500).json({ message: "Failed to delete English category" });
+    }
+  });
+
+  // Reorder English categories
+  app.post("/api/en/dashboard/categories/reorder", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { categoryIds } = req.body;
+      
+      if (!Array.isArray(categoryIds)) {
+        return res.status(400).json({ message: "categoryIds must be an array" });
+      }
+
+      // Update each category's displayOrder
+      const updates = categoryIds.map(async (id, index) => {
+        return await db
+          .update(enCategories)
+          .set({ displayOrder: index, updatedAt: new Date() })
+          .where(eq(enCategories.id, id));
+      });
+
+      await Promise.all(updates);
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "reordered",
+        entityType: "en_category",
+        entityId: "bulk",
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason: `Reordered ${categoryIds.length} English categories`,
+        },
+      });
+
+      res.json({ message: "English categories reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering English categories:", error);
+      res.status(500).json({ message: "Failed to reorder English categories" });
+    }
+  });
+
+  // ============================================================
+  // ENGLISH COMMENTS ROUTES
+  // ============================================================
+
+  // Get all English comments with filtering
+  app.get("/api/en/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+
+      let query = db
+        .select({
+          comment: enComments,
+          article: {
+            id: enArticles.id,
+            title: enArticles.title,
+          },
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(enComments)
+        .leftJoin(enArticles, eq(enComments.articleId, enArticles.id))
+        .leftJoin(users, eq(enComments.userId, users.id))
+        .$dynamic();
+
+      if (status) {
+        query = query.where(eq(enComments.status, status));
+      }
+
+      if (articleId) {
+        query = query.where(eq(enComments.articleId, articleId));
+      }
+
+      query = query.orderBy(desc(enComments.createdAt));
+
+      const results = await query;
+
+      const formattedComments = results.map((row) => ({
+        ...row.comment,
+        article: row.article,
+        user: row.user,
+      }));
+
+      res.json(formattedComments);
+    } catch (error) {
+      console.error("Error fetching English comments:", error);
+      res.status(500).json({ message: "Failed to fetch English comments" });
+    }
+  });
+
+  // Approve English comment
+  app.patch("/api/en/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [approved] = await db
+        .update(enComments)
+        .set({
+          status: "approved",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "approved",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: approved,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving English comment:", error);
+      res.status(500).json({ message: "Failed to approve English comment" });
+    }
+  });
+
+  // Reject English comment
+  app.patch("/api/en/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [rejected] = await db
+        .update(enComments)
+        .set({
+          status: "rejected",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+          moderationReason: reason || null,
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "rejected",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: rejected,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason,
+        },
+      });
+
+      res.json({ message: "English comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting English comment:", error);
+      res.status(500).json({ message: "Failed to reject English comment" });
+    }
+  });
+
+  // Restore English comment
+  app.patch("/api/en/dashboard/comments/:id/restore", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [restored] = await db
+        .update(enComments)
+        .set({
+          status: "pending",
+          moderatedBy: null,
+          moderatedAt: null,
+          moderationReason: null,
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "restored",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: restored,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English comment restored", comment: restored });
+    } catch (error) {
+      console.error("Error restoring English comment:", error);
+      res.status(500).json({ message: "Failed to restore English comment" });
+    }
+  });
+
+  // ============================================================
+  // ARABIC DASHBOARD ARTICLES ROUTES (LEGACY)
+  // ============================================================
+
   app.get("/api/dashboard/articles", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
