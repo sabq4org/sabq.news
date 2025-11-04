@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { queryClient } from '@/lib/queryClient';
 
 type Language = 'ar' | 'en';
 
@@ -23,6 +24,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
+    queryClient.invalidateQueries();
   };
 
   return (
