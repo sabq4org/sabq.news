@@ -1,22 +1,110 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "wouter";
+import { useParams, Link } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Eye, Heart, Bookmark, Sparkles } from "lucide-react";
-import type { EnArticle } from "@shared/schema";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Heart,
+  Bookmark,
+  Share2,
+  Clock,
+  Eye,
+  Sparkles,
+  User,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import type { EnArticleWithDetails } from "@shared/schema";
+import DOMPurify from "isomorphic-dompurify";
 
 export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
-  
-  const { data: article, isLoading } = useQuery<EnArticle>({
-    queryKey: [`/api/en/articles/${params.slug}`],
+  const { toast } = useToast();
+
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
+  const { data: article, isLoading } = useQuery<EnArticleWithDetails>({
+    queryKey: ["/api/en/articles", params.slug],
     enabled: !!params.slug,
   });
 
+  const reactMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest<{ hasReacted: boolean }>(`/api/en/articles/${article.id}/react`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/en/articles", params.slug] });
+      toast({
+        title: data?.hasReacted ? "Article liked!" : "Reaction removed",
+        description: data?.hasReacted ? "Thank you for your feedback" : "Your reaction has been removed",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to react to article",
+      });
+    },
+  });
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest<{ isBookmarked: boolean }>(`/api/en/articles/${article.id}/bookmark`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/en/articles", params.slug] });
+      toast({
+        title: data?.isBookmarked ? "Article saved!" : "Bookmark removed",
+        description: data?.isBookmarked ? "Added to your bookmarks" : "Removed from your bookmarks",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to bookmark article",
+      });
+    },
+  });
+
+  const handleShare = async () => {
+    if (navigator.share && article) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt || article.aiSummary || "",
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Article link copied to clipboard",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background" dir="ltr">
+      <EnglishLayout>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <Skeleton className="h-8 w-24 mb-6" />
           <Skeleton className="h-12 w-full mb-4" />
@@ -24,81 +112,96 @@ export default function EnglishArticleDetail() {
           <Skeleton className="h-96 w-full mb-8" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
+      </EnglishLayout>
     );
   }
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="ltr">
-        <Card className="p-8 text-center">
+      <EnglishLayout>
+        <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
           <h2 className="text-2xl font-bold mb-4">Article Not Found</h2>
           <p className="text-muted-foreground mb-6">
-            The article you're looking for doesn't exist.
+            The article you're looking for doesn't exist or has been removed.
           </p>
           <Link href="/en">
             <Button data-testid="button-back-home">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
+              Back to Home
             </Button>
           </Link>
-        </Card>
-      </div>
+        </div>
+      </EnglishLayout>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background" dir="ltr">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/en">
-              <Button variant="ghost" size="sm" data-testid="button-back">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
-              </Button>
-            </Link>
-            <Link href="/ar">
-              <Button variant="outline" size="sm" data-testid="button-switch-arabic">
-                عربي
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+  // Sanitize HTML content with XSS protection
+  const sanitizedContent = DOMPurify.sanitize(article.content, {
+    ADD_TAGS: ['iframe'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  });
 
-      {/* Article Content */}
+  return (
+    <EnglishLayout>
       <article className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Breadcrumb / Category Badge */}
+        {article.category && (
+          <div className="mb-6">
+            <Badge variant="secondary" data-testid="badge-category">
+              {article.category.name}
+            </Badge>
+          </div>
+        )}
+
         {/* Title Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4 leading-tight" data-testid="text-article-title">
+        <header className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight" data-testid="text-article-title">
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="text-xl text-muted-foreground" data-testid="text-article-subtitle">
+            <p className="text-xl text-muted-foreground leading-relaxed" data-testid="text-article-subtitle">
               {article.subtitle}
             </p>
           )}
-        </div>
+        </header>
 
         {/* Meta Information */}
-        <div className="flex items-center gap-6 mb-8 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-6 mb-8 text-sm text-muted-foreground">
+          {article.author && (
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10" data-testid="avatar-author">
+                <AvatarImage src={article.author.profileImageUrl || undefined} />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium text-foreground" data-testid="text-author-name">
+                  {article.author.firstName && article.author.lastName
+                    ? `${article.author.firstName} ${article.author.lastName}`
+                    : article.author.email}
+                </p>
+                <p className="text-xs">Reporter</p>
+              </div>
+            </div>
+          )}
+          
+          <Separator orientation="vertical" className="h-10" />
+          
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+            <Clock className="w-4 h-4" />
             {article.publishedAt ? (
               <time dateTime={article.publishedAt.toString()} data-testid="text-publish-date">
-                {new Date(article.publishedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
               </time>
             ) : (
               <span>Draft</span>
             )}
           </div>
+          
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            <span data-testid="text-views">{article.views || 0} views</span>
+            <span data-testid="text-views">{(article.views || 0).toLocaleString()} views</span>
           </div>
         </div>
 
@@ -118,60 +221,91 @@ export default function EnglishArticleDetail() {
         {(article.smartSummary || article.aiSummary) && (
           <Card className="mb-8 bg-primary/5 border-primary/20">
             <CardContent className="p-6">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" /> Quick Summary
-              </h3>
-              <p className="text-sm leading-relaxed" data-testid="text-ai-summary">
-                {article.smartSummary || article.aiSummary}
-              </p>
+              <div className="flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-semibold mb-2">AI Quick Summary</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground" data-testid="text-ai-summary">
+                    {article.smartSummary || article.aiSummary}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
 
         {/* Article Content */}
         <div
-          className="prose prose-lg max-w-none dark:prose-invert mb-12"
-          dangerouslySetInnerHTML={{ __html: article.content }}
+          className="prose prose-lg max-w-none dark:prose-invert mb-12 
+                     prose-headings:font-bold prose-headings:text-foreground
+                     prose-p:text-foreground prose-p:leading-relaxed
+                     prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                     prose-strong:text-foreground prose-strong:font-semibold
+                     prose-ul:text-foreground prose-ol:text-foreground
+                     prose-li:text-foreground prose-li:marker:text-muted-foreground
+                     prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
+                     prose-img:rounded-lg"
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           data-testid="text-article-content"
         />
 
         {/* Action Buttons */}
-        <div className="flex gap-3 border-t pt-6">
-          <Button variant="outline" size="sm" data-testid="button-like">
-            <Heart className="w-4 h-4 mr-2" /> Like
+        <div className="flex flex-wrap gap-3 border-t pt-6 mb-8">
+          <Button
+            variant={article.hasReacted ? "default" : "outline"}
+            size="sm"
+            onClick={() => reactMutation.mutate()}
+            disabled={!user || reactMutation.isPending}
+            data-testid="button-like"
+          >
+            <Heart className={`w-4 h-4 mr-2 ${article.hasReacted ? 'fill-current' : ''}`} />
+            {article.hasReacted ? 'Liked' : 'Like'}
+            {article.reactionsCount && article.reactionsCount > 0 ? ` (${article.reactionsCount})` : ''}
           </Button>
-          <Button variant="outline" size="sm" data-testid="button-bookmark">
-            <Bookmark className="w-4 h-4 mr-2" /> Save
+          
+          <Button
+            variant={article.isBookmarked ? "default" : "outline"}
+            size="sm"
+            onClick={() => bookmarkMutation.mutate()}
+            disabled={!user || bookmarkMutation.isPending}
+            data-testid="button-bookmark"
+          >
+            <Bookmark className={`w-4 h-4 mr-2 ${article.isBookmarked ? 'fill-current' : ''}`} />
+            {article.isBookmarked ? 'Saved' : 'Save'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            data-testid="button-share"
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
           </Button>
         </div>
 
-        {/* Keywords */}
+        {/* Keywords/Tags */}
         {article.seo?.keywords && article.seo.keywords.length > 0 && (
-          <div className="mt-8 pt-8 border-t">
-            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Tags</h3>
+          <div className="pt-8 border-t">
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+              Related Topics
+            </h3>
             <div className="flex flex-wrap gap-2">
               {article.seo.keywords.map((keyword, index) => (
-                <span
+                <Badge
                   key={index}
-                  className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm"
+                  variant="secondary"
+                  className="hover-elevate cursor-pointer"
                   data-testid={`tag-${index}`}
                 >
                   {keyword}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
         )}
       </article>
-
-      {/* Footer */}
-      <footer className="border-t bg-card mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Sabq Smart. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </EnglishLayout>
   );
 }
