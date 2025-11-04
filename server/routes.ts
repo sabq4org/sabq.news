@@ -108,6 +108,9 @@ import {
   smartEntities,
   smartTerms,
   articleSmartLinks,
+  enArticles,
+  enCategories,
+  enComments,
 } from "@shared/schema";
 import {
   insertArticleSchema,
