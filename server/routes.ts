@@ -6181,7 +6181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SEO AI Assistant Endpoint
-  app.post("/api/articles/:id/analyze-seo", isAuthenticated, requirePermission('manage_articles'), async (req: any, res) => {
+  app.post("/api/articles/:id/analyze-seo", isAuthenticated, requireAnyPermission('articles.create', 'articles.edit_any', 'articles.edit_own'), async (req: any, res) => {
     try {
       const articleId = req.params.id;
       
@@ -6231,7 +6231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Smart Content Generation Endpoint
-  app.post("/api/articles/generate-content", isAuthenticated, requirePermission('manage_articles'), async (req: any, res) => {
+  app.post("/api/articles/generate-content", isAuthenticated, requireAnyPermission('articles.create', 'articles.edit_any', 'articles.edit_own'), async (req: any, res) => {
     try {
       const { content } = req.body;
 
