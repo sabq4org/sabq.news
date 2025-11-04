@@ -100,10 +100,10 @@ function SortableRow({ article, children }: { article: Article; children: React.
     <tr
       ref={setNodeRef}
       style={style}
-      className="border-t border-stroke dark:border-strokedark hover:bg-gray-2 dark:hover:bg-meta-4"
+      className="border-b border-border hover:bg-muted/30"
       data-testid={`row-en-article-${article.id}`}
     >
-      <td className="py-4 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+      <td className="py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
         <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-en-${article.id}`} />
       </td>
       {children}
@@ -460,22 +460,22 @@ export default function EnglishArticlesPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      draft: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-warning/10 text-warning border-warning/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-en-draft">Draft</Badge>,
-      scheduled: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary border-primary/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-en-scheduled">Scheduled</Badge>,
-      published: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-success/10 text-success border-success/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-en-published">Published</Badge>,
-      archived: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-danger/10 text-danger border-danger/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-en-archived">Archived</Badge>,
+      draft: <Badge variant="secondary" data-testid="badge-en-draft">Draft</Badge>,
+      scheduled: <Badge variant="outline" data-testid="badge-en-scheduled">Scheduled</Badge>,
+      published: <Badge variant="default" data-testid="badge-en-published">Published</Badge>,
+      archived: <Badge variant="destructive" data-testid="badge-en-archived">Archived</Badge>,
     };
-    return badges[status as keyof typeof badges] || <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium no-default-hover-elevate no-default-active-elevate">{status}</Badge>;
+    return badges[status as keyof typeof badges] || <Badge>{status}</Badge>;
   };
 
   const getTypeBadge = (type: string) => {
     const badges = {
-      news: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary border-primary/20 no-default-hover-elevate no-default-active-elevate">News</Badge>,
-      opinion: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400 no-default-hover-elevate no-default-active-elevate">Opinion</Badge>,
-      analysis: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400 no-default-hover-elevate no-default-active-elevate">Analysis</Badge>,
-      column: <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400 no-default-hover-elevate no-default-active-elevate">Column</Badge>,
+      news: <Badge variant="secondary">News</Badge>,
+      opinion: <Badge variant="outline">Opinion</Badge>,
+      analysis: <Badge variant="default">Analysis</Badge>,
+      column: <Badge variant="default">Column</Badge>,
     };
-    return badges[type as keyof typeof badges] || <Badge variant="outline" className="rounded-full px-3 py-1 text-sm font-medium no-default-hover-elevate no-default-active-elevate">{type}</Badge>;
+    return badges[type as keyof typeof badges] || <Badge>{type}</Badge>;
   };
 
   const StatusCards = ({ 
@@ -495,20 +495,20 @@ export default function EnglishArticlesPage() {
     ];
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {cards.map(({ status, label, count }) => (
           <button
             key={status}
             onClick={() => onSelect(status)}
-            className={`rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark px-7.5 py-6 transition-colors no-default-hover-elevate no-default-active-elevate ${
+            className={`p-3 md:p-4 rounded-lg border transition-colors hover-elevate ${
               activeStatus === status
-                ? "ring-2 ring-primary"
-                : ""
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border"
             }`}
             data-testid={`status-card-en-${status}`}
           >
-            <div className="text-2xl md:text-3xl font-bold text-black dark:text-white">{count}</div>
-            <div className="text-sm text-muted-foreground mt-1">{label}</div>
+            <div className="text-xl md:text-2xl font-bold">{count}</div>
+            <div className="text-xs md:text-sm">{label}</div>
           </button>
         ))}
       </div>
@@ -526,10 +526,10 @@ export default function EnglishArticlesPage() {
       <button
         onClick={() => toggleBreakingMutation.mutate({ id: articleId, currentState: initialValue })}
         disabled={toggleBreakingMutation.isPending}
-        className={`rounded-full px-3 py-1 text-xs font-medium ${
+        className={`px-2 py-1 rounded text-xs font-medium ${
           initialValue
-            ? "bg-danger/10 text-danger border border-danger/20"
-            : "bg-gray-2 text-muted-foreground dark:bg-meta-4"
+            ? "bg-destructive text-destructive-foreground"
+            : "bg-muted text-muted-foreground"
         }`}
         data-testid={`breaking-switch-en-${articleId}`}
       >
@@ -554,41 +554,37 @@ export default function EnglishArticlesPage() {
     return (
       <div className="flex items-center gap-1">
         <Button
-          size="icon"
+          size="sm"
           variant="ghost"
           onClick={onEdit}
-          className="hover:text-primary"
           data-testid={`button-edit-en-${articleId}`}
         >
           <Edit className="h-4 w-4" />
         </Button>
         <Button
-          size="icon"
+          size="sm"
           variant="ghost"
           onClick={() => featureMutation.mutate({ id: articleId, featured: !isFeatured })}
           disabled={featureMutation.isPending}
-          className="hover:text-warning"
           data-testid={`button-feature-en-${articleId}`}
         >
-          <Star className={`h-4 w-4 ${isFeatured ? 'text-warning fill-warning' : ''}`} />
+          <Star className={`h-4 w-4 ${isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
         </Button>
         {status === "draft" && (
           <Button
-            size="icon"
+            size="sm"
             variant="ghost"
             onClick={() => publishMutation.mutate(articleId)}
             disabled={publishMutation.isPending}
-            className="hover:text-success"
             data-testid={`button-publish-en-${articleId}`}
           >
             <Send className="h-4 w-4" />
           </Button>
         )}
         <Button
-          size="icon"
+          size="sm"
           variant="ghost"
           onClick={onDelete}
-          className="hover:text-danger"
           data-testid={`button-delete-en-${articleId}`}
         >
           <Trash2 className="h-4 w-4" />
@@ -599,34 +595,33 @@ export default function EnglishArticlesPage() {
 
   return (
     <EnglishDashboardLayout>
-      <div className="space-y-6 p-0" dir="ltr">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-0" dir="ltr">
         {/* Header */}
-        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark px-6 py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-black dark:text-white" data-testid="heading-en-title">
-                News & Articles Management
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage news content and articles
-              </p>
-            </div>
-            <Button
-              onClick={() => setLocation("/en/dashboard/articles/new")}
-              className="gap-2 w-full sm:w-auto"
-              data-testid="button-create-en-article"
-            >
-              <Plus className="h-4 w-4" />
-              New Article
-            </Button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold" data-testid="heading-en-title">
+              News & Articles Management
+            </h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Manage news content and articles
+            </p>
           </div>
+          <Button
+            onClick={() => setLocation("/en/dashboard/articles/new")}
+            className="gap-2 w-full sm:w-auto"
+            size="sm"
+            data-testid="button-create-en-article"
+          >
+            <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            New Article
+          </Button>
         </div>
 
         {/* Status Cards */}
         {metricsLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark animate-pulse" />
+              <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : metrics ? (
@@ -636,27 +631,27 @@ export default function EnglishArticlesPage() {
             onSelect={setActiveStatus}
           />
         ) : (
-          <div className="rounded-sm border border-danger bg-danger/10 px-6 py-4">
-            <p className="text-sm font-medium text-danger">Error loading metrics: {metricsError?.message || "Unknown"}</p>
+          <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+            Error loading metrics: {metricsError?.message || "Unknown"}
           </div>
         )}
 
         {/* Filters */}
-        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark px-6 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="bg-card rounded-lg border border-border p-3 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div>
               <Input
                 placeholder="Search by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-11 text-sm"
+                className="h-9 md:h-10 text-sm"
                 data-testid="input-en-search"
               />
             </div>
 
             <div>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger data-testid="select-en-type-filter" className="h-11 text-sm">
+                <SelectTrigger data-testid="select-en-type-filter" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -671,7 +666,7 @@ export default function EnglishArticlesPage() {
 
             <div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger data-testid="select-en-category-filter" className="h-11 text-sm">
+                <SelectTrigger data-testid="select-en-category-filter" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -689,9 +684,9 @@ export default function EnglishArticlesPage() {
 
         {/* Bulk Actions Toolbar */}
         {selectedArticles.size > 0 && (
-          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark px-6 py-4">
+          <div className="bg-card rounded-lg border border-border p-3 md:p-4">
             <div className="flex items-center justify-between gap-4">
-              <div className="text-sm font-medium text-black dark:text-white">
+              <div className="text-sm text-muted-foreground">
                 {selectedArticles.size} article{selectedArticles.size > 1 ? 's' : ''} selected
               </div>
               <div className="flex items-center gap-2">
@@ -735,22 +730,14 @@ export default function EnglishArticlesPage() {
         )}
 
         {/* Articles Table - Desktop View */}
-        <div className="hidden md:block rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-          {/* Table Header */}
-          <div className="px-4 py-6 md:px-6 xl:px-7.5">
-            <h4 className="text-xl font-semibold text-black dark:text-white">
-              All Articles
-            </h4>
-          </div>
-
+        <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
           {articlesLoading ? (
-            <div className="border-t border-stroke dark:border-strokedark p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-muted-foreground">
               Loading...
             </div>
           ) : localArticles.length === 0 ? (
-            <div className="border-t border-stroke dark:border-strokedark p-8 text-center">
-              <p className="text-muted-foreground">No articles found</p>
-              <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters or create a new article</p>
+            <div className="p-8 text-center text-muted-foreground">
+              No articles found
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -760,23 +747,23 @@ export default function EnglishArticlesPage() {
                 onDragEnd={handleDragEnd}
               >
                 <table className="w-full">
-                  <thead>
-                    <tr className="border-t border-stroke px-4 py-4.5 dark:border-strokedark md:px-6 2xl:px-7.5">
-                      <th className="text-center px-2 w-10" data-testid="header-en-drag"></th>
-                      <th className="text-center px-4 w-12">
+                  <thead className="bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="text-center py-3 px-2 w-10" data-testid="header-en-drag"></th>
+                      <th className="text-center py-3 px-4 w-12">
                         <Checkbox
                           checked={localArticles.length > 0 && selectedArticles.size === localArticles.length}
                           onCheckedChange={toggleSelectAll}
                           data-testid="checkbox-select-all-en"
                         />
                       </th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Title</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Type</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Author</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Category</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Breaking</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Views</th>
-                      <th className="text-left px-4 py-4.5 font-medium text-sm text-black dark:text-white">Actions</th>
+                      <th className="text-left py-3 px-4 font-medium">Title</th>
+                      <th className="text-left py-3 px-4 font-medium">Type</th>
+                      <th className="text-left py-3 px-4 font-medium">Author</th>
+                      <th className="text-left py-3 px-4 font-medium">Category</th>
+                      <th className="text-left py-3 px-4 font-medium">Breaking</th>
+                      <th className="text-left py-3 px-4 font-medium">Views</th>
+                      <th className="text-left py-3 px-4 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -786,20 +773,20 @@ export default function EnglishArticlesPage() {
                     >
                       {localArticles.map((article) => (
                         <SortableRow key={article.id} article={article}>
-                          <td className="py-4 px-4 text-center">
+                          <td className="py-3 px-4 text-center">
                             <Checkbox
                               checked={selectedArticles.has(article.id)}
                               onCheckedChange={() => toggleArticleSelection(article.id)}
                               data-testid={`checkbox-en-article-${article.id}`}
                             />
                           </td>
-                          <td className="py-4 px-4">
-                            <span className="font-medium text-sm text-black dark:text-white max-w-md truncate inline-block">{article.title}</span>
+                          <td className="py-3 px-4">
+                            <span className="font-medium max-w-md truncate inline-block">{article.title}</span>
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-3 px-4">
                             {getTypeBadge(article.articleType || "news")}
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
                                 <AvatarImage src={article.author?.profileImageUrl || ""} />
@@ -807,27 +794,27 @@ export default function EnglishArticlesPage() {
                                   {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm text-black dark:text-white">
+                              <span className="text-sm">
                                 {article.author?.firstName || article.author?.email}
                               </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4">
-                            <span className="text-sm text-black dark:text-white">{article.category?.nameEn || "-"}</span>
+                          <td className="py-3 px-4">
+                            <span className="text-sm">{article.category?.nameEn || "-"}</span>
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-3 px-4">
                             <BreakingSwitch 
                               articleId={article.id}
                               initialValue={article.newsType === "breaking"}
                             />
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-3 px-4">
                             <ViewsCount 
                               views={article.views}
                               iconClassName="h-4 w-4"
                             />
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-3 px-4">
                             <RowActions 
                               articleId={article.id}
                               status={article.status}
@@ -847,33 +834,32 @@ export default function EnglishArticlesPage() {
         </div>
 
         {/* Articles Cards - Mobile View */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-3">
           {articlesLoading ? (
-            <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 text-center">
-              <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              Loading...
             </div>
           ) : articles.length === 0 ? (
-            <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 text-center">
-              <p className="text-muted-foreground">No articles found</p>
-              <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters or create a new article</p>
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              No articles found
             </div>
           ) : (
             articles.map((article) => (
               <div 
                 key={article.id} 
-                className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4 space-y-3 hover-elevate"
+                className="bg-card border rounded-lg p-3 space-y-3 hover-elevate"
                 data-testid={`card-en-article-${article.id}`}
               >
                 {/* Checkbox and Title */}
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2">
                   <Checkbox
                     checked={selectedArticles.has(article.id)}
                     onCheckedChange={() => toggleArticleSelection(article.id)}
                     data-testid={`checkbox-en-article-mobile-${article.id}`}
-                    className="mt-1"
+                    className="mt-0.5"
                   />
-                  <div className="flex-1 flex items-start justify-between gap-3">
-                    <h3 className="font-semibold text-sm flex-1 break-words leading-snug text-black dark:text-white">
+                  <div className="flex-1 flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
                       {article.title}
                     </h3>
                     {getStatusBadge(article.status)}
@@ -882,19 +868,19 @@ export default function EnglishArticlesPage() {
 
                 {/* Author and Category */}
                 <div className="flex items-center gap-3 text-xs">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <Avatar className="h-5 w-5">
                       <AvatarImage src={article.author?.profileImageUrl || ""} />
                       <AvatarFallback className="text-xs">
                         {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-black dark:text-white">
+                    <span className="text-muted-foreground">
                       {article.author?.firstName || article.author?.email}
                     </span>
                   </div>
                   <span className="text-muted-foreground">•</span>
-                  <span className="text-sm text-black dark:text-white">
+                  <span className="text-muted-foreground">
                     {article.category?.nameEn || "-"}
                   </span>
                 </div>
@@ -908,10 +894,10 @@ export default function EnglishArticlesPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {article.newsType === "breaking" && (
-                      <Badge variant="outline" className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-danger/10 text-danger border-danger/20 no-default-hover-elevate no-default-active-elevate">Breaking</Badge>
+                      <Badge variant="destructive" className="text-xs">Breaking</Badge>
                     )}
                     {article.isFeatured && (
-                      <Badge variant="outline" className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-warning/10 text-warning border-warning/20 flex items-center gap-1 no-default-hover-elevate no-default-active-elevate">
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
                         <Star className="h-3 w-3 fill-current" />
                         Featured
                       </Badge>
@@ -925,15 +911,15 @@ export default function EnglishArticlesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-3 border-t border-stroke dark:border-strokedark">
+                <div className="flex gap-2 pt-2 border-t">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEdit(article)}
-                    className="flex-1 gap-1.5"
+                    className="flex-1"
                     data-testid={`button-edit-mobile-en-${article.id}`}
                   >
-                    <Edit className="h-3.5 w-3.5" />
+                    <Edit className="mr-1.5 h-3.5 w-3.5" />
                     Edit
                   </Button>
                   
@@ -946,10 +932,10 @@ export default function EnglishArticlesPage() {
                         currentState: false 
                       })}
                       disabled={toggleBreakingMutation.isPending}
-                      className="flex-1 gap-1.5"
+                      className="flex-1"
                       data-testid={`button-breaking-mobile-en-${article.id}`}
                     >
-                      <Bell className="h-3.5 w-3.5" />
+                      <Bell className="mr-1.5 h-3.5 w-3.5" />
                       Breaking
                     </Button>
                   ) : (
@@ -964,29 +950,27 @@ export default function EnglishArticlesPage() {
                       className="flex-1"
                       data-testid={`button-unbreaking-mobile-en-${article.id}`}
                     >
-                      Unmark
+                      Unmark Breaking
                     </Button>
                   )}
 
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
                     onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
                     disabled={featureMutation.isPending}
-                    className="hover:text-warning"
                     data-testid={`button-feature-mobile-en-${article.id}`}
                   >
-                    <Star className={`h-4 w-4 ${article.isFeatured ? 'text-warning fill-warning' : ''}`} />
+                    <Star className={`h-3.5 w-3.5 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
                   </Button>
                   
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
                     onClick={() => setDeletingArticle(article)}
-                    className="hover:text-danger"
                     data-testid={`button-delete-mobile-en-${article.id}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
