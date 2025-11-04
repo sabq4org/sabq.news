@@ -18184,66 +18184,9 @@ Allow: /
     try {
       const userId = req.user?.id;
       
-      // Get article with category and author joins - use explicit field selection for proper camelCase mapping
+      // Get article with category and author joins - select all fields using Drizzle's proper approach
       const results = await db
-        .select({
-          // Article fields - explicit selection ensures proper camelCase mapping from snake_case DB columns
-          id: enArticles.id,
-          title: enArticles.title,
-          subtitle: enArticles.subtitle,
-          slug: enArticles.slug,
-          content: enArticles.content,
-          excerpt: enArticles.excerpt,
-          imageUrl: enArticles.imageUrl,
-          imageFocalPoint: enArticles.imageFocalPoint,
-          categoryId: enArticles.categoryId,
-          authorId: enArticles.authorId,
-          reporterId: enArticles.reporterId,
-          articleType: enArticles.articleType,
-          newsType: enArticles.newsType,
-          publishType: enArticles.publishType,
-          scheduledAt: enArticles.scheduledAt,
-          status: enArticles.status,
-          reviewStatus: enArticles.reviewStatus,
-          reviewedBy: enArticles.reviewedBy,
-          reviewedAt: enArticles.reviewedAt,
-          reviewNotes: enArticles.reviewNotes,
-          hideFromHomepage: enArticles.hideFromHomepage,
-          aiSummary: enArticles.aiSummary,
-          smartSummary: enArticles.smartSummary,
-          aiGenerated: enArticles.aiGenerated,
-          isFeatured: enArticles.isFeatured,
-          views: enArticles.views,
-          displayOrder: enArticles.displayOrder,
-          seo: enArticles.seo,
-          publishedAt: enArticles.publishedAt,
-          createdAt: enArticles.createdAt,
-          updatedAt: enArticles.updatedAt,
-          // Category fields
-          category: {
-            id: enCategories.id,
-            name: enCategories.name,
-            slug: enCategories.slug,
-            description: enCategories.description,
-            color: enCategories.color,
-            icon: enCategories.icon,
-            heroImageUrl: enCategories.heroImageUrl,
-            displayOrder: enCategories.displayOrder,
-            status: enCategories.status,
-            type: enCategories.type,
-            createdAt: enCategories.createdAt,
-            updatedAt: enCategories.updatedAt,
-          },
-          // Author fields
-          author: {
-            id: users.id,
-            email: users.email,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            profileImageUrl: users.profileImageUrl,
-            bio: users.bio,
-          },
-        })
+        .select()
         .from(enArticles)
         .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
         .leftJoin(users, eq(enArticles.authorId, users.id))
@@ -18254,8 +18197,11 @@ Allow: /
         return res.status(404).json({ message: "Article not found" });
       }
 
+      // Access joined tables by their actual table names (snake_case as Drizzle returns them)
       const result = results[0];
-      const { category, author, ...article } = result;
+      const article = result.en_articles;
+      const category = result.en_categories;
+      const authorData = result.users;
 
       // Run all queries in parallel for better performance
       const [
@@ -18289,11 +18235,21 @@ Allow: /
         .set({ views: sql`${enArticles.views} + 1` })
         .where(eq(enArticles.id, article.id));
 
-      // Return full article details
+      // Build safe author object (exclude sensitive fields)
+      const author = authorData ? {
+        id: authorData.id,
+        email: authorData.email,
+        firstName: authorData.firstName,
+        lastName: authorData.lastName,
+        profileImageUrl: authorData.profileImageUrl,
+        bio: authorData.bio,
+      } : undefined;
+
+      // Return full article details with ALL article fields
       const articleWithDetails: EnArticleWithDetails = {
         ...article,
         category: category || undefined,
-        author: author || undefined,
+        author,
         isBookmarked,
         hasReacted,
         reactionsCount,
