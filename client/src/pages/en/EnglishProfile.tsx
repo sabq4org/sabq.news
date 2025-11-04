@@ -152,17 +152,17 @@ export default function EnglishProfile() {
   };
 
   const { data: likedArticles = [], isLoading: isLoadingLiked } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/profile/liked"],
+    queryKey: ["/api/en/user/liked"],
     enabled: !!user,
   });
 
   const { data: bookmarkedArticles = [], isLoading: isLoadingBookmarks } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/profile/bookmarks"],
+    queryKey: ["/api/en/user/bookmarks"],
     enabled: !!user,
   });
 
   const { data: readingHistory = [], isLoading: isLoadingHistory } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/profile/history"],
+    queryKey: ["/api/en/user/history"],
     enabled: !!user,
   });
 

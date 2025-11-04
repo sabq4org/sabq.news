@@ -18760,6 +18760,109 @@ Allow: /
     }
   });
 
+  // Get English User Bookmarks
+  app.get("/api/en/user/bookmarks", isAuthenticated, async (req: any, res) => {
+    try {
+      const bookmarks = await storage.getEnUserBookmarks(req.user.id);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error("Error fetching EN user bookmarks:", error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+
+  // Get English User Liked Articles
+  app.get("/api/en/user/liked", isAuthenticated, async (req: any, res) => {
+    try {
+      const articles = await storage.getEnUserLikedArticles(req.user.id);
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching EN user liked articles:", error);
+      res.status(500).json({ message: "Failed to fetch liked articles" });
+    }
+  });
+
+  // Get English User Reading History
+  app.get("/api/en/user/history", isAuthenticated, async (req: any, res) => {
+    try {
+      const history = await storage.getEnUserReadingHistory(req.user.id);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching EN user reading history:", error);
+      res.status(500).json({ message: "Failed to fetch reading history" });
+    }
+  });
+
+  // English Daily Summary - 24h activity analysis for English content
+  app.get("/api/en/ai/daily-summary", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const now = new Date();
+      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Query English article events only
+      const todayEvents = await db
+        .select()
+        .from(userEvents)
+        .innerJoin(enArticles, eq(userEvents.articleId, enArticles.id))
+        .where(and(
+          eq(userEvents.userId, userId),
+          gte(userEvents.createdAt, last24h)
+        ));
+      
+      // Calculate metrics
+      const viewedCount = todayEvents.filter(e => e.user_events.eventType === 'view').length;
+      const readCount = todayEvents.filter(e => e.user_events.eventType === 'read').length;
+      const likedCount = todayEvents.filter(e => e.user_events.eventType === 'like').length;
+      const bookmarkedCount = todayEvents.filter(e => e.user_events.eventType === 'bookmark').length;
+      const commentedCount = todayEvents.filter(e => e.user_events.eventType === 'comment').length;
+      
+      // Get unique articles
+      const uniqueArticleIds = [...new Set(todayEvents.map(e => e.user_events.articleId))];
+      
+      // Fetch article details
+      const articles = uniqueArticleIds.length > 0
+        ? await db.select().from(enArticles).where(inArray(enArticles.id, uniqueArticleIds))
+        : [];
+      
+      // Determine mood (same logic as Arabic version)
+      let mood = 'productive';
+      if (readCount >= 5) mood = 'excellent';
+      else if (readCount >= 3) mood = 'good';
+      else if (readCount >= 1) mood = 'okay';
+      else if (viewedCount >= 3) mood = 'curious';
+      else mood = 'quiet';
+      
+      res.json({
+        mood,
+        stats: {
+          viewed: viewedCount,
+          read: readCount,
+          liked: likedCount,
+          bookmarked: bookmarkedCount,
+          commented: commentedCount,
+        },
+        suggestedArticles: articles.slice(0, 3),
+        insights: {
+          totalActivity: todayEvents.length,
+          uniqueArticles: uniqueArticleIds.length,
+        }
+      });
+    } catch (error) {
+      console.error("Error generating English daily summary:", error);
+      res.status(500).json({ message: "Failed to generate summary" });
+    }
+  });
+
   // ============================================================
   // END ENGLISH VERSION API ENDPOINTS
   // ============================================================

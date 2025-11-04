@@ -59,6 +59,9 @@ import {
   enArticles,
   enCategories,
   enComments,
+  enBookmarks,
+  enReactions,
+  enReadingHistory,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -207,6 +210,7 @@ import {
   type InsertSmartEntity,
   type InsertSmartTerm,
   type InsertArticleSmartLink,
+  type EnArticleWithDetails,
 } from "@shared/schema";
 
 import { IChatStorage, DbChatStorage } from "./chat-storage";
@@ -935,6 +939,13 @@ export interface IStorage {
   updateCalendarAssignment(id: string, updates: any): Promise<any>;
   deleteCalendarAssignment(id: string): Promise<void>;
   completeCalendarAssignment(id: string): Promise<any>;
+
+  // ==========================================
+  // English User Data Operations - عمليات بيانات المستخدم الإنجليزية
+  // ==========================================
+  getEnUserBookmarks(userId: string): Promise<EnArticleWithDetails[]>;
+  getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]>;
+  getEnUserReadingHistory(userId: string, limit?: number): Promise<EnArticleWithDetails[]>;
 
   // ==========================================
   // Chat System - نظام الدردشة
@@ -8399,6 +8410,88 @@ export class DatabaseStorage implements IStorage {
       .update(smartTerms)
       .set({ usageCount: sql`${smartTerms.usageCount} + 1` })
       .where(eq(smartTerms.id, termId));
+  }
+
+  // =====================================================
+  // ENGLISH USER DATA METHODS
+  // =====================================================
+
+  async getEnUserBookmarks(userId: string): Promise<EnArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(enBookmarks)
+      .innerJoin(enArticles, eq(enBookmarks.articleId, enArticles.id))
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+      .where(eq(enBookmarks.userId, userId))
+      .orderBy(desc(enBookmarks.createdAt));
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+      isBookmarked: true,
+    }));
+  }
+
+  async getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(enReactions)
+      .innerJoin(enArticles, eq(enReactions.articleId, enArticles.id))
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+      .where(and(eq(enReactions.userId, userId), eq(enArticles.status, "published")))
+      .orderBy(desc(enReactions.createdAt));
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+      hasReacted: true,
+    }));
+  }
+
+  async getEnUserReadingHistory(userId: string, limit: number = 20): Promise<EnArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(enReadingHistory)
+      .innerJoin(enArticles, eq(enReadingHistory.articleId, enArticles.id))
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+      .where(eq(enReadingHistory.userId, userId))
+      .orderBy(desc(enReadingHistory.readAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+    }));
   }
 }
 

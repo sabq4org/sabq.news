@@ -96,12 +96,12 @@ export default function EnglishDailyBrief() {
   });
 
   const { data: summary, isLoading, error, refetch } = useQuery<DailySummary>({
-    queryKey: ["/api/ai/daily-summary"],
+    queryKey: ["/api/en/ai/daily-summary"],
     retry: false,
   });
 
   const handleRefresh = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["/api/ai/daily-summary"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/en/ai/daily-summary"] });
     refetch();
   };
 
