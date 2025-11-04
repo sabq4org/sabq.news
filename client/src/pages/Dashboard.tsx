@@ -35,6 +35,7 @@ import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useMemo, useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AdminDashboardStats {
   articles: {
@@ -109,35 +110,22 @@ interface AdminDashboardStats {
   }>;
 }
 
-// Motivational quotes in Arabic
-const MOTIVATIONAL_QUOTES = [
-  "يوم جديد، إنجاز جديد ✨… خلنا نبدأ بقوّة يا بطل!",
-  "ابدأ يومك بحماس، فكل فكرة منك تصنع فرقاً في سبق 💪",
-  "صباح الذكاء والإبداع… أنت محور التميّز اليوم! 🚀",
-  "تذكّر: الجودة تبدأ من التفاصيل الصغيرة 👀",
-  "وجودك يصنع الأثر، ونتائجك تُلهم الفريق 🌟",
-  "كل مقال تكتبه اليوم… بصمة تُضاف لتاريخ سبق 🖋️",
-  "كن النسخة الأفضل من نفسك في كل مهمة 🔥",
-  "الإتقان ما هو خيار… هو أسلوب حياة في سبق 👑",
-  "ابدع كأنك تصنع خبراً يُقرأ لأول مرة 💡",
-  "كل ضغطة زر منك تُحدث فرقاً في تجربة آلاف القراء 🌍",
-];
-
-// Get time-based greeting
-function getTimeBasedGreeting(): string {
+// Get time-based greeting key
+function getTimeBasedGreetingKey(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "صباح الخير";
-  if (hour < 18) return "مساء الخير";
-  return "مساء الخير";
+  if (hour < 12) return "dashboard.greetings.morning";
+  if (hour < 18) return "dashboard.greetings.afternoon";
+  return "dashboard.greetings.evening";
 }
 
-// Get random motivational quote (changes on each visit)
-function getRandomMotivationalQuote(): string {
-  const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
-  return MOTIVATIONAL_QUOTES[randomIndex];
+// Get random motivational quote key (changes on each visit)
+function getRandomMotivationalQuoteKey(): string {
+  const randomIndex = Math.floor(Math.random() * 10) + 1;
+  return `dashboard.motivationalQuotes.quote${randomIndex}`;
 }
 
 function Dashboard() {
+  const { t } = useTranslation();
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
   const { data: stats, isLoading } = useQuery<AdminDashboardStats>({
@@ -145,11 +133,11 @@ function Dashboard() {
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
-  // Get greeting (memoized to avoid recalculation during re-renders)
-  const greeting = useMemo(() => getTimeBasedGreeting(), []);
+  // Get greeting key (memoized to avoid recalculation during re-renders)
+  const greetingKey = useMemo(() => getTimeBasedGreetingKey(), []);
   
-  // Get a fresh random quote on each render to ensure it changes on every visit
-  const motivationalQuote = getRandomMotivationalQuote();
+  // Get a fresh random quote key on each render to ensure it changes on every visit
+  const motivationalQuoteKey = getRandomMotivationalQuoteKey();
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -160,17 +148,10 @@ function Dashboard() {
       rejected: "destructive",
       archived: "outline",
     };
-    const labels: Record<string, string> = {
-      published: "منشور",
-      draft: "مسودة",
-      pending: "قيد المراجعة",
-      approved: "موافق عليه",
-      rejected: "مرفوض",
-      archived: "مؤرشف",
-    };
+    const statusKey = `dashboard.status.${status}`;
     return (
       <Badge variant={variants[status] || "outline"} data-testid={`badge-status-${status}`}>
-        {labels[status] || status}
+        {t(statusKey)}
       </Badge>
     );
   };
@@ -180,15 +161,15 @@ function Dashboard() {
 
   // Prepare chart data
   const articleChartData = stats ? [
-    { name: "منشور", value: stats.articles.published, color: COLORS[0] },
-    { name: "مسودة", value: stats.articles.draft, color: COLORS[1] },
-    { name: "مؤرشف", value: stats.articles.archived, color: COLORS[2] },
+    { name: t('dashboard.status.published'), value: stats.articles.published, color: COLORS[0] },
+    { name: t('dashboard.status.draft'), value: stats.articles.draft, color: COLORS[1] },
+    { name: t('dashboard.status.archived'), value: stats.articles.archived, color: COLORS[2] },
   ] : [];
 
   const commentChartData = stats ? [
-    { name: "موافق", value: stats.comments.approved, color: COLORS[0] },
-    { name: "قيد المراجعة", value: stats.comments.pending, color: COLORS[1] },
-    { name: "مرفوض", value: stats.comments.rejected, color: COLORS[2] },
+    { name: t('dashboard.status.approved'), value: stats.comments.approved, color: COLORS[0] },
+    { name: t('dashboard.status.pending'), value: stats.comments.pending, color: COLORS[1] },
+    { name: t('dashboard.status.rejected'), value: stats.comments.rejected, color: COLORS[2] },
   ] : [];
 
   if (isUserLoading || !user) {
@@ -223,11 +204,11 @@ function Dashboard() {
                     <div className="absolute -inset-1 bg-primary/20 rounded-full blur-md animate-pulse"></div>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-l from-primary to-accent-foreground bg-clip-text text-transparent" data-testid="text-greeting">
-                    {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
+                    {t(greetingKey)} يا {user?.firstName || user?.email?.split('@')[0] || t('dashboard.greetings.dear')}
                   </h2>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
-                  {motivationalQuote}
+                  {t(motivationalQuoteKey)}
                 </p>
               </div>
               <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
@@ -255,7 +236,7 @@ function Dashboard() {
           {/* Articles Stats */}
           <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المقالات</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.articles')}</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
                 <FileText className="h-4 w-4 text-primary" data-testid="icon-articles" />
               </div>
@@ -269,7 +250,7 @@ function Dashboard() {
                     {stats?.articles.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-articles-breakdown">
-                    {stats?.articles.published || 0} منشور · {stats?.articles.draft || 0} مسودة · {stats?.articles.scheduled || 0} مجدولة
+                    {stats?.articles.published || 0} {t('dashboard.stats.publishedCount')} · {stats?.articles.draft || 0} {t('dashboard.stats.draftCount')} · {stats?.articles.scheduled || 0} {t('dashboard.stats.scheduledCount')}
                   </p>
                 </>
               )}
@@ -279,7 +260,7 @@ function Dashboard() {
           {/* Users Stats */}
           <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-users-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المستخدمون</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.users')}</CardTitle>
               <div className="p-2 rounded-md bg-accent-purple/30">
                 <Users className="h-4 w-4 text-accent-foreground" data-testid="icon-users" />
               </div>
@@ -293,7 +274,7 @@ function Dashboard() {
                     {stats?.users.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-users-breakdown">
-                    {stats?.users.active24h || 0} نشط اليوم · {stats?.users.newThisWeek || 0} جديد هذا الأسبوع
+                    {stats?.users.active24h || 0} {t('dashboard.stats.activeTodayCount')} · {stats?.users.newThisWeek || 0} {t('dashboard.stats.newThisWeekCount')}
                   </p>
                 </>
               )}
@@ -303,7 +284,7 @@ function Dashboard() {
           {/* Comments Stats */}
           <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-comments-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">التعليقات</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.comments')}</CardTitle>
               <div className="p-2 rounded-md bg-accent-green/30">
                 <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" data-testid="icon-comments" />
               </div>
@@ -317,7 +298,7 @@ function Dashboard() {
                     {stats?.comments.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-comments-breakdown">
-                    {stats?.comments.pending || 0} قيد المراجعة · {stats?.comments.approved || 0} موافق عليه
+                    {stats?.comments.pending || 0} {t('dashboard.stats.pendingCount')} · {stats?.comments.approved || 0} {t('dashboard.stats.approvedCount')}
                   </p>
                 </>
               )}
@@ -327,7 +308,7 @@ function Dashboard() {
           {/* Views Stats */}
           <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-views-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.totalViews')}</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
                 <Eye className="h-4 w-4 text-primary" data-testid="icon-views" />
               </div>
@@ -341,7 +322,7 @@ function Dashboard() {
                     {stats?.articles.totalViews || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-views-description">
-                    إجمالي مشاهدات المقالات
+                    {t('dashboard.stats.totalViewsDescription')}
                   </p>
                 </>
               )}
@@ -353,7 +334,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.viewsToday')}</CardTitle>
               <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
             </CardHeader>
             <CardContent>
@@ -365,7 +346,7 @@ function Dashboard() {
                     {stats?.articles.viewsToday || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
-                    مشاهدة جديدة اليوم
+                    {t('dashboard.stats.newViewsToday')}
                   </p>
                 </>
               )}
@@ -374,7 +355,7 @@ function Dashboard() {
 
           <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.activeToday')}</CardTitle>
               <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
             </CardHeader>
             <CardContent>
@@ -386,7 +367,7 @@ function Dashboard() {
                     {stats?.users.activeToday || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-active-today-description">
-                    زائر نشط حالياً
+                    {t('dashboard.stats.activeVisitorNow')}
                   </p>
                 </>
               )}
@@ -395,7 +376,7 @@ function Dashboard() {
 
           <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.readsToday')}</CardTitle>
               <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
             </CardHeader>
             <CardContent>
@@ -407,7 +388,7 @@ function Dashboard() {
                     {stats?.engagement.readsToday || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
-                    من {stats?.engagement.totalReads || 0} إجمالي
+                    {t('dashboard.stats.ofTotal', { total: stats?.engagement.totalReads || 0 })}
                   </p>
                 </>
               )}
@@ -416,7 +397,7 @@ function Dashboard() {
 
           <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.engagementToday')}</CardTitle>
               <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
             </CardHeader>
             <CardContent>
@@ -428,7 +409,7 @@ function Dashboard() {
                     {stats?.reactions.todayCount || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
-                    من {stats?.reactions.total || 0} إجمالي
+                    {t('dashboard.stats.ofTotal', { total: stats?.reactions.total || 0 })}
                   </p>
                 </>
               )}
@@ -440,7 +421,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card data-testid="card-categories-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.categories')}</CardTitle>
               <FolderTree className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -456,7 +437,7 @@ function Dashboard() {
 
           <Card data-testid="card-abtests-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">اختبارات A/B</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.abTests')}</CardTitle>
               <FlaskConical className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -468,7 +449,7 @@ function Dashboard() {
                     {stats?.abTests.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-abtests-running">
-                    {stats?.abTests.running || 0} قيد التشغيل
+                    {t('dashboard.stats.runningTests', { count: stats?.abTests.running || 0 })}
                   </p>
                 </>
               )}
@@ -477,7 +458,7 @@ function Dashboard() {
 
           <Card data-testid="card-avg-time-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">متوسط وقت القراءة</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.avgReadTime')}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -489,7 +470,7 @@ function Dashboard() {
                     {Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:{String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
-                    دقيقة:ثانية لكل مقال
+                    {t('dashboard.stats.timePerArticle')}
                   </p>
                 </>
               )}
@@ -502,8 +483,8 @@ function Dashboard() {
           {/* Articles Distribution */}
           <Card data-testid="card-articles-chart">
             <CardHeader>
-              <CardTitle>توزيع المقالات</CardTitle>
-              <CardDescription>حسب الحالة</CardDescription>
+              <CardTitle>{t('dashboard.charts.articlesDistribution')}</CardTitle>
+              <CardDescription>{t('dashboard.charts.byStatus')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -535,8 +516,8 @@ function Dashboard() {
           {/* Comments Distribution */}
           <Card data-testid="card-comments-chart">
             <CardHeader>
-              <CardTitle>توزيع التعليقات</CardTitle>
-              <CardDescription>حسب الحالة</CardDescription>
+              <CardTitle>{t('dashboard.charts.commentsDistribution')}</CardTitle>
+              <CardDescription>{t('dashboard.charts.byStatus')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -562,11 +543,11 @@ function Dashboard() {
           <Card data-testid="card-recent-articles">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>أحدث المقالات</CardTitle>
-                <CardDescription>آخر 5 مقالات تم إنشاؤها</CardDescription>
+                <CardTitle>{t('dashboard.recentArticles.title')}</CardTitle>
+                <CardDescription>{t('dashboard.recentArticles.description')}</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-articles">
-                <Link href="/dashboard/articles">عرض الكل</Link>
+                <Link href="/dashboard/articles">{t('dashboard.recentArticles.viewAll')}</Link>
               </Button>
             </CardHeader>
             <CardContent>
@@ -610,7 +591,7 @@ function Dashboard() {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-articles">
-                  لا توجد مقالات حديثة
+                  {t('dashboard.recentArticles.noArticles')}
                 </p>
               )}
             </CardContent>
@@ -620,11 +601,11 @@ function Dashboard() {
           <Card data-testid="card-recent-comments">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>أحدث التعليقات</CardTitle>
-                <CardDescription>آخر 5 تعليقات</CardDescription>
+                <CardTitle>{t('dashboard.recentComments.title')}</CardTitle>
+                <CardDescription>{t('dashboard.recentComments.description')}</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
-                <Link href="/dashboard/comments">عرض الكل</Link>
+                <Link href="/dashboard/comments">{t('dashboard.recentComments.viewAll')}</Link>
               </Button>
             </CardHeader>
             <CardContent>
@@ -651,7 +632,7 @@ function Dashboard() {
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span>
-                            {comment.user?.firstName || comment.user?.email || "مستخدم"}
+                            {comment.user?.firstName || comment.user?.email || t('dashboard.recentComments.user')}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -667,7 +648,7 @@ function Dashboard() {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-comments">
-                  لا توجد تعليقات حديثة
+                  {t('dashboard.recentComments.noComments')}
                 </p>
               )}
             </CardContent>
@@ -687,9 +668,9 @@ function Dashboard() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  أكثر المقالات مشاهدة
+                  {t('dashboard.topArticles.title')}
                 </CardTitle>
-                <CardDescription>أفضل 5 مقالات من حيث عدد المشاهدات</CardDescription>
+                <CardDescription>{t('dashboard.topArticles.description')}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -726,7 +707,7 @@ function Dashboard() {
                             views={article.views}
                             iconClassName="h-3 w-3"
                           />
-                          <span>مشاهدة</span>
+                          <span>{t('dashboard.stats.viewsLabel')}</span>
                         </span>
                       </div>
                     </div>
@@ -735,7 +716,7 @@ function Dashboard() {
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8" data-testid="text-no-top-articles">
-                لا توجد مقالات
+                {t('dashboard.topArticles.noArticles')}
               </p>
             )}
           </CardContent>
@@ -747,6 +728,7 @@ function Dashboard() {
 
 // Widget: Upcoming Reminders
 function UpcomingRemindersWidget() {
+  const { t } = useTranslation();
   const { data: reminders, isLoading } = useQuery<Array<{
     id: string;
     eventId: string;
@@ -762,7 +744,7 @@ function UpcomingRemindersWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" data-testid="icon-reminders" />
-          التذكيرات القادمة
+          {t('dashboard.reminders.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -791,7 +773,7 @@ function UpcomingRemindersWidget() {
                         const reminderDate = new Date(reminder.reminderTime);
                         const now = new Date();
                         if (reminderDate > now) {
-                          return `بعد ${formatDistance(reminderDate, now, { locale: arSA })}`;
+                          return `${t('dashboard.reminders.after')} ${formatDistance(reminderDate, now, { locale: arSA })}`;
                         } else {
                           return formatDistanceToNow(reminderDate, {
                             addSuffix: true,
@@ -801,11 +783,7 @@ function UpcomingRemindersWidget() {
                       })()}
                     </span>
                     <Badge variant="outline" data-testid={`badge-reminder-channel-${reminder.id}`}>
-                      {reminder.channelType === 'IN_APP' ? 'داخل التطبيق' :
-                       reminder.channelType === 'EMAIL' ? 'بريد إلكتروني' : 
-                       reminder.channelType === 'WHATSAPP' ? 'واتساب' :
-                       reminder.channelType === 'SLACK' ? 'سلاك' : 
-                       reminder.channelType}
+                      {t(`dashboard.reminders.channels.${reminder.channelType}`) || reminder.channelType}
                     </Badge>
                   </div>
                 </div>
@@ -814,7 +792,7 @@ function UpcomingRemindersWidget() {
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-8" data-testid="text-no-reminders">
-            لا توجد تذكيرات قادمة
+            {t('dashboard.reminders.noReminders')}
           </p>
         )}
       </CardContent>
@@ -824,6 +802,7 @@ function UpcomingRemindersWidget() {
 
 // Widget: Upcoming Tasks
 function UpcomingTasksWidget() {
+  const { t } = useTranslation();
   const { data: tasks, isLoading } = useQuery<Array<{
     id: string;
     eventId: string;
@@ -846,7 +825,7 @@ function UpcomingTasksWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5" data-testid="icon-tasks" />
-          المهام القادمة
+          {t('dashboard.tasks.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -870,20 +849,13 @@ function UpcomingTasksWidget() {
                   </h4>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="secondary" data-testid={`badge-task-role-${task.id}`}>
-                      {task.role === 'coordinator' ? 'منسق' :
-                       task.role === 'reporter' ? 'مراسل' :
-                       task.role === 'photographer' ? 'مصور' :
-                       task.role === 'editor' ? 'محرر' :
-                       task.role}
+                      {t(`dashboard.tasks.roles.${task.role}`) || task.role}
                     </Badge>
                     <Badge 
                       variant={task.status === 'pending' ? 'outline' : 'default'}
                       data-testid={`badge-task-status-${task.id}`}
                     >
-                      {task.status === 'pending' ? 'معلق' :
-                       task.status === 'in_progress' ? 'قيد التنفيذ' :
-                       task.status === 'completed' ? 'مكتمل' :
-                       task.status}
+                      {t(`dashboard.tasks.statuses.${task.status}`) || task.status}
                     </Badge>
                   </div>
                 </div>
@@ -892,7 +864,7 @@ function UpcomingTasksWidget() {
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-8" data-testid="text-no-tasks">
-            لا توجد مهام قادمة
+            {t('dashboard.tasks.noTasks')}
           </p>
         )}
       </CardContent>
@@ -902,6 +874,7 @@ function UpcomingTasksWidget() {
 
 // Component: Urgent Reminder Banner
 function UrgentReminderBanner() {
+  const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(false);
   
   const { data: reminders, isLoading } = useQuery<Array<{
@@ -953,14 +926,14 @@ function UrgentReminderBanner() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100" data-testid="text-banner-title">
-                  تذكير قريب جداً
+                  {t('dashboard.reminders.urgentTitle')}
                 </h3>
                 <Badge 
                   variant="outline" 
                   className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-700"
                   data-testid="badge-urgent-time"
                 >
-                  {minutesUntil > 0 ? `بعد ${minutesUntil} دقيقة` : 'الآن'}
+                  {minutesUntil > 0 ? t('dashboard.reminders.urgentMinutes', { minutes: minutesUntil }) : t('dashboard.reminders.urgentNow')}
                 </Badge>
               </div>
               
@@ -981,11 +954,7 @@ function UrgentReminderBanner() {
                 </span>
                 <span className="text-blue-500 dark:text-blue-400">•</span>
                 <span>
-                  {reminder.channelType === 'IN_APP' ? 'داخل التطبيق' :
-                   reminder.channelType === 'EMAIL' ? 'بريد إلكتروني' : 
-                   reminder.channelType === 'WHATSAPP' ? 'واتساب' :
-                   reminder.channelType === 'SLACK' ? 'سلاك' : 
-                   reminder.channelType}
+                  {t(`dashboard.reminders.channels.${reminder.channelType}`) || reminder.channelType}
                 </span>
               </div>
             </div>
@@ -1003,7 +972,7 @@ function UrgentReminderBanner() {
           
           {urgentReminders.length > 1 && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-2" data-testid="text-more-reminders">
-              + {urgentReminders.length - 1} تذكير آخر قريب
+              {t('dashboard.reminders.moreReminders', { count: urgentReminders.length - 1 })}
             </p>
           )}
         </div>
