@@ -466,6 +466,7 @@ ${newsContent}
 قم بتوليد جميع العناصر التحريرية المطلوبة بصيغة JSON.`;
 
     console.log("[Smart Content] Generating smart content with GPT-5...");
+    console.log("[Smart Content] Input content length:", newsContent.length);
     
     const response = await openai.chat.completions.create({
       model: "gpt-5",
@@ -483,6 +484,9 @@ ${newsContent}
       max_completion_tokens: 1024,
     });
 
+    console.log("[Smart Content] OpenAI response status:", response.choices[0].finish_reason);
+    console.log("[Smart Content] OpenAI message content:", response.choices[0].message.content);
+    
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
     console.log("[Smart Content] Raw OpenAI response:", JSON.stringify(result, null, 2));
