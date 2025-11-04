@@ -1,0 +1,136 @@
+2025-11-04 10:18:10.52
+4dbdd54a
+User
+7:18:10 AM [express] GET /api/admin/users 200 in 259ms :: {"items":[{"id":"buthInkHK0H3Q3Wqn1Zox","n…
+2025-11-04 10:18:14.64
+4dbdd54a
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-04 10:18:14.66
+4dbdd54a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-04 10:18:14.69
+4dbdd54a
+User
+[Smart Content API] Generating content for news...
+2025-11-04 10:18:14.69
+4dbdd54a
+User
+[Smart Content] Generating smart content with GPT-5...
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+[Smart Content] Error generating smart content: BadRequestError: 400 Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at APIError.generate (file:///home/runner/workspace/node_modules/openai/core/error.mjs:41:20)
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at OpenAI.makeStatusError (file:///home/runner/workspace/node_modules/openai/client.mjs:160:32)
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at OpenAI.makeRequest (file:///home/runner/workspace/node_modules/openai/client.mjs:328:30)
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at async generateSmartContent (file:///home/runner/workspace/dist/index.js:11932:22)
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+at async file:///home/runner/workspace/dist/index.js:17427:32 {
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+status: 400,
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+headers: Headers {
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+date: 'Tue, 04 Nov 2025 07:18:15 GMT',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'content-type': 'application/json',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'content-length': '247',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+connection: 'keep-alive',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'access-control-expose-headers': 'X-Request-ID',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'openai-organization': 'sabq-jcqyyg',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'openai-processing-ms': '7',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'openai-project': 'proj_Z8XHr4ekQ6viwsxMWAtsK2N8',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'openai-version': '2020-10-01',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-envoy-upstream-service-time': '103',
+
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-limit-requests': '5000',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-limit-tokens': '2000000',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-remaining-requests': '4999',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-remaining-tokens': '1998771',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-reset-requests': '12ms',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-ratelimit-reset-tokens': '36ms',
+
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-request-id': 'req_7a28c359c0df4cb08a6991929dce81c0',
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'x-openai-proxy-wasm': 'v0.1',
+
+2025-11-04 10:18:15.21
+4dbdd54a
+User
+'cf-cache-status': 'DYNAMIC',
