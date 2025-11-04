@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Clock, Eye, Star, TrendingUp } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import type { EnArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 
@@ -38,7 +39,7 @@ export default function EnglishHome() {
       <main className="flex-1">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
           
-          {/* Featured News Section */}
+          {/* Featured News Carousel */}
           {featuredArticles.length > 0 && (
             <section className="scroll-fade-in">
               <div className="flex items-center gap-3 mb-6">
@@ -46,100 +47,7 @@ export default function EnglishHome() {
                 <h2 className="text-2xl md:text-3xl font-bold">Featured News</h2>
               </div>
 
-              {/* Hero Featured Article */}
-              {featuredArticles[0] && (
-                <Link href={`/en/article/${featuredArticles[0].slug}`}>
-                  <Card className="hover-elevate active-elevate-2 cursor-pointer mb-8 overflow-hidden" data-testid="card-featured-hero">
-                    <div className="grid md:grid-cols-2 gap-0">
-                      {featuredArticles[0].imageUrl && (
-                        <div className="relative h-64 md:h-full overflow-hidden">
-                          <img
-                            src={featuredArticles[0].imageUrl}
-                            alt={featuredArticles[0].title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          <div className="absolute top-4 left-4">
-                            <Badge variant="default" className="gap-1">
-                              <Star className="h-3 w-3 fill-current" />
-                              Featured
-                            </Badge>
-                          </div>
-                        </div>
-                      )}
-                      <CardContent className="p-6 md:p-8 flex flex-col justify-center">
-                        <h3 className="text-2xl md:text-3xl font-bold mb-4 line-clamp-3">
-                          {featuredArticles[0].title}
-                        </h3>
-                        {featuredArticles[0].excerpt && (
-                          <p className="text-muted-foreground mb-6 line-clamp-4">
-                            {featuredArticles[0].excerpt}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {featuredArticles[0].publishedAt && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>{formatDistanceToNow(new Date(featuredArticles[0].publishedAt), { addSuffix: true })}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            <span>{(featuredArticles[0].views || 0).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </div>
-                  </Card>
-                </Link>
-              )}
-
-              {/* Other Featured Articles Grid */}
-              {featuredArticles.length > 1 && (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  {featuredArticles.slice(1, 7).map((article) => (
-                    <Link key={article.id} href={`/en/article/${article.slug}`}>
-                      <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-featured-${article.id}`}>
-                        {article.imageUrl && (
-                          <div className="relative h-48 overflow-hidden">
-                            <img
-                              src={article.imageUrl}
-                              alt={article.title}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute top-3 left-3">
-                              <Badge variant="default" className="gap-1">
-                                <Star className="h-3 w-3 fill-current" />
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        <CardContent className="p-5 space-y-3">
-                          <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
-                            {article.title}
-                          </h3>
-                          {article.excerpt && (
-                            <p className="text-sm text-muted-foreground line-clamp-3">
-                              {article.excerpt}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                            {article.publishedAt && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{(article.views || 0).toLocaleString()}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <EnglishHeroCarousel articles={featuredArticles} />
             </section>
           )}
 
