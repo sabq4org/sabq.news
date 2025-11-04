@@ -405,14 +405,29 @@ export default function ArticleDetail() {
         setIsLoadingAudio(false);
       });
       
-      audioRef.current.addEventListener('canplay', () => {
-        setIsLoadingAudio(false);
-      });
+      // Wait for audio to be ready, then play
+      audioRef.current.addEventListener('canplaythrough', async () => {
+        if (audioRef.current) {
+          try {
+            await audioRef.current.play();
+            setIsPlaying(true);
+            setIsLoadingAudio(false);
+          } catch (playError) {
+            console.error('Error playing audio:', playError);
+            toast({
+              title: "خطأ",
+              description: "فشل تشغيل الموجز الصوتي",
+              variant: "destructive",
+            });
+            setIsLoadingAudio(false);
+          }
+        }
+      }, { once: true }); // Only fire once
       
-      await audioRef.current.play();
-      setIsPlaying(true);
+      // Start loading the audio
+      audioRef.current.load();
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error('Error loading audio:', error);
       toast({
         title: "خطأ",
         description: "فشل تحميل الموجز الصوتي",
