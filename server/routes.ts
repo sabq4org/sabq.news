@@ -6066,6 +6066,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get smart summary audio for an article
+  app.get("/api/articles/:slug/summary-audio", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      // Use smartSummary, aiSummary, or excerpt (in priority order)
+      const textToConvert = article.smartSummary || article.aiSummary || article.excerpt;
+      
+      if (!textToConvert) {
+        return res.status(400).json({ message: "الموجز غير متوفر لهذا المقال" });
+      }
+
+      // Import ElevenLabs service
+      const { getElevenLabsService } = await import("./services/elevenlabs");
+      const elevenLabsService = getElevenLabsService();
+
+      // Generate audio using ElevenLabs with timeout
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('ElevenLabs timeout')), 30000) // 30 second timeout
+      );
+
+      const audioBuffer = await Promise.race([
+        elevenLabsService.textToSpeech({
+          text: textToConvert,
+          voiceSettings: {
+            stability: 0.6,
+            similarity_boost: 0.75,
+            style: 0.5,
+            use_speaker_boost: true
+          }
+        }),
+        timeoutPromise
+      ]);
+
+      // Set response headers for audio with cache busting support
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Content-Length", audioBuffer.length.toString());
+      res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 24 hours
+      res.setHeader("ETag", `"${article.id}-${article.updatedAt}"`); // Add ETag for cache validation
+      res.send(audioBuffer);
+    } catch (error) {
+      console.error("Error generating summary audio:", error);
+      const errorMessage = error instanceof Error && error.message === 'ElevenLabs timeout' 
+        ? "انتهت مهلة توليد الموجز الصوتي" 
+        : "فشل في توليد الموجز الصوتي";
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+
   // Get articles by keyword
   app.get("/api/keyword/:keyword", async (req, res) => {
     try {

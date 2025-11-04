@@ -18,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { useArticleReadTracking } from "@/hooks/useArticleReadTracking";
-import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import {
@@ -31,6 +30,7 @@ import {
   Volume2,
   VolumeX,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -45,11 +45,10 @@ export default function ArticleDetail() {
   const { logBehavior } = useBehaviorTracking();
   const [, setLocation] = useLocation();
   
-  // Text-to-speech hook
-  const { speak, cancel, isSpeaking, isSupported } = useTextToSpeech({
-    lang: 'ar-SA',
-    rate: 0.9,
-  });
+  // Audio player state
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -344,57 +343,86 @@ export default function ArticleDetail() {
     commentMutation.mutate({ content, parentId });
   };
 
-  // Extract text for audio summary
-  const getAudioText = () => {
-    if (!article) return '';
-    
-    // Priority 1: aiSummary
-    if (article.aiSummary) {
-      return article.aiSummary;
-    }
-    
-    // Priority 2: excerpt
-    if (article.excerpt) {
-      return article.excerpt;
-    }
-    
-    // Priority 3: First 200 words from content
-    if (article.content) {
-      // Remove HTML tags
-      const textContent = article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      const words = textContent.split(' ');
-      return words.slice(0, 200).join(' ') + (words.length > 200 ? '...' : '');
-    }
-    
-    return '';
-  };
-
-  const handlePlayAudio = () => {
-    if (!isSupported) {
-      toast({
-        title: "غير مدعوم",
-        description: "متصفحك لا يدعم ميزة القراءة الصوتية",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const audioText = getAudioText();
-    if (!audioText) {
+  // Handle audio playback using ElevenLabs
+  const handlePlayAudio = async () => {
+    if (!article?.smartSummary && !article?.aiSummary && !article?.excerpt) {
       toast({
         title: "لا يوجد محتوى",
-        description: "لا يوجد نص متاح للقراءة الصوتية",
+        description: "الموجز الذكي غير متوفر لهذا المقال",
         variant: "destructive",
       });
       return;
     }
 
-    if (isSpeaking) {
-      cancel();
-    } else {
-      speak(audioText);
+    // If already playing, pause
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // If audio is already loaded, just play
+    if (audioRef.current && audioRef.current.src) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    // Load and play new audio
+    try {
+      setIsLoadingAudio(true);
+      
+      // Add cache busting parameter to prevent browser from caching errors
+      const timestamp = article?.updatedAt || new Date().toISOString();
+      const audioUrl = `/api/articles/${slug}/summary-audio?v=${encodeURIComponent(timestamp)}`;
+      
+      // Create audio element
+      if (!audioRef.current) {
+        audioRef.current = new Audio(audioUrl);
+        
+        // Add event listeners
+        audioRef.current.addEventListener('ended', () => {
+          setIsPlaying(false);
+        });
+        
+        audioRef.current.addEventListener('error', (e) => {
+          console.error('Audio playback error:', e);
+          toast({
+            title: "خطأ",
+            description: "فشل تشغيل الموجز الصوتي",
+            variant: "destructive",
+          });
+          setIsPlaying(false);
+          setIsLoadingAudio(false);
+        });
+        
+        audioRef.current.addEventListener('canplay', () => {
+          setIsLoadingAudio(false);
+        });
+      }
+      
+      await audioRef.current.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل تحميل الموجز الصوتي",
+        variant: "destructive",
+      });
+      setIsLoadingAudio(false);
     }
   };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [slug]);
 
   if (isLoading) {
     return (
@@ -602,18 +630,21 @@ export default function ArticleDetail() {
                     <h3 className="font-bold text-lg text-primary">الموجز الذكي</h3>
                   </div>
                   <Button
-                    variant={isSpeaking ? "default" : "outline"}
+                    variant={isPlaying ? "default" : "outline"}
                     size="sm"
                     className="gap-2"
                     onClick={handlePlayAudio}
+                    disabled={isLoadingAudio}
                     data-testid="button-listen-summary"
                   >
-                    {isSpeaking ? (
+                    {isLoadingAudio ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isPlaying ? (
                       <VolumeX className="h-4 w-4" />
                     ) : (
                       <Volume2 className="h-4 w-4" />
                     )}
-                    {isSpeaking ? "إيقاف" : "استمع للملخص"}
+                    {isLoadingAudio ? "جاري التحميل..." : isPlaying ? "إيقاف" : "استمع للموجز"}
                   </Button>
                 </div>
                 <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
