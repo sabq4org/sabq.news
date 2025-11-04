@@ -302,7 +302,7 @@ export interface IStorage {
   }): Promise<void>;
   
   // Category operations
-  getAllCategories(): Promise<Category[]>;
+  getAllCategories(language?: string): Promise<Category[]>;
   getCategoryById(id: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category>;
@@ -314,6 +314,7 @@ export interface IStorage {
     status?: string;
     authorId?: string;
     searchQuery?: string;
+    language?: string;
   }): Promise<ArticleWithDetails[]>;
   getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined>;
   getArticleById(id: string, userId?: string): Promise<ArticleWithDetails | undefined>;
@@ -1564,7 +1565,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Category operations
-  async getAllCategories(): Promise<Category[]> {
+  async getAllCategories(language?: string): Promise<Category[]> {
+    if (language) {
+      return await db
+        .select()
+        .from(categories)
+        .where(eq(categories.language, language))
+        .orderBy(categories.displayOrder);
+    }
     return await db.select().from(categories).orderBy(categories.displayOrder);
   }
 
@@ -1630,6 +1638,7 @@ export class DatabaseStorage implements IStorage {
     status?: string;
     authorId?: string;
     searchQuery?: string;
+    language?: string;
   }): Promise<ArticleWithDetails[]> {
     const conditions = [];
 
@@ -1651,6 +1660,11 @@ export class DatabaseStorage implements IStorage {
       conditions.push(
         sql`${articles.title} ILIKE ${`%${filters.searchQuery}%`} OR ${articles.content} ILIKE ${`%${filters.searchQuery}%`}`
       );
+    }
+
+    // Language filter
+    if (filters?.language) {
+      conditions.push(eq(articles.language, filters.language));
     }
 
     // Exclude opinion articles from regular news feeds

@@ -1808,12 +1808,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories", async (req, res) => {
     try {
       const withStats = req.query.withStats === 'true';
+      const language = req.query.language as string | undefined;
       
       if (withStats) {
         const categories = await storage.getCategoriesWithStats();
-        res.json(categories);
+        // Filter by language if specified
+        const filteredCategories = language 
+          ? categories.filter(c => c.language === language)
+          : categories;
+        res.json(filteredCategories);
       } else {
-        const categories = await storage.getAllCategories();
+        const categories = await storage.getAllCategories(language);
         res.json(categories);
       }
     } catch (error) {
@@ -5750,12 +5755,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles", async (req, res) => {
     try {
-      const { category, search, status, author } = req.query;
+      const { category, search, status, author, language } = req.query;
       const articles = await storage.getArticles({
         categoryId: category as string,
         searchQuery: search as string,
         status: status as string,
         authorId: author as string,
+        language: language as string | undefined,
       });
       res.json(articles);
     } catch (error) {
