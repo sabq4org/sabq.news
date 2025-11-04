@@ -58,6 +58,9 @@ export const users = pgTable("users", {
   // Soft delete
   deletedAt: timestamp("deleted_at"),
   
+  // Language permissions (ar, en, or both)
+  allowedLanguages: text("allowed_languages").array().default(sql`ARRAY['ar']::text[]`).notNull(),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -3999,3 +4002,179 @@ export type InsertEntityType = z.infer<typeof insertEntityTypeSchema>;
 export type InsertSmartEntity = z.infer<typeof insertSmartEntitySchema>;
 export type InsertSmartTerm = z.infer<typeof insertSmartTermSchema>;
 export type InsertArticleSmartLink = z.infer<typeof insertArticleSmartLinkSchema>;
+
+// ============================================
+// ENGLISH VERSION TABLES
+// ============================================
+
+// English Categories
+export const enCategories = pgTable("en_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  color: text("color"),
+  icon: text("icon"),
+  heroImageUrl: text("hero_image_url"),
+  displayOrder: integer("display_order").default(0),
+  status: text("status").default("active").notNull(),
+  type: text("type").default("core").notNull(), // core, dynamic, smart, seasonal
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_categories_status").on(table.status),
+  index("idx_en_categories_type_status").on(table.type, table.status),
+]);
+
+// English Articles
+export const enArticles = pgTable("en_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: text("image_url"),
+  imageFocalPoint: jsonb("image_focal_point").$type<{
+    x: number;
+    y: number;
+  }>(),
+  categoryId: varchar("category_id").references(() => enCategories.id, { onDelete: 'set null' }),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  reporterId: varchar("reporter_id").references(() => users.id),
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
+  publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
+  scheduledAt: timestamp("scheduled_at"),
+  status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
+  reviewStatus: text("review_status"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  hideFromHomepage: boolean("hide_from_homepage").default(false).notNull(),
+  aiSummary: text("ai_summary"),
+  smartSummary: text("smart_summary"),
+  aiGenerated: boolean("ai_generated").default(false),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  views: integer("views").default(0).notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+  seo: jsonb("seo").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    socialTitle?: string;
+    socialDescription?: string;
+    imageAltText?: string;
+  }>(),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_articles_status_published").on(table.status, table.publishedAt.desc()),
+  index("idx_en_articles_category_status").on(table.categoryId, table.status),
+  index("idx_en_articles_author_status").on(table.authorId, table.status),
+  index("idx_en_articles_type").on(table.articleType),
+  index("idx_en_articles_published_at").on(table.publishedAt.desc()),
+]);
+
+// English Comments
+export const enComments = pgTable("en_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => enArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
+  parentId: varchar("parent_id"),
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  moderationReason: text("moderation_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_comments_article_status").on(table.articleId, table.status),
+  index("idx_en_comments_user").on(table.userId),
+  index("idx_en_comments_status").on(table.status),
+]);
+
+// English Reactions
+export const enReactions = pgTable("en_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => enArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull().default("like"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_reactions_article").on(table.articleId),
+  index("idx_en_reactions_user_article").on(table.userId, table.articleId),
+]);
+
+// English Bookmarks
+export const enBookmarks = pgTable("en_bookmarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => enArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_bookmarks_user").on(table.userId, table.createdAt.desc()),
+  index("idx_en_bookmarks_article").on(table.articleId),
+]);
+
+// English Reading History
+export const enReadingHistory = pgTable("en_reading_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  articleId: varchar("article_id").references(() => enArticles.id, { onDelete: "cascade" }).notNull(),
+  readAt: timestamp("read_at").defaultNow().notNull(),
+  readDuration: integer("read_duration"),
+}, (table) => [
+  index("idx_en_reading_history_user").on(table.userId, table.readAt.desc()),
+  index("idx_en_reading_history_article").on(table.articleId),
+]);
+
+// ============================================
+// ENGLISH VERSION - INSERT SCHEMAS
+// ============================================
+
+export const insertEnCategorySchema = createInsertSchema(enCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Category name is required"),
+  slug: z.string().min(1, "Slug is required"),
+});
+
+export const insertEnArticleSchema = createInsertSchema(enArticles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+  views: true,
+}).extend({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  slug: z.string().min(1, "Slug is required"),
+});
+
+export const insertEnCommentSchema = createInsertSchema(enComments).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  content: z.string().min(1, "Comment content is required"),
+});
+
+// ============================================
+// ENGLISH VERSION - SELECT TYPES
+// ============================================
+
+export type EnCategory = typeof enCategories.$inferSelect;
+export type InsertEnCategory = z.infer<typeof insertEnCategorySchema>;
+
+export type EnArticle = typeof enArticles.$inferSelect;
+export type InsertEnArticle = z.infer<typeof insertEnArticleSchema>;
+
+export type EnComment = typeof enComments.$inferSelect;
+export type InsertEnComment = z.infer<typeof insertEnCommentSchema>;
+
+export type EnReaction = typeof enReactions.$inferSelect;
+export type EnBookmark = typeof enBookmarks.$inferSelect;
+export type EnReadingHistory = typeof enReadingHistory.$inferSelect;
