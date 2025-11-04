@@ -481,16 +481,36 @@ ${newsContent}
         },
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 1024,
+      max_completion_tokens: 2048, // Increased from 1024 to allow full response
     });
 
-    console.log("[Smart Content] OpenAI response status:", response.choices[0].finish_reason);
-    console.log("[Smart Content] OpenAI message content:", response.choices[0].message.content);
+    console.log("[Smart Content] ✅ OpenAI response received");
+    console.log("[Smart Content] Finish reason:", response.choices[0].finish_reason);
+    console.log("[Smart Content] Message content length:", response.choices[0].message.content?.length || 0);
+    console.log("[Smart Content] Full message content:", response.choices[0].message.content);
     
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    // Check if response was cut off
+    if (response.choices[0].finish_reason === "length") {
+      console.error("[Smart Content] ⚠️ Response was truncated due to token limit!");
+      throw new Error("Response truncated - increase max_completion_tokens");
+    }
     
-    console.log("[Smart Content] Raw OpenAI response:", JSON.stringify(result, null, 2));
-    console.log("[Smart Content] Successfully generated content");
+    const messageContent = response.choices[0].message.content;
+    if (!messageContent || messageContent.trim() === "") {
+      console.error("[Smart Content] ❌ Empty response from OpenAI");
+      throw new Error("Empty response from OpenAI");
+    }
+    
+    const result = JSON.parse(messageContent);
+    
+    console.log("[Smart Content] Parsed result:", {
+      hasMainTitle: !!result.main_title,
+      hasSubTitle: !!result.sub_title,
+      hasSummary: !!result.smart_summary,
+      keywordsCount: result.keywords?.length || 0,
+      hasSeo: !!result.seo
+    });
+    console.log("[Smart Content] ✅ Successfully generated content");
     
     return {
       mainTitle: result.main_title || "",
