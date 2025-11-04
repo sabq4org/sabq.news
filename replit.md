@@ -4,7 +4,13 @@
 Sabq Smart is an AI-powered **bilingual news platform (Arabic and English)** built with React, Express, and PostgreSQL. The platform delivers an advanced news experience for both Arabic and English audiences by providing AI-driven article summarization, personalized recommendations, and comprehensive content management. The platform features RTL/LTR support, dynamic content delivery, user profiling, and advanced theme management, aiming to enrich news consumption through AI and content enrichment.
 
 **Latest Update (November 2025):** 
-- **Bilingual Platform MVP**: Complete English version infrastructure with separate database tables, dedicated API endpoints, language-specific dashboards, and i18n system with language switcher
+- **Bilingual Platform MVP - English Dashboard Complete**: Full English content management system with complete separation from Arabic dashboard:
+  - **Separate Navigation System**: Independent `en.nav.config.ts` with all routes prefixed `/en/dashboard/*`
+  - **Separate API Endpoints**: 19 English-specific endpoints for articles, categories, and comments management
+  - **Separate Storage Layer**: `getEnglishAdminDashboardStats()` and dedicated English table queries
+  - **Complete Dashboard Pages**: Overview, Articles, Categories, Comments, Users (shared)
+  - **LTR Layout**: All English pages use `dir="ltr"` with English labels
+  - **Independent Content**: English articles, categories, and comments stored in separate `en_*` tables
 - Smart Links system fully operational with complete CRUD operations for entities and terms, Object Storage integration for entity images, and AI-powered auto-description generation
 - **SEO AI System**: Complete SEO optimization platform with AI-powered analysis, Open Graph & Twitter Cards integration, dynamic XML sitemap, robots.txt, and structured Schema.org data
 - **Smart Content Generation**: One-click AI-powered content generation using GPT-5 that automatically produces all editorial elements from raw article content
@@ -19,8 +25,15 @@ Preferred communication style: Simple, everyday language.
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 production templates) ensures flexible content presentation with Framer Motion animations. Mobile responsiveness is achieved through a mobile-first approach, ensuring accessible touch targets (minimum 32px) and text sizes.
 
 **Bilingual System (November 2025):**
-- **Separate Database Architecture:** Independent tables for each language (en_categories, en_articles vs. categories, articles) for clean separation and independent editorial control
-- **Language-Specific Dashboards:** Dedicated management interfaces (/dashboard for Arabic, /en/dashboard for English) with permission-based access control
+- **Separate Database Architecture:** Independent tables for each language (en_categories, en_articles, en_comments vs. categories, articles, comments) for clean separation and independent editorial control
+- **Language-Specific Dashboards:** Completely separate management interfaces:
+  - **Arabic Dashboard:** `/dashboard` with Arabic navigation (`nav.config.ts`), RTL layout, Arabic labels
+  - **English Dashboard:** `/en/dashboard` with English navigation (`en.nav.config.ts`), LTR layout, English labels
+  - **Zero Content Mixing:** Each dashboard manages ONLY its language's content through dedicated API endpoints
+- **API Layer Separation:** 
+  - Arabic endpoints: `/api/dashboard/*` → query `articles`, `categories`, `comments` tables
+  - English endpoints: `/api/en/dashboard/*` → query `en_articles`, `en_categories`, `en_comments` tables
+- **Shared Resources:** Users, roles, authentication system shared between both languages
 - **i18n System:** LanguageContext with translation dictionaries, LanguageSwitcher component using lucide-react icons (NO emoji), and bidirectional routing (/ar, /en)
 - **Editorial Team Structure:** Users have allowedLanguages field to control access to language-specific content management
 - **Unified Design System:** Both languages share the same color palette, components, and design principles while respecting RTL/LTR requirements
