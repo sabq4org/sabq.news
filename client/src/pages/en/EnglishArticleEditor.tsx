@@ -894,6 +894,7 @@ export default function EnglishArticleEditor() {
                   onChange={setContent}
                   placeholder="Start writing the article..."
                   editorRef={setEditorInstance}
+                  dir="ltr"
                 />
               </CardContent>
             </Card>

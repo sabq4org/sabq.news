@@ -111,7 +111,12 @@ export async function setupAuth(app: Express) {
         return done(null, false);
       }
       console.log('✅ DeserializeUser: User found:', user.email);
-      done(null, { id: user.id, email: user.email });
+      done(null, { 
+        id: user.id, 
+        email: user.email,
+        role: user.role,
+        allowedLanguages: user.allowedLanguages || []
+      });
     } catch (error) {
       console.error('❌ DeserializeUser error:', error);
       done(error);
