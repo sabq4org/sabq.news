@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLanguage } from "@/contexts/LanguageContext";
 import {
   FolderOpen,
   PlusCircle,
@@ -179,7 +178,6 @@ function SortableCategoryItem({
 }
 
 export default function CategoriesManagement() {
-  const { language } = useLanguage();
   const { toast } = useToast();
 
   // State for dialogs
@@ -210,7 +208,7 @@ export default function CategoriesManagement() {
 
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories", language],
+    queryKey: ["/api/categories"],
   });
 
   // Update local categories when data changes

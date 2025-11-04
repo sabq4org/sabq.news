@@ -84,9 +84,6 @@ export const categories = pgTable("categories", {
   displayOrder: integer("display_order").default(0),
   status: text("status").default("active").notNull(),
   
-  // Multi-language support
-  language: text("language").default("ar").notNull(), // ar, en, fa, ur
-  
   // Smart Categories fields
   type: text("type").default("core").notNull(), // core, dynamic, smart, seasonal
   autoActivate: boolean("auto_activate").default(false).notNull(),
@@ -159,10 +156,6 @@ export const articles = pgTable("articles", {
   newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
   scheduledAt: timestamp("scheduled_at"),
-  
-  // Multi-language support
-  language: text("language").default("ar").notNull(), // ar, en, fa, ur
-  
   status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
   reviewStatus: text("review_status"), // null, pending_review, approved, rejected, needs_changes (for opinion articles)
   reviewedBy: varchar("reviewed_by").references(() => users.id),
@@ -192,8 +185,6 @@ export const articles = pgTable("articles", {
   index("idx_articles_author_status").on(table.authorId, table.status),
   index("idx_articles_type").on(table.articleType),
   index("idx_articles_published_at").on(table.publishedAt.desc()),
-  index("idx_articles_language").on(table.language),
-  index("idx_articles_language_status").on(table.language, table.status, table.publishedAt.desc()),
 ]);
 
 // RSS feeds for import

@@ -1,157 +1,0 @@
-رائع 👌
-بما أنك تريد في مشروع “سبق الذكية” دعم لغات متعددة (العربية، الإنجليزية، الفارسية، والأوردو) بحيث:
-
-🔹 لا تكون ترجمة آلية
-🔹 بل لكل لغة محتوى مختلف ولوحة تحكم مستقلة بالكامل
-🔹 ويمكن أن تختلف قاعدة البيانات لكل لغة
-
-فهذا يعني أننا نتحدث عن نظام Multi-Tenant CMS بلغة متعددة (Multi-Language / Multi-Instance Architecture).
-إليك أفضل طريقة هندسية لتنفيذها داخل بيئة Next.js + PostgreSQL (Supabase) + Prisma الحالية:
-
-⸻
-
-🏗️ أولًا: نموذج البنية المقترحة
-
-🔹 المقاربة الأفضل
-استخدم Hybrid Multi-Database Architecture:
-
-العنصر	الفكرة
-كل لغة = قاعدة بيانات مستقلة	sabq_ar, sabq_en, sabq_fa, sabq_ur
-نفس الكود الأساسي (shared codebase)	يحتفظ بنفس الواجهات والمنطق العام
-إعدادات منفصلة للبيئة (Environment Variables)	تحدد قاعدة البيانات النشطة واللغة الافتراضية
-لوحة تحكم مستقلة لكل لغة	/admin?lang=en, /admin?lang=fa, إلخ
-
-
-⸻
-
-⚙️ ثانيًا: إعداد قواعد البيانات المتعددة
-
-في ملف البيئة .env:
-
-# اللغة العربية (الافتراضية)
-DATABASE_URL_AR="postgresql://user:pass@db.sabq_ar"
-
-# الإنجليزية
-DATABASE_URL_EN="postgresql://user:pass@db.sabq_en"
-
-# الفارسية
-DATABASE_URL_FA="postgresql://user:pass@db.sabq_fa"
-
-# الأوردو
-DATABASE_URL_UR="postgresql://user:pass@db.sabq_ur"
-
-في Prisma:
-
-// lib/prismaClient.ts
-import { PrismaClient } from "@prisma/client";
-
-const connections = {
-  ar: new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL_AR } } }),
-  en: new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL_EN } } }),
-  fa: new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL_FA } } }),
-  ur: new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL_UR } } }),
-};
-
-export function getPrismaClient(lang: string = "ar") {
-  return connections[lang] || connections["ar"];
-}
-
-
-⸻
-
-🌐 ثالثًا: إدارة اللغات على مستوى الواجهة
-
-في Next.js، أنشئ نظام Dynamic Routing مثل:
-
-/[lang]/page.tsx
-/[lang]/news/[slug]
-/[lang]/categories/[id]
-
-ثم في middleware.ts:
-
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-const SUPPORTED_LANGS = ['ar', 'en', 'fa', 'ur'];
-
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const lang = pathname.split('/')[1];
-  
-  if (!SUPPORTED_LANGS.includes(lang)) {
-    const locale = req.cookies.get('locale')?.value || 'ar';
-    return NextResponse.redirect(new URL(`/${locale}${pathname}`, req.url));
-  }
-  return NextResponse.next();
-}
-
-
-⸻
-
-🧭 رابعًا: فصل المحتوى لكل لغة
-
-أضف في كل قاعدة بيانات جداول منفصلة بنفس البنية، مثل:
-
-articles_en
-articles_fa
-articles_ur
-
-أو استخدم نفس الجداول ولكن مع حقل اللغة:
-
-articles {
-  id: String PRIMARY KEY,
-  title: String,
-  content: Text,
-  lang: Enum('ar', 'en', 'fa', 'ur')
-}
-
-✅ الخيار الأول (قواعد مختلفة) أفضل إذا كان المحتوى فريدًا تمامًا لكل لغة.
-✅ الخيار الثاني أفضل إذا كان هناك بعض التشارك (مثلاً نفس الصور أو المراسلين).
-
-⸻
-
-🧮 خامسًا: لوحة التحكم المتعددة
-
-أنشئ إعدادًا مركزيًا للوحة التحكم في /app/admin/layout.tsx:
-
-import { getLocale } from "@/lib/i18n";
-
-export default async function AdminLayout({ children, params }) {
-  const locale = getLocale(params.lang);
-  return (
-    <html lang={locale}>
-      <body dir={locale === "ar" || locale === "fa" || locale === "ur" ? "rtl" : "ltr"}>
-        <AdminSidebar lang={locale} />
-        <main>{children}</main>
-      </body>
-    </html>
-  );
-}
-
-ويكون الوصول إلى لوحة التحكم:
-	•	/ar/admin
-	•	/en/admin
-	•	/fa/admin
-	•	/ur/admin
-
-مع ترجمة الواجهة وإعداداتها الخاصة بكل لغة (باستخدام ملفات i18n مثل locales/en.json, locales/fa.json… إلخ).
-
-⸻
-
-🔐 سادسًا: التحكم في صلاحيات اللغة
-
-أضف إلى جدول المستخدمين:
-
-ALTER TABLE users ADD COLUMN language_preference VARCHAR(2) DEFAULT 'ar';
-
-ليتمكن المستخدم من الدخول فقط إلى لوحة اللغة المخصصة له.
-
-⸻
-
-🧰 سابعًا: الخطوة العملية للبدء
-	1.	استنساخ قاعدة البيانات الحالية (العربية) إلى ثلاث نسخ جديدة.
-	2.	تحديث Prisma schema لدعم getPrismaClient(lang) كما في المثال.
-	3.	تفعيل middleware لتوجيه اللغة.
-	4.	إعداد ملفات الترجمة للواجهة والـAdmin.
-	5.	ربط كل لغة بمحتواها من قاعدة بياناتها الخاصة.
-
