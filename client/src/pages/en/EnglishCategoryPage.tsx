@@ -67,10 +67,10 @@ export default function EnglishCategoryPage() {
     <EnglishLayout>
 
       {/* Hero Section */}
-      {category.imageUrl ? (
+      {category.heroImageUrl ? (
         <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden">
           <img
-            src={category.imageUrl}
+            src={category.heroImageUrl}
             alt={category.name}
             className="w-full h-full object-cover"
           />
