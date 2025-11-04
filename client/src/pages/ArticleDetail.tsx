@@ -136,8 +136,8 @@ export default function ArticleDetail() {
   useEffect(() => {
     if (!article) return;
 
-    const seoTitle = article.seo?.ogTitle || article.seo?.title || article.title;
-    const seoDescription = article.seo?.ogDescription || article.seo?.description || article.excerpt || article.aiSummary || "";
+    const seoTitle = article.seo?.metaTitle || article.title;
+    const seoDescription = article.seo?.metaDescription || article.excerpt || article.aiSummary || "";
     const seoImage = article.imageUrl || `${window.location.origin}/og-image.png`;
     const seoUrl = window.location.href;
 
@@ -175,10 +175,10 @@ export default function ArticleDetail() {
     updateMetaTag('og:locale', 'ar_SA');
 
     if (article.publishedAt) {
-      updateMetaTag('article:published_time', article.publishedAt);
+      updateMetaTag('article:published_time', new Date(article.publishedAt).toISOString());
     }
     if (article.updatedAt) {
-      updateMetaTag('article:modified_time', article.updatedAt);
+      updateMetaTag('article:modified_time', new Date(article.updatedAt).toISOString());
     }
     if (article.category?.nameAr) {
       updateMetaTag('article:section', article.category.nameAr);
@@ -195,11 +195,6 @@ export default function ArticleDetail() {
 
     if (article.seo?.keywords && article.seo.keywords.length > 0) {
       updateMetaTag('keywords', article.seo.keywords.join(', '), true);
-    }
-
-    // Image Alt Text
-    if (article.seo?.imageAlt) {
-      updateMetaTag('twitter:image:alt', article.seo.imageAlt, true);
     }
 
     // Cleanup on unmount - restore original values or remove created tags
@@ -483,7 +478,7 @@ export default function ArticleDetail() {
         </div>
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <article className="lg:col-span-2 space-y-8">
