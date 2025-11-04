@@ -67,10 +67,10 @@ export default function EnglishCategoriesListPage() {
                     data-testid={`card-category-${category.id}`}
                   >
                     {/* Hero Image */}
-                    {category.imageUrl && (
+                    {category.heroImageUrl && (
                       <div className="relative h-48 overflow-hidden">
                         <img
-                          src={category.imageUrl}
+                          src={category.heroImageUrl}
                           alt={category.name}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
@@ -79,7 +79,7 @@ export default function EnglishCategoriesListPage() {
                     )}
 
                     {/* No Image - Show Color Gradient */}
-                    {!category.imageUrl && (
+                    {!category.heroImageUrl && (
                       <div 
                         className="relative h-48 flex items-center justify-center"
                         style={{
@@ -88,9 +88,7 @@ export default function EnglishCategoriesListPage() {
                             : 'linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.05) 100%)'
                         }}
                       >
-                        <div className="text-6xl" style={{ color: category.color || 'hsl(var(--primary))' }}>
-                          📰
-                        </div>
+                        <FileText className="h-16 w-16" style={{ color: category.color || 'hsl(var(--primary))' }} />
                       </div>
                     )}
                     
