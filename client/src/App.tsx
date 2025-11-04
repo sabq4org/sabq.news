@@ -109,6 +109,7 @@ import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
 import EnglishHome from "@/pages/en/EnglishHome";
 import EnglishArticleDetail from "@/pages/en/EnglishArticleDetail";
+import EnglishDashboard from "@/pages/en/EnglishDashboard";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -129,6 +130,7 @@ function Router() {
         {/* English Version Routes */}
         <Route path="/en" component={EnglishHome} />
         <Route path="/en/articles/:slug" component={EnglishArticleDetail} />
+        <Route path="/en/dashboard" component={EnglishDashboard} />
         
         {/* Arabic Version Routes */}
         <Route path="/" component={Home} />

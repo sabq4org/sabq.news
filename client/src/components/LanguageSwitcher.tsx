@@ -1,6 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Globe } from "lucide-react";
+import { Globe, Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +45,7 @@ export default function LanguageSwitcher() {
           className={language === "ar" ? "bg-accent" : ""}
           data-testid="option-arabic"
         >
-          <span className="mr-2">🇸🇦</span>
+          <Languages className="w-4 h-4 mr-2" />
           العربية
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -53,7 +53,7 @@ export default function LanguageSwitcher() {
           className={language === "en" ? "bg-accent" : ""}
           data-testid="option-english"
         >
-          <span className="mr-2">🇬🇧</span>
+          <Languages className="w-4 h-4 mr-2" />
           English
         </DropdownMenuItem>
       </DropdownMenuContent>

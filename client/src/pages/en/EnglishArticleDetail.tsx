@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Eye, Heart, Bookmark } from "lucide-react";
+import { ArrowLeft, Calendar, Eye, Heart, Bookmark, Sparkles } from "lucide-react";
 import type { EnArticle } from "@shared/schema";
 
 export default function EnglishArticleDetail() {
@@ -119,7 +119,7 @@ export default function EnglishArticleDetail() {
           <Card className="mb-8 bg-primary/5 border-primary/20">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <span className="text-primary">⚡</span> Quick Summary
+                <Sparkles className="w-4 h-4 text-primary" /> Quick Summary
               </h3>
               <p className="text-sm leading-relaxed" data-testid="text-ai-summary">
                 {article.smartSummary || article.aiSummary}
