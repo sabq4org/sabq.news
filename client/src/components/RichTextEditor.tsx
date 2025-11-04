@@ -62,13 +62,15 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   editorRef?: (editor: Editor | null) => void;
+  dir?: "rtl" | "ltr";
 }
 
 export function RichTextEditor({ 
   content, 
   onChange, 
   placeholder = "ابدأ الكتابة...",
-  editorRef 
+  editorRef,
+  dir = "rtl"
 }: RichTextEditorProps) {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -114,7 +116,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-[300px] px-4 py-3",
-        dir: "rtl",
+        dir: dir,
       },
     },
     onUpdate: ({ editor }) => {
@@ -253,7 +255,7 @@ export function RichTextEditor({
   );
 
   return (
-    <div className="border rounded-md" dir="rtl">
+    <div className="border rounded-md" dir={dir}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
         <ToolbarButton
