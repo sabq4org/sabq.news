@@ -88,6 +88,23 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        // TailAdmin color utilities
+        stroke: "hsl(var(--border) / <alpha-value>)",
+        strokedark: "hsl(var(--border) / <alpha-value>)",
+        boxdark: "hsl(var(--card) / <alpha-value>)",
+        graydark: "hsl(var(--muted) / <alpha-value>)",
+        "gray-2": "hsl(var(--muted) / 0.3)",
+        "meta-4": "hsl(var(--muted) / 0.3)",
+        success: "rgb(34 197 94)",
+        warning: "rgb(245 158 11)",
+        danger: "rgb(239 68 68)",
+      },
+      boxShadow: {
+        default: "0 2px 4px 0 rgb(0 0 0 / 0.05)",
+      },
+      spacing: {
+        "4.5": "1.125rem",
+        "7.5": "1.875rem",
       },
       fontFamily: {
         sans: ['"IBM Plex Sans Arabic"', 'Inter', 'system-ui', 'sans-serif'],
