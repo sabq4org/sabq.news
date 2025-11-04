@@ -485,6 +485,7 @@ ${newsContent}
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
+    console.log("[Smart Content] Raw OpenAI response:", JSON.stringify(result, null, 2));
     console.log("[Smart Content] Successfully generated content");
     
     return {
