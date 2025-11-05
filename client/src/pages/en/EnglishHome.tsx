@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Clock, Eye, Star, TrendingUp } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
+import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import type { EnArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 
@@ -50,6 +51,11 @@ export default function EnglishHome() {
               <EnglishHeroCarousel articles={featuredArticles} />
             </section>
           )}
+
+          {/* Quad Categories Block - Full Width */}
+          <div className="scroll-fade-in">
+            <EnglishQuadCategoriesBlock />
+          </div>
 
           {/* Latest Articles Section */}
           {regularArticles.length > 0 && (
