@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Loader2, Save, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { categories } from "@shared/schema";
+import { enCategories } from "@shared/schema";
 
 // Form Schema
 const formSchema = z.object({
@@ -43,14 +43,14 @@ type FormData = z.infer<typeof formSchema>;
 export default function EnglishQuadCategoriesBlockSettings() {
   const { toast } = useToast();
 
-  // Fetch categories
-  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<Array<typeof categories.$inferSelect>>({
-    queryKey: ["/api/categories"],
+  // Fetch English categories
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<Array<typeof enCategories.$inferSelect>>({
+    queryKey: ["/api/en/categories"],
   });
 
-  // Fetch current settings
+  // Fetch current English settings
   const { data: settings, isLoading: settingsLoading } = useQuery<{ config: FormData["config"]; isActive: boolean }>({
-    queryKey: ["/api/admin/blocks/quad-categories/settings"],
+    queryKey: ["/api/en/admin/blocks/quad-categories/settings"],
   });
 
   const form = useForm<FormData>({
@@ -82,22 +82,22 @@ export default function EnglishQuadCategoriesBlockSettings() {
     }
   }, [settings]);
 
-  // Save mutation
+  // Save mutation for English settings
   const saveMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("/api/admin/blocks/quad-categories/settings", {
+      return await apiRequest("/api/en/admin/blocks/quad-categories/settings", {
         method: "PUT",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["/api/blocks/quad-categories"] });
-      queryClient.refetchQueries({ queryKey: ["/api/blocks/quad-categories"] });
-      queryClient.removeQueries({ queryKey: ["/api/admin/blocks/quad-categories/settings"] });
-      queryClient.refetchQueries({ queryKey: ["/api/admin/blocks/quad-categories/settings"] });
+      queryClient.removeQueries({ queryKey: ["/api/en/blocks/quad-categories"] });
+      queryClient.refetchQueries({ queryKey: ["/api/en/blocks/quad-categories"] });
+      queryClient.removeQueries({ queryKey: ["/api/en/admin/blocks/quad-categories/settings"] });
+      queryClient.refetchQueries({ queryKey: ["/api/en/admin/blocks/quad-categories/settings"] });
       toast({
         title: "Saved successfully",
-        description: "Quad categories block settings saved",
+        description: "English quad categories block settings saved",
       });
     },
     onError: (error: any) => {
@@ -176,7 +176,7 @@ export default function EnglishQuadCategoriesBlockSettings() {
                               <SelectContent>
                                 {activeCategories.map((cat) => (
                                   <SelectItem key={cat.slug} value={cat.slug}>
-                                    {cat.nameEn || cat.nameAr}
+                                    {cat.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>

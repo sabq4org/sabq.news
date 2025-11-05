@@ -103,6 +103,7 @@ import {
   shorts,
   shortAnalytics,
   quadCategoriesSettings,
+  enQuadCategoriesSettings,
   articleSmartCategories,
   entityTypes,
   smartEntities,
@@ -168,6 +169,7 @@ import {
   updateShortSchema,
   insertShortAnalyticSchema,
   insertQuadCategoriesSettingsSchema,
+  insertEnQuadCategoriesSettingsSchema,
   insertChatChannelSchema,
   updateChatChannelSchema,
   insertChatMemberSchema,
@@ -14871,6 +14873,325 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
       }
       res.status(500).json({ message: "فشل حفظ الإعدادات" });
+    }
+  });
+
+  // ==================== English Quad Categories Block APIs ====================
+  
+  // GET /api/en/blocks/quad-categories - Get English quad categories block data for frontend
+  app.get("/api/en/blocks/quad-categories", async (req, res) => {
+    try {
+      // Get active settings
+      const [settings] = await db
+        .select()
+        .from(enQuadCategoriesSettings)
+        .where(eq(enQuadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        return res.json({ items: [] });
+      }
+
+      const config = settings.config;
+      const items = [];
+
+      // Process each section
+      for (const section of config.sections) {
+        const category = await db
+          .select()
+          .from(enCategories)
+          .where(and(
+            eq(enCategories.slug, section.categorySlug),
+            eq(enCategories.status, "active")
+          ))
+          .limit(1);
+
+        if (!category.length) continue;
+
+        const cat = category[0];
+
+        // Calculate stats based on statType
+        let stats: { label: string; value: number; trend?: string } = { label: "", value: 0 };
+        
+        if (section.statType === "dailyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(enArticles)
+            .where(and(
+              eq(enArticles.categoryId, cat.id),
+              eq(enArticles.status, "published"),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '24 hours'`),
+              or(
+                isNull(enArticles.articleType),
+                ne(enArticles.articleType, "opinion")
+              )
+            ));
+          stats = { label: "Today's News", value: count[0]?.count || 0 };
+        } else if (section.statType === "weeklyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(enArticles)
+            .where(and(
+              eq(enArticles.categoryId, cat.id),
+              eq(enArticles.status, "published"),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '7 days'`),
+              or(
+                isNull(enArticles.articleType),
+                ne(enArticles.articleType, "opinion")
+              )
+            ));
+          stats = { label: "This Week", value: count[0]?.count || 0 };
+        } else if (section.statType === "totalViews") {
+          const sum = await db
+            .select({ total: sql<number>`COALESCE(SUM(${enArticles.views}), 0)::int` })
+            .from(enArticles)
+            .where(and(
+              eq(enArticles.categoryId, cat.id),
+              eq(enArticles.status, "published"),
+              or(
+                isNull(enArticles.articleType),
+                ne(enArticles.articleType, "opinion")
+              )
+            ));
+          stats = { label: "Total Views", value: sum[0]?.total || 0 };
+        } else if (section.statType === "engagementRate") {
+          // Calculate engagement rate based on reactions and comments
+          const result = await db
+            .select({
+              totalViews: sql<number>`COALESCE(SUM(${enArticles.views}), 0)::int`,
+              totalReactions: sql<number>`COALESCE(COUNT(DISTINCT ${enReactions.id}), 0)::int`,
+              totalComments: sql<number>`COALESCE(COUNT(DISTINCT ${enComments.id}), 0)::int`,
+            })
+            .from(enArticles)
+            .leftJoin(enReactions, eq(enReactions.articleId, enArticles.id))
+            .leftJoin(enComments, eq(enComments.articleId, enArticles.id))
+            .where(and(
+              eq(enArticles.categoryId, cat.id),
+              eq(enArticles.status, "published"),
+              or(
+                isNull(enArticles.articleType),
+                ne(enArticles.articleType, "opinion")
+              )
+            ));
+
+          const totalViews = result[0]?.totalViews || 0;
+          const totalEngagements = (result[0]?.totalReactions || 0) + (result[0]?.totalComments || 0);
+          const engagementRate = totalViews > 0 ? Math.round((totalEngagements / totalViews) * 100) : 0;
+          
+          stats = { label: "Engagement Rate", value: engagementRate };
+        }
+
+        // Get articles based on headlineMode
+        let articlesQuery = db
+          .select({
+            article: enArticles,
+            author: users,
+          })
+          .from(enArticles)
+          .leftJoin(users, eq(enArticles.authorId, users.id))
+          .where(and(
+            eq(enArticles.categoryId, cat.id),
+            eq(enArticles.status, "published"),
+            or(
+              isNull(enArticles.articleType),
+              ne(enArticles.articleType, "opinion")
+            )
+          ))
+          .$dynamic();
+
+        if (section.headlineMode === "mostViewed") {
+          articlesQuery = articlesQuery.orderBy(desc(enArticles.views), desc(enArticles.publishedAt));
+        } else if (section.headlineMode === "editorsPick") {
+          articlesQuery = articlesQuery
+            .where(and(
+              eq(enArticles.categoryId, cat.id),
+              eq(enArticles.status, "published"),
+              eq(enArticles.isFeatured, true)
+            ))
+            .orderBy(desc(enArticles.publishedAt));
+        } else {
+          articlesQuery = articlesQuery.orderBy(desc(enArticles.publishedAt));
+        }
+
+        const articlesList = await articlesQuery.limit(section.listSize + 1);
+
+        if (!articlesList.length) continue;
+
+        // Featured article (first one)
+        const featuredData = articlesList[0];
+        const timeDiff = featuredData.article.publishedAt 
+          ? Date.now() - new Date(featuredData.article.publishedAt).getTime()
+          : 0;
+        const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+        const isFresh = hoursAgo <= config.freshHours;
+
+        let badge = null;
+        if (config.badges.breaking && featuredData.article.newsType === "breaking") {
+          badge = "Breaking";
+        } else if (config.badges.analysis && featuredData.article.articleType === "analysis") {
+          badge = "Analysis";
+        }
+
+        const featured = {
+          id: featuredData.article.id,
+          title: featuredData.article.title,
+          image: featuredData.article.imageUrl,
+          href: `/en/article/${featuredData.article.slug}`,
+          meta: {
+            age: hoursAgo < 1 ? "minutes ago" : hoursAgo < 24 ? `${hoursAgo}h` : `${Math.floor(hoursAgo / 24)}d`,
+            readMins: 3,
+            views: featuredData.article.views,
+            badge: isFresh && hoursAgo < 2 ? "New" : badge,
+          },
+        };
+
+        // List items (remaining articles)
+        const list = articlesList.slice(1).map((item) => {
+          const timeDiff = item.article.publishedAt 
+            ? Date.now() - new Date(item.article.publishedAt).getTime()
+            : 0;
+          const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+
+          return {
+            id: item.article.id,
+            title: item.article.title,
+            href: `/en/article/${item.article.slug}`,
+            meta: {
+              views: item.article.views,
+              age: hoursAgo < 1 ? "min" : hoursAgo < 24 ? `${hoursAgo}h` : `${Math.floor(hoursAgo / 24)}d`,
+            },
+          };
+        });
+
+        items.push({
+          category: {
+            slug: cat.slug,
+            name: cat.name,
+            icon: cat.icon || "folder",
+          },
+          stats,
+          featured,
+          list,
+          teaser: section.teaser || "",
+        });
+      }
+
+      res.json({
+        items,
+        mobileCarousel: config.mobileCarousel,
+        backgroundColor: config.backgroundColor,
+      });
+    } catch (error) {
+      console.error("Error fetching English quad categories block:", error);
+      res.status(500).json({ message: "Failed to load quad categories block" });
+    }
+  });
+
+  // GET /api/en/admin/blocks/quad-categories/settings - Get current settings (admin)
+  app.get("/api/en/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const [settings] = await db
+        .select()
+        .from(enQuadCategoriesSettings)
+        .where(eq(enQuadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        // Return default configuration
+        return res.json({
+          config: {
+            sections: [
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+              {
+                categorySlug: "",
+                headlineMode: "latest" as const,
+                statType: "dailyCount" as const,
+                teaser: "",
+                listSize: 5,
+              },
+            ],
+            mobileCarousel: true,
+            freshHours: 12,
+            badges: {
+              exclusive: true,
+              breaking: true,
+              analysis: true,
+            },
+            backgroundColor: undefined,
+          },
+          isActive: true,
+        });
+      }
+
+      res.json({
+        config: settings.config,
+        isActive: settings.isActive,
+      });
+    } catch (error) {
+      console.error("Error fetching English quad categories settings:", error);
+      res.status(500).json({ message: "Failed to load settings" });
+    }
+  });
+
+  // PUT /api/en/admin/blocks/quad-categories/settings - Update settings (admin)
+  app.put("/api/en/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const validated = insertEnQuadCategoriesSettingsSchema.parse(req.body);
+
+      // Deactivate existing settings
+      await db
+        .update(enQuadCategoriesSettings)
+        .set({ isActive: false })
+        .where(eq(enQuadCategoriesSettings.isActive, true));
+
+      // Create new settings
+      const [newSettings] = await db
+        .insert(enQuadCategoriesSettings)
+        .values({
+          config: validated.config,
+          isActive: true,
+        })
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId: (req.user as any).id,
+        action: "en_quad_categories_settings_update",
+        entityType: "en_quad_categories_settings",
+        entityId: newSettings.id,
+        newValue: { config: validated.config },
+      });
+
+      res.json({
+        message: "Settings saved successfully",
+        settings: newSettings,
+      });
+    } catch (error: any) {
+      console.error("Error updating English quad categories settings:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save settings" });
     }
   });
 
