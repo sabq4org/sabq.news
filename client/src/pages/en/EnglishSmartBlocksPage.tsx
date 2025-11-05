@@ -53,8 +53,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Blocks, Plus, Edit, Trash2 } from "lucide-react";
-import type { SmartBlock, InsertSmartBlock } from "@shared/schema";
-import { insertSmartBlockSchema } from "@shared/schema";
+import type { EnSmartBlock, InsertEnSmartBlock } from "@shared/schema";
+import { insertEnSmartBlockSchema } from "@shared/schema";
 
 const placementOptions = [
   { value: 'below_featured', label: 'Below Main Banner' },
@@ -72,11 +72,11 @@ const layoutStyleOptions = [
 export default function EnglishSmartBlocksPage() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingBlock, setEditingBlock] = useState<SmartBlock | null>(null);
+  const [editingBlock, setEditingBlock] = useState<EnSmartBlock | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const form = useForm<InsertSmartBlock>({
-    resolver: zodResolver(insertSmartBlockSchema),
+  const form = useForm<InsertEnSmartBlock>({
+    resolver: zodResolver(insertEnSmartBlockSchema),
     defaultValues: {
       title: '',
       keyword: '',
@@ -88,24 +88,19 @@ export default function EnglishSmartBlocksPage() {
     },
   });
 
-  const { data: blocks = [], isLoading } = useQuery<SmartBlock[]>({
-    queryKey: ['/api/smart-blocks'],
-    queryFn: async () => {
-      const res = await fetch('/api/smart-blocks', { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch blocks');
-      return await res.json();
-    },
+  const { data: blocks = [], isLoading } = useQuery<EnSmartBlock[]>({
+    queryKey: ['/api/en/smart-blocks'],
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: InsertSmartBlock) => {
-      return await apiRequest('/api/smart-blocks', {
+    mutationFn: async (data: InsertEnSmartBlock) => {
+      return await apiRequest('/api/en/smart-blocks', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/smart-blocks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/en/smart-blocks'] });
       toast({
         title: "Created",
         description: "Smart block created successfully",
@@ -122,14 +117,14 @@ export default function EnglishSmartBlocksPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: InsertSmartBlock }) => {
-      return await apiRequest(`/api/smart-blocks/${id}`, {
+    mutationFn: async ({ id, data }: { id: string; data: InsertEnSmartBlock }) => {
+      return await apiRequest(`/api/en/smart-blocks/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/smart-blocks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/en/smart-blocks'] });
       toast({
         title: "Updated",
         description: "Smart block updated successfully",
@@ -147,10 +142,10 @@ export default function EnglishSmartBlocksPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest(`/api/smart-blocks/${id}`, { method: 'DELETE' });
+      await apiRequest(`/api/en/smart-blocks/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/smart-blocks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/en/smart-blocks'] });
       toast({
         title: "Deleted",
         description: "Smart block deleted successfully",
@@ -166,7 +161,7 @@ export default function EnglishSmartBlocksPage() {
     },
   });
 
-  const handleSubmit = (data: InsertSmartBlock) => {
+  const handleSubmit = (data: InsertEnSmartBlock) => {
     if (editingBlock) {
       updateMutation.mutate({ id: editingBlock.id, data });
     } else {
@@ -174,7 +169,7 @@ export default function EnglishSmartBlocksPage() {
     }
   };
 
-  const handleEdit = (block: SmartBlock) => {
+  const handleEdit = (block: EnSmartBlock) => {
     setEditingBlock(block);
     form.reset({
       title: block.title,

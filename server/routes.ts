@@ -114,6 +114,7 @@ import {
   enComments,
   enReactions,
   enBookmarks,
+  enSmartBlocks,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -189,6 +190,7 @@ import {
   insertEnCategorySchema,
   insertEnArticleSchema,
   insertEnCommentSchema,
+  insertEnSmartBlockSchema,
   type EnArticleWithDetails,
   type User,
 } from "@shared/schema";
