@@ -21,12 +21,15 @@ import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { arSA, enUS } from "date-fns/locale";
+import type { Locale } from "date-fns";
 import FollowStoryButton from "./FollowStoryButton";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
   variant?: "grid" | "featured" | "list" | "compact";
+  dir?: "rtl" | "ltr";
+  locale?: Locale;
   onReact?: (articleId: string) => void;
   onBookmark?: (articleId: string) => void;
 }
@@ -34,13 +37,20 @@ interface ArticleCardProps {
 export function ArticleCard({ 
   article, 
   variant = "grid",
+  dir = "rtl",
+  locale = arSA,
   onReact,
   onBookmark 
 }: ArticleCardProps) {
+  // Determine category name based on direction
+  const categoryName = dir === "ltr" 
+    ? article.category?.nameEn 
+    : article.category?.nameAr;
+
   const timeAgo = article.publishedAt
     ? formatDistanceToNow(new Date(article.publishedAt), { 
         addSuffix: true, 
-        locale: arSA 
+        locale 
       })
     : null;
 
@@ -78,12 +88,12 @@ export function ArticleCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
             
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
-              {article.category && (
+              {article.category && categoryName && (
                 <Badge 
                   className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs sm:text-sm shadow-md" 
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {article.category.icon} {article.category.nameAr}
+                  {article.category.icon} {categoryName}
                 </Badge>
               )}
             </div>
@@ -135,13 +145,13 @@ export function ArticleCard({
         <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent">
           <CardContent className="p-3">
             <div className="flex items-start gap-2 mb-2">
-              {article.category && (
+              {article.category && categoryName && (
                 <Badge 
                   variant="outline" 
                   className="text-[10px] px-1.5 py-0.5 border-primary/20 text-primary"
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {article.category.nameAr}
+                  {categoryName}
                 </Badge>
               )}
               {aiInsight && (
@@ -195,13 +205,13 @@ export function ArticleCard({
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
                 )}
-                {article.category && (
+                {article.category && categoryName && (
                   <div className="absolute bottom-2 right-2">
                     <Badge 
                       className="bg-primary/90 backdrop-blur-sm text-white border-0 text-[10px] px-2 py-0.5"
                       data-testid={`badge-category-${article.id}`}
                     >
-                      {article.category.nameAr}
+                      {categoryName}
                     </Badge>
                   </div>
                 )}
@@ -297,8 +307,8 @@ export function ArticleCard({
     <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent" data-testid={`card-article-${article.id}`}>
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
         <CardContent className="p-3">
-          <div className="flex gap-3 flex-row-reverse">
-            {/* Image on right (RTL) */}
+          <div className={`flex gap-3 ${dir === "rtl" ? "flex-row-reverse" : "flex-row"}`}>
+            {/* Image on right for RTL, left for LTR */}
             <div className="relative w-20 md:w-24 lg:w-28 xl:w-[120px] flex-shrink-0 rounded-md overflow-hidden">
               <div className="aspect-[3/2]">
                 {article.imageUrl ? (
@@ -319,13 +329,13 @@ export function ArticleCard({
             <div className="flex-1 min-w-0 flex flex-col gap-2">
               {/* Badges row */}
               <div className="flex items-center gap-2 flex-wrap">
-                {article.category && (
+                {article.category && categoryName && (
                   <Badge 
                     variant="outline"
                     className="text-[10px] px-1.5 py-0.5 border-primary/20 text-primary"
                     data-testid={`badge-category-${article.id}`}
                   >
-                    {article.category.nameAr}
+                    {categoryName}
                   </Badge>
                 )}
                 {aiInsight && (
