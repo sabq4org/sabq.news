@@ -103,6 +103,7 @@ import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
 import OpinionManagement from "@/pages/dashboard/OpinionManagement";
 import Chat from "@/pages/dashboard/Chat";
 import ChatAdmin from "@/pages/dashboard/ChatAdmin";
+import MediaLibrary from "@/pages/dashboard/MediaLibrary";
 import AdminLogin from "@/pages/AdminLogin";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
@@ -268,6 +269,7 @@ function Router() {
       <Route path="/dashboard/articles" component={ArticlesManagement} />
       <Route path="/dashboard/opinion" component={OpinionManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
+      <Route path="/dashboard/media-library" component={MediaLibrary} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />

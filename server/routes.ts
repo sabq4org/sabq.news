@@ -115,6 +115,9 @@ import {
   enReactions,
   enBookmarks,
   enSmartBlocks,
+  mediaFiles,
+  mediaFolders,
+  mediaUsageLog,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -191,6 +194,11 @@ import {
   insertEnArticleSchema,
   insertEnCommentSchema,
   insertEnSmartBlockSchema,
+  insertMediaFolderSchema,
+  insertMediaFileSchema,
+  insertMediaUsageLogSchema,
+  updateMediaFileSchema,
+  updateMediaFolderSchema,
   type EnArticleWithDetails,
   type User,
 } from "@shared/schema";
@@ -687,6 +695,925 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "فشل في تحديث الصورة الشخصية" });
     }
   });
+
+  // ============================================================
+  // MEDIA LIBRARY API ENDPOINTS
+  // ============================================================
+
+  // GET /api/media - List all media files with pagination, search, and filtering
+  app.get("/api/media", isAuthenticated, async (req: any, res) => {
+    try {
+      const {
+        search,
+        folder,
+        folderId,
+        category,
+        isFavorite,
+        page = 1,
+        limit = 20,
+      } = req.query;
+
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 20);
+      const offset = (pageNum - 1) * limitNum;
+
+      // Build where conditions
+      const conditions = [];
+
+      if (search) {
+        conditions.push(
+          or(
+            ilike(mediaFiles.fileName, `%${search}%`),
+            ilike(mediaFiles.title, `%${search}%`),
+            ilike(mediaFiles.description, `%${search}%`)
+          )
+        );
+      }
+
+      // Support both folderId and folder parameters
+      const folderFilter = (folderId || folder) as string | undefined;
+      if (folderFilter) {
+        conditions.push(eq(mediaFiles.folderId, folderFilter));
+      }
+
+      if (category) {
+        conditions.push(eq(mediaFiles.category, category as string));
+      }
+
+      if (isFavorite !== undefined) {
+        conditions.push(eq(mediaFiles.isFavorite, isFavorite === 'true'));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      // Get total count
+      const [countResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(mediaFiles)
+        .where(whereClause);
+
+      const total = Number(countResult.count);
+
+      // Get paginated results with folder and uploader details
+      const items = await db
+        .select({
+          id: mediaFiles.id,
+          fileName: mediaFiles.fileName,
+          originalName: mediaFiles.originalName,
+          folderId: mediaFiles.folderId,
+          url: mediaFiles.url,
+          thumbnailUrl: mediaFiles.thumbnailUrl,
+          type: mediaFiles.type,
+          mimeType: mediaFiles.mimeType,
+          size: mediaFiles.size,
+          width: mediaFiles.width,
+          height: mediaFiles.height,
+          title: mediaFiles.title,
+          description: mediaFiles.description,
+          altText: mediaFiles.altText,
+          caption: mediaFiles.caption,
+          keywords: mediaFiles.keywords,
+          isFavorite: mediaFiles.isFavorite,
+          category: mediaFiles.category,
+          usedIn: mediaFiles.usedIn,
+          usageCount: mediaFiles.usageCount,
+          uploadedBy: mediaFiles.uploadedBy,
+          createdAt: mediaFiles.createdAt,
+          updatedAt: mediaFiles.updatedAt,
+          folder: mediaFolders,
+          uploader: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(mediaFiles)
+        .leftJoin(mediaFolders, eq(mediaFiles.folderId, mediaFolders.id))
+        .leftJoin(users, eq(mediaFiles.uploadedBy, users.id))
+        .where(whereClause)
+        .orderBy(desc(mediaFiles.createdAt))
+        .limit(limitNum)
+        .offset(offset);
+
+      res.json({
+        files: items,
+        total,
+        page: pageNum,
+        limit: limitNum,
+      });
+    } catch (error) {
+      console.error("Error fetching media files:", error);
+      res.status(500).json({ message: "فشل في جلب ملفات الوسائط" });
+    }
+  });
+
+  // POST /api/media/upload - Upload media file to GCS
+  const mediaUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'image/svg+xml',
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مسموح. الأنواع المسموحة: JPEG, PNG, WEBP, GIF, SVG'));
+      }
+    },
+  });
+
+  app.post("/api/media/upload", isAuthenticated, strictLimiter, mediaUpload.single('file'), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم اختيار ملف" });
+      }
+
+      console.log("[Media Upload] File received:", {
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      });
+
+      // Extract bucket ID from PRIVATE_OBJECT_DIR
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
+      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
+
+      if (!bucketId) {
+        throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');
+      }
+
+      // Generate unique filename with year/month structure
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
+      const objectId = randomUUID();
+
+      const objectPath = `uploads/media/${year}/${month}/${objectId}.${fileExtension}`;
+
+      console.log("[Media Upload] Uploading to bucket:", bucketId, "path:", objectPath);
+
+      // Upload file to GCS with public access
+      const { objectStorageClient } = await import('./objectStorage');
+      const bucket = objectStorageClient.bucket(bucketId);
+      const file = bucket.file(objectPath);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+        predefinedAcl: 'publicRead',
+      });
+
+      console.log("[Media Upload] File uploaded successfully with public access");
+
+      // Build public URL
+      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+
+      // Extract metadata (width, height for images)
+      let width: number | undefined;
+      let height: number | undefined;
+
+      if (req.file.mimetype.startsWith('image/')) {
+        try {
+          // Use sharp or image-size library to extract dimensions
+          // For now, we'll leave them as undefined and can be updated later
+          // In production, you'd use: const { width: w, height: h } = await sharp(req.file.buffer).metadata();
+        } catch (err) {
+          console.log("[Media Upload] Could not extract image dimensions:", err);
+        }
+      }
+
+      // Determine file type
+      let fileType = 'document';
+      if (req.file.mimetype.startsWith('image/')) {
+        fileType = 'image';
+      } else if (req.file.mimetype.startsWith('video/')) {
+        fileType = 'video';
+      }
+
+      // Parse additional metadata from request body
+      const {
+        title,
+        description,
+        altText,
+        caption,
+        keywords,
+        category,
+        isFavorite,
+        folderId,
+        entityType,
+        entityId,
+      } = req.body;
+
+      // Save to media_files table
+      const [mediaFile] = await db
+        .insert(mediaFiles)
+        .values({
+          fileName: `${objectId}.${fileExtension}`,
+          originalName: req.file.originalname,
+          folderId: folderId || null,
+          url: publicUrl,
+          type: fileType,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+          width,
+          height,
+          title: title || null,
+          description: description || null,
+          altText: altText || null,
+          caption: caption || null,
+          keywords: keywords ? JSON.parse(keywords) : [],
+          isFavorite: isFavorite === 'true' || false,
+          category: category || null,
+          uploadedBy: userId,
+          usedIn: entityId ? [entityId] : [],
+          usageCount: entityId ? 1 : 0,
+        })
+        .returning();
+
+      // Auto-save to mediaUsageLog if entityId provided
+      if (entityType && entityId) {
+        await db.insert(mediaUsageLog).values({
+          mediaId: mediaFile.id,
+          entityType,
+          entityId,
+          usedBy: userId,
+        });
+      }
+
+      // Fetch complete details with folder and uploader
+      const [mediaFileWithDetails] = await db
+        .select({
+          id: mediaFiles.id,
+          fileName: mediaFiles.fileName,
+          originalName: mediaFiles.originalName,
+          folderId: mediaFiles.folderId,
+          url: mediaFiles.url,
+          thumbnailUrl: mediaFiles.thumbnailUrl,
+          type: mediaFiles.type,
+          mimeType: mediaFiles.mimeType,
+          size: mediaFiles.size,
+          width: mediaFiles.width,
+          height: mediaFiles.height,
+          title: mediaFiles.title,
+          description: mediaFiles.description,
+          altText: mediaFiles.altText,
+          caption: mediaFiles.caption,
+          keywords: mediaFiles.keywords,
+          isFavorite: mediaFiles.isFavorite,
+          category: mediaFiles.category,
+          usedIn: mediaFiles.usedIn,
+          usageCount: mediaFiles.usageCount,
+          uploadedBy: mediaFiles.uploadedBy,
+          createdAt: mediaFiles.createdAt,
+          updatedAt: mediaFiles.updatedAt,
+          folder: mediaFolders,
+          uploader: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(mediaFiles)
+        .leftJoin(mediaFolders, eq(mediaFiles.folderId, mediaFolders.id))
+        .leftJoin(users, eq(mediaFiles.uploadedBy, users.id))
+        .where(eq(mediaFiles.id, mediaFile.id));
+
+      console.log("[Media Upload] Media file created:", mediaFileWithDetails.id);
+
+      res.json(mediaFileWithDetails);
+    } catch (error: any) {
+      console.error("Error uploading media file:", error);
+
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "الملف كبير جداً. الحد الأقصى 10MB" });
+      }
+
+      if (error.message?.includes('نوع الملف')) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: "فشل في رفع ملف الوسائط" });
+    }
+  });
+
+  // POST /api/media/save-existing - Save existing image to media library (JSON endpoint for auto-save from editor)
+  app.post("/api/media/save-existing", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { url, fileName, title, description, category } = req.body;
+      
+      // Validation
+      if (!url || !fileName) {
+        return res.status(400).json({ message: "URL والاسم مطلوبان" });
+      }
+
+      // Create media file record
+      const [mediaFile] = await db.insert(mediaFiles).values({
+        fileName,
+        originalName: fileName,
+        url,
+        type: "image",
+        mimeType: "image/jpeg",
+        size: 0, // Unknown for existing URLs
+        title: title || fileName,
+        description,
+        category: category || "articles",
+        uploadedBy: userId,
+      }).returning();
+
+      res.json(mediaFile);
+    } catch (error) {
+      console.error("Error saving media metadata:", error);
+      res.status(500).json({ message: "فشل حفظ البيانات" });
+    }
+  });
+
+  // PUT /api/media/:id - Update media file metadata
+  app.put("/api/media/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const mediaId = req.params.id;
+      const userId = req.user.id;
+
+      // Check if media file exists and user has permission
+      const [existingMedia] = await db
+        .select()
+        .from(mediaFiles)
+        .where(eq(mediaFiles.id, mediaId))
+        .limit(1);
+
+      if (!existingMedia) {
+        return res.status(404).json({ message: "ملف الوسائط غير موجود" });
+      }
+
+      // Check if user is owner or admin
+      const isOwner = existingMedia.uploadedBy === userId;
+      const userPermissions = await getUserPermissions(userId);
+      const isAdmin = userPermissions.includes('media:manage');
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ message: "غير مصرح لك بتحديث هذا الملف" });
+      }
+
+      // Validate update data
+      const { updateMediaFileSchema } = await import('@shared/schema');
+      const parsed = updateMediaFileSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors,
+        });
+      }
+
+      // Update media file
+      const [updatedMedia] = await db
+        .update(mediaFiles)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(mediaFiles.id, mediaId))
+        .returning();
+
+      res.json(updatedMedia);
+    } catch (error) {
+      console.error("Error updating media file:", error);
+      res.status(500).json({ message: "فشل في تحديث ملف الوسائط" });
+    }
+  });
+
+  // DELETE /api/media/:id - Delete media file
+  app.delete("/api/media/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const mediaId = req.params.id;
+      const userId = req.user.id;
+
+      // Check if media file exists
+      const [existingMedia] = await db
+        .select()
+        .from(mediaFiles)
+        .where(eq(mediaFiles.id, mediaId))
+        .limit(1);
+
+      if (!existingMedia) {
+        return res.status(404).json({ message: "ملف الوسائط غير موجود" });
+      }
+
+      // Check if user is owner or admin
+      const isOwner = existingMedia.uploadedBy === userId;
+      const userPermissions = await getUserPermissions(userId);
+      const isAdmin = userPermissions.includes('media:manage');
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ message: "غير مصرح لك بحذف هذا الملف" });
+      }
+
+      // Check if file is used in articles
+      if (existingMedia.usedIn && existingMedia.usedIn.length > 0) {
+        return res.status(400).json({
+          message: "لا يمكن حذف الملف لأنه مستخدم في مقالات أو محتوى آخر",
+          usedIn: existingMedia.usedIn,
+        });
+      }
+
+      // Delete from GCS
+      try {
+        const { objectStorageClient } = await import('./objectStorage');
+        const url = new URL(existingMedia.url);
+        const pathParts = url.pathname.split('/').filter(Boolean);
+        const bucketName = pathParts[0];
+        const objectPath = pathParts.slice(1).join('/');
+
+        const bucket = objectStorageClient.bucket(bucketName);
+        const file = bucket.file(objectPath);
+        await file.delete();
+
+        console.log("[Media Delete] File deleted from GCS:", objectPath);
+      } catch (gcsError) {
+        console.error("[Media Delete] Error deleting from GCS:", gcsError);
+        // Continue with database deletion even if GCS deletion fails
+      }
+
+      // Delete from database
+      await db.delete(mediaFiles).where(eq(mediaFiles.id, mediaId));
+
+      res.json({ message: "تم حذف ملف الوسائط بنجاح" });
+    } catch (error) {
+      console.error("Error deleting media file:", error);
+      res.status(500).json({ message: "فشل في حذف ملف الوسائط" });
+    }
+  });
+
+  // GET /api/media/folders - List all folders with file counts and nesting
+  app.get("/api/media/folders", isAuthenticated, async (req: any, res) => {
+    try {
+      // Get all folders
+      const allFolders = await db
+        .select()
+        .from(mediaFolders)
+        .orderBy(asc(mediaFolders.name));
+
+      // Get file counts for each folder
+      const folderCounts = await db
+        .select({
+          folderId: mediaFiles.folderId,
+          count: sql<number>`count(*)`,
+        })
+        .from(mediaFiles)
+        .groupBy(mediaFiles.folderId);
+
+      const countMap = new Map(
+        folderCounts.map((fc) => [fc.folderId, Number(fc.count)])
+      );
+
+      // Build folder tree structure
+      const buildTree = (parentId: string | null): any[] => {
+        return allFolders
+          .filter((folder) => folder.parentId === parentId)
+          .map((folder) => ({
+            ...folder,
+            fileCount: countMap.get(folder.id) || 0,
+            children: buildTree(folder.id),
+          }));
+      };
+
+      const folderTree = buildTree(null);
+
+      res.json(folderTree);
+    } catch (error) {
+      console.error("Error fetching media folders:", error);
+      res.status(500).json({ message: "فشل في جلب مجلدات الوسائط" });
+    }
+  });
+
+  // POST /api/media/folders - Create new folder
+  app.post("/api/media/folders", isAuthenticated, async (req: any, res) => {
+    try {
+      const { insertMediaFolderSchema } = await import('@shared/schema');
+      const parsed = insertMediaFolderSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors,
+        });
+      }
+
+      // Check name uniqueness within same parent
+      const existingFolder = await db
+        .select()
+        .from(mediaFolders)
+        .where(
+          and(
+            eq(mediaFolders.name, parsed.data.name),
+            parsed.data.parentId
+              ? eq(mediaFolders.parentId, parsed.data.parentId)
+              : isNull(mediaFolders.parentId)
+          )
+        )
+        .limit(1);
+
+      if (existingFolder.length > 0) {
+        return res.status(400).json({
+          message: "يوجد مجلد بنفس الاسم في نفس المستوى",
+        });
+      }
+
+      // Create folder
+      const [folder] = await db
+        .insert(mediaFolders)
+        .values(parsed.data)
+        .returning();
+
+      res.json(folder);
+    } catch (error) {
+      console.error("Error creating media folder:", error);
+      res.status(500).json({ message: "فشل في إنشاء مجلد الوسائط" });
+    }
+  });
+
+  // PUT /api/media/folders/:id - Update folder
+  app.put("/api/media/folders/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const folderId = req.params.id;
+
+      // Check if folder exists
+      const [existingFolder] = await db
+        .select()
+        .from(mediaFolders)
+        .where(eq(mediaFolders.id, folderId))
+        .limit(1);
+
+      if (!existingFolder) {
+        return res.status(404).json({ message: "المجلد غير موجود" });
+      }
+
+      // Validate update data
+      const { updateMediaFolderSchema } = await import('@shared/schema');
+      const parsed = updateMediaFolderSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "بيانات غير صحيحة",
+          errors: parsed.error.errors,
+        });
+      }
+
+      // Prevent circular references
+      if (parsed.data.parentId) {
+        // Check if the new parent is a descendant of this folder
+        const isCircular = async (checkId: string, targetId: string): Promise<boolean> => {
+          if (checkId === targetId) return true;
+
+          const [parent] = await db
+            .select()
+            .from(mediaFolders)
+            .where(eq(mediaFolders.id, checkId))
+            .limit(1);
+
+          if (!parent || !parent.parentId) return false;
+
+          return isCircular(parent.parentId, targetId);
+        };
+
+        if (await isCircular(parsed.data.parentId, folderId)) {
+          return res.status(400).json({
+            message: "لا يمكن نقل المجلد إلى أحد مجلداته الفرعية",
+          });
+        }
+      }
+
+      // Check name uniqueness if name is being changed
+      if (parsed.data.name && parsed.data.name !== existingFolder.name) {
+        const parentId = parsed.data.parentId !== undefined ? parsed.data.parentId : existingFolder.parentId;
+        
+        const existingWithName = await db
+          .select()
+          .from(mediaFolders)
+          .where(
+            and(
+              eq(mediaFolders.name, parsed.data.name),
+              ne(mediaFolders.id, folderId),
+              parentId
+                ? eq(mediaFolders.parentId, parentId)
+                : isNull(mediaFolders.parentId)
+            )
+          )
+          .limit(1);
+
+        if (existingWithName.length > 0) {
+          return res.status(400).json({
+            message: "يوجد مجلد بنفس الاسم في نفس المستوى",
+          });
+        }
+      }
+
+      // Update folder
+      const [updatedFolder] = await db
+        .update(mediaFolders)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(mediaFolders.id, folderId))
+        .returning();
+
+      res.json(updatedFolder);
+    } catch (error) {
+      console.error("Error updating media folder:", error);
+      res.status(500).json({ message: "فشل في تحديث مجلد الوسائط" });
+    }
+  });
+
+  // DELETE /api/media/folders/:id - Delete folder
+  app.delete("/api/media/folders/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const folderId = req.params.id;
+
+      // Check if folder exists
+      const [existingFolder] = await db
+        .select()
+        .from(mediaFolders)
+        .where(eq(mediaFolders.id, folderId))
+        .limit(1);
+
+      if (!existingFolder) {
+        return res.status(404).json({ message: "المجلد غير موجود" });
+      }
+
+      // Check if folder has files
+      const [filesCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(mediaFiles)
+        .where(eq(mediaFiles.folderId, folderId));
+
+      if (Number(filesCount.count) > 0) {
+        return res.status(400).json({
+          message: "لا يمكن حذف المجلد لأنه يحتوي على ملفات",
+          fileCount: Number(filesCount.count),
+        });
+      }
+
+      // Check if folder has subfolders
+      const [subfoldersCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(mediaFolders)
+        .where(eq(mediaFolders.parentId, folderId));
+
+      if (Number(subfoldersCount.count) > 0) {
+        return res.status(400).json({
+          message: "لا يمكن حذف المجلد لأنه يحتوي على مجلدات فرعية",
+          subfolderCount: Number(subfoldersCount.count),
+        });
+      }
+
+      // Delete folder
+      await db.delete(mediaFolders).where(eq(mediaFolders.id, folderId));
+
+      res.json({ message: "تم حذف المجلد بنجاح" });
+    } catch (error) {
+      console.error("Error deleting media folder:", error);
+      res.status(500).json({ message: "فشل في حذف مجلد الوسائط" });
+    }
+  });
+
+  // AI-powered media suggestions with caching
+  const mediaSuggestionsCache = new Map<string, {
+    keywords: string[];
+    timestamp: number;
+  }>();
+  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+  app.get("/api/media/suggestions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, content, keywords: userKeywords, limit = 10 } = req.query;
+
+      // Validate required parameters
+      if (!title) {
+        return res.status(400).json({ message: "العنوان مطلوب" });
+      }
+
+      console.log("[Media Suggestions] Request:", { 
+        title: title.substring(0, 50), 
+        hasContent: !!content,
+        hasUserKeywords: !!userKeywords,
+        limit 
+      });
+
+      let extractedKeywords: string[] = [];
+
+      // Use user-provided keywords if available, otherwise use AI
+      if (userKeywords && typeof userKeywords === 'string') {
+        extractedKeywords = userKeywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+        console.log("[Media Suggestions] Using user-provided keywords:", extractedKeywords);
+      } else {
+        // Check cache first
+        const cacheKey = `${title}:${content || ''}`;
+        const cached = mediaSuggestionsCache.get(cacheKey);
+        
+        if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+          extractedKeywords = cached.keywords;
+          console.log("[Media Suggestions] ✅ Using cached keywords:", extractedKeywords);
+        } else {
+          // Call AI to extract keywords
+          try {
+            const { extractMediaKeywords } = await import('./openai');
+            extractedKeywords = await extractMediaKeywords(title, content);
+            
+            // Cache the result
+            mediaSuggestionsCache.set(cacheKey, {
+              keywords: extractedKeywords,
+              timestamp: Date.now(),
+            });
+            
+            // Clean old cache entries (simple cleanup strategy)
+            if (mediaSuggestionsCache.size > 100) {
+              const entries = Array.from(mediaSuggestionsCache.entries());
+              entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+              entries.slice(0, 50).forEach(([key]) => mediaSuggestionsCache.delete(key));
+            }
+            
+            console.log("[Media Suggestions] ✅ AI extracted keywords:", extractedKeywords);
+          } catch (aiError) {
+            console.error("[Media Suggestions] AI extraction failed, using fallback:", aiError);
+            // Fallback: extract simple keywords from title
+            extractedKeywords = title
+              .split(/[\s،؛]+/)
+              .filter((word: string) => word.length > 3)
+              .slice(0, 5);
+            console.log("[Media Suggestions] Fallback keywords:", extractedKeywords);
+          }
+        }
+      }
+
+      if (extractedKeywords.length === 0) {
+        return res.json({
+          suggestions: [],
+          extractedKeywords: [],
+          confidence: "low",
+          total: 0,
+        });
+      }
+
+      // Build smart search query
+      // Search across: fileName, title, description, keywords array
+      const searchConditions = extractedKeywords.flatMap((keyword) => [
+        ilike(mediaFiles.fileName, `%${keyword}%`),
+        ilike(mediaFiles.title, `%${keyword}%`),
+        ilike(mediaFiles.description, `%${keyword}%`),
+        sql`${keyword} = ANY(${mediaFiles.keywords})`,
+      ]);
+
+      // Get all media files that match any keyword
+      const matchedFiles = await db
+        .select({
+          id: mediaFiles.id,
+          fileName: mediaFiles.fileName,
+          originalName: mediaFiles.originalName,
+          url: mediaFiles.url,
+          thumbnailUrl: mediaFiles.thumbnailUrl,
+          type: mediaFiles.type,
+          mimeType: mediaFiles.mimeType,
+          size: mediaFiles.size,
+          width: mediaFiles.width,
+          height: mediaFiles.height,
+          title: mediaFiles.title,
+          description: mediaFiles.description,
+          altText: mediaFiles.altText,
+          caption: mediaFiles.caption,
+          keywords: mediaFiles.keywords,
+          isFavorite: mediaFiles.isFavorite,
+          category: mediaFiles.category,
+          usedIn: mediaFiles.usedIn,
+          usageCount: mediaFiles.usageCount,
+          uploadedBy: mediaFiles.uploadedBy,
+          folderId: mediaFiles.folderId,
+          createdAt: mediaFiles.createdAt,
+          updatedAt: mediaFiles.updatedAt,
+          uploaderEmail: users.email,
+          uploaderFirstName: users.firstName,
+          uploaderLastName: users.lastName,
+          folderName: mediaFolders.name,
+        })
+        .from(mediaFiles)
+        .leftJoin(users, eq(mediaFiles.uploadedBy, users.id))
+        .leftJoin(mediaFolders, eq(mediaFiles.folderId, mediaFolders.id))
+        .where(or(...searchConditions))
+        .limit(100); // Get more than needed for scoring
+
+      console.log("[Media Suggestions] Found", matchedFiles.length, "potential matches");
+
+      // Score and rank results
+      const scoredResults = matchedFiles.map((file) => {
+        let score = 0;
+
+        extractedKeywords.forEach((keyword) => {
+          const keywordLower = keyword.toLowerCase();
+          
+          // Exact match in title: +10 points
+          if (file.title && file.title.toLowerCase().includes(keywordLower)) {
+            score += 10;
+          }
+          
+          // Match in description: +5 points
+          if (file.description && file.description.toLowerCase().includes(keywordLower)) {
+            score += 5;
+          }
+          
+          // Match in keywords array: +7 points
+          if (file.keywords && file.keywords.some((k: string) => k.toLowerCase().includes(keywordLower))) {
+            score += 7;
+          }
+          
+          // Match in fileName: +3 points
+          if (file.fileName && file.fileName.toLowerCase().includes(keywordLower)) {
+            score += 3;
+          }
+        });
+
+        // Recent uploads (last 30 days): +3 points
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        if (file.createdAt && new Date(file.createdAt) > thirtyDaysAgo) {
+          score += 3;
+        }
+
+        // Favorite status: +2 points
+        if (file.isFavorite) {
+          score += 2;
+        }
+
+        return {
+          ...file,
+          score,
+          folder: file.folderName ? {
+            id: file.folderId || '',
+            name: file.folderName,
+          } : undefined,
+          uploader: {
+            id: file.uploadedBy,
+            email: file.uploaderEmail || '',
+            firstName: file.uploaderFirstName,
+            lastName: file.uploaderLastName,
+          },
+        };
+      });
+
+      // Sort by score descending and take top N
+      scoredResults.sort((a, b) => b.score - a.score);
+      const topResults = scoredResults.slice(0, Number(limit));
+
+      // Determine confidence level based on number of matches and scores
+      let confidence: "high" | "medium" | "low" = "low";
+      if (topResults.length > 0) {
+        const avgScore = topResults.reduce((sum, r) => sum + r.score, 0) / topResults.length;
+        if (avgScore >= 15 && topResults.length >= 5) {
+          confidence = "high";
+        } else if (avgScore >= 8 && topResults.length >= 3) {
+          confidence = "medium";
+        }
+      }
+
+      // Clean up results (remove score from response)
+      const suggestions = topResults.map(({ score, uploaderEmail, uploaderFirstName, uploaderLastName, folderName, ...rest }) => rest);
+
+      console.log("[Media Suggestions] ✅ Returning", suggestions.length, "suggestions with confidence:", confidence);
+
+      res.json({
+        suggestions,
+        extractedKeywords,
+        confidence,
+        total: suggestions.length,
+      });
+    } catch (error) {
+      console.error("[Media Suggestions] Error:", error);
+      res.status(500).json({ 
+        message: "فشل في الحصول على اقتراحات الوسائط",
+        suggestions: [],
+        extractedKeywords: [],
+        confidence: "low",
+        total: 0,
+      });
+    }
+  });
+
+  // ============================================================
+  // END OF MEDIA LIBRARY API ENDPOINTS
+  // ============================================================
 
   // Simplified avatar upload endpoint - single step upload
   const avatarUpload = multer({

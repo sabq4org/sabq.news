@@ -4290,3 +4290,144 @@ export type EnCommentWithUser = EnComment & {
   user: User;
   replies?: EnCommentWithUser[];
 };
+
+// ============================================
+// MEDIA LIBRARY (Arabic Version Only)
+// ============================================
+
+// Media Folders for organizing media files
+export const mediaFolders = pgTable("media_folders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  parentId: varchar("parent_id").references((): any => mediaFolders.id, { onDelete: "cascade" }),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_media_folders_parent").on(table.parentId),
+]);
+
+// Media Files - main media library table
+export const mediaFiles = pgTable("media_files", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(),
+  folderId: varchar("folder_id").references(() => mediaFolders.id, { onDelete: "set null" }),
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  type: text("type").notNull(), // image, video, document
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(), // in bytes
+  width: integer("width"),
+  height: integer("height"),
+  
+  // Metadata
+  title: text("title"),
+  description: text("description"),
+  altText: text("alt_text"),
+  caption: text("caption"),
+  keywords: text("keywords").array().default(sql`ARRAY[]::text[]`),
+  
+  // Organization
+  isFavorite: boolean("is_favorite").default(false).notNull(),
+  category: text("category"), // articles, logos, reporters, banners, general
+  
+  // Usage tracking
+  usedIn: text("used_in").array().default(sql`ARRAY[]::text[]`), // Array of article IDs or entity IDs
+  usageCount: integer("usage_count").default(0).notNull(),
+  
+  // Ownership
+  uploadedBy: varchar("uploaded_by").references(() => users.id).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_media_files_folder").on(table.folderId),
+  index("idx_media_files_uploaded_by").on(table.uploadedBy),
+  index("idx_media_files_created_at").on(table.createdAt.desc()),
+  index("idx_media_files_is_favorite").on(table.isFavorite),
+  index("idx_media_files_category").on(table.category),
+]);
+
+// Media Usage Log - track where and when media is used
+export const mediaUsageLog = pgTable("media_usage_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mediaId: varchar("media_id").references(() => mediaFiles.id, { onDelete: "cascade" }).notNull(),
+  entityType: text("entity_type").notNull(), // article, user_profile, banner, etc.
+  entityId: varchar("entity_id").notNull(),
+  usedBy: varchar("used_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_media_usage_log_media").on(table.mediaId),
+  index("idx_media_usage_log_entity").on(table.entityType, table.entityId),
+]);
+
+// ============================================
+// MEDIA LIBRARY - INSERT SCHEMAS
+// ============================================
+
+export const insertMediaFolderSchema = createInsertSchema(mediaFolders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Folder name is required"),
+});
+
+export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+}).extend({
+  fileName: z.string().min(1, "File name is required"),
+  url: z.string().url("Invalid URL"),
+  type: z.enum(["image", "video", "document"]),
+  size: z.number().positive("Size must be positive"),
+});
+
+export const insertMediaUsageLogSchema = createInsertSchema(mediaUsageLog).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  mediaId: z.string().min(1, "Media ID is required"),
+  entityType: z.string().min(1, "Entity type is required"),
+  entityId: z.string().min(1, "Entity ID is required"),
+});
+
+export const updateMediaFileSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  altText: z.string().optional(),
+  caption: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  category: z.string().optional(),
+  isFavorite: z.boolean().optional(),
+  folderId: z.string().nullable().optional(),
+});
+
+export const updateMediaFolderSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  parentId: z.string().nullable().optional(),
+});
+
+// ============================================
+// MEDIA LIBRARY - SELECT TYPES
+// ============================================
+
+export type MediaFolder = typeof mediaFolders.$inferSelect;
+export type InsertMediaFolder = z.infer<typeof insertMediaFolderSchema>;
+
+export type MediaFile = typeof mediaFiles.$inferSelect;
+export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+
+export type MediaUsageLog = typeof mediaUsageLog.$inferSelect;
+export type InsertMediaUsageLog = z.infer<typeof insertMediaUsageLogSchema>;
+
+// Media File with additional details
+export type MediaFileWithDetails = MediaFile & {
+  folder?: MediaFolder;
+  uploader?: User;
+  usageHistory?: MediaUsageLog[];
+};

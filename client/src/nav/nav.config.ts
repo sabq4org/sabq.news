@@ -39,6 +39,7 @@ import {
   BookOpen,
   Calendar,
   Link,
+  ImageIcon,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -152,6 +153,14 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/calendar",
         icon: Calendar,
         roles: ["admin", "editor"],
+      },
+      {
+        id: "media_library",
+        labelKey: "nav.media_library",
+        labelAr: "مكتبة الوسائط",
+        path: "/dashboard/media-library",
+        icon: ImageIcon,
+        roles: ["admin", "editor", "author"],
       },
     ],
   },

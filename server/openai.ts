@@ -527,3 +527,70 @@ ${newsContent}
     throw new Error("Failed to generate smart content");
   }
 }
+
+export async function extractMediaKeywords(
+  title: string,
+  content?: string
+): Promise<string[]> {
+  try {
+    const systemPrompt = `أنت خبير في تحليل المحتوى الإخباري العربي وتحديد الكلمات المفتاحية للبحث عن الصور والوسائط المناسبة.
+
+مهمتك: تحليل المقال واستخراج الكلمات المفتاحية التي يمكن استخدامها للبحث عن صور ذات صلة في مكتبة الوسائط.
+
+معايير استخراج الكلمات المفتاحية:
+1. الأسماء والكيانات الرئيسية (أشخاص، أماكن، منظمات)
+2. المواضيع والمفاهيم الرئيسية
+3. الأحداث والمناسبات
+4. المجالات والقطاعات (رياضة، سياسة، اقتصاد، إلخ)
+5. الصفات والخصائص المميزة
+
+توجيهات:
+- استخرج 5-10 كلمات مفتاحية
+- استخدم كلمات واضحة ومحددة
+- تجنب الكلمات العامة جداً (مثل "خبر" أو "تقرير")
+- ركز على الكلمات التي تصف محتوى بصري محتمل
+- استخدم اللغة العربية فقط
+
+أعد النتيجة بصيغة JSON فقط:
+{
+  "keywords": ["كلمة1", "كلمة2", ...]
+}`;
+
+    const userContent = content 
+      ? `العنوان: ${title}\n\nالمحتوى (أول 1000 حرف):\n${content.substring(0, 1000)}`
+      : `العنوان: ${title}`;
+
+    console.log("[Extract Keywords] Analyzing content for media keywords...");
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 512,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const keywords = result.keywords || [];
+    
+    console.log("[Extract Keywords] ✅ Extracted keywords:", keywords);
+    return keywords;
+  } catch (error) {
+    console.error("[Extract Keywords] Error extracting keywords:", error);
+    // Fallback: extract simple keywords from title
+    const fallbackKeywords = title
+      .split(/[\s،؛]+/)
+      .filter(word => word.length > 3)
+      .slice(0, 5);
+    console.log("[Extract Keywords] Using fallback keywords:", fallbackKeywords);
+    return fallbackKeywords;
+  }
+}

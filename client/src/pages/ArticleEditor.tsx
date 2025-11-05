@@ -31,6 +31,7 @@ import {
   Calendar,
   Hash,
   EyeOff,
+  Image as ImageIcon,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -44,7 +45,9 @@ import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
+import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import type { Editor } from "@tiptap/react";
+import type { MediaFile } from "@shared/schema";
 
 export default function ArticleEditor() {
   const params = useParams<{ id: string }>();
@@ -105,6 +108,7 @@ export default function ArticleEditor() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const { toast } = useToast();
 
@@ -177,6 +181,32 @@ export default function ArticleEditor() {
     }
   }, [article, isNewArticle]);
 
+  // Helper function to save uploaded images to media library
+  const saveToMediaLibrary = async (imageUrl: string) => {
+    try {
+      const fileName = imageUrl.split('/').pop() || 'image.jpg';
+      const mediaTitle = title || "صورة المقال";
+      const description = (excerpt || content.substring(0, 100) || mediaTitle);
+      
+      await apiRequest("/api/media/save-existing", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName,
+          url: imageUrl,
+          title: mediaTitle,
+          description,
+          category: "articles",
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      console.log("[Media Library] Successfully saved image to library:", fileName);
+    } catch (error) {
+      console.error("Failed to save to media library:", error);
+      // Don't show error to user - this is background operation
+    }
+  };
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -234,6 +264,9 @@ export default function ArticleEditor() {
       console.log("[Image Upload] Object Path:", aclData.objectPath);
 
       setImageUrl(aclData.objectPath);
+
+      // Auto-save to media library in background
+      saveToMediaLibrary(aclData.objectPath);
 
       toast({
         title: "تم الرفع بنجاح",
@@ -851,6 +884,15 @@ const generateSlug = (text: string) => {
                     )}
                     {imageUrl ? "تغيير الصورة" : "رفع صورة"}
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMediaPicker(true)}
+                    className="gap-2"
+                    data-testid="button-choose-from-library"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    اختر من المكتبة
+                  </Button>
                   <input
                     id="image-upload"
                     type="file"
@@ -1263,6 +1305,23 @@ const generateSlug = (text: string) => {
           </div>
         </div>
       </div>
+
+      {/* Media Library Picker */}
+      <MediaLibraryPicker
+        isOpen={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(media: MediaFile) => {
+          setImageUrl(media.url);
+          setShowMediaPicker(false);
+          toast({
+            title: "تم اختيار الصورة",
+            description: "تم إضافة الصورة من المكتبة",
+          });
+        }}
+        articleTitle={title}
+        articleContent={content?.substring(0, 500)}
+        currentImageUrl={imageUrl}
+      />
     </DashboardLayout>
   );
 }
