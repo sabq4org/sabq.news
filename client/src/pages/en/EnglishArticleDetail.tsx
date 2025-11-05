@@ -27,6 +27,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import type { EnArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
+import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
 
 export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -334,6 +335,11 @@ export default function EnglishArticleDetail() {
             </div>
           </div>
         )}
+
+        {/* AI Analytics Block */}
+        <div className="pt-8">
+          <EnAiArticleStats slug={params.slug || ""} />
+        </div>
       </article>
     </EnglishLayout>
   );
