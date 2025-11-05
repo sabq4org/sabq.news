@@ -12324,6 +12324,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // ENGLISH SMART BLOCKS API - بلوكات النسخة الإنجليزية
+  // ============================================================
+
+  // GET /api/en/smart-blocks - List all English smart blocks
+  app.get("/api/en/smart-blocks", async (req: any, res) => {
+    try {
+      const { isActive, placement } = req.query;
+      
+      const conditions: any[] = [];
+      if (isActive !== undefined) {
+        conditions.push(eq(enSmartBlocks.isActive, isActive === 'true'));
+      }
+      if (placement) {
+        conditions.push(eq(enSmartBlocks.placement, placement));
+      }
+
+      const blocks = await db.query.enSmartBlocks.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        orderBy: [desc(enSmartBlocks.createdAt)],
+      });
+
+      res.json(blocks);
+    } catch (error: any) {
+      console.error("Error fetching English smart blocks:", error);
+      res.status(500).json({ message: "Failed to fetch smart blocks" });
+    }
+  });
+
+  // POST /api/en/smart-blocks - Create new English smart block
+  app.post("/api/en/smart-blocks", requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const validatedData = insertEnSmartBlockSchema.parse({
+        ...req.body,
+        createdBy: req.user?.id,
+      });
+
+      const [block] = await db.insert(enSmartBlocks).values(validatedData as any).returning();
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'create_en_smart_block',
+        entityType: 'en_smart_block',
+        entityId: block.id,
+        newValue: { title: block.title, keyword: block.keyword }
+      });
+
+      res.status(201).json(block);
+    } catch (error: any) {
+      console.error("Error creating English smart block:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create smart block" });
+    }
+  });
+
+  // GET /api/en/smart-blocks/:id - Get specific English smart block
+  app.get("/api/en/smart-blocks/:id", async (req: any, res) => {
+    try {
+      const block = await db.query.enSmartBlocks.findFirst({
+        where: eq(enSmartBlocks.id, req.params.id),
+      });
+      
+      if (!block) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      res.json(block);
+    } catch (error: any) {
+      console.error("Error fetching English smart block:", error);
+      res.status(500).json({ message: "Failed to fetch smart block" });
+    }
+  });
+
+  // PUT /api/en/smart-blocks/:id - Update English smart block
+  app.put("/api/en/smart-blocks/:id", requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await db.query.enSmartBlocks.findFirst({
+        where: eq(enSmartBlocks.id, req.params.id),
+      });
+
+      if (!existingBlock) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      const [updated] = await db.update(enSmartBlocks)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(enSmartBlocks.id, req.params.id))
+        .returning();
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'update_en_smart_block',
+        entityType: 'en_smart_block',
+        entityId: updated.id,
+        oldValue: { title: existingBlock.title, keyword: existingBlock.keyword },
+        newValue: { title: updated.title, keyword: updated.keyword }
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating English smart block:", error);
+      res.status(500).json({ message: "Failed to update smart block" });
+    }
+  });
+
+  // DELETE /api/en/smart-blocks/:id - Delete English smart block
+  app.delete("/api/en/smart-blocks/:id", requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await db.query.enSmartBlocks.findFirst({
+        where: eq(enSmartBlocks.id, req.params.id),
+      });
+
+      if (!existingBlock) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      await db.delete(enSmartBlocks).where(eq(enSmartBlocks.id, req.params.id));
+
+      await logActivity({
+        userId: req.user?.id,
+        action: 'delete_en_smart_block',
+        entityType: 'en_smart_block',
+        entityId: req.params.id,
+        oldValue: { title: existingBlock.title, keyword: existingBlock.keyword }
+      });
+
+      res.json({ success: true, message: "Smart block deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting English smart block:", error);
+      res.status(500).json({ message: "Failed to delete smart block" });
+    }
+  });
+
+  // GET /api/en/smart-blocks/query/articles - Query English articles by keyword
+  app.get("/api/en/smart-blocks/query/articles", async (req: any, res) => {
+    try {
+      const { keyword, limit = 6, categories, dateFrom, dateTo } = req.query;
+
+      if (!keyword) {
+        return res.status(400).json({ message: "Keyword is required" });
+      }
+
+      console.log(`🔍 [EN Smart Block] Searching for keyword: "${keyword}", limit: ${limit}`);
+
+      const conditions: any[] = [
+        eq(enArticles.status, 'published'),
+        or(
+          ilike(enArticles.title, `%${keyword}%`),
+          ilike(enArticles.content, `%${keyword}%`),
+          ilike(enArticles.excerpt, `%${keyword}%`)
+        )
+      ];
+
+      if (categories) {
+        const categoryList = Array.isArray(categories) ? categories : [categories];
+        conditions.push(inArray(enArticles.categoryId, categoryList));
+      }
+
+      if (dateFrom) {
+        conditions.push(gte(enArticles.publishedAt, new Date(dateFrom as string)));
+      }
+
+      if (dateTo) {
+        conditions.push(gte(enArticles.publishedAt, new Date(dateTo as string)));
+      }
+
+      const articles = await db.query.enArticles.findMany({
+        where: and(...conditions),
+        orderBy: [desc(enArticles.publishedAt)],
+        limit: parseInt(limit as string) || 6,
+        with: {
+          category: true,
+        },
+      });
+
+      console.log(`✅ [EN Smart Block] Found ${articles.length} articles for "${keyword}"`);
+
+      res.json({ items: articles, total: articles.length });
+    } catch (error: any) {
+      console.error("❌ [EN Smart Block] Error querying articles:", error);
+      res.status(500).json({ message: "Failed to search articles" });
+    }
+  });
+
+  // ============================================================
   // AUDIO NEWSLETTERS ROUTES - النشرات الصوتية
   // ============================================================
 

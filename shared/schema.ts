@@ -2356,6 +2356,47 @@ export type InsertSmartBlock = z.infer<typeof insertSmartBlockSchema>;
 export type UpdateSmartBlock = Partial<InsertSmartBlock>;
 
 // ============================================
+// ENGLISH SMART BLOCKS
+// ============================================
+
+export const enSmartBlocks = pgTable("en_smart_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 60 }).notNull(),
+  keyword: varchar("keyword", { length: 100 }).notNull(),
+  color: varchar("color", { length: 20 }).notNull(),
+  placement: varchar("placement", { length: 30 }).notNull(),
+  layoutStyle: varchar("layout_style", { length: 20 }).notNull().default('grid'),
+  limitCount: integer("limit_count").notNull().default(6),
+  filters: jsonb("filters").$type<{
+    categories?: string[];
+    dateRange?: { from: string; to: string };
+  }>(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_en_smart_blocks_keyword").on(table.keyword),
+  index("idx_en_smart_blocks_placement").on(table.placement),
+  index("idx_en_smart_blocks_active").on(table.isActive),
+]);
+
+export const enSmartBlocksRelations = relations(enSmartBlocks, ({ one }) => ({
+  creator: one(users, {
+    fields: [enSmartBlocks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export type EnSmartBlock = typeof enSmartBlocks.$inferSelect;
+export const insertEnSmartBlockSchema = createInsertSchema(enSmartBlocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEnSmartBlock = z.infer<typeof insertEnSmartBlockSchema>;
+
+// ============================================
 // AUDIO NEWS BRIEFS (الأخبار الصوتية السريعة)
 // ============================================
 
