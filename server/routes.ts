@@ -881,20 +881,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Media Upload] Uploading to bucket:", bucketId, "path:", objectPath);
 
-      // Upload file to GCS with public access
+      // Upload file to GCS (without public access as bucket has public access prevention)
       const { objectStorageClient } = await import('./objectStorage');
       const bucket = objectStorageClient.bucket(bucketId);
       const file = bucket.file(objectPath);
 
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
-        predefinedAcl: 'publicRead',
       });
 
-      console.log("[Media Upload] File uploaded successfully with public access");
+      console.log("[Media Upload] File uploaded successfully");
 
-      // Build public URL
-      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+      // Generate a signed URL valid for 1 year
+      const [signedUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
+      });
+
+      console.log("[Media Upload] Generated signed URL");
 
       // Extract metadata (width, height for images)
       let width: number | undefined;
@@ -939,7 +943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileName: `${objectId}.${fileExtension}`,
           originalName: req.file.originalname,
           folderId: folderId || null,
-          url: publicUrl,
+          url: signedUrl,
           type: fileType,
           mimeType: req.file.mimetype,
           size: req.file.size,
@@ -1691,22 +1695,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Avatar Upload] Uploading to bucket:", bucketId, "path:", objectPath);
 
-      // Upload file directly to GCS with public access
+      // Upload file to GCS (without public access as bucket has public access prevention)
       const { objectStorageClient } = await import('./objectStorage');
       const bucket = objectStorageClient.bucket(bucketId);
       const file = bucket.file(objectPath);
 
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
-        predefinedAcl: 'publicRead', // Make it public directly
       });
 
-      console.log("[Avatar Upload] File uploaded successfully with public access");
+      console.log("[Avatar Upload] File uploaded successfully");
 
-      // Build public URL manually
-      const publicUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+      // Generate a signed URL valid for 1 year
+      const [publicUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
+      });
 
-      console.log("[Avatar Upload] Public URL:", publicUrl);
+      console.log("[Avatar Upload] Generated signed URL");
 
       // Update user profile with the public URL
       const user = await storage.updateUser(userId, { 
