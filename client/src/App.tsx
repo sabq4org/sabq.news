@@ -122,6 +122,8 @@ import EnglishArticlesPage from "@/pages/en/EnglishArticlesPage";
 import EnglishProfile from "@/pages/en/EnglishProfile";
 import EnglishDailyBrief from "@/pages/en/EnglishDailyBrief";
 import EnglishNotificationSettings from "@/pages/en/EnglishNotificationSettings";
+import EnglishSmartBlocksPage from "@/pages/en/EnglishSmartBlocksPage";
+import EnglishQuadCategoriesBlockSettings from "@/pages/en/EnglishQuadCategoriesBlockSettings";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -151,6 +153,8 @@ function Router() {
         <Route path="/en/dashboard/articles" component={EnglishArticlesPage} />
         <Route path="/en/dashboard/categories" component={EnglishCategoriesPage} />
         <Route path="/en/dashboard/comments" component={EnglishCommentsPage} />
+        <Route path="/en/dashboard/smart-blocks" component={EnglishSmartBlocksPage} />
+        <Route path="/en/dashboard/quad-categories" component={EnglishQuadCategoriesBlockSettings} />
         <Route path="/en/dashboard/users" component={EnglishUsersPage} />
         <Route path="/en/dashboard" component={EnglishDashboard} />
         <Route path="/en/profile" component={EnglishProfile} />
