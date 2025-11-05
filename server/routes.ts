@@ -7315,6 +7315,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get AI-powered analytics/insights for an article
+  app.get("/api/articles/:slug/ai-insights", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      // Get reading history stats
+      const readingStats = await db
+        .select({
+          avgDuration: sql<number>`AVG(${readingHistory.readDuration})`,
+          totalReads: sql<number>`COUNT(*)`,
+        })
+        .from(readingHistory)
+        .where(eq(readingHistory.articleId, article.id));
+
+      // Get reactions count
+      const reactionsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(reactions)
+        .where(eq(reactions.articleId, article.id));
+
+      // Get comments count
+      const commentsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(comments)
+        .where(and(
+          eq(comments.articleId, article.id),
+          eq(comments.status, "approved")
+        ));
+
+      const avgReadTime = readingStats[0]?.avgDuration || 0;
+      const totalReads = Number(readingStats[0]?.totalReads || 0);
+      const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
+      const totalViews = article.views || 0;
+
+      // Calculate engagement rate: (reactions + comments) / views
+      const engagementRate = totalViews > 0 
+        ? ((totalReactions + totalComments) / totalViews) 
+        : 0;
+
+      // Estimate reading completion based on avg read time
+      // Assuming 200 words per minute reading speed
+      const estimatedReadTime = article.content 
+        ? Math.ceil(article.content.split(/\s+/).length / 200) * 60 
+        : 180; // default 3 min
+      
+      const completionRate = avgReadTime > 0 && estimatedReadTime > 0
+        ? Math.min(100, (avgReadTime / estimatedReadTime) * 100)
+        : 0;
+
+      res.json({
+        avgReadTime: Math.round(avgReadTime), // in seconds
+        totalReads,
+        totalReactions,
+        totalComments,
+        totalViews,
+        engagementRate: parseFloat(engagementRate.toFixed(2)),
+        completionRate: Math.round(completionRate), // percentage
+        totalInteractions: totalReactions + totalComments,
+      });
+    } catch (error) {
+      console.error("Error fetching article AI insights:", error);
+      res.status(500).json({ message: "فشل في جلب إحصائيات المقال" });
+    }
+  });
+
   // Get articles by keyword
   app.get("/api/keyword/:keyword", async (req, res) => {
     try {
