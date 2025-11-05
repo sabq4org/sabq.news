@@ -45,7 +45,7 @@ import {
 import { Download, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { MediaFile, MediaFolder } from "@shared/schema";
 
 type UpdateFormValues = z.infer<typeof updateMediaFileSchema>;
@@ -69,28 +69,30 @@ export function MediaPreviewDialog({
   const form = useForm<UpdateFormValues>({
     resolver: zodResolver(updateMediaFileSchema),
     defaultValues: {
-      title: file?.title || "",
-      description: file?.description || "",
-      altText: file?.altText || "",
-      keywords: file?.keywords || [],
-      category: file?.category || "",
-      isFavorite: file?.isFavorite || false,
-      folderId: file?.folderId || null,
+      title: "",
+      description: "",
+      altText: "",
+      keywords: [],
+      category: "",
+      isFavorite: false,
+      folderId: null,
     },
   });
 
-  // Update form when file changes
-  if (file && open) {
-    form.reset({
-      title: file.title || "",
-      description: file.description || "",
-      altText: file.altText || "",
-      keywords: file.keywords || [],
-      category: file.category || "",
-      isFavorite: file.isFavorite,
-      folderId: file.folderId || null,
-    });
-  }
+  // Update form when file changes - using useEffect to prevent infinite loop
+  useEffect(() => {
+    if (file && open) {
+      form.reset({
+        title: file.title || "",
+        description: file.description || "",
+        altText: file.altText || "",
+        keywords: file.keywords || [],
+        category: file.category || "",
+        isFavorite: file.isFavorite,
+        folderId: file.folderId || null,
+      });
+    }
+  }, [file?.id, open]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateFormValues) => {
@@ -358,7 +360,7 @@ export function MediaPreviewDialog({
                         <FormLabel>المجلد</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(value === "null" ? null : value)}
-                          value={field.value || "null"}
+                          value={field.value?.toString() || "null"}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-edit-folder">
