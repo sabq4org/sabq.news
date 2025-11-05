@@ -892,13 +892,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Media Upload] File uploaded successfully");
 
-      // Generate a signed URL valid for 1 year
-      const [signedUrl] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
-      });
-
-      console.log("[Media Upload] Generated signed URL");
+      // Store the object path and bucket for later retrieval via proxy
+      // We'll build the proxy URL after getting the media file ID
+      const storagePath = `gs://${bucketId}/${objectPath}`;
 
       // Extract metadata (width, height for images)
       let width: number | undefined;
@@ -936,14 +932,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId,
       } = req.body;
 
-      // Save to media_files table
+      // Save to media_files table with storage path
       const [mediaFile] = await db
         .insert(mediaFiles)
         .values({
           fileName: `${objectId}.${fileExtension}`,
           originalName: req.file.originalname,
           folderId: folderId || null,
-          url: signedUrl,
+          url: storagePath, // Store GCS path, will be replaced with proxy URL
           type: fileType,
           mimeType: req.file.mimetype,
           size: req.file.size,
@@ -1012,9 +1008,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(users, eq(mediaFiles.uploadedBy, users.id))
         .where(eq(mediaFiles.id, mediaFile.id));
 
+      // Update the URL to use proxy endpoint
+      const proxyUrl = `/api/media/proxy/${mediaFile.id}`;
+      await db
+        .update(mediaFiles)
+        .set({ url: proxyUrl })
+        .where(eq(mediaFiles.id, mediaFile.id));
+
       console.log("[Media Upload] Media file created:", mediaFileWithDetails.id);
 
-      res.json(mediaFileWithDetails);
+      // Return with proxy URL
+      res.json({
+        ...mediaFileWithDetails,
+        url: proxyUrl,
+      });
     } catch (error: any) {
       console.error("Error uploading media file:", error);
 
@@ -1027,6 +1034,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(500).json({ message: "فشل في رفع ملف الوسائط" });
+    }
+  });
+
+  // GET /api/media/proxy/:id - Proxy endpoint to serve media files from Object Storage
+  app.get("/api/media/proxy/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get media file record
+      const [mediaFile] = await db
+        .select()
+        .from(mediaFiles)
+        .where(eq(mediaFiles.id, id));
+
+      if (!mediaFile) {
+        return res.status(404).json({ message: "الملف غير موجود" });
+      }
+
+      // Parse storage path: gs://bucket-name/path/to/file
+      const storagePath = mediaFile.url;
+      
+      // If it's already a proxy URL, extract the original storage path from metadata
+      // For now, we store the gs:// path directly
+      if (!storagePath.startsWith('gs://')) {
+        return res.status(400).json({ message: "مسار التخزين غير صحيح" });
+      }
+
+      const pathParts = storagePath.replace('gs://', '').split('/');
+      const bucketName = pathParts[0];
+      const objectPath = pathParts.slice(1).join('/');
+
+      // Get file from Object Storage
+      const { objectStorageClient } = await import('./objectStorage');
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectPath);
+
+      // Check if file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ message: "الملف غير موجود في التخزين" });
+      }
+
+      // Stream the file to response
+      res.setHeader('Content-Type', mediaFile.mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      
+      file.createReadStream()
+        .on('error', (error) => {
+          console.error('[Media Proxy] Error streaming file:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ message: "فشل في تحميل الملف" });
+          }
+        })
+        .pipe(res);
+
+    } catch (error) {
+      console.error('[Media Proxy] Error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "فشل في تحميل الملف" });
+      }
     }
   });
 
@@ -1706,13 +1773,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Avatar Upload] File uploaded successfully");
 
-      // Generate a signed URL valid for 1 year
-      const [publicUrl] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
-      });
+      // Store the storage path and build proxy URL
+      const storagePath = `gs://${bucketId}/${objectPath}`;
+      const publicUrl = `/api/media/proxy-avatar/${encodeURIComponent(storagePath)}`;
 
-      console.log("[Avatar Upload] Generated signed URL");
+      console.log("[Avatar Upload] Using proxy URL:", publicUrl);
 
       // Update user profile with the public URL
       const user = await storage.updateUser(userId, { 
@@ -1739,6 +1804,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(500).json({ message: "فشل في رفع الصورة" });
+    }
+  });
+
+  // GET /api/media/proxy-avatar/:storagePath - Proxy endpoint for avatar images
+  app.get("/api/media/proxy-avatar/:storagePath", async (req, res) => {
+    try {
+      const storagePath = decodeURIComponent(req.params.storagePath);
+
+      if (!storagePath.startsWith('gs://')) {
+        return res.status(400).json({ message: "مسار التخزين غير صحيح" });
+      }
+
+      const pathParts = storagePath.replace('gs://', '').split('/');
+      const bucketName = pathParts[0];
+      const objectPath = pathParts.slice(1).join('/');
+
+      // Get file from Object Storage
+      const { objectStorageClient } = await import('./objectStorage');
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectPath);
+
+      // Check if file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ message: "الصورة غير موجودة في التخزين" });
+      }
+
+      // Stream the file to response
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      
+      file.createReadStream()
+        .on('error', (error) => {
+          console.error('[Avatar Proxy] Error streaming file:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ message: "فشل في تحميل الصورة" });
+          }
+        })
+        .pipe(res);
+
+    } catch (error) {
+      console.error('[Avatar Proxy] Error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "فشل في تحميل الصورة" });
+      }
     }
   });
 
