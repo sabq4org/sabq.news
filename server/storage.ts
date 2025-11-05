@@ -946,6 +946,7 @@ export interface IStorage {
   getEnUserBookmarks(userId: string): Promise<EnArticleWithDetails[]>;
   getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]>;
   getEnUserReadingHistory(userId: string, limit?: number): Promise<EnArticleWithDetails[]>;
+  getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined>;
 
   // ==========================================
   // Chat System - نظام الدردشة
@@ -8492,6 +8493,64 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.reporter || r.author || undefined,
     }));
+  }
+
+  async getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+      .where(eq(enArticles.id, id));
+
+    if (results.length === 0) return undefined;
+
+    const result = results[0];
+    const article = result.article;
+
+    // Run all queries in parallel for better performance
+    const [
+      bookmarkResult,
+      reactionResult,
+      reactionsCountResult,
+      commentsCountResult
+    ] = await Promise.all([
+      userId ? db.select().from(enBookmarks)
+        .where(and(eq(enBookmarks.articleId, article.id), eq(enBookmarks.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      userId ? db.select().from(enReactions)
+        .where(and(eq(enReactions.articleId, article.id), eq(enReactions.userId, userId)))
+        .limit(1) : Promise.resolve([]),
+      db.select({ count: sql<number>`count(*)` })
+        .from(enReactions)
+        .where(eq(enReactions.articleId, article.id)),
+      db.select({ count: sql<number>`count(*)` })
+        .from(enComments)
+        .where(eq(enComments.articleId, article.id))
+    ]);
+
+    const isBookmarked = bookmarkResult.length > 0;
+    const hasReacted = reactionResult.length > 0;
+    const reactionsCount = Number(reactionsCountResult[0].count);
+    const commentsCount = Number(commentsCountResult[0].count);
+
+    return {
+      ...article,
+      category: result.category || undefined,
+      author: result.reporter || result.author || undefined,
+      isBookmarked,
+      hasReacted,
+      reactionsCount,
+      commentsCount,
+    };
   }
 }
 
