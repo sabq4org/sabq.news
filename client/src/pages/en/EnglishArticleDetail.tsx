@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,6 +111,21 @@ export default function EnglishArticleDetail() {
     }
   };
 
+  // Ensure LTR direction is applied for English content
+  useEffect(() => {
+    const previousDir = document.documentElement.dir;
+    const previousLang = document.documentElement.lang;
+    
+    document.documentElement.dir = "ltr";
+    document.documentElement.lang = "en";
+    
+    // Cleanup: restore previous values when unmounting (default to LTR if not set)
+    return () => {
+      document.documentElement.dir = previousDir || "ltr";
+      document.documentElement.lang = previousLang || "en";
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <EnglishLayout>
@@ -213,7 +228,7 @@ export default function EnglishArticleDetail() {
               
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4" />
-                <span data-testid="text-views">{(article.views || 0).toLocaleString()} views</span>
+                <span data-testid="text-views">{article.views || 0} views</span>
               </div>
             </div>
 

@@ -73,6 +73,21 @@ export default function ArticleDetail() {
     enabled: !!article && !!user,
   });
 
+  // Ensure RTL direction is applied for Arabic content
+  useEffect(() => {
+    const previousDir = document.documentElement.dir;
+    const previousLang = document.documentElement.lang;
+    
+    document.documentElement.dir = "rtl";
+    document.documentElement.lang = "ar";
+    
+    // Cleanup: restore previous values when unmounting
+    return () => {
+      document.documentElement.dir = previousDir || "ltr";
+      document.documentElement.lang = previousLang || "en";
+    };
+  }, []);
+
   useEffect(() => {
     if (article && user) {
       logArticleView();
