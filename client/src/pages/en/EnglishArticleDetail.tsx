@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
@@ -296,8 +297,9 @@ export default function EnglishArticleDetail() {
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="hover-elevate cursor-pointer"
-                  data-testid={`tag-${index}`}
+                  className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
+                  onClick={() => setLocation(`/en/keyword/${encodeURIComponent(keyword)}`)}
+                  data-testid={`badge-keyword-${index}`}
                 >
                   {keyword}
                 </Badge>

@@ -18468,6 +18468,48 @@ Allow: /
     }
   });
 
+  // GET English Articles by Keyword
+  app.get("/api/en/keyword/:keyword", async (req, res) => {
+    try {
+      const keyword = decodeURIComponent(req.params.keyword);
+      
+      // Get all published English articles
+      const allArticles = await db
+        .select({
+          id: enArticles.id,
+          title: enArticles.title,
+          subtitle: enArticles.subtitle,
+          slug: enArticles.slug,
+          excerpt: enArticles.excerpt,
+          imageUrl: enArticles.imageUrl,
+          imageFocalPoint: enArticles.imageFocalPoint,
+          categoryId: enArticles.categoryId,
+          authorId: enArticles.authorId,
+          articleType: enArticles.articleType,
+          newsType: enArticles.newsType,
+          status: enArticles.status,
+          isFeatured: enArticles.isFeatured,
+          views: enArticles.views,
+          publishedAt: enArticles.publishedAt,
+          createdAt: enArticles.createdAt,
+          seo: enArticles.seo,
+        })
+        .from(enArticles)
+        .where(eq(enArticles.status, "published"))
+        .orderBy(desc(enArticles.publishedAt));
+      
+      // Filter articles that contain the keyword in their SEO keywords
+      const filteredArticles = allArticles.filter(article => 
+        article.seo?.keywords?.some(k => k.toLowerCase() === keyword.toLowerCase())
+      );
+
+      res.json(filteredArticles);
+    } catch (error) {
+      console.error("Error fetching EN articles by keyword:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
   // POST Toggle English Article Reaction
   app.post("/api/en/articles/:id/react", isAuthenticated, async (req: any, res) => {
     try {

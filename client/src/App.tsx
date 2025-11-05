@@ -109,6 +109,7 @@ import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
 import EnglishHome from "@/pages/en/EnglishHome";
 import EnglishArticleDetail from "@/pages/en/EnglishArticleDetail";
+import EnglishKeywordPage from "@/pages/en/EnglishKeywordPage";
 import EnglishArticleEditor from "@/pages/en/EnglishArticleEditor";
 import EnglishDashboard from "@/pages/en/EnglishDashboard";
 import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
@@ -143,6 +144,7 @@ function Router() {
         <Route path="/en/news" component={EnglishNewsPage} />
         <Route path="/en/categories" component={EnglishCategoriesListPage} />
         <Route path="/en/category/:slug" component={EnglishCategoryPage} />
+        <Route path="/en/keyword/:keyword" component={EnglishKeywordPage} />
         <Route path="/en/article/:slug" component={EnglishArticleDetail} />
         <Route path="/en/dashboard/articles/new" component={EnglishArticleEditor} />
         <Route path="/en/dashboard/articles/:id/edit" component={EnglishArticleEditor} />
