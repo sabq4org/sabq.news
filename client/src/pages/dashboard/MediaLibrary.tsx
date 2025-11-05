@@ -46,7 +46,7 @@ export default function MediaLibrary() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isFavoritesView, setIsFavoritesView] = useState(false);
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -79,7 +79,7 @@ export default function MediaLibrary() {
       params.append("limit", limit.toString());
       if (searchTerm) params.append("search", searchTerm);
       if (selectedFolderId) params.append("folderId", selectedFolderId);
-      if (selectedCategory) params.append("category", selectedCategory);
+      if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
       if (isFavoritesView) params.append("isFavorite", "true");
 
       const response = await fetch(`/api/media?${params.toString()}`, {
@@ -232,7 +232,7 @@ export default function MediaLibrary() {
                 <SelectValue placeholder="التصنيف" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">كل التصنيفات</SelectItem>
+                <SelectItem value="all">كل التصنيفات</SelectItem>
                 <SelectItem value="مقالات">مقالات</SelectItem>
                 <SelectItem value="شعارات">شعارات</SelectItem>
                 <SelectItem value="صور المراسلين">صور المراسلين</SelectItem>

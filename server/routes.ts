@@ -18770,11 +18770,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (assignment.userId) {
         await createNotification({
           type: 'NEW_ARTICLE',
-          message: `تم تعيينك لدور ${assignment.role} في حدث ${event.title}`,
-          messageAr: `تم تعيينك لدور ${assignment.role} في حدث ${event.title}`,
+          data: {
+            articleId: id,
+            articleTitle: event.title,
+            articleSlug: id,
+          },
           userId: assignment.userId,
-          link: `/calendar/${id}`,
-          metadata: { eventId: id, assignmentId: assignment.id, role: assignment.role }
         });
       }
 
@@ -19914,21 +19915,11 @@ Allow: /
         .set({ views: sql`${enArticles.views} + 1` })
         .where(eq(enArticles.id, article.id));
 
-      // Build safe author object (exclude sensitive fields)
-      const author = authorData ? {
-        id: authorData.id,
-        email: authorData.email,
-        firstName: authorData.firstName,
-        lastName: authorData.lastName,
-        profileImageUrl: authorData.profileImageUrl,
-        bio: authorData.bio,
-      } : undefined;
-
       // Return full article details with ALL article fields
       const articleWithDetails: EnArticleWithDetails = {
         ...article,
         category: category || undefined,
-        author,
+        author: authorData || undefined,
         isBookmarked,
         hasReacted,
         reactionsCount,
