@@ -6616,6 +6616,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single English article by ID (for editing)
+  app.get("/api/en/dashboard/articles/:id", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      const [result] = await db
+        .select({
+          article: enArticles,
+          category: enCategories,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+          reporter: {
+            id: reporterAlias.id,
+            firstName: reporterAlias.firstName,
+            lastName: reporterAlias.lastName,
+            email: reporterAlias.email,
+            profileImageUrl: reporterAlias.profileImageUrl,
+          },
+        })
+        .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+        .where(eq(enArticles.id, articleId))
+        .limit(1);
+
+      if (!result) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Check permissions
+      const userPermissions = await getUserPermissions(userId);
+      const canViewAny = userPermissions.includes("articles.view");
+      const canEditOwn = userPermissions.includes("articles.edit_own");
+      const canEditAny = userPermissions.includes("articles.edit_any");
+
+      const isOwner = result.article.authorId === userId;
+
+      if (!canViewAny && !canEditAny && (!canEditOwn || !isOwner)) {
+        return res.status(403).json({ message: "You don't have permission to view this article" });
+      }
+
+      const formattedArticle = {
+        ...result.article,
+        category: result.category,
+        author: result.reporter || result.author,
+      };
+
+      res.json(formattedArticle);
+    } catch (error) {
+      console.error("Error fetching English article:", error);
+      res.status(500).json({ message: "Failed to fetch English article" });
+    }
+  });
+
   // Create new English article
   app.post("/api/en/dashboard/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
     try {
@@ -7120,6 +7187,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching English categories:", error);
       res.status(500).json({ message: "Failed to fetch English categories" });
+    }
+  });
+
+  // Get single English category by ID (for editing)
+  app.get("/api/en/dashboard/categories/:id", requireAuth, requirePermission("categories.view"), async (req: any, res) => {
+    try {
+      const categoryId = req.params.id;
+
+      const [category] = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching English category:", error);
+      res.status(500).json({ message: "Failed to fetch English category" });
     }
   });
 
