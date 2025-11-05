@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,6 +137,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Mobile Actions */}
             <div className="md:hidden flex items-center gap-2">
+              <LanguageSwitcher />
               <ThemeToggle />
               
               {user && <NotificationBell />}
@@ -218,6 +220,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
+              <LanguageSwitcher />
               <ThemeToggle />
               
               {user && <NotificationBell />}
@@ -227,7 +230,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
-                      className="gap-2 hover-elevate active-elevate-2"
+                      size="icon"
+                      className="hover-elevate active-elevate-2"
                       data-testid="button-user-menu"
                     >
                       <Avatar className="h-8 w-8">
@@ -240,7 +244,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                           {getInitials(user.name || undefined, user.email)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden lg:inline-block">{user.name || user.email}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-56">
