@@ -938,6 +938,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId,
       } = req.body;
 
+      // Parse keywords - handle both JSON array string and comma-separated string
+      let parsedKeywords: string[] = [];
+      if (keywords) {
+        try {
+          // Try parsing as JSON first (e.g., ["keyword1", "keyword2"])
+          if (typeof keywords === 'string' && keywords.trim().startsWith('[')) {
+            parsedKeywords = JSON.parse(keywords);
+          } else if (typeof keywords === 'string') {
+            // Treat as comma-separated string
+            parsedKeywords = keywords.split(',').map(k => k.trim()).filter(Boolean);
+          } else if (Array.isArray(keywords)) {
+            parsedKeywords = keywords;
+          }
+        } catch (err) {
+          // If JSON parse fails, treat as comma-separated string
+          parsedKeywords = keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+        }
+      }
+
       // Save to media_files table with storage path
       const [mediaFile] = await db
         .insert(mediaFiles)
@@ -955,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: description || null,
           altText: altText || null,
           caption: caption || null,
-          keywords: keywords ? JSON.parse(keywords) : [],
+          keywords: parsedKeywords,
           isFavorite: isFavorite === 'true' || false,
           category: category || null,
           uploadedBy: userId,
