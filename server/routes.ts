@@ -13564,11 +13564,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const conditions: any[] = [
         eq(enArticles.status, 'published'),
-        or(
-          ilike(enArticles.title, `%${keyword}%`),
-          ilike(enArticles.content, `%${keyword}%`),
-          ilike(enArticles.excerpt, `%${keyword}%`)
-        )
+        // Search ONLY in seo.keywords JSONB array - not in title/content/excerpt
+        sql`${enArticles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`
       ];
 
       if (categories) {

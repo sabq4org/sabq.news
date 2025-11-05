@@ -6660,12 +6660,8 @@ export class DatabaseStorage implements IStorage {
         isNull(articles.articleType),
         ne(articles.articleType, 'opinion')
       ),
-      // Search in seo.keywords JSONB array OR in title/excerpt
-      or(
-        sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`,
-        sql`${articles.title} LIKE ${`%${keyword}%`}`,
-        sql`${articles.excerpt} LIKE ${`%${keyword}%`}`
-      )
+      // Search ONLY in seo.keywords JSONB array - not in title/excerpt
+      sql`${articles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`
     ];
 
     if (filters?.categories && filters.categories.length > 0) {
