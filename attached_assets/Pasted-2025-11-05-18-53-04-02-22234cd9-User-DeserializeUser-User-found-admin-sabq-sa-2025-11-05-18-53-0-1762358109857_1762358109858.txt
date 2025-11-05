@@ -1,0 +1,92 @@
+2025-11-05 18:53:04.02
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:04.04
+22234cd9
+User
+3:53:04 PM [express] GET /api/media/page=1&limit=20 200 in 69ms
+2025-11-05 18:53:05.73
+22234cd9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-05 18:53:05.75
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:05.78
+22234cd9
+User
+3:53:05 PM [express] GET /api/media/page=1&limit=20&category=articles 200 in 69ms
+2025-11-05 18:53:07.22
+22234cd9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-05 18:53:07.24
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:07.27
+22234cd9
+User
+3:53:07 PM [express] GET /api/media/page=1&limit=20&category=general 200 in 73ms
+2025-11-05 18:53:11.91
+22234cd9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-05 18:53:11.93
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:11.95
+22234cd9
+User
+3:53:11 PM [express] GET /api/media/page=1&limit=20&category=general&isFavorite=true 200 in 74ms
+2025-11-05 18:53:43.57
+22234cd9
+User
+3:53:43 PM [express] GET /api/themes/active 200 in 123ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-11-05 18:53:51.44
+22234cd9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-05 18:53:51.47
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:51.49
+22234cd9
+User
+3:53:51 PM [express] GET /api/media/page=1&limit=20&search=%D8%B3&category=general&isFavorite=true 2…
+2025-11-05 18:53:52.92
+22234cd9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-05 18:53:52.94
+22234cd9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-05 18:53:52.97
+22234cd9
+User
+3:53:52 PM [express] GET /api/media/page=1&limit=20&search=%D8%B3%D9%84%D9%85%D8%A7%D9%86&category=g…
+2025-11-05 18:54:44.38
+22234cd9
+User
+3:54:44 PM [express] GET /api/themes/active 200 in 110ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a…
+2025-11-05 18:54:48.41
+8656176e
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-05 18:54:48.41
+8656176e
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-05 18:54:48.43
+8656176e
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-05 18:54:48.43
+8656176e
+User
+📡 SSE connection closed for user: admin-sabq
