@@ -38,6 +38,7 @@ export default function EnglishHome() {
   return (
     <EnglishLayout>
       <main className="flex-1">
+        {/* Featured News and Latest Articles in Container */}
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
           
           {/* Featured News Carousel */}
@@ -51,11 +52,6 @@ export default function EnglishHome() {
               <EnglishHeroCarousel articles={featuredArticles} />
             </section>
           )}
-
-          {/* Quad Categories Block - Full Width */}
-          <div className="scroll-fade-in">
-            <EnglishQuadCategoriesBlock />
-          </div>
 
           {/* Latest Articles Section */}
           {regularArticles.length > 0 && (
@@ -118,6 +114,11 @@ export default function EnglishHome() {
               </Link>
             </Card>
           )}
+        </div>
+
+        {/* Quad Categories Block - Full Width Outside Container */}
+        <div className="scroll-fade-in">
+          <EnglishQuadCategoriesBlock />
         </div>
       </main>
 
