@@ -361,41 +361,31 @@ export function MediaLibraryPicker({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              <ImageIcon className="h-8 w-8 text-muted-foreground" />
             </div>
           )}
           {(isSelected || isCurrent) && (
-            <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-              <Check className="h-4 w-4 text-primary-foreground" />
+            <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+              <Check className="h-3 w-3 text-primary-foreground" />
             </div>
           )}
           {relevanceScore !== undefined && (
-            <Badge className="absolute top-2 left-2" variant="secondary">
+            <Badge className="absolute top-1 left-1 text-xs" variant="secondary">
               {Math.round(relevanceScore * 100)}%
             </Badge>
           )}
         </div>
-        <div className="p-3 space-y-2">
+        <div className="p-2 space-y-1.5">
           <p
-            className="text-sm font-medium truncate"
+            className="text-xs font-medium truncate"
             title={media.title || media.fileName}
             data-testid={`text-filename-${media.id}`}
           >
             {media.title || media.fileName}
           </p>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span data-testid={`text-size-${media.id}`}>
-              {(media.size / 1024).toFixed(0)} KB
-            </span>
-            {media.width && media.height && (
-              <span data-testid={`text-dimensions-${media.id}`}>
-                {media.width} × {media.height}
-              </span>
-            )}
-          </div>
           <Button
             size="sm"
-            className="w-full"
+            className="w-full h-7 text-xs"
             variant={isSelected || isCurrent ? "default" : "outline"}
             onClick={(e) => {
               e.stopPropagation();
@@ -449,117 +439,115 @@ export function MediaLibraryPicker({
           </TabsList>
 
           {/* Tab 1: Library Browser */}
-          <TabsContent value="library" className="flex-1 p-6 pt-4 overflow-hidden">
-            <div className="flex flex-col h-full gap-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ابحث في مكتبة الوسائط..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                  data-testid="input-search"
-                />
-              </div>
+          <TabsContent value="library" className="flex-1 p-6 pt-4 space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث في مكتبة الوسائط..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+                data-testid="input-search"
+              />
+            </div>
 
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-2">
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={showFavorites ? "default" : "outline"}
+                className="cursor-pointer hover-elevate"
+                onClick={() => {
+                  setShowFavorites(!showFavorites);
+                  setPage(1);
+                }}
+                data-testid="filter-favorites"
+              >
+                <Star className="h-3 w-3 ml-1" />
+                المفضلة
+              </Badge>
+              <Badge
+                variant={showRecent ? "default" : "outline"}
+                className="cursor-pointer hover-elevate"
+                onClick={() => {
+                  setShowRecent(!showRecent);
+                  setPage(1);
+                }}
+                data-testid="filter-recent"
+              >
+                <Clock className="h-3 w-3 ml-1" />
+                الأخيرة
+              </Badge>
+              {CATEGORIES.map((cat) => (
                 <Badge
-                  variant={showFavorites ? "default" : "outline"}
+                  key={cat.value}
+                  variant={selectedCategory === cat.value ? "default" : "outline"}
                   className="cursor-pointer hover-elevate"
                   onClick={() => {
-                    setShowFavorites(!showFavorites);
+                    setSelectedCategory(cat.value);
                     setPage(1);
                   }}
-                  data-testid="filter-favorites"
+                  data-testid={`filter-category-${cat.value}`}
                 >
-                  <Star className="h-3 w-3 ml-1" />
-                  المفضلة
+                  {cat.label}
                 </Badge>
-                <Badge
-                  variant={showRecent ? "default" : "outline"}
-                  className="cursor-pointer hover-elevate"
-                  onClick={() => {
-                    setShowRecent(!showRecent);
-                    setPage(1);
-                  }}
-                  data-testid="filter-recent"
+              ))}
+              {activeFilterCount > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearFilters}
+                  data-testid="button-clear-filters"
                 >
-                  <Clock className="h-3 w-3 ml-1" />
-                  الأخيرة
-                </Badge>
-                {CATEGORIES.map((cat) => (
-                  <Badge
-                    key={cat.value}
-                    variant={selectedCategory === cat.value ? "default" : "outline"}
-                    className="cursor-pointer hover-elevate"
-                    onClick={() => {
-                      setSelectedCategory(cat.value);
-                      setPage(1);
-                    }}
-                    data-testid={`filter-category-${cat.value}`}
-                  >
-                    {cat.label}
-                  </Badge>
-                ))}
-                {activeFilterCount > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={clearFilters}
-                    data-testid="button-clear-filters"
-                  >
-                    <X className="h-3 w-3 ml-1" />
-                    مسح ({activeFilterCount})
-                  </Button>
-                )}
-              </div>
+                  <X className="h-3 w-3 ml-1" />
+                  مسح ({activeFilterCount})
+                </Button>
+              )}
+            </div>
 
-              {/* Media Grid */}
-              <div className="flex-1 overflow-y-auto">
-                {isLoadingMedia ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <Card key={i} className="overflow-hidden">
-                        <Skeleton className="aspect-video" />
-                        <div className="p-3 space-y-2">
-                          <Skeleton className="h-4 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
-                          <Skeleton className="h-8 w-full" />
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : mediaData?.files.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <ImageIcon className="h-16 w-16 text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium" data-testid="text-empty">
-                      لا توجد ملفات
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      جرب تغيير الفلاتر أو ارفع ملفًا جديدًا
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {mediaData?.files.map((media) => renderMediaCard(media))}
-                    </div>
-                    {mediaData?.hasMore && (
-                      <div className="mt-4 text-center">
-                        <Button
-                          onClick={() => setPage((p) => p + 1)}
-                          variant="outline"
-                          data-testid="button-load-more"
-                        >
-                          تحميل المزيد
-                        </Button>
+            {/* Media Grid - with fixed height and scroll */}
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 300px)' }}>
+              {isLoadingMedia ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <Skeleton className="aspect-video" />
+                      <div className="p-2 space-y-1">
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-2 w-1/2" />
+                        <Skeleton className="h-7 w-full" />
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : mediaData?.files.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-center">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium" data-testid="text-empty">
+                    لا توجد ملفات
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    جرب تغيير الفلاتر أو ارفع ملفًا جديدًا
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {mediaData?.files.map((media) => renderMediaCard(media))}
+                  </div>
+                  {mediaData?.hasMore && (
+                    <div className="mt-4 text-center">
+                      <Button
+                        onClick={() => setPage((p) => p + 1)}
+                        variant="outline"
+                        data-testid="button-load-more"
+                      >
+                        تحميل المزيد
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </TabsContent>
 
