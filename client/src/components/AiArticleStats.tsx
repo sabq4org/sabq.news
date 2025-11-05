@@ -94,24 +94,24 @@ export function AiArticleStats({ slug }: AiArticleStatsProps) {
   // Generate engagement trend data for visualization
   const engagementData = [
     { 
-      name: 'المشاهدات', 
-      value: insights.totalViews,
-      percentage: 100 
+      الاسم: 'المشاهدات', 
+      القيمة: insights.totalViews,
+      النسبة: 100 
     },
     { 
-      name: 'القراءات', 
-      value: insights.totalReads,
-      percentage: insights.totalViews > 0 ? Math.round((insights.totalReads / insights.totalViews) * 100) : 0
+      الاسم: 'القراءات', 
+      القيمة: insights.totalReads,
+      النسبة: insights.totalViews > 0 ? Math.round((insights.totalReads / insights.totalViews) * 100) : 0
     },
     { 
-      name: 'الإكمال', 
-      value: Math.round((insights.totalReads * insights.completionRate) / 100),
-      percentage: insights.completionRate
+      الاسم: 'الإكمال', 
+      القيمة: Math.round((insights.totalReads * insights.completionRate) / 100),
+      النسبة: insights.completionRate
     },
     { 
-      name: 'التفاعل', 
-      value: insights.totalInteractions,
-      percentage: insights.totalViews > 0 ? Math.round((insights.totalInteractions / insights.totalViews) * 100) : 0
+      الاسم: 'التفاعل', 
+      القيمة: insights.totalInteractions,
+      النسبة: insights.totalViews > 0 ? Math.round((insights.totalInteractions / insights.totalViews) * 100) : 0
     }
   ];
 
@@ -167,7 +167,7 @@ export function AiArticleStats({ slug }: AiArticleStatsProps) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis 
-                dataKey="name" 
+                dataKey="الاسم" 
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 stroke="hsl(var(--border))"
               />
@@ -184,14 +184,14 @@ export function AiArticleStats({ slug }: AiArticleStatsProps) {
                   direction: 'rtl'
                 }}
                 labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                formatter={(value: number, name: string) => {
-                  const item = engagementData.find(d => d.name === name);
-                  return [`${value.toLocaleString('ar-SA')} (${item?.percentage}%)`, name];
+                formatter={(value: number, الاسم: string) => {
+                  const item = engagementData.find(d => d.الاسم === الاسم);
+                  return [`${value} (${item?.النسبة}%)`, الاسم];
                 }}
               />
               <Area 
                 type="monotone" 
-                dataKey="value" 
+                dataKey="القيمة" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2}
                 fill="url(#colorEngagement)" 
@@ -225,14 +225,14 @@ export function AiArticleStats({ slug }: AiArticleStatsProps) {
           <StatItem
             icon={Eye}
             label="إجمالي المشاهدات"
-            value={insights.totalViews.toLocaleString("ar-SA")}
+            value={insights.totalViews}
             delay={0.3}
           />
           
           <StatItem
             icon={Heart}
             label="التفاعلات"
-            value={insights.totalInteractions.toLocaleString("ar-SA")}
+            value={insights.totalInteractions}
             subtext={`${insights.totalReactions} إعجاب، ${insights.totalComments} تعليق`}
             delay={0.35}
           />
