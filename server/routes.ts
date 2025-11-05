@@ -18159,7 +18159,7 @@ Allow: /
           subtitle: enArticles.subtitle,
           slug: enArticles.slug,
           excerpt: enArticles.excerpt,
-          mainImageUrl: enArticles.imageUrl,
+          imageUrl: enArticles.imageUrl,
           imageFocalPoint: enArticles.imageFocalPoint,
           categoryId: enArticles.categoryId,
           authorId: enArticles.authorId,
