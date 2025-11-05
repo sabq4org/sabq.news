@@ -109,9 +109,17 @@ export default function EnglishCategoryPage() {
       {/* Articles Grid */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {articlesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-80 rounded-lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Card key={i} className="overflow-hidden rounded-xl">
+                <Skeleton className="w-full aspect-[4/3]" />
+                <CardContent className="p-4 space-y-3">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-4 w-24" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : articles.length === 0 ? (
@@ -123,11 +131,11 @@ export default function EnglishCategoryPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {articles.map((article) => (
               <Link key={article.id} href={`/en/article/${article.slug}`}>
                 <Card 
-                  className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden group"
+                  className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
                   data-testid={`card-article-${article.id}`}
                 >
                   {article.imageUrl && (
@@ -135,28 +143,20 @@ export default function EnglishCategoryPage() {
                       <img
                         src={article.imageUrl}
                         alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       />
-                      {article.isFeatured && (
-                        <div className="absolute top-3 left-3">
-                          <Badge variant="default">Featured</Badge>
-                        </div>
-                      )}
                     </div>
                   )}
-                  
-                  <CardContent className="p-5 space-y-3">
-                    <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                  <CardContent className="p-4 space-y-3">
+                    <h3 className="text-lg font-bold line-clamp-2 hover:text-primary transition-colors">
                       {article.title}
                     </h3>
-                    
                     {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {article.excerpt}
                       </p>
                     )}
-
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {article.publishedAt && (
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -170,6 +170,9 @@ export default function EnglishCategoryPage() {
                         </div>
                       )}
                     </div>
+                    {article.isFeatured && (
+                      <Badge variant="default" className="text-xs">Featured</Badge>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
