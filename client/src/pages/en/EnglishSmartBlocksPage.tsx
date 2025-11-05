@@ -59,7 +59,7 @@ import { insertSmartBlockSchema } from "@shared/schema";
 const placementOptions = [
   { value: 'below_featured', label: 'Below Main Banner' },
   { value: 'above_all_news', label: 'Above All News' },
-  { value: 'between_all_and_murqap', label: 'Between News & Murqap' },
+  { value: 'between_all_and_murqap', label: 'Between News & Mirqab' },
   { value: 'above_footer', label: 'Above Footer' },
 ] as const;
 
@@ -472,6 +472,7 @@ export default function EnglishSmartBlocksPage() {
                             placeholder="#3B82F6"
                             maxLength={7}
                             className="flex-1"
+                            data-testid="input-block-color-hex"
                           />
                         </div>
                       </FormControl>
