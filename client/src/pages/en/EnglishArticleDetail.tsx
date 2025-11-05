@@ -152,195 +152,201 @@ export default function EnglishArticleDetail() {
 
   return (
     <EnglishLayout>
-      <article className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Breadcrumb / Category Badge */}
-        {article.category && (
-          <div className="mb-6">
-            <Badge variant="secondary" data-testid="badge-category">
-              {article.category.name}
-            </Badge>
-          </div>
-        )}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 max-w-7xl mx-auto">
+          {/* Main Content */}
+          <article>
+            {/* Breadcrumb / Category Badge */}
+            {article.category && (
+              <div className="mb-6">
+                <Badge variant="secondary" data-testid="badge-category">
+                  {article.category.name}
+                </Badge>
+              </div>
+            )}
 
-        {/* Title Section */}
-        <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight" data-testid="text-article-title">
-            {article.title}
-          </h1>
-          {article.subtitle && (
-            <p className="text-xl text-muted-foreground leading-relaxed" data-testid="text-article-subtitle">
-              {article.subtitle}
-            </p>
-          )}
-        </header>
-
-        {/* Meta Information */}
-        <div className="flex flex-wrap items-center gap-6 mb-8 text-sm text-muted-foreground">
-          {article.author && (
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10" data-testid="avatar-author">
-                <AvatarImage src={article.author.profileImageUrl || undefined} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium text-foreground" data-testid="text-author-name">
-                  {article.author.firstName && article.author.lastName
-                    ? `${article.author.firstName} ${article.author.lastName}`
-                    : article.author.email}
+            {/* Title Section */}
+            <header className="mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight" data-testid="text-article-title">
+                {article.title}
+              </h1>
+              {article.subtitle && (
+                <p className="text-xl text-muted-foreground leading-relaxed" data-testid="text-article-subtitle">
+                  {article.subtitle}
                 </p>
-                <p className="text-xs">Reporter</p>
+              )}
+            </header>
+
+            {/* Meta Information */}
+            <div className="flex flex-wrap items-center gap-6 mb-8 text-sm text-muted-foreground">
+              {article.author && (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10" data-testid="avatar-author">
+                    <AvatarImage src={article.author.profileImageUrl || undefined} />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-foreground" data-testid="text-author-name">
+                      {article.author.firstName && article.author.lastName
+                        ? `${article.author.firstName} ${article.author.lastName}`
+                        : article.author.email}
+                    </p>
+                    <p className="text-xs">Reporter</p>
+                  </div>
+                </div>
+              )}
+              
+              <Separator orientation="vertical" className="h-10" />
+              
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                {article.publishedAt ? (
+                  <time dateTime={article.publishedAt.toString()} data-testid="text-publish-date">
+                    {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                  </time>
+                ) : (
+                  <span>Draft</span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                <span data-testid="text-views">{(article.views || 0).toLocaleString()} views</span>
               </div>
             </div>
-          )}
-          
-          <Separator orientation="vertical" className="h-10" />
-          
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            {article.publishedAt ? (
-              <time dateTime={article.publishedAt.toString()} data-testid="text-publish-date">
-                {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
-              </time>
-            ) : (
-              <span>Draft</span>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Eye className="w-4 h-4" />
-            <span data-testid="text-views">{(article.views || 0).toLocaleString()} views</span>
-          </div>
-        </div>
 
-        {/* Featured Image */}
-        {article.imageUrl && (
-          <div className="mb-8 rounded-lg overflow-hidden">
-            <img
-              src={article.imageUrl}
-              alt={article.title}
-              className="w-full h-auto"
-              data-testid="img-article-cover"
-            />
-          </div>
-        )}
-
-        {/* AI Summary */}
-        {(article.aiSummary || article.excerpt) && (
-          <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-base text-primary">Smart Summary</h3>
+            {/* Featured Image */}
+            {article.imageUrl && (
+              <div className="mb-8 rounded-lg overflow-hidden">
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-auto"
+                  data-testid="img-article-cover"
+                />
               </div>
+            )}
+
+            {/* AI Summary */}
+            {(article.aiSummary || article.excerpt) && (
+              <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-base text-primary">Smart Summary</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                    className="h-7 text-xs text-primary hover:text-primary/80"
+                    data-testid="button-toggle-summary"
+                  >
+                    {isSummaryExpanded ? (
+                      <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        Show less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        Read more
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p 
+                  className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} 
+                  data-testid="text-smart-summary"
+                >
+                  {article.aiSummary || article.excerpt}
+                </p>
+              </div>
+            )}
+
+            {/* Article Content */}
+            <div
+              className="prose prose-lg max-w-none dark:prose-invert mb-12 
+                         prose-headings:font-bold prose-headings:text-foreground
+                         prose-p:text-foreground prose-p:leading-relaxed
+                         prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                         prose-strong:text-foreground prose-strong:font-semibold
+                         prose-ul:text-foreground prose-ol:text-foreground
+                         prose-li:text-foreground prose-li:marker:text-muted-foreground
+                         prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
+                         prose-img:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              data-testid="text-article-content"
+            />
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 border-t pt-6 mb-8">
               <Button
-                variant="ghost"
+                variant={article.hasReacted ? "default" : "outline"}
                 size="sm"
-                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                className="h-7 text-xs text-primary hover:text-primary/80"
-                data-testid="button-toggle-summary"
+                onClick={() => reactMutation.mutate()}
+                disabled={!user || reactMutation.isPending}
+                data-testid="button-like"
               >
-                {isSummaryExpanded ? (
-                  <>
-                    <ChevronUp className="h-3 w-3 mr-1" />
-                    Show less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3 w-3 mr-1" />
-                    Read more
-                  </>
-                )}
+                <Heart className={`w-4 h-4 mr-2 ${article.hasReacted ? 'fill-current' : ''}`} />
+                {article.hasReacted ? 'Liked' : 'Like'}
+                {article.reactionsCount && article.reactionsCount > 0 ? ` (${article.reactionsCount})` : ''}
+              </Button>
+              
+              <Button
+                variant={article.isBookmarked ? "default" : "outline"}
+                size="sm"
+                onClick={() => bookmarkMutation.mutate()}
+                disabled={!user || bookmarkMutation.isPending}
+                data-testid="button-bookmark"
+              >
+                <Bookmark className={`w-4 h-4 mr-2 ${article.isBookmarked ? 'fill-current' : ''}`} />
+                {article.isBookmarked ? 'Saved' : 'Save'}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                data-testid="button-share"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
               </Button>
             </div>
-            <p 
-              className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} 
-              data-testid="text-smart-summary"
-            >
-              {article.aiSummary || article.excerpt}
-            </p>
-          </div>
-        )}
 
-        {/* Article Content */}
-        <div
-          className="prose prose-lg max-w-none dark:prose-invert mb-12 
-                     prose-headings:font-bold prose-headings:text-foreground
-                     prose-p:text-foreground prose-p:leading-relaxed
-                     prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                     prose-strong:text-foreground prose-strong:font-semibold
-                     prose-ul:text-foreground prose-ol:text-foreground
-                     prose-li:text-foreground prose-li:marker:text-muted-foreground
-                     prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
-                     prose-img:rounded-lg"
-          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          data-testid="text-article-content"
-        />
+            {/* Keywords/Tags */}
+            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+              <div className="pt-8 border-t">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                  Related Topics
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {article.seo.keywords.map((keyword, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
+                      onClick={() => setLocation(`/en/keyword/${encodeURIComponent(keyword)}`)}
+                      data-testid={`badge-keyword-${index}`}
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3 border-t pt-6 mb-8">
-          <Button
-            variant={article.hasReacted ? "default" : "outline"}
-            size="sm"
-            onClick={() => reactMutation.mutate()}
-            disabled={!user || reactMutation.isPending}
-            data-testid="button-like"
-          >
-            <Heart className={`w-4 h-4 mr-2 ${article.hasReacted ? 'fill-current' : ''}`} />
-            {article.hasReacted ? 'Liked' : 'Like'}
-            {article.reactionsCount && article.reactionsCount > 0 ? ` (${article.reactionsCount})` : ''}
-          </Button>
-          
-          <Button
-            variant={article.isBookmarked ? "default" : "outline"}
-            size="sm"
-            onClick={() => bookmarkMutation.mutate()}
-            disabled={!user || bookmarkMutation.isPending}
-            data-testid="button-bookmark"
-          >
-            <Bookmark className={`w-4 h-4 mr-2 ${article.isBookmarked ? 'fill-current' : ''}`} />
-            {article.isBookmarked ? 'Saved' : 'Save'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShare}
-            data-testid="button-share"
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            {/* AI Article Analytics */}
+            <EnAiArticleStats slug={params.slug || ""} />
+          </aside>
         </div>
-
-        {/* Keywords/Tags */}
-        {article.seo?.keywords && article.seo.keywords.length > 0 && (
-          <div className="pt-8 border-t">
-            <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-              Related Topics
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {article.seo.keywords.map((keyword, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
-                  onClick={() => setLocation(`/en/keyword/${encodeURIComponent(keyword)}`)}
-                  data-testid={`badge-keyword-${index}`}
-                >
-                  {keyword}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* AI Analytics Block */}
-        <div className="pt-8">
-          <EnAiArticleStats slug={params.slug || ""} />
-        </div>
-      </article>
+      </div>
     </EnglishLayout>
   );
 }

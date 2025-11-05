@@ -20225,7 +20225,7 @@ Allow: /
 
       const article = articleResults[0];
 
-      // Get reading history stats
+      // Get reading history stats (shared table uses article.id)
       const readingStats = await db
         .select({
           avgDuration: sql<number>`AVG(${readingHistory.readDuration})`,
@@ -20234,13 +20234,13 @@ Allow: /
         .from(readingHistory)
         .where(eq(readingHistory.articleId, article.id));
 
-      // Get reactions count (English reactions table)
+      // Get reactions count (English reactions table: en_reactions)
       const reactionsCount = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(enReactions)
         .where(eq(enReactions.articleId, article.id));
 
-      // Get comments count (English comments table)
+      // Get comments count (English comments table: en_comments)
       const commentsCount = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(enComments)
