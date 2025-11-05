@@ -1,5 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import {
   Volume2,
   VolumeX,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnArticleWithDetails } from "@shared/schema";
@@ -29,6 +32,7 @@ export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -223,14 +227,36 @@ export default function EnglishArticleDetail() {
 
         {/* AI Summary */}
         {(article.aiSummary || article.excerpt) && (
-          <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
+          <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-lg text-primary">Smart Summary</h3>
+                <h3 className="font-bold text-base text-primary">Smart Summary</h3>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                className="h-7 text-xs text-primary hover:text-primary/80"
+                data-testid="button-toggle-summary"
+              >
+                {isSummaryExpanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3 mr-1" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                    Read more
+                  </>
+                )}
+              </Button>
             </div>
-            <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
+            <p 
+              className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} 
+              data-testid="text-smart-summary"
+            >
               {article.aiSummary || article.excerpt}
             </p>
           </div>
