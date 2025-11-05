@@ -178,6 +178,7 @@ export function MediaLibraryPicker({
       return apiRequest<MediaFile>("/api/media/upload", {
         method: "POST",
         body: formData,
+        isFormData: true,
       });
     },
     onSuccess: (uploadedMedia) => {

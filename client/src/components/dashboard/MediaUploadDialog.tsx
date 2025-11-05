@@ -90,6 +90,11 @@ export function MediaUploadDialog({ open, onOpenChange, folders }: MediaUploadDi
       return apiRequest("/api/media/upload", {
         method: "POST",
         body: formData,
+        isFormData: true,
+        onUploadProgress: (progress) => {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          setUploadProgress(percent);
+        },
       });
     },
     onSuccess: () => {
