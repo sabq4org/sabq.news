@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag } from "lucide-react";
+import { Clock, Tag, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnSmartBlock } from "@shared/schema";
 
@@ -17,6 +17,14 @@ interface ArticleResult {
     name: string;
     slug: string;
     color: string | null;
+  } | null;
+  author?: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    bio: string | null;
   } | null;
 }
 
@@ -132,12 +140,24 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                 <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-smart-article-title-${article.id}`}>
                   {article.title}
                 </h3>
-                {timeAgo && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo}
-                  </div>
-                )}
+                <div className="flex flex-col gap-1.5">
+                  {article.author && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <User className="h-3 w-3" />
+                      <span className="font-medium">
+                        {article.author.firstName && article.author.lastName
+                          ? `${article.author.firstName} ${article.author.lastName}`
+                          : article.author.email}
+                      </span>
+                    </div>
+                  )}
+                  {timeAgo && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {timeAgo}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </Link>
@@ -186,12 +206,24 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                     <h3 className="font-bold text-base line-clamp-2 group-hover:text-primary transition-colors">
                       {article.title}
                     </h3>
-                    {timeAgo && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {timeAgo}
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {article.author && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          <span className="font-medium">
+                            {article.author.firstName && article.author.lastName
+                              ? `${article.author.firstName} ${article.author.lastName}`
+                              : article.author.email}
+                          </span>
+                        </div>
+                      )}
+                      {timeAgo && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {timeAgo}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -241,12 +273,24 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
             <h3 className="font-bold text-xl line-clamp-2 group-hover:text-primary transition-colors">
               {featured.title}
             </h3>
-            {featuredTimeAgo && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                {featuredTimeAgo}
-              </div>
-            )}
+            <div className="flex flex-col gap-2">
+              {featured.author && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <User className="h-3.5 w-3.5" />
+                  <span className="font-medium">
+                    {featured.author.firstName && featured.author.lastName
+                      ? `${featured.author.firstName} ${featured.author.lastName}`
+                      : featured.author.email}
+                  </span>
+                </div>
+              )}
+              {featuredTimeAgo && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  {featuredTimeAgo}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </Link>
@@ -276,12 +320,24 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                       <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                         {article.title}
                       </h4>
-                      {timeAgo && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {timeAgo}
-                        </div>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {article.author && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            <span className="font-medium">
+                              {article.author.firstName && article.author.lastName
+                                ? `${article.author.firstName} ${article.author.lastName}`
+                                : article.author.email}
+                            </span>
+                          </div>
+                        )}
+                        {timeAgo && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {timeAgo}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

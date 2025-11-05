@@ -12493,13 +12493,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         conditions.push(gte(enArticles.publishedAt, new Date(dateTo as string)));
       }
 
-      const articles = await db.query.enArticles.findMany({
-        where: and(...conditions),
-        orderBy: [desc(enArticles.publishedAt)],
-        limit: parseInt(limit as string) || 6,
-        with: {
-          category: true,
-        },
+      // Use leftJoin to get articles with category and author information
+      const results = await db
+        .select()
+        .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .where(and(...conditions))
+        .orderBy(desc(enArticles.publishedAt))
+        .limit(parseInt(limit as string) || 6);
+
+      // Map results to include category and author information
+      const articles = results.map(result => {
+        const article = result.en_articles;
+        const category = result.en_categories;
+        const authorData = result.users;
+
+        return {
+          ...article,
+          category: category || undefined,
+          author: authorData ? {
+            id: authorData.id,
+            email: authorData.email,
+            firstName: authorData.firstName,
+            lastName: authorData.lastName,
+            profileImageUrl: authorData.profileImageUrl,
+            bio: authorData.bio,
+          } : undefined,
+        };
       });
 
       console.log(`✅ [EN Smart Block] Found ${articles.length} articles for "${keyword}"`);
