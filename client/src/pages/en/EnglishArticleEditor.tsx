@@ -1242,7 +1242,7 @@ export default function EnglishArticleEditor() {
                     <SeoPreview
                       title={metaTitle || title}
                       description={metaDescription || excerpt}
-                      imageUrl={imageUrl}
+                      slug={slug}
                     />
                   </TabsContent>
                 </Tabs>
