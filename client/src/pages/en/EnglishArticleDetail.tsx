@@ -17,6 +17,9 @@ import {
   Eye,
   Sparkles,
   User,
+  Volume2,
+  VolumeX,
+  Loader2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnArticleWithDetails } from "@shared/schema";
@@ -219,20 +222,18 @@ export default function EnglishArticleDetail() {
         )}
 
         {/* AI Summary */}
-        {(article.smartSummary || article.aiSummary) && (
-          <Card className="mb-8 bg-primary/5 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-semibold mb-2">AI Quick Summary</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground" data-testid="text-ai-summary">
-                    {article.smartSummary || article.aiSummary}
-                  </p>
-                </div>
+        {(article.aiSummary || article.excerpt) && (
+          <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h3 className="font-bold text-lg text-primary">Smart Summary</h3>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
+              {article.aiSummary || article.excerpt}
+            </p>
+          </div>
         )}
 
         {/* Article Content */}
