@@ -1231,8 +1231,9 @@ export default function EnglishArticleEditor() {
                       <Label>Keywords</Label>
                       <TagInput
                         tags={keywords}
-                        onChange={setKeywords}
+                        onTagsChange={setKeywords}
                         placeholder="Add keywords..."
+                        testId="input-keywords-en"
                       />
                     </div>
                   </TabsContent>
