@@ -18775,7 +18775,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             articleTitle: event.title,
             articleSlug: id,
           },
-          userId: assignment.userId,
         });
       }
 
