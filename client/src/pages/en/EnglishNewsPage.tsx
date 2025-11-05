@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { enUS } from 'date-fns/locale';
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishNewsAnalyticsHero } from "@/components/en/EnglishNewsAnalyticsHero";
 import { EnglishAIInsightsPanel } from "@/components/en/EnglishAIInsightsPanel";
 import { EnglishSmartFilterBar } from "@/components/en/EnglishSmartFilterBar";
-import { ArticleCard } from "@/components/ArticleCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronRight, ChevronLeft, Clock, Eye } from "lucide-react";
+import { Link } from "wouter";
 import type { EnArticle, EnCategory } from "@shared/schema";
+import { formatDistanceToNow } from "date-fns";
 
 const ARTICLES_PER_PAGE = 20;
 
@@ -236,13 +237,49 @@ export default function EnglishNewsPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentArticles.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article as any}
-                  variant="grid"
-                  dir="ltr"
-                  locale={enUS}
-                />
+                <Link key={article.id} href={`/en/article/${article.slug}`}>
+                  <Card 
+                    className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
+                    data-testid={`card-article-${article.id}`}
+                  >
+                    {article.imageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-lg font-bold line-clamp-2 hover:text-primary transition-colors">
+                        {article.title}
+                      </h3>
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        {article.publishedAt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                          </div>
+                        )}
+                        {article.views !== undefined && (
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{article.views.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                      {article.isFeatured && (
+                        <Badge variant="default" className="text-xs">Featured</Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 

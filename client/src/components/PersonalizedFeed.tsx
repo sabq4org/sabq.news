@@ -1,9 +1,8 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Clock, MessageSquare, Zap, Star } from "lucide-react";
+import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
-import { ArticleCard } from "./ArticleCard";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -143,14 +142,107 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         </CardContent>
       </Card>
 
-      {/* Desktop View: Grid using ArticleCard */}
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* Desktop View: Grid with 4 columns (original design) */}
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.map((article) => (
-          <ArticleCard 
-            key={article.id}
-            article={article}
-            variant="grid"
-          />
+          <Link key={article.id} href={`/article/${article.slug}`}>
+            <Card 
+              className={`cursor-pointer h-full overflow-hidden border border-card-border ${
+                article.newsType === "breaking" ? "bg-destructive/5" : ""
+              }`}
+              data-testid={`card-article-${article.id}`}
+            >
+              {article.imageUrl && (
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={article.imageUrl}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    style={{
+                      objectPosition: (article as any).imageFocalPoint
+                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                        : 'center'
+                    }}
+                  />
+                  {article.newsType === "breaking" ? (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute top-3 right-3 gap-1" 
+                      data-testid={`badge-breaking-${article.id}`}
+                    >
+                      <Zap className="h-3 w-3" />
+                      عاجل
+                    </Badge>
+                  ) : article.isFeatured ? (
+                    <Badge 
+                      variant="default" 
+                      className="absolute top-3 right-3 gap-1 bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
+                      data-testid={`badge-featured-${article.id}`}
+                    >
+                      <Star className="h-3 w-3 fill-current" />
+                      مميز
+                    </Badge>
+                  ) : article.category ? (
+                    <Badge 
+                      variant="default" 
+                      className="absolute top-3 right-3" 
+                      data-testid={`badge-category-${article.id}`}
+                    >
+                      {article.category.icon} {article.category.nameAr}
+                    </Badge>
+                  ) : null}
+                  {article.aiSummary && (
+                    <div className="absolute top-3 left-3">
+                      <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                        <Sparkles className="h-3 w-3 ml-1" />
+                        ذكاء اصطناعي
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <CardContent className="p-4 space-y-3">
+                
+                <h3 
+                  className={`font-bold text-lg line-clamp-2 ${
+                    article.newsType === "breaking"
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}
+                  data-testid={`text-article-title-${article.id}`}
+                >
+                  {article.title}
+                </h3>
+                
+                {article.excerpt && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {article.excerpt}
+                  </p>
+                )}
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                  {article.publishedAt && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {formatDistanceToNow(new Date(article.publishedAt), {
+                          addSuffix: true,
+                          locale: arSA,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <ViewsCount 
+                    views={article.views || 0}
+                    iconClassName="h-3 w-3"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
     </section>

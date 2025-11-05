@@ -21,15 +21,12 @@ import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
-import { arSA, enUS } from "date-fns/locale";
-import type { Locale } from "date-fns";
+import { arSA } from "date-fns/locale";
 import FollowStoryButton from "./FollowStoryButton";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
   variant?: "grid" | "featured" | "list" | "compact";
-  dir?: "rtl" | "ltr";
-  locale?: Locale;
   onReact?: (articleId: string) => void;
   onBookmark?: (articleId: string) => void;
 }
@@ -37,20 +34,13 @@ interface ArticleCardProps {
 export function ArticleCard({ 
   article, 
   variant = "grid",
-  dir = "rtl",
-  locale = arSA,
   onReact,
   onBookmark 
 }: ArticleCardProps) {
-  // Determine category name based on direction
-  const categoryName = dir === "ltr" 
-    ? article.category?.nameEn 
-    : article.category?.nameAr;
-
   const timeAgo = article.publishedAt
     ? formatDistanceToNow(new Date(article.publishedAt), { 
         addSuffix: true, 
-        locale 
+        locale: arSA 
       })
     : null;
 
@@ -88,12 +78,12 @@ export function ArticleCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
             
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
-              {article.category && categoryName && (
+              {article.category && (
                 <Badge 
                   className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs sm:text-sm shadow-md" 
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {article.category.icon} {categoryName}
+                  {article.category.icon} {article.category.nameAr}
                 </Badge>
               )}
             </div>
@@ -145,13 +135,13 @@ export function ArticleCard({
         <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent">
           <CardContent className="p-3">
             <div className="flex items-start gap-2 mb-2">
-              {article.category && categoryName && (
+              {article.category && (
                 <Badge 
                   variant="outline" 
                   className="text-[10px] px-1.5 py-0.5 border-primary/20 text-primary"
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {categoryName}
+                  {article.category.nameAr}
                 </Badge>
               )}
               {aiInsight && (
@@ -205,13 +195,13 @@ export function ArticleCard({
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
                 )}
-                {article.category && categoryName && (
+                {article.category && (
                   <div className="absolute bottom-2 right-2">
                     <Badge 
                       className="bg-primary/90 backdrop-blur-sm text-white border-0 text-[10px] px-2 py-0.5"
                       data-testid={`badge-category-${article.id}`}
                     >
-                      {categoryName}
+                      {article.category.nameAr}
                     </Badge>
                   </div>
                 )}
@@ -302,80 +292,129 @@ export function ArticleCard({
     );
   }
 
-  // Grid variant (default) - Compact Horizontal Card
+  // Grid variant (default) - Professional News Card
   return (
     <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent" data-testid={`card-article-${article.id}`}>
-      <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
-        <CardContent className="p-3">
-          <div className={`flex gap-3 ${dir === "rtl" ? "flex-row-reverse" : "flex-row"}`}>
-            {/* Image on right for RTL, left for LTR */}
-            <div className="relative w-20 md:w-24 lg:w-28 xl:w-[120px] flex-shrink-0 rounded-md overflow-hidden">
-              <div className="aspect-[3/2]">
-                {article.imageUrl ? (
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    style={{ objectPosition: getObjectPosition() }}
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
-                )}
-              </div>
-            </div>
-
-            {/* Content on left */}
-            <div className="flex-1 min-w-0 flex flex-col gap-2">
-              {/* Badges row */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {article.category && categoryName && (
-                  <Badge 
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0.5 border-primary/20 text-primary"
-                    data-testid={`badge-category-${article.id}`}
-                  >
-                    {categoryName}
-                  </Badge>
-                )}
-                {aiInsight && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 border-primary/20">
-                          <aiInsight.icon className="h-2.5 w-2.5 text-primary" />
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs">{aiInsight.text}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-
-              {/* Title */}
-              <h3 className="text-base font-semibold leading-tight line-clamp-2 text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
-                {article.title}
-              </h3>
-
-              {/* Metadata row */}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                {timeAgo && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo}
-                  </span>
-                )}
-                <ViewsCount 
-                  views={article.views || 0}
-                  iconClassName="h-3 w-3"
-                />
-              </div>
+      <CardContent className="p-0">
+        <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
+          <div className="relative aspect-[16/9] overflow-hidden">
+            {article.imageUrl ? (
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                style={{ objectPosition: getObjectPosition() }}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+            )}
+            
+            <div className="absolute top-3 right-3 flex flex-wrap gap-2">
+              {article.category && (
+                <Badge 
+                  className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs shadow-md"
+                  data-testid={`badge-category-${article.id}`}
+                >
+                  {article.category.icon} {article.category.nameAr}
+                </Badge>
+              )}
+              {aiInsight && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 gap-1.5 shadow-lg">
+                        <aiInsight.icon className="h-3.5 w-3.5" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">{aiInsight.text}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Link>
+        </Link>
+
+        <div className="p-4">
+          <Link href={`/article/${article.slug}`}>
+            <h3 className="text-[17px] font-semibold mb-2 line-clamp-2 leading-snug text-[#0F172A] dark:text-foreground group-hover:text-primary transition-colors" data-testid={`text-title-${article.id}`}>
+              {article.title}
+            </h3>
+          </Link>
+
+        {article.aiSummary && (
+          <p className="text-sm text-[#475569] dark:text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+            {article.aiSummary}
+          </p>
+        )}
+
+        {article.storyId && article.storyTitle && (
+          <div className="mb-3" onClick={(e) => e.preventDefault()}>
+            <FollowStoryButton 
+              storyId={article.storyId} 
+              storyTitle={article.storyTitle}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-3">
+          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-muted-foreground">
+            {timeAgo && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {timeAgo}
+              </span>
+            )}
+            <ViewsCount 
+              views={article.views || 0}
+              iconClassName="h-3 w-3"
+            />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover-elevate"
+              onClick={(e) => {
+                e.preventDefault();
+                onReact?.(article.id);
+              }}
+              data-testid={`button-react-${article.id}`}
+            >
+              <Heart className={`h-4 w-4 ${article.hasReacted ? 'fill-red-500 text-red-500' : ''}`} />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover-elevate"
+              onClick={(e) => {
+                e.preventDefault();
+                onBookmark?.(article.id);
+              }}
+              data-testid={`button-bookmark-${article.id}`}
+            >
+              <Bookmark className={`h-4 w-4 ${article.isBookmarked ? 'fill-current' : ''}`} />
+            </Button>
+
+            <Link href={`/article/${article.slug}#comments`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover-elevate"
+                onClick={(e) => e.stopPropagation()}
+                data-testid={`button-comments-${article.id}`}
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+      </CardContent>
     </Card>
   );
 }

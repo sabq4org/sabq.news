@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
-import { enUS } from 'date-fns/locale';
-import { ArticleCard } from "@/components/ArticleCard";
+import { useParams, Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tag } from "lucide-react";
+import { Clock, Eye, Tag } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import type { EnArticle } from "@shared/schema";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 
@@ -65,15 +65,72 @@ export default function EnglishKeywordPage() {
         {/* Articles Grid */}
         {!isLoading && articles && articles.length > 0 && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article as any}
-                variant="grid"
-                dir="ltr"
-                locale={enUS}
-              />
-            ))}
+            {articles.map((article) => {
+              const timeAgo = article.publishedAt
+                ? formatDistanceToNow(new Date(article.publishedAt), {
+                    addSuffix: true,
+                  })
+                : null;
+
+              return (
+                <Link 
+                  key={article.id} 
+                  href={`/en/article/${article.slug}`}
+                  data-testid={`link-article-${article.slug}`}
+                >
+                  <Card className="group cursor-pointer h-full hover-elevate active-elevate-2 transition-all duration-300" data-testid={`card-article-${article.slug}`}>
+                    <CardContent className="p-0">
+                      {article.imageUrl && (
+                        <div className="relative h-48 overflow-hidden rounded-t-lg">
+                          <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            data-testid={`img-article-${article.slug}`}
+                            style={{
+                              objectPosition: (article as any).imageFocalPoint
+                                ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                : 'center'
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <div className="p-4 space-y-3">
+                        <h2 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors" data-testid="text-article-title">
+                          {article.title}
+                        </h2>
+
+                        {article.excerpt && (
+                          <p className="text-muted-foreground line-clamp-2 text-sm" data-testid="text-article-excerpt">
+                            {article.excerpt}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {timeAgo && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{timeAgo}</span>
+                            </div>
+                          )}
+                          {article.views !== undefined && (
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{article.views.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {article.isFeatured && (
+                          <Badge variant="default" className="text-xs">Featured</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
 
