@@ -7,6 +7,8 @@ import {
   MessageSquare,
   Newspaper,
   UserCircle,
+  Blocks,
+  LayoutGrid,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -70,6 +72,36 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/comments",
         icon: MessageSquare,
         roles: ["admin", "editor", "reviewer"],
+      },
+    ],
+  },
+
+  // ===== Smart Content / المحتوى الذكي =====
+  {
+    id: "smart_content",
+    labelKey: "nav.smart_content",
+    labelAr: "المحتوى الذكي",
+    labelEn: "Smart Content",
+    icon: Blocks,
+    roles: ["admin", "editor"],
+    children: [
+      {
+        id: "smart_blocks",
+        labelKey: "nav.smart_blocks",
+        labelAr: "البلوكات الذكية",
+        labelEn: "Smart Blocks",
+        path: "/en/dashboard/smart-blocks",
+        icon: Blocks,
+        roles: ["admin", "editor"],
+      },
+      {
+        id: "quad_categories",
+        labelKey: "nav.quad_categories",
+        labelAr: "التصنيفات الرباعية",
+        labelEn: "Quad Categories",
+        path: "/en/dashboard/quad-categories",
+        icon: LayoutGrid,
+        roles: ["admin", "editor"],
       },
     ],
   },
