@@ -19770,26 +19770,15 @@ Allow: /
     try {
       const { limit = 50, offset = 0 } = req.query;
       
-      const articles = await db
-        .select({
-          id: enArticles.id,
-          title: enArticles.title,
-          subtitle: enArticles.subtitle,
-          slug: enArticles.slug,
-          excerpt: enArticles.excerpt,
-          imageUrl: enArticles.imageUrl,
-          imageFocalPoint: enArticles.imageFocalPoint,
-          categoryId: enArticles.categoryId,
-          authorId: enArticles.authorId,
-          articleType: enArticles.articleType,
-          newsType: enArticles.newsType,
-          status: enArticles.status,
-          isFeatured: enArticles.isFeatured,
-          views: enArticles.views,
-          publishedAt: enArticles.publishedAt,
-          createdAt: enArticles.createdAt,
-        })
+      // Create alias for reporter
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      // Get articles with author and reporter information
+      const results = await db
+        .select()
         .from(enArticles)
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
         .where(
           and(
             eq(enArticles.categoryId, req.params.id),
@@ -19799,6 +19788,44 @@ Allow: /
         .orderBy(desc(enArticles.publishedAt))
         .limit(Number(limit))
         .offset(Number(offset));
+
+      // Map results to include author/reporter information
+      const articles = results.map(result => {
+        const article = result.en_articles;
+        const authorData = result.users;
+        const reporterData = result.reporter;
+
+        // Priority: reporter > author (same as dashboard)
+        const displayAuthor = reporterData || authorData;
+
+        return {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          imageFocalPoint: article.imageFocalPoint,
+          categoryId: article.categoryId,
+          authorId: article.authorId,
+          reporterId: article.reporterId,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          status: article.status,
+          isFeatured: article.isFeatured,
+          views: article.views,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+            bio: displayAuthor.bio,
+          } : undefined,
+        };
+      });
       
       res.json(articles);
     } catch (error) {
@@ -19821,20 +19848,28 @@ Allow: /
         conditions.push(eq(enArticles.categoryId, categoryId as string));
       }
 
-      // Get articles with author information using leftJoin
+      // Create alias for reporter
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      // Get articles with author and reporter information using leftJoin
       const results = await db
         .select()
         .from(enArticles)
         .leftJoin(users, eq(enArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(enArticles.publishedAt))
         .limit(Number(limit))
         .offset(Number(offset));
 
-      // Map results to include author information
+      // Map results to include author/reporter information
       const articles = results.map(result => {
         const article = result.en_articles;
         const authorData = result.users;
+        const reporterData = result.reporter;
+
+        // Priority: reporter > author (same as dashboard)
+        const displayAuthor = reporterData || authorData;
 
         return {
           id: article.id,
@@ -19846,6 +19881,7 @@ Allow: /
           imageFocalPoint: article.imageFocalPoint,
           categoryId: article.categoryId,
           authorId: article.authorId,
+          reporterId: article.reporterId,
           articleType: article.articleType,
           newsType: article.newsType,
           status: article.status,
@@ -19853,13 +19889,13 @@ Allow: /
           views: article.views,
           publishedAt: article.publishedAt,
           createdAt: article.createdAt,
-          author: authorData ? {
-            id: authorData.id,
-            email: authorData.email,
-            firstName: authorData.firstName,
-            lastName: authorData.lastName,
-            profileImageUrl: authorData.profileImageUrl,
-            bio: authorData.bio,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+            bio: displayAuthor.bio,
           } : undefined,
         };
       });
@@ -20024,12 +20060,16 @@ Allow: /
     try {
       const userId = req.user?.id;
       
-      // Get article with category and author joins - select all fields using Drizzle's proper approach
+      // Create alias for reporter
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      // Get article with category, author, and reporter joins
       const results = await db
         .select()
         .from(enArticles)
         .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
         .leftJoin(users, eq(enArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
         .where(eq(enArticles.slug, req.params.slug))
         .limit(1);
       
@@ -20037,11 +20077,12 @@ Allow: /
         return res.status(404).json({ message: "Article not found" });
       }
 
-      // Access joined tables by their actual table names (snake_case as Drizzle returns them)
+      // Access joined tables by their actual table names
       const result = results[0];
       const article = result.en_articles;
       const category = result.en_categories;
       const authorData = result.users;
+      const reporterData = result.reporter;
 
       // Run all queries in parallel for better performance
       const [
@@ -20075,11 +20116,14 @@ Allow: /
         .set({ views: sql`${enArticles.views} + 1` })
         .where(eq(enArticles.id, article.id));
 
+      // Priority: reporter > author (same as dashboard)
+      const displayAuthor = reporterData || authorData;
+
       // Return full article details with ALL article fields
       const articleWithDetails: EnArticleWithDetails = {
         ...article,
         category: category || undefined,
-        author: authorData || undefined,
+        author: displayAuthor || undefined,
         isBookmarked,
         hasReacted,
         reactionsCount,
