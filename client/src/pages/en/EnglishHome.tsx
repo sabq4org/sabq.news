@@ -8,12 +8,54 @@ import { ArrowRight, Clock, Eye, Star, TrendingUp } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
-import type { EnArticle } from "@shared/schema";
+import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
+import type { EnArticle, EnSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 
 export default function EnglishHome() {
   const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({
     queryKey: ["/api/en/articles"],
+  });
+
+  // Fetch smart blocks for different placements
+  const { data: blocksBelowFeatured } = useQuery<EnSmartBlock[]>({
+    queryKey: ['/api/en/smart-blocks', 'below_featured'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'below_featured' });
+      const res = await fetch(`/api/en/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+  });
+
+  const { data: blocksAboveAllNews } = useQuery<EnSmartBlock[]>({
+    queryKey: ['/api/en/smart-blocks', 'above_all_news'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'above_all_news' });
+      const res = await fetch(`/api/en/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+  });
+
+  const { data: blocksBetweenAllAndMurqap } = useQuery<EnSmartBlock[]>({
+    queryKey: ['/api/en/smart-blocks', 'between_all_and_murqap'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'between_all_and_murqap' });
+      const res = await fetch(`/api/en/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
+  });
+
+  const { data: blocksAboveFooter } = useQuery<EnSmartBlock[]>({
+    queryKey: ['/api/en/smart-blocks', 'above_footer'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ isActive: 'true', placement: 'above_footer' });
+      const res = await fetch(`/api/en/smart-blocks?${params}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    },
   });
 
   // Separate featured and regular articles
@@ -52,6 +94,16 @@ export default function EnglishHome() {
               <EnglishHeroCarousel articles={featuredArticles} />
             </section>
           )}
+
+          {/* Smart Blocks: below_featured */}
+          {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
+            <EnglishSmartNewsBlock key={block.id} config={block} />
+          ))}
+
+          {/* Smart Blocks: above_all_news */}
+          {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
+            <EnglishSmartNewsBlock key={block.id} config={block} />
+          ))}
 
           {/* Latest Articles Section */}
           {regularArticles.length > 0 && (
@@ -103,6 +155,11 @@ export default function EnglishHome() {
             </section>
           )}
 
+          {/* Smart Blocks: between_all_and_murqap */}
+          {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
+            <EnglishSmartNewsBlock key={block.id} config={block} />
+          ))}
+
           {/* Empty State */}
           {articles.length === 0 && (
             <Card className="p-12 text-center">
@@ -114,6 +171,11 @@ export default function EnglishHome() {
               </Link>
             </Card>
           )}
+
+          {/* Smart Blocks: above_footer */}
+          {blocksAboveFooter && blocksAboveFooter.map((block) => (
+            <EnglishSmartNewsBlock key={block.id} config={block} />
+          ))}
         </div>
 
         {/* Quad Categories Block - Full Width Outside Container */}
