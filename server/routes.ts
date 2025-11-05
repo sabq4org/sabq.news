@@ -19862,7 +19862,7 @@ Allow: /
         .offset(Number(offset));
 
       // Map results to include author/reporter information
-      const articles = results.map(result => {
+      const articles = results.map((result: any) => {
         const article = result.en_articles;
         const authorData = result.users;
         const reporterData = result.reporter;
@@ -19935,7 +19935,7 @@ Allow: /
         .offset(Number(offset));
 
       // Map results to include author/reporter information
-      const articles = results.map(result => {
+      const articles = results.map((result: any) => {
         const article = result.en_articles;
         const authorData = result.users;
         const reporterData = result.reporter;
@@ -20150,7 +20150,7 @@ Allow: /
       }
 
       // Access joined tables by their actual table names
-      const result = results[0];
+      const result: any = results[0];
       const article = result.en_articles;
       const category = result.en_categories;
       const authorData = result.users;

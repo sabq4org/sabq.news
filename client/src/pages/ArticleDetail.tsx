@@ -10,6 +10,7 @@ import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
 import { ExportPdfButton } from "@/components/ExportPdfButton";
 import { ArticlePdfView } from "@/components/ArticlePdfView";
+import { AiArticleStats } from "@/components/AiArticleStats";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -345,7 +346,7 @@ export default function ArticleDetail() {
 
   // Handle audio playback using ElevenLabs
   const handlePlayAudio = async () => {
-    if (!article?.smartSummary && !article?.aiSummary && !article?.excerpt) {
+    if (!article?.aiSummary && !article?.excerpt) {
       toast({
         title: "لا يوجد محتوى",
         description: "الموجز الذكي غير متوفر لهذا المقال",
@@ -383,7 +384,7 @@ export default function ArticleDetail() {
       setIsLoadingAudio(true);
       
       // Add cache busting parameter to prevent browser from caching errors
-      const timestamp = article?.updatedAt || new Date().toISOString();
+      const timestamp = article?.updatedAt ? new Date(article.updatedAt).toISOString() : new Date().toISOString();
       const audioUrl = `/api/articles/${slug}/summary-audio?v=${encodeURIComponent(timestamp)}`;
       
       // Create audio element
@@ -775,6 +776,9 @@ export default function ArticleDetail() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
+            {/* AI Article Analytics */}
+            <AiArticleStats slug={slug} />
+
             {/* AI-Powered Smart Recommendations */}
             <AIRecommendationsBlock articleSlug={slug} />
 
