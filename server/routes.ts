@@ -797,8 +797,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(limitNum)
         .offset(offset);
 
+      // Convert gs:// URLs to proxy URLs for frontend
+      const filesWithProxyUrls = items.map(item => ({
+        ...item,
+        url: item.url.startsWith('gs://') ? `/api/media/proxy/${item.id}` : item.url,
+      }));
+
       res.json({
-        files: items,
+        files: filesWithProxyUrls,
         total,
         page: pageNum,
         limit: limitNum,
@@ -969,6 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch complete details with folder and uploader
+      // Note: We keep the gs:// path in the database for the proxy to use
       const [mediaFileWithDetails] = await db
         .select({
           id: mediaFiles.id,
@@ -1008,16 +1015,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(users, eq(mediaFiles.uploadedBy, users.id))
         .where(eq(mediaFiles.id, mediaFile.id));
 
-      // Update the URL to use proxy endpoint
-      const proxyUrl = `/api/media/proxy/${mediaFile.id}`;
-      await db
-        .update(mediaFiles)
-        .set({ url: proxyUrl })
-        .where(eq(mediaFiles.id, mediaFile.id));
-
       console.log("[Media Upload] Media file created:", mediaFileWithDetails.id);
 
-      // Return with proxy URL
+      // Return with proxy URL for frontend use
+      const proxyUrl = `/api/media/proxy/${mediaFile.id}`;
       res.json({
         ...mediaFileWithDetails,
         url: proxyUrl,
