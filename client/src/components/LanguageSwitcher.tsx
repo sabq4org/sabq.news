@@ -1,12 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Globe, Languages } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Globe } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function LanguageSwitcher() {
@@ -17,7 +11,8 @@ export default function LanguageSwitcher() {
   const isEnglishPage = location.startsWith('/en');
   const currentLang = isEnglishPage ? 'en' : 'ar';
 
-  const switchLanguage = (newLang: "ar" | "en") => {
+  const toggleLanguage = () => {
+    const newLang = currentLang === 'ar' ? 'en' : 'ar';
     setLanguage(newLang);
     
     // Navigate to corresponding language route
@@ -29,38 +24,17 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          data-testid="button-language-switcher"
-        >
-          <Globe className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {currentLang === "ar" ? "English" : "العربية"}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => switchLanguage("ar")}
-          className={language === "ar" ? "bg-accent" : ""}
-          data-testid="option-arabic"
-        >
-          <Languages className="w-4 h-4 mr-2" />
-          العربية
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => switchLanguage("en")}
-          className={language === "en" ? "bg-accent" : ""}
-          data-testid="option-english"
-        >
-          <Languages className="w-4 h-4 mr-2" />
-          English
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="outline"
+      size="sm"
+      className="gap-2"
+      onClick={toggleLanguage}
+      data-testid="button-language-switcher"
+    >
+      <Globe className="w-4 h-4" />
+      <span className="hidden sm:inline">
+        {currentLang === "ar" ? "English" : "العربية"}
+      </span>
+    </Button>
   );
 }
