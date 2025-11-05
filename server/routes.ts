@@ -848,7 +848,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract bucket ID from PRIVATE_OBJECT_DIR
       const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
-      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
+      console.log("[Media Upload] PRIVATE_OBJECT_DIR:", privateObjectDir);
+      
+      // PRIVATE_OBJECT_DIR can be in format: "bucket-name/.private" or "/objects/bucket-name/.private"
+      const parts = privateObjectDir.split('/').filter(Boolean);
+      let bucketId: string;
+      
+      if (parts.length >= 2 && parts[0] === 'objects') {
+        // Format: /objects/bucket-name/.private
+        bucketId = parts[1];
+      } else if (parts.length >= 1) {
+        // Format: bucket-name/.private
+        bucketId = parts[0];
+      } else {
+        throw new Error('Invalid PRIVATE_OBJECT_DIR format');
+      }
+      
+      console.log("[Media Upload] Extracted bucket ID:", bucketId);
 
       if (!bucketId) {
         throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');
@@ -1645,10 +1661,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: req.file.size
       });
 
-      // Extract bucket ID from PRIVATE_OBJECT_DIR environment variable
-      // Format: /objects/<bucket-id>/.private
+      // Extract bucket ID from PRIVATE_OBJECT_DIR
       const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
-      const bucketId = privateObjectDir.split('/').filter(Boolean)[1];
+      
+      // PRIVATE_OBJECT_DIR can be in format: "bucket-name/.private" or "/objects/bucket-name/.private"
+      const parts = privateObjectDir.split('/').filter(Boolean);
+      let bucketId: string;
+      
+      if (parts.length >= 2 && parts[0] === 'objects') {
+        // Format: /objects/bucket-name/.private
+        bucketId = parts[1];
+      } else if (parts.length >= 1) {
+        // Format: bucket-name/.private
+        bucketId = parts[0];
+      } else {
+        throw new Error('Invalid PRIVATE_OBJECT_DIR format');
+      }
 
       if (!bucketId) {
         throw new Error('Bucket ID not found in PRIVATE_OBJECT_DIR');

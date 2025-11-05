@@ -1,0 +1,119 @@
+2025-11-05 17:36:53.88
+445d8252
+User
+[Media Upload] File received: { originalName: '66099.jpg', mimetype: 'image/jpeg', size: 45940 }
+2025-11-05 17:36:53.88
+445d8252
+User
+[Media Upload] Uploading to bucket: .private path: uploads/media/2025/11/c451c8d8-d088-4500-9094-772f157deee7.jpg
+2025-11-05 17:36:54.04
+445d8252
+User
+Error uploading media file: GaxiosError: {
+2025-11-05 17:36:54.04
+445d8252
+User
+"error": {
+2025-11-05 17:36:54.04
+445d8252
+User
+"code": 400,
+2025-11-05 17:36:54.04
+445d8252
+User
+"message": "Invalid bucket name: '.private'",
+2025-11-05 17:36:54.04
+445d8252
+User
+"errors": [
+2025-11-05 17:36:54.04
+445d8252
+User
+{
+2025-11-05 17:36:54.04
+445d8252
+User
+"message": "Invalid bucket name: '.private'",
+2025-11-05 17:36:54.04
+445d8252
+User
+"domain": "global",
+2025-11-05 17:36:54.04
+445d8252
+User
+"reason": "invalid"
+2025-11-05 17:36:54.04
+445d8252
+User
+}
+2025-11-05 17:36:54.04
+445d8252
+User
+]
+2025-11-05 17:36:54.04
+445d8252
+User
+}
+2025-11-05 17:36:54.04
+445d8252
+User
+}
+2025-11-05 17:36:54.04
+445d8252
+User
+2025-11-05 17:36:54.04
+445d8252
+User
+at Gaxios._request (/home/runner/workspace/node_modules/gaxios/build/src/gaxios.js:142:23)
+2025-11-05 17:36:54.04
+445d8252
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-05 17:36:54.04
+445d8252
+User
+at async IdentityPoolClient.requestAsync (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/baseexternalclient.js:277:24)
+2025-11-05 17:36:54.04
+445d8252
+User
+at async Upload.makeRequest (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:727:21)
+2025-11-05 17:36:54.04
+445d8252
+User
+at async AsyncRetry.retries (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:393:29)
+2025-11-05 17:36:54.04
+445d8252
+User
+at async Upload.createURIAsync (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:390:21) {
+2025-11-05 17:36:54.04
+445d8252
+User
+config: {
+2025-11-05 17:36:54.04
+445d8252
+User
+method: 'POST',
+2025-11-05 17:36:54.04
+445d8252
+User
+url: 'https://storage.googleapis.com/upload/storage/v1/b/.private/o?name=uploads%2Fmedia%2F2025%2F11%2Fc451c8d8-d088-4500-9094-772f157deee7.jpg&uploadType=resumable&predefinedAcl=publicRead',
+2025-11-05 17:36:54.04
+445d8252
+User
+params: {
+2025-11-05 17:36:54.04
+445d8252
+User
+name: 'uploads/media/2025/11/c451c8d8-d088-4500-9094-772f157deee7.jpg',
+2025-11-05 17:36:54.04
+445d8252
+User
+uploadType: 'resumable',
+2025-11-05 17:36:54.04
+445d8252
+User
+predefinedAcl: 'publicRead'
+2025-11-05 17:36:54.04
+445d8252
+User
+},
