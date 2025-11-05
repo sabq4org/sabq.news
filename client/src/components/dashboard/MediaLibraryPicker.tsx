@@ -128,7 +128,7 @@ export function MediaLibraryPicker({
   }, [isOpen, activeTab]);
 
   // Build query params for media API
-  const queryParams = useMemo(() => {
+  const mediaQueryUrl = useMemo(() => {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     params.set("limit", "20");
@@ -140,7 +140,7 @@ export function MediaLibraryPicker({
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       params.set("since", sevenDaysAgo.toISOString());
     }
-    return params.toString();
+    return `/api/media?${params.toString()}`;
   }, [page, debouncedSearch, selectedCategory, showFavorites, showRecent]);
 
   // Fetch media library
@@ -149,19 +149,24 @@ export function MediaLibraryPicker({
     total: number;
     hasMore: boolean;
   }>({
-    queryKey: ["/api/media", queryParams],
+    queryKey: [mediaQueryUrl],
     enabled: isOpen && activeTab === "library",
   });
 
   // Fetch AI suggestions (conditional)
+  const suggestionsQueryUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (articleTitle) params.set("title", articleTitle);
+    if (articleContent) params.set("content", articleContent);
+    params.set("limit", "12");
+    return `/api/media/suggestions?${params.toString()}`;
+  }, [articleTitle, articleContent]);
+
   const { data: suggestionsData, isLoading: isLoadingSuggestions } = useQuery<{
     suggestions: (MediaFile & { relevanceScore: number; keywords: string[] })[];
     extractedKeywords: string[];
   }>({
-    queryKey: [
-      "/api/media/suggestions",
-      { title: articleTitle, content: articleContent, limit: 12 },
-    ],
+    queryKey: [suggestionsQueryUrl],
     enabled: isOpen && activeTab === "ai" && !!articleTitle,
   });
 
