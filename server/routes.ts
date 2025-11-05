@@ -20209,6 +20209,83 @@ Allow: /
     }
   });
 
+  // Get AI-powered analytics/insights for an English article
+  app.get("/api/en/articles/:slug/ai-insights", async (req: any, res) => {
+    try {
+      // Get the English article by slug
+      const articleResults = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!articleResults || articleResults.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const article = articleResults[0];
+
+      // Get reading history stats
+      const readingStats = await db
+        .select({
+          avgDuration: sql<number>`AVG(${readingHistory.readDuration})`,
+          totalReads: sql<number>`COUNT(*)`,
+        })
+        .from(readingHistory)
+        .where(eq(readingHistory.articleId, article.id));
+
+      // Get reactions count (English reactions table)
+      const reactionsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(enReactions)
+        .where(eq(enReactions.articleId, article.id));
+
+      // Get comments count (English comments table)
+      const commentsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(enComments)
+        .where(and(
+          eq(enComments.articleId, article.id),
+          eq(enComments.status, "approved")
+        ));
+
+      const avgReadTime = readingStats[0]?.avgDuration || 0;
+      const totalReads = Number(readingStats[0]?.totalReads || 0);
+      const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
+      const totalViews = article.views || 0;
+
+      // Calculate engagement rate: (reactions + comments) / views
+      const engagementRate = totalViews > 0 
+        ? ((totalReactions + totalComments) / totalViews) 
+        : 0;
+
+      // Estimate reading completion based on avg read time
+      // Assuming 200 words per minute reading speed
+      const estimatedReadTime = article.content 
+        ? Math.ceil(article.content.split(/\s+/).length / 200) * 60 
+        : 180; // default 3 min
+      
+      const completionRate = avgReadTime > 0 && estimatedReadTime > 0
+        ? Math.min(100, (avgReadTime / estimatedReadTime) * 100)
+        : 0;
+
+      res.json({
+        avgReadTime: Math.round(avgReadTime), // in seconds
+        totalReads,
+        totalReactions,
+        totalComments,
+        totalViews,
+        engagementRate: parseFloat(engagementRate.toFixed(2)),
+        completionRate: Math.round(completionRate), // percentage
+        totalInteractions: totalReactions + totalComments,
+      });
+    } catch (error) {
+      console.error("Error fetching EN article AI insights:", error);
+      res.status(500).json({ message: "Failed to fetch article insights" });
+    }
+  });
+
   // GET English Articles by Keyword
   app.get("/api/en/keyword/:keyword", async (req, res) => {
     try {
