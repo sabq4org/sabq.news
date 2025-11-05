@@ -171,36 +171,14 @@ app.get("/health", (_req, res) => {
 });
 
 // Readiness check - verifies server is running and can accept requests
-app.get("/ready", async (_req, res) => {
-  const response: any = {
+// IMPORTANT: This endpoint must respond QUICKLY for Autoscale deployments
+// Do NOT perform expensive database checks here
+app.get("/ready", (_req, res) => {
+  res.status(200).json({ 
     status: "ready",
-    server: "running"
-  };
-  
-  // Check if database is configured
-  if (!process.env.DATABASE_URL) {
-    console.log("[Health] Readiness check: DATABASE_URL not configured, database features disabled");
-    response.database = "not_configured";
-    response.message = "Server ready but database not configured. Configure DATABASE_URL in deployment settings.";
-    return res.status(200).json(response);
-  }
-  
-  // Try to verify database connection if configured
-  try {
-    const { pool } = await import("./db");
-    await pool.query('SELECT 1');
-    
-    response.database = "connected";
-    res.status(200).json(response);
-  } catch (error) {
-    console.error("[Health] Database connection test failed:", error);
-    response.database = "connection_failed";
-    response.message = "Server ready but database connection failed. Check DATABASE_URL configuration.";
-    
-    // Still return 200 so deployment succeeds - server is running
-    // Just note that database features won't work
-    res.status(200).json(response);
-  }
+    server: "running",
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use((req, res, next) => {
@@ -300,24 +278,37 @@ app.use((req, res, next) => {
       console.log(`[Server] Ready check available at http://0.0.0.0:${port}/ready`);
       log(`serving on port ${port}`);
       
+      // Background workers should ONLY run in Reserved VM deployments
+      // For Autoscale deployments, set ENABLE_BACKGROUND_WORKERS=false or leave it unset
+      const enableBackgroundWorkers = process.env.ENABLE_BACKGROUND_WORKERS === "true";
+      
+      if (!enableBackgroundWorkers) {
+        console.log("[Server] ℹ️  Background workers disabled (ENABLE_BACKGROUND_WORKERS not set to 'true')");
+        console.log("[Server] This is recommended for Autoscale deployments");
+        console.log("[Server] To enable background workers, set ENABLE_BACKGROUND_WORKERS=true in a Reserved VM deployment");
+      }
+      
       // Start notification worker in a non-blocking way
       // Any errors in the worker won't crash the main server
-      setImmediate(() => {
-        try {
-          startNotificationWorker();
-        } catch (error) {
-          console.error("[Server] ⚠️  Error starting notification worker:", error);
-          console.error("[Server] Server will continue running without notification worker");
-        }
-      });
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startNotificationWorker();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting notification worker:", error);
+            console.error("[Server] Server will continue running without notification worker");
+          }
+        });
+      }
 
       // Register job queue handlers for TTS generation
-      setImmediate(async () => {
-        try {
-          const { jobQueue } = await import("./services/job-queue");
-          const { getElevenLabsService } = await import("./services/elevenlabs");
-          const { ObjectStorageService } = await import("./objectStorage");
-          const { storage } = await import("./storage");
+      if (enableBackgroundWorkers) {
+        setImmediate(async () => {
+          try {
+            const { jobQueue } = await import("./services/job-queue");
+            const { getElevenLabsService } = await import("./services/elevenlabs");
+            const { ObjectStorageService } = await import("./objectStorage");
+            const { storage } = await import("./storage");
 
           jobQueue.onExecute(async (job) => {
             if (job.type === 'generate-tts') {
@@ -432,32 +423,37 @@ app.use((req, res, next) => {
             }
           });
 
-          console.log("[Server] ✅ Job queue handlers registered successfully");
-        } catch (error) {
-          console.error("[Server] ⚠️  Error registering job queue handlers:", error);
-          console.error("[Server] Server will continue running without job queue");
-        }
-      });
+            console.log("[Server] ✅ Job queue handlers registered successfully");
+          } catch (error) {
+            console.error("[Server] ⚠️  Error registering job queue handlers:", error);
+            console.error("[Server] Server will continue running without job queue");
+          }
+        });
+      }
 
       // Start Seasonal Categories Job
-      setImmediate(() => {
-        try {
-          startSeasonalCategoriesJob();
-        } catch (error) {
-          console.error("[Server] ⚠️  Error starting seasonal categories job:", error);
-          console.error("[Server] Server will continue running without seasonal categories automation");
-        }
-      });
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startSeasonalCategoriesJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting seasonal categories job:", error);
+            console.error("[Server] Server will continue running without seasonal categories automation");
+          }
+        });
+      }
 
       // Start Dynamic Categories Job (updates "الآن" every 5 minutes)
-      setImmediate(() => {
-        try {
-          startDynamicCategoriesJob();
-        } catch (error) {
-          console.error("[Server] ⚠️  Error starting dynamic categories job:", error);
-          console.error("[Server] Server will continue running without dynamic categories automation");
-        }
-      });
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startDynamicCategoriesJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting dynamic categories job:", error);
+            console.error("[Server] Server will continue running without dynamic categories automation");
+          }
+        });
+      }
     });
 
     // Handle server errors
