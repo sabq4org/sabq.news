@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, Eye, Star, TrendingUp } from "lucide-react";
+import { ArrowRight, Clock, Eye, Star, TrendingUp, User } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
@@ -135,16 +135,28 @@ export default function EnglishHome() {
                             {article.excerpt}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                          {article.publishedAt && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                        <div className="flex flex-col gap-2 pt-2 border-t">
+                          {article.author && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <User className="h-3 w-3" />
+                              <span className="font-medium" data-testid={`text-author-${article.id}`}>
+                                {article.author.firstName && article.author.lastName
+                                  ? `${article.author.firstName} ${article.author.lastName}`
+                                  : article.author.email}
+                              </span>
                             </div>
                           )}
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{(article.views || 0).toLocaleString()}</span>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            {article.publishedAt && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{(article.views || 0).toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

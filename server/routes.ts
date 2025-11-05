@@ -18703,40 +18703,57 @@ Allow: /
     try {
       const { categoryId, status = "published", limit = 20, offset = 0 } = req.query;
       
-      let query = db
-        .select({
-          id: enArticles.id,
-          title: enArticles.title,
-          subtitle: enArticles.subtitle,
-          slug: enArticles.slug,
-          excerpt: enArticles.excerpt,
-          imageUrl: enArticles.imageUrl,
-          imageFocalPoint: enArticles.imageFocalPoint,
-          categoryId: enArticles.categoryId,
-          authorId: enArticles.authorId,
-          articleType: enArticles.articleType,
-          newsType: enArticles.newsType,
-          status: enArticles.status,
-          isFeatured: enArticles.isFeatured,
-          views: enArticles.views,
-          publishedAt: enArticles.publishedAt,
-          createdAt: enArticles.createdAt,
-        })
-        .from(enArticles)
-        .$dynamic();
-
+      // Build conditions array
+      const conditions: any[] = [];
       if (status) {
-        query = query.where(eq(enArticles.status, status as string));
+        conditions.push(eq(enArticles.status, status as string));
       }
-
       if (categoryId) {
-        query = query.where(eq(enArticles.categoryId, categoryId as string));
+        conditions.push(eq(enArticles.categoryId, categoryId as string));
       }
 
-      const articles = await query
+      // Get articles with author information using leftJoin
+      const results = await db
+        .select()
+        .from(enArticles)
+        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(enArticles.publishedAt))
         .limit(Number(limit))
         .offset(Number(offset));
+
+      // Map results to include author information
+      const articles = results.map(result => {
+        const article = result.en_articles;
+        const authorData = result.users;
+
+        return {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          imageFocalPoint: article.imageFocalPoint,
+          categoryId: article.categoryId,
+          authorId: article.authorId,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          status: article.status,
+          isFeatured: article.isFeatured,
+          views: article.views,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          author: authorData ? {
+            id: authorData.id,
+            email: authorData.email,
+            firstName: authorData.firstName,
+            lastName: authorData.lastName,
+            profileImageUrl: authorData.profileImageUrl,
+            bio: authorData.bio,
+          } : undefined,
+        };
+      });
       
       res.json(articles);
     } catch (error) {
