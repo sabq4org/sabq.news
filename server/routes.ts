@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register
   app.post("/api/register", authLimiter, async (req, res) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, role } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ message: "البريد الإلكتروني وكلمة المرور مطلوبان" });
@@ -398,6 +398,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const passwordHash = await bcrypt.hash(password, 10);
 
+      // Determine user role (for development/testing only - production should use proper RBAC flow)
+      // In production, only allow 'reader' and require admin approval for elevated roles
+      const allowedRoles = ["reader", "advertiser", "admin", "superadmin"];
+      const userRole = (process.env.NODE_ENV === "development" && role && allowedRoles.includes(role)) 
+        ? role 
+        : "reader";
+
       // Create user
       const userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const [newUser] = await db
@@ -408,6 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           passwordHash,
           firstName: firstName || null,
           lastName: lastName || null,
+          role: userRole,
           isProfileComplete: false, // Always false for new users - will be set to true after onboarding
         })
         .returning();
