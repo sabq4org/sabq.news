@@ -1,23 +1,218 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation, useParams } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  ArrowRight, 
+  Eye, 
+  MousePointer, 
+  TrendingUp, 
+  DollarSign, 
+  Wallet,
+  Plus,
+  MoreVertical,
+  Calendar,
+  Target
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { formatDistanceToNow } from "date-fns";
+import { arSA } from "date-fns/locale";
+import type { Campaign } from "@shared/schema";
+
+// Types for API responses
+interface CampaignStats {
+  totalImpressions: number;
+  totalClicks: number;
+  totalConversions: number;
+  ctr: number;
+  conversionRate: number;
+}
+
+interface CampaignWithStats extends Campaign {
+  stats: CampaignStats;
+}
+
+interface AdGroupWithStats {
+  id: string;
+  campaignId: string;
+  name: string;
+  status: string;
+  creativesCount: number;
+  stats: {
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface DailyStatRecord {
+  id: string;
+  campaignId: string;
+  date: Date;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spent: string;
+  ctr: number;
+  cpc: string;
+  cpm: string;
+}
+
+interface BudgetHistoryRecord {
+  id: string;
+  campaignId: string;
+  previousBudget: string;
+  newBudget: string;
+  changeType: string;
+  reason?: string;
+  changedBy: string;
+  createdAt: Date;
+}
+
+const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  draft: "outline",
+  pending_review: "secondary",
+  active: "default",
+  paused: "outline",
+  completed: "secondary",
+  rejected: "destructive"
+};
+
+const statusLabels: Record<string, string> = {
+  draft: "مسودة",
+  pending_review: "قيد المراجعة",
+  active: "نشطة",
+  paused: "متوقفة",
+  completed: "مكتملة",
+  rejected: "مرفوضة"
+};
+
+const objectiveLabels: Record<string, string> = {
+  cpm: "التكلفة لكل ألف ظهور (CPM)",
+  cpc: "التكلفة لكل نقرة (CPC)",
+  cpa: "التكلفة لكل إجراء (CPA)",
+  brand_awareness: "الوعي بالعلامة التجارية",
+  engagement: "التفاعل"
+};
 
 export default function CampaignDetail() {
   const [, setLocation] = useLocation();
   const params = useParams();
   const campaignId = params.id;
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     document.title = "تفاصيل الحملة - لوحة تحكم الإعلانات";
   }, []);
 
+  // Fetch campaign details
+  const { data: campaign, isLoading: campaignLoading, error: campaignError } = useQuery<CampaignWithStats>({
+    queryKey: ["/api/ads/campaigns", campaignId],
+    enabled: !!campaignId,
+  });
+
+  // Fetch ad groups
+  const { data: adGroups = [], isLoading: adGroupsLoading } = useQuery<AdGroupWithStats[]>({
+    queryKey: ["/api/ads/ad-groups", { campaignId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/ads/ad-groups?campaignId=${campaignId}`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("فشل في جلب المجموعات الإعلانية");
+      return res.json();
+    },
+    enabled: !!campaignId && activeTab === "adGroups",
+  });
+
+  // Fetch daily stats
+  const { data: dailyStats = [], isLoading: statsLoading } = useQuery<DailyStatRecord[]>({
+    queryKey: ["/api/ads/campaigns", campaignId, "daily-stats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/ads/campaigns/${campaignId}/daily-stats?days=7`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("فشل في جلب الإحصائيات اليومية");
+      return res.json();
+    },
+    enabled: !!campaignId && activeTab === "overview",
+  });
+
+  // Fetch budget history
+  const { data: budgetHistory = [], isLoading: budgetLoading } = useQuery<BudgetHistoryRecord[]>({
+    queryKey: ["/api/ads/budget/history", { campaignId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/ads/budget/history?campaignId=${campaignId}`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("فشل في جلب سجل الميزانية");
+      return res.json();
+    },
+    enabled: !!campaignId && activeTab === "budget",
+  });
+
+  // Calculate total spent from daily stats
+  const totalSpent = dailyStats.reduce((sum, stat) => sum + Number(stat.spent || 0), 0);
+
+  // Calculate budget progress
+  const dailyBudgetProgress = campaign ? Math.min(
+    (totalSpent / (Number(campaign.dailyBudget) * 7)) * 100,
+    100
+  ) : 0;
+
+  const totalBudgetProgress = campaign ? Math.min(
+    (totalSpent / Number(campaign.totalBudget)) * 100,
+    100
+  ) : 0;
+
+  if (campaignError) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto p-6" dir="rtl">
+          <Card>
+            <CardHeader>
+              <CardTitle>خطأ</CardTitle>
+              <CardDescription>فشل في تحميل بيانات الحملة</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-destructive">
+                {(campaignError as Error).message || "حدث خطأ غير متوقع"}
+              </p>
+              <Button
+                onClick={() => setLocation("/dashboard/ads/campaigns")}
+                className="mt-4"
+                data-testid="button-back-to-campaigns-error"
+              >
+                <ArrowRight className="h-4 w-4 ml-2" />
+                العودة إلى الحملات
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-
-      <div className="container mx-auto p-6" dir="rtl">
+      <div className="container mx-auto p-6 max-w-7xl" dir="rtl">
+        {/* Back Button */}
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -28,27 +223,457 @@ export default function CampaignDetail() {
             <ArrowRight className="h-4 w-4 ml-2" />
             العودة إلى الحملات
           </Button>
-          <h1 className="text-3xl font-bold">تفاصيل الحملة</h1>
-          <p className="text-muted-foreground mt-2">
-            معرف الحملة: {campaignId}
-          </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>إحصائيات الحملة</CardTitle>
-            <CardDescription>
-              سيتم إضافة تفاصيل الحملة والإحصائيات في التحديث القادم
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center py-12">
-              <p className="text-muted-foreground">
-                صفحة التفاصيل قيد التطوير...
-              </p>
+        {/* Campaign Header */}
+        {campaignLoading ? (
+          <div className="space-y-4 mb-6">
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        ) : campaign ? (
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h1 className="text-3xl font-bold" data-testid="text-campaign-name">
+                {campaign.name}
+              </h1>
+              <Badge variant={statusColors[campaign.status]} data-testid="badge-campaign-status">
+                {statusLabels[campaign.status] || campaign.status}
+              </Badge>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-6 text-muted-foreground flex-wrap">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                <span data-testid="text-campaign-objective">
+                  {objectiveLabels[campaign.objective] || campaign.objective}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span data-testid="text-campaign-dates">
+                  {new Date(campaign.startDate).toLocaleDateString("ar-SA")}
+                  {campaign.endDate && ` - ${new Date(campaign.endDate).toLocaleDateString("ar-SA")}`}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Performance Overview Cards */}
+        {campaignLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+        ) : campaign ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {/* Total Impressions */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي الظهور</CardTitle>
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-total-impressions">
+                  {(campaign.stats?.totalImpressions || 0).toLocaleString("ar-SA")}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  عدد مرات عرض الإعلان
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Total Clicks */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي النقرات</CardTitle>
+                <MousePointer className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-total-clicks">
+                  {(campaign.stats?.totalClicks || 0).toLocaleString("ar-SA")}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  عدد النقرات على الإعلان
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* CTR */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">معدل النقر (CTR)</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-ctr">
+                  {(campaign.stats?.ctr || 0).toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  نسبة النقرات إلى الظهور
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Total Spent */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي الإنفاق</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-total-spent">
+                  {totalSpent.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  من {Number(campaign.totalBudget).toLocaleString("ar-SA")} ر.س
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Budget Progress */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">استهلاك الميزانية</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-budget-progress">
+                  {totalBudgetProgress.toFixed(0)}%
+                </div>
+                <Progress value={totalBudgetProgress} className="mt-2" />
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
+
+        {/* Tabs Section */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" dir="rtl">
+          <TabsList>
+            <TabsTrigger value="overview" data-testid="tab-overview">نظرة عامة</TabsTrigger>
+            <TabsTrigger value="adGroups" data-testid="tab-ad-groups">المجموعات الإعلانية</TabsTrigger>
+            <TabsTrigger value="budget" data-testid="tab-budget">الميزانية</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>اتجاه الأداء (آخر 7 أيام)</CardTitle>
+                <CardDescription>
+                  الظهور والنقرات على مدار الأسبوع
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-80 w-full" />
+                ) : dailyStats.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={dailyStats.map(stat => ({
+                        date: new Date(stat.date).toLocaleDateString("ar-SA", { month: "short", day: "numeric" }),
+                        impressions: stat.impressions,
+                        clicks: stat.clicks
+                      }))}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip
+                        labelFormatter={(label) => `التاريخ: ${label}`}
+                        formatter={(value: number, name: string) => [
+                          value.toLocaleString("ar-SA"),
+                          name === "impressions" ? "الظهور" : "النقرات"
+                        ]}
+                      />
+                      <Legend
+                        formatter={(value) => value === "impressions" ? "الظهور" : "النقرات"}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="impressions" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        name="impressions"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="clicks" 
+                        stroke="hsl(var(--accent))" 
+                        strokeWidth={2}
+                        name="clicks"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-80 text-muted-foreground">
+                    لا توجد بيانات للعرض
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ad Groups Tab */}
+          <TabsContent value="adGroups" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>المجموعات الإعلانية</CardTitle>
+                    <CardDescription>
+                      المجموعات الإعلانية المرتبطة بهذه الحملة
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => toast({
+                      title: "قريباً",
+                      description: "سيتم إضافة إنشاء مجموعة إعلانية قريباً"
+                    })}
+                    data-testid="button-create-ad-group"
+                  >
+                    <Plus className="h-4 w-4 ml-2" />
+                    إنشاء مجموعة
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {adGroupsLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : adGroups.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">الاسم</TableHead>
+                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">عدد الإعلانات</TableHead>
+                          <TableHead className="text-right">الظهور</TableHead>
+                          <TableHead className="text-right">النقرات</TableHead>
+                          <TableHead className="text-right">CTR</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {adGroups.map((group) => (
+                          <TableRow key={group.id} data-testid={`row-ad-group-${group.id}`}>
+                            <TableCell className="font-medium" data-testid={`text-ad-group-name-${group.id}`}>
+                              {group.name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={statusColors[group.status] || "outline"}
+                                data-testid={`badge-ad-group-status-${group.id}`}
+                              >
+                                {statusLabels[group.status] || group.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell data-testid={`text-ad-group-creatives-${group.id}`}>
+                              {group.creativesCount}
+                            </TableCell>
+                            <TableCell data-testid={`text-ad-group-impressions-${group.id}`}>
+                              {group.stats.impressions.toLocaleString("ar-SA")}
+                            </TableCell>
+                            <TableCell data-testid={`text-ad-group-clicks-${group.id}`}>
+                              {group.stats.clicks.toLocaleString("ar-SA")}
+                            </TableCell>
+                            <TableCell data-testid={`text-ad-group-ctr-${group.id}`}>
+                              {group.stats.ctr.toFixed(2)}%
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    data-testid={`button-ad-group-actions-${group.id}`}
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    data-testid={`button-view-ad-group-${group.id}`}
+                                    onClick={() => toast({
+                                      title: "قريباً",
+                                      description: "عرض التفاصيل قريباً"
+                                    })}
+                                  >
+                                    عرض
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    data-testid={`button-edit-ad-group-${group.id}`}
+                                    onClick={() => toast({
+                                      title: "قريباً",
+                                      description: "التعديل قريباً"
+                                    })}
+                                  >
+                                    تعديل
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    data-testid={`button-delete-ad-group-${group.id}`}
+                                    className="text-destructive"
+                                    onClick={() => toast({
+                                      title: "قريباً",
+                                      description: "الحذف قريباً"
+                                    })}
+                                  >
+                                    حذف
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="text-muted-foreground mb-4">
+                      لا توجد مجموعات إعلانية حتى الآن
+                    </div>
+                    <Button
+                      onClick={() => toast({
+                        title: "قريباً",
+                        description: "سيتم إضافة إنشاء مجموعة إعلانية قريباً"
+                      })}
+                      data-testid="button-create-first-ad-group"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إنشاء أول مجموعة
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Budget Tab */}
+          <TabsContent value="budget" className="space-y-4">
+            {/* Budget Progress Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>الميزانية اليومية</CardTitle>
+                  <CardDescription>الإنفاق مقابل الميزانية اليومية</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>المستخدم</span>
+                    <span className="font-medium">
+                      {campaign ? (totalSpent / 7).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0} ر.س
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>الميزانية</span>
+                    <span className="font-medium">
+                      {campaign ? Number(campaign.dailyBudget).toLocaleString("ar-SA") : 0} ر.س
+                    </span>
+                  </div>
+                  <Progress value={dailyBudgetProgress} data-testid="progress-daily-budget" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {dailyBudgetProgress.toFixed(0)}% من الميزانية اليومية
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>الميزانية الإجمالية</CardTitle>
+                  <CardDescription>الإنفاق مقابل الميزانية الكلية</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>المستخدم</span>
+                    <span className="font-medium">
+                      {totalSpent.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>الميزانية</span>
+                    <span className="font-medium">
+                      {campaign ? Number(campaign.totalBudget).toLocaleString("ar-SA") : 0} ر.س
+                    </span>
+                  </div>
+                  <Progress value={totalBudgetProgress} data-testid="progress-total-budget" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {totalBudgetProgress.toFixed(0)}% من الميزانية الإجمالية
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Budget History */}
+            <Card>
+              <CardHeader>
+                <CardTitle>سجل الميزانية</CardTitle>
+                <CardDescription>
+                  تغييرات الميزانية على مدار الوقت
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {budgetLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : budgetHistory.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">التاريخ</TableHead>
+                          <TableHead className="text-right">نوع التغيير</TableHead>
+                          <TableHead className="text-right">الميزانية السابقة</TableHead>
+                          <TableHead className="text-right">الميزانية الجديدة</TableHead>
+                          <TableHead className="text-right">السبب</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {budgetHistory.map((record) => (
+                          <TableRow key={record.id} data-testid={`row-budget-history-${record.id}`}>
+                            <TableCell data-testid={`text-budget-history-date-${record.id}`}>
+                              {formatDistanceToNow(new Date(record.createdAt), { 
+                                addSuffix: true, 
+                                locale: arSA 
+                              })}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" data-testid={`badge-budget-change-type-${record.id}`}>
+                                {record.changeType === "increase" ? "زيادة" : "تخفيض"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell data-testid={`text-budget-previous-${record.id}`}>
+                              {Number(record.previousBudget).toLocaleString("ar-SA")} ر.س
+                            </TableCell>
+                            <TableCell data-testid={`text-budget-new-${record.id}`}>
+                              {Number(record.newBudget).toLocaleString("ar-SA")} ر.س
+                            </TableCell>
+                            <TableCell data-testid={`text-budget-reason-${record.id}`}>
+                              {record.reason || "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-12 text-muted-foreground">
+                    لا يوجد سجل للميزانية
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

@@ -19,7 +19,7 @@ import {
   insertCreativeSchema,
   insertInventorySlotSchema
 } from "@shared/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import type { 
   AdAccount, 
   Campaign, 
@@ -1541,6 +1541,215 @@ router.post("/rtb/bid-request", async (req, res) => {
   } catch (error) {
     console.error("[RTB] خطأ في معالجة طلب المزايدة:", error);
     res.status(500).json({ error: "حدث خطأ في المزايدة" });
+  }
+});
+
+// ============================================================
+// ADDITIONAL ENDPOINTS FOR CAMPAIGN DETAIL PAGE
+// ============================================================
+
+// Get ad groups by campaign ID (query param version)
+router.get("/ad-groups", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const campaignId = req.query.campaignId as string;
+    
+    if (!campaignId) {
+      return res.status(400).json({ error: "يجب توفير معرف الحملة" });
+    }
+    
+    // التحقق من الصلاحية
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // جلب المجموعات الإعلانية مع عدد الإعلانات
+    const groups = await db
+      .select({
+        id: adGroups.id,
+        campaignId: adGroups.campaignId,
+        name: adGroups.name,
+        status: adGroups.status,
+        targeting: adGroups.targeting,
+        createdAt: adGroups.createdAt,
+        updatedAt: adGroups.updatedAt,
+      })
+      .from(adGroups)
+      .where(eq(adGroups.campaignId, campaignId))
+      .orderBy(desc(adGroups.createdAt));
+    
+    // جلب عدد الإعلانات والإحصائيات لكل مجموعة
+    const groupsWithStats = await Promise.all(
+      groups.map(async (group) => {
+        // عدد الإعلانات
+        const creativesCount = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(creatives)
+          .where(eq(creatives.adGroupId, group.id));
+        
+        // الإحصائيات
+        const stats = await db
+          .select({
+            totalImpressions: sql<number>`COUNT(DISTINCT ${impressions.id})::int`,
+            totalClicks: sql<number>`COUNT(DISTINCT CASE WHEN ${clicks.id} IS NOT NULL THEN ${clicks.id} END)::int`,
+            totalConversions: sql<number>`COUNT(DISTINCT CASE WHEN ${conversions.id} IS NOT NULL THEN ${conversions.id} END)::int`
+          })
+          .from(impressions)
+          .leftJoin(clicks, eq(clicks.impressionId, impressions.id))
+          .leftJoin(conversions, eq(conversions.clickId, clicks.id))
+          .where(eq(impressions.adGroupId, group.id));
+        
+        const totalImpressions = stats[0]?.totalImpressions || 0;
+        const totalClicks = stats[0]?.totalClicks || 0;
+        const totalConversions = stats[0]?.totalConversions || 0;
+        const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+        
+        return {
+          ...group,
+          creativesCount: creativesCount[0]?.count || 0,
+          stats: {
+            impressions: totalImpressions,
+            clicks: totalClicks,
+            conversions: totalConversions,
+            ctr: Math.round(ctr * 100) / 100
+          }
+        };
+      })
+    );
+    
+    res.json(groupsWithStats);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب المجموعات:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// Get budget history for a campaign
+router.get("/budget/history", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const campaignId = req.query.campaignId as string;
+    
+    if (!campaignId) {
+      return res.status(400).json({ error: "يجب توفير معرف الحملة" });
+    }
+    
+    // التحقق من الصلاحية
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // جلب سجل الميزانية
+    const history = await db
+      .select()
+      .from(budgetHistory)
+      .where(eq(budgetHistory.campaignId, campaignId))
+      .orderBy(desc(budgetHistory.timestamp))
+      .limit(50);
+    
+    res.json(history);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب سجل الميزانية:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// Get daily stats for a campaign
+router.get("/campaigns/:id/daily-stats", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const campaignId = req.params.id;
+    const days = parseInt(req.query.days as string) || 7;
+    
+    // التحقق من الصلاحية
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // حساب تاريخ البداية
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    // جلب الإحصائيات اليومية
+    const stats = await db
+      .select()
+      .from(dailyStats)
+      .where(and(
+        eq(dailyStats.campaignId, campaignId),
+        gte(dailyStats.date, startDate)
+      ))
+      .orderBy(desc(dailyStats.date));
+    
+    res.json(stats);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب الإحصائيات اليومية:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
   }
 });
 
