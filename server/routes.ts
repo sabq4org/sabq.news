@@ -1533,7 +1533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await gcsFile.makePublic();
           successCount++;
           console.log(`[Make Public] ✓ ${file.fileName}`);
-        } catch (error) {
+        } catch (error: any) {
           errorCount++;
           console.error(`[Make Public] ✗ ${file.fileName}:`, error);
           errors.push(`${file.fileName}: ${error.message}`);
