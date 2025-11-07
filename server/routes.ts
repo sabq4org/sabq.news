@@ -797,14 +797,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(limitNum)
         .offset(offset);
 
-      // Convert gs:// URLs to proxy URLs for frontend
-      const filesWithProxyUrls = items.map(item => ({
-        ...item,
-        url: item.url.startsWith('gs://') ? `/api/media/proxy/${item.id}` : item.url,
-      }));
+      // Return files with appropriate URLs:
+      // - Files with https:// URLs (public) use direct URL
+      // - Files with gs:// URLs (private) use proxy URL
+      const filesWithUrls = items.map(item => {
+        const url = item.url.startsWith('https://') 
+          ? item.url 
+          : `/api/media/proxy/${item.id}`;
+        
+        return {
+          ...item,
+          url,
+          proxyUrl: `/api/media/proxy/${item.id}`,
+        };
+      });
 
       res.json({
-        files: filesWithProxyUrls,
+        files: filesWithUrls,
         total,
         page: pageNum,
         limit: limitNum,
@@ -887,20 +896,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Media Upload] Uploading to bucket:", bucketId, "path:", objectPath);
 
-      // Upload file to GCS (without public access as bucket has public access prevention)
+      // Upload file to GCS and make it public for direct access
       const { objectStorageClient } = await import('./objectStorage');
       const bucket = objectStorageClient.bucket(bucketId);
       const file = bucket.file(objectPath);
 
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
+        metadata: {
+          cacheControl: 'public, max-age=31536000', // Cache for 1 year
+        },
       });
+
+      // Make the file publicly accessible for direct access from GCS
+      let isPublic = false;
+      try {
+        await file.makePublic();
+        console.log("[Media Upload] File made public successfully");
+        isPublic = true;
+      } catch (error) {
+        console.warn("[Media Upload] Could not make file public (bucket may have public access prevention):", error);
+      }
 
       console.log("[Media Upload] File uploaded successfully");
 
-      // Store the object path and bucket for later retrieval via proxy
-      // We'll build the proxy URL after getting the media file ID
-      const storagePath = `gs://${bucketId}/${objectPath}`;
+      // Determine which URL to store in database based on public access success
+      const publicGcsUrl = `https://storage.googleapis.com/${bucketId}/${objectPath}`;
+      const gsPath = `gs://${bucketId}/${objectPath}`;
+      
+      // If public access succeeded, store public URL; otherwise store gs:// path for proxy
+      const storagePath = isPublic ? publicGcsUrl : gsPath;
 
       // Extract metadata (width, height for images)
       let width: number | undefined;
@@ -1036,11 +1061,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Media Upload] Media file created:", mediaFileWithDetails.id);
 
-      // Return with proxy URL for frontend use
-      const proxyUrl = `/api/media/proxy/${mediaFile.id}`;
+      // Return appropriate URL:
+      // - If public: use stored public URL
+      // - If not public: use proxy URL
+      const responseUrl = mediaFileWithDetails.url.startsWith('https://') 
+        ? mediaFileWithDetails.url 
+        : `/api/media/proxy/${mediaFile.id}`;
+      
       res.json({
         ...mediaFileWithDetails,
-        url: proxyUrl,
+        url: responseUrl,
+        proxyUrl: `/api/media/proxy/${mediaFile.id}`,
       });
     } catch (error: any) {
       console.error("Error uploading media file:", error);
@@ -1443,6 +1474,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating media folder:", error);
       res.status(500).json({ message: "فشل في تحديث مجلد الوسائط" });
+    }
+  });
+
+  // POST /api/media/make-public - Admin endpoint to make all existing media files public
+  app.post("/api/media/make-public", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Check if user is admin
+      const userPermissions = await getUserPermissions(userId);
+      const isAdmin = userPermissions.includes('media:manage');
+      
+      if (!isAdmin) {
+        return res.status(403).json({ message: "غير مصرح لك بتنفيذ هذه العملية" });
+      }
+
+      console.log("[Make Public] Starting bulk public access for media files...");
+
+      // Get all media files with gs:// URLs
+      const allFiles = await db
+        .select({
+          id: mediaFiles.id,
+          url: mediaFiles.url,
+          fileName: mediaFiles.fileName,
+        })
+        .from(mediaFiles)
+        .where(sql`${mediaFiles.url} LIKE 'gs://%'`);
+
+      console.log(`[Make Public] Found ${allFiles.length} files to process`);
+
+      const { objectStorageClient } = await import('./objectStorage');
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const file of allFiles) {
+        try {
+          // Parse gs://bucket-name/path
+          const gcsPath = file.url.replace('gs://', '');
+          const pathParts = gcsPath.split('/');
+          const bucketName = pathParts[0];
+          const objectPath = pathParts.slice(1).join('/');
+
+          const bucket = objectStorageClient.bucket(bucketName);
+          const gcsFile = bucket.file(objectPath);
+
+          // Check if file exists
+          const [exists] = await gcsFile.exists();
+          if (!exists) {
+            console.warn(`[Make Public] File not found in GCS: ${objectPath}`);
+            errorCount++;
+            errors.push(`File not found: ${file.fileName}`);
+            continue;
+          }
+
+          // Make file public
+          await gcsFile.makePublic();
+          successCount++;
+          console.log(`[Make Public] ✓ ${file.fileName}`);
+        } catch (error) {
+          errorCount++;
+          console.error(`[Make Public] ✗ ${file.fileName}:`, error);
+          errors.push(`${file.fileName}: ${error.message}`);
+        }
+      }
+
+      console.log(`[Make Public] Complete. Success: ${successCount}, Errors: ${errorCount}`);
+
+      res.json({
+        success: true,
+        processed: allFiles.length,
+        successCount,
+        errorCount,
+        errors: errors.length > 0 ? errors.slice(0, 10) : [], // Return first 10 errors
+        message: `تم معالجة ${successCount} ملف بنجاح${errorCount > 0 ? `، فشل ${errorCount} ملف` : ''}`,
+      });
+    } catch (error) {
+      console.error("[Make Public] Error:", error);
+      res.status(500).json({ message: "فشل في تحويل الملفات إلى public" });
     }
   });
 
