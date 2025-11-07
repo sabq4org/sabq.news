@@ -204,9 +204,11 @@ export default function EnglishArticleDetail() {
                   </Avatar>
                   <div>
                     <p className="font-medium text-foreground" data-testid="text-author-name">
-                      {article.author.firstName && article.author.lastName
-                        ? `${article.author.firstName} ${article.author.lastName}`
-                        : article.author.email}
+                      {article.author.firstNameEn && article.author.lastNameEn
+                        ? `${article.author.firstNameEn} ${article.author.lastNameEn}`
+                        : article.author.firstName && article.author.lastName
+                          ? `${article.author.firstName} ${article.author.lastName}`
+                          : article.author.email}
                     </p>
                     <p className="text-xs">Reporter</p>
                   </div>

@@ -46,6 +46,8 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  firstNameEn: string | null;
+  lastNameEn: string | null;
   phoneNumber: string | null;
   profileImageUrl: string | null;
   status: string;
@@ -57,6 +59,8 @@ interface User {
 const editUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل"),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل"),
+  firstNameEn: z.string().min(2, "English first name must be at least 2 characters").optional().or(z.literal("")),
+  lastNameEn: z.string().min(2, "English last name must be at least 2 characters").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().nullable().optional(),
   roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),
@@ -96,6 +100,8 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
     defaultValues: {
       firstName: "",
       lastName: "",
+      firstNameEn: "",
+      lastNameEn: "",
       phoneNumber: "",
       profileImageUrl: null,
       roleIds: [],
@@ -110,6 +116,8 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
       form.reset({
         firstName: user.firstName,
         lastName: user.lastName,
+        firstNameEn: user.firstNameEn || "",
+        lastNameEn: user.lastNameEn || "",
         phoneNumber: user.phoneNumber || "",
         profileImageUrl: user.profileImageUrl,
         roleIds: user.roles?.map(r => r.id) || [],
@@ -213,6 +221,46 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
                         />
                       </FormControl>
                       <FormMessage data-testid="error-lastName" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstNameEn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-firstNameEn">English First Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Ahmed"
+                          data-testid="input-firstNameEn"
+                          dir="ltr"
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-firstNameEn" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastNameEn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-lastNameEn">English Last Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Mohammed"
+                          data-testid="input-lastNameEn"
+                          dir="ltr"
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-lastNameEn" />
                     </FormItem>
                   )}
                 />

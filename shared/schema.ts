@@ -21,6 +21,8 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"), // bcrypt hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
+  firstNameEn: text("first_name_en"), // English first name (optional)
+  lastNameEn: text("last_name_en"), // English last name (optional)
   bio: text("bio"),
   phoneNumber: text("phone_number"),
   profileImageUrl: text("profile_image_url"),
@@ -966,6 +968,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
+  firstNameEn: z.string().min(2, "English first name must be at least 2 characters").optional().or(z.literal("")),
+  lastNameEn: z.string().min(2, "English last name must be at least 2 characters").optional().or(z.literal("")),
   bio: z.string().max(500, "النبذة يجب أن لا تزيد عن 500 حرف").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().optional().or(z.literal("")),
@@ -975,6 +979,8 @@ export const updateUserSchema = z.object({
 export const adminUpdateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل").optional(),
+  firstNameEn: z.string().min(2, "English first name must be at least 2 characters").optional().or(z.literal("")),
+  lastNameEn: z.string().min(2, "English last name must be at least 2 characters").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().nullable().optional(),
   status: z.enum(["active", "pending", "suspended", "banned", "locked", "deleted"], {
@@ -991,6 +997,8 @@ export const adminCreateUserSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل"),
   lastName: z.string().min(2, "اسم العائلة يجب أن يكون حرفين على الأقل"),
+  firstNameEn: z.string().min(2, "English first name must be at least 2 characters").optional().or(z.literal("")),
+  lastNameEn: z.string().min(2, "English last name must be at least 2 characters").optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().nullable().optional(),
   roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),

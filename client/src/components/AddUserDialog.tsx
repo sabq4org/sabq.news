@@ -75,6 +75,8 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
       email: "",
       firstName: "",
       lastName: "",
+      firstNameEn: "",
+      lastNameEn: "",
       phoneNumber: "",
       profileImageUrl: null,
       roleIds: [],
@@ -208,6 +210,46 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                       />
                     </FormControl>
                     <FormMessage data-testid="error-lastName" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstNameEn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-firstNameEn">English First Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Ahmed"
+                        data-testid="input-firstNameEn"
+                        dir="ltr"
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-firstNameEn" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lastNameEn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-lastNameEn">English Last Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Mohammed"
+                        data-testid="input-lastNameEn"
+                        dir="ltr"
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-lastNameEn" />
                   </FormItem>
                 )}
               />
