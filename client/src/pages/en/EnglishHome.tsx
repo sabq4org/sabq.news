@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, Eye, Star, TrendingUp, User, Flame } from "lucide-react";
+import { ArrowRight, Clock, Eye, Star, TrendingUp, User, Flame, Zap } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
-import type { EnArticle, EnSmartBlock } from "@shared/schema";
+import type { EnArticleWithDetails, EnSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 
 // Helper function to check if article is new (published within last 3 hours)
@@ -22,7 +22,7 @@ const isNewArticle = (publishedAt: Date | string | null | undefined) => {
 };
 
 export default function EnglishHome() {
-  const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({
+  const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticleWithDetails[]>({
     queryKey: ["/api/en/articles"],
   });
 
@@ -166,8 +166,40 @@ export default function EnglishHome() {
 
                                   {/* Content */}
                                   <div className="flex-1 min-w-0 space-y-2">
+                                    {/* Breaking/New/Category Badge */}
+                                    {article.newsType === "breaking" ? (
+                                      <Badge 
+                                        variant="destructive" 
+                                        className="text-xs h-5 gap-1"
+                                        data-testid={`badge-breaking-${article.id}`}
+                                      >
+                                        <Zap className="h-3 w-3" />
+                                        Breaking
+                                      </Badge>
+                                    ) : isNewArticle(article.publishedAt) ? (
+                                      <Badge 
+                                        className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                        data-testid={`badge-new-${article.id}`}
+                                      >
+                                        <Flame className="h-3 w-3" />
+                                        New
+                                      </Badge>
+                                    ) : article.category ? (
+                                      <Badge 
+                                        variant="outline" 
+                                        className="text-xs h-5"
+                                        data-testid={`badge-article-category-${article.id}`}
+                                      >
+                                        {article.category.icon} {article.category.name}
+                                      </Badge>
+                                    ) : null}
+
                                     {/* Title */}
-                                    <h4 className="font-bold text-sm line-clamp-2 leading-snug transition-colors group-hover:text-primary" data-testid={`text-article-title-${article.id}`}>
+                                    <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                                      article.newsType === "breaking"
+                                        ? "text-destructive"
+                                        : "group-hover:text-primary"
+                                    }`} data-testid={`text-article-title-${article.id}`}>
                                       {article.title}
                                     </h4>
 
@@ -200,7 +232,9 @@ export default function EnglishHome() {
               <div className="hidden lg:grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {regularArticles.map((article) => (
                   <Link key={article.id} href={`/en/article/${article.slug}`}>
-                    <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border" data-testid={`card-article-${article.id}`}>
+                    <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border ${
+                      article.newsType === "breaking" ? "bg-destructive/5" : ""
+                    }`} data-testid={`card-article-${article.id}`}>
                       {article.imageUrl && (
                         <div className="relative h-48 overflow-hidden">
                           <img
@@ -208,16 +242,40 @@ export default function EnglishHome() {
                             alt={article.title}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
-                          {isNewArticle(article.publishedAt) && (
-                            <div className="absolute top-2 left-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                          {article.newsType === "breaking" ? (
+                            <Badge 
+                              variant="destructive" 
+                              className="absolute top-3 left-3 gap-1" 
+                              data-testid={`badge-breaking-${article.id}`}
+                            >
+                              <Zap className="h-3 w-3" />
+                              Breaking
+                            </Badge>
+                          ) : isNewArticle(article.publishedAt) ? (
+                            <Badge 
+                              className="absolute top-3 left-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                              data-testid={`badge-new-${article.id}`}
+                            >
                               <Flame className="h-3 w-3" />
                               New
-                            </div>
-                          )}
+                            </Badge>
+                          ) : article.category ? (
+                            <Badge 
+                              variant="default" 
+                              className="absolute top-3 left-3" 
+                              data-testid={`badge-category-${article.id}`}
+                            >
+                              {article.category.icon} {article.category.name}
+                            </Badge>
+                          ) : null}
                         </div>
                       )}
                       <CardContent className="p-5 space-y-3">
-                        <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                        <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
+                          article.newsType === "breaking"
+                            ? "text-destructive"
+                            : "group-hover:text-primary"
+                        }`}>
                           {article.title}
                         </h3>
                         {article.excerpt && (

@@ -19971,10 +19971,11 @@ Allow: /
       // Create alias for reporter
       const reporterAlias = aliasedTable(users, 'reporter');
 
-      // Get articles with author and reporter information
+      // Get articles with category, author and reporter information
       const results = await db
         .select()
         .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
         .leftJoin(users, eq(enArticles.authorId, users.id))
         .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
         .where(
@@ -19987,9 +19988,10 @@ Allow: /
         .limit(Number(limit))
         .offset(Number(offset));
 
-      // Map results to include author/reporter information
+      // Map results to include category, author and reporter information
       const articles = results.map((result: any) => {
         const article = result.en_articles;
+        const category = result.en_categories;
         const authorData = result.users;
         const reporterData = result.reporter;
 
@@ -20014,6 +20016,14 @@ Allow: /
           views: article.views,
           publishedAt: article.publishedAt,
           createdAt: article.createdAt,
+          category: category ? {
+            id: category.id,
+            name: category.name,
+            slug: category.slug,
+            icon: category.icon,
+            color: category.color,
+            description: category.description,
+          } : undefined,
           author: displayAuthor ? {
             id: displayAuthor.id,
             email: displayAuthor.email,
@@ -20049,10 +20059,11 @@ Allow: /
       // Create alias for reporter
       const reporterAlias = aliasedTable(users, 'reporter');
 
-      // Get articles with author and reporter information using leftJoin
+      // Get articles with category, author and reporter information using leftJoin
       const results = await db
         .select()
         .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
         .leftJoin(users, eq(enArticles.authorId, users.id))
         .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -20060,9 +20071,10 @@ Allow: /
         .limit(Number(limit))
         .offset(Number(offset));
 
-      // Map results to include author/reporter information
+      // Map results to include category, author and reporter information
       const articles = results.map((result: any) => {
         const article = result.en_articles;
+        const category = result.en_categories;
         const authorData = result.users;
         const reporterData = result.reporter;
 
@@ -20087,6 +20099,14 @@ Allow: /
           views: article.views,
           publishedAt: article.publishedAt,
           createdAt: article.createdAt,
+          category: category ? {
+            id: category.id,
+            name: category.name,
+            slug: category.slug,
+            icon: category.icon,
+            color: category.color,
+            description: category.description,
+          } : undefined,
           author: displayAuthor ? {
             id: displayAuthor.id,
             email: displayAuthor.email,
