@@ -183,6 +183,33 @@ export const navConfig: NavItem[] = [
     roles: ["admin"],
   },
 
+  // ===== الإعلانات / Advertising =====
+  {
+    id: "advertising",
+    labelKey: "nav.advertising",
+    labelAr: "الإعلانات",
+    icon: Megaphone,
+    roles: ["admin", "advertiser"],
+    children: [
+      {
+        id: "ad_campaigns",
+        labelKey: "nav.campaigns",
+        labelAr: "الحملات الإعلانية",
+        path: "/dashboard/ads/campaigns",
+        icon: Megaphone,
+        roles: ["admin", "advertiser"],
+      },
+      {
+        id: "ad_account",
+        labelKey: "nav.ad_account",
+        labelAr: "حسابي الإعلاني",
+        path: "/dashboard/ads/account",
+        icon: User,
+        roles: ["admin", "advertiser"],
+      },
+    ],
+  },
+
   // ===== الذكاء الاصطناعي / AI =====
   {
     id: "ai",

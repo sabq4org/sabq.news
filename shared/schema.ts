@@ -4787,11 +4787,12 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
   updatedAt: true,
 }).extend({
   name: z.string().min(1, "اسم الحملة مطلوب"),
-  objective: z.enum(["CPM", "CPC", "CPA"], { message: "نوع الحملة غير صحيح" }),
+  objective: z.enum(["CPM", "CPC", "CPA", "CPE"], { message: "نوع الحملة غير صحيح" }),
   dailyBudget: z.number().positive("الميزانية اليومية يجب أن تكون موجبة"),
   totalBudget: z.number().positive("الميزانية الإجمالية يجب أن تكون موجبة"),
   bidAmount: z.number().positive("مبلغ العرض يجب أن يكون موجباً"),
-  startDate: z.date(),
+  startDate: z.coerce.date(), // Accept ISO string and convert to date
+  endDate: z.coerce.date().nullable().optional(), // Accept ISO string, optional, can be null
 });
 
 export const insertAdGroupSchema = createInsertSchema(adGroups).omit({
