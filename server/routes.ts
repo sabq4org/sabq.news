@@ -3913,6 +3913,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData: any = {};
       if (parsed.data.firstName !== undefined) updateData.firstName = parsed.data.firstName;
       if (parsed.data.lastName !== undefined) updateData.lastName = parsed.data.lastName;
+      if (parsed.data.firstNameEn !== undefined) updateData.firstNameEn = parsed.data.firstNameEn || null;
+      if (parsed.data.lastNameEn !== undefined) updateData.lastNameEn = parsed.data.lastNameEn || null;
       if (parsed.data.phoneNumber !== undefined) updateData.phoneNumber = parsed.data.phoneNumber || null;
       if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl;
       if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
