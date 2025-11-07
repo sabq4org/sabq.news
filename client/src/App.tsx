@@ -125,6 +125,10 @@ import EnglishDailyBrief from "@/pages/en/EnglishDailyBrief";
 import EnglishNotificationSettings from "@/pages/en/EnglishNotificationSettings";
 import EnglishSmartBlocksPage from "@/pages/en/EnglishSmartBlocksPage";
 import EnglishQuadCategoriesBlockSettings from "@/pages/en/EnglishQuadCategoriesBlockSettings";
+import AdvertiserDashboard from "@/pages/dashboard/AdvertiserDashboard";
+import CampaignsList from "@/pages/dashboard/ads/CampaignsList";
+import CampaignDetail from "@/pages/dashboard/ads/CampaignDetail";
+import CampaignEditor from "@/pages/dashboard/ads/CampaignEditor";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -272,6 +276,12 @@ function Router() {
       <Route path="/dashboard/media-library" component={MediaLibrary} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
+      
+      {/* Advertising Dashboard - Arabic only */}
+      <Route path="/dashboard/ads" component={AdvertiserDashboard} />
+      <Route path="/dashboard/ads/campaigns" component={CampaignsList} />
+      <Route path="/dashboard/ads/campaigns/new" component={CampaignEditor} />
+      <Route path="/dashboard/ads/campaigns/:id" component={CampaignDetail} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile" component={Profile} />
