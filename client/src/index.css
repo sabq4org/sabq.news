@@ -541,7 +541,7 @@
   .section-separator {
     height: 2px;
     background: linear-gradient(to left, transparent 0%, hsl(var(--border)) 20%, hsl(var(--border)) 80%, transparent 100%);
-    margin: 4rem 0;
+    margin: 2rem 0;
   }
 
   /* Scroll Fade In Animation */

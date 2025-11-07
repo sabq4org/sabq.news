@@ -222,10 +222,10 @@ export default function Home() {
       <NavigationBar />
 
       <main className="flex-1">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Hero Section */}
           {homepage.hero && homepage.hero.length > 0 && (
-            <div className="mb-20">
+            <div className="mb-8">
               <HeroCarousel articles={homepage.hero} />
             </div>
           )}
@@ -238,8 +238,8 @@ export default function Home() {
 
         {/* Visual Separator + AI Section with soft gradient background */}
         <div className="section-separator"></div>
-        <div className="bg-ai-gradient-soft py-12">
-          <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <div className="bg-ai-gradient-soft py-8">
+          <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             {/* Smart Summary Block (صباح الخير) - Only for authenticated users */}
             {user && (
               <div className="scroll-fade-in">
@@ -262,7 +262,7 @@ export default function Home() {
         {/* Visual Separator */}
         <div className="section-separator"></div>
 
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-12">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
@@ -293,7 +293,7 @@ export default function Home() {
         {/* Visual Separator */}
         <div className="section-separator"></div>
 
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-12">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: between_all_and_murqap */}
           {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
