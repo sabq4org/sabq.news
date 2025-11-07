@@ -30,7 +30,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
       </p>
 
       {/* Mobile View: Vertical List (like RecommendationsWidget) */}
-      <Card className="overflow-hidden lg:hidden border-0 dark:border">
+      <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
         <CardContent className="p-0">
           <div className="dark:divide-y">
             {articles.map((article, index) => {
