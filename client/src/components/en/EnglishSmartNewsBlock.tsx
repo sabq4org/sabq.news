@@ -117,7 +117,7 @@ export function EnglishSmartNewsBlock({ config }: EnglishSmartNewsBlockProps) {
 
 function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {articles.map((article) => {
         const timeAgo = article.publishedAt
           ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
@@ -125,71 +125,42 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
         return (
           <Link key={article.id} href={`/en/article/${article.slug}`}>
-            <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border ${
-              article.newsType === "breaking" ? "bg-destructive/5" : ""
-            }`} data-testid={`card-smart-article-${article.id}`}>
+            <Card 
+              className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
+              data-testid={`card-article-${article.id}`}
+            >
               {article.imageUrl && (
                 <div className="relative h-48 overflow-hidden">
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     loading="lazy"
                   />
-                  {article.newsType === "breaking" ? (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute top-3 left-3 gap-1" 
-                      data-testid={`badge-smart-breaking-${article.id}`}
-                    >
-                      <Zap className="h-3 w-3" />
-                      Breaking
-                    </Badge>
-                  ) : isNewArticle(article.publishedAt) ? (
-                    <Badge 
-                      className="absolute top-3 left-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
-                      data-testid={`badge-smart-new-${article.id}`}
-                    >
-                      <Flame className="h-3 w-3" />
-                      New
-                    </Badge>
-                  ) : article.category ? (
-                    <Badge 
-                      variant="default" 
-                      className="absolute top-3 left-3" 
-                      data-testid={`badge-smart-category-${article.id}`}
-                    >
-                      {article.category.icon} {article.category.name}
-                    </Badge>
-                  ) : null}
                 </div>
               )}
-              <CardContent className="p-5 space-y-3">
-                <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
-                  article.newsType === "breaking"
-                    ? "text-destructive"
-                    : "group-hover:text-primary"
-                }`} data-testid={`text-smart-article-title-${article.id}`}>
+              <CardContent className="p-4 space-y-3">
+                <h3 className="text-lg font-bold line-clamp-2 hover:text-primary transition-colors">
                   {article.title}
                 </h3>
                 {article.excerpt && (
-                  <p className="text-sm text-muted-foreground line-clamp-3">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {article.excerpt}
                   </p>
                 )}
-                <div className="flex flex-col gap-2 pt-2 border-t">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {timeAgo && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{timeAgo}</span>
-                      </div>
-                    )}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {timeAgo && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{timeAgo}</span>
+                    </div>
+                  )}
+                  {article.views !== undefined && (
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
-                      <span>{(article.views || 0).toLocaleString()}</span>
+                      <span>{article.views.toLocaleString()}</span>
                     </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
