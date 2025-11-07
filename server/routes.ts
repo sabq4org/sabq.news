@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
+import adsRoutes from "./ads-routes";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
@@ -21170,6 +21171,11 @@ Allow: /
   // ============================================================
   // END ENGLISH VERSION API ENDPOINTS
   // ============================================================
+
+  // ============================================================
+  // ADVERTISING SYSTEM - نظام الإعلانات الذكي
+  // ============================================================
+  app.use("/api/ads", adsRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

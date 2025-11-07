@@ -4439,3 +4439,430 @@ export type MediaFileWithDetails = MediaFile & {
   uploader?: User;
   usageHistory?: MediaUsageLog[];
 };
+
+// ============================================
+// ADVERTISING SYSTEM - SMART AD PLATFORM
+// ============================================
+
+// Ad Accounts - حسابات المعلنين
+export const adAccounts = pgTable("ad_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  companyName: text("company_name").notNull(),
+  companyNameEn: text("company_name_en"),
+  contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone"),
+  taxId: text("tax_id"), // الرقم الضريبي
+  billingAddress: jsonb("billing_address").$type<{
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  }>(),
+  status: text("status").default("active").notNull(), // active, suspended, closed
+  accountType: text("account_type").default("standard").notNull(), // standard, premium, enterprise
+  totalSpent: integer("total_spent").default(0).notNull().$type<number>(), // بالسنتات - using integer for compatibility
+  totalBudget: integer("total_budget").$type<number>(), // حد الإنفاق الإجمالي (اختياري)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ad_accounts_user").on(table.userId),
+  index("idx_ad_accounts_status").on(table.status),
+]);
+
+// Campaigns - الحملات الإعلانية
+export const campaigns = pgTable("campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").references(() => adAccounts.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  objective: text("objective").notNull(), // CPM, CPC, CPA
+  status: text("status").default("draft").notNull(), // draft, pending_review, active, paused, completed, rejected
+  dailyBudget: integer("daily_budget").notNull(), // بالسنتات
+  totalBudget: integer("total_budget").notNull(), // بالسنتات
+  spentBudget: integer("spent_budget").default(0).notNull(), // بالسنتات
+  spentToday: integer("spent_today").default(0).notNull(), // بالسنتات
+  lastResetDate: timestamp("last_reset_date").defaultNow(), // لإعادة تعيين الميزانية اليومية
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  bidAmount: integer("bid_amount").notNull(), // بالسنتات (المبلغ لكل وحدة حسب الهدف)
+  
+  // معلومات الموافقة
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  rejectionReason: text("rejection_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_campaigns_account").on(table.accountId),
+  index("idx_campaigns_status").on(table.status),
+  index("idx_campaigns_objective").on(table.objective),
+  index("idx_campaigns_dates").on(table.startDate, table.endDate),
+]);
+
+// Ad Groups - المجموعات الإعلانية
+export const adGroups = pgTable("ad_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  
+  // الاستهداف
+  targetCountries: text("target_countries").array().default(sql`ARRAY['SA']::text[]`),
+  targetDevices: text("target_devices").array().default(sql`ARRAY['desktop', 'mobile', 'tablet']::text[]`),
+  targetCategories: text("target_categories").array().default(sql`ARRAY[]::text[]`), // IDs من جدول categories
+  targetKeywords: text("target_keywords").array().default(sql`ARRAY[]::text[]`),
+  
+  status: text("status").default("active").notNull(), // active, paused
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ad_groups_campaign").on(table.campaignId),
+  index("idx_ad_groups_status").on(table.status),
+]);
+
+// Creatives - الإعلانات (المحتوى الإعلاني)
+export const creatives = pgTable("creatives", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adGroupId: varchar("ad_group_id").references(() => adGroups.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // image, video, html, text
+  content: text("content").notNull(), // URL للصورة/فيديو أو HTML code
+  destinationUrl: text("destination_url").notNull(),
+  size: text("size").notNull(), // "728x90", "300x250", etc.
+  
+  // معلومات إضافية
+  title: text("title"), // للإعلانات النصية
+  description: text("description"), // للإعلانات النصية
+  callToAction: text("call_to_action"), // "اشتري الآن"، "سجل الآن"
+  
+  // الأداء المتوقع بواسطة AI
+  predictedCTR: integer("predicted_ctr").default(0), // نسبة مئوية × 10000
+  
+  status: text("status").default("active").notNull(), // active, paused, rejected
+  rejectionReason: text("rejection_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_creatives_ad_group").on(table.adGroupId),
+  index("idx_creatives_status").on(table.status),
+  index("idx_creatives_type").on(table.type),
+  index("idx_creatives_size").on(table.size),
+]);
+
+// Inventory Slots - أماكن العرض في الموقع
+export const inventorySlots = pgTable("inventory_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  location: text("location").notNull(), // header, sidebar, footer, inline, between_articles
+  size: text("size").notNull(), // "728x90", "300x250", etc.
+  pageType: text("page_type").default("all").notNull(), // all, home, article, category
+  isActive: boolean("is_active").default(true).notNull(),
+  floorPrice: integer("floor_price").default(0), // الحد الأدنى للسعر بالسنتات
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_inventory_slots_location").on(table.location),
+  index("idx_inventory_slots_size").on(table.size),
+  index("idx_inventory_slots_active").on(table.isActive),
+]);
+
+// Impressions - المشاهدات
+export const impressions = pgTable("impressions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }).notNull(),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  slotId: varchar("slot_id").references(() => inventorySlots.id),
+  
+  // معلومات المستخدم
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  country: text("country").default("SA"),
+  device: text("device"), // desktop, mobile, tablet
+  
+  // معلومات الصفحة
+  pageUrl: text("page_url"),
+  referrer: text("referrer"),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("idx_impressions_creative").on(table.creativeId),
+  index("idx_impressions_campaign").on(table.campaignId),
+  index("idx_impressions_slot").on(table.slotId),
+  index("idx_impressions_timestamp").on(table.timestamp.desc()),
+  index("idx_impressions_country").on(table.country),
+  index("idx_impressions_device").on(table.device),
+]);
+
+// Clicks - النقرات
+export const clicks = pgTable("clicks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  impressionId: varchar("impression_id").references(() => impressions.id),
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }).notNull(),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  slotId: varchar("slot_id").references(() => inventorySlots.id),
+  
+  // معلومات المستخدم
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  country: text("country").default("SA"),
+  device: text("device"),
+  
+  // معلومات الصفحة
+  pageUrl: text("page_url"),
+  referrer: text("referrer"),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("idx_clicks_impression").on(table.impressionId),
+  index("idx_clicks_creative").on(table.creativeId),
+  index("idx_clicks_campaign").on(table.campaignId),
+  index("idx_clicks_slot").on(table.slotId),
+  index("idx_clicks_timestamp").on(table.timestamp.desc()),
+  index("idx_clicks_country").on(table.country),
+  index("idx_clicks_device").on(table.device),
+]);
+
+// Conversions - التحويلات
+export const conversions = pgTable("conversions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clickId: varchar("click_id").references(() => clicks.id),
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }).notNull(),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  
+  conversionType: text("conversion_type").notNull(), // purchase, signup, download, form_submit
+  conversionValue: integer("conversion_value"), // قيمة التحويل بالسنتات (اختياري)
+  
+  // معلومات إضافية
+  metadata: jsonb("metadata").$type<{
+    orderId?: string;
+    productId?: string;
+    quantity?: number;
+    [key: string]: any;
+  }>(),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ad_conversions_click").on(table.clickId),
+  index("idx_ad_conversions_creative").on(table.creativeId),
+  index("idx_ad_conversions_campaign").on(table.campaignId),
+  index("idx_ad_conversions_timestamp").on(table.timestamp.desc()),
+  index("idx_ad_conversions_type").on(table.conversionType),
+]);
+
+// Daily Stats - الإحصائيات اليومية المحسوبة
+export const dailyStats = pgTable("daily_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }),
+  slotId: varchar("slot_id").references(() => inventorySlots.id),
+  
+  date: timestamp("date").notNull(),
+  
+  // المقاييس
+  impressions: integer("impressions").default(0).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  conversions: integer("conversions").default(0).notNull(),
+  spent: integer("spent").default(0).notNull(), // بالسنتات
+  revenue: integer("revenue").default(0).notNull(), // بالسنتات (للناشر)
+  
+  // المقاييس المحسوبة (نسب مئوية × 10000)
+  ctr: integer("ctr").default(0), // Click-Through Rate
+  conversionRate: integer("conversion_rate").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_daily_stats_campaign").on(table.campaignId),
+  index("idx_daily_stats_creative").on(table.creativeId),
+  index("idx_daily_stats_slot").on(table.slotId),
+  index("idx_daily_stats_date").on(table.date.desc()),
+  // فهرس مركب لتحسين الاستعلامات
+  index("idx_daily_stats_campaign_date").on(table.campaignId, table.date.desc()),
+]);
+
+// Budget History - سجل الميزانية
+export const budgetHistory = pgTable("budget_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  amount: integer("amount").notNull(), // بالسنتات
+  type: text("type").notNull(), // charge, refund, adjustment
+  reason: text("reason"),
+  performedBy: varchar("performed_by").references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("idx_budget_history_campaign").on(table.campaignId),
+  index("idx_budget_history_timestamp").on(table.timestamp.desc()),
+  index("idx_budget_history_type").on(table.type),
+]);
+
+// AI Recommendations - التوصيات الذكية
+export const aiRecommendations = pgTable("ai_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }),
+  
+  type: text("type").notNull(), // budget_increase, budget_decrease, pause_ad, target_adjustment, bid_adjustment
+  priority: text("priority").default("medium").notNull(), // low, medium, high, critical
+  message: text("message").notNull(),
+  
+  // التوصية المفصلة
+  recommendation: jsonb("recommendation").$type<{
+    action?: string;
+    currentValue?: any;
+    suggestedValue?: any;
+    reason?: string;
+    expectedImpact?: string;
+    [key: string]: any;
+  }>(),
+  
+  confidence: integer("confidence").default(5000), // نسبة الثقة (0-10000)
+  
+  isRead: boolean("is_read").default(false).notNull(),
+  isApplied: boolean("is_applied").default(false).notNull(),
+  appliedAt: timestamp("applied_at"),
+  appliedBy: varchar("applied_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ai_recommendations_campaign").on(table.campaignId),
+  index("idx_ai_recommendations_creative").on(table.creativeId),
+  index("idx_ai_recommendations_type").on(table.type),
+  index("idx_ai_recommendations_priority").on(table.priority),
+  index("idx_ai_recommendations_is_read").on(table.isRead),
+  index("idx_ai_recommendations_created_at").on(table.createdAt.desc()),
+]);
+
+// Audit Logs - سجل التدقيق
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  entityType: text("entity_type").notNull(), // campaign, creative, ad_group, etc.
+  entityId: varchar("entity_id").notNull(),
+  action: text("action").notNull(), // create, update, delete, approve, reject, pause, resume
+  
+  // التغييرات
+  changes: jsonb("changes").$type<{
+    before?: any;
+    after?: any;
+    [key: string]: any;
+  }>(),
+  
+  // معلومات الطلب
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audit_logs_user").on(table.userId),
+  index("idx_audit_logs_entity").on(table.entityType, table.entityId),
+  index("idx_audit_logs_action").on(table.action),
+  index("idx_audit_logs_timestamp").on(table.timestamp.desc()),
+]);
+
+// ============================================
+// ADVERTISING SYSTEM - INSERT SCHEMAS
+// ============================================
+
+export const insertAdAccountSchema = createInsertSchema(adAccounts).omit({
+  id: true,
+  totalSpent: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  companyName: z.string().min(1, "اسم الشركة مطلوب"),
+  contactEmail: z.string().email("البريد الإلكتروني غير صحيح"),
+});
+
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({
+  id: true,
+  spentBudget: true,
+  spentToday: true,
+  lastResetDate: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  rejectionReason: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "اسم الحملة مطلوب"),
+  objective: z.enum(["CPM", "CPC", "CPA"], { message: "نوع الحملة غير صحيح" }),
+  dailyBudget: z.number().positive("الميزانية اليومية يجب أن تكون موجبة"),
+  totalBudget: z.number().positive("الميزانية الإجمالية يجب أن تكون موجبة"),
+  bidAmount: z.number().positive("مبلغ العرض يجب أن يكون موجباً"),
+  startDate: z.date(),
+});
+
+export const insertAdGroupSchema = createInsertSchema(adGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "اسم المجموعة مطلوب"),
+});
+
+export const insertCreativeSchema = createInsertSchema(creatives).omit({
+  id: true,
+  predictedCTR: true,
+  rejectionReason: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "اسم الإعلان مطلوب"),
+  type: z.enum(["image", "video", "html", "text"], { message: "نوع الإعلان غير صحيح" }),
+  content: z.string().min(1, "محتوى الإعلان مطلوب"),
+  destinationUrl: z.string().url("الرابط غير صحيح"),
+  size: z.string().min(1, "حجم الإعلان مطلوب"),
+});
+
+export const insertInventorySlotSchema = createInsertSchema(inventorySlots).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "اسم المكان مطلوب"),
+  location: z.enum(["header", "sidebar", "footer", "inline", "between_articles"]),
+  size: z.string().min(1, "الحجم مطلوب"),
+});
+
+// ============================================
+// ADVERTISING SYSTEM - SELECT TYPES
+// ============================================
+
+export type AdAccount = typeof adAccounts.$inferSelect;
+export type InsertAdAccount = z.infer<typeof insertAdAccountSchema>;
+
+export type Campaign = typeof campaigns.$inferSelect;
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+
+export type AdGroup = typeof adGroups.$inferSelect;
+export type InsertAdGroup = z.infer<typeof insertAdGroupSchema>;
+
+export type Creative = typeof creatives.$inferSelect;
+export type InsertCreative = z.infer<typeof insertCreativeSchema>;
+
+export type InventorySlot = typeof inventorySlots.$inferSelect;
+export type InsertInventorySlot = z.infer<typeof insertInventorySlotSchema>;
+
+export type Impression = typeof impressions.$inferSelect;
+export type Click = typeof clicks.$inferSelect;
+export type Conversion = typeof conversions.$inferSelect;
+export type DailyStat = typeof dailyStats.$inferSelect;
+export type BudgetHistory = typeof budgetHistory.$inferSelect;
+export type AIRecommendation = typeof aiRecommendations.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
+
+// Campaign with additional details
+export type CampaignWithDetails = Campaign & {
+  account?: AdAccount;
+  adGroups?: AdGroup[];
+  stats?: {
+    totalImpressions: number;
+    totalClicks: number;
+    totalConversions: number;
+    ctr: number;
+    conversionRate: number;
+  };
+  recommendations?: AIRecommendation[];
+};
