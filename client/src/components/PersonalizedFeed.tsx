@@ -30,9 +30,9 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
       </p>
 
       {/* Mobile View: Vertical List (like RecommendationsWidget) */}
-      <Card className="overflow-hidden lg:hidden">
+      <Card className="overflow-hidden lg:hidden border-0 dark:border">
         <CardContent className="p-0">
-          <div className="divide-y">
+          <div className="dark:divide-y">
             {articles.map((article, index) => {
               const timeAgo = article.publishedAt
                 ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -147,7 +147,7 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
         {articles.map((article) => (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className={`cursor-pointer h-full overflow-hidden border border-card-border ${
+              className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
                 article.newsType === "breaking" ? "bg-destructive/5" : ""
               }`}
               data-testid={`card-article-${article.id}`}
