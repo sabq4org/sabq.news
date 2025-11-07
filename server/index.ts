@@ -105,7 +105,7 @@ app.use(express.urlencoded({ extended: false }));
 // Rate limiting configurations
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // 300 requests per window (increased for bulk operations)
+  max: 1000, // 1000 requests per window (increased for development and testing)
   message: { message: "تم تجاوز حد الطلبات. يرجى المحاولة مرة أخرى بعد قليل" },
   standardHeaders: true,
   legacyHeaders: false,
