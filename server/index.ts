@@ -105,11 +105,17 @@ app.use(express.urlencoded({ extended: false }));
 // Rate limiting configurations
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // 1000 requests per window (increased for development and testing)
+  max: 500, // 500 requests per IP per window (per user, not global)
   message: { message: "تم تجاوز حد الطلبات. يرجى المحاولة مرة أخرى بعد قليل" },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.path.startsWith("/health") || req.path.startsWith("/ready"),
+  // Use IP address as key (each IP has its own limit)
+  keyGenerator: (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = req.ip || (Array.isArray(forwarded) ? forwarded[0] : forwarded) || req.headers['x-real-ip'] || 'unknown';
+    return Array.isArray(ip) ? ip[0] : ip;
+  },
 });
 
 const authLimiter = rateLimit({
