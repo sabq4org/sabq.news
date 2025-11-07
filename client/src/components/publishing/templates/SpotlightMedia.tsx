@@ -83,13 +83,10 @@ export default function SpotlightMedia({
               </button>
             )}
 
-            {/* Featured Badge */}
-            {item.newsType === "featured" && (
-              <div 
-                className="absolute top-4 right-4 text-white px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-sm"
-                style={{ backgroundColor: accent }}
-              >
-                فيديو مميز
+            {/* Badge */}
+            {item.newsType === "breaking" && (
+              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-sm">
+                عاجل
               </div>
             )}
 

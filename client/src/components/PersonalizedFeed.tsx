@@ -1,11 +1,20 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star } from "lucide-react";
+import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 interface PersonalizedFeedProps {
   articles: ArticleWithDetails[];
@@ -83,14 +92,13 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                                 <Zap className="h-3 w-3" />
                                 عاجل
                               </Badge>
-                            ) : article.isFeatured ? (
+                            ) : isNewArticle(article.publishedAt) ? (
                               <Badge 
-                                variant="default" 
-                                className="text-xs h-5 gap-1 bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
-                                data-testid={`badge-featured-${article.id}`}
+                                className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                data-testid={`badge-new-${article.id}`}
                               >
-                                <Star className="h-3 w-3 fill-current" />
-                                مميز
+                                <Flame className="h-3 w-3" />
+                                جديد
                               </Badge>
                             ) : article.category ? (
                               <Badge 
@@ -174,14 +182,13 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                       <Zap className="h-3 w-3" />
                       عاجل
                     </Badge>
-                  ) : article.isFeatured ? (
+                  ) : isNewArticle(article.publishedAt) ? (
                     <Badge 
-                      variant="default" 
-                      className="absolute top-3 right-3 gap-1 bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
-                      data-testid={`badge-featured-${article.id}`}
+                      className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                      data-testid={`badge-new-${article.id}`}
                     >
-                      <Star className="h-3 w-3 fill-current" />
-                      مميز
+                      <Flame className="h-3 w-3" />
+                      جديد
                     </Badge>
                   ) : article.category ? (
                     <Badge 

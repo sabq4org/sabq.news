@@ -190,14 +190,13 @@ export function EnglishHeroCarousel({ articles }: EnglishHeroCarouselProps) {
                             <Zap className="h-3 w-3" />
                             Breaking News
                           </Badge>
-                        ) : article.isFeatured ? (
+                        ) : isNewArticle(article.publishedAt) ? (
                           <Badge 
-                            variant="default" 
-                            className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 gap-1"
-                            data-testid={`badge-featured-${article.id}`}
+                            className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1"
+                            data-testid={`badge-new-${article.id}`}
                           >
-                            <Star className="h-3 w-3 fill-current" />
-                            Featured
+                            <Flame className="h-3 w-3" />
+                            New
                           </Badge>
                         ) : (
                           <Badge 
