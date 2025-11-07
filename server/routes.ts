@@ -3837,6 +3837,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: users.email,
           firstName: users.firstName,
           lastName: users.lastName,
+          firstNameEn: users.firstNameEn,
+          lastNameEn: users.lastNameEn,
           bio: users.bio,
           phoneNumber: users.phoneNumber,
           profileImageUrl: users.profileImageUrl,
