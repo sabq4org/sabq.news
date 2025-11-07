@@ -3,10 +3,19 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag, Newspaper } from "lucide-react";
+import { Clock, Tag, Newspaper, Eye, Flame, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { SmartBlock } from "@shared/schema";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const now = new Date();
+  const published = new Date(publishedAt);
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 interface ArticleResult {
   id: string;
@@ -14,10 +23,14 @@ interface ArticleResult {
   slug: string;
   publishedAt: string | null;
   imageUrl?: string | null;
+  excerpt?: string | null;
+  newsType?: string | null;
+  views?: number;
   category?: {
     nameAr: string;
     slug: string;
     color: string | null;
+    icon?: string | null;
   } | null;
 }
 
@@ -135,30 +148,54 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         )}
 
                         <div className="flex-1 min-w-0 space-y-2">
-                          {article.category && (
+                          {/* Breaking/New/Category Badge */}
+                          {article.newsType === "breaking" ? (
+                            <Badge 
+                              variant="destructive" 
+                              className="text-xs h-5 gap-1"
+                              data-testid={`badge-smart-mobile-breaking-${article.id}`}
+                            >
+                              <Zap className="h-3 w-3" />
+                              عاجل
+                            </Badge>
+                          ) : isNewArticle(article.publishedAt) ? (
+                            <Badge 
+                              className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                              data-testid={`badge-smart-mobile-new-${article.id}`}
+                            >
+                              <Flame className="h-3 w-3" />
+                              جديد
+                            </Badge>
+                          ) : article.category ? (
                             <Badge 
                               variant="outline" 
                               className="text-xs h-5"
-                              style={{ 
-                                borderColor: article.category.color || undefined,
-                                color: article.category.color || undefined,
-                              }}
-                              data-testid={`badge-smart-article-category-${article.id}`}
+                              data-testid={`badge-smart-mobile-category-${article.id}`}
                             >
-                              {article.category.nameAr}
+                              {article.category.icon} {article.category.nameAr}
                             </Badge>
-                          )}
+                          ) : null}
 
-                          <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors" data-testid={`text-smart-article-title-${article.id}`}>
+                          <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                            article.newsType === "breaking"
+                              ? "text-destructive"
+                              : "group-hover:text-primary"
+                          }`} data-testid={`text-smart-article-title-${article.id}`}>
                             {article.title}
                           </h4>
 
-                          {timeAgo && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {timeAgo}
-                            </div>
-                          )}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            {timeAgo && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {timeAgo}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {(article.views || 0).toLocaleString('ar-SA')}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -170,7 +207,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
         </CardContent>
       </Card>
 
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.map((article) => {
           const timeAgo = article.publishedAt
             ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -181,16 +218,15 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
           return (
             <Link key={article.id} href={`/article/${article.slug}`}>
-              <Card 
-                className="cursor-pointer h-full overflow-hidden border border-card-border hover-elevate active-elevate-2"
-                data-testid={`card-smart-article-${article.id}`}
-              >
+              <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border ${
+                article.newsType === "breaking" ? "bg-destructive/5" : ""
+              }`} data-testid={`card-smart-article-${article.id}`}>
                 {article.imageUrl && (
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={article.imageUrl}
                       alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                       style={{
                         objectPosition: (article as any).imageFocalPoint
@@ -198,33 +234,61 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                           : 'center'
                       }}
                     />
+                    {article.newsType === "breaking" ? (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute top-3 right-3 gap-1" 
+                        data-testid={`badge-smart-breaking-${article.id}`}
+                      >
+                        <Zap className="h-3 w-3" />
+                        عاجل
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge 
+                        className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                        data-testid={`badge-smart-new-${article.id}`}
+                      >
+                        <Flame className="h-3 w-3" />
+                        جديد
+                      </Badge>
+                    ) : article.category ? (
+                      <Badge 
+                        variant="default" 
+                        className="absolute top-3 right-3" 
+                        data-testid={`badge-smart-category-${article.id}`}
+                      >
+                        {article.category.icon} {article.category.nameAr}
+                      </Badge>
+                    ) : null}
                   </div>
                 )}
-                
-                <CardContent className="p-4 space-y-3">
-                  {article.category && (
-                    <Badge 
-                      variant="outline"
-                      style={{ 
-                        borderColor: article.category.color || undefined,
-                        color: article.category.color || undefined,
-                      }}
-                      data-testid={`badge-smart-article-category-desktop-${article.id}`}
-                    >
-                      {article.category.nameAr}
-                    </Badge>
-                  )}
-
-                  <h3 className="font-bold text-lg line-clamp-2 leading-snug" data-testid={`text-smart-article-title-desktop-${article.id}`}>
+                <CardContent className="p-5 space-y-3">
+                  <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
+                    article.newsType === "breaking"
+                      ? "text-destructive"
+                      : "group-hover:text-primary"
+                  }`} data-testid={`text-smart-article-title-${article.id}`}>
                     {article.title}
                   </h3>
-
-                  {timeAgo && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      {timeAgo}
-                    </div>
+                  {article.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {article.excerpt}
+                    </p>
                   )}
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {timeAgo && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{timeAgo}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        <span>{(article.views || 0).toLocaleString('ar-SA')}</span>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
