@@ -110,12 +110,6 @@ const generalApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.path.startsWith("/health") || req.path.startsWith("/ready"),
-  // Use IP address as key (each IP has its own limit)
-  keyGenerator: (req) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip = req.ip || (Array.isArray(forwarded) ? forwarded[0] : forwarded) || req.headers['x-real-ip'] || 'unknown';
-    return Array.isArray(ip) ? ip[0] : ip;
-  },
 });
 
 const authLimiter = rateLimit({

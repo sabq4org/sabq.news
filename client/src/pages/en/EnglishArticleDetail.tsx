@@ -28,6 +28,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { EnArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
 import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
+import { EnglishRecommendationsWidget } from "@/components/EnglishRecommendationsWidget";
 
 export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -42,6 +43,11 @@ export default function EnglishArticleDetail() {
 
   const { data: article, isLoading } = useQuery<EnArticleWithDetails>({
     queryKey: ["/api/en/articles", params.slug],
+    enabled: !!params.slug,
+  });
+
+  const { data: relatedArticles = [] } = useQuery<any[]>({
+    queryKey: [`/api/en/articles/${params.slug}/related`],
     enabled: !!params.slug,
   });
 
@@ -361,6 +367,15 @@ export default function EnglishArticleDetail() {
           <aside className="space-y-6">
             {/* AI Article Analytics */}
             <EnAiArticleStats slug={params.slug || ""} />
+
+            {/* Related Articles */}
+            {relatedArticles.length > 0 && (
+              <EnglishRecommendationsWidget
+                articles={relatedArticles}
+                title="Related Articles"
+                reason="You might also like"
+              />
+            )}
           </aside>
         </div>
       </div>
