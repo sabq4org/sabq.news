@@ -42,14 +42,6 @@ export default function HeroSplit({ item, accent = "hsl(var(--primary))", classN
                 عاجل
               </div>
             )}
-            {item.newsType === "featured" && (
-              <div 
-                className="absolute top-4 right-4 text-white px-3 py-1 rounded-md text-xs font-bold"
-                style={{ backgroundColor: accent }}
-              >
-                مميز
-              </div>
-            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent md:hidden" />
           </a>
         </Link>

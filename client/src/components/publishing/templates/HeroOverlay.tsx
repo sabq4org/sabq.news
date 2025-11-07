@@ -49,15 +49,6 @@ export default function HeroOverlay({ item, accent = "hsl(var(--primary))", clas
               </div>
             )}
 
-            {item.newsType === "featured" && (
-              <div 
-                className="absolute top-6 right-6 text-white px-4 py-2 rounded-lg text-sm font-bold"
-                style={{ backgroundColor: accent }}
-              >
-                مميز
-              </div>
-            )}
-
             {/* Category Badge */}
             {item.category && (
               <div className="mb-4">

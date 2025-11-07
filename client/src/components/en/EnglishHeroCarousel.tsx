@@ -96,15 +96,6 @@ export function EnglishHeroCarousel({ articles }: EnglishHeroCarouselProps) {
                           <Zap className="h-3 w-3" />
                           Breaking
                         </Badge>
-                      ) : article.isFeatured ? (
-                        <Badge 
-                          variant="default" 
-                          className="w-fit bg-amber-500 hover:bg-amber-600 text-white border-amber-600 text-xs gap-1"
-                          data-testid={`badge-featured-${article.id}`}
-                        >
-                          <Star className="h-3 w-3 fill-current" />
-                          Featured
-                        </Badge>
                       ) : (
                         <Badge 
                           variant="default" 
