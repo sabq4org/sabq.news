@@ -113,10 +113,79 @@ export default function EnglishHome() {
                 <h2 className="text-2xl md:text-3xl font-bold">Latest News</h2>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <p className="text-muted-foreground mb-4">
+                All the latest articles sorted from newest to oldest
+              </p>
+
+              {/* Mobile View: Vertical List */}
+              <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
+                <CardContent className="p-0">
+                  <div className="dark:divide-y">
+                    {regularArticles.map((article) => {
+                      const timeAgo = article.publishedAt
+                        ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+                        : null;
+
+                      return (
+                        <div key={article.id}>
+                          <Link href={`/en/article/${article.slug}`}>
+                            <div 
+                              className="block group cursor-pointer"
+                              data-testid={`link-article-mobile-${article.id}`}
+                            >
+                              <div className="p-4 hover-elevate active-elevate-2 transition-all">
+                                <div className="flex gap-3">
+                                  {/* Image */}
+                                  <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                                    {article.imageUrl ? (
+                                      <img
+                                        src={article.imageUrl}
+                                        alt={article.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        loading="lazy"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+                                    )}
+                                  </div>
+
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0 space-y-2">
+                                    {/* Title */}
+                                    <h4 className="font-bold text-sm line-clamp-2 leading-snug transition-colors group-hover:text-primary" data-testid={`text-article-title-${article.id}`}>
+                                      {article.title}
+                                    </h4>
+
+                                    {/* Meta Info */}
+                                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                      {timeAgo && (
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {timeAgo}
+                                        </span>
+                                      )}
+                                      <span className="flex items-center gap-1">
+                                        <Eye className="h-3 w-3" />
+                                        {(article.views || 0).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Desktop View: Grid */}
+              <div className="hidden lg:grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {regularArticles.map((article) => (
                   <Link key={article.id} href={`/en/article/${article.slug}`}>
-                    <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-article-${article.id}`}>
+                    <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border" data-testid={`card-article-${article.id}`}>
                       {article.imageUrl && (
                         <div className="relative h-48 overflow-hidden">
                           <img
@@ -136,16 +205,6 @@ export default function EnglishHome() {
                           </p>
                         )}
                         <div className="flex flex-col gap-2 pt-2 border-t">
-                          {article.author && (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <User className="h-3 w-3" />
-                              <span className="font-medium" data-testid={`text-author-${article.id}`}>
-                                {article.author.firstName && article.author.lastName
-                                  ? `${article.author.firstName} ${article.author.lastName}`
-                                  : article.author.email}
-                              </span>
-                            </div>
-                          )}
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             {article.publishedAt && (
                               <div className="flex items-center gap-1">
