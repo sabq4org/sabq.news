@@ -236,8 +236,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Visual Separator + AI Section with soft gradient background */}
-        <div className="section-separator"></div>
+        {/* AI Section with soft gradient background */}
         <div className="bg-ai-gradient-soft py-8">
           <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             {/* Smart Summary Block (صباح الخير) - Only for authenticated users */}
@@ -258,9 +257,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Visual Separator */}
-        <div className="section-separator"></div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: above_all_news */}
@@ -289,9 +285,6 @@ export default function Home() {
         <div className="scroll-fade-in">
           <QuadCategoriesBlock />
         </div>
-
-        {/* Visual Separator */}
-        <div className="section-separator"></div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: between_all_and_murqap */}

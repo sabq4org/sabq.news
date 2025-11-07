@@ -537,13 +537,6 @@
     animation: ai-gradient-pulse 4s ease infinite;
   }
 
-  /* Section Separator with Gradient */
-  .section-separator {
-    height: 2px;
-    background: linear-gradient(to left, transparent 0%, hsl(var(--border)) 20%, hsl(var(--border)) 80%, transparent 100%);
-    margin: 2rem 0;
-  }
-
   /* Scroll Fade In Animation */
   @keyframes fade-in-up {
     from {
