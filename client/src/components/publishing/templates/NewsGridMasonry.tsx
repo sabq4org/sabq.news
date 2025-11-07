@@ -1,9 +1,18 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye, MessageSquare } from "lucide-react";
+import { Clock, Eye, MessageSquare, Flame } from "lucide-react";
 import type { GridTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 export default function NewsGridMasonry({
   items,
@@ -67,12 +76,10 @@ export default function NewsGridMasonry({
                         عاجل
                       </div>
                     )}
-                    {item.newsType === "featured" && (
-                      <div 
-                        className="absolute top-3 right-3 text-white px-2 py-1 rounded text-xs font-bold"
-                        style={{ backgroundColor: accent }}
-                      >
-                        مميز
+                    {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+                      <div className="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <Flame className="h-3 w-3" />
+                        جديد
                       </div>
                     )}
                   </div>

@@ -4,13 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, Eye, Star, TrendingUp, User } from "lucide-react";
+import { ArrowRight, Clock, Eye, Star, TrendingUp, User, Flame } from "lucide-react";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
 import type { EnArticle, EnSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 export default function EnglishHome() {
   const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({
@@ -147,6 +156,12 @@ export default function EnglishHome() {
                                     ) : (
                                       <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
                                     )}
+                                    {isNewArticle(article.publishedAt) && (
+                                      <div className="absolute top-1 left-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                                        <Flame className="h-2.5 w-2.5" />
+                                        New
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Content */}
@@ -193,6 +208,12 @@ export default function EnglishHome() {
                             alt={article.title}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
+                          {isNewArticle(article.publishedAt) && (
+                            <div className="absolute top-2 left-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                              <Flame className="h-3 w-3" />
+                              New
+                            </div>
+                          )}
                         </div>
                       )}
                       <CardContent className="p-5 space-y-3">

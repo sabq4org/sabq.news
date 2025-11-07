@@ -2,10 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Star, Eye, Clock } from "lucide-react";
+import { Zap, Star, Eye, Clock, Flame } from "lucide-react";
 import type { EnArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 interface EnglishHeroCarouselProps {
   articles: EnArticle[];
@@ -95,6 +104,14 @@ export function EnglishHeroCarousel({ articles }: EnglishHeroCarouselProps) {
                         >
                           <Zap className="h-3 w-3" />
                           Breaking
+                        </Badge>
+                      ) : isNewArticle(article.publishedAt) ? (
+                        <Badge 
+                          className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 text-xs gap-1"
+                          data-testid={`badge-new-${article.id}`}
+                        >
+                          <Flame className="h-3 w-3" />
+                          New
                         </Badge>
                       ) : (
                         <Badge 

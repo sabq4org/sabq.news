@@ -1,11 +1,20 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, MessageSquare, BookOpen } from "lucide-react";
+import { Clock, MessageSquare, BookOpen, Flame } from "lucide-react";
 import type { ListTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 import { ViewsCount } from "@/components/ViewsCount";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 export default function NewsListSummary({
   items,
@@ -67,6 +76,12 @@ export default function NewsListSummary({
                     {item.newsType === "breaking" && (
                       <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded text-xs font-bold">
                         عاجل
+                      </div>
+                    )}
+                    {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+                      <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <Flame className="h-3 w-3" />
+                        جديد
                       </div>
                     )}
                   </div>

@@ -1,9 +1,18 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Eye, MessageSquare } from "lucide-react";
+import { Clock, Eye, MessageSquare, Flame } from "lucide-react";
 import type { HeroTemplateProps } from "@/lib/publishing/types";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 export default function HeroOverlay({ item, accent = "hsl(var(--primary))", className, onView }: HeroTemplateProps) {
   if (!item) return null;
@@ -46,6 +55,14 @@ export default function HeroOverlay({ item, accent = "hsl(var(--primary))", clas
             {item.newsType === "breaking" && (
               <div className="absolute top-6 right-6 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg text-sm font-bold animate-pulse">
                 عاجل
+              </div>
+            )}
+            
+            {/* New Article Badge */}
+            {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+              <div className="absolute top-6 right-6 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1.5">
+                <Flame className="h-4 w-4" />
+                جديد
               </div>
             )}
 
