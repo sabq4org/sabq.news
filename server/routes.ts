@@ -20225,6 +20225,31 @@ Allow: /
     }
   });
 
+  // Get related articles for an English article
+  app.get("/api/en/articles/:slug/related", async (req: any, res) => {
+    try {
+      // Get the English article by slug
+      const articleResults = await db
+        .select()
+        .from(enArticles)
+        .where(eq(enArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!articleResults || articleResults.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const article = articleResults[0];
+
+      // Get related articles using storage method
+      const related = await storage.getEnglishRelatedArticles(article.id, article.categoryId || undefined);
+      res.json(related);
+    } catch (error) {
+      console.error("Error fetching related English articles:", error);
+      res.status(500).json({ message: "Failed to fetch related articles" });
+    }
+  });
+
   // Get AI-powered analytics/insights for an English article
   app.get("/api/en/articles/:slug/ai-insights", async (req: any, res) => {
     try {
