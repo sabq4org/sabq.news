@@ -8548,6 +8548,40 @@ export class DatabaseStorage implements IStorage {
       commentsCount,
     };
   }
+
+  async getEnglishRelatedArticles(articleId: string, categoryId?: string): Promise<any[]> {
+    const conditions = [
+      eq(enArticles.status, "published"),
+      ne(enArticles.id, articleId),
+    ];
+
+    if (categoryId) {
+      conditions.push(eq(enArticles.categoryId, categoryId));
+    }
+
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: enArticles,
+        category: enCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(users, eq(enArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(enArticles.reporterId, reporterAlias.id))
+      .where(and(...conditions))
+      .orderBy(desc(enArticles.publishedAt))
+      .limit(5);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+    }));
+  }
 }
 
 export const storage = new DatabaseStorage();
