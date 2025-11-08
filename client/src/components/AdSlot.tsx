@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 interface AdSlotProps {
   slotId: string;
@@ -22,9 +22,42 @@ interface AdData {
   impressionId?: string;
 }
 
+// Detect device type based on screen width
+function getDeviceType(): "desktop" | "mobile" | "tablet" {
+  if (typeof window === "undefined") return "desktop";
+  
+  const width = window.innerWidth;
+  
+  if (width < 768) {
+    return "mobile";
+  } else if (width < 1024) {
+    return "tablet";
+  } else {
+    return "desktop";
+  }
+}
+
 export function AdSlot({ slotId, className = "" }: AdSlotProps) {
+  // Detect device type
+  const deviceType = useMemo(() => getDeviceType(), []);
+
   const { data: ad, isLoading, error } = useQuery<AdData>({
-    queryKey: ["/api/ads/slot", slotId],
+    queryKey: ["/api/ads/slot", slotId, deviceType],
+    queryFn: async () => {
+      const response = await fetch(`/api/ads/slot/${slotId}?deviceType=${deviceType}`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        if (response.status === 204) {
+          // No ad available
+          return null;
+        }
+        throw new Error("Failed to fetch ad");
+      }
+      
+      return response.json();
+    },
     enabled: !!slotId,
     refetchInterval: 60000, // Refresh every minute
     retry: false,

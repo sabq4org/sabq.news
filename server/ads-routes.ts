@@ -2864,9 +2864,11 @@ router.get("/creatives/:creativeId/placements", requireAdvertiser, async (req, r
 router.get("/slot/:slotId", async (req, res) => {
   try {
     const slotId = req.params.slotId;
+    const deviceType = (req.query.deviceType as string) || "desktop"; // desktop, mobile, tablet
     const now = new Date();
     
     // Find ALL active placements for this slot (not just highest priority)
+    // Filter by device type
     const activePlacements = await db
       .select({
         placement: adCreativePlacements,
@@ -2885,7 +2887,9 @@ router.get("/slot/:slotId", async (req, res) => {
         eq(campaigns.status, "active"),
         eq(creatives.status, "active"),
         lte(adCreativePlacements.startDate, now),
-        sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`
+        sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`,
+        // Device type filtering: show if slot is "all" OR matches the requested device type
+        sql`(${inventorySlots.deviceType} = 'all' OR ${inventorySlots.deviceType} = ${deviceType})`
       ))
       .orderBy(desc(adCreativePlacements.priority));
     
