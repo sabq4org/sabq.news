@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
+import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
 import { initializeChatWebSocket } from "./chat-websocket";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
@@ -453,6 +454,18 @@ app.use((req, res, next) => {
           } catch (error) {
             console.error("[Server] ⚠️  Error starting dynamic categories job:", error);
             console.error("[Server] Server will continue running without dynamic categories automation");
+          }
+        });
+      }
+
+      // Start Campaign Daily Reset Job (resets daily impressions at midnight)
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startCampaignDailyResetJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting campaign daily reset job:", error);
+            console.error("[Server] Server will continue running without campaign daily reset automation");
           }
         });
       }
