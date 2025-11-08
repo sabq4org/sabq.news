@@ -1248,22 +1248,21 @@ router.get("/campaigns/:id/analytics", requireAdvertiser, async (req, res) => {
     }
     
     // جلب الإحصائيات اليومية
-    let dailyStatsQuery = db
-      .select()
-      .from(dailyStats)
-      .where(eq(dailyStats.campaignId, campaignId))
-      .orderBy(desc(dailyStats.date));
+    let whereConditions = [eq(dailyStats.campaignId, campaignId)];
     
     if (startDate && endDate) {
-      dailyStatsQuery = dailyStatsQuery.where(
-        and(
-          gte(dailyStats.date, new Date(startDate as string)),
-          sql`${dailyStats.date} <= ${new Date(endDate as string)}`
-        )
+      whereConditions.push(
+        gte(dailyStats.date, new Date(startDate as string)),
+        sql`${dailyStats.date} <= ${new Date(endDate as string)}`
       );
     }
     
-    const stats = await dailyStatsQuery.limit(30);
+    const stats = await db
+      .select()
+      .from(dailyStats)
+      .where(and(...whereConditions))
+      .orderBy(desc(dailyStats.date))
+      .limit(30);
     
     // حساب المقاييس الإجمالية
     const totalImpressions = stats.reduce((sum, s) => sum + (s.impressions || 0), 0);
@@ -1460,11 +1459,17 @@ router.get("/campaigns/:id/ai-recommendations", requireAdvertiser, async (req, r
         newRecommendations.push({
           campaignId,
           type: "optimization",
-          title: "تحسين معدل النقر (CTR)",
-          description: "معدل النقر الحالي أقل من المتوسط. قم بتحديث نص الإعلان والصور لجعلها أكثر جاذبية.",
+          message: "تحسين معدل النقر (CTR): معدل النقر الحالي أقل من المتوسط. قم بتحديث نص الإعلان والصور لجعلها أكثر جاذبية.",
           priority: "high",
-          expectedImpact: 25,
-          implementationSteps: ["تحليل الإعلانات ذات الأداء الأفضل", "تحديث النصوص الإعلانية", "اختبار صور جديدة"]
+          recommendation: {
+            action: "optimize_ctr",
+            currentValue: campaignStats.avgCtr,
+            suggestedValue: 2.0,
+            reason: "معدل النقر الحالي أقل من المتوسط",
+            expectedImpact: "زيادة 25% في النقرات",
+            implementationSteps: ["تحليل الإعلانات ذات الأداء الأفضل", "تحديث النصوص الإعلانية", "اختبار صور جديدة"]
+          },
+          confidence: 7500
         });
       }
       
@@ -1474,11 +1479,17 @@ router.get("/campaigns/:id/ai-recommendations", requireAdvertiser, async (req, r
         newRecommendations.push({
           campaignId,
           type: "budget",
-          title: "زيادة الميزانية",
-          description: `تم إنفاق ${Math.round(budgetUsage * 100)}% من الميزانية. فكر في زيادة الميزانية للحفاظ على الزخم.`,
+          message: `زيادة الميزانية: تم إنفاق ${Math.round(budgetUsage * 100)}% من الميزانية. فكر في زيادة الميزانية للحفاظ على الزخم.`,
           priority: "medium",
-          expectedImpact: 20,
-          implementationSteps: ["مراجعة أداء الحملة", "تحديد ميزانية إضافية", "تطبيق الزيادة"]
+          recommendation: {
+            action: "increase_budget",
+            currentValue: campaign.totalBudget,
+            suggestedValue: Number(campaign.totalBudget) * 1.5,
+            reason: `تم إنفاق ${Math.round(budgetUsage * 100)}% من الميزانية`,
+            expectedImpact: "زيادة 20% في الوصول",
+            implementationSteps: ["مراجعة أداء الحملة", "تحديد ميزانية إضافية", "تطبيق الزيادة"]
+          },
+          confidence: 8000
         });
       }
       
@@ -1487,11 +1498,17 @@ router.get("/campaigns/:id/ai-recommendations", requireAdvertiser, async (req, r
         newRecommendations.push({
           campaignId,
           type: "targeting",
-          title: "تحسين استهداف الجمهور",
-          description: "النتائج تشير إلى إمكانية تحسين الاستهداف. قم بمراجعة معايير الجمهور المستهدف.",
+          message: "تحسين استهداف الجمهور: النتائج تشير إلى إمكانية تحسين الاستهداف. قم بمراجعة معايير الجمهور المستهدف.",
           priority: "medium",
-          expectedImpact: 30,
-          implementationSteps: ["تحليل البيانات الديموغرافية", "تعديل معايير الاستهداف", "إنشاء جماهير مشابهة"]
+          recommendation: {
+            action: "refine_targeting",
+            currentValue: campaignStats.avgCtr,
+            suggestedValue: 3.0,
+            reason: "معدل النقر يمكن تحسينه مع استهداف أفضل",
+            expectedImpact: "زيادة 30% في معدل التحويل",
+            implementationSteps: ["تحليل البيانات الديموغرافية", "تعديل معايير الاستهداف", "إنشاء جماهير مشابهة"]
+          },
+          confidence: 6500
         });
       }
       
@@ -1538,8 +1555,9 @@ router.post("/recommendations/:id/apply", requireAdvertiser, async (req, res) =>
     const [updated] = await db
       .update(aiRecommendations)
       .set({
-        status: "applied",
-        appliedAt: new Date()
+        isApplied: true,
+        appliedAt: new Date(),
+        appliedBy: userId
       })
       .where(eq(aiRecommendations.id, recommendationId))
       .returning();
@@ -1551,8 +1569,8 @@ router.post("/recommendations/:id/apply", requireAdvertiser, async (req, res) =>
       entityId: recommendationId,
       action: "apply",
       changes: {
-        before: { status: recommendation.status },
-        after: { status: "applied" }
+        before: { isApplied: recommendation.isApplied },
+        after: { isApplied: true }
       },
       ipAddress: req.ip,
       userAgent: req.get("user-agent")
@@ -1584,7 +1602,7 @@ router.post("/rtb/bid-request", async (req, res) => {
       .from(inventorySlots)
       .where(and(
         eq(inventorySlots.id, slotId),
-        eq(inventorySlots.status, "active")
+        eq(inventorySlots.isActive, true)
       ))
       .limit(1);
     
@@ -1671,12 +1689,14 @@ router.post("/rtb/bid-request", async (req, res) => {
     // تسجيل الظهور
     await db.insert(impressions).values({
       campaignId: winner!.campaignId,
-      adGroupId: winner!.creative.adGroupId,
       creativeId: winner!.creative.id,
-      userId: userContext?.userId || null,
-      deviceType: userContext?.deviceType || "desktop",
-      location: userContext?.location || null,
-      cost: winner!.bidAmount
+      slotId: slotId,
+      device: userContext?.deviceType || "desktop",
+      country: userContext?.country || "SA",
+      pageUrl: pageContext?.url || null,
+      referrer: pageContext?.referrer || null,
+      userAgent: req.get("user-agent") || null,
+      ipAddress: req.ip || null
     });
     
     res.json({
@@ -2976,7 +2996,15 @@ router.post("/track/click/:impressionId", async (req, res) => {
     // Create click record
     await db.insert(clicks).values({
       impressionId,
-      clickedAt: new Date(),
+      creativeId: impression.creativeId,
+      campaignId: impression.campaignId,
+      slotId: impression.slotId,
+      device: impression.device,
+      country: impression.country,
+      pageUrl: impression.pageUrl,
+      referrer: impression.referrer,
+      userAgent: impression.userAgent,
+      ipAddress: impression.ipAddress
     });
     
     // Update daily stats
