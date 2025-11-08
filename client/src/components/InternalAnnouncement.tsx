@@ -3,6 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +25,7 @@ export function InternalAnnouncement() {
   const [location, navigate] = useLocation();
   const [trackedImpressions, setTrackedImpressions] = useState<Set<string>>(new Set());
   const [trackedUniqueViews, setTrackedUniqueViews] = useState<Set<string>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const { data: announcements = [] } = useQuery<Announcement[]>({
     queryKey: ['/api/announcements/active'],
@@ -92,6 +95,18 @@ export function InternalAnnouncement() {
     }
   };
 
+  const toggleExpanded = (id: string) => {
+    setExpandedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   const getPriorityConfig = (priority: string) => {
     const configs: Record<string, { bg: string; border: string; text: string; icon: string }> = {
       critical: {
@@ -153,43 +168,83 @@ export function InternalAnnouncement() {
       {visibleAnnouncements.map((announcement) => {
         const config = getPriorityConfig(announcement.priority);
         const Icon = getIcon(announcement.iconName);
+        const isExpanded = expandedIds.has(announcement.id);
 
         return (
-          <div
+          <Collapsible
             key={announcement.id}
-            className={cn(
-              "w-full border-b-2 transition-all duration-300",
-              config.bg,
-              config.border
-            )}
-            data-testid={`banner-announcement-${announcement.id}`}
+            open={isExpanded}
+            onOpenChange={() => toggleExpanded(announcement.id)}
           >
-            <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center gap-3">
-                {Icon && (
-                  <div className={cn("flex-shrink-0", config.icon)}>
-                    <Icon className="h-5 w-5" />
+            <div
+              className={cn(
+                "w-full border-b-2 transition-all duration-300",
+                config.bg,
+                config.border
+              )}
+              data-testid={`banner-announcement-${announcement.id}`}
+            >
+              <div className="container mx-auto px-4 py-3">
+                <div className="flex items-center gap-3">
+                  {Icon && (
+                    <div className={cn("flex-shrink-0", config.icon)}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                  )}
+                  
+                  <div className="flex-1">
+                    <p className={cn("text-sm font-bold", config.text)}>
+                      {announcement.title}
+                    </p>
                   </div>
-                )}
-                
-                <div className="flex-1">
-                  <p className={cn("text-sm font-bold", config.text)}>
-                    {announcement.title}
-                  </p>
+                  
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-shrink-0"
+                      data-testid={`button-toggle-${announcement.id}`}
+                    >
+                      <ChevronDown 
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          isExpanded && "rotate-180"
+                        )}
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/dashboard/announcements/${announcement.id}`)}
+                    className="flex-shrink-0"
+                    data-testid={`button-view-details-${announcement.id}`}
+                  >
+                    عرض التفاصيل
+                  </Button>
                 </div>
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(`/dashboard/announcements/${announcement.id}`)}
-                  className="flex-shrink-0"
-                  data-testid={`button-view-details-${announcement.id}`}
-                >
-                  عرض التفاصيل
-                </Button>
+
+                <CollapsibleContent className="mt-3">
+                  <div className={cn("pr-8 text-sm", config.text)}>
+                    <p className="whitespace-pre-wrap">{announcement.message}</p>
+                    
+                    {announcement.actionButtonUrl && announcement.actionButtonLabel && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleActionClick(announcement)}
+                        className="mt-3"
+                        data-testid={`button-action-${announcement.id}`}
+                      >
+                        {announcement.actionButtonLabel}
+                      </Button>
+                    )}
+                  </div>
+                </CollapsibleContent>
               </div>
             </div>
-          </div>
+          </Collapsible>
         );
       })}
     </div>
