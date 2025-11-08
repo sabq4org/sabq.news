@@ -6,6 +6,7 @@ import {
   adGroups, 
   creatives,
   inventorySlots,
+  adCreativePlacements,
   impressions,
   clicks,
   conversions,
@@ -17,7 +18,8 @@ import {
   insertCampaignSchema,
   insertAdGroupSchema,
   insertCreativeSchema,
-  insertInventorySlotSchema
+  insertInventorySlotSchema,
+  insertAdCreativePlacementSchema
 } from "@shared/schema";
 import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
 import type { 
@@ -2276,6 +2278,530 @@ router.delete("/creatives/:id", requireAdvertiser, async (req, res) => {
   } catch (error) {
     console.error("[Ads API] خطأ في حذف البنر:", error);
     res.status(500).json({ error: "حدث خطأ في الحذف" });
+  }
+});
+
+// ============================================================
+// AD CREATIVE PLACEMENTS - ربط البنرات بأماكن العرض
+// ============================================================
+
+// GET /api/ads/campaigns/:campaignId/placements - List all placements for campaign
+router.get("/campaigns/:campaignId/placements", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const campaignId = req.params.campaignId;
+    
+    // التحقق من وجود الحملة
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    // التحقق من الصلاحية (المشرف يرى كل شيء، المعلن يرى حملاته فقط)
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية الوصول لهذه الحملة" });
+      }
+    }
+    
+    // جلب جميع Placements مع تفاصيل Creatives و InventorySlots
+    const placements = await db
+      .select({
+        id: adCreativePlacements.id,
+        campaignId: adCreativePlacements.campaignId,
+        adGroupId: adCreativePlacements.adGroupId,
+        creativeId: adCreativePlacements.creativeId,
+        inventorySlotId: adCreativePlacements.inventorySlotId,
+        priority: adCreativePlacements.priority,
+        startDate: adCreativePlacements.startDate,
+        endDate: adCreativePlacements.endDate,
+        status: adCreativePlacements.status,
+        createdAt: adCreativePlacements.createdAt,
+        updatedAt: adCreativePlacements.updatedAt,
+        creative: {
+          id: creatives.id,
+          name: creatives.name,
+          type: creatives.type,
+          content: creatives.content,
+          size: creatives.size,
+          status: creatives.status,
+        },
+        inventorySlot: {
+          id: inventorySlots.id,
+          name: inventorySlots.name,
+          location: inventorySlots.location,
+          size: inventorySlots.size,
+          pageType: inventorySlots.pageType,
+          isActive: inventorySlots.isActive,
+        }
+      })
+      .from(adCreativePlacements)
+      .innerJoin(creatives, eq(adCreativePlacements.creativeId, creatives.id))
+      .innerJoin(inventorySlots, eq(adCreativePlacements.inventorySlotId, inventorySlots.id))
+      .where(eq(adCreativePlacements.campaignId, campaignId))
+      .orderBy(desc(adCreativePlacements.createdAt));
+    
+    res.json(placements);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب placements:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// POST /api/ads/campaigns/:campaignId/placements - Create placement
+router.post("/campaigns/:campaignId/placements", requireAdvertiser, requireAdmin, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const campaignId = req.params.campaignId;
+    
+    // التحقق من وجود الحملة
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    // التحقق من البيانات
+    const validation = insertAdCreativePlacementSchema.safeParse({
+      ...req.body,
+      campaignId
+    });
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: "بيانات غير صحيحة", 
+        details: validation.error.errors 
+      });
+    }
+    
+    const data = validation.data;
+    
+    // التحقق من وجود Creative
+    const [creative] = await db
+      .select()
+      .from(creatives)
+      .where(eq(creatives.id, data.creativeId))
+      .limit(1);
+    
+    if (!creative) {
+      return res.status(404).json({ error: "البنر غير موجود" });
+    }
+    
+    // التحقق من وجود InventorySlot
+    const [inventorySlot] = await db
+      .select()
+      .from(inventorySlots)
+      .where(eq(inventorySlots.id, data.inventorySlotId))
+      .limit(1);
+    
+    if (!inventorySlot) {
+      return res.status(404).json({ error: "مكان العرض غير موجود" });
+    }
+    
+    // Size compatibility check
+    if (creative.size !== inventorySlot.size) {
+      return res.status(400).json({ 
+        error: `حجم البنر (${creative.size}) لا يتطابق مع حجم مكان العرض (${inventorySlot.size})`,
+        details: {
+          creativeSize: creative.size,
+          inventorySlotSize: inventorySlot.size
+        }
+      });
+    }
+    
+    // Check for overlapping date ranges manually
+    const existingPlacements = await db
+      .select()
+      .from(adCreativePlacements)
+      .where(and(
+        eq(adCreativePlacements.creativeId, data.creativeId),
+        eq(adCreativePlacements.inventorySlotId, data.inventorySlotId)
+      ));
+    
+    // Check for actual date range overlap
+    for (const existing of existingPlacements) {
+      const newStart = new Date(data.startDate);
+      const newEnd = data.endDate ? new Date(data.endDate) : null;
+      const existingStart = new Date(existing.startDate);
+      const existingEnd = existing.endDate ? new Date(existing.endDate) : null;
+      
+      // Two ranges overlap if: (start1 <= end2) AND (end1 >= start2)
+      // Handle infinite ranges (no endDate)
+      let overlaps = false;
+      if (!newEnd || !existingEnd) {
+        // If either range has no end date, they overlap if start dates conflict
+        overlaps = true;
+      } else {
+        overlaps = (newStart <= existingEnd) && (newEnd >= existingStart);
+      }
+      
+      if (overlaps) {
+        return res.status(409).json({ 
+          error: "يوجد تداخل في جدولة هذا البنر في نفس المكان" 
+        });
+      }
+    }
+    
+    try {
+      // إنشاء Placement
+      const [placement] = await db
+        .insert(adCreativePlacements)
+        .values(data as typeof adCreativePlacements.$inferInsert)
+        .returning();
+      
+      // تسجيل في audit log
+      await db.insert(auditLogs).values({
+        userId,
+        entityType: "ad_creative_placement",
+        entityId: placement.id,
+        action: "create",
+        changes: { after: placement },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+      });
+      
+      res.json(placement);
+    } catch (error: any) {
+      // Catch unique violation errors (PostgreSQL error code 23505)
+      // Database-level EXCLUSION constraint prevents race conditions
+      if (error.code === "23505") {
+        return res.status(409).json({ 
+          error: "يوجد تداخل في جدولة هذا البنر في نفس المكان" 
+        });
+      }
+      throw error; // Re-throw other errors
+    }
+  } catch (error) {
+    console.error("[Ads API] خطأ في إنشاء placement:", error);
+    res.status(500).json({ error: "حدث خطأ في إنشاء placement" });
+  }
+});
+
+// PUT /api/ads/campaigns/:campaignId/placements/:placementId - Update placement
+router.put("/campaigns/:campaignId/placements/:placementId", requireAdvertiser, requireAdmin, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const campaignId = req.params.campaignId;
+    const placementId = req.params.placementId;
+    
+    // جلب Placement الحالي
+    const [existingPlacement] = await db
+      .select()
+      .from(adCreativePlacements)
+      .where(eq(adCreativePlacements.id, placementId))
+      .limit(1);
+    
+    if (!existingPlacement) {
+      return res.status(404).json({ error: "Placement غير موجود" });
+    }
+    
+    // التحقق من الملكية (placement.campaignId === campaignId)
+    if (existingPlacement.campaignId !== campaignId) {
+      return res.status(403).json({ error: "Placement لا ينتمي لهذه الحملة" });
+    }
+    
+    // التحقق من البيانات
+    const validation = insertAdCreativePlacementSchema.safeParse({
+      ...req.body,
+      campaignId
+    });
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: "بيانات غير صحيحة", 
+        details: validation.error.errors 
+      });
+    }
+    
+    const data = validation.data;
+    
+    // إذا تم تغيير Creative أو InventorySlot، التحقق من التطابق
+    if (data.creativeId !== existingPlacement.creativeId || 
+        data.inventorySlotId !== existingPlacement.inventorySlotId) {
+      
+      const [creative] = await db
+        .select()
+        .from(creatives)
+        .where(eq(creatives.id, data.creativeId))
+        .limit(1);
+      
+      if (!creative) {
+        return res.status(404).json({ error: "البنر غير موجود" });
+      }
+      
+      const [inventorySlot] = await db
+        .select()
+        .from(inventorySlots)
+        .where(eq(inventorySlots.id, data.inventorySlotId))
+        .limit(1);
+      
+      if (!inventorySlot) {
+        return res.status(404).json({ error: "مكان العرض غير موجود" });
+      }
+      
+      // Size compatibility check
+      if (creative.size !== inventorySlot.size) {
+        return res.status(400).json({ 
+          error: `حجم البنر (${creative.size}) لا يتطابق مع حجم مكان العرض (${inventorySlot.size})`,
+          details: {
+            creativeSize: creative.size,
+            inventorySlotSize: inventorySlot.size
+          }
+        });
+      }
+    }
+    
+    // Check for overlapping date ranges with OTHER placements (exclude current placement)
+    const otherPlacements = await db
+      .select()
+      .from(adCreativePlacements)
+      .where(and(
+        eq(adCreativePlacements.creativeId, data.creativeId),
+        eq(adCreativePlacements.inventorySlotId, data.inventorySlotId),
+        sql`${adCreativePlacements.id} != ${placementId}` // Exclude current placement
+      ));
+    
+    // Check for actual date range overlap with other placements
+    for (const other of otherPlacements) {
+      const newStart = new Date(data.startDate);
+      const newEnd = data.endDate ? new Date(data.endDate) : null;
+      const otherStart = new Date(other.startDate);
+      const otherEnd = other.endDate ? new Date(other.endDate) : null;
+      
+      // Two ranges overlap if: (start1 <= end2) AND (end1 >= start2)
+      // Handle infinite ranges (no endDate)
+      let overlaps = false;
+      if (!newEnd || !otherEnd) {
+        // If either range has no end date, they overlap if start dates conflict
+        overlaps = true;
+      } else {
+        overlaps = (newStart <= otherEnd) && (newEnd >= otherStart);
+      }
+      
+      if (overlaps) {
+        return res.status(409).json({ 
+          error: "يوجد تداخل في جدولة هذا البنر في نفس المكان" 
+        });
+      }
+    }
+    
+    try {
+      // Use DELETE/INSERT pattern to avoid unique constraint conflicts
+      // This approach ensures the unique index on (creativeId, inventorySlotId, startDate) works correctly
+      await db.transaction(async (tx) => {
+        // 1. Delete existing placement
+        await tx
+          .delete(adCreativePlacements)
+          .where(eq(adCreativePlacements.id, placementId));
+        
+        // 2. Insert new placement with updated data (keep same ID for audit trail)
+        await tx
+          .insert(adCreativePlacements)
+          .values({
+            id: placementId, // Keep same ID
+            ...data,
+            updatedAt: new Date()
+          } as typeof adCreativePlacements.$inferInsert);
+      });
+      
+      // Get the updated placement
+      const [updatedPlacement] = await db
+        .select()
+        .from(adCreativePlacements)
+        .where(eq(adCreativePlacements.id, placementId))
+        .limit(1);
+      
+      // تسجيل في audit log
+      await db.insert(auditLogs).values({
+        userId,
+        entityType: "ad_creative_placement",
+        entityId: placementId,
+        action: "update",
+        changes: {
+          before: existingPlacement,
+          after: updatedPlacement
+        },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+      });
+      
+      res.json(updatedPlacement);
+    } catch (error: any) {
+      // Catch unique violation errors (PostgreSQL error code 23505)
+      // Database-level EXCLUSION constraint prevents race conditions
+      if (error.code === "23505") {
+        return res.status(409).json({ 
+          error: "يوجد تداخل في جدولة هذا البنر في نفس المكان" 
+        });
+      }
+      throw error; // Re-throw other errors
+    }
+  } catch (error) {
+    console.error("[Ads API] خطأ في تحديث placement:", error);
+    res.status(500).json({ error: "حدث خطأ في تحديث placement" });
+  }
+});
+
+// DELETE /api/ads/campaigns/:campaignId/placements/:placementId - Delete placement
+router.delete("/campaigns/:campaignId/placements/:placementId", requireAdvertiser, requireAdmin, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const campaignId = req.params.campaignId;
+    const placementId = req.params.placementId;
+    
+    // جلب Placement
+    const [placement] = await db
+      .select()
+      .from(adCreativePlacements)
+      .where(eq(adCreativePlacements.id, placementId))
+      .limit(1);
+    
+    if (!placement) {
+      return res.status(404).json({ error: "Placement غير موجود" });
+    }
+    
+    // التحقق من الملكية
+    if (placement.campaignId !== campaignId) {
+      return res.status(403).json({ error: "Placement لا ينتمي لهذه الحملة" });
+    }
+    
+    // حذف Placement
+    await db
+      .delete(adCreativePlacements)
+      .where(eq(adCreativePlacements.id, placementId));
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "ad_creative_placement",
+      entityId: placementId,
+      action: "delete",
+      changes: { before: placement },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json({ message: "تم حذف placement بنجاح" });
+  } catch (error) {
+    console.error("[Ads API] خطأ في حذف placement:", error);
+    res.status(500).json({ error: "حدث خطأ في حذف placement" });
+  }
+});
+
+// GET /api/ads/creatives/:creativeId/placements - Find where creative is used
+router.get("/creatives/:creativeId/placements", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const creativeId = req.params.creativeId;
+    
+    // التحقق من وجود Creative
+    const [creative] = await db
+      .select()
+      .from(creatives)
+      .where(eq(creatives.id, creativeId))
+      .limit(1);
+    
+    if (!creative) {
+      return res.status(404).json({ error: "البنر غير موجود" });
+    }
+    
+    // التحقق من الصلاحية
+    if (!["admin", "superadmin"].includes(userRole)) {
+      // جلب AdGroup للـ Creative
+      const [adGroup] = await db
+        .select()
+        .from(adGroups)
+        .where(eq(adGroups.id, creative.adGroupId))
+        .limit(1);
+      
+      if (!adGroup) {
+        return res.status(404).json({ error: "المجموعة الإعلانية غير موجودة" });
+      }
+      
+      // جلب Campaign
+      const [campaign] = await db
+        .select()
+        .from(campaigns)
+        .where(eq(campaigns.id, adGroup.campaignId))
+        .limit(1);
+      
+      if (!campaign) {
+        return res.status(404).json({ error: "الحملة غير موجودة" });
+      }
+      
+      // التحقق من ملكية الحساب
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية الوصول لهذا البنر" });
+      }
+    }
+    
+    // جلب جميع Placements لهذا Creative مع تفاصيل InventorySlots و Campaigns
+    const placements = await db
+      .select({
+        id: adCreativePlacements.id,
+        campaignId: adCreativePlacements.campaignId,
+        adGroupId: adCreativePlacements.adGroupId,
+        creativeId: adCreativePlacements.creativeId,
+        inventorySlotId: adCreativePlacements.inventorySlotId,
+        priority: adCreativePlacements.priority,
+        startDate: adCreativePlacements.startDate,
+        endDate: adCreativePlacements.endDate,
+        status: adCreativePlacements.status,
+        createdAt: adCreativePlacements.createdAt,
+        updatedAt: adCreativePlacements.updatedAt,
+        campaign: {
+          id: campaigns.id,
+          name: campaigns.name,
+          status: campaigns.status,
+        },
+        inventorySlot: {
+          id: inventorySlots.id,
+          name: inventorySlots.name,
+          location: inventorySlots.location,
+          size: inventorySlots.size,
+          pageType: inventorySlots.pageType,
+          isActive: inventorySlots.isActive,
+        }
+      })
+      .from(adCreativePlacements)
+      .innerJoin(campaigns, eq(adCreativePlacements.campaignId, campaigns.id))
+      .innerJoin(inventorySlots, eq(adCreativePlacements.inventorySlotId, inventorySlots.id))
+      .where(eq(adCreativePlacements.creativeId, creativeId))
+      .orderBy(desc(adCreativePlacements.createdAt));
+    
+    res.json(placements);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب placements للبنر:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
   }
 });
 

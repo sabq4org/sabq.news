@@ -210,6 +210,12 @@ export default function CampaignDetail() {
     enabled: !!campaignId && activeTab === "creatives",
   });
 
+  // Fetch placements
+  const { data: placements = [], isLoading: placementsLoading } = useQuery<any[]>({
+    queryKey: ["/api/ads/campaigns", campaignId, "placements"],
+    enabled: !!campaignId && activeTab === "placements",
+  });
+
   // Delete creative mutation
   const deleteMutation = useMutation({
     mutationFn: async (creativeId: string) => {
@@ -421,6 +427,7 @@ export default function CampaignDetail() {
           <TabsList>
             <TabsTrigger value="overview" data-testid="tab-overview">نظرة عامة</TabsTrigger>
             <TabsTrigger value="adGroups" data-testid="tab-ad-groups">المجموعات الإعلانية</TabsTrigger>
+            <TabsTrigger value="placements" data-testid="tab-placements">البنرات</TabsTrigger>
             <TabsTrigger value="creatives" data-testid="tab-creatives">الإعلانات</TabsTrigger>
             <TabsTrigger value="budget" data-testid="tab-budget">الميزانية</TabsTrigger>
           </TabsList>
@@ -737,6 +744,102 @@ export default function CampaignDetail() {
                 ) : (
                   <div className="flex items-center justify-center py-12 text-muted-foreground">
                     لا يوجد سجل للميزانية
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Placements Tab */}
+          <TabsContent value="placements" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <CardTitle>البنرات (أماكن العرض)</CardTitle>
+                    <CardDescription>
+                      إدارة ربط البنرات بأماكن العرض
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => setLocation(`/dashboard/ads/campaigns/${campaignId}/placements`)}
+                    data-testid="button-manage-placements"
+                  >
+                    <LayoutGrid className="h-4 w-4 ml-2" />
+                    إدارة البنرات
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {placementsLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : placements.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium">إجمالي الروابط</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold" data-testid="text-placements-total">
+                            {placements.length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium">الروابط النشطة</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-green-600" data-testid="text-placements-active">
+                            {placements.filter((p: any) => p.status === "active").length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium">الروابط المجدولة</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-blue-600" data-testid="text-placements-scheduled">
+                            {placements.filter((p: any) => p.status === "scheduled").length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        يوجد {placements.length} ربط للبنرات في هذه الحملة
+                      </p>
+                      <Button
+                        onClick={() => setLocation(`/dashboard/ads/campaigns/${campaignId}/placements`)}
+                        variant="outline"
+                      >
+                        عرض جميع الروابط
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <LayoutGrid className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold mb-2">لا توجد روابط بنرات</h3>
+                    <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                      قم بربط البنرات بأماكن العرض لبدء عرض الإعلانات
+                    </p>
+                    <Button
+                      onClick={() => setLocation(`/dashboard/ads/campaigns/${campaignId}/placements`)}
+                      data-testid="button-create-first-placement"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إنشاء أول ربط
+                    </Button>
                   </div>
                 )}
               </CardContent>

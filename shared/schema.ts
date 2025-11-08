@@ -4568,6 +4568,30 @@ export const inventorySlots = pgTable("inventory_slots", {
   index("idx_inventory_slots_active").on(table.isActive),
 ]);
 
+// Ad Creative Placements - ربط البنرات بأماكن العرض
+export const adCreativePlacements = pgTable("ad_creative_placements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }).notNull(),
+  adGroupId: varchar("ad_group_id").references(() => adGroups.id, { onDelete: "cascade" }), // اختياري للاستهداف المتقدم
+  creativeId: varchar("creative_id").references(() => creatives.id, { onDelete: "cascade" }).notNull(),
+  inventorySlotId: varchar("inventory_slot_id").references(() => inventorySlots.id, { onDelete: "cascade" }).notNull(),
+  
+  // الجدولة والأولوية
+  priority: integer("priority").default(5).notNull(), // 1-10 (أعلى رقم = أولوية أعلى)
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  status: text("status").default("scheduled").notNull(), // scheduled, active, paused, expired
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_placements_campaign").on(table.campaignId),
+  index("idx_placements_creative").on(table.creativeId),
+  index("idx_placements_slot").on(table.inventorySlotId),
+  index("idx_placements_status").on(table.status),
+  index("idx_placements_dates").on(table.startDate, table.endDate),
+]);
+
 // Impressions - المشاهدات
 export const impressions = pgTable("impressions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -4827,6 +4851,23 @@ export const insertInventorySlotSchema = createInsertSchema(inventorySlots).omit
   size: z.string().min(1, "الحجم مطلوب"),
 });
 
+export const insertAdCreativePlacementSchema = createInsertSchema(adCreativePlacements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  campaignId: z.string().uuid("معرف الحملة غير صحيح"),
+  creativeId: z.string().uuid("معرف البنر غير صحيح"),
+  inventorySlotId: z.string().uuid("معرف مكان العرض غير صحيح"),
+  priority: z.coerce.number().int().min(1, "الأولوية يجب أن تكون 1 على الأقل").max(10, "الأولوية لا يمكن أن تزيد عن 10").default(5),
+  startDate: z.coerce.date({ message: "تاريخ البداية مطلوب" }),
+  endDate: z.coerce.date({ message: "تاريخ النهاية غير صحيح" }).optional().nullable(),
+  status: z.enum(["scheduled", "active", "paused", "expired"], { message: "الحالة غير صحيحة" }).default("scheduled"),
+}).refine((data) => !data.endDate || data.endDate > data.startDate, {
+  message: "تاريخ النهاية يجب أن يكون بعد تاريخ البداية",
+  path: ["endDate"],
+});
+
 // ============================================
 // ADVERTISING SYSTEM - SELECT TYPES
 // ============================================
@@ -4845,6 +4886,9 @@ export type InsertCreative = z.infer<typeof insertCreativeSchema>;
 
 export type InventorySlot = typeof inventorySlots.$inferSelect;
 export type InsertInventorySlot = z.infer<typeof insertInventorySlotSchema>;
+
+export type AdCreativePlacement = typeof adCreativePlacements.$inferSelect;
+export type InsertAdCreativePlacement = z.infer<typeof insertAdCreativePlacementSchema>;
 
 export type Impression = typeof impressions.$inferSelect;
 export type Click = typeof clicks.$inferSelect;
