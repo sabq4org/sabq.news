@@ -18,7 +18,7 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey(), // Keep existing structure - no default
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash"), // bcrypt hashed password
+  passwordHash: text("password_hash"), // bcrypt hashed password (optional for OAuth users)
   firstName: text("first_name"),
   lastName: text("last_name"),
   firstNameEn: text("first_name_en"), // English first name (optional)
@@ -29,6 +29,11 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("reader"),
   status: text("status").default("active").notNull(), // active, pending, suspended, banned, locked, deleted
   isProfileComplete: boolean("is_profile_complete").default(false).notNull(),
+  
+  // OAuth fields
+  authProvider: text("auth_provider").default("local").notNull(), // local, google, apple
+  googleId: text("google_id").unique(), // Google OAuth ID
+  appleId: text("apple_id").unique(), // Apple OAuth ID
   
   // Verification fields
   emailVerified: boolean("email_verified").default(false).notNull(),
