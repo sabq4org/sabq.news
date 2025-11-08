@@ -3083,6 +3083,602 @@ export const insertEnQuadCategoriesSettingsSchema = createInsertSchema(enQuadCat
 export type InsertEnQuadCategoriesSettings = z.infer<typeof insertEnQuadCategoriesSettingsSchema>;
 
 // ============================================
+// Chat System Tables
+// ============================================
+
+// Chat Channels - القنوات/المحادثات
+export const chatChannels = pgTable("chat_channels", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // 'direct', 'group', 'channel'
+  name: text("name"), // nullable for direct messages
+  description: text("description"),
+  category: text("category"), // 'desk', 'department', 'team', 'custom'
+  departmentType: text("department_type"), // 'local', 'world', 'sports', etc.
+  isPrivate: boolean("is_private").default(true).notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  avatarUrl: text("avatar_url"),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  settings: jsonb("settings").$type<{
+    slowMode?: number; // seconds between messages
+    retention?: number; // days to keep messages
+    allowFileSharing?: boolean;
+    allowVoiceNotes?: boolean;
+    maxMembers?: number;
+  }>(),
+  metadata: jsonb("metadata").$type<{
+    pinnedCount?: number;
+    lastActivity?: string;
+    memberCount?: number;
+    recipientUserId?: string; // For direct messages
+  }>(),
+  status: text("status").notNull().default("active"), // 'active', 'archived', 'deleted'
+  archivedAt: timestamp("archived_at"),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_channels_type_idx").on(table.type),
+  index("chat_channels_status_idx").on(table.status),
+  index("chat_channels_created_by_idx").on(table.createdBy),
+  index("chat_channels_category_idx").on(table.category),
+]);
+
+// Chat Members - أعضاء القنوات
+export const chatMembers = pgTable("chat_members", {
+  id: varchar("id").default(sql`gen_random_uuid()`).notNull(),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  role: text("role").notNull().default("member"), // 'owner', 'admin', 'moderator', 'member'
+  canPost: boolean("can_post").default(true).notNull(),
+  canInvite: boolean("can_invite").default(false).notNull(),
+  isMuted: boolean("is_muted").default(false).notNull(),
+  mutedUntil: timestamp("muted_until"),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  lastReadAt: timestamp("last_read_at"),
+  lastReadMessageId: varchar("last_read_message_id"),
+  notificationPreference: text("notification_preference").default("all").notNull(), // 'all', 'mentions', 'none'
+}, (table) => ({
+  pk: primaryKey({ columns: [table.channelId, table.userId] }),
+  channelIdx: index("chat_members_channel_idx").on(table.channelId),
+  userIdx: index("chat_members_user_idx").on(table.userId),
+  roleIdx: index("chat_members_role_idx").on(table.role),
+}));
+
+// Chat Messages - الرسائل
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  contentType: text("content_type").notNull().default("text"), // 'text', 'rich_text', 'system'
+  parentMessageId: varchar("parent_message_id"), // self-reference for threads
+  isEdited: boolean("is_edited").default(false).notNull(),
+  editedAt: timestamp("edited_at"),
+  isDeleted: boolean("is_deleted").default(false).notNull(),
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: varchar("deleted_by").references(() => users.id),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  pinnedBy: varchar("pinned_by").references(() => users.id),
+  pinnedAt: timestamp("pinned_at"),
+  isAnnouncement: boolean("is_announcement").default(false).notNull(),
+  scheduledFor: timestamp("scheduled_for"),
+  metadata: jsonb("metadata").$type<{
+    replyCount?: number;
+    reactionCount?: number;
+    editHistory?: Array<{ content: string; editedAt: string }>;
+    aiGenerated?: boolean;
+    toxicityScore?: number;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_messages_channel_created_idx").on(table.channelId, table.createdAt),
+  index("chat_messages_user_idx").on(table.userId),
+  index("chat_messages_parent_idx").on(table.parentMessageId),
+  index("chat_messages_pinned_idx").on(table.isPinned),
+  index("chat_messages_scheduled_idx").on(table.scheduledFor),
+]);
+
+// Chat Attachments - المرفقات
+export const chatAttachments = pgTable("chat_attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(), // 'image', 'video', 'audio', 'voice_note', 'document', 'file'
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  duration: integer("duration"), // for audio/video in seconds
+  metadata: jsonb("metadata").$type<{
+    width?: number;
+    height?: number;
+    thumbnail?: string;
+  }>(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_attachments_message_idx").on(table.messageId),
+  index("chat_attachments_type_idx").on(table.type),
+]);
+
+// Chat Reactions - التفاعلات
+export const chatReactions = pgTable("chat_reactions", {
+  id: varchar("id").default(sql`gen_random_uuid()`).notNull(),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  emoji: text("emoji").notNull(), // '👍', '❤️', '✅', etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.messageId, table.userId, table.emoji] }),
+  messageIdx: index("chat_reactions_message_idx").on(table.messageId),
+  userIdx: index("chat_reactions_user_idx").on(table.userId),
+}));
+
+// Chat Mentions - الإشارات
+export const chatMentions = pgTable("chat_mentions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "cascade" }).notNull(),
+  mentionedUserId: varchar("mentioned_user_id").references(() => users.id).notNull(),
+  mentionType: text("mention_type").notNull().default("user"), // 'user', 'channel', 'all'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_mentions_mentioned_user_created_idx").on(table.mentionedUserId, table.createdAt),
+  index("chat_mentions_message_idx").on(table.messageId),
+]);
+
+// Chat Read Receipts - إيصالات القراءة
+export const chatReadReceipts = pgTable("chat_read_receipts", {
+  id: varchar("id").default(sql`gen_random_uuid()`).notNull(),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  readAt: timestamp("read_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.messageId, table.userId] }),
+  messageIdx: index("chat_read_receipts_message_idx").on(table.messageId),
+  userIdx: index("chat_read_receipts_user_idx").on(table.userId),
+}));
+
+// Chat Pinned Messages - الرسائل المثبتة
+export const chatPinnedMessages = pgTable("chat_pinned_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "cascade" }).notNull(),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "cascade" }).notNull(),
+  pinnedBy: varchar("pinned_by").references(() => users.id).notNull(),
+  pinnedAt: timestamp("pinned_at").defaultNow().notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+}, (table) => [
+  index("chat_pinned_messages_channel_idx").on(table.channelId),
+  index("chat_pinned_messages_message_idx").on(table.messageId),
+  uniqueIndex("chat_pinned_messages_unique_idx").on(table.channelId, table.messageId),
+]);
+
+// Chat Moderation Logs - سجلات الإشراف
+export const chatModerationLogs = pgTable("chat_moderation_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "set null" }),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "set null" }),
+  userId: varchar("user_id").references(() => users.id).notNull(), // المشرف
+  targetUserId: varchar("target_user_id").references(() => users.id), // المستهدف
+  action: text("action").notNull(), // 'delete_message', 'pin', 'unpin', 'mute_user', 'remove_member', 'slow_mode', etc.
+  reason: text("reason"),
+  metadata: jsonb("metadata").$type<{
+    previousValue?: any;
+    newValue?: any;
+    duration?: number;
+    [key: string]: any;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_moderation_logs_channel_idx").on(table.channelId),
+  index("chat_moderation_logs_user_idx").on(table.userId),
+  index("chat_moderation_logs_target_user_idx").on(table.targetUserId),
+  index("chat_moderation_logs_action_idx").on(table.action),
+  index("chat_moderation_logs_created_idx").on(table.createdAt),
+]);
+
+// Chat Retention Policies - سياسات الاحتفاظ
+export const chatRetentionPolicies = pgTable("chat_retention_policies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "cascade" }), // null for global policy
+  retentionDays: integer("retention_days").notNull(),
+  isEnabled: boolean("is_enabled").default(true).notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_retention_policies_channel_idx").on(table.channelId),
+  index("chat_retention_policies_enabled_idx").on(table.isEnabled),
+]);
+
+// Chat Notifications - إشعارات الدردشة
+export const chatNotifications = pgTable("chat_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(), // 'message', 'mention', 'reply', 'reaction'
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  channelId: varchar("channel_id").references(() => chatChannels.id, { onDelete: "set null" }),
+  messageId: varchar("message_id").references(() => chatMessages.id, { onDelete: "set null" }),
+  metadata: jsonb("metadata").$type<{
+    senderName?: string;
+    senderAvatar?: string;
+    emoji?: string;
+    [key: string]: any;
+  }>(),
+  isRead: boolean("is_read").default(false).notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_chat_notifications_user_id").on(table.userId),
+  index("idx_chat_notifications_is_read").on(table.isRead),
+  index("idx_chat_notifications_created_at").on(table.createdAt),
+  index("idx_chat_notifications_user_unread").on(table.userId, table.isRead),
+]);
+
+// ============================================
+// Chat System Relations
+// ============================================
+
+export const chatChannelsRelations = relations(chatChannels, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [chatChannels.createdBy],
+    references: [users.id],
+  }),
+  members: many(chatMembers),
+  messages: many(chatMessages),
+  pinnedMessages: many(chatPinnedMessages),
+  retentionPolicy: one(chatRetentionPolicies, {
+    fields: [chatChannels.id],
+    references: [chatRetentionPolicies.channelId],
+  }),
+}));
+
+export const chatMembersRelations = relations(chatMembers, ({ one }) => ({
+  channel: one(chatChannels, {
+    fields: [chatMembers.channelId],
+    references: [chatChannels.id],
+  }),
+  user: one(users, {
+    fields: [chatMembers.userId],
+    references: [users.id],
+  }),
+  lastReadMessage: one(chatMessages, {
+    fields: [chatMembers.lastReadMessageId],
+    references: [chatMessages.id],
+  }),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one, many }) => ({
+  channel: one(chatChannels, {
+    fields: [chatMessages.channelId],
+    references: [chatChannels.id],
+  }),
+  user: one(users, {
+    fields: [chatMessages.userId],
+    references: [users.id],
+  }),
+  parentMessage: one(chatMessages, {
+    fields: [chatMessages.parentMessageId],
+    references: [chatMessages.id],
+    relationName: "thread",
+  }),
+  replies: many(chatMessages, {
+    relationName: "thread",
+  }),
+  deletedByUser: one(users, {
+    fields: [chatMessages.deletedBy],
+    references: [users.id],
+  }),
+  pinnedByUser: one(users, {
+    fields: [chatMessages.pinnedBy],
+    references: [users.id],
+  }),
+  attachments: many(chatAttachments),
+  reactions: many(chatReactions),
+  mentions: many(chatMentions),
+  readReceipts: many(chatReadReceipts),
+}));
+
+export const chatAttachmentsRelations = relations(chatAttachments, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [chatAttachments.messageId],
+    references: [chatMessages.id],
+  }),
+}));
+
+export const chatReactionsRelations = relations(chatReactions, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [chatReactions.messageId],
+    references: [chatMessages.id],
+  }),
+  user: one(users, {
+    fields: [chatReactions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const chatMentionsRelations = relations(chatMentions, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [chatMentions.messageId],
+    references: [chatMessages.id],
+  }),
+  mentionedUser: one(users, {
+    fields: [chatMentions.mentionedUserId],
+    references: [users.id],
+  }),
+}));
+
+export const chatReadReceiptsRelations = relations(chatReadReceipts, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [chatReadReceipts.messageId],
+    references: [chatMessages.id],
+  }),
+  user: one(users, {
+    fields: [chatReadReceipts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const chatPinnedMessagesRelations = relations(chatPinnedMessages, ({ one }) => ({
+  channel: one(chatChannels, {
+    fields: [chatPinnedMessages.channelId],
+    references: [chatChannels.id],
+  }),
+  message: one(chatMessages, {
+    fields: [chatPinnedMessages.messageId],
+    references: [chatMessages.id],
+  }),
+  pinnedByUser: one(users, {
+    fields: [chatPinnedMessages.pinnedBy],
+    references: [users.id],
+  }),
+}));
+
+export const chatModerationLogsRelations = relations(chatModerationLogs, ({ one }) => ({
+  channel: one(chatChannels, {
+    fields: [chatModerationLogs.channelId],
+    references: [chatChannels.id],
+  }),
+  message: one(chatMessages, {
+    fields: [chatModerationLogs.messageId],
+    references: [chatMessages.id],
+  }),
+  moderator: one(users, {
+    fields: [chatModerationLogs.userId],
+    references: [users.id],
+  }),
+  targetUser: one(users, {
+    fields: [chatModerationLogs.targetUserId],
+    references: [users.id],
+  }),
+}));
+
+export const chatRetentionPoliciesRelations = relations(chatRetentionPolicies, ({ one }) => ({
+  channel: one(chatChannels, {
+    fields: [chatRetentionPolicies.channelId],
+    references: [chatChannels.id],
+  }),
+  createdByUser: one(users, {
+    fields: [chatRetentionPolicies.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const chatNotificationsRelations = relations(chatNotifications, ({ one }) => ({
+  user: one(users, {
+    fields: [chatNotifications.userId],
+    references: [users.id],
+  }),
+  channel: one(chatChannels, {
+    fields: [chatNotifications.channelId],
+    references: [chatChannels.id],
+  }),
+  message: one(chatMessages, {
+    fields: [chatNotifications.messageId],
+    references: [chatMessages.id],
+  }),
+}));
+
+// ============================================
+// Chat System Types
+// ============================================
+
+export type ChatChannel = typeof chatChannels.$inferSelect;
+export type ChatMember = typeof chatMembers.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type ChatAttachment = typeof chatAttachments.$inferSelect;
+export type ChatReaction = typeof chatReactions.$inferSelect;
+export type ChatMention = typeof chatMentions.$inferSelect;
+export type ChatReadReceipt = typeof chatReadReceipts.$inferSelect;
+export type ChatPinnedMessage = typeof chatPinnedMessages.$inferSelect;
+export type ChatModerationLog = typeof chatModerationLogs.$inferSelect;
+export type ChatRetentionPolicy = typeof chatRetentionPolicies.$inferSelect;
+export type ChatNotification = typeof chatNotifications.$inferSelect;
+
+// Extended types with relations
+export type ChatChannelWithDetails = ChatChannel & {
+  creator?: User;
+  members?: ChatMember[];
+  messages?: ChatMessage[];
+  pinnedMessages?: ChatPinnedMessage[];
+  retentionPolicy?: ChatRetentionPolicy;
+};
+
+export type ChatMessageWithDetails = ChatMessage & {
+  channel?: ChatChannel;
+  user?: User;
+  parentMessage?: ChatMessage;
+  replies?: ChatMessage[];
+  attachments?: ChatAttachment[];
+  reactions?: ChatReaction[];
+  mentions?: ChatMention[];
+  readReceipts?: ChatReadReceipt[];
+};
+
+export type ChatMemberWithDetails = ChatMember & {
+  channel?: ChatChannel;
+  user?: User;
+};
+
+// ============================================
+// Chat System Zod Schemas
+// ============================================
+
+export const insertChatChannelSchema = createInsertSchema(chatChannels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  archivedAt: true,
+  deletedAt: true,
+}).extend({
+  type: z.enum(["direct", "group", "channel"]),
+  name: z.string().min(1, "اسم القناة مطلوب").max(100, "اسم القناة يجب ألا يتجاوز 100 حرف").optional(),
+  category: z.enum(["desk", "department", "team", "custom"]).optional(),
+  departmentType: z.enum(["local", "world", "sports", "economy", "technology", "health", "culture", "entertainment"]).optional(),
+  status: z.enum(["active", "archived", "deleted"]).default("active"),
+});
+
+export const updateChatChannelSchema = insertChatChannelSchema.partial();
+
+export const insertChatMemberSchema = createInsertSchema(chatMembers).omit({
+  id: true,
+  joinedAt: true,
+  lastReadAt: true,
+}).extend({
+  role: z.enum(["owner", "admin", "moderator", "member"]).default("member"),
+  notificationPreference: z.enum(["all", "mentions", "none"]).default("all"),
+});
+
+export const updateChatMemberSchema = insertChatMemberSchema.partial().omit({
+  channelId: true,
+  userId: true,
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+  isEdited: true,
+  editedAt: true,
+  isDeleted: true,
+  deletedAt: true,
+  deletedBy: true,
+  isPinned: true,
+  pinnedBy: true,
+  pinnedAt: true,
+}).extend({
+  content: z.string().min(1, "محتوى الرسالة مطلوب").max(10000, "الرسالة طويلة جداً"),
+  contentType: z.enum(["text", "rich_text", "system"]).default("text"),
+});
+
+export const updateChatMessageSchema = createInsertSchema(chatMessages).pick({
+  content: true,
+  metadata: true,
+}).extend({
+  content: z.string().min(1, "محتوى الرسالة مطلوب").max(10000, "الرسالة طويلة جداً"),
+});
+
+export const insertChatAttachmentSchema = createInsertSchema(chatAttachments).omit({
+  id: true,
+  uploadedAt: true,
+}).extend({
+  type: z.enum(["image", "video", "audio", "voice_note", "document", "file"]),
+  fileName: z.string().min(1, "اسم الملف مطلوب"),
+  fileUrl: z.string().url("رابط الملف غير صحيح"),
+  fileSize: z.number().positive("حجم الملف يجب أن يكون أكبر من صفر"),
+  mimeType: z.string().min(1, "نوع الملف مطلوب"),
+});
+
+export const insertChatReactionSchema = createInsertSchema(chatReactions).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  emoji: z.string().min(1, "الرمز التعبيري مطلوب").max(10, "الرمز التعبيري طويل جداً"),
+});
+
+export const insertChatMentionSchema = createInsertSchema(chatMentions).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  mentionType: z.enum(["user", "channel", "all"]).default("user"),
+});
+
+export const insertChatReadReceiptSchema = createInsertSchema(chatReadReceipts).omit({
+  id: true,
+  readAt: true,
+});
+
+export const insertChatPinnedMessageSchema = createInsertSchema(chatPinnedMessages).omit({
+  id: true,
+  pinnedAt: true,
+});
+
+export const updateChatPinnedMessageSchema = insertChatPinnedMessageSchema.pick({
+  displayOrder: true,
+});
+
+export const insertChatModerationLogSchema = createInsertSchema(chatModerationLogs).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  action: z.enum([
+    "delete_message",
+    "pin",
+    "unpin",
+    "mute_user",
+    "unmute_user",
+    "remove_member",
+    "add_member",
+    "slow_mode",
+    "disable_slow_mode",
+    "archive_channel",
+    "unarchive_channel",
+    "update_settings",
+  ]),
+});
+
+export const insertChatNotificationSchema = createInsertSchema(chatNotifications).omit({
+  id: true,
+  createdAt: true,
+  readAt: true,
+}).extend({
+  type: z.enum(["message", "mention", "reply", "reaction"]),
+  title: z.string().min(1, "عنوان الإشعار مطلوب"),
+  body: z.string().min(1, "محتوى الإشعار مطلوب"),
+});
+
+export const insertChatRetentionPolicySchema = createInsertSchema(chatRetentionPolicies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  retentionDays: z.number().min(1, "يجب أن تكون فترة الاحتفاظ يوم واحد على الأقل").max(365, "فترة الاحتفاظ يجب ألا تتجاوز 365 يوم"),
+});
+
+export const updateChatRetentionPolicySchema = insertChatRetentionPolicySchema.partial().omit({
+  channelId: true,
+  createdBy: true,
+});
+
+// ============================================
+// Chat System Insert Types
+// ============================================
+
+export type InsertChatChannel = z.infer<typeof insertChatChannelSchema>;
+export type UpdateChatChannel = z.infer<typeof updateChatChannelSchema>;
+export type InsertChatMember = z.infer<typeof insertChatMemberSchema>;
+export type UpdateChatMember = z.infer<typeof updateChatMemberSchema>;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type UpdateChatMessage = z.infer<typeof updateChatMessageSchema>;
+export type InsertChatAttachment = z.infer<typeof insertChatAttachmentSchema>;
+export type InsertChatReaction = z.infer<typeof insertChatReactionSchema>;
+export type InsertChatMention = z.infer<typeof insertChatMentionSchema>;
+export type InsertChatReadReceipt = z.infer<typeof insertChatReadReceiptSchema>;
+export type InsertChatPinnedMessage = z.infer<typeof insertChatPinnedMessageSchema>;
+export type UpdateChatPinnedMessage = z.infer<typeof updateChatPinnedMessageSchema>;
+export type InsertChatModerationLog = z.infer<typeof insertChatModerationLogSchema>;
+export type InsertChatNotification = z.infer<typeof insertChatNotificationSchema>;
+export type InsertChatRetentionPolicy = z.infer<typeof insertChatRetentionPolicySchema>;
+export type UpdateChatRetentionPolicy = z.infer<typeof updateChatRetentionPolicySchema>;
+
+// ============================================
 // Calendar System (Sabq Calendar / تقويم سبق)
 // ============================================
 

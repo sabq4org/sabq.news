@@ -213,8 +213,6 @@ import {
   type EnArticleWithDetails,
 } from "@shared/schema";
 
-import { IChatStorage, DbChatStorage } from "./chat-storage";
-
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -947,20 +945,9 @@ export interface IStorage {
   getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]>;
   getEnUserReadingHistory(userId: string, limit?: number): Promise<EnArticleWithDetails[]>;
   getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined>;
-
-  // ==========================================
-  // Chat System - نظام الدردشة
-  // ==========================================
-  chatStorage: IChatStorage;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Chat storage instance
-  public chatStorage: IChatStorage;
-
-  constructor() {
-    this.chatStorage = new DbChatStorage();
-  }
 
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {

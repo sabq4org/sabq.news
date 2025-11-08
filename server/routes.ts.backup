@@ -173,6 +173,13 @@ import {
   insertShortAnalyticSchema,
   insertQuadCategoriesSettingsSchema,
   insertEnQuadCategoriesSettingsSchema,
+  insertChatChannelSchema,
+  updateChatChannelSchema,
+  insertChatMemberSchema,
+  updateChatMemberSchema,
+  insertChatMessageSchema,
+  updateChatMessageSchema,
+  insertChatReactionSchema,
   insertCalendarEventSchema,
   updateCalendarEventSchema,
   insertCalendarReminderSchema,
@@ -17467,6 +17474,1349 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete opinion article" });
     }
   });
+
+  // ============================================================
+  // CHAT SYSTEM API ENDPOINTS - نظام الدردشة
+  // ============================================================
+
+  // ==========================================
+  // 0. File Upload Endpoints - رفع الملفات
+  // ==========================================
+
+  // Configure multer for chat file uploads
+  const chatFileUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max for general files
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'video/mp4', 'video/webm',
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm',
+        'application/pdf', 'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مدعوم'));
+      }
+    },
+  });
+
+  // Configure multer for voice notes (stricter limits)
+  const voiceNoteUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 2 * 1024 * 1024, // 2MB max for voice notes
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = [
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف الصوتي غير مدعوم'));
+      }
+    },
+  });
+
+  // Helper function to determine file type
+  function getFileType(mimeType: string): string {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.includes('msword')) return 'document';
+    return 'file';
+  }
+
+  // POST /api/chat/upload - رفع ملف للدردشة
+  app.post("/api/chat/upload", isAuthenticated, chatFileUpload.single("file"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم رفع ملف" });
+      }
+
+      const userId = req.user!.id;
+      const fileType = getFileType(req.file.mimetype);
+      
+      // Additional size validation based on file type
+      const maxSize = fileType === 'image' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ 
+          message: fileType === 'image' 
+            ? 'حجم الصورة كبير جداً. الحد الأقصى 5MB' 
+            : 'حجم الملف كبير جداً. الحد الأقصى 10MB' 
+        });
+      }
+
+      // Generate unique filename with nanoid
+      const { nanoid } = await import('nanoid');
+      const uniqueId = nanoid(12);
+      const ext = req.file.originalname.split('.').pop();
+      const filename = `${uniqueId}.${ext}`;
+      
+      // Upload to Object Storage in chat-attachments folder (PRIVATE_OBJECT_DIR)
+      const objectStorageService = new ObjectStorageService();
+      const path = `chat-attachments/${filename}`;
+      const result = await objectStorageService.uploadFile(
+        path,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      res.json({
+        id: uniqueId,
+        url: result.url,
+        name: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        type: fileType,
+      });
+    } catch (error) {
+      console.error("خطأ في رفع الملف:", error);
+      
+      if (error instanceof Error && error.message === 'نوع الملف غير مدعوم') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "حدث خطأ في رفع الملف" });
+    }
+  });
+
+  // POST /api/chat/upload/voice - رفع voice note
+  app.post("/api/chat/upload/voice", isAuthenticated, voiceNoteUpload.single("audio"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم رفع الملف الصوتي" });
+      }
+
+      const userId = req.user!.id;
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(7);
+      const ext = req.file.originalname.split('.').pop() || 'webm';
+      const filename = `${timestamp}-${randomStr}.${ext}`;
+      
+      // Upload to Object Storage in chat-voice-notes folder
+      const objectStorageService = new ObjectStorageService();
+      const path = `chat-voice-notes/${filename}`;
+      const result = await objectStorageService.uploadFile(
+        path,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      res.json({
+        url: result.url,
+        duration: parseInt(req.body.duration) || 0,
+        size: req.file.size,
+      });
+    } catch (error) {
+      console.error("خطأ في رفع الملاحظة الصوتية:", error);
+      
+      if (error instanceof Error && error.message === 'نوع الملف الصوتي غير مدعوم') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "حدث خطأ في رفع الملاحظة الصوتية" });
+    }
+  });
+
+  // ==========================================
+  // 0. Users Endpoint - للبحث عن المستخدمين
+  // ==========================================
+
+  // GET /api/chat/users - جلب قائمة المستخدمين للدردشة (محدودة)
+  app.get("/api/chat/users", isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user!.id;
+      const searchQuery = req.query.search as string | undefined;
+      
+      // Build where conditions
+      const conditions = [
+        ne(users.id, currentUserId),
+        eq(users.status, "active")
+      ];
+      
+      // Add search filter if provided
+      if (searchQuery && searchQuery.trim()) {
+        const searchPattern = `%${searchQuery.trim()}%`;
+        conditions.push(
+          or(
+            ilike(users.firstName, searchPattern),
+            ilike(users.lastName, searchPattern)
+          )!
+        );
+      }
+      
+      // Get users except current user, limited fields for privacy
+      const allUsers = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(users)
+        .where(and(...conditions))
+        .limit(50);
+      
+      res.json(allUsers);
+    } catch (error) {
+      console.error("خطأ في جلب المستخدمين:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 1. Channels Endpoints - إدارة القنوات
+  // ==========================================
+
+  // POST /api/chat/channels - إنشاء قناة/مجموعة/محادثة
+  app.post("/api/chat/channels", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // For direct messages, generate a name from participant IDs
+      let channelData = { ...req.body };
+      if (channelData.type === "direct" && channelData.metadata?.recipientUserId) {
+        const recipientId = channelData.metadata.recipientUserId;
+        // Check if direct channel already exists between these two users
+        const existingChannels = await storage.chatStorage.getChannelsByUserId(userId);
+        const existingDirectChannel = existingChannels.find(ch => 
+          ch.type === "direct" && 
+          ch.metadata?.recipientUserId === recipientId
+        );
+        
+        if (existingDirectChannel) {
+          return res.status(200).json(existingDirectChannel);
+        }
+        
+        channelData.name = `direct_${userId}_${recipientId}`;
+      }
+      
+      const validatedData = insertChatChannelSchema.parse(channelData);
+      
+      const channel = await storage.chatStorage.createChannel(validatedData);
+      
+      // For direct messages, add the recipient as a member
+      if (channel.type === "direct" && channel.metadata?.recipientUserId) {
+        await storage.chatStorage.addMember({
+          channelId: channel.id,
+          userId: channel.metadata.recipientUserId as string,
+          role: "member",
+          canPost: true,
+          canInvite: false,
+          notificationPreference: 'all',
+        });
+      }
+      
+      res.status(201).json(channel);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في إنشاء القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/channels - جلب قنوات المستخدم
+  app.get("/api/chat/channels", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      const channels = await storage.chatStorage.getChannelsByUserId(userId);
+      
+      // For direct messages, get the other participant's info
+      const channelsWithDisplayNames = await Promise.all(
+        channels.map(async (channel) => {
+          if (channel.type === 'direct') {
+            // Get all members of this channel
+            const members = await storage.chatStorage.getChannelMembers(channel.id);
+            
+            // Find the other user (not the current user)
+            const otherMember = members.find(m => m.userId !== userId);
+            
+            if (otherMember) {
+              const [otherUser] = await db
+                .select({
+                  id: users.id,
+                  firstName: users.firstName,
+                  lastName: users.lastName,
+                  profileImageUrl: users.profileImageUrl,
+                })
+                .from(users)
+                .where(eq(users.id, otherMember.userId))
+                .limit(1);
+              
+              if (otherUser) {
+                return {
+                  ...channel,
+                  displayName: `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || otherUser.id,
+                  avatarUrl: otherUser.profileImageUrl || channel.avatarUrl,
+                  userId: otherUser.id,
+                };
+              }
+            }
+          }
+          
+          return {
+            ...channel,
+            displayName: channel.name || channel.id,
+          };
+        })
+      );
+      
+      // Sort to show pinned channels first
+      const sortedChannels = channelsWithDisplayNames.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+      
+      res.json(sortedChannels);
+    } catch (error) {
+      console.error("خطأ في جلب القنوات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/channels/:channelId - جلب قناة محددة
+  app.get("/api/chat/channels/:channelId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بالوصول إلى هذه القناة" });
+      }
+      
+      const channel = await storage.chatStorage.getChannelById(channelId);
+      
+      if (!channel) {
+        return res.status(404).json({ message: "القناة غير موجودة" });
+      }
+      
+      res.json(channel);
+    } catch (error) {
+      console.error("خطأ في جلب القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // PATCH /api/chat/channels/:channelId - تحديث قناة
+  app.patch("/api/chat/channels/:channelId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتحديث هذه القناة" });
+      }
+      
+      const validatedData = updateChatChannelSchema.parse(req.body);
+      
+      const channel = await storage.chatStorage.updateChannel(channelId, validatedData);
+      
+      res.json(channel);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في تحديث القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // PATCH /api/chat/channels/:channelId/pin - تبديل حالة التثبيت
+  app.patch("/api/chat/channels/:channelId/pin", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتثبيت هذه القناة" });
+      }
+      
+      const channel = await storage.chatStorage.getChannelById(channelId);
+      if (!channel) {
+        return res.status(404).json({ message: "القناة غير موجودة" });
+      }
+      
+      const updated = await storage.chatStorage.updateChannel(channelId, {
+        isPinned: !channel.isPinned,
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("خطأ في تثبيت القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/channels/:channelId - حذف قناة (أرشفة)
+  app.delete("/api/chat/channels/:channelId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بحذف هذه القناة" });
+      }
+      
+      await storage.chatStorage.archiveChannel(channelId);
+      
+      res.json({ message: "تم حذف القناة بنجاح" });
+    } catch (error) {
+      console.error("خطأ في حذف القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/channels/:channelId/archive - أرشفة قناة
+  app.post("/api/chat/channels/:channelId/archive", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بأرشفة هذه القناة" });
+      }
+      
+      await storage.chatStorage.archiveChannel(channelId);
+      
+      await storage.chatStorage.logModeration({
+        channelId,
+        userId,
+        action: "archive_channel",
+        reason: "تم أرشفة القناة من قبل المستخدم",
+      });
+      
+      res.json({ message: "تم أرشفة القناة بنجاح" });
+    } catch (error) {
+      console.error("خطأ في أرشفة القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 2. Members Endpoints - إدارة الأعضاء
+  // ==========================================
+
+  // POST /api/chat/channels/:channelId/members - إضافة عضو
+  app.post("/api/chat/channels/:channelId/members", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بإضافة أعضاء لهذه القناة" });
+      }
+      
+      const validatedData = insertChatMemberSchema.parse({
+        ...req.body,
+        channelId,
+      });
+      
+      const member = await storage.chatStorage.addMember(validatedData);
+      
+      await storage.chatStorage.logModeration({
+        channelId,
+        userId,
+        targetUserId: validatedData.userId,
+        action: "add_member",
+        reason: "تم إضافة عضو جديد",
+      });
+      
+      res.status(201).json(member);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في إضافة عضو:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/channels/:channelId/members/:userId - إزالة عضو
+  app.delete("/api/chat/channels/:channelId/members/:targetUserId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId, targetUserId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بإزالة أعضاء من هذه القناة" });
+      }
+      
+      await storage.chatStorage.removeMember(channelId, targetUserId);
+      
+      await storage.chatStorage.logModeration({
+        channelId,
+        userId,
+        targetUserId,
+        action: "remove_member",
+        reason: "تم إزالة عضو من القناة",
+      });
+      
+      res.json({ message: "تم إزالة العضو بنجاح" });
+    } catch (error) {
+      console.error("خطأ في إزالة عضو:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // PATCH /api/chat/channels/:channelId/members/:userId - تحديث دور عضو
+  app.patch("/api/chat/channels/:channelId/members/:targetUserId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId, targetUserId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتحديث دور الأعضاء في هذه القناة" });
+      }
+      
+      const { role } = req.body;
+      
+      if (!role) {
+        return res.status(400).json({ message: "الدور مطلوب" });
+      }
+      
+      const member = await storage.chatStorage.updateMemberRole(channelId, targetUserId, role);
+      
+      await storage.chatStorage.logModeration({
+        channelId,
+        userId,
+        targetUserId,
+        action: "update_settings",
+        reason: `تم تحديث دور العضو إلى ${role}`,
+        metadata: {
+          newRole: role,
+        },
+      });
+      
+      res.json(member);
+    } catch (error) {
+      console.error("خطأ في تحديث دور العضو:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/channels/:channelId/members - جلب أعضاء القناة
+  app.get("/api/chat/channels/:channelId/members", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض أعضاء هذه القناة" });
+      }
+      
+      const members = await storage.chatStorage.getChannelMembers(channelId);
+      
+      res.json(members);
+    } catch (error) {
+      console.error("خطأ في جلب أعضاء القناة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 3. Messages Endpoints - إدارة الرسائل
+  // ==========================================
+
+  // POST /api/chat/channels/:channelId/messages - إرسال رسالة
+  app.post("/api/chat/channels/:channelId/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      const { attachments, ...messageData } = req.body;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بإرسال رسائل في هذه القناة" });
+      }
+      
+      const validatedData = insertChatMessageSchema.parse({
+        ...messageData,
+        channelId,
+        userId,
+      });
+      
+      const message = await storage.chatStorage.createMessage(validatedData);
+      
+      // إنشاء سجلات المرفقات إذا وُجدت
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        for (const attachment of attachments) {
+          await storage.chatStorage.createAttachment({
+            messageId: message.id,
+            type: attachment.type || 'file',
+            fileName: attachment.name,
+            fileUrl: attachment.url,
+            fileSize: attachment.size,
+            mimeType: attachment.mimeType,
+          });
+        }
+      }
+      
+      // Get message with attachments for response
+      const messageAttachments = await storage.chatStorage.getMessageAttachments(message.id);
+      const messageWithAttachments = {
+        ...message,
+        attachments: messageAttachments,
+      };
+      
+      // Broadcast new message to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastNewMessage(channelId, messageWithAttachments);
+      }
+      
+      // إرسال إشعارات لأعضاء القناة
+      try {
+        const members = await storage.chatStorage.getChannelMembers(channelId);
+        const senderName = req.user!.firstName || 'مستخدم';
+        
+        for (const member of members) {
+          if (member.userId !== userId) {
+            const notification = await storage.chatStorage.createNotification({
+              userId: member.userId,
+              type: 'message',
+              title: 'رسالة جديدة',
+              body: message.content.substring(0, 100),
+              channelId,
+              messageId: message.id,
+              metadata: { senderName },
+            });
+            
+            if (chatWebSocket) {
+              chatWebSocket.sendNotification(member.userId, notification);
+            }
+          }
+        }
+      } catch (notifError) {
+        console.error("خطأ في إرسال الإشعارات:", notifError);
+      }
+      
+      res.status(201).json(messageWithAttachments);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في إنشاء الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/channels/:channelId/messages - جلب رسائل القناة (مع pagination)
+  app.get("/api/chat/channels/:channelId/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      const { before, after, limit } = req.query;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض رسائل هذه القناة" });
+      }
+      
+      const messages = await storage.chatStorage.getChannelMessages(channelId, {
+        limit: limit ? parseInt(limit as string) : undefined,
+        before: before as string,
+        after: after as string,
+      });
+      
+      // إضافة المرفقات لكل رسالة وتحويل البيانات للواجهة
+      const messagesWithAttachments = await Promise.all(
+        messages.map(async (message: any) => {
+          const attachments = await storage.chatStorage.getMessageAttachments(message.id);
+          return {
+            id: message.id,
+            content: message.content,
+            contentType: message.contentType,
+            senderId: message.userId,
+            senderName: message.senderName || "مستخدم غير معروف",
+            senderAvatar: message.senderAvatar,
+            timestamp: message.createdAt,
+            attachments,
+            reactions: message.metadata?.reactions || [],
+            isPinned: message.isPinned,
+            isEdited: message.isEdited,
+            mentions: message.metadata?.mentions || [],
+            replyTo: message.parentMessageId ? {
+              id: message.parentMessageId,
+              senderName: message.metadata?.replyTo?.senderName || "",
+              content: message.metadata?.replyTo?.content || "",
+            } : undefined,
+          };
+        })
+      );
+      
+      res.json(messagesWithAttachments);
+    } catch (error) {
+      console.error("خطأ في جلب الرسائل:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/messages/:messageId - جلب رسالة محددة
+  app.get("/api/chat/messages/:messageId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const message = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(message.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض هذه الرسالة" });
+      }
+      
+      // إضافة المرفقات
+      const attachments = await storage.chatStorage.getMessageAttachments(messageId);
+      const messageWithAttachments = {
+        ...message,
+        attachments,
+      };
+      
+      res.json(messageWithAttachments);
+    } catch (error) {
+      console.error("خطأ في جلب الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // PATCH /api/chat/messages/:messageId - تحديث رسالة
+  app.patch("/api/chat/messages/:messageId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      if (existingMessage.userId !== userId) {
+        return res.status(403).json({ message: "غير مسموح لك بتعديل هذه الرسالة" });
+      }
+      
+      const { content } = updateChatMessageSchema.parse(req.body);
+      
+      const message = await storage.chatStorage.updateMessage(messageId, content);
+      
+      // Broadcast message update to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastMessageUpdate(existingMessage.channelId, messageId, content);
+      }
+      
+      res.json(message);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في تحديث الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/messages/:messageId - حذف رسالة
+  app.delete("/api/chat/messages/:messageId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      if (existingMessage.userId !== userId) {
+        return res.status(403).json({ message: "غير مسموح لك بحذف هذه الرسالة" });
+      }
+      
+      await storage.chatStorage.deleteMessage(messageId, userId);
+      
+      await storage.chatStorage.logModeration({
+        channelId: existingMessage.channelId,
+        messageId,
+        userId,
+        action: "delete_message",
+        reason: "تم حذف الرسالة من قبل المستخدم",
+      });
+      
+      // Broadcast message deletion to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastMessageDelete(existingMessage.channelId, messageId);
+      }
+      
+      res.json({ message: "تم حذف الرسالة بنجاح" });
+    } catch (error) {
+      console.error("خطأ في حذف الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/messages/:messageId/pin - تثبيت رسالة
+  app.post("/api/chat/messages/:messageId/pin", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتثبيت رسائل في هذه القناة" });
+      }
+      
+      await storage.chatStorage.pinMessage(messageId, userId);
+      
+      await storage.chatStorage.logModeration({
+        channelId: existingMessage.channelId,
+        messageId,
+        userId,
+        action: "pin",
+        reason: "تم تثبيت الرسالة",
+      });
+      
+      res.json({ message: "تم تثبيت الرسالة بنجاح" });
+    } catch (error) {
+      console.error("خطأ في تثبيت الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/messages/:messageId/pin - إلغاء تثبيت رسالة
+  app.delete("/api/chat/messages/:messageId/pin", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بإلغاء تثبيت رسائل في هذه القناة" });
+      }
+      
+      await storage.chatStorage.unpinMessage(messageId);
+      
+      await storage.chatStorage.logModeration({
+        channelId: existingMessage.channelId,
+        messageId,
+        userId,
+        action: "unpin",
+        reason: "تم إلغاء تثبيت الرسالة",
+      });
+      
+      res.json({ message: "تم إلغاء تثبيت الرسالة بنجاح" });
+    } catch (error) {
+      console.error("خطأ في إلغاء تثبيت الرسالة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 4. Threads Endpoints - المحادثات الفرعية
+  // ==========================================
+
+  // GET /api/chat/messages/:messageId/replies - جلب ردود على رسالة (thread)
+  app.get("/api/chat/messages/:messageId/replies", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const parentMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!parentMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(parentMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض ردود هذه الرسالة" });
+      }
+      
+      const replies = await storage.chatStorage.getThreadMessages(messageId);
+      
+      res.json(replies);
+    } catch (error) {
+      console.error("خطأ في جلب الردود:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 5. Reactions Endpoints - التفاعلات
+  // ==========================================
+
+  // POST /api/chat/messages/:messageId/reactions - إضافة تفاعل
+  app.post("/api/chat/messages/:messageId/reactions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بالتفاعل مع هذه الرسالة" });
+      }
+      
+      const validatedData = insertChatReactionSchema.parse({
+        ...req.body,
+        messageId,
+        userId,
+      });
+      
+      const reaction = await storage.chatStorage.addReaction(validatedData);
+      
+      // Broadcast reaction to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastReaction(existingMessage.channelId, messageId, reaction);
+      }
+      
+      res.status(201).json(reaction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("خطأ في إضافة تفاعل:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // DELETE /api/chat/messages/:messageId/reactions - إزالة تفاعل
+  app.delete("/api/chat/messages/:messageId/reactions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      const { emoji } = req.query;
+      
+      if (!emoji) {
+        return res.status(400).json({ message: "الرمز التعبيري مطلوب" });
+      }
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      await storage.chatStorage.removeReaction(messageId, userId, emoji as string);
+      
+      res.json({ message: "تم إزالة التفاعل بنجاح" });
+    } catch (error) {
+      console.error("خطأ في إزالة التفاعل:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/messages/:messageId/reactions - جلب تفاعلات رسالة
+  app.get("/api/chat/messages/:messageId/reactions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض تفاعلات هذه الرسالة" });
+      }
+      
+      const reactions = await storage.chatStorage.getMessageReactions(messageId);
+      
+      res.json(reactions);
+    } catch (error) {
+      console.error("خطأ في جلب التفاعلات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 6. Mentions Endpoints - الإشارات
+  // ==========================================
+
+  // GET /api/chat/mentions - جلب إشارات المستخدم
+  app.get("/api/chat/mentions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const { unreadOnly } = req.query;
+      
+      const mentions = await storage.chatStorage.getUserMentions(userId, {
+        unreadOnly: unreadOnly === "true",
+      });
+      
+      res.json(mentions);
+    } catch (error) {
+      console.error("خطأ في جلب الإشارات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 7. Read Receipts Endpoints - إيصالات القراءة
+  // ==========================================
+
+  // POST /api/chat/messages/:messageId/read - تمييز رسالة كمقروءة
+  app.post("/api/chat/messages/:messageId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتمييز هذه الرسالة كمقروءة" });
+      }
+      
+      await storage.chatStorage.markAsRead(messageId, userId);
+      
+      // Broadcast read receipt to all channel members via WebSocket
+      if (chatWebSocket) {
+        chatWebSocket.broadcastReadReceipt(existingMessage.channelId, messageId, userId);
+      }
+      
+      res.json({ message: "تم تمييز الرسالة كمقروءة" });
+    } catch (error) {
+      console.error("خطأ في تمييز الرسالة كمقروءة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/messages/:messageId/read-receipts - جلب read receipts لرسالة
+  app.get("/api/chat/messages/:messageId/read-receipts", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.user!.id;
+      
+      const existingMessage = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!existingMessage) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(existingMessage.channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض read receipts لهذه الرسالة" });
+      }
+      
+      const receipts = await storage.chatStorage.getMessageReadReceipts(messageId);
+      
+      res.json(receipts);
+    } catch (error) {
+      console.error("خطأ في جلب read receipts:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/channels/:channelId/read - تحديث آخر رسالة مقروءة في قناة
+  app.post("/api/chat/channels/:channelId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      const { messageId } = req.body;
+      
+      if (!messageId) {
+        return res.status(400).json({ message: "معرف الرسالة مطلوب" });
+      }
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بتحديث حالة القراءة في هذه القناة" });
+      }
+      
+      await storage.chatStorage.updateChannelRead(channelId, userId, messageId);
+      
+      res.json({ message: "تم تحديث آخر رسالة مقروءة" });
+    } catch (error) {
+      console.error("خطأ في تحديث حالة القراءة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/channels/:channelId/unread - جلب عدد الرسائل غير المقروءة
+  app.get("/api/chat/channels/:channelId/unread", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض عدد الرسائل غير المقروءة في هذه القناة" });
+      }
+      
+      const unreadCount = await storage.chatStorage.getUnreadCount(channelId, userId);
+      
+      res.json({ unreadCount });
+    } catch (error) {
+      console.error("خطأ في جلب عدد الرسائل غير المقروءة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 8. Search Endpoint - البحث
+  // ==========================================
+
+  // GET /api/chat/search - بحث في الرسائل
+  app.get("/api/chat/search", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const { q, channelId, userId: searchUserId, hasMedia } = req.query;
+      
+      if (!q) {
+        return res.status(400).json({ message: "نص البحث مطلوب" });
+      }
+      
+      const messages = await storage.chatStorage.searchMessages(q as string, {
+        channelId: channelId as string,
+        userId: searchUserId as string,
+        hasMedia: hasMedia === "true",
+      });
+      
+      res.json(messages);
+    } catch (error) {
+      console.error("خطأ في البحث:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 9. Pinned Messages Endpoint - الرسائل المثبتة
+  // ==========================================
+
+  // GET /api/chat/channels/:channelId/pinned-messages - جلب الرسائل المثبتة
+  app.get("/api/chat/channels/:channelId/pinned-messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض هذه القناة" });
+      }
+      
+      const pinnedMessages = await storage.chatStorage.getPinnedMessages(channelId);
+      
+      // تحويل البيانات للواجهة
+      const formattedPinnedMessages = pinnedMessages.map((message: any) => ({
+        id: message.id,
+        content: message.content,
+        contentType: message.contentType,
+        senderId: message.userId,
+        senderName: message.senderName || "مستخدم غير معروف",
+        senderAvatar: message.senderAvatar,
+        timestamp: message.createdAt,
+        reactions: message.metadata?.reactions || [],
+        isPinned: message.isPinned,
+        isEdited: message.isEdited,
+        mentions: message.metadata?.mentions || [],
+      }));
+      
+      res.json(formattedPinnedMessages);
+    } catch (error) {
+      console.error("خطأ في جلب الرسائل المثبتة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 10. Moderation Endpoints - الإشراف
+  // ==========================================
+
+  // GET /api/chat/channels/:channelId/moderation-logs - جلب سجلات الإشراف
+  app.get("/api/chat/channels/:channelId/moderation-logs", isAuthenticated, async (req: any, res) => {
+    try {
+      const { channelId } = req.params;
+      const userId = req.user!.id;
+      
+      const isMember = await storage.chatStorage.isMember(channelId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "غير مسموح لك بعرض سجلات الإشراف لهذه القناة" });
+      }
+      
+      const logs = await storage.chatStorage.getModerationLogs(channelId);
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("خطأ في جلب سجلات الإشراف:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ==========================================
+  // 11. AI Features - الميزات الذكية
+  // ==========================================
+
+  // POST /api/chat/ai/summarize - تلخيص thread
+  app.post("/api/chat/ai/summarize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.body;
+      
+      if (!messageId) {
+        return res.status(400).json({ message: "messageId مطلوب" });
+      }
+      
+      const thread = await storage.chatStorage.getThreadMessages(messageId);
+      const message = await storage.chatStorage.getMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "الرسالة غير موجودة" });
+      }
+      
+      const messages = [message, ...thread].map(m => ({
+        content: m.content,
+        senderName: 'مستخدم',
+      }));
+      
+      const summary = await aiChatService.summarizeThread(messages);
+      
+      res.json({ summary });
+    } catch (error) {
+      console.error("خطأ في التلخيص:", error);
+      res.status(500).json({ message: "حدث خطأ في التلخيص" });
+    }
+  });
+
+  // POST /api/chat/ai/suggest-replies - اقتراح ردود
+  app.post("/api/chat/ai/suggest-replies", isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageContent } = req.body;
+      
+      if (!messageContent) {
+        return res.status(400).json({ message: "messageContent مطلوب" });
+      }
+      
+      const replies = await aiChatService.suggestReplies(messageContent, 3);
+      
+      res.json({ replies });
+    } catch (error) {
+      console.error("خطأ في اقتراح الردود:", error);
+      res.status(500).json({ message: "حدث خطأ في اقتراح الردود" });
+    }
+  });
+
+  // POST /api/chat/ai/check-toxicity - فحص السُمّية
+  app.post("/api/chat/ai/check-toxicity", isAuthenticated, async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "content مطلوب" });
+      }
+      
+      const result = await aiChatService.checkToxicity(content);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("خطأ في فحص السُمّية:", error);
+      res.status(500).json({ message: "حدث خطأ في فحص السُمّية" });
+    }
+  });
+
+  // GET /api/chat/notifications - جلب إشعارات المستخدم
+  app.get("/api/chat/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const unreadOnly = req.query.unreadOnly === 'true';
+      
+      const notifications = await storage.chatStorage.getUserNotifications(userId, unreadOnly);
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error("خطأ في جلب الإشعارات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // GET /api/chat/notifications/unread-count
+  app.get("/api/chat/notifications/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.chatStorage.getUnreadNotificationsCount(userId);
+      
+      res.json({ count });
+    } catch (error) {
+      console.error("خطأ في جلب عدد الإشعارات:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/notifications/:notificationId/read
+  app.post("/api/chat/notifications/:notificationId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const { notificationId } = req.params;
+      
+      await storage.chatStorage.markNotificationAsRead(notificationId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("خطأ في تمييز الإشعار كمقروء:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // POST /api/chat/notifications/mark-all-read
+  app.post("/api/chat/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      await storage.chatStorage.markAllNotificationsAsRead(userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("خطأ في تمييز جميع الإشعارات كمقروءة:", error);
+      res.status(500).json({ message: "حدث خطأ في الخادم" });
+    }
+  });
+
+  // ============================================================
+  // END CHAT SYSTEM API ENDPOINTS
+  // ============================================================
 
   // ============================================================
   // CALENDAR SYSTEM API ENDPOINTS - تقويم سبق

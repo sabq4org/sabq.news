@@ -149,12 +149,12 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton
-                tooltip={item.labelEn || item.labelKey}
+                tooltip={item.labelKey}
                 className="w-full"
               >
                 <span className="flex items-center gap-3 flex-1">
                   {Icon && <Icon className="h-5 w-5" />}
-                  <span>{item.labelEn || item.labelKey}</span>
+                  <span>{item.labelKey}</span>
                 </span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </SidebarMenuButton>
@@ -177,7 +177,7 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
                         >
                           <span className="flex items-center gap-3">
                             {ChildIcon && <ChildIcon className="h-4 w-4" />}
-                            <span>{child.labelEn || child.labelKey}</span>
+                            <span>{child.labelKey}</span>
                           </span>
                         </Link>
                       </SidebarMenuSubButton>
@@ -196,7 +196,7 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarMenuButton
           asChild
           isActive={isActive}
-          tooltip={item.labelEn || item.labelKey}
+          tooltip={item.labelKey}
         >
           <Link 
             href={item.path || "#"}
@@ -204,7 +204,7 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
           >
             <span className="flex items-center gap-3">
               {Icon && <Icon className="h-5 w-5" />}
-              <span>{item.labelEn || item.labelKey}</span>
+              <span>{item.labelKey}</span>
             </span>
           </Link>
         </SidebarMenuButton>
