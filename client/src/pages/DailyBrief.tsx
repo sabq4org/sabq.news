@@ -619,8 +619,10 @@ export default function DailyBrief() {
                     </h3>
                     <p data-testid="text-daily-goal">{summary.aiInsights.dailyGoal}</p>
                   </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </div>
           )}
         </div>
