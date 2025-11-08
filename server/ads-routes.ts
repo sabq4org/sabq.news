@@ -21,7 +21,7 @@ import {
   insertInventorySlotSchema,
   insertAdCreativePlacementSchema
 } from "@shared/schema";
-import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, inArray, ne } from "drizzle-orm";
 import type { 
   AdAccount, 
   Campaign, 
@@ -285,14 +285,15 @@ router.get("/campaigns", requireAdvertiser, async (req, res) => {
     
     let query;
     
-    // إذا كان مشرفاً، يرى جميع الحملات
+    // إذا كان مشرفاً، يرى جميع الحملات (عدا المحذوفة)
     if (["admin", "superadmin"].includes(userRole)) {
       query = db
         .select()
         .from(campaigns)
+        .where(ne(campaigns.status, "completed"))
         .orderBy(desc(campaigns.createdAt));
     } else {
-      // المعلن يرى حملاته فقط
+      // المعلن يرى حملاته فقط (عدا المحذوفة)
       const [account] = await db
         .select()
         .from(adAccounts)
@@ -306,7 +307,10 @@ router.get("/campaigns", requireAdvertiser, async (req, res) => {
       query = db
         .select()
         .from(campaigns)
-        .where(eq(campaigns.accountId, account.id))
+        .where(and(
+          eq(campaigns.accountId, account.id),
+          ne(campaigns.status, "completed")
+        ))
         .orderBy(desc(campaigns.createdAt));
     }
     
