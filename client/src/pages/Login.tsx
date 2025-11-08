@@ -13,6 +13,7 @@ import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
 import { SiGoogle, SiApple } from "react-icons/si";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import sabqLogo from "@assets/sabq-logo.png";
 
 const loginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -82,12 +83,13 @@ export default function Login() {
         {/* Right Side - Branding */}
         <div className="hidden lg:flex flex-col items-center justify-center text-white space-y-6 px-8">
           {/* Logo */}
-          <div className="text-center space-y-4">
-            <svg className="w-48 h-48 mx-auto" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <text x="100" y="100" fontSize="120" fontWeight="bold" fill="white" textAnchor="middle" dominantBaseline="middle">سبق</text>
-            </svg>
-            <h1 className="text-4xl font-bold">صحيفة سبق الإلكترونية</h1>
-            <p className="text-xl opacity-90">SABQ ONLINE NEWSPAPER</p>
+          <div className="text-center space-y-6">
+            <img 
+              src={sabqLogo} 
+              alt="سبق" 
+              className="w-64 h-auto mx-auto brightness-0 invert"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </div>
 
           {/* Tagline */}
@@ -221,14 +223,14 @@ export default function Login() {
               </div>
 
               <div className="text-center pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2">بإمكانك مشاهدة آليات نشاط إدارات التحكم</p>
+                <p className="text-sm text-muted-foreground mb-2">هل أنت من الإدارة أو الصحفيين؟</p>
                 <button
                   type="button"
                   onClick={() => navigate("/admin/login")}
                   className="text-sm text-primary hover:underline font-medium"
                   data-testid="link-admin-login"
                 >
-                  تواصل معنا عبر البريد الإلكتروني الفوري
+                  تسجيل دخول الإدارة
                 </button>
               </div>
             </form>
