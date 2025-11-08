@@ -497,7 +497,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "يجب تسجيل الدخول أولاً" });
       }
 
-      const result = await resendVerificationEmail(req.user.id);
+      const user = req.user as any;
+      const result = await resendVerificationEmail(user.id);
 
       if (!result.success) {
         return res.status(400).json({ message: result.error || "فشل إعادة إرسال رسالة التحقق" });
