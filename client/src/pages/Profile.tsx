@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -43,6 +44,8 @@ import {
   ChevronDown,
   Tag,
   X,
+  AlertCircle,
+  Mail,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -99,6 +102,27 @@ export default function Profile() {
       toast({
         title: "خطأ",
         description: "فشل في تحديث البيانات. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resendVerificationMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("/api/auth/resend-verification", {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم الإرسال بنجاح",
+        description: "تم إرسال رسالة التحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إرسال رسالة التحقق. حاول مرة أخرى.",
         variant: "destructive",
       });
     },
@@ -406,6 +430,45 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Email Verification Alert */}
+      {user && !user.emailVerified && (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <Alert className="bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900" data-testid="alert-email-verification">
+            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+            <AlertTitle className="text-yellow-800 dark:text-yellow-300">
+              يرجى تفعيل حسابك عبر البريد الإلكتروني
+            </AlertTitle>
+            <AlertDescription className="text-yellow-700 dark:text-yellow-400">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p>
+                  للوصول الكامل لجميع الميزات، يرجى التحقق من بريدك الإلكتروني وتفعيل حسابك.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => resendVerificationMutation.mutate()}
+                  disabled={resendVerificationMutation.isPending}
+                  className="shrink-0 border-yellow-300 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+                  data-testid="button-resend-verification"
+                >
+                  {resendVerificationMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                      جاري الإرسال...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 ml-2" />
+                      إعادة إرسال رسالة التحقق
+                    </>
+                  )}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
