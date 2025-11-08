@@ -131,6 +131,7 @@ import CampaignDetail from "@/pages/dashboard/ads/CampaignDetail";
 import CampaignEditor from "@/pages/dashboard/ads/CampaignEditor";
 import AdAccountPage from "@/pages/dashboard/ads/AdAccountPage";
 import CreativesManagement from "@/pages/dashboard/ads/CreativesManagement";
+import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManagement";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -285,6 +286,7 @@ function Router() {
       <Route path="/dashboard/ads/campaigns/new" component={CampaignEditor} />
       <Route path="/dashboard/ads/campaigns/:id" component={CampaignDetail} />
       <Route path="/dashboard/ads/creatives" component={CreativesManagement} />
+      <Route path="/dashboard/ads/inventory-slots" component={InventorySlotsManagement} />
       <Route path="/dashboard/ads/account" component={AdAccountPage} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />

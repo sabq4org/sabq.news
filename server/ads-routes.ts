@@ -1975,6 +1975,44 @@ router.put("/inventory-slots/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// حذف مكان ظهور (للمشرفين فقط)
+router.delete("/inventory-slots/:id", requireAdmin, async (req, res) => {
+  try {
+    const slotId = req.params.id;
+    const userId = (req.user as any).id;
+    
+    const [existingSlot] = await db
+      .select()
+      .from(inventorySlots)
+      .where(eq(inventorySlots.id, slotId))
+      .limit(1);
+    
+    if (!existingSlot) {
+      return res.status(404).json({ error: "مكان الظهور غير موجود" });
+    }
+    
+    await db
+      .delete(inventorySlots)
+      .where(eq(inventorySlots.id, slotId));
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "inventory_slot",
+      entityId: slotId,
+      action: "delete",
+      changes: { before: existingSlot },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json({ success: true, message: "تم حذف مكان الظهور بنجاح" });
+  } catch (error) {
+    console.error("[Ads API] خطأ في حذف مكان الظهور:", error);
+    res.status(500).json({ error: "حدث خطأ في الحذف" });
+  }
+});
+
 // ============================================================
 // CREATIVES - الإعلانات
 // ============================================================
