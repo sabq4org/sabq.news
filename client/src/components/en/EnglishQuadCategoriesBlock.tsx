@@ -231,30 +231,8 @@ function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
         ))}
       </div>
 
-      {/* Navigation Arrows */}
-      {items.length > 1 && (
-        <>
-          <button
-            onClick={() => scroll('right')}
-            disabled={currentIndex === 0}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover-elevate active-elevate-2"
-            data-testid="carousel-prev"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scroll('left')}
-            disabled={currentIndex === items.length - 1}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border border-border shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover-elevate active-elevate-2"
-            data-testid="carousel-next"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </>
-      )}
-
-      {/* Indicators */}
-      <div className="flex justify-center gap-1.5 mt-2">
+      {/* Indicators - small dots only */}
+      <div className="flex justify-center gap-1 mt-3">
         {items.map((_, index) => (
           <button
             key={index}
@@ -265,10 +243,10 @@ function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
                 scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
               }
             }}
-            className={`w-1.5 h-1.5 rounded-full transition-all ${
+            className={`rounded-full transition-all ${
               index === currentIndex 
-                ? 'bg-primary w-6' 
-                : 'bg-muted-foreground/30'
+                ? 'bg-primary w-2 h-2' 
+                : 'bg-muted-foreground/30 w-1.5 h-1.5'
             }`}
             data-testid={`carousel-indicator-${index}`}
           />
