@@ -204,7 +204,7 @@ export function EnAiArticleStats({ slug }: EnAiArticleStatsProps) {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <StatItem
             icon={Clock}
             label="Average Read Time"
