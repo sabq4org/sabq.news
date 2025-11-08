@@ -176,7 +176,7 @@ export function AIInsightsBlock() {
       </div>
 
       {/* Mobile: Horizontal Scroll */}
-      <div className="flex flex-row lg:hidden gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+      <div className="flex flex-row lg:hidden gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
         {insightsData.map((insight, index) => {
           const IconComponent = insight.icon;
           const articleLink = insight.article ? `/article/${insight.article.slug}` : "#";
