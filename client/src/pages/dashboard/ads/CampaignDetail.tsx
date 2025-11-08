@@ -17,6 +17,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -150,6 +161,9 @@ export default function CampaignDetail() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [creativeToDelete, setCreativeToDelete] = useState<Creative | null>(null);
+  const [showAdGroupDialog, setShowAdGroupDialog] = useState(false);
+  const [adGroupName, setAdGroupName] = useState("");
+  const [targetDevices, setTargetDevices] = useState<string[]>(["desktop", "mobile", "tablet"]);
 
   useEffect(() => {
     document.title = "تفاصيل الحملة - لوحة تحكم الإعلانات";
@@ -239,6 +253,43 @@ export default function CampaignDetail() {
       toast({
         title: "حدث خطأ",
         description: error.message || "فشل في حذف الإعلان",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create ad group mutation
+  const createAdGroupMutation = useMutation({
+    mutationFn: async (data: { name: string; targetDevices: string[] }) => {
+      return await apiRequest("/api/ads/ad-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId,
+          name: data.name,
+          targetDevices: data.targetDevices,
+          targetCountries: ["SA"],
+          targetCategories: [],
+          targetKeywords: [],
+          status: "active"
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/ad-groups", { campaignId }] });
+      toast({
+        title: "تم الإنشاء",
+        description: "تم إنشاء المجموعة الإعلانية بنجاح",
+      });
+      setShowAdGroupDialog(false);
+      setAdGroupName("");
+      setTargetDevices(["desktop", "mobile", "tablet"]);
+    },
+    onError: (error: any) => {
+      console.error("[Create Ad Group] خطأ:", error);
+      toast({
+        title: "حدث خطأ",
+        description: error.message || "فشل في إنشاء المجموعة الإعلانية",
         variant: "destructive",
       });
     },
@@ -507,10 +558,7 @@ export default function CampaignDetail() {
                     </CardDescription>
                   </div>
                   <Button
-                    onClick={() => toast({
-                      title: "قريباً",
-                      description: "سيتم إضافة إنشاء مجموعة إعلانية قريباً"
-                    })}
+                    onClick={() => setShowAdGroupDialog(true)}
                     data-testid="button-create-ad-group"
                   >
                     <Plus className="h-4 w-4 ml-2" />
@@ -619,10 +667,7 @@ export default function CampaignDetail() {
                       لا توجد مجموعات إعلانية حتى الآن
                     </div>
                     <Button
-                      onClick={() => toast({
-                        title: "قريباً",
-                        description: "سيتم إضافة إنشاء مجموعة إعلانية قريباً"
-                      })}
+                      onClick={() => setShowAdGroupDialog(true)}
                       data-testid="button-create-first-ad-group"
                     >
                       <Plus className="h-4 w-4 ml-2" />
@@ -1009,6 +1054,116 @@ export default function CampaignDetail() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Create Ad Group Dialog */}
+        <Dialog open={showAdGroupDialog} onOpenChange={setShowAdGroupDialog}>
+          <DialogContent className="sm:max-w-[500px]" data-testid="dialog-create-ad-group">
+            <DialogHeader>
+              <DialogTitle>إنشاء مجموعة إعلانية جديدة</DialogTitle>
+              <DialogDescription>
+                أضف مجموعة إعلانية جديدة للحملة. يمكنك إضافة البنرات الإعلانية للمجموعة لاحقاً.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="ad-group-name">اسم المجموعة الإعلانية *</Label>
+                <Input
+                  id="ad-group-name"
+                  placeholder="مثال: حملة رمضان - صفحة رئيسية"
+                  value={adGroupName}
+                  onChange={(e) => setAdGroupName(e.target.value)}
+                  data-testid="input-ad-group-name"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label>الأجهزة المستهدفة *</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="target-desktop"
+                      checked={targetDevices.includes("desktop")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setTargetDevices([...targetDevices, "desktop"]);
+                        } else {
+                          setTargetDevices(targetDevices.filter(d => d !== "desktop"));
+                        }
+                      }}
+                      data-testid="checkbox-target-desktop"
+                    />
+                    <Label htmlFor="target-desktop" className="cursor-pointer">
+                      أجهزة الكمبيوتر
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="target-mobile"
+                      checked={targetDevices.includes("mobile")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setTargetDevices([...targetDevices, "mobile"]);
+                        } else {
+                          setTargetDevices(targetDevices.filter(d => d !== "mobile"));
+                        }
+                      }}
+                      data-testid="checkbox-target-mobile"
+                    />
+                    <Label htmlFor="target-mobile" className="cursor-pointer">
+                      الهواتف الذكية
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="target-tablet"
+                      checked={targetDevices.includes("tablet")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setTargetDevices([...targetDevices, "tablet"]);
+                        } else {
+                          setTargetDevices(targetDevices.filter(d => d !== "tablet"));
+                        }
+                      }}
+                      data-testid="checkbox-target-tablet"
+                    />
+                    <Label htmlFor="target-tablet" className="cursor-pointer">
+                      الأجهزة اللوحية
+                    </Label>
+                  </div>
+                </div>
+                {targetDevices.length === 0 && (
+                  <p className="text-sm text-destructive">يجب اختيار جهاز واحد على الأقل</p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAdGroupDialog(false);
+                  setAdGroupName("");
+                  setTargetDevices(["desktop", "mobile", "tablet"]);
+                }}
+                data-testid="button-cancel-ad-group"
+              >
+                إلغاء
+              </Button>
+              <Button
+                onClick={() => {
+                  if (adGroupName.trim() && targetDevices.length > 0) {
+                    createAdGroupMutation.mutate({
+                      name: adGroupName.trim(),
+                      targetDevices
+                    });
+                  }
+                }}
+                disabled={!adGroupName.trim() || targetDevices.length === 0 || createAdGroupMutation.isPending}
+                data-testid="button-submit-ad-group"
+              >
+                {createAdGroupMutation.isPending ? "جارٍ الإنشاء..." : "إنشاء المجموعة"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
