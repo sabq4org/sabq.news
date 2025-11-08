@@ -2852,12 +2852,15 @@ router.get("/slot/:slotId", async (req, res) => {
         placement: adCreativePlacements,
         creative: creatives,
         campaign: campaigns,
+        slot: inventorySlots,
       })
       .from(adCreativePlacements)
       .innerJoin(creatives, eq(adCreativePlacements.creativeId, creatives.id))
       .innerJoin(campaigns, eq(adCreativePlacements.campaignId, campaigns.id))
+      .innerJoin(inventorySlots, eq(adCreativePlacements.inventorySlotId, inventorySlots.id))
       .where(and(
-        eq(adCreativePlacements.inventorySlotId, slotId),
+        eq(inventorySlots.location, slotId),
+        eq(inventorySlots.isActive, true),
         eq(adCreativePlacements.status, "active"),
         eq(campaigns.status, "active"),
         eq(creatives.status, "active"),
@@ -2895,7 +2898,7 @@ router.get("/slot/:slotId", async (req, res) => {
         type: creative.type,
         content: creative.content,
         size: creative.size,
-        clickUrl: creative.clickUrl,
+        destinationUrl: creative.destinationUrl,
       },
       campaign: {
         id: campaign.id,
