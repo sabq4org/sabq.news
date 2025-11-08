@@ -9,6 +9,7 @@ Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform design
 - Implemented mobile-friendly collapsible sections for Daily Brief pages (both Arabic and English) with four expandable sections: Performance Metrics, Interest Analysis, Time Activity, and AI Insights. Each section features ChevronDown toggle with 200ms animation (rotates 180° when expanded), defaulting to expanded state for better mobile UX.
 - Redesigned Smart News Block GridLayout for mobile-responsive display: Mobile view (lg:hidden) now uses vertical list pattern matching Latest News with w-24 h-20 images, divide-y dividers, hover-elevate effects, and proper data-testid attributes. Desktop view (hidden lg:grid) maintains 4-column grid. Implementation is consistent across both Arabic (SmartNewsBlock) and English (EnglishSmartNewsBlock) versions.
 - Updated SmartSummaryBlock (both Arabic and English versions) with improved typography and UX: Metric values reduced from text-2xl to text-lg, section headings reduced from text-lg to text-base, default state changed to expanded (isExpanded = true), and CollapsibleTrigger now wraps the full header for easier interaction. Mobile metrics display uses w-24 h-20 icon containers with divide-y dividers matching Latest News layout.
+- Reordered Arabic homepage blocks: QuadCategoriesBlock now appears before OpinionArticlesBlock, improving content flow from broad news coverage to category exploration to editorial perspectives.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
