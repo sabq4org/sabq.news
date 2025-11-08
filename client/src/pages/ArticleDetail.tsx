@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { useArticleReadTracking } from "@/hooks/useArticleReadTracking";
@@ -29,6 +30,7 @@ import {
   Clock,
   Sparkles,
   ChevronRight,
+  ChevronDown,
   Volume2,
   VolumeX,
   CheckCircle2,
@@ -51,6 +53,9 @@ export default function ArticleDetail() {
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Smart summary collapsible state
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -663,34 +668,54 @@ export default function ArticleDetail() {
 
             {/* Smart Summary */}
             {(article.aiSummary || article.excerpt) && (
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <h3 className="font-bold text-lg text-primary">الموجز الذكي</h3>
+              <Collapsible open={isSummaryExpanded} onOpenChange={setIsSummaryExpanded}>
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      <h3 className="font-bold text-base text-primary">الموجز الذكي</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1"
+                          data-testid="button-toggle-summary"
+                        >
+                          <span className="text-xs">{isSummaryExpanded ? "إخفاء" : "عرض الكل"}</span>
+                          <ChevronDown 
+                            className={`h-4 w-4 transition-transform duration-200 ${isSummaryExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button
+                        variant={isPlaying ? "default" : "outline"}
+                        size="sm"
+                        className="gap-2"
+                        onClick={handlePlayAudio}
+                        disabled={isLoadingAudio}
+                        data-testid="button-listen-summary"
+                      >
+                        {isLoadingAudio ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isPlaying ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                        <span className="hidden md:inline">{isLoadingAudio ? "جاري التحميل..." : isPlaying ? "إيقاف" : "استمع للموجز"}</span>
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant={isPlaying ? "default" : "outline"}
-                    size="sm"
-                    className="gap-2"
-                    onClick={handlePlayAudio}
-                    disabled={isLoadingAudio}
-                    data-testid="button-listen-summary"
+                  <p 
+                    className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}
+                    data-testid="text-smart-summary"
                   >
-                    {isLoadingAudio ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : isPlaying ? (
-                      <VolumeX className="h-4 w-4" />
-                    ) : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
-                    {isLoadingAudio ? "جاري التحميل..." : isPlaying ? "إيقاف" : "استمع للموجز"}
-                  </Button>
+                    {article.aiSummary || article.excerpt}
+                  </p>
                 </div>
-                <p className="text-foreground/90 leading-relaxed text-lg" data-testid="text-smart-summary">
-                  {article.aiSummary || article.excerpt}
-                </p>
-              </div>
+              </Collapsible>
             )}
 
             {/* Keywords */}
