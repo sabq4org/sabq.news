@@ -292,9 +292,17 @@ function Router() {
       <Route path="/select-interests" component={SelectInterests} />
       <Route path="/interests/edit" component={EditInterests} />
       <Route path="/notification-settings" component={NotificationSettings} />
+      
+      {/* Onboarding routes - Arabic */}
+      <Route path="/ar/onboarding/welcome" component={Welcome} />
+      <Route path="/ar/onboarding/interests" component={OnboardingInterests} />
+      <Route path="/ar/onboarding/personalize" component={Personalize} />
+      
+      {/* Onboarding routes - Legacy (without /ar/) */}
       <Route path="/onboarding/welcome" component={Welcome} />
       <Route path="/onboarding/interests" component={OnboardingInterests} />
       <Route path="/onboarding/personalize" component={Personalize} />
+      
       <Route path="/daily-brief" component={DailyBrief} />
       <Route path="/moment-by-moment" component={MomentByMoment} />
       
