@@ -6,13 +6,35 @@ import { eq } from 'drizzle-orm';
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@sabq.sa';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
+
+// Get frontend URL from environment or detect from Replit domains
+function getFrontendUrl(): string {
+  // 1. Use explicit FRONTEND_URL if provided
+  if (process.env.FRONTEND_URL) {
+    return process.env.FRONTEND_URL;
+  }
+  
+  // 2. Use REPLIT_DOMAINS if available (production)
+  if (process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    const primaryDomain = domains[0]?.trim();
+    if (primaryDomain) {
+      return `https://${primaryDomain}`;
+    }
+  }
+  
+  // 3. Fallback to localhost for local development
+  return 'http://localhost:5000';
+}
+
+const FRONTEND_URL = getFrontendUrl();
 
 if (!SENDGRID_API_KEY) {
   console.warn('⚠️  SENDGRID_API_KEY not set. Email functionality will be disabled.');
 } else {
   sgMail.setApiKey(SENDGRID_API_KEY);
   console.log('✅ SendGrid email service initialized');
+  console.log(`🔗 Frontend URL for email links: ${FRONTEND_URL}`);
 }
 
 /**
