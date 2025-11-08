@@ -1,0 +1,226 @@
+SELECT 
+  id, 
+  name, 
+  location, 
+  page_type,
+  device_type,
+  size, 
+  is_active,
+  created_at
+FROM inventory_slots 
+ORDER BY location, page_type;
+
+[
+  {
+    "id": "c9d7264d-3c2c-4d19-8194-b44104ec99cc",
+    "name": "بنر رئيسي",
+    "location": "header",
+    "page_type": "all",
+    "device_type": "desktop",
+    "size": "728x90",
+    "is_active": true,
+    "created_at": "2025-11-08T06:00:47.972Z"
+  },
+  {
+    "id": "1980d4c8-5961-4bb6-9feb-05384da1e2f9",
+    "name": "إعلان جانبي",
+    "location": "sidebar",
+    "page_type": "article",
+    "device_type": "desktop",
+    "size": "300x250",
+    "is_active": true,
+    "created_at": "2025-11-08T11:31:05.736Z"
+  },
+  {
+    "id": "e95eea37-a773-4ee2-bf01-82259b74dd42",
+    "name": "إعلان جانبي قائم",
+    "location": "sidebar",
+    "page_type": "article",
+    "device_type": "desktop",
+    "size": "300x600",
+    "is_active": true,
+    "created_at": "2025-11-08T12:11:08.135Z"
+  }
+]
+
+
+
+SELECT 
+  id, 
+  name, 
+  status, 
+  start_date, 
+  end_date,
+  created_at
+FROM campaigns 
+WHERE status NOT IN ('completed', 'draft')
+ORDER BY created_at DESC;
+
+[
+  {
+    "id": "76c0a585-3496-45ec-a5e3-0eff51ea2195",
+    "name": "حملة تجريبية",
+    "status": "active",
+    "start_date": "2025-11-08T12:38:44.930Z",
+    "end_date": "2025-11-09T21:00:00.000Z",
+    "created_at": "2025-11-08T12:39:02.123Z"
+  }
+]
+
+
+
+SELECT 
+  id, 
+  name, 
+  type, 
+  size, 
+  status,
+  destination_url,
+  created_at
+FROM creatives 
+WHERE status = 'active'
+ORDER BY created_at DESC;
+
+[
+  {
+    "id": "4ab88027-69a0-4ffe-9a8e-2c993d91205e",
+    "name": "إعلان تجريبي جانبي 2",
+    "type": "image",
+    "size": "300x600",
+    "status": "active",
+    "destination_url": "https://sabq.life",
+    "created_at": "2025-11-08T12:46:03.211Z"
+  },
+  {
+    "id": "9154f575-9d6d-4041-aa86-cc0f1abcc0e4",
+    "name": "إعلان تجريبي جانبي 1",
+    "type": "image",
+    "size": "300x250",
+    "status": "active",
+    "destination_url": "http://sabq.org",
+    "created_at": "2025-11-08T12:43:37.732Z"
+  },
+  {
+    "id": "f16a99ab-620c-4910-b728-06a59dff7345",
+    "name": "إعلان تجريبي ترويجي 2",
+    "type": "image",
+    "size": "728x90",
+    "status": "active",
+    "destination_url": "https://sabq.org",
+    "created_at": "2025-11-08T12:42:00.889Z"
+  },
+  {
+    "id": "1b19b984-7284-4916-9770-61d1bf471828",
+    "name": "إعلان تجريبي ترويجي 1",
+    "type": "image",
+    "size": "728x90",
+    "status": "active",
+    "destination_url": "https://sabq.org",
+    "created_at": "2025-11-08T12:40:26.670Z"
+  }
+]
+    SELECT 
+  acp.id as placement_id,
+  acp.status as placement_status,
+  acp.priority,
+  acp.start_date,
+  acp.end_date,
+  c.name as campaign_name,
+  c.status as campaign_status,
+  cr.name as creative_name,
+  cr.status as creative_status,
+  s.name as slot_name,
+  s.location,
+  s.page_type,
+  s.device_type,
+  s.is_active as slot_is_active
+FROM ad_creative_placements acp
+JOIN campaigns c ON acp.campaign_id = c.id
+JOIN creatives cr ON acp.creative_id = cr.id
+JOIN inventory_slots s ON acp.inventory_slot_id = s.id
+WHERE c.status != 'completed'
+ORDER BY s.location, acp.priority DESC;   [
+  {
+    "placement_id": "e26d63b6-232d-4c0d-97d2-8f7ad296bc2c",
+    "placement_status": "active",
+    "priority": 5,
+    "start_date": "2025-11-08T12:40:32.869Z",
+    "end_date": null,
+    "campaign_name": "حملة تجريبية",
+    "campaign_status": "active",
+    "creative_name": "إعلان تجريبي ترويجي 1",
+    "creative_status": "active",
+    "slot_name": "بنر رئيسي",
+    "location": "header",
+    "page_type": "all",
+    "device_type": "desktop",
+    "slot_is_active": true
+  },
+  {
+    "placement_id": "a193e6da-b209-4753-bda4-3c2e97410e5e",
+    "placement_status": "active",
+    "priority": 5,
+    "start_date": "2025-11-08T12:42:06.642Z",
+    "end_date": null,
+    "campaign_name": "حملة تجريبية",
+    "campaign_status": "active",
+    "creative_name": "إعلان تجريبي ترويجي 2",
+    "creative_status": "active",
+    "slot_name": "بنر رئيسي",
+    "location": "header",
+    "page_type": "all",
+    "device_type": "desktop",
+    "slot_is_active": true
+  },
+  {
+    "placement_id": "75d7e67a-c1ea-4899-8416-f9c39eb213ff",
+    "placement_status": "active",
+    "priority": 5,
+    "start_date": "2025-11-08T12:43:42.286Z",
+    "end_date": null,
+    "campaign_name": "حملة تجريبية",
+    "campaign_status": "active",
+    "creative_name": "إعلان تجريبي جانبي 1",
+    "creative_status": "active",
+    "slot_name": "إعلان جانبي",
+    "location": "sidebar",
+    "page_type": "article",
+    "device_type": "desktop",
+    "slot_is_active": true
+  },
+  {
+    "placement_id": "ea5bcc04-60b2-479f-b271-93e8e5feb757",
+    "placement_status": "active",
+    "priority": 5,
+    "start_date": "2025-11-08T12:46:08.637Z",
+    "end_date": null,
+    "campaign_name": "حملة تجريبية",
+    "campaign_status": "active",
+    "creative_name": "إعلان تجريبي جانبي 2",
+    "creative_status": "active",
+    "slot_name": "إعلان جانبي قائم",
+    "location": "sidebar",
+    "page_type": "article",
+    "device_type": "desktop",
+    "slot_is_active": true
+  }
+]     SELECT 
+  acp.id,
+  acp.status,
+  acp.priority,
+  acp.start_date,
+  acp.end_date,
+  c.name as campaign,
+  cr.name as creative,
+  s.page_type,
+  s.device_type,
+  c.status as c_status,
+  cr.status as cr_status,
+  s.is_active as slot_active
+FROM ad_creative_placements acp
+JOIN campaigns c ON acp.campaign_id = c.id
+JOIN creatives cr ON acp.creative_id = cr.id
+JOIN inventory_slots s ON acp.inventory_slot_id = s.id
+WHERE s.location = 'header-banner'
+  AND acp.start_date <= CURRENT_DATE
+  AND (acp.end_date IS NULL OR acp.end_date >= CURRENT_DATE);  []
