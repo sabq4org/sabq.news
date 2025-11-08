@@ -364,6 +364,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
+  // Google OAuth Routes
+  app.get("/api/auth/google", 
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
+
+  app.get("/api/auth/google/callback", 
+    passport.authenticate("google", { 
+      failureRedirect: "/ar/login?error=google_auth_failed",
+      failureMessage: true 
+    }),
+    (req, res) => {
+      console.log("✅ Google OAuth callback successful");
+      // Redirect to onboarding or dashboard based on isProfileComplete
+      const user = req.user as any;
+      if (user && !user.isProfileComplete) {
+        res.redirect("/ar/onboarding");
+      } else {
+        res.redirect("/ar/dashboard");
+      }
+    }
+  );
+
   // Register
   app.post("/api/register", authLimiter, async (req, res) => {
     try {
