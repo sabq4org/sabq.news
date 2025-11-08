@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
 import { LogIn } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 
 const loginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -151,6 +152,26 @@ export default function Login() {
                 data-testid="button-login"
               >
                 {isLoading ? "جاري تسجيل الدخول..." : "دخول"}
+              </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">أو</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = '/api/auth/google'}
+                data-testid="button-google-login"
+              >
+                <SiGoogle className="ml-2 h-4 w-4" />
+                تسجيل الدخول عبر Google
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">

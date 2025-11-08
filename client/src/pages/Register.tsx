@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { UserPlus } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 
 const registerSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -201,6 +202,26 @@ export default function Register() {
                 data-testid="button-register"
               >
                 {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
+              </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">أو</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = '/api/auth/google'}
+                data-testid="button-google-register"
+              >
+                <SiGoogle className="ml-2 h-4 w-4" />
+                إنشاء حساب عبر Google
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">
