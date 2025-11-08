@@ -7,9 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocation, useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   ArrowRight, 
   Eye, 
@@ -20,7 +31,11 @@ import {
   Plus,
   MoreVertical,
   Calendar,
-  Target
+  Target,
+  Image as ImageIcon,
+  Video,
+  Trash2,
+  Code
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -85,6 +100,20 @@ interface BudgetHistoryRecord {
   createdAt: Date;
 }
 
+interface Creative {
+  id: string;
+  adGroupId: string;
+  name: string;
+  type: string;
+  content: string;
+  destinationUrl: string;
+  size: string;
+  description?: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   draft: "outline",
   pending_review: "secondary",
@@ -117,6 +146,7 @@ export default function CampaignDetail() {
   const campaignId = params.id;
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [creativeToDelete, setCreativeToDelete] = useState<Creative | null>(null);
 
   useEffect(() => {
     document.title = "تفاصيل الحملة - لوحة تحكم الإعلانات";
@@ -165,6 +195,44 @@ export default function CampaignDetail() {
       return res.json();
     },
     enabled: !!campaignId && activeTab === "budget",
+  });
+
+  // Fetch creatives
+  const { data: creatives = [], isLoading: creativesLoading } = useQuery<Creative[]>({
+    queryKey: ["/api/ads/campaigns", campaignId, "creatives"],
+    queryFn: async () => {
+      const res = await fetch(`/api/ads/campaigns/${campaignId}/creatives`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("فشل في جلب الإعلانات");
+      return res.json();
+    },
+    enabled: !!campaignId && activeTab === "creatives",
+  });
+
+  // Delete creative mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (creativeId: string) => {
+      return await apiRequest(`/api/ads/creatives/${creativeId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/campaigns", campaignId, "creatives"] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الإعلان بنجاح",
+      });
+      setCreativeToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error("[Delete Creative] خطأ:", error);
+      toast({
+        title: "حدث خطأ",
+        description: error.message || "فشل في حذف الإعلان",
+        variant: "destructive",
+      });
+    },
   });
 
   // Calculate total spent from daily stats
@@ -353,6 +421,7 @@ export default function CampaignDetail() {
           <TabsList>
             <TabsTrigger value="overview" data-testid="tab-overview">نظرة عامة</TabsTrigger>
             <TabsTrigger value="adGroups" data-testid="tab-ad-groups">المجموعات الإعلانية</TabsTrigger>
+            <TabsTrigger value="creatives" data-testid="tab-creatives">الإعلانات</TabsTrigger>
             <TabsTrigger value="budget" data-testid="tab-budget">الميزانية</TabsTrigger>
           </TabsList>
 
@@ -673,7 +742,167 @@ export default function CampaignDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Creatives Tab */}
+          <TabsContent value="creatives" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <CardTitle>الإعلانات</CardTitle>
+                    <CardDescription>
+                      الإعلانات المرتبطة بهذه الحملة
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => setLocation(`/dashboard/ads/creatives?campaignId=${campaignId}`)}
+                    data-testid="button-create-creative"
+                  >
+                    <Plus className="h-4 w-4 ml-2" />
+                    إنشاء إعلان
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {creativesLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : creatives.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">معاينة</TableHead>
+                          <TableHead className="text-right">الاسم</TableHead>
+                          <TableHead className="text-right">النوع</TableHead>
+                          <TableHead className="text-right">الحجم</TableHead>
+                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {creatives.map((creative) => (
+                          <TableRow key={creative.id} data-testid={`row-creative-${creative.id}`}>
+                            <TableCell>
+                              <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
+                                {creative.type === "image" ? (
+                                  <img
+                                    src={creative.content}
+                                    alt={creative.name}
+                                    className="w-full h-full object-cover"
+                                    data-testid={`img-creative-preview-${creative.id}`}
+                                  />
+                                ) : creative.type === "html" ? (
+                                  <Code className="h-6 w-6 text-muted-foreground" data-testid={`icon-creative-preview-html-${creative.id}`} />
+                                ) : (
+                                  <Video className="h-6 w-6 text-muted-foreground" />
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium" data-testid={`text-creative-name-${creative.id}`}>
+                              {creative.name}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {creative.type === "image" ? (
+                                  <>
+                                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span data-testid={`text-creative-type-${creative.id}`}>صورة</span>
+                                  </>
+                                ) : creative.type === "html" ? (
+                                  <>
+                                    <Code className="h-4 w-4 text-muted-foreground" />
+                                    <Badge variant="outline" data-testid={`badge-creative-type-html-${creative.id}`}>HTML</Badge>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Video className="h-4 w-4 text-muted-foreground" />
+                                    <span data-testid={`text-creative-type-${creative.id}`}>فيديو</span>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell data-testid={`text-creative-size-${creative.id}`}>
+                              {creative.size}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={statusColors[creative.status] || "default"}
+                                data-testid={`badge-creative-status-${creative.id}`}
+                              >
+                                {statusLabels[creative.status] || creative.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => window.open(creative.content, "_blank")}
+                                  data-testid={`button-view-creative-${creative.id}`}
+                                  title="عرض"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setCreativeToDelete(creative)}
+                                  data-testid={`button-delete-creative-${creative.id}`}
+                                  title="حذف"
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="text-muted-foreground mb-4">
+                      لا توجد إعلانات حتى الآن
+                    </div>
+                    <Button
+                      onClick={() => setLocation(`/dashboard/ads/creatives?campaignId=${campaignId}`)}
+                      data-testid="button-create-first-creative"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إنشاء أول إعلان
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!creativeToDelete} onOpenChange={(open) => !open && setCreativeToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+              <AlertDialogDescription>
+                هل أنت متأكد من حذف الإعلان "{creativeToDelete?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => creativeToDelete && deleteMutation.mutate(creativeToDelete.id)}
+                className="bg-destructive hover:bg-destructive/90"
+                data-testid="button-confirm-delete"
+              >
+                حذف
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

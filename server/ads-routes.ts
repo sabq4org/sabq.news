@@ -1976,6 +1976,132 @@ router.put("/inventory-slots/:id", requireAdmin, async (req, res) => {
 });
 
 // ============================================================
+// CREATIVES - الإعلانات
+// ============================================================
+
+// رفع ملف إعلاني (صورة أو فيديو)
+router.post("/creatives/upload", requireAdvertiser, upload.single("file"), async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({ error: "لم يتم رفع أي ملف" });
+    }
+    
+    // تحديد نوع الملف
+    const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    const isImage = ALLOWED_IMAGE_EXTENSIONS.includes(ext);
+    const isVideo = ALLOWED_VIDEO_EXTENSIONS.includes(ext);
+    
+    if (!isImage && !isVideo) {
+      return res.status(400).json({ error: "نوع الملف غير مدعوم" });
+    }
+    
+    const fileType = isImage ? "image" : "video";
+    
+    // رفع الملف إلى Object Storage
+    const path = `ads/creatives/${userId}/${Date.now()}-${file.originalname}`;
+    const publicUrl = await objectStorage.uploadFile(file.buffer, path, file.mimetype, "public");
+    
+    console.log(`[Ads API] تم رفع ملف إعلاني: ${publicUrl}`);
+    
+    res.json({
+      url: publicUrl,
+      type: fileType,
+      size: file.size,
+      mimeType: file.mimetype,
+      originalName: file.originalname
+    });
+  } catch (error) {
+    console.error("[Ads API] خطأ في رفع الملف:", error);
+    res.status(500).json({ error: "حدث خطأ في رفع الملف" });
+  }
+});
+
+// إنشاء إعلان جديد
+router.post("/creatives", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    
+    // التحقق من وجود المجموعة الإعلانية
+    const [adGroup] = await db
+      .select()
+      .from(adGroups)
+      .where(eq(adGroups.id, req.body.adGroupId))
+      .limit(1);
+    
+    if (!adGroup) {
+      return res.status(404).json({ error: "المجموعة الإعلانية غير موجودة" });
+    }
+    
+    // التحقق من الصلاحية
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, adGroup.campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // التحقق من البيانات
+    const validation = insertCreativeSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: "بيانات غير صحيحة", 
+        details: validation.error.errors 
+      });
+    }
+    
+    // إنشاء الإعلان
+    const [creative] = await db
+      .insert(creatives)
+      .values({
+        ...validation.data,
+        status: "active"
+      })
+      .returning();
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "creative",
+      entityId: creative.id,
+      action: "create",
+      changes: { after: creative },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    console.log(`[Ads API] تم إنشاء إعلان جديد: ${creative.id}`);
+    
+    res.json(creative);
+  } catch (error) {
+    console.error("[Ads API] خطأ في إنشاء الإعلان:", error);
+    res.status(500).json({ error: "حدث خطأ في إنشاء الإعلان" });
+  }
+});
+
+// ============================================================
 // CAMPAIGN CREATIVES - البنرات حسب الحملة
 // ============================================================
 
