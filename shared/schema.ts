@@ -4478,14 +4478,14 @@ export const campaigns = pgTable("campaigns", {
   name: text("name").notNull(),
   objective: text("objective").notNull(), // CPM, CPC, CPA
   status: text("status").default("draft").notNull(), // draft, pending_review, active, paused, completed, rejected
-  dailyBudget: integer("daily_budget").notNull(), // بالسنتات
-  totalBudget: integer("total_budget").notNull(), // بالسنتات
-  spentBudget: integer("spent_budget").default(0).notNull(), // بالسنتات
-  spentToday: integer("spent_today").default(0).notNull(), // بالسنتات
-  lastResetDate: timestamp("last_reset_date").defaultNow(), // لإعادة تعيين الميزانية اليومية
+  dailyBudget: integer("daily_budget").notNull(), // عدد الظهورات اليومية المسموحة
+  totalBudget: integer("total_budget").notNull(), // إجمالي الظهورات المسموحة
+  spentBudget: integer("spent_budget").default(0).notNull(), // عدد الظهورات المستخدمة
+  spentToday: integer("spent_today").default(0).notNull(), // عدد الظهورات المستخدمة اليوم
+  lastResetDate: timestamp("last_reset_date").defaultNow(), // لإعادة تعيين عداد الظهورات اليومية
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
-  bidAmount: integer("bid_amount").notNull(), // بالسنتات (المبلغ لكل وحدة حسب الهدف)
+  bidAmount: integer("bid_amount").notNull(), // للاحتفاظ بالتوافقية (غير مستخدم حالياً)
   
   // معلومات الموافقة
   reviewedBy: varchar("reviewed_by").references(() => users.id),
@@ -4814,9 +4814,9 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
 }).extend({
   name: z.string().min(1, "اسم الحملة مطلوب"),
   objective: z.enum(["CPM", "CPC", "CPA", "CPE"], { message: "نوع الحملة غير صحيح" }),
-  dailyBudget: z.number().positive("الميزانية اليومية يجب أن تكون موجبة"),
-  totalBudget: z.number().positive("الميزانية الإجمالية يجب أن تكون موجبة"),
-  bidAmount: z.number().positive("مبلغ العرض يجب أن يكون موجباً"),
+  dailyBudget: z.number().int().positive("عدد الظهورات اليومية يجب أن يكون موجباً"),
+  totalBudget: z.number().int().positive("إجمالي الظهورات يجب أن يكون موجباً"),
+  bidAmount: z.number().int().positive("القيمة يجب أن تكون موجبة").default(1),
   startDate: z.coerce.date(), // Accept ISO string and convert to date
   endDate: z.coerce.date().nullable().optional(), // Accept ISO string, optional, can be null
 });
