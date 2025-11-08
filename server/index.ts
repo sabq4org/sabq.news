@@ -234,6 +234,12 @@ app.use((req, res, next) => {
     const server = await registerRoutes(app);
     console.log("[Server] ✅ Routes registered successfully");
 
+    // Social media crawler middleware - MUST come before Vite/static setup
+    // This intercepts crawler requests and serves static HTML with proper meta tags
+    const { socialCrawlerMiddleware } = await import("./socialCrawler");
+    app.use(socialCrawlerMiddleware);
+    console.log("[Server] ✅ Social crawler middleware registered");
+
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
