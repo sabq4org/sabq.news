@@ -91,7 +91,7 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
             e.preventDefault();
             handleClick();
           }}
-          className="block cursor-pointer mx-auto"
+          className="block cursor-pointer mx-auto rounded-md overflow-hidden border border-border/50 bg-card/30 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow"
           style={{ maxWidth: `${width}px` }}
           data-testid={`ad-link-${creative.id}`}
           rel="noopener noreferrer sponsored"

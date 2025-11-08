@@ -174,11 +174,18 @@ export default function InventorySlotsManagement() {
   const [slotToDelete, setSlotToDelete] = useState<InventorySlot | null>(null);
 
   // Allow advertiser, admin, and superadmin to manage inventory slots
-  const isAdmin = ["admin", "superadmin", "advertiser"].includes(user?.role || "");
+  const isAdmin = user ? ["admin", "superadmin", "advertiser"].includes(user.role) : false;
 
   useEffect(() => {
     document.title = "إدارة أماكن العرض الإعلانية - لوحة تحكم الإعلانات";
   }, []);
+
+  // Debug log
+  useEffect(() => {
+    if (user) {
+      console.log("[InventorySlotsManagement] User role:", user.role, "isAdmin:", isAdmin);
+    }
+  }, [user, isAdmin]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
