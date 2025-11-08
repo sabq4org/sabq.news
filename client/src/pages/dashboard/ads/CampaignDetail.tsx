@@ -164,6 +164,7 @@ export default function CampaignDetail() {
   const [showAdGroupDialog, setShowAdGroupDialog] = useState(false);
   const [adGroupName, setAdGroupName] = useState("");
   const [targetDevices, setTargetDevices] = useState<string[]>(["desktop", "mobile", "tablet"]);
+  const [adGroupToDelete, setAdGroupToDelete] = useState<AdGroupWithStats | null>(null);
 
   useEffect(() => {
     document.title = "تفاصيل الحملة - لوحة تحكم الإعلانات";
@@ -316,6 +317,31 @@ export default function CampaignDetail() {
       toast({
         title: "حدث خطأ",
         description: error.message || "فشل في تحديث حالة الحملة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete ad group mutation
+  const deleteAdGroupMutation = useMutation({
+    mutationFn: async (adGroupId: string) => {
+      return await apiRequest(`/api/ads/ad-groups/${adGroupId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/ad-groups", { campaignId }] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف المجموعة الإعلانية بنجاح",
+      });
+      setAdGroupToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error("[Delete Ad Group] خطأ:", error);
+      toast({
+        title: "حدث خطأ",
+        description: error.message || "فشل في حذف المجموعة الإعلانية",
         variant: "destructive",
       });
     },
@@ -691,8 +717,8 @@ export default function CampaignDetail() {
                                   <DropdownMenuItem
                                     data-testid={`button-view-ad-group-${group.id}`}
                                     onClick={() => toast({
-                                      title: "قريباً",
-                                      description: "عرض التفاصيل قريباً"
+                                      title: "معلومات المجموعة",
+                                      description: `الاسم: ${group.name}\nالحالة: ${statusLabels[group.status]}\nعدد الإعلانات: ${group.creativesCount}`
                                     })}
                                   >
                                     عرض
@@ -700,8 +726,8 @@ export default function CampaignDetail() {
                                   <DropdownMenuItem
                                     data-testid={`button-edit-ad-group-${group.id}`}
                                     onClick={() => toast({
-                                      title: "قريباً",
-                                      description: "التعديل قريباً"
+                                      title: "التعديل",
+                                      description: "يمكنك تعديل المجموعة من خلال API مباشرة"
                                     })}
                                   >
                                     تعديل
@@ -709,10 +735,7 @@ export default function CampaignDetail() {
                                   <DropdownMenuItem
                                     data-testid={`button-delete-ad-group-${group.id}`}
                                     className="text-destructive"
-                                    onClick={() => toast({
-                                      title: "قريباً",
-                                      description: "الحذف قريباً"
-                                    })}
+                                    onClick={() => setAdGroupToDelete(group)}
                                   >
                                     حذف
                                   </DropdownMenuItem>
@@ -1096,7 +1119,7 @@ export default function CampaignDetail() {
           </TabsContent>
         </Tabs>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Delete Creative Confirmation Dialog */}
         <AlertDialog open={!!creativeToDelete} onOpenChange={(open) => !open && setCreativeToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -1113,6 +1136,29 @@ export default function CampaignDetail() {
                 data-testid="button-confirm-delete"
               >
                 حذف
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Ad Group Confirmation Dialog */}
+        <AlertDialog open={!!adGroupToDelete} onOpenChange={(open) => !open && setAdGroupToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>تأكيد حذف المجموعة الإعلانية</AlertDialogTitle>
+              <AlertDialogDescription>
+                هل أنت متأكد من حذف المجموعة الإعلانية "{adGroupToDelete?.name}"؟ سيتم حذف جميع الإعلانات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-cancel-delete-ad-group">إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => adGroupToDelete && deleteAdGroupMutation.mutate(adGroupToDelete.id)}
+                className="bg-destructive hover:bg-destructive/90"
+                data-testid="button-confirm-delete-ad-group"
+                disabled={deleteAdGroupMutation.isPending}
+              >
+                {deleteAdGroupMutation.isPending ? "جارٍ الحذف..." : "حذف"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
