@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, CornerDownLeft } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MessageCircle, Send, CornerDownLeft, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { CommentWithUser } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -30,6 +32,7 @@ export function CommentSection({
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,68 +178,84 @@ export function CommentSection({
     );
   };
 
+  // Don't show comments section for non-authenticated users
+  if (!currentUser) {
+    return null;
+  }
+
+  const commentsCount = comments.length;
+
   return (
-    <Card id="comments">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          التعليقات ({comments.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {currentUser ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex gap-3">
-              <Avatar className="h-10 w-10 flex-shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                  {getInitials(currentUser.firstName, currentUser.lastName, currentUser.email)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <Textarea
-                  placeholder="شارك برأيك..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[100px] resize-none"
-                  data-testid="textarea-new-comment"
+    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+      <Card id="comments">
+        <CardHeader>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between cursor-pointer group">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base group-hover:text-primary transition-colors">
+                  التعليقات
+                </CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                {commentsCount === 0 ? (
+                  <p className="text-sm text-muted-foreground">✍️ لا توجد تعليقات بعد. كن أول من يعلق!</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    يوجد {commentsCount.toLocaleString('ar-SA')} {commentsCount === 1 ? 'تعليق' : commentsCount === 2 ? 'تعليقان' : 'تعليقات'} .. للقراءة والمشاركة
+                  </p>
+                )}
+                <ChevronDown 
+                  className={cn(
+                    "h-5 w-5 transition-transform duration-200 text-muted-foreground",
+                    isExpanded && "rotate-180"
+                  )}
                 />
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                disabled={!newComment.trim()}
-                className="gap-2"
-                data-testid="button-submit-comment"
-              >
-                <Send className="h-4 w-4" />
-                نشر التعليق
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="mb-4">سجل الدخول لإضافة تعليق</p>
-            <Button 
-              onClick={() => window.location.href = "/api/login"}
-              data-testid="button-login-to-comment"
-            >
-              تسجيل الدخول
-            </Button>
-          </div>
-        )}
+          </CollapsibleTrigger>
+        </CardHeader>
+        
+        <CollapsibleContent>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="flex gap-3">
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                    {getInitials(currentUser.firstName, currentUser.lastName, currentUser.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <Textarea
+                    placeholder="شارك برأيك..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="min-h-[100px] resize-none"
+                    data-testid="textarea-new-comment"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={!newComment.trim()}
+                  className="gap-2"
+                  data-testid="button-submit-comment"
+                >
+                  <Send className="h-4 w-4" />
+                  نشر التعليق
+                </Button>
+              </div>
+            </form>
 
-        <div className="space-y-4">
-          {comments.length > 0 ? (
-            comments.filter(c => !c.parentId).map((comment) => renderComment(comment))
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>لا توجد تعليقات بعد. كن أول من يعلق!</p>
+            <div className="space-y-4">
+              {commentsCount > 0 && (
+                comments.filter(c => !c.parentId).map((comment) => renderComment(comment))
+              )}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
