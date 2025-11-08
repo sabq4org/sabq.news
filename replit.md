@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform designed to deliver an advanced news experience through AI-driven article summarization, personalized recommendations, and comprehensive content management. Built with React, Express, and PostgreSQL, the platform supports RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management. It aims to enrich news consumption with AI and content enrichment, featuring an MVP with a complete English dashboard and independent content management for both languages. Key capabilities include a smart links system, an AI-powered SEO optimization platform, and one-click AI content generation.
+Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform designed to deliver an advanced news experience through AI-driven article summarization, personalized recommendations, and comprehensive content management. It aims to enrich news consumption with AI and content enrichment, featuring an MVP with a complete English dashboard and independent content management for both languages. Key capabilities include a smart links system, an AI-powered SEO optimization platform, and one-click AI content generation. The platform is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,53 +9,33 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts. It includes a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation. Mobile responsiveness is achieved through a mobile-first approach.
+The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation. Mobile responsiveness is achieved through a mobile-first approach.
 
-A core architectural decision is the **bilingual system**, which implements:
--   **Separate Database Architecture:** Independent tables for each language (e.g., `en_categories`, `articles`) for clean separation.
--   **Language-Specific Dashboards:** Completely separate management interfaces for Arabic (`/dashboard`) and English (`/en/dashboard`), each with its own navigation, layout (RTL/LTR), and content management, ensuring zero content mixing.
--   **API Layer Separation:** Dedicated API endpoints for each language (e.g., `/api/dashboard/*` for Arabic, `/api/en/dashboard/*` for English, `/api/en/user/*` for English user data, `/api/en/ai/daily-summary` for English daily activity analysis).
--   **Shared Resources:** Users, roles, and authentication are shared.
--   **i18n System:** LanguageContext with translation dictionaries, LanguageSwitcher, and bidirectional routing.
--   **Unified Design System:** Both languages share the same color palette, components, and design principles, adapting for RTL/LTR.
-
-The design system uses an enhanced color palette with a soft bluish-white background, brightened primary colors, and a new accent system (blue, purple, green). Dashboard UI elements feature gradient backgrounds, subtle shadows, and hover effects. Dark mode is fully supported. Navigation includes a sticky core categories bar on desktop and a redesigned footer with an intelligence banner, navigation columns, and a bottom bar.
+A core architectural decision is the **bilingual system** with separate database architecture, language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented. The design system uses an enhanced color palette, gradient backgrounds, subtle shadows, and full dark mode support, with a sticky core categories bar and a redesigned footer.
 
 ### Technical Implementations
-The frontend is built with Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, utilizing TanStack Query for state management. The backend uses Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (via Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features.
-
-Performance optimizations include Gzip compression, smart HTTP caching, background jobs with locking mechanisms, dynamic category updates every 15 minutes, and a Content Security Policy (CSP). API payload optimization reduces response sizes by excluding heavy fields from homepage endpoints.
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
 
 ### Feature Specifications
 Key features include:
--   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and granular permissions, and hybrid authentication.
--   **Content Management:** Lifecycle management for articles, news, users, and categories, including comment moderation, an advanced article editor with AI-powered title/summary generation, SEO, and bulk operations.
--   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English with strict language separation. Arabic version uses `articles`, `reactions`, `comments` tables with RTL layout and sidebar on the left. English version uses `en_articles`, `en_reactions`, `en_comments` tables with LTR layout and sidebar on the right. Both versions display metrics in standardized format (763564 without locale separators), use only lucide-react icons (no emoji), and include engagement charts with Recharts and Framer Motion animations.
--   **Comments & Engagement:** Nested comment system with reply functionality and real-time moderation.
--   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles, managed from a unified dashboard but strictly separated on public-facing pages.
--   **Advanced Internal Announcements System:** Production-grade platform with multi-announcement support, versioning, scheduling, audience targeting, and analytics.
--   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (Text-to-Speech with ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story Tracking & Following, Keyword Following, AI Insights Block, AI Analytics Dashboard (displays article engagement metrics including average read time, completion rate, and user interactions with interactive charts using Recharts and Framer Motion - **fully implemented for both Arabic and English versions with complete language separation**), SEO AI Assistant (GPT-5 for automated SEO analysis and content generation), and Smart Content Generation System (one-click content creation using GPT-5).
--   **Real-Time Features:** "Moment by Moment" (لحظة بلحظة) provides an AI-powered activity timeline, and a Smart Notifications System uses SSE.
--   **Smart Links Management System:** Full CRUD operations for AI-powered entity and term recognition, direct image upload, AI-powered auto-description generation, rich metadata support, and dashboard management.
--   **Smart Media Library System (Arabic):** Comprehensive media asset management with hierarchical folder structure, AI-powered image suggestions using GPT-5, advanced search and filtering, grid/list views, dual upload/selection interface integrated with article editor, and auto-save feature that stores uploaded images to library. Accessible at `/dashboard/media-library` for Arabic content management.
--   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including article metadata, Schema.org JSON-LD, and OpenAPI 3.0 specification.
+-   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
+-   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO, and bulk operations.
+-   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English with strict language separation, displaying engagement metrics with Recharts and Framer Motion animations.
+-   **Comments & Engagement:** Nested comment system with real-time moderation.
+-   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
+-   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
+-   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story/Keyword Following, AI Insights Block, SEO AI Assistant (GPT-5), and Smart Content Generation System (GPT-5).
+-   **Real-Time Features:** "Moment by Moment" activity timeline and Smart Notifications System via SSE.
+-   **Smart Links Management System:** Full CRUD for AI-powered entity/term recognition, direct image upload, AI auto-description, and rich metadata.
+-   **Smart Media Library System (Arabic):** Comprehensive asset management with hierarchical folders, AI-powered image suggestions (GPT-5), and integration with the article editor.
+-   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including Schema.org JSON-LD and OpenAPI 3.0 specification.
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
--   **Locale-Isolated User Pages:** Complete English-specific user profile pages (`/en/profile`, `/en/daily-brief`, `/en/notification-settings`) that query English-only data through dedicated API endpoints (`/api/en/user/*`, `/api/en/ai/daily-summary`), ensuring zero contamination from Arabic content.
--   **Related Articles Feature (Bilingual):** Intelligent article recommendations displayed in article detail page sidebar. Arabic version queries `articles` table via `/api/articles/:slug/related`, English version queries `en_articles` table via `/api/en/articles/:slug/related`. Both display up to 5 related published articles from same category, excluding opinions and current article, with proper language-specific formatting (RTL/LTR, localized dates, English/Arabic names).
--   **Smart Advertising System (Arabic - Phase 1 Implemented):** Enterprise-grade advertising platform mimicking Google DoubleClick with AI-powered optimization. **Current Status:** Advertiser dashboard UI complete with campaign management, ad account management, performance analytics, and budget tracking. Core features include:
-    -   **Ad Account Management:** Complete account creation and management UI accessible at `/dashboard/ads/account`. Features include account creation form with company information (Arabic/English names), contact details, tax ID, billing address, account type selection (standard/premium/enterprise), and total budget configuration. Account display shows real-time spending metrics, account status, and billing information. Uses react-hook-form + zod validation with proper data-testids for E2E testing.
-    -   **Campaign Management:** Full CRUD with Campaign Editor (react-hook-form + zod validation), supporting multi-objective campaigns (CPM/CPC/CPA/CPE for brand awareness/traffic/conversions/engagement). Bidirectional objective mapping implemented with proper round-trip conversion. Date validation accepts ISO date strings via z.coerce.date() for seamless frontend-backend communication.
-    -   **Performance Dashboard:** Campaign List page with stats cards (total spend, impressions, clicks, conversions, CTR), filtering by status/objective, and search functionality. Campaign Detail page with performance analytics charts (Recharts), ad groups management, and budget tracking tabs.
-    -   **Navigation Integration:** Advertising section added to main sidebar navigation (nav.config.ts) with two menu items: "الحملات الإعلانية" (Campaigns) and "حسابي الإعلاني" (Ad Account). Available to admin and advertiser roles.
-    -   **API Endpoints:** Complete REST API with `/api/ads/accounts` (POST/GET /me for account management), `/api/ads/campaigns`, `/api/ads/campaigns/:id/ad-groups`, `/api/ads/campaigns/:id/budget-history`, `/api/ads/campaigns/:id/daily-stats` - all returning real database data with fixed COUNT(DISTINCT) queries to prevent inflated metrics from JOIN row multiplication.
-    -   **Data Integrity:** All statistics calculations use COUNT(DISTINCT impressions.id), COUNT(DISTINCT clicks.id), COUNT(DISTINCT conversions.id) to ensure accurate metrics. Budget values stored in cents for precision.
-    -   **RBAC Integration:** Added "advertiser" role to UserRole type. Users require both role="advertiser" AND active adAccount record to access advertising system. Development mode allows role specification during registration for testing.
-    -   **UI/UX:** RTL-first design, Shadcn components, lucide-react icons only (NO EMOJI), loading/saving states, mobile-responsive, proper data-testids for testing. All forms use controlled components with real-time validation.
-    -   **Testing:** E2E test coverage for ad account creation flow, navigation, data persistence, and display validation using Playwright.
-    -   **Planned Features:** Real-time bidding (RTB) engine, automated budget management with daily/total limits, intelligent ad targeting (geographic, device, category, keywords), AI-powered recommendations for campaign optimization, predictive CTR calculation, automatic low-performing ad detection, admin approval workflow, audit logging for governance, and automated Cron jobs for monitoring and optimization.
+-   **Locale-Isolated User Pages:** Complete English-specific user profile pages querying English-only data.
+-   **Related Articles Feature (Bilingual):** Intelligent article recommendations with language-specific formatting.
+-   **Smart Advertising System (Arabic - Phase 1 Implemented):** Enterprise-grade advertising platform with AI-powered optimization. Features include Ad Account, Campaign, Performance Dashboard, Ad Creatives, Inventory Slots, and Creative Placements Management with PostgreSQL EXCLUSION constraint for overlap prevention. RBAC integrated for admin and advertiser roles.
 
 ### System Design Choices
-Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library (MediaFiles, MediaFolders, MediaUsageLog). AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and intelligent media suggestions based on article context. A scope-aware theme management system enables dynamic theme application. A Content Import System parses RSS feeds with AI for summarization. The Smart Categories architecture uses a junction table (`articleSmartCategories`) for dynamic/smart categories, a background job for automated assignment, and a refined selection algorithm for "الآن" based on breaking news, trending articles, and featured content. Content management supports multiple article types (news, opinion, analysis, column) with a unified dashboard interface and distinct type badges. Public-facing content applies filtering to exclude opinion articles from general news feeds, maintaining separation while opinion articles are accessible via dedicated sections. The Media Library system provides centralized asset management with AI-powered keyword extraction for intelligent image recommendations, integrated seamlessly with the article editor workflow.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and intelligent media suggestions. A scope-aware theme management system is implemented. A Content Import System parses RSS feeds with AI. The Smart Categories architecture uses a junction table for dynamic/smart categories and a background job for automated assignment. Content management supports multiple article types with a unified dashboard and distinct badges. The Media Library provides centralized asset management with AI-powered keyword extraction.
 
 ## External Dependencies
 
@@ -69,7 +49,7 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **AI & Machine Learning**
 -   OpenAI API (GPT-5)
--   ElevenLabs API (Text-to-Speech for Arabic)
+-   ElevenLabs API
 
 **File Storage**
 -   `@google-cloud/storage` (via Replit Object Storage)
