@@ -4558,6 +4558,7 @@ export const inventorySlots = pgTable("inventory_slots", {
   location: text("location").notNull(), // header, sidebar, footer, inline, between_articles
   size: text("size").notNull(), // "728x90", "300x250", etc.
   pageType: text("page_type").default("all").notNull(), // all, home, article, category
+  deviceType: text("device_type").default("all").notNull(), // desktop, mobile, tablet, all
   isActive: boolean("is_active").default(true).notNull(),
   floorPrice: integer("floor_price").default(0), // الحد الأدنى للسعر بالسنتات
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -4566,6 +4567,7 @@ export const inventorySlots = pgTable("inventory_slots", {
   index("idx_inventory_slots_location").on(table.location),
   index("idx_inventory_slots_size").on(table.size),
   index("idx_inventory_slots_active").on(table.isActive),
+  index("idx_inventory_slots_device_type").on(table.deviceType),
 ]);
 
 // Ad Creative Placements - ربط البنرات بأماكن العرض
@@ -4849,6 +4851,7 @@ export const insertInventorySlotSchema = createInsertSchema(inventorySlots).omit
   name: z.string().min(1, "اسم المكان مطلوب"),
   location: z.enum(["header", "sidebar", "footer", "inline", "between_articles"]),
   size: z.string().min(1, "الحجم مطلوب"),
+  deviceType: z.enum(["desktop", "mobile", "tablet", "all"]).default("all"),
 });
 
 export const insertAdCreativePlacementSchema = createInsertSchema(adCreativePlacements).omit({
