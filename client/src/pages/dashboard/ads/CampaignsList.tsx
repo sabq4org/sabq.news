@@ -83,13 +83,8 @@ const statusLabels: Record<Campaign["status"], string> = {
   draft: "مسودة",
 };
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "SAR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+function formatImpressions(count: number): string {
+  return new Intl.NumberFormat("en-US").format(count);
 }
 
 function formatNumber(num: number): string {
@@ -291,24 +286,24 @@ export default function CampaignsList() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الميزانية المستهلكة</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">الظهورات المستهلكة</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="text-spent-budget">
-                {formatCurrency(totalSpent)}
+                {formatImpressions(totalSpent)}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي الميزانية</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">إجمالي الظهورات</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="text-total-budget">
-                {formatCurrency(totalBudget)}
+                {formatImpressions(totalBudget)}
               </div>
             </CardContent>
           </Card>
@@ -397,7 +392,7 @@ export default function CampaignsList() {
                     <TableRow>
                       <TableHead className="text-right">اسم الحملة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">الميزانية</TableHead>
+                      <TableHead className="text-right">رصيد الظهورات</TableHead>
                       <TableHead className="text-right">المشاهدات</TableHead>
                       <TableHead className="text-right">النقرات</TableHead>
                       <TableHead className="text-right">معدل النقر (CTR)</TableHead>
@@ -439,7 +434,7 @@ export default function CampaignsList() {
                           <TableCell>
                             <div className="space-y-1">
                               <p className="text-sm font-medium">
-                                {formatCurrency(campaign.spentBudget)} / {formatCurrency(campaign.totalBudget)}
+                                {formatImpressions(campaign.spentBudget)} / {formatImpressions(campaign.totalBudget)}
                               </p>
                               <div className="w-24 bg-muted rounded-full h-1.5">
                                 <div
