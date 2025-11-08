@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import { 
   Sparkles, 
@@ -9,8 +12,10 @@ import {
   Percent, 
   Heart, 
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  ChevronDown
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TodayInsightsData {
   greeting: string;
@@ -60,6 +65,8 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
 }
 
 export function SmartSummaryBlock() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const { data: insights, isLoading } = useQuery<TodayInsightsData>({
     queryKey: ["/api/ai/insights/today"],
     retry: false,
@@ -87,92 +94,115 @@ export function SmartSummaryBlock() {
   if (!insights) return null;
 
   return (
-    <Card 
-      className="rounded-2xl p-5 bg-gradient-to-br from-slate-50 to-white dark:from-gray-800 dark:to-gray-900 shadow-sm border-2 border-primary/10"
-      data-testid="card-smart-summary"
-      dir="rtl"
-    >
-      {/* Header */}
-      <div className="flex justify-between items-center gap-3 mb-4">
-        <div>
-          <h2 className="text-lg font-bold" data-testid="text-greeting">
-            {insights.greeting}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            رحلتك المعرفية في سبق اليوم باختصار
-          </p>
-        </div>
-        <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex-shrink-0">
-          <Sparkles className="h-5 w-5 text-white" />
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <MetricCard
-          icon={<BookOpen className="h-5 w-5" />}
-          label="وقت القراءة"
-          value={`${insights.metrics.readingTime} دقيقة`}
-          color="blue"
-        />
-        <MetricCard
-          icon={<Percent className="h-5 w-5" />}
-          label="معدل الإكمال"
-          value={`${insights.metrics.completionRate}%`}
-          color="green"
-        />
-        <MetricCard
-          icon={<Heart className="h-5 w-5" />}
-          label="الإعجابات"
-          value={insights.metrics.likes}
-          color="pink"
-        />
-        <MetricCard
-          icon={<MessageSquare className="h-5 w-5" />}
-          label="التعليقات"
-          value={insights.metrics.comments}
-          color="purple"
-        />
-      </div>
-
-      {/* Top Interests */}
-      {insights.topInterests.length > 0 && (
-        <div className="border-t pt-4 mb-4">
-          <p className="font-medium text-sm mb-2">اهتماماتك اليوم:</p>
-          <div className="flex flex-wrap gap-2">
-            {insights.topInterests.map((interest, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="px-3 py-1 text-xs rounded-full bg-primary/10 text-primary border-primary/20"
-                data-testid={`interest-${index}`}
+    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+      <Card 
+        className="rounded-2xl p-5 bg-gradient-to-br from-slate-50 to-white dark:from-gray-800 dark:to-gray-900 shadow-sm border-2 border-primary/10"
+        data-testid="card-smart-summary"
+        dir="rtl"
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center gap-3 mb-4">
+          <div className="flex-1">
+            <h2 className="text-lg font-bold" data-testid="text-greeting">
+              {insights.greeting}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              رحلتك المعرفية في سبق اليوم باختصار
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <CollapsibleTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex-shrink-0"
+                data-testid="button-toggle-smart-summary"
               >
-                {interest}
-              </Badge>
-            ))}
+                <ChevronDown 
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    isExpanded && "rotate-180"
+                  )}
+                />
+              </Button>
+            </CollapsibleTrigger>
+            
+            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex-shrink-0">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
           </div>
         </div>
-      )}
 
-      {/* AI Phrase & Summary */}
-      <div className="space-y-3">
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground italic" data-testid="text-ai-phrase">
-            الذكاء الاصطناعي يقول: "{insights.aiPhrase}"
-          </p>
-        </div>
+        <CollapsibleContent>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <MetricCard
+              icon={<BookOpen className="h-5 w-5" />}
+              label="وقت القراءة"
+              value={`${insights.metrics.readingTime} دقيقة`}
+              color="blue"
+            />
+            <MetricCard
+              icon={<Percent className="h-5 w-5" />}
+              label="معدل الإكمال"
+              value={`${insights.metrics.completionRate}%`}
+              color="green"
+            />
+            <MetricCard
+              icon={<Heart className="h-5 w-5" />}
+              label="الإعجابات"
+              value={insights.metrics.likes}
+              color="pink"
+            />
+            <MetricCard
+              icon={<MessageSquare className="h-5 w-5" />}
+              label="التعليقات"
+              value={insights.metrics.comments}
+              color="purple"
+            />
+          </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground" data-testid="text-quick-summary">
-            {insights.quickSummary}
-          </p>
-          <Link href="/dashboard/daily-summary">
-            <a className="text-sm text-primary font-medium hover:underline whitespace-nowrap" data-testid="link-daily-summary">
-              عرض الملخص اليومي
-            </a>
-          </Link>
-        </div>
-      </div>
-    </Card>
+          {/* Top Interests */}
+          {insights.topInterests.length > 0 && (
+            <div className="border-t pt-4 mb-4">
+              <p className="font-medium text-sm mb-2">اهتماماتك اليوم:</p>
+              <div className="flex flex-wrap gap-2">
+                {insights.topInterests.map((interest, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="px-3 py-1 text-xs rounded-full bg-primary/10 text-primary border-primary/20"
+                    data-testid={`interest-${index}`}
+                  >
+                    {interest}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Phrase & Summary */}
+          <div className="space-y-3">
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground italic" data-testid="text-ai-phrase">
+                الذكاء الاصطناعي يقول: "{insights.aiPhrase}"
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground" data-testid="text-quick-summary">
+                {insights.quickSummary}
+              </p>
+              <Link href="/dashboard/daily-summary">
+                <a className="text-sm text-primary font-medium hover:underline whitespace-nowrap" data-testid="link-daily-summary">
+                  عرض الملخص اليومي
+                </a>
+              </Link>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
