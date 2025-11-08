@@ -27,6 +27,7 @@ export default function AdminLogin() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
+  const [useBackupCode, setUseBackupCode] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -89,13 +90,17 @@ export default function AdminLogin() {
   };
 
   const handleVerify2FA = async () => {
-    if (twoFactorCode.length !== 6) return;
+    if (useBackupCode ? twoFactorCode.length < 6 : twoFactorCode.length !== 6) return;
 
     try {
       setIsVerifying2FA(true);
       await apiRequest("/api/2fa/verify", {
         method: "POST",
-        body: JSON.stringify({ token: twoFactorCode }),
+        body: JSON.stringify(
+          useBackupCode 
+            ? { backupCode: twoFactorCode } 
+            : { token: twoFactorCode }
+        ),
       });
 
       // Fetch user data to verify staff access
@@ -124,7 +129,7 @@ export default function AdminLogin() {
     } catch (error: any) {
       toast({
         title: "خطأ في التحقق",
-        description: error.message || "رمز التحقق غير صحيح",
+        description: error.message || (useBackupCode ? "الرمز الاحتياطي غير صحيح" : "رمز التحقق غير صحيح"),
         variant: "destructive",
       });
       setTwoFactorCode("");
@@ -156,18 +161,24 @@ export default function AdminLogin() {
 
             <div className="space-y-2">
               <label htmlFor="twoFactorCode" className="text-sm font-medium text-white">
-                رمز التحقق
+                {useBackupCode ? "الرمز الاحتياطي" : "رمز التحقق"}
               </label>
               <Input
                 id="twoFactorCode"
                 type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="000000"
+                inputMode={useBackupCode ? "text" : "numeric"}
+                maxLength={useBackupCode ? 16 : 6}
+                placeholder={useBackupCode ? "XXXX-XXXX-XXXX-XXXX" : "000000"}
                 value={twoFactorCode}
-                onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  if (useBackupCode) {
+                    setTwoFactorCode(e.target.value);
+                  } else {
+                    setTwoFactorCode(e.target.value.replace(/\D/g, ""));
+                  }
+                }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && twoFactorCode.length === 6) {
+                  if (e.key === "Enter" && twoFactorCode.length >= 6) {
                     handleVerify2FA();
                   }
                 }}
@@ -179,7 +190,7 @@ export default function AdminLogin() {
 
             <Button
               onClick={handleVerify2FA}
-              disabled={twoFactorCode.length !== 6 || isVerifying2FA}
+              disabled={(useBackupCode ? twoFactorCode.length < 6 : twoFactorCode.length !== 6) || isVerifying2FA}
               className="w-full"
               data-testid="button-verify-2fa"
             >
@@ -190,8 +201,21 @@ export default function AdminLogin() {
             <button
               type="button"
               onClick={() => {
+                setUseBackupCode(!useBackupCode);
+                setTwoFactorCode("");
+              }}
+              className="w-full text-sm text-primary hover:underline transition-colors"
+              data-testid="button-toggle-backup-code"
+            >
+              {useBackupCode ? "استخدام رمز التحقق من التطبيق" : "استخدام رمز احتياطي"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
                 setRequires2FA(false);
                 setTwoFactorCode("");
+                setUseBackupCode(false);
               }}
               className="w-full text-sm text-slate-400 hover:text-white transition-colors"
             >
