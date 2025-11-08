@@ -11,6 +11,7 @@ import { ViewsCount } from "@/components/ViewsCount";
 import { ExportPdfButton } from "@/components/ExportPdfButton";
 import { ArticlePdfView } from "@/components/ArticlePdfView";
 import { AiArticleStats } from "@/components/AiArticleStats";
+import { AdSlot } from "@/components/AdSlot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -793,6 +794,9 @@ export default function ArticleDetail() {
           <aside className="space-y-6">
             {/* AI Article Analytics */}
             <AiArticleStats slug={slug} />
+
+            {/* Advertisement Slot - Article Sidebar */}
+            <AdSlot slotId="sidebar" className="my-6" />
 
             {/* AI-Powered Smart Recommendations */}
             <AIRecommendationsBlock articleSlug={slug} />
