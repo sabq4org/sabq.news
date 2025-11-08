@@ -57,7 +57,7 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
         <TrendingUp className="h-3 w-3 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-lg font-bold">{value}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
@@ -65,7 +65,7 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
 }
 
 export function SmartSummaryBlock() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const { data: insights, isLoading } = useQuery<TodayInsightsData>({
     queryKey: ["/api/ai/insights/today"],
