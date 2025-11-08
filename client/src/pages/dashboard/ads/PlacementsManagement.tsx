@@ -486,7 +486,7 @@ export default function PlacementsManagement() {
               ربط البنرات بأماكن العرض وإدارة الجدولة
             </p>
           </div>
-          {isAdmin && placements.length > 0 && (
+          {isAdmin && (
             <Button
               onClick={handleCreate}
               data-testid="button-create-placement"
