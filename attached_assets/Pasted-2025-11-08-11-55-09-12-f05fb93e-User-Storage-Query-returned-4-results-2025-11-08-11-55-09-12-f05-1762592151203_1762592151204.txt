@@ -1,0 +1,124 @@
+2025-11-08 11:55:09.12
+f05fb93e
+User
+✓ [Storage] Query returned 4 results
+2025-11-08 11:55:09.12
+f05fb93e
+User
+1. "وزير الصحة يُطلق أول "وصفة نمط حياة صحية" تُطبق بج..." [Image: ✓]
+2025-11-08 11:55:09.12
+f05fb93e
+User
+2. "اتفاقية تعاون بين تجمع المدينة المنورة الصحي ومايك..." [Image: ✓]
+2025-11-08 11:55:09.12
+f05fb93e
+User
+3. "وزير الصحة يُطلق أول مركز قيادة وتحكم للسكري في ال..." [Image: ✓]
+
+2025-11-08 11:55:09.12
+f05fb93e
+User
+4. " تحت رعاية خادم الحرمين .. انطلاق النسخة التاسعة م..." [Image: ✓]
+2025-11-08 11:55:09.12
+f05fb93e
+User
+✅ [Smart Block] Found 4 articles for "مبادرة الاستثمار 2025"
+2025-11-08 11:55:09.12
+f05fb93e
+User
+1. "وزير الصحة يُطلق أول "وصفة نمط حياة صحية" تُطبق بجميع التجمع..."
+2025-11-08 11:55:09.12
+f05fb93e
+User
+2. "اتفاقية تعاون بين تجمع المدينة المنورة الصحي ومايكروسوفت الع..."
+2025-11-08 11:55:09.12
+f05fb93e
+User
+3. "وزير الصحة يُطلق أول مركز قيادة وتحكم للسكري في العالم لمتاب..."
+2025-11-08 11:55:09.12
+f05fb93e
+User
+4. " تحت رعاية خادم الحرمين .. انطلاق النسخة التاسعة من مؤتمر مب..."
+2025-11-08 11:55:09.13
+f05fb93e
+User
+8:55:09 AM [express] GET /api/shorts/featured 200 in 106ms :: {"shorts":[],"total":0}
+2025-11-08 11:55:09.13
+f05fb93e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-08 11:55:09.14
+f05fb93e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-08 11:55:09.15
+f05fb93e
+User
+8:55:09 AM [express] GET /api/smart-blocks/query/articles 200 in 118ms :: {"items":[{"id":"ad46c4f4-…
+2025-11-08 11:55:09.15
+f05fb93e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-08 11:55:09.15
+f05fb93e
+User
+[Ads API] خطأ في جلب إعلان: error: insert or update on table "impressions" violates foreign key constraint "impressions_slot_id_inventory_slots_id_fk"
+2025-11-08 11:55:09.15
+f05fb93e
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-08 11:55:09.15
+f05fb93e
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-08 11:55:09.15
+f05fb93e
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-08 11:55:09.15
+f05fb93e
+User
+at async file:///home/runner/workspace/dist/index.js:14782:26 {
+2025-11-08 11:55:09.15
+f05fb93e
+User
+length: 322,
+2025-11-08 11:55:09.15
+f05fb93e
+User
+severity: 'ERROR',
+2025-11-08 11:55:09.15
+f05fb93e
+User
+code: '23503',
+
+2025-11-08 11:55:09.15
+f05fb93e
+User
+detail: 'Key (slot_id)=(header-banner) is not present in table "inventory_slots".',
+2025-11-08 11:55:09.15
+f05fb93e
+User
+hint: undefined,
+2025-11-08 11:55:09.15
+f05fb93e
+User
+position: undefined,
+2025-11-08 11:55:09.15
+f05fb93e
+User
+internalPosition: undefined,
+
+2025-11-08 11:55:09.15
+f05fb93e
+User
+internalQuery: undefined,
+2025-11-08 11:55:09.15
+f05fb93e
+User
+where: undefined,
+2025-11-08 11:55:09.15
+f05fb93e
+User
+schema: 'public',
+

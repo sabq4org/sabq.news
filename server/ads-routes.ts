@@ -2894,7 +2894,7 @@ router.get("/slot/:slotId", async (req, res) => {
       return res.status(204).send(); // No ad available
     }
     
-    const { placement, creative, campaign } = activePlacements[0];
+    const { placement, creative, campaign, slot } = activePlacements[0];
     
     // Create impression record
     const [impression] = await db
@@ -2902,7 +2902,7 @@ router.get("/slot/:slotId", async (req, res) => {
       .values({
         creativeId: creative.id,
         campaignId: campaign.id,
-        slotId: slotId,
+        slotId: slot.id,
         userAgent: req.headers["user-agent"] || null,
         ipAddress: req.ip || null,
         pageUrl: req.headers.referer || null,
