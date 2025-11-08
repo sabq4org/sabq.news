@@ -204,8 +204,24 @@ export async function setupAuth(app: Express) {
 
   // Apple OAuth Strategy
   if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
-    // Format the private key properly - replace literal \n with actual newlines
-    const privateKey = process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    // Format the private key properly
+    let privateKey = process.env.APPLE_PRIVATE_KEY;
+    
+    // If the key is stored as a single line (common in env variables), convert it to multiline format
+    if (!privateKey.includes('\n')) {
+      // Replace literal \n with actual newlines
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+    
+    // Ensure proper PEM format with headers
+    if (!privateKey.includes('BEGIN PRIVATE KEY')) {
+      console.error("❌ Apple private key must include PEM headers (BEGIN PRIVATE KEY)");
+    }
+    
+    // Trim any whitespace
+    privateKey = privateKey.trim();
+    
+    console.log("🔑 Apple private key formatted (length:", privateKey.length, ")");
     
     passport.use(
       new AppleStrategy(

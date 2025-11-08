@@ -94,28 +94,30 @@ export default function NotFound() {
           transition={{ delay: 0.9 }}
           className="flex flex-col sm:flex-row gap-4 mt-8"
         >
-          <Link href="/">
-            <Button
-              size="lg"
-              className="flex items-center gap-2 text-base px-6"
-              data-testid="button-home-404"
-            >
+          <Button
+            size="lg"
+            className="flex items-center gap-2 text-base px-6"
+            data-testid="button-home-404"
+            asChild
+          >
+            <Link href="/">
               <Home className="w-5 h-5" />
               العودة للرئيسية
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
-          <Link href="/ar/search">
-            <Button
-              size="lg"
-              variant="outline"
-              className="flex items-center gap-2 text-base px-6 border-primary/40 hover:bg-primary/10"
-              data-testid="button-search-404"
-            >
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex items-center gap-2 text-base px-6 border-primary/40"
+            data-testid="button-search-404"
+            asChild
+          >
+            <Link href="/ar/search">
               <Search className="w-5 h-5" />
               البحث في الموقع
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </motion.div>
 
         {/* Fun Suggestions */}
@@ -130,46 +132,42 @@ export default function NotFound() {
             اقتراحات ذكية من المساعد الرقمي
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Link href="/ar/news">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs hover:bg-primary/10 hover:text-primary"
-                data-testid="link-news-404"
-              >
-                الأخبار
-              </Button>
-            </Link>
-            <Link href="/ar/categories">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs hover:bg-primary/10 hover:text-primary"
-                data-testid="link-categories-404"
-              >
-                الأقسام
-              </Button>
-            </Link>
-            <Link href="/ar/mirqab">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs hover:bg-primary/10 hover:text-primary"
-                data-testid="link-mirqab-404"
-              >
-                مرقاب
-              </Button>
-            </Link>
-            <Link href="/ar/opinion">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs hover:bg-primary/10 hover:text-primary"
-                data-testid="link-opinion-404"
-              >
-                الرأي
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+              data-testid="link-news-404"
+              asChild
+            >
+              <Link href="/ar/news">الأخبار</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+              data-testid="link-categories-404"
+              asChild
+            >
+              <Link href="/ar/categories">الأقسام</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+              data-testid="link-mirqab-404"
+              asChild
+            >
+              <Link href="/ar/mirqab">مرقاب</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+              data-testid="link-opinion-404"
+              asChild
+            >
+              <Link href="/ar/opinion">الرأي</Link>
+            </Button>
           </div>
         </motion.div>
       </motion.div>
