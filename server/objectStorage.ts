@@ -144,17 +144,22 @@ export class ObjectStorageService {
   async uploadFile(
     path: string,
     buffer: Buffer,
-    contentType: string
+    contentType: string,
+    visibility: "public" | "private" = "private"
   ): Promise<{ url: string; path: string }> {
-    const privateObjectDir = this.getPrivateObjectDir();
-    if (!privateObjectDir) {
+    // Use public or private directory based on visibility
+    const baseDir = visibility === "public" 
+      ? this.getPublicObjectSearchPaths()[0] 
+      : this.getPrivateObjectDir();
+    
+    if (!baseDir) {
       throw new Error(
-        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
+        `${visibility === "public" ? "PUBLIC_OBJECT_SEARCH_PATHS" : "PRIVATE_OBJECT_DIR"} not set. ` +
+        "Create a bucket in 'Object Storage' tool and set the env var."
       );
     }
 
-    const fullPath = `${privateObjectDir}/${path}`;
+    const fullPath = `${baseDir}/${path}`;
     const { bucketName, objectName } = parseObjectPath(fullPath);
 
     const bucket = objectStorageClient.bucket(bucketName);
@@ -166,9 +171,9 @@ export class ObjectStorageService {
       },
     });
 
-    // Make the file publicly accessible
-    await file.makePublic();
-
+    // For public files in the public/ directory, they're automatically accessible
+    // No need to call makePublic() as Replit Object Storage doesn't allow it
+    
     return {
       url: `https://storage.googleapis.com/${bucketName}/${objectName}`,
       path: fullPath,

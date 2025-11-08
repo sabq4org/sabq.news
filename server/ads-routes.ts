@@ -2042,12 +2042,12 @@ router.post("/creatives/upload", requireAdvertiser, upload.single("file"), async
     
     // رفع الملف إلى Object Storage
     const path = `ads/creatives/${userId}/${Date.now()}-${file.originalname}`;
-    const publicUrl = await objectStorage.uploadFile(file.buffer, path, file.mimetype, "public");
+    const result = await objectStorage.uploadFile(path, file.buffer, file.mimetype, "public");
     
-    console.log(`[Ads API] تم رفع ملف إعلاني: ${publicUrl}`);
+    console.log(`[Ads API] تم رفع ملف إعلاني: ${result.url}`);
     
     res.json({
-      url: publicUrl,
+      url: result.url,
       type: fileType,
       size: file.size,
       mimeType: file.mimetype,
