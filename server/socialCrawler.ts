@@ -42,47 +42,59 @@ function isCrawler(req: Request): boolean {
  * Generates static HTML with Open Graph meta tags for an article
  */
 function generateArticleHTML(article: any, baseUrl: string): string {
-  const seoTitle = article.seoTitle || article.title || 'خبر من سبق';
-  const seoDescription = article.seoDescription || article.excerpt || article.aiSummary || 'اقرأ المزيد';
-  const seoImage = article.imageUrl || `${baseUrl}/icon.png`;
+  // Extract SEO data from article.seo JSON field or fallback to article fields
+  const seoData = article.seo || {};
+  const seoTitle = seoData.title || article.title || 'خبر من سبق';
+  const seoDescription = seoData.description || article.excerpt || article.aiSummary || article.ai_summary || 'اقرأ المزيد';
+  // Drizzle converts snake_case to camelCase, so check both
+  const seoImage = article.imageUrl || article.image_url || `${baseUrl}/icon.png`;
   const articleUrl = `${baseUrl}/article/${article.slug}`;
+  
+  // Escape HTML to prevent XSS
+  const escapeHtml = (str: string) => str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  
+  const safeSeoTitle = escapeHtml(seoTitle);
+  const safeSeoDescription = escapeHtml(seoDescription);
   
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${seoTitle}</title>
-  <meta name="description" content="${seoDescription}">
+  <title>${safeSeoTitle}</title>
+  <meta name="description" content="${safeSeoDescription}">
   
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="article">
   <meta property="og:url" content="${articleUrl}">
-  <meta property="og:title" content="${seoTitle}">
-  <meta property="og:description" content="${seoDescription}">
+  <meta property="og:title" content="${safeSeoTitle}">
+  <meta property="og:description" content="${safeSeoDescription}">
   <meta property="og:image" content="${seoImage}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${safeSeoTitle}">
   <meta property="og:site_name" content="صحيفة سبق الإلكترونية">
   <meta property="og:locale" content="ar_SA">
-  ${article.publishedAt ? `<meta property="article:published_time" content="${article.publishedAt}">` : ''}
-  ${article.modifiedAt ? `<meta property="article:modified_time" content="${article.modifiedAt}">` : ''}
+  ${article.published_at ? `<meta property="article:published_time" content="${new Date(article.published_at).toISOString()}">` : ''}
+  ${article.updated_at ? `<meta property="article:modified_time" content="${new Date(article.updated_at).toISOString()}">` : ''}
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="${articleUrl}">
-  <meta name="twitter:title" content="${seoTitle}">
-  <meta name="twitter:description" content="${seoDescription}">
+  <meta name="twitter:title" content="${safeSeoTitle}">
+  <meta name="twitter:description" content="${safeSeoDescription}">
   <meta name="twitter:image" content="${seoImage}">
-  
-  <!-- Redirect to actual page after crawler reads meta tags -->
-  <meta http-equiv="refresh" content="0; url=${articleUrl}">
+  <meta name="twitter:image:alt" content="${safeSeoTitle}">
 </head>
-<body>
-  <h1>${seoTitle}</h1>
-  <p>${seoDescription}</p>
-  <p>يتم تحويلك للمقال...</p>
-  <script>window.location.href = '${articleUrl}';</script>
+<body style="font-family: 'Tajawal', Arial, sans-serif; direction: rtl; text-align: right; padding: 20px; background: #f5f5f5;">
+  <h1 style="color: #333; font-size: 24px; margin-bottom: 12px;">${safeSeoTitle}</h1>
+  <p style="color: #666; font-size: 16px; line-height: 1.6;">${safeSeoDescription}</p>
+  <a href="${articleUrl}" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #0066cc; color: white; text-decoration: none; border-radius: 6px;">اقرأ المقال كاملاً</a>
 </body>
 </html>`;
 }
