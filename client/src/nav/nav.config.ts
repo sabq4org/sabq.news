@@ -40,6 +40,8 @@ import {
   Calendar,
   Link,
   ImageIcon,
+  LayoutGrid,
+  MapPin,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -206,6 +208,14 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ads/account",
         icon: User,
         roles: ["admin", "advertiser"],
+      },
+      {
+        id: "inventory_slots",
+        labelKey: "nav.inventory_slots",
+        labelAr: "أماكن الظهور",
+        path: "/dashboard/ads/inventory-slots",
+        icon: MapPin,
+        roles: ["admin"],
       },
     ],
   },
