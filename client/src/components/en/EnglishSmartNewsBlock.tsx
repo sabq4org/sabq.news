@@ -117,57 +117,194 @@ export function EnglishSmartNewsBlock({ config }: EnglishSmartNewsBlockProps) {
 
 function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {articles.map((article) => {
-        const timeAgo = article.publishedAt
-          ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
-          : null;
+    <>
+      {/* Mobile View: Vertical List */}
+      <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border" data-testid={`smart-block-mobile-card-${blockId}`}>
+        <CardContent className="p-0">
+          <div className="divide-y dark:divide-y">
+            {articles.map((article) => {
+              const timeAgo = article.publishedAt
+                ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+                : null;
 
-        return (
-          <Link key={article.id} href={`/en/article/${article.slug}`}>
-            <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
-              data-testid={`card-article-${article.id}`}
-            >
-              {article.imageUrl && (
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              <CardContent className="p-4 space-y-3">
-                <h3 className="text-lg font-bold line-clamp-2 hover:text-primary transition-colors">
-                  {article.title}
-                </h3>
-                {article.excerpt && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {article.excerpt}
-                  </p>
+              return (
+                <Link key={article.id} href={`/en/article/${article.slug}`}>
+                  <div 
+                    className="block group cursor-pointer"
+                    data-testid={`link-smart-article-mobile-${article.id}`}
+                  >
+                    <div className="p-4 hover-elevate active-elevate-2 transition-all">
+                      <div className="flex gap-3">
+                        {/* Image */}
+                        {article.imageUrl && (
+                          <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                            <img
+                              src={article.imageUrl}
+                              alt={article.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              loading="lazy"
+                            />
+                            {isNewArticle(article.publishedAt) && (
+                              <div className="absolute top-1 left-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                                <Flame className="h-2.5 w-2.5" />
+                                New
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-2">
+                          {/* Breaking/New/Category Badge */}
+                          {article.newsType === "breaking" ? (
+                            <Badge 
+                              variant="destructive" 
+                              className="text-xs h-5 gap-1"
+                              data-testid={`badge-smart-mobile-breaking-${article.id}`}
+                            >
+                              <Zap className="h-3 w-3" />
+                              Breaking
+                            </Badge>
+                          ) : isNewArticle(article.publishedAt) ? (
+                            <Badge 
+                              className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                              data-testid={`badge-smart-mobile-new-${article.id}`}
+                            >
+                              <Flame className="h-3 w-3" />
+                              New
+                            </Badge>
+                          ) : article.category ? (
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs h-5"
+                              data-testid={`badge-smart-mobile-category-${article.id}`}
+                            >
+                              {article.category.icon} {article.category.name}
+                            </Badge>
+                          ) : null}
+
+                          {/* Title */}
+                          <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                            article.newsType === "breaking"
+                              ? "text-destructive"
+                              : "group-hover:text-primary"
+                          }`} data-testid={`text-smart-mobile-title-${article.id}`}>
+                            {article.title}
+                          </h4>
+
+                          {/* Meta Info */}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            {timeAgo && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {timeAgo}
+                              </span>
+                            )}
+                            {article.views !== undefined && (
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {article.views.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Desktop View: Grid */}
+      <div className="hidden lg:grid grid-cols-4 gap-6">
+        {articles.map((article) => {
+          const timeAgo = article.publishedAt
+            ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+            : null;
+
+          return (
+            <Link key={article.id} href={`/en/article/${article.slug}`}>
+              <Card 
+                className={`hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden group border-0 dark:border dark:border-card-border ${
+                  article.newsType === "breaking" ? "bg-destructive/5" : ""
+                }`}
+                data-testid={`card-smart-article-${article.id}`}
+              >
+                {article.imageUrl && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    {article.newsType === "breaking" ? (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute top-3 left-3 gap-1" 
+                        data-testid={`badge-smart-breaking-${article.id}`}
+                      >
+                        <Zap className="h-3 w-3" />
+                        Breaking
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge 
+                        className="absolute top-3 left-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                        data-testid={`badge-smart-new-${article.id}`}
+                      >
+                        <Flame className="h-3 w-3" />
+                        New
+                      </Badge>
+                    ) : article.category ? (
+                      <Badge 
+                        variant="default" 
+                        className="absolute top-3 left-3" 
+                        data-testid={`badge-smart-category-${article.id}`}
+                      >
+                        {article.category.icon} {article.category.name}
+                      </Badge>
+                    ) : null}
+                  </div>
                 )}
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  {timeAgo && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{timeAgo}</span>
-                    </div>
+                <CardContent className="p-5 space-y-3">
+                  <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
+                    article.newsType === "breaking"
+                      ? "text-destructive"
+                      : "group-hover:text-primary"
+                  }`} data-testid={`text-smart-article-title-${article.id}`}>
+                    {article.title}
+                  </h3>
+                  {article.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {article.excerpt}
+                    </p>
                   )}
-                  {article.views !== undefined && (
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      <span>{article.views.toLocaleString()}</span>
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {timeAgo && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{timeAgo}</span>
+                        </div>
+                      )}
+                      {article.views !== undefined && (
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{article.views.toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        );
-      })}
-    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </>
   );
 }
 

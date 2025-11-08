@@ -7,6 +7,8 @@ Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform design
 **November 8, 2025:** 
 - Complete removal of the internal chat/messaging system. All chat-related backend services (chat-storage.ts, chat-websocket.ts, AI chat service), frontend components (chat components folder, notification hooks, chat websocket client), database tables (10+ chat tables), API routes (1300+ lines), and UI elements have been removed. The platform now focuses exclusively on news content management and publishing features.
 - Implemented mobile-friendly collapsible sections for Daily Brief pages (both Arabic and English) with four expandable sections: Performance Metrics, Interest Analysis, Time Activity, and AI Insights. Each section features ChevronDown toggle with 200ms animation (rotates 180° when expanded), defaulting to expanded state for better mobile UX.
+- Redesigned Smart News Block GridLayout for mobile-responsive display: Mobile view (lg:hidden) now uses vertical list pattern matching Latest News with w-24 h-20 images, divide-y dividers, hover-elevate effects, and proper data-testid attributes. Desktop view (hidden lg:grid) maintains 4-column grid. Implementation is consistent across both Arabic (SmartNewsBlock) and English (EnglishSmartNewsBlock) versions.
+- Updated SmartSummaryBlock mobile metrics display to use w-24 h-20 icon containers with divide-y dark:divide-y dividers and restored data-testid attributes for all metric items, ensuring design parity with Latest News mobile layout.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

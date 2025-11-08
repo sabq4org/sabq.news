@@ -112,9 +112,10 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
 function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   return (
     <>
-      <Card className="overflow-hidden lg:hidden" data-testid={`smart-block-mobile-card-${blockId}`}>
+      {/* Mobile View: Vertical List */}
+      <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border" data-testid={`smart-block-mobile-card-${blockId}`}>
         <CardContent className="p-0">
-          <div className="divide-y">
+          <div className="divide-y dark:divide-y">
             {articles.map((article) => {
               const timeAgo = article.publishedAt
                 ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -131,8 +132,9 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                   >
                     <div className="p-4 hover-elevate active-elevate-2 transition-all">
                       <div className="flex gap-3">
+                        {/* Image */}
                         {article.imageUrl && (
-                          <div className="relative flex-shrink-0 w-24 h-20 rounded overflow-hidden">
+                          <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
                             <img
                               src={article.imageUrl}
                               alt={article.title}
@@ -144,9 +146,16 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                                   : 'center'
                               }}
                             />
+                            {isNewArticle(article.publishedAt) && (
+                              <div className="absolute top-1 right-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                                <Flame className="h-2.5 w-2.5" />
+                                جديد
+                              </div>
+                            )}
                           </div>
                         )}
 
+                        {/* Content */}
                         <div className="flex-1 min-w-0 space-y-2">
                           {/* Breaking/New/Category Badge */}
                           {article.newsType === "breaking" ? (
@@ -176,14 +185,16 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                             </Badge>
                           ) : null}
 
+                          {/* Title */}
                           <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
                             article.newsType === "breaking"
                               ? "text-destructive"
                               : "group-hover:text-primary"
-                          }`} data-testid={`text-smart-article-title-${article.id}`}>
+                          }`} data-testid={`text-smart-mobile-title-${article.id}`}>
                             {article.title}
                           </h4>
 
+                          {/* Meta Info */}
                           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             {timeAgo && (
                               <span className="flex items-center gap-1">
@@ -207,7 +218,8 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
         </CardContent>
       </Card>
 
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Desktop View: Grid */}
+      <div className="hidden lg:grid grid-cols-4 gap-6">
         {articles.map((article) => {
           const timeAgo = article.publishedAt
             ? formatDistanceToNow(new Date(article.publishedAt), {
