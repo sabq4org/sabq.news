@@ -285,6 +285,7 @@ function Router() {
       <Route path="/dashboard/ads" component={AdvertiserDashboard} />
       <Route path="/dashboard/ads/campaigns" component={CampaignsList} />
       <Route path="/dashboard/ads/campaigns/new" component={CampaignEditor} />
+      <Route path="/dashboard/ads/campaigns/:id/edit" component={CampaignEditor} />
       <Route path="/dashboard/ads/campaigns/:campaignId/placements" component={PlacementsManagement} />
       <Route path="/dashboard/ads/campaigns/:id" component={CampaignDetail} />
       <Route path="/dashboard/ads/creatives" component={CreativesManagement} />

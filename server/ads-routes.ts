@@ -822,6 +822,67 @@ router.put("/ad-groups/:id", requireAdvertiser, async (req, res) => {
   }
 });
 
+// حذف مجموعة إعلانية
+router.delete("/ad-groups/:id", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const adGroupId = req.params.id;
+    
+    const [existingGroup] = await db
+      .select()
+      .from(adGroups)
+      .where(eq(adGroups.id, adGroupId))
+      .limit(1);
+    
+    if (!existingGroup) {
+      return res.status(404).json({ error: "المجموعة غير موجودة" });
+    }
+    
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, existingGroup.campaignId))
+      .limit(1);
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign!.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    await db
+      .delete(adGroups)
+      .where(eq(adGroups.id, adGroupId));
+    
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "ad_group",
+      entityId: adGroupId,
+      action: "delete",
+      changes: {
+        before: existingGroup
+      },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json({ success: true, message: "تم حذف المجموعة بنجاح" });
+  } catch (error) {
+    console.error("[Ads API] خطأ في حذف المجموعة:", error);
+    res.status(500).json({ error: "حدث خطأ في الحذف" });
+  }
+});
+
 // ============================================================
 // CREATIVES MANAGEMENT - إدارة الإعلانات الفردية
 // ============================================================
