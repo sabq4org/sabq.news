@@ -18,7 +18,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 
 ### Feature Specifications
 Key features include:
--   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth). Email verification system implemented.
+-   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth). Email verification system implemented. OAuth features include automatic email verification, account linking by email, first-time user onboarding flow, and proper redirect logic (new users → onboarding, existing users → dashboard).
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO, and bulk operations. Includes a Smart Media Library System (Arabic) with AI-powered image suggestions.
 -   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English, displaying engagement metrics with Recharts and Framer Motion animations.
 -   **Comments & Engagement:** Nested comment system with real-time moderation, integrated with user authentication.
@@ -40,8 +40,9 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 ## External Dependencies
 
 **Authentication & Identity**
--   Passport.js
+-   Passport.js (passport-local, passport-google-oauth20, passport-apple)
 -   `express-session`, `connect-pg-simple`
+-   `apple-signin-auth` (for Apple ID token verification)
 
 **Database & ORM**
 -   `@neondatabase/serverless` (PostgreSQL)
