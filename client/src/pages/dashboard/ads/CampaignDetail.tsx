@@ -35,7 +35,10 @@ import {
   Image as ImageIcon,
   Video,
   Trash2,
-  Code
+  Code,
+  LayoutGrid,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import {
   DropdownMenu,
