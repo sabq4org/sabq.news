@@ -100,7 +100,7 @@ export async function sendVerificationEmail(userId: string, email: string): Prom
         <body>
           <div class="container">
             <div class="header">
-              <h1>📰 صحيفة سبق الإلكترونية</h1>
+              <h1>🧠 صحيفة سبق الإلكترونية</h1>
             </div>
             
             <div class="content">
