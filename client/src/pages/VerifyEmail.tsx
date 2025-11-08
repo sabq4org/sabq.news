@@ -24,29 +24,23 @@ export default function VerifyEmail() {
     // Verify email
     const verifyEmail = async () => {
       try {
-        const response = await apiRequest('/api/auth/verify-email', {
+        const data = await apiRequest('/api/auth/verify-email', {
           method: 'POST',
           body: JSON.stringify({ token }),
-          headers: { 'Content-Type': 'application/json' },
         });
 
-        if (response.ok) {
-          setStatus('success');
-          setMessage('تم التحقق من بريدك الإلكتروني بنجاح!');
-          
-          // Invalidate user cache
-          queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-          
-          // Redirect to home after 3 seconds
-          setTimeout(() => navigate('/'), 3000);
-        } else {
-          const data = await response.json();
-          setStatus('error');
-          setMessage(data.message || 'فشل التحقق من البريد الإلكتروني');
-        }
-      } catch (error) {
+        // If apiRequest succeeds, it means verification was successful
+        setStatus('success');
+        setMessage(data.message || 'تم التحقق من بريدك الإلكتروني بنجاح!');
+        
+        // Invalidate user cache
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        
+        // Redirect to home after 3 seconds
+        setTimeout(() => navigate('/'), 3000);
+      } catch (error: any) {
         setStatus('error');
-        setMessage('حدث خطأ أثناء التحقق من البريد الإلكتروني');
+        setMessage(error.message || 'حدث خطأ أثناء التحقق من البريد الإلكتروني');
         console.error('Email verification error:', error);
       }
     };
@@ -57,18 +51,14 @@ export default function VerifyEmail() {
   const handleResend = async () => {
     setResending(true);
     try {
-      const response = await apiRequest('/api/auth/resend-verification', {
+      const data = await apiRequest('/api/auth/resend-verification', {
         method: 'POST',
       });
 
-      if (response.ok) {
-        setMessage('تم إرسال رسالة التحقق بنجاح. يرجى فحص بريدك الإلكتروني');
-      } else {
-        const data = await response.json();
-        setMessage(data.message || 'فشل إرسال رسالة التحقق');
-      }
-    } catch (error) {
-      setMessage('حدث خطأ أثناء إرسال رسالة التحقق');
+      // If apiRequest succeeds, show success message
+      setMessage(data.message || 'تم إرسال رسالة التحقق بنجاح. يرجى فحص بريدك الإلكتروني');
+    } catch (error: any) {
+      setMessage(error.message || 'حدث خطأ أثناء إرسال رسالة التحقق');
       console.error('Resend verification error:', error);
     } finally {
       setResending(false);
