@@ -1649,7 +1649,10 @@ router.get("/ad-groups", requireAdvertiser, async (req, res) => {
         campaignId: adGroups.campaignId,
         name: adGroups.name,
         status: adGroups.status,
-        targeting: adGroups.targeting,
+        targetCountries: adGroups.targetCountries,
+        targetDevices: adGroups.targetDevices,
+        targetCategories: adGroups.targetCategories,
+        targetKeywords: adGroups.targetKeywords,
         createdAt: adGroups.createdAt,
         updatedAt: adGroups.updatedAt,
       })
@@ -1674,9 +1677,10 @@ router.get("/ad-groups", requireAdvertiser, async (req, res) => {
             totalConversions: sql<number>`COUNT(DISTINCT CASE WHEN ${conversions.id} IS NOT NULL THEN ${conversions.id} END)::int`
           })
           .from(impressions)
+          .innerJoin(creatives, eq(impressions.creativeId, creatives.id))
           .leftJoin(clicks, eq(clicks.impressionId, impressions.id))
           .leftJoin(conversions, eq(conversions.clickId, clicks.id))
-          .where(eq(impressions.adGroupId, group.id));
+          .where(eq(creatives.adGroupId, group.id));
         
         const totalImpressions = stats[0]?.totalImpressions || 0;
         const totalClicks = stats[0]?.totalClicks || 0;
