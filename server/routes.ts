@@ -866,14 +866,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return files with appropriate URLs:
       // - Files with https:// URLs (public) use direct URL
       // - Files with gs:// URLs (private) use proxy URL
+      // - Keep originalUrl for storage in articles
       const filesWithUrls = items.map(item => {
-        const url = item.url.startsWith('https://') 
+        const displayUrl = item.url.startsWith('https://') 
           ? item.url 
           : `/api/media/proxy/${item.id}`;
         
         return {
           ...item,
-          url,
+          originalUrl: item.url, // Keep original URL from database (https:// or gs://)
+          url: displayUrl, // Display URL for preview (https:// or /api/media/proxy/)
           proxyUrl: `/api/media/proxy/${item.id}`,
         };
       });

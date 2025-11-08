@@ -1311,7 +1311,10 @@ const generateSlug = (text: string) => {
         isOpen={showMediaPicker}
         onClose={() => setShowMediaPicker(false)}
         onSelect={(media: MediaFile) => {
-          setImageUrl(media.url);
+          // Use originalUrl (from database) instead of url (which might be proxy URL)
+          // This ensures we store the actual GCS URL (https:// or gs://)
+          const urlToStore = (media as any).originalUrl || media.url;
+          setImageUrl(urlToStore);
           setShowMediaPicker(false);
           toast({
             title: "تم اختيار الصورة",

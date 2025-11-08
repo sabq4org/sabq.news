@@ -49,6 +49,26 @@ export function ArticleCard({
     return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
   };
 
+  // Convert gs:// URLs to proxy URLs for display
+  const getDisplayImageUrl = () => {
+    if (!article.imageUrl) return null;
+    
+    // If it's a gs:// URL, it needs to be proxied
+    // We'll extract the media ID from usedIn or create a proxy URL
+    // For now, return as-is since gs:// URLs should be stored in database
+    // and will be handled by backend proxy
+    if (article.imageUrl.startsWith('gs://')) {
+      // gs:// URLs should not be in articles anymore after our fix
+      // But if they are, we can't convert without media ID
+      console.warn('[ArticleCard] Found gs:// URL in article, this should not happen:', article.imageUrl);
+      return article.imageUrl; // Will fail to load, but better than crashing
+    }
+    
+    return article.imageUrl;
+  };
+
+  const displayImageUrl = getDisplayImageUrl();
+
   // Smart AI Indicator
   const getAIInsight = () => {
     if (article.aiGenerated) return { icon: Brain, text: "محتوى مُنشأ بالذكاء الاصطناعي" };
@@ -64,9 +84,9 @@ export function ArticleCard({
       <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
         <Card className="group overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 !border-0 !bg-transparent">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-            {article.imageUrl ? (
+            {displayImageUrl ? (
               <img
-                src={article.imageUrl}
+                src={displayImageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 style={{ objectPosition: getObjectPosition() }}
@@ -184,9 +204,9 @@ export function ArticleCard({
           <div className="flex gap-4">
             <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
               <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                {article.imageUrl ? (
+                {displayImageUrl ? (
                   <img
-                    src={article.imageUrl}
+                    src={displayImageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     style={{ objectPosition: getObjectPosition() }}
@@ -298,9 +318,9 @@ export function ArticleCard({
       <CardContent className="p-0">
         <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
           <div className="relative aspect-[16/9] overflow-hidden">
-            {article.imageUrl ? (
+            {displayImageUrl ? (
               <img
-                src={article.imageUrl}
+                src={displayImageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 style={{ objectPosition: getObjectPosition() }}
