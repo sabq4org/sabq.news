@@ -13,7 +13,7 @@ interface AdData {
     type: "image" | "video" | "html";
     content: string;
     size: string;
-    clickUrl?: string;
+    destinationUrl: string;
   };
   campaign: {
     id: string;
@@ -50,9 +50,9 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
       }).catch(console.error);
     }
 
-    // Open ad URL if provided
-    if (ad?.creative?.clickUrl) {
-      window.open(ad.creative.clickUrl, "_blank", "noopener,noreferrer");
+    // Open ad URL
+    if (ad?.creative?.destinationUrl) {
+      window.open(ad.creative.destinationUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -71,6 +71,12 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
 
   const { creative } = ad;
 
+  // Parse size (e.g., "728x90" -> width: 728, height: 90)
+  // Validate and provide fallback for malformed sizes
+  const parsedSize = creative.size?.split('x')?.map(Number) ?? [728, 90];
+  const width = isNaN(parsedSize[0]) ? 728 : parsedSize[0];
+  const height = isNaN(parsedSize[1]) ? 90 : parsedSize[1];
+
   return (
     <div 
       className={`ad-slot ${className}`} 
@@ -80,14 +86,22 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
     >
       {creative.type === "image" && (
         <a
-          onClick={handleClick}
-          className="block cursor-pointer"
+          href={creative.destinationUrl}
+          onClick={(e) => {
+            e.preventDefault();
+            handleClick();
+          }}
+          className="block cursor-pointer mx-auto"
+          style={{ maxWidth: `${width}px` }}
           data-testid={`ad-link-${creative.id}`}
           rel="noopener noreferrer sponsored"
+          target="_blank"
         >
           <img
             src={creative.content}
             alt={creative.name}
+            width={width}
+            height={height}
             className="w-full h-auto"
             loading="lazy"
             data-testid={`ad-image-${creative.id}`}
@@ -96,9 +110,16 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
       )}
 
       {creative.type === "video" && (
-        <div onClick={handleClick} className="cursor-pointer" data-testid={`ad-video-${creative.id}`}>
+        <div 
+          onClick={handleClick} 
+          className="cursor-pointer mx-auto" 
+          style={{ maxWidth: `${width}px` }}
+          data-testid={`ad-video-${creative.id}`}
+        >
           <video
             src={creative.content}
+            width={width}
+            height={height}
             className="w-full h-auto"
             autoPlay
             muted
@@ -111,7 +132,8 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
       {creative.type === "html" && (
         <div
           onClick={handleClick}
-          className="cursor-pointer"
+          className="cursor-pointer mx-auto"
+          style={{ maxWidth: `${width}px` }}
           dangerouslySetInnerHTML={{ __html: creative.content }}
           data-testid={`ad-html-${creative.id}`}
         />
