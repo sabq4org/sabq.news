@@ -2,7 +2,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { chatWebSocket } from "./chat-websocket";
 import { setupAuth, isAuthenticated } from "./auth";
 import adsRoutes from "./ads-routes";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
@@ -10,7 +9,6 @@ import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
-import { aiChatService } from "./ai-chat-service";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
 import { createNotification } from "./notificationEngine";
 import { notificationBus } from "./notificationBus";
