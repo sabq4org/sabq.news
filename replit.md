@@ -4,7 +4,9 @@
 Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform designed to deliver an advanced news experience through AI-driven article summarization, personalized recommendations, and comprehensive content management. It aims to enrich news consumption with AI and content enrichment, featuring an MVP with a complete English dashboard and independent content management for both languages. Key capabilities include a smart links system, an AI-powered SEO optimization platform, and one-click AI content generation. The platform is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management.
 
 ## Recent Changes
-**November 8, 2025:** Complete removal of the internal chat/messaging system. All chat-related backend services (chat-storage.ts, chat-websocket.ts, AI chat service), frontend components (chat components folder, notification hooks, chat websocket client), database tables (10+ chat tables), API routes (1300+ lines), and UI elements have been removed. The platform now focuses exclusively on news content management and publishing features.
+**November 8, 2025:** 
+- Complete removal of the internal chat/messaging system. All chat-related backend services (chat-storage.ts, chat-websocket.ts, AI chat service), frontend components (chat components folder, notification hooks, chat websocket client), database tables (10+ chat tables), API routes (1300+ lines), and UI elements have been removed. The platform now focuses exclusively on news content management and publishing features.
+- Implemented mobile-friendly collapsible sections for Daily Brief pages (both Arabic and English) with four expandable sections: Performance Metrics, Interest Analysis, Time Activity, and AI Insights. Each section features ChevronDown toggle with 200ms animation (rotates 180° when expanded), defaulting to expanded state for better mobile UX.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
