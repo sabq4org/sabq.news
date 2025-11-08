@@ -65,7 +65,7 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
 }
 
 export function SmartSummaryBlock() {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const { data: insights, isLoading } = useQuery<TodayInsightsData>({
     queryKey: ["/api/ai/insights/today"],
@@ -128,76 +128,60 @@ export function SmartSummaryBlock() {
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          {/* Metrics - Mobile: Vertical List */}
-          <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border mb-5">
-            <CardContent className="p-0">
-              <div className="divide-y dark:divide-y">
-                <div className="p-4 hover-elevate active-elevate-2 transition-all" data-testid="metric-وقت القراءة-mobile">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-24 h-20 rounded-lg bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center">
-                      <BookOpen className="h-8 w-8 text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs text-muted-foreground">وقت القراءة</p>
-                      <p className="text-lg font-bold">{insights.metrics.readingTime} دقيقة</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>نشط</span>
-                      </div>
-                    </div>
-                  </div>
+          {/* Metrics - Mobile: 2x2 Grid */}
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 lg:hidden mb-5">
+            <div className="rounded-xl p-3 space-y-2 bg-blue-50 dark:bg-blue-950/20" data-testid="metric-وقت القراءة-mobile">
+              <div className="flex items-center justify-between">
+                <div className="text-blue-500">
+                  <BookOpen className="h-5 w-5" />
                 </div>
-                
-                <div className="p-4 hover-elevate active-elevate-2 transition-all" data-testid="metric-معدل الإكمال-mobile">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-24 h-20 rounded-lg bg-green-50 dark:bg-green-950/20 flex items-center justify-center">
-                      <Percent className="h-8 w-8 text-green-500" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs text-muted-foreground">معدل الإكمال</p>
-                      <p className="text-lg font-bold">{insights.metrics.completionRate}%</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>يتحسن</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 hover-elevate active-elevate-2 transition-all" data-testid="metric-الإعجابات-mobile">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-24 h-20 rounded-lg bg-pink-50 dark:bg-pink-950/20 flex items-center justify-center">
-                      <Heart className="h-8 w-8 text-pink-500" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs text-muted-foreground">الإعجابات</p>
-                      <p className="text-lg font-bold">{insights.metrics.likes}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>متفاعل</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 hover-elevate active-elevate-2 transition-all" data-testid="metric-التعليقات-mobile">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-24 h-20 rounded-lg bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center">
-                      <MessageSquare className="h-8 w-8 text-purple-500" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs text-muted-foreground">التعليقات</p>
-                      <p className="text-lg font-bold">{insights.metrics.comments}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>تفاعلي</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-lg font-bold">{insights.metrics.readingTime} دقيقة</p>
+                <p className="text-xs text-muted-foreground">وقت القراءة</p>
+              </div>
+            </div>
+            
+            <div className="rounded-xl p-3 space-y-2 bg-green-50 dark:bg-green-950/20" data-testid="metric-معدل الإكمال-mobile">
+              <div className="flex items-center justify-between">
+                <div className="text-green-500">
+                  <Percent className="h-5 w-5" />
+                </div>
+                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{insights.metrics.completionRate}%</p>
+                <p className="text-xs text-muted-foreground">معدل الإكمال</p>
+              </div>
+            </div>
+            
+            <div className="rounded-xl p-3 space-y-2 bg-pink-50 dark:bg-pink-950/20" data-testid="metric-الإعجابات-mobile">
+              <div className="flex items-center justify-between">
+                <div className="text-pink-500">
+                  <Heart className="h-5 w-5" />
+                </div>
+                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{insights.metrics.likes}</p>
+                <p className="text-xs text-muted-foreground">الإعجابات</p>
+              </div>
+            </div>
+            
+            <div className="rounded-xl p-3 space-y-2 bg-purple-50 dark:bg-purple-950/20" data-testid="metric-التعليقات-mobile">
+              <div className="flex items-center justify-between">
+                <div className="text-purple-500">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{insights.metrics.comments}</p>
+                <p className="text-xs text-muted-foreground">التعليقات</p>
+              </div>
+            </div>
+          </div>
 
           {/* Metrics - Desktop: Grid */}
           <div className="hidden lg:grid grid-cols-4 gap-3 mb-5">
