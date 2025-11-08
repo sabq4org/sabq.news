@@ -48,11 +48,12 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
         credentials: "include",
       });
       
+      // Handle 204 No Content (no ad available for this slot/device)
+      if (response.status === 204) {
+        return null;
+      }
+      
       if (!response.ok) {
-        if (response.status === 204) {
-          // No ad available
-          return null;
-        }
         throw new Error("Failed to fetch ad");
       }
       
