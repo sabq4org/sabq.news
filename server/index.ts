@@ -24,6 +24,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS?.split(',') || [])
     )
   )
   .concat(['http://localhost:5000', 'http://localhost:5001', 'http://127.0.0.1:5000', 'http://127.0.0.1:5001'])
+  .concat(['https://appleid.apple.com']) // Allow Apple OAuth callback
   .filter(origin => origin && origin.trim().length > 0) // Remove empty strings
   .map(origin => origin.trim());
 
