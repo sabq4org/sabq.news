@@ -57,7 +57,7 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
         <TrendingUp className="h-3 w-3 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-lg font-bold">{value}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
@@ -65,7 +65,7 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
 }
 
 export function EnglishSmartSummaryBlock() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const { data: insights, isLoading } = useQuery<TodayInsightsData>({
     queryKey: ["/api/en/ai/insights/today"],
@@ -100,38 +100,31 @@ export function EnglishSmartSummaryBlock() {
         data-testid="card-smart-summary"
       >
         {/* Header */}
-        <div className="flex justify-between items-center gap-3 mb-4">
-          <div className="flex-1">
-            <h2 className="text-lg font-bold" data-testid="text-greeting">
-              {insights.greeting}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Your knowledge journey in Sabq today in brief
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <CollapsibleTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="flex-shrink-0"
-                data-testid="button-toggle-smart-summary"
-              >
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    isExpanded && "rotate-180"
-                  )}
-                />
-              </Button>
-            </CollapsibleTrigger>
+        <CollapsibleTrigger className="w-full">
+          <div className="flex justify-between items-center gap-3 mb-4 cursor-pointer group">
+            <div className="flex-1 text-left">
+              <h2 className="text-base font-bold group-hover:text-primary transition-colors" data-testid="text-greeting">
+                {insights.greeting}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Your knowledge journey in Sabq today in brief
+              </p>
+            </div>
             
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-2">
+              <ChevronDown 
+                className={cn(
+                  "h-5 w-5 transition-transform duration-200 text-muted-foreground",
+                  isExpanded && "rotate-180"
+                )}
+              />
+              
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex-shrink-0">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
             </div>
           </div>
-        </div>
+        </CollapsibleTrigger>
 
         <CollapsibleContent>
           {/* Metrics - Mobile: Vertical List */}
@@ -145,7 +138,7 @@ export function EnglishSmartSummaryBlock() {
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-xs text-muted-foreground">Reading Time</p>
-                      <p className="text-2xl font-bold">{insights.metrics.readingTime} min</p>
+                      <p className="text-lg font-bold">{insights.metrics.readingTime} min</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
                         <span>Active</span>
@@ -161,7 +154,7 @@ export function EnglishSmartSummaryBlock() {
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-xs text-muted-foreground">Completion Rate</p>
-                      <p className="text-2xl font-bold">{insights.metrics.completionRate}%</p>
+                      <p className="text-lg font-bold">{insights.metrics.completionRate}%</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
                         <span>Improving</span>
@@ -177,7 +170,7 @@ export function EnglishSmartSummaryBlock() {
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-xs text-muted-foreground">Likes</p>
-                      <p className="text-2xl font-bold">{insights.metrics.likes}</p>
+                      <p className="text-lg font-bold">{insights.metrics.likes}</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
                         <span>Engaged</span>
@@ -193,7 +186,7 @@ export function EnglishSmartSummaryBlock() {
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-xs text-muted-foreground">Comments</p>
-                      <p className="text-2xl font-bold">{insights.metrics.comments}</p>
+                      <p className="text-lg font-bold">{insights.metrics.comments}</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
                         <span>Interactive</span>
