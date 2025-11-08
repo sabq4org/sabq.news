@@ -2041,13 +2041,16 @@ router.post("/creatives/upload", requireAdvertiser, upload.single("file"), async
     const fileType = isImage ? "image" : "video";
     
     // رفع الملف إلى Object Storage
-    const path = `ads/creatives/${userId}/${Date.now()}-${file.originalname}`;
-    const result = await objectStorage.uploadFile(path, file.buffer, file.mimetype, "public");
+    const relativePath = `ads/creatives/${userId}/${Date.now()}-${file.originalname}`;
+    const result = await objectStorage.uploadFile(relativePath, file.buffer, file.mimetype, "public");
     
-    console.log(`[Ads API] تم رفع ملف إعلاني: ${result.url}`);
+    // استخدام proxy URL بدلاً من GCS URL المباشر لتجنب مشاكل الصلاحيات
+    const proxyUrl = `/public-objects/${relativePath}`;
+    
+    console.log(`[Ads API] تم رفع ملف إعلاني: ${proxyUrl}`);
     
     res.json({
-      url: result.url,
+      url: proxyUrl,
       type: fileType,
       size: file.size,
       mimeType: file.mimetype,
