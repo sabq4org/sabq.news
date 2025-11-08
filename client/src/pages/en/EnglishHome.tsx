@@ -9,6 +9,8 @@ import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
+import { EnglishSmartSummaryBlock } from "@/components/en/EnglishSmartSummaryBlock";
+import { useAuth } from "@/hooks/useAuth";
 import type { EnArticleWithDetails, EnSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 
@@ -22,6 +24,8 @@ const isNewArticle = (publishedAt: Date | string | null | undefined) => {
 };
 
 export default function EnglishHome() {
+  const { user } = useAuth();
+  
   const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticleWithDetails[]>({
     queryKey: ["/api/en/articles"],
   });
@@ -108,6 +112,13 @@ export default function EnglishHome() {
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
             <EnglishSmartNewsBlock key={block.id} config={block} />
           ))}
+
+          {/* Smart Summary Block - Only for authenticated users */}
+          {user && (
+            <div className="scroll-fade-in">
+              <EnglishSmartSummaryBlock />
+            </div>
+          )}
 
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
