@@ -1,0 +1,89 @@
+2025-11-08 21:55:31.09
+e7aa9d32
+User
+6:55:31 PM [express] GET /api/themes/active 200 in 64ms :: {"id":"5df633f6-4c8f-443a-bb2a-0e2ee256a5…
+2025-11-08 21:55:32.53
+e7aa9d32
+User
+6:55:32 PM [express] GET /api/auth/apple 302 in 41ms
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+[CORS] Blocked origin: https://appleid.apple.com
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+[CORS] Allowed origins: [
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'https://sabq.replit.app',
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'https://sabq.life',
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'http://localhost:5000',
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'http://localhost:5001',
+
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'http://127.0.0.1:5000',
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+'http://127.0.0.1:5001'
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+]
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+[Server] Error: 500 - غير مسموح بالوصول من هذا المصدر Error: غير مسموح بالوصول من هذا المصدر
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at origin (file:///home/runner/workspace/dist/index.js:29882:18)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at /home/runner/workspace/node_modules/cors/lib/index.js:219:13
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at optionsCallback (/home/runner/workspace/node_modules/cors/lib/index.js:199:9)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at corsMiddleware (/home/runner/workspace/node_modules/cors/lib/index.js:204:7)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-08 21:55:44.66
+e7aa9d32
+User
+at expressInit (/home/runner/workspace/node_modules/express/lib/middleware/init.js:40:5)
