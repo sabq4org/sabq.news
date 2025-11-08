@@ -10,8 +10,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
-import { LogIn } from "lucide-react";
 import { SiGoogle, SiApple } from "react-icons/si";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -76,20 +77,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4" dir="rtl">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <LogIn className="w-8 h-8 text-primary" />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4A90E2] via-[#5B9FED] to-[#6DAEF8] p-4 lg:p-8" dir="rtl">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Right Side - Branding */}
+        <div className="hidden lg:flex flex-col items-center justify-center text-white space-y-6 px-8">
+          {/* Logo */}
+          <div className="text-center space-y-4">
+            <svg className="w-48 h-48 mx-auto" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <text x="100" y="100" fontSize="120" fontWeight="bold" fill="white" textAnchor="middle" dominantBaseline="middle">سبق</text>
+            </svg>
+            <h1 className="text-4xl font-bold">صحيفة سبق الإلكترونية</h1>
+            <p className="text-xl opacity-90">SABQ ONLINE NEWSPAPER</p>
           </div>
-          <CardTitle className="text-3xl font-bold">سبق الذكية</CardTitle>
-          <CardDescription className="text-right">
-            سجل الدخول للوصول إلى حسابك
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
+          {/* Tagline */}
+          <div className="text-center space-y-3 max-w-md">
+            <h2 className="text-2xl font-semibold">حيث تلتقي الثقة بالمصداقية</h2>
+            <p className="text-lg opacity-90">صحافة ذكية. مستقبل مشرق.</p>
+            <p className="text-base opacity-80">التميز في لوحة الإعلام الرقمي المدعوم بالذكاء الاصطناعي</p>
+          </div>
+
+          {/* AI Badge */}
+          <Badge variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30 px-4 py-2 text-sm backdrop-blur-sm">
+            <Sparkles className="w-4 h-4 ml-2" />
+            AI-Powered
+          </Badge>
+        </div>
+
+        {/* Left Side - Login Form */}
+        <Card className="w-full max-w-md mx-auto shadow-2xl">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-2xl font-bold text-right">مرحباً بك في مستقبل الصحافة الذكية</CardTitle>
+            <CardDescription className="text-right">
+              الدخول إلى لوحة التحكم المدعومة بالذكاء الاصطناعي
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -151,7 +174,7 @@ export default function Login() {
                 disabled={isLoading}
                 data-testid="button-login"
               >
-                {isLoading ? "جاري تسجيل الدخول..." : "دخول"}
+                {isLoading ? "جاري تسجيل الدخول..." : "تحويل إلى لوحة التحكم"}
               </Button>
 
               <div className="relative my-6">
@@ -198,20 +221,27 @@ export default function Login() {
               </div>
 
               <div className="text-center pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2">هل أنت من الإدارة أو الصحفيين؟</p>
+                <p className="text-sm text-muted-foreground mb-2">بإمكانك مشاهدة آليات نشاط إدارات التحكم</p>
                 <button
                   type="button"
                   onClick={() => navigate("/admin/login")}
                   className="text-sm text-primary hover:underline font-medium"
                   data-testid="link-admin-login"
                 >
-                  تسجيل دخول الإدارة
+                  تواصل معنا عبر البريد الإلكتروني الفوري
                 </button>
               </div>
             </form>
           </Form>
         </CardContent>
       </Card>
+
+      {/* Mobile Branding - shown on small screens */}
+      <div className="lg:hidden text-center mt-8 text-white">
+        <h2 className="text-2xl font-bold mb-2">سبق الذكية</h2>
+        <p className="text-sm opacity-90">صحافة ذكية مدعومة بالذكاء الاصطناعي</p>
+      </div>
+      </div>
     </div>
   );
 }
