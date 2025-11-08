@@ -46,12 +46,11 @@ type Campaign = {
   endDate: string | null;
   createdAt: string;
   updatedAt: string;
-};
-
-type CampaignStats = {
-  impressions: number;
-  clicks: number;
-  ctr: number;
+  stats?: {
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  };
 };
 
 const statusColors: Record<Campaign["status"], string> = {
@@ -161,16 +160,6 @@ export default function CampaignsList() {
   const filteredCampaigns = campaigns.filter((campaign) =>
     campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Calculate stats for a campaign
-  const getCampaignStats = (campaign: Campaign): CampaignStats => {
-    // Placeholder - will be replaced with real data later
-    const impressions = Math.floor(Math.random() * 100000);
-    const clicks = Math.floor(impressions * (Math.random() * 0.05));
-    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-    
-    return { impressions, clicks, ctr };
-  };
 
   // Calculate summary stats
   const totalCampaigns = campaigns.length;
@@ -332,8 +321,8 @@ export default function CampaignsList() {
                   </TableHeader>
                   <TableBody>
                     {filteredCampaigns.map((campaign) => {
-                      const stats = getCampaignStats(campaign);
                       const budgetProgress = (campaign.spentBudget / campaign.totalBudget) * 100;
+                      const stats = campaign.stats || { impressions: 0, clicks: 0, ctr: 0 };
 
                       return (
                         <TableRow 

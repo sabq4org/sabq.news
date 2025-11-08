@@ -312,7 +312,34 @@ router.get("/campaigns", requireAdvertiser, async (req, res) => {
     
     const results = await query;
     
-    res.json(results);
+    // حساب الإحصائيات الحقيقية لكل حملة
+    const campaignsWithStats = await Promise.all(
+      results.map(async (campaign) => {
+        const stats = await db
+          .select({
+            totalImpressions: sql<number>`COALESCE(COUNT(DISTINCT ${impressions.id}), 0)::int`,
+            totalClicks: sql<number>`COALESCE(COUNT(DISTINCT CASE WHEN ${clicks.id} IS NOT NULL THEN ${clicks.id} END), 0)::int`,
+          })
+          .from(impressions)
+          .leftJoin(clicks, eq(clicks.impressionId, impressions.id))
+          .where(eq(impressions.campaignId, campaign.id));
+        
+        const totalImpressions = stats[0]?.totalImpressions || 0;
+        const totalClicks = stats[0]?.totalClicks || 0;
+        const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+        
+        return {
+          ...campaign,
+          stats: {
+            impressions: totalImpressions,
+            clicks: totalClicks,
+            ctr: parseFloat(ctr.toFixed(2))
+          }
+        };
+      })
+    );
+    
+    res.json(campaignsWithStats);
   } catch (error) {
     console.error("[Ads API] خطأ في جلب الحملات:", error);
     res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
@@ -1811,70 +1838,6 @@ router.get("/campaigns/:id/daily-stats", requireAdvertiser, async (req, res) => 
   } catch (error) {
     console.error("[Ads API] خطأ في جلب الإحصائيات اليومية:", error);
     res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
-  }
-});
-
-// ============================================================
-// CREATIVE FILE UPLOAD - رفع ملفات البنرات
-// ============================================================
-
-// رفع ملف (صورة أو فيديو) للبنر الإعلاني
-router.post("/creatives/upload", requireAdvertiser, upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "لم يتم رفع أي ملف" });
-    }
-
-    const file = req.file;
-    const userId = (req.user as any).id;
-    
-    // Generate unique filename with proper extension validation
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(7);
-    const originalExt = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
-    
-    // Double-check extension is allowed (defense in depth)
-    if (!ALL_ALLOWED_EXTENSIONS.includes(originalExt)) {
-      return res.status(400).json({ error: "نوع الملف غير مدعوم" });
-    }
-    
-    const fileName = `ads/${userId}/${timestamp}-${randomString}${originalExt}`;
-    
-    // Upload to Replit Object Storage
-    const uploadResult = await objectStorage.uploadFile(
-      fileName,
-      file.buffer,
-      file.mimetype
-    );
-    
-    // Log the upload in audit log
-    await db.insert(auditLogs).values({
-      userId,
-      entityType: "creative_upload",
-      entityId: uploadResult.path,
-      action: "upload",
-      changes: { 
-        after: {
-          fileName,
-          originalName: file.originalname,
-          mimetype: file.mimetype,
-          size: file.size,
-          url: uploadResult.url
-        }
-      },
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent")
-    });
-    
-    res.json({
-      url: uploadResult.url,
-      filename: fileName,
-      mimetype: file.mimetype,
-      size: file.size
-    });
-  } catch (error) {
-    console.error("[Ads API] خطأ في رفع الملف:", error);
-    res.status(500).json({ error: "حدث خطأ في رفع الملف" });
   }
 });
 
