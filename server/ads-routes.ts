@@ -477,13 +477,25 @@ router.put("/campaigns/:id", requireAdvertiser, async (req, res) => {
       }
     }
     
-    // تحديث البيانات
+    // تحديث البيانات - whitelist الحقول المسموح بتحديثها فقط
+    // CRITICAL: لا نسمح بتحديث accountId لمنع cascade delete
+    const allowedFields: Partial<typeof campaigns.$inferInsert> = {};
+    
+    if (req.body.name !== undefined) allowedFields.name = req.body.name;
+    if (req.body.objective !== undefined) allowedFields.objective = req.body.objective;
+    if (req.body.totalBudget !== undefined) allowedFields.totalBudget = req.body.totalBudget;
+    if (req.body.dailyBudget !== undefined) allowedFields.dailyBudget = req.body.dailyBudget;
+    if (req.body.startDate !== undefined) allowedFields.startDate = new Date(req.body.startDate);
+    if (req.body.endDate !== undefined) allowedFields.endDate = req.body.endDate ? new Date(req.body.endDate) : null;
+    if (req.body.status !== undefined) allowedFields.status = req.body.status;
+    if (req.body.bidAmount !== undefined) allowedFields.bidAmount = req.body.bidAmount;
+    if (req.body.rejectionReason !== undefined) allowedFields.rejectionReason = req.body.rejectionReason;
+    
+    allowedFields.updatedAt = new Date();
+    
     const [updatedCampaign] = await db
       .update(campaigns)
-      .set({
-        ...req.body,
-        updatedAt: new Date()
-      })
+      .set(allowedFields)
       .where(eq(campaigns.id, campaignId))
       .returning();
     
