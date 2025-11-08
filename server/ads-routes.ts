@@ -2884,7 +2884,7 @@ router.get("/slot/:slotId", async (req, res) => {
     const now = new Date();
     
     // Find ALL active placements for this slot (not just highest priority)
-    // Filter by device type
+    // Filter by device type AND budget constraints
     const activePlacements = await db
       .select({
         placement: adCreativePlacements,
@@ -2905,7 +2905,10 @@ router.get("/slot/:slotId", async (req, res) => {
         lte(adCreativePlacements.startDate, now),
         sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`,
         // Device type filtering: show if slot is "all" OR matches the requested device type
-        sql`(${inventorySlots.deviceType} = 'all' OR ${inventorySlots.deviceType} = ${deviceType})`
+        sql`(${inventorySlots.deviceType} = 'all' OR ${inventorySlots.deviceType} = ${deviceType})`,
+        // Budget constraints: check total impressions and daily impressions
+        sql`${campaigns.spentBudget} < ${campaigns.totalBudget}`, // Total impressions not exceeded
+        sql`${campaigns.spentToday} < ${campaigns.dailyBudget}` // Daily impressions not exceeded
       ))
       .orderBy(desc(adCreativePlacements.priority));
     
@@ -2990,6 +2993,48 @@ router.post("/track/impression/:impressionId", async (req, res) => {
     
     if (!impression) {
       return res.status(404).json({ error: "Impression not found" });
+    }
+    
+    // Update campaign impression counters
+    await db
+      .update(campaigns)
+      .set({
+        spentBudget: sql`${campaigns.spentBudget} + 1`,
+        spentToday: sql`${campaigns.spentToday} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(campaigns.id, impression.campaignId));
+    
+    // Check if campaign has exceeded budget and auto-pause
+    const [campaign] = await db
+      .select({
+        id: campaigns.id,
+        spentBudget: campaigns.spentBudget,
+        totalBudget: campaigns.totalBudget,
+        spentToday: campaigns.spentToday,
+        dailyBudget: campaigns.dailyBudget,
+      })
+      .from(campaigns)
+      .where(eq(campaigns.id, impression.campaignId))
+      .limit(1);
+    
+    if (campaign) {
+      // Auto-pause if total budget exceeded
+      if (campaign.spentBudget >= campaign.totalBudget) {
+        await db
+          .update(campaigns)
+          .set({ 
+            status: "paused",
+            updatedAt: new Date(),
+          })
+          .where(eq(campaigns.id, campaign.id));
+        
+        console.log(`[Ads] Campaign ${campaign.id} auto-paused: total impressions budget exhausted (${campaign.spentBudget}/${campaign.totalBudget})`);
+      }
+      // Auto-pause if daily budget exceeded
+      else if (campaign.spentToday >= campaign.dailyBudget) {
+        console.log(`[Ads] Campaign ${campaign.id} reached daily limit (${campaign.spentToday}/${campaign.dailyBudget}). Will resume after daily reset.`);
+      }
     }
     
     // Update daily stats
