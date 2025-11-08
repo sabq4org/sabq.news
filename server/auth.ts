@@ -154,6 +154,7 @@ export async function setupAuth(app: Express) {
               return done(null, {
                 id: existingUser.id,
                 email: existingUser.email,
+                isProfileComplete: existingUser.isProfileComplete ?? true, // ✅ Pass profile status
                 twoFactorEnabled: false, // OAuth users don't need 2FA
                 twoFactorMethod: 'authenticator'
               });
@@ -176,7 +177,7 @@ export async function setupAuth(app: Express) {
               googleId,
               emailVerified: true, // Google already verified the email
               status: 'active',
-              isProfileComplete: true,
+              isProfileComplete: false, // ✅ New users need onboarding
               allowedLanguages: ['ar']
             });
 
@@ -184,6 +185,7 @@ export async function setupAuth(app: Express) {
             return done(null, {
               id: newUserId,
               email: email.toLowerCase(),
+              isProfileComplete: false, // ✅ New users need to complete onboarding
               twoFactorEnabled: false,
               twoFactorMethod: 'authenticator'
             });
@@ -202,6 +204,9 @@ export async function setupAuth(app: Express) {
 
   // Apple OAuth Strategy
   if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+    // Format the private key properly - replace literal \n with actual newlines
+    const privateKey = process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    
     passport.use(
       new AppleStrategy(
         {
@@ -209,7 +214,7 @@ export async function setupAuth(app: Express) {
           teamID: process.env.APPLE_TEAM_ID,
           callbackURL: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/api/auth/apple/callback`,
           keyID: process.env.APPLE_KEY_ID,
-          privateKeyString: process.env.APPLE_PRIVATE_KEY,
+          privateKeyString: privateKey,
           passReqToCallback: true,
         },
         async (req: any, accessToken: string, refreshToken: string, idToken: string, profile: any, done: any) => {
@@ -283,6 +288,7 @@ export async function setupAuth(app: Express) {
               return done(null, {
                 id: existingUser.id,
                 email: existingUser.email,
+                isProfileComplete: existingUser.isProfileComplete ?? true, // ✅ Pass profile status
                 twoFactorEnabled: false, // OAuth users don't need 2FA
                 twoFactorMethod: 'authenticator'
               });
@@ -301,7 +307,7 @@ export async function setupAuth(app: Express) {
               appleId,
               emailVerified: true, // Apple already verified the email
               status: 'active',
-              isProfileComplete: true,
+              isProfileComplete: false, // ✅ New users need onboarding
               allowedLanguages: ['ar']
             });
 
@@ -309,6 +315,7 @@ export async function setupAuth(app: Express) {
             return done(null, {
               id: newUserId,
               email: email.toLowerCase(),
+              isProfileComplete: false, // ✅ New users need to complete onboarding
               twoFactorEnabled: false,
               twoFactorMethod: 'authenticator'
             });
