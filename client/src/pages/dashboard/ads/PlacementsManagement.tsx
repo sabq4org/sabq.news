@@ -224,7 +224,7 @@ export default function PlacementsManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [placementToDelete, setPlacementToDelete] = useState<Placement | null>(null);
 
-  const isAdmin = ["admin", "superadmin"].includes(user?.role || "");
+  const isAdmin = ["admin", "superadmin", "system_admin", "advertiser"].includes(user?.role || "");
 
   useEffect(() => {
     document.title = "إدارة أماكن عرض البنرات - لوحة تحكم الإعلانات";

@@ -627,7 +627,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? rolesArray 
         : [user.role || "reader"];
 
-      res.json({ ...user, role, roles: allRoles });
+      // SECURITY: Never send passwordHash to client
+      const { passwordHash, twoFactorSecret, ...safeUser } = user;
+      res.json({ ...safeUser, role, roles: allRoles });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
