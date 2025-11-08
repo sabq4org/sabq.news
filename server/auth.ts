@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import AppleStrategy from "passport-apple";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
@@ -10,6 +11,7 @@ import { db } from "./db";
 import { users, canUserLogin, getUserStatusMessage } from "@shared/schema";
 import { eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import jwt from "jsonwebtoken";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -196,6 +198,127 @@ export async function setupAuth(app: Express) {
     console.log("✅ Google OAuth Strategy initialized");
   } else {
     console.log("⚠️  Google OAuth not configured (GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET missing)");
+  }
+
+  // Apple OAuth Strategy
+  if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+    passport.use(
+      new AppleStrategy(
+        {
+          clientID: process.env.APPLE_CLIENT_ID,
+          teamID: process.env.APPLE_TEAM_ID,
+          callbackURL: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/api/auth/apple/callback`,
+          keyID: process.env.APPLE_KEY_ID,
+          privateKeyString: process.env.APPLE_PRIVATE_KEY,
+          passReqToCallback: true,
+        },
+        async (req: any, accessToken: string, refreshToken: string, idToken: string, profile: any, done: any) => {
+          try {
+            console.log("🔍 AppleStrategy: Processing user");
+            
+            // Decode the idToken to get user info
+            const decodedToken = jwt.decode(idToken, { json: true });
+            const appleId = decodedToken?.sub;
+            const email = decodedToken?.email;
+
+            if (!appleId || !email) {
+              return done(null, false, { message: "لم نتمكن من الحصول على البريد الإلكتروني من Apple" });
+            }
+
+            // Get name from req.body.user (only available on first login)
+            let firstName = '';
+            let lastName = '';
+            if (req.body.user) {
+              try {
+                const userData = typeof req.body.user === 'string' ? JSON.parse(req.body.user) : req.body.user;
+                firstName = userData.name?.firstName || '';
+                lastName = userData.name?.lastName || '';
+                console.log("✅ AppleStrategy: Got name from first login:", firstName, lastName);
+              } catch (e) {
+                console.log("⚠️  AppleStrategy: Could not parse user data");
+              }
+            }
+
+            // Check if user exists with this Apple ID or email
+            const [existingUser] = await db
+              .select()
+              .from(users)
+              .where(or(
+                eq(users.appleId, appleId),
+                eq(users.email, email.toLowerCase())
+              ))
+              .limit(1);
+
+            if (existingUser) {
+              // Update Apple ID if not set
+              if (!existingUser.appleId) {
+                await db
+                  .update(users)
+                  .set({ appleId, authProvider: 'apple' })
+                  .where(eq(users.id, existingUser.id));
+              }
+
+              // Update name if we got it and user doesn't have it
+              if (firstName && lastName && !existingUser.firstName) {
+                await db
+                  .update(users)
+                  .set({ firstName, lastName })
+                  .where(eq(users.id, existingUser.id));
+              }
+
+              // Check if user can login
+              if (!canUserLogin(existingUser)) {
+                const statusMessage = getUserStatusMessage(existingUser);
+                console.log("❌ AppleStrategy: User cannot login:", statusMessage);
+                return done(null, false, { 
+                  message: statusMessage || "لا يمكنك تسجيل الدخول بسبب حالة حسابك. يرجى التواصل مع الإدارة" 
+                });
+              }
+
+              console.log("✅ AppleStrategy: Existing user logged in");
+              return done(null, {
+                id: existingUser.id,
+                email: existingUser.email,
+                twoFactorEnabled: false, // OAuth users don't need 2FA
+                twoFactorMethod: 'authenticator'
+              });
+            }
+
+            // Create new user
+            const newUserId = nanoid();
+
+            await db.insert(users).values({
+              id: newUserId,
+              email: email.toLowerCase(),
+              firstName,
+              lastName,
+              role: 'reader',
+              authProvider: 'apple',
+              appleId,
+              emailVerified: true, // Apple already verified the email
+              status: 'active',
+              isProfileComplete: true,
+              allowedLanguages: ['ar']
+            });
+
+            console.log("✅ AppleStrategy: New user created");
+            return done(null, {
+              id: newUserId,
+              email: email.toLowerCase(),
+              twoFactorEnabled: false,
+              twoFactorMethod: 'authenticator'
+            });
+
+          } catch (error) {
+            console.error("❌ AppleStrategy error:", error);
+            return done(error);
+          }
+        }
+      )
+    );
+    console.log("✅ Apple OAuth Strategy initialized");
+  } else {
+    console.log("⚠️  Apple OAuth not configured (APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, or APPLE_PRIVATE_KEY missing)");
   }
 
   passport.serializeUser((user: any, done) => {
