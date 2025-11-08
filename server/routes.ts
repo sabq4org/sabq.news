@@ -379,7 +379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Redirect to onboarding or dashboard based on isProfileComplete
       const user = req.user as any;
       if (user && !user.isProfileComplete) {
-        res.redirect("/ar/onboarding");
+        res.redirect("/ar/onboarding/welcome");
       } else {
         res.redirect("/ar/dashboard");
       }
@@ -401,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Redirect to onboarding or dashboard based on isProfileComplete
       const user = req.user as any;
       if (user && !user.isProfileComplete) {
-        res.redirect("/ar/onboarding");
+        res.redirect("/ar/onboarding/welcome");
       } else {
         res.redirect("/ar/dashboard");
       }
