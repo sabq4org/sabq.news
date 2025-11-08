@@ -234,14 +234,16 @@ app.use((req, res, next) => {
     const server = await registerRoutes(app);
     console.log("[Server] ✅ Routes registered successfully");
 
-    // Initialize WebSocket server for real-time chat
-    try {
-      initializeChatWebSocket(server, storage);
-      console.log("[Server] ✅ Chat WebSocket server initialized on /ws/chat");
-    } catch (error) {
-      console.error("[Server] ⚠️  Error initializing WebSocket server:", error);
-      console.error("[Server] Server will continue running without WebSocket support");
-    }
+    // Initialize WebSocket server for real-time chat (non-blocking to prevent timeout)
+    setImmediate(() => {
+      try {
+        initializeChatWebSocket(server, storage);
+        console.log("[Server] ✅ Chat WebSocket server initialized on /ws/chat");
+      } catch (error) {
+        console.error("[Server] ⚠️  Error initializing WebSocket server:", error);
+        console.error("[Server] Server will continue running without WebSocket support");
+      }
+    });
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
