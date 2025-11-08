@@ -19,7 +19,7 @@ import {
   insertCreativeSchema,
   insertInventorySlotSchema
 } from "@shared/schema";
-import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
 import type { 
   AdAccount, 
   Campaign, 
@@ -27,8 +27,63 @@ import type {
   Creative,
   CampaignWithDetails
 } from "@shared/schema";
+import multer from "multer";
+import { ObjectStorageService } from "./objectStorage";
 
 const router = Router();
+
+// ============================================
+// STORAGE CONFIGURATION
+// ============================================
+
+// Initialize Replit Object Storage
+const objectStorage = new ObjectStorageService();
+
+// Allowed file extensions for banners
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.avi', '.mov'];
+const ALL_ALLOWED_EXTENSIONS = [...ALLOWED_IMAGE_EXTENSIONS, ...ALLOWED_VIDEO_EXTENSIONS];
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Get file extension
+    const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    
+    // Map extensions to their actual MIME types
+    const extensionMimeMap: Record<string, string[]> = {
+      '.jpg': ['image/jpeg'],
+      '.jpeg': ['image/jpeg'],
+      '.png': ['image/png'],
+      '.gif': ['image/gif'],
+      '.webp': ['image/webp'],
+      '.mp4': ['video/mp4'],
+      '.webm': ['video/webm'],
+      '.avi': ['video/avi', 'video/x-msvideo'],
+      '.mov': ['video/quicktime']
+    };
+    
+    // Check extension
+    const isValidExtension = ALL_ALLOWED_EXTENSIONS.includes(ext);
+    if (!isValidExtension) {
+      return cb(new Error("نوع الملف غير مدعوم. الأنواع المسموحة: الصور (JPG, PNG, GIF, WEBP) والفيديو (MP4, WEBM, AVI, MOV)"));
+    }
+    
+    // Check MIME type matches extension
+    const expectedMimeTypes = extensionMimeMap[ext] || [];
+    const isValidMimeType = expectedMimeTypes.includes(file.mimetype);
+    
+    if (isValidMimeType) {
+      cb(null, true);
+    } else {
+      cb(new Error(`نوع الملف غير مطابق. الملف ${ext} يجب أن يكون من نوع: ${expectedMimeTypes.join(', ')}`));
+    }
+  }
+});
 
 // ============================================
 // MIDDLEWARE - التحقق من الصلاحيات
@@ -1750,6 +1805,313 @@ router.get("/campaigns/:id/daily-stats", requireAdvertiser, async (req, res) => 
   } catch (error) {
     console.error("[Ads API] خطأ في جلب الإحصائيات اليومية:", error);
     res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// ============================================================
+// CREATIVE FILE UPLOAD - رفع ملفات البنرات
+// ============================================================
+
+// رفع ملف (صورة أو فيديو) للبنر الإعلاني
+router.post("/creatives/upload", requireAdvertiser, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "لم يتم رفع أي ملف" });
+    }
+
+    const file = req.file;
+    const userId = (req.user as any).id;
+    
+    // Generate unique filename with proper extension validation
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(7);
+    const originalExt = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    
+    // Double-check extension is allowed (defense in depth)
+    if (!ALL_ALLOWED_EXTENSIONS.includes(originalExt)) {
+      return res.status(400).json({ error: "نوع الملف غير مدعوم" });
+    }
+    
+    const fileName = `ads/${userId}/${timestamp}-${randomString}${originalExt}`;
+    
+    // Upload to Replit Object Storage
+    const uploadResult = await objectStorage.uploadFile(
+      fileName,
+      file.buffer,
+      file.mimetype
+    );
+    
+    // Log the upload in audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "creative_upload",
+      entityId: uploadResult.path,
+      action: "upload",
+      changes: { 
+        after: {
+          fileName,
+          originalName: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          url: uploadResult.url
+        }
+      },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json({
+      url: uploadResult.url,
+      filename: fileName,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+  } catch (error) {
+    console.error("[Ads API] خطأ في رفع الملف:", error);
+    res.status(500).json({ error: "حدث خطأ في رفع الملف" });
+  }
+});
+
+// ============================================================
+// INVENTORY SLOTS - إدارة أماكن الظهور
+// ============================================================
+
+// جلب جميع أماكن الظهور المتاحة
+router.get("/inventory-slots", requireAdvertiser, async (req, res) => {
+  try {
+    const slots = await db
+      .select()
+      .from(inventorySlots)
+      .where(eq(inventorySlots.isActive, true))
+      .orderBy(inventorySlots.location, inventorySlots.size);
+    
+    res.json(slots);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب أماكن الظهور:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// إنشاء مكان ظهور جديد (للمشرفين فقط)
+router.post("/inventory-slots", requireAdmin, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    
+    const validation = insertInventorySlotSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: "بيانات غير صحيحة", 
+        details: validation.error.errors 
+      });
+    }
+    
+    const [slot] = await db
+      .insert(inventorySlots)
+      .values(validation.data)
+      .returning();
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "inventory_slot",
+      entityId: slot.id,
+      action: "create",
+      changes: { after: slot },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json(slot);
+  } catch (error) {
+    console.error("[Ads API] خطأ في إنشاء مكان الظهور:", error);
+    res.status(500).json({ error: "حدث خطأ في الإنشاء" });
+  }
+});
+
+// تحديث مكان ظهور (للمشرفين فقط)
+router.put("/inventory-slots/:id", requireAdmin, async (req, res) => {
+  try {
+    const slotId = req.params.id;
+    const userId = (req.user as any).id;
+    
+    const [existingSlot] = await db
+      .select()
+      .from(inventorySlots)
+      .where(eq(inventorySlots.id, slotId))
+      .limit(1);
+    
+    if (!existingSlot) {
+      return res.status(404).json({ error: "مكان الظهور غير موجود" });
+    }
+    
+    const [updatedSlot] = await db
+      .update(inventorySlots)
+      .set({
+        ...req.body,
+        updatedAt: new Date()
+      })
+      .where(eq(inventorySlots.id, slotId))
+      .returning();
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "inventory_slot",
+      entityId: slotId,
+      action: "update",
+      changes: {
+        before: existingSlot,
+        after: updatedSlot
+      },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json(updatedSlot);
+  } catch (error) {
+    console.error("[Ads API] خطأ في تحديث مكان الظهور:", error);
+    res.status(500).json({ error: "حدث خطأ في التحديث" });
+  }
+});
+
+// ============================================================
+// CAMPAIGN CREATIVES - البنرات حسب الحملة
+// ============================================================
+
+// جلب جميع البنرات لحملة معينة
+router.get("/campaigns/:campaignId/creatives", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const campaignId = req.params.campaignId;
+    
+    // التحقق من الصلاحية
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "الحملة غير موجودة" });
+    }
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // جلب جميع المجموعات الإعلانية للحملة
+    const groups = await db
+      .select()
+      .from(adGroups)
+      .where(eq(adGroups.campaignId, campaignId));
+    
+    if (groups.length === 0) {
+      return res.json([]);
+    }
+    
+    const groupIds = groups.map(g => g.id);
+    
+    // جلب جميع البنرات للمجموعات
+    const allCreatives = await db
+      .select()
+      .from(creatives)
+      .where(inArray(creatives.adGroupId, groupIds))
+      .orderBy(desc(creatives.createdAt));
+    
+    res.json(allCreatives);
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب البنرات:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// ============================================================
+// DELETE CREATIVE - حذف بنر
+// ============================================================
+
+// حذف بنر إعلاني
+router.delete("/creatives/:id", requireAdvertiser, async (req, res) => {
+  try {
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const creativeId = req.params.id;
+    
+    // التحقق من وجود البنر
+    const [creative] = await db
+      .select()
+      .from(creatives)
+      .where(eq(creatives.id, creativeId))
+      .limit(1);
+    
+    if (!creative) {
+      return res.status(404).json({ error: "البنر غير موجود" });
+    }
+    
+    // التحقق من الصلاحية
+    const [adGroup] = await db
+      .select()
+      .from(adGroups)
+      .where(eq(adGroups.id, creative.adGroupId))
+      .limit(1);
+    
+    if (!adGroup) {
+      return res.status(404).json({ error: "المجموعة غير موجودة" });
+    }
+    
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.id, adGroup.campaignId))
+      .limit(1);
+    
+    if (!["admin", "superadmin"].includes(userRole)) {
+      const [account] = await db
+        .select()
+        .from(adAccounts)
+        .where(and(
+          eq(adAccounts.userId, userId),
+          eq(adAccounts.id, campaign!.accountId)
+        ))
+        .limit(1);
+      
+      if (!account) {
+        return res.status(403).json({ error: "ليس لديك صلاحية" });
+      }
+    }
+    
+    // حذف البنر
+    await db
+      .delete(creatives)
+      .where(eq(creatives.id, creativeId));
+    
+    // تسجيل في audit log
+    await db.insert(auditLogs).values({
+      userId,
+      entityType: "creative",
+      entityId: creativeId,
+      action: "delete",
+      changes: { before: creative },
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent")
+    });
+    
+    res.json({ message: "تم حذف البنر بنجاح" });
+  } catch (error) {
+    console.error("[Ads API] خطأ في حذف البنر:", error);
+    res.status(500).json({ error: "حدث خطأ في الحذف" });
   }
 });
 
