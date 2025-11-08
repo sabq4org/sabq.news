@@ -205,7 +205,7 @@ export function AiArticleStats({ slug }: AiArticleStatsProps) {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <StatItem
             icon={Clock}
             label="متوسط زمن القراءة"
