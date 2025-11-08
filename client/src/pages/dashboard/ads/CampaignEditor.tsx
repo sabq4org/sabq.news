@@ -34,7 +34,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowRight, Save, Loader2, Calendar as CalendarIcon, DollarSign, Target } from "lucide-react";
+import { ArrowRight, Save, Loader2, Calendar as CalendarIcon, Eye, Target } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -46,8 +46,8 @@ const formSchema = z.object({
   objective: z.enum(["brand_awareness", "traffic", "conversions", "engagement"], {
     required_error: "يرجى اختيار هدف الحملة",
   }),
-  dailyBudget: z.number().min(1, "الميزانية اليومية يجب أن تكون أكبر من صفر"),
-  totalBudget: z.number().min(1, "الميزانية الإجمالية يجب أن تكون أكبر من صفر"),
+  dailyBudget: z.number().min(1, "عدد الظهورات اليومية يجب أن يكون أكبر من صفر"),
+  totalBudget: z.number().min(1, "إجمالي عدد الظهورات يجب أن يكون أكبر من صفر"),
   startDate: z.date({
     required_error: "تاريخ البداية مطلوب",
   }),
@@ -55,7 +55,7 @@ const formSchema = z.object({
 }).refine(
   (data) => data.totalBudget >= data.dailyBudget,
   {
-    message: "الميزانية الإجمالية يجب أن تكون أكبر من أو تساوي الميزانية اليومية",
+    message: "إجمالي الظهورات يجب أن يكون أكبر من أو يساوي الظهورات اليومية",
     path: ["totalBudget"],
   }
 ).refine(
@@ -121,8 +121,8 @@ export default function CampaignEditor() {
       form.reset({
         name: campaign.name,
         objective: backendToUiObjective(campaign.objective),
-        dailyBudget: campaign.dailyBudget / 100, // Convert from cents to SAR
-        totalBudget: campaign.totalBudget / 100, // Convert from cents to SAR
+        dailyBudget: campaign.dailyBudget, // Impressions count
+        totalBudget: campaign.totalBudget, // Impressions count
         startDate: new Date(campaign.startDate),
         endDate: campaign.endDate ? new Date(campaign.endDate) : undefined,
       });
@@ -156,8 +156,8 @@ export default function CampaignEditor() {
       const payload = {
         name: values.name,
         objective: objectiveMap[values.objective],
-        dailyBudget: Math.round(values.dailyBudget * 100), // Convert SAR to cents
-        totalBudget: Math.round(values.totalBudget * 100), // Convert SAR to cents
+        dailyBudget: Math.round(values.dailyBudget), // Impressions count
+        totalBudget: Math.round(values.totalBudget), // Impressions count
         startDate: values.startDate.toISOString(),
         endDate: values.endDate?.toISOString() || null,
         bidAmount: Math.round(bidAmountMap[values.objective] * 100), // Convert SAR to cents
@@ -333,70 +333,64 @@ export default function CampaignEditor() {
 
                 {/* Budget Fields - Side by Side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Daily Budget */}
+                  {/* Daily Impressions Budget */}
                   <FormField
                     control={form.control}
                     name="dailyBudget"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الميزانية اليومية</FormLabel>
+                        <FormLabel>رصيد الظهورات اليومية</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               type="number"
                               min="1"
-                              step="0.01"
-                              placeholder="100"
+                              step="1"
+                              placeholder="10000"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                               value={field.value}
-                              className="pr-10 pl-16"
+                              className="pr-10"
                               data-testid="input-daily-budget"
                               disabled={mutation.isPending}
                             />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                              ريال
-                            </span>
                           </div>
                         </FormControl>
                         <FormDescription>
-                          الحد الأقصى للإنفاق اليومي
+                          الحد الأقصى لعدد الظهورات اليومية
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Total Budget */}
+                  {/* Total Impressions Budget */}
                   <FormField
                     control={form.control}
                     name="totalBudget"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الميزانية الإجمالية</FormLabel>
+                        <FormLabel>إجمالي رصيد الظهورات</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               type="number"
                               min="1"
-                              step="0.01"
-                              placeholder="1000"
+                              step="1"
+                              placeholder="100000"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                               value={field.value}
-                              className="pr-10 pl-16"
+                              className="pr-10"
                               data-testid="input-total-budget"
                               disabled={mutation.isPending}
                             />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                              ريال
-                            </span>
                           </div>
                         </FormControl>
                         <FormDescription>
-                          إجمالي الميزانية المخصصة للحملة
+                          إجمالي عدد الظهورات المخصصة للحملة
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
