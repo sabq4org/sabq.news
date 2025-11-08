@@ -2812,4 +2812,173 @@ router.get("/creatives/:creativeId/placements", requireAdvertiser, async (req, r
   }
 });
 
+// ============================================
+// PUBLIC AD SERVING ENDPOINTS
+// ============================================
+
+// Get active ad for a specific inventory slot (PUBLIC - no auth required)
+router.get("/slot/:slotId", async (req, res) => {
+  try {
+    const slotId = req.params.slotId;
+    const now = new Date();
+    
+    // Find active placement for this slot
+    const activePlacements = await db
+      .select({
+        placement: adCreativePlacements,
+        creative: creatives,
+        campaign: campaigns,
+      })
+      .from(adCreativePlacements)
+      .innerJoin(creatives, eq(adCreativePlacements.creativeId, creatives.id))
+      .innerJoin(campaigns, eq(adCreativePlacements.campaignId, campaigns.id))
+      .where(and(
+        eq(adCreativePlacements.inventorySlotId, slotId),
+        eq(adCreativePlacements.status, "active"),
+        eq(campaigns.status, "active"),
+        eq(creatives.status, "active"),
+        lte(adCreativePlacements.startDate, now),
+        sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`
+      ))
+      .orderBy(desc(adCreativePlacements.priority))
+      .limit(1);
+    
+    if (activePlacements.length === 0) {
+      return res.status(204).send(); // No ad available
+    }
+    
+    const { placement, creative, campaign } = activePlacements[0];
+    
+    // Create impression record
+    const [impression] = await db
+      .insert(impressions)
+      .values({
+        creativeId: creative.id,
+        campaignId: campaign.id,
+        slotId: slotId,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || null,
+        pageUrl: req.headers.referer || null,
+        referrer: req.headers.referer || null,
+      })
+      .returning();
+    
+    // Return ad data
+    res.json({
+      creative: {
+        id: creative.id,
+        name: creative.name,
+        type: creative.type,
+        content: creative.content,
+        size: creative.size,
+        clickUrl: creative.clickUrl,
+      },
+      campaign: {
+        id: campaign.id,
+        name: campaign.name,
+      },
+      impressionId: impression.id,
+    });
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب إعلان:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب الإعلان" });
+  }
+});
+
+// Track impression view (PUBLIC)
+router.post("/track/impression/:impressionId", async (req, res) => {
+  try {
+    const impressionId = req.params.impressionId;
+    
+    // Verify impression exists
+    const [impression] = await db
+      .select()
+      .from(impressions)
+      .where(eq(impressions.id, impressionId))
+      .limit(1);
+    
+    if (!impression) {
+      return res.status(404).json({ error: "Impression not found" });
+    }
+    
+    // Update daily stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    await db
+      .insert(dailyStats)
+      .values({
+        campaignId: impression.campaignId,
+        date: today,
+        impressions: 1,
+        clicks: 0,
+        conversions: 0,
+        spent: 0,
+      })
+      .onConflictDoUpdate({
+        target: [dailyStats.campaignId, dailyStats.date],
+        set: {
+          impressions: sql`${dailyStats.impressions} + 1`,
+          updatedAt: new Date(),
+        },
+      });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[Ads API] خطأ في تتبع المشاهدة:", error);
+    res.status(500).json({ error: "حدث خطأ" });
+  }
+});
+
+// Track ad click (PUBLIC)
+router.post("/track/click/:impressionId", async (req, res) => {
+  try {
+    const impressionId = req.params.impressionId;
+    
+    // Verify impression exists
+    const [impression] = await db
+      .select()
+      .from(impressions)
+      .where(eq(impressions.id, impressionId))
+      .limit(1);
+    
+    if (!impression) {
+      return res.status(404).json({ error: "Impression not found" });
+    }
+    
+    // Create click record
+    await db.insert(clicks).values({
+      impressionId,
+      clickedAt: new Date(),
+    });
+    
+    // Update daily stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    await db
+      .insert(dailyStats)
+      .values({
+        campaignId: impression.campaignId,
+        date: today,
+        impressions: 0,
+        clicks: 1,
+        conversions: 0,
+        spent: 0,
+      })
+      .onConflictDoUpdate({
+        target: [dailyStats.campaignId, dailyStats.date],
+        set: {
+          clicks: sql`${dailyStats.clicks} + 1`,
+          updatedAt: new Date(),
+        },
+      });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[Ads API] خطأ في تتبع النقرة:", error);
+    res.status(500).json({ error: "حدث خطأ" });
+  }
+});
+
 export default router;

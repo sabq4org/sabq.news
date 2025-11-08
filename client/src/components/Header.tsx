@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { AdSlot } from "./AdSlot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -355,6 +356,13 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </div>
         </SheetContent>
       </Sheet>
+      
+      {/* Ad Banner Slot - Header */}
+      <div className="border-t">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <AdSlot slotId="header-banner" className="w-full" />
+        </div>
+      </div>
     </header>
   );
 }
