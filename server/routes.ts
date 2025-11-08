@@ -386,6 +386,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Apple OAuth Routes
+  app.get("/api/auth/apple", 
+    passport.authenticate("apple")
+  );
+
+  app.post("/api/auth/apple/callback", 
+    passport.authenticate("apple", { 
+      failureRedirect: "/ar/login?error=apple_auth_failed",
+      failureMessage: true 
+    }),
+    (req, res) => {
+      console.log("✅ Apple OAuth callback successful");
+      // Redirect to onboarding or dashboard based on isProfileComplete
+      const user = req.user as any;
+      if (user && !user.isProfileComplete) {
+        res.redirect("/ar/onboarding");
+      } else {
+        res.redirect("/ar/dashboard");
+      }
+    }
+  );
+
   // Register
   app.post("/api/register", authLimiter, async (req, res) => {
     try {
