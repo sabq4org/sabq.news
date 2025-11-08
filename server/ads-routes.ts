@@ -2866,7 +2866,7 @@ router.get("/slot/:slotId", async (req, res) => {
     const slotId = req.params.slotId;
     const now = new Date();
     
-    // Find active placement for this slot
+    // Find ALL active placements for this slot (not just highest priority)
     const activePlacements = await db
       .select({
         placement: adCreativePlacements,
@@ -2887,14 +2887,38 @@ router.get("/slot/:slotId", async (req, res) => {
         lte(adCreativePlacements.startDate, now),
         sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`
       ))
-      .orderBy(desc(adCreativePlacements.priority))
-      .limit(1);
+      .orderBy(desc(adCreativePlacements.priority));
     
     if (activePlacements.length === 0) {
       return res.status(204).send(); // No ad available
     }
     
-    const { placement, creative, campaign, slot } = activePlacements[0];
+    // Weighted rotation: Select ad based on priority weights
+    // Higher priority = higher chance to be selected
+    let selectedPlacement;
+    
+    // Calculate total weight sum
+    const totalWeight = activePlacements.reduce((sum, p) => sum + p.placement.priority, 0);
+    
+    if (totalWeight <= 0) {
+      // Fallback to uniform random selection if all priorities are 0 or negative
+      const randomIndex = Math.floor(Math.random() * activePlacements.length);
+      selectedPlacement = activePlacements[randomIndex];
+    } else {
+      // Weighted random selection
+      let random = Math.random() * totalWeight;
+      
+      selectedPlacement = activePlacements[0];
+      for (const placement of activePlacements) {
+        random -= placement.placement.priority;
+        if (random <= 0) {
+          selectedPlacement = placement;
+          break;
+        }
+      }
+    }
+    
+    const { placement, creative, campaign, slot } = selectedPlacement;
     
     // Create impression record
     const [impression] = await db
