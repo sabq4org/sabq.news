@@ -11,7 +11,7 @@ import { db } from "./db";
 import { users, canUserLogin, getUserStatusMessage } from "@shared/schema";
 import { eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import jwt from "jsonwebtoken";
+import appleSignin from "apple-signin-auth";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -216,10 +216,14 @@ export async function setupAuth(app: Express) {
           try {
             console.log("🔍 AppleStrategy: Processing user");
             
-            // Decode the idToken to get user info
-            const decodedToken = jwt.decode(idToken, { json: true });
-            const appleId = decodedToken?.sub;
-            const email = decodedToken?.email;
+            // Verify and decode the idToken securely
+            const verifiedToken = await appleSignin.verifyIdToken(idToken, {
+              audience: process.env.APPLE_CLIENT_ID!,
+              ignoreExpiration: false,
+            });
+            
+            const appleId = verifiedToken.sub;
+            const email = verifiedToken.email;
 
             if (!appleId || !email) {
               return done(null, false, { message: "لم نتمكن من الحصول على البريد الإلكتروني من Apple" });

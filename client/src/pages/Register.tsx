@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus, Apple } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
+import { UserPlus } from "lucide-react";
+import { SiGoogle, SiApple } from "react-icons/si";
 
 const registerSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -231,7 +231,7 @@ export default function Register() {
                 onClick={() => window.location.href = '/api/auth/apple'}
                 data-testid="button-apple-register"
               >
-                <Apple className="ml-2 h-4 w-4" />
+                <SiApple className="ml-2 h-4 w-4" />
                 إنشاء حساب عبر Apple
               </Button>
 
