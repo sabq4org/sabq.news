@@ -14,11 +14,11 @@ The platform features an RTL-first design with custom light/dark theming and Ara
 A core architectural decision is the **bilingual system** with separate database architecture, language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented. The design system uses an enhanced color palette, gradient backgrounds, subtle shadows, and full dark mode support, with a sticky core categories bar and a redesigned footer.
 
 ### Technical Implementations
-The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
 
 ### Feature Specifications
 Key features include:
--   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth). Email verification system implemented.
+-   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth). Email verification system implemented.
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO, and bulk operations. Includes a Smart Media Library System (Arabic) with AI-powered image suggestions.
 -   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English, displaying engagement metrics with Recharts and Framer Motion animations.
 -   **Comments & Engagement:** Nested comment system with real-time moderation, integrated with user authentication.
