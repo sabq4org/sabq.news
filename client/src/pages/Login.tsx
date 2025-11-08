@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getDefaultRedirectPath, isStaff, type User } from "@/hooks/useAuth";
-import { LogIn } from "lucide-react";
+import { LogIn, Apple } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 
 const loginSchema = z.object({
@@ -172,6 +172,17 @@ export default function Login() {
               >
                 <SiGoogle className="ml-2 h-4 w-4" />
                 تسجيل الدخول عبر Google
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = '/api/auth/apple'}
+                data-testid="button-apple-login"
+              >
+                <Apple className="ml-2 h-4 w-4" />
+                تسجيل الدخول عبر Apple
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">

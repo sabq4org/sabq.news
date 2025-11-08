@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Apple } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 
 const registerSchema = z.object({
@@ -222,6 +222,17 @@ export default function Register() {
               >
                 <SiGoogle className="ml-2 h-4 w-4" />
                 إنشاء حساب عبر Google
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = '/api/auth/apple'}
+                data-testid="button-apple-register"
+              >
+                <Apple className="ml-2 h-4 w-4" />
+                إنشاء حساب عبر Apple
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">
