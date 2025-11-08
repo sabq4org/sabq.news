@@ -295,6 +295,32 @@ export default function CampaignDetail() {
     },
   });
 
+  // Update campaign status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      return await apiRequest(`/api/ads/campaigns/${campaignId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    },
+    onSuccess: (_, newStatus) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/campaigns", campaignId] });
+      toast({
+        title: "تم التحديث",
+        description: newStatus === "active" ? "تم تفعيل الحملة بنجاح" : "تم إيقاف الحملة بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      console.error("[Update Campaign Status] خطأ:", error);
+      toast({
+        title: "حدث خطأ",
+        description: error.message || "فشل في تحديث حالة الحملة",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Calculate total spent from daily stats
   const totalSpent = dailyStats.reduce((sum, stat) => sum + Number(stat.spent || 0), 0);
 
@@ -361,13 +387,50 @@ export default function CampaignDetail() {
           </div>
         ) : campaign ? (
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h1 className="text-3xl font-bold" data-testid="text-campaign-name">
-                {campaign.name}
-              </h1>
-              <Badge variant={statusColors[campaign.status]} data-testid="badge-campaign-status">
-                {statusLabels[campaign.status] || campaign.status}
-              </Badge>
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl font-bold" data-testid="text-campaign-name">
+                  {campaign.name}
+                </h1>
+                <Badge variant={statusColors[campaign.status]} data-testid="badge-campaign-status">
+                  {statusLabels[campaign.status] || campaign.status}
+                </Badge>
+              </div>
+              
+              {/* Status Control Buttons */}
+              <div className="flex items-center gap-2">
+                {campaign.status === "draft" && (
+                  <Button
+                    onClick={() => updateStatusMutation.mutate("active")}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid="button-activate-campaign"
+                  >
+                    <CheckCircle className="h-4 w-4 ml-2" />
+                    {updateStatusMutation.isPending ? "جارٍ التفعيل..." : "تفعيل الحملة"}
+                  </Button>
+                )}
+                {campaign.status === "active" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => updateStatusMutation.mutate("paused")}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid="button-pause-campaign"
+                  >
+                    <Clock className="h-4 w-4 ml-2" />
+                    {updateStatusMutation.isPending ? "جارٍ الإيقاف..." : "إيقاف مؤقت"}
+                  </Button>
+                )}
+                {campaign.status === "paused" && (
+                  <Button
+                    onClick={() => updateStatusMutation.mutate("active")}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid="button-resume-campaign"
+                  >
+                    <CheckCircle className="h-4 w-4 ml-2" />
+                    {updateStatusMutation.isPending ? "جارٍ الاستئناف..." : "استئناف الحملة"}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-6 text-muted-foreground flex-wrap">
               <div className="flex items-center gap-2">
