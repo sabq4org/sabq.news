@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,16 +151,19 @@ export default function AdAccountPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   // إذا كان لديه حساب - عرض معلومات الحساب
   if (account && !error) {
     return (
-      <div className="space-y-6">
+      <DashboardLayout>
+        <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">حسابي الإعلاني</h1>
           <p className="text-muted-foreground">
@@ -320,13 +324,15 @@ export default function AdAccountPage() {
             </Card>
           )}
         </div>
-      </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   // إذا لم يكن لديه حساب - عرض نموذج الإنشاء
   return (
-    <div className="max-w-4xl mx-auto">
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">إنشاء حساب معلن</h1>
         <p className="text-muted-foreground">
@@ -625,6 +631,7 @@ export default function AdAccountPage() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
