@@ -493,7 +493,7 @@ export default function CampaignDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="text-total-impressions">
-                  {(campaign.stats?.totalImpressions || 0).toLocaleString("ar-SA")}
+                  {(campaign.stats?.totalImpressions || 0).toLocaleString("ar-EG")}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   عدد مرات عرض الإعلان
@@ -509,7 +509,7 @@ export default function CampaignDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="text-total-clicks">
-                  {(campaign.stats?.totalClicks || 0).toLocaleString("ar-SA")}
+                  {(campaign.stats?.totalClicks || 0).toLocaleString("ar-EG")}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   عدد النقرات على الإعلان
@@ -541,10 +541,10 @@ export default function CampaignDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="text-total-spent">
-                  {totalSpent.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
+                  {totalSpent.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  من {Number(campaign.totalBudget).toLocaleString("ar-SA")} ر.س
+                  من {Number(campaign.totalBudget).toLocaleString("ar-EG")} ر.س
                 </p>
               </CardContent>
             </Card>
@@ -603,7 +603,7 @@ export default function CampaignDetail() {
                       <Tooltip
                         labelFormatter={(label) => `التاريخ: ${label}`}
                         formatter={(value: number, name: string) => [
-                          value.toLocaleString("ar-SA"),
+                          value.toLocaleString("ar-EG"),
                           name === "impressions" ? "الظهور" : "النقرات"
                         ]}
                       />
@@ -694,10 +694,10 @@ export default function CampaignDetail() {
                               {group.creativesCount}
                             </TableCell>
                             <TableCell data-testid={`text-ad-group-impressions-${group.id}`}>
-                              {group.stats.impressions.toLocaleString("ar-SA")}
+                              {group.stats.impressions.toLocaleString("ar-EG")}
                             </TableCell>
                             <TableCell data-testid={`text-ad-group-clicks-${group.id}`}>
-                              {group.stats.clicks.toLocaleString("ar-SA")}
+                              {group.stats.clicks.toLocaleString("ar-EG")}
                             </TableCell>
                             <TableCell data-testid={`text-ad-group-ctr-${group.id}`}>
                               {group.stats.ctr.toFixed(2)}%
@@ -778,13 +778,13 @@ export default function CampaignDetail() {
                   <div className="flex justify-between text-sm">
                     <span>المستخدم</span>
                     <span className="font-medium">
-                      {campaign ? (totalSpent / 7).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0} ر.س
+                      {campaign ? (totalSpent / 7).toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0} ر.س
                     </span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>الميزانية</span>
                     <span className="font-medium">
-                      {campaign ? Number(campaign.dailyBudget).toLocaleString("ar-SA") : 0} ر.س
+                      {campaign ? Number(campaign.dailyBudget).toLocaleString("ar-EG") : 0} ر.س
                     </span>
                   </div>
                   <Progress value={dailyBudgetProgress} data-testid="progress-daily-budget" />
@@ -803,13 +803,13 @@ export default function CampaignDetail() {
                   <div className="flex justify-between text-sm">
                     <span>المستخدم</span>
                     <span className="font-medium">
-                      {totalSpent.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
+                      {totalSpent.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
                     </span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>الميزانية</span>
                     <span className="font-medium">
-                      {campaign ? Number(campaign.totalBudget).toLocaleString("ar-SA") : 0} ر.س
+                      {campaign ? Number(campaign.totalBudget).toLocaleString("ar-EG") : 0} ر.س
                     </span>
                   </div>
                   <Progress value={totalBudgetProgress} data-testid="progress-total-budget" />
@@ -862,10 +862,10 @@ export default function CampaignDetail() {
                               </Badge>
                             </TableCell>
                             <TableCell data-testid={`text-budget-previous-${record.id}`}>
-                              {Number(record.previousBudget).toLocaleString("ar-SA")} ر.س
+                              {Number(record.previousBudget).toLocaleString("ar-EG")} ر.س
                             </TableCell>
                             <TableCell data-testid={`text-budget-new-${record.id}`}>
-                              {Number(record.newBudget).toLocaleString("ar-SA")} ر.س
+                              {Number(record.newBudget).toLocaleString("ar-EG")} ر.س
                             </TableCell>
                             <TableCell data-testid={`text-budget-reason-${record.id}`}>
                               {record.reason || "-"}

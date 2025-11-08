@@ -70,7 +70,7 @@ const statusLabels: Record<Campaign["status"], string> = {
 };
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("ar-SA", {
+  return new Intl.NumberFormat("ar-EG", {
     style: "currency",
     currency: "SAR",
     minimumFractionDigits: 0,
@@ -79,7 +79,7 @@ function formatCurrency(amount: number): string {
 }
 
 function formatNumber(num: number): string {
-  return new Intl.NumberFormat("ar-SA").format(num);
+  return new Intl.NumberFormat("ar-EG").format(num);
 }
 
 function CampaignsTableSkeleton() {
