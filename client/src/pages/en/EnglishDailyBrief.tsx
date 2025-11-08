@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
@@ -7,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Sun, 
   RefreshCw, 
@@ -30,7 +32,9 @@ import {
   Search,
   Gauge,
   TargetIcon,
+  ChevronDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { queryClient } from "@/lib/queryClient";
@@ -88,6 +92,10 @@ interface DailySummary {
 
 export default function EnglishDailyBrief() {
   const [location, navigate] = useLocation();
+  const [isMetricsExpanded, setIsMetricsExpanded] = useState(true);
+  const [isInterestExpanded, setIsInterestExpanded] = useState(true);
+  const [isTimeActivityExpanded, setIsTimeActivityExpanded] = useState(true);
+  const [isAIInsightsExpanded, setIsAIInsightsExpanded] = useState(true);
 
   // Fetch user for header
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string; profileImageUrl?: string | null }>({
@@ -267,12 +275,30 @@ export default function EnglishDailyBrief() {
               </Card>
 
               {/* Performance Metrics */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" data-testid="heading-performance-metrics">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                  Personal Performance Metrics
-                </h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Collapsible open={isMetricsExpanded} onOpenChange={setIsMetricsExpanded}>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <h2 className="text-2xl font-bold flex items-center gap-2" data-testid="heading-performance-metrics">
+                    <BarChart3 className="h-6 w-6 text-primary" />
+                    Personal Performance Metrics
+                  </h2>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      data-testid="button-toggle-metrics"
+                    >
+                      <ChevronDown 
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          isMetricsExpanded && "rotate-180"
+                        )}
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                
+                <CollapsibleContent>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <Card data-testid="metric-articles-read">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-2">
@@ -348,18 +374,38 @@ export default function EnglishDailyBrief() {
                       <div className="text-3xl font-bold" data-testid="value-comments">{summary.metrics.commentsPosted}</div>
                     </CardContent>
                   </Card>
-                </div>
-              </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Interest Analysis */}
-              <Card data-testid="card-interest-analysis">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2" data-testid="heading-interest-analysis">
-                    <Sparkles className="h-6 w-6 text-primary" />
-                    Interest Analysis (AI Insights)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <Collapsible open={isInterestExpanded} onOpenChange={setIsInterestExpanded}>
+                <Card data-testid="card-interest-analysis">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2" data-testid="heading-interest-analysis">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        Interest Analysis (AI Insights)
+                      </CardTitle>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          data-testid="button-toggle-interest"
+                        >
+                          <ChevronDown 
+                            className={cn(
+                              "h-4 w-4 transition-transform duration-200",
+                              isInterestExpanded && "rotate-180"
+                            )}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                  </CardHeader>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-semibold mb-2" data-testid="label-today-interest">Your interests today:</h3>
                     <div className="flex flex-wrap gap-2">
@@ -426,22 +472,45 @@ export default function EnglishDailyBrief() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
 
               {/* Time Activity Chart */}
-              <Card data-testid="card-time-activity">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2" data-testid="heading-time-activity">
-                    <Zap className="h-6 w-6 text-primary" />
-                    Time Activity
-                  </CardTitle>
-                  <CardDescription data-testid="text-activity-summary">
-                    Peak reading time: <strong data-testid="value-peak-time">{formatHour(summary.timeActivity.peakReadingTime)}</strong>
-                    {' '}• Low activity period: <strong data-testid="value-low-time">{formatHour(summary.timeActivity.lowActivityPeriod)}</strong>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+              <Collapsible open={isTimeActivityExpanded} onOpenChange={setIsTimeActivityExpanded}>
+                <Card data-testid="card-time-activity">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2" data-testid="heading-time-activity">
+                          <Zap className="h-6 w-6 text-primary" />
+                          Time Activity
+                        </CardTitle>
+                        <CardDescription data-testid="text-activity-summary">
+                          Peak reading time: <strong data-testid="value-peak-time">{formatHour(summary.timeActivity.peakReadingTime)}</strong>
+                          {' '}• Low activity period: <strong data-testid="value-low-time">{formatHour(summary.timeActivity.lowActivityPeriod)}</strong>
+                        </CardDescription>
+                      </div>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          data-testid="button-toggle-time-activity"
+                        >
+                          <ChevronDown 
+                            className={cn(
+                              "h-4 w-4 transition-transform duration-200",
+                              isTimeActivityExpanded && "rotate-180"
+                            )}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                  </CardHeader>
+                  
+                  <CollapsibleContent>
+                    <CardContent>
                   <div className="h-64 w-full" data-testid="chart-hourly-activity">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart 
@@ -476,18 +545,39 @@ export default function EnglishDailyBrief() {
                       </p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
 
               {/* AI Insights */}
-              <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20" data-testid="card-ai-insights">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2" data-testid="heading-ai-touches">
-                    <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                    AI Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <Collapsible open={isAIInsightsExpanded} onOpenChange={setIsAIInsightsExpanded}>
+                <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20" data-testid="card-ai-insights">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2" data-testid="heading-ai-touches">
+                        <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                        AI Insights
+                      </CardTitle>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          data-testid="button-toggle-ai-insights"
+                        >
+                          <ChevronDown 
+                            className={cn(
+                              "h-4 w-4 transition-transform duration-200",
+                              isAIInsightsExpanded && "rotate-180"
+                            )}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                  </CardHeader>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div data-testid="box-reading-mood-report">
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
@@ -530,8 +620,10 @@ export default function EnglishDailyBrief() {
                     </h3>
                     <p data-testid="text-daily-goal">{summary.aiInsights.dailyGoal}</p>
                   </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </div>
           )}
         </div>
