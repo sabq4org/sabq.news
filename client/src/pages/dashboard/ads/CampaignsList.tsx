@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -8,6 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -31,8 +41,12 @@ import {
   Edit2, 
   Pause, 
   Play,
-  Search
+  Search,
+  Trash2,
+  Loader2
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type Campaign = {
   id: string;
@@ -130,6 +144,8 @@ export default function CampaignsList() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     document.title = "إدارة الحملات الإعلانية - لوحة تحكم الإعلانات";
@@ -155,6 +171,75 @@ export default function CampaignsList() {
     },
     enabled: !!user,
   });
+
+  // Delete campaign mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      await apiRequest(`/api/ads/campaigns/${campaignId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/campaigns"] });
+      toast({
+        title: "تم حذف الحملة",
+        description: "تم حذف الحملة الإعلانية بنجاح",
+      });
+      setCampaignToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حذف الحملة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Toggle campaign status (pause/resume)
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, newStatus }: { id: string; newStatus: "active" | "paused" }) => {
+      await apiRequest(`/api/ads/campaigns/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ads/campaigns"] });
+      const action = variables.newStatus === "paused" ? "إيقاف" : "تشغيل";
+      toast({
+        title: `تم ${action} الحملة`,
+        description: `تم ${action} الحملة الإعلانية بنجاح`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في تحديث حالة الحملة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle pause/resume
+  const handleToggleStatus = (campaign: Campaign) => {
+    const newStatus = campaign.status === "active" ? "paused" : "active";
+    toggleStatusMutation.mutate({ id: campaign.id, newStatus });
+  };
+
+  // Handle delete
+  const handleDelete = (campaign: Campaign) => {
+    setCampaignToDelete(campaign);
+  };
+
+  const confirmDelete = () => {
+    if (campaignToDelete) {
+      deleteMutation.mutate(campaignToDelete.id);
+    }
+  };
 
   // Filter campaigns by search term
   const filteredCampaigns = campaigns.filter((campaign) =>
@@ -413,9 +498,15 @@ export default function CampaignsList() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  onClick={() => handleToggleStatus(campaign)}
+                                  disabled={toggleStatusMutation.isPending}
                                   data-testid={`button-pause-${campaign.id}`}
                                 >
-                                  <Pause className="h-4 w-4" />
+                                  {toggleStatusMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Pause className="h-4 w-4" />
+                                  )}
                                 </Button>
                               )}
 
@@ -423,11 +514,27 @@ export default function CampaignsList() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  onClick={() => handleToggleStatus(campaign)}
+                                  disabled={toggleStatusMutation.isPending}
                                   data-testid={`button-resume-${campaign.id}`}
                                 >
-                                  <Play className="h-4 w-4" />
+                                  {toggleStatusMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
                                 </Button>
                               )}
+
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(campaign)}
+                                disabled={deleteMutation.isPending}
+                                data-testid={`button-delete-${campaign.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -440,6 +547,42 @@ export default function CampaignsList() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!campaignToDelete} onOpenChange={(open) => !open && setCampaignToDelete(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف الحملة</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف الحملة "{campaignToDelete?.name}"؟
+              <br />
+              <span className="text-destructive font-medium">
+                تحذير: سيتم حذف جميع البنرات والإحصائيات المرتبطة بهذه الحملة بشكل نهائي.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                "حذف الحملة"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
