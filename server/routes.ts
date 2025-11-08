@@ -17,6 +17,7 @@ import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
+import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -76,6 +77,7 @@ import {
   reactions,
   bookmarks,
   passwordResetTokens,
+  emailVerificationTokens,
   tags,
   articleTags,
   userFollowedTerms,
@@ -428,6 +430,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail registration if notification prefs fail
         });
 
+      // Send verification email
+      const emailResult = await sendVerificationEmail(newUser.id, newUser.email);
+      
+      if (!emailResult.success) {
+        console.warn("⚠️  Failed to send verification email:", emailResult.error);
+      }
+
       // Auto-login after registration
       req.logIn(newUser, (err) => {
         if (err) {
@@ -437,13 +446,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("✅ User registered and logged in:", newUser.email);
         res.status(201).json({ 
-          message: "تم إنشاء الحساب بنجاح", 
-          user: { id: newUser.id, email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName } 
+          message: emailResult.success 
+            ? "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب" 
+            : "تم إنشاء الحساب بنجاح",
+          user: { 
+            id: newUser.id, 
+            email: newUser.email, 
+            firstName: newUser.firstName, 
+            lastName: newUser.lastName,
+            emailVerified: newUser.emailVerified
+          },
+          emailSent: emailResult.success
         });
       });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ message: "خطأ في إنشاء الحساب" });
+    }
+  });
+
+  // Verify Email
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({ message: "رمز التحقق مطلوب" });
+      }
+
+      const result = await verifyEmailToken(token);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error || "فشل التحقق من البريد الإلكتروني" });
+      }
+
+      res.json({ 
+        message: "تم التحقق من بريدك الإلكتروني بنجاح",
+        userId: result.userId
+      });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "خطأ في التحقق من البريد الإلكتروني" });
+    }
+  });
+
+  // Resend Verification Email
+  app.post("/api/auth/resend-verification", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "يجب تسجيل الدخول أولاً" });
+      }
+
+      const result = await resendVerificationEmail(req.user.id);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error || "فشل إعادة إرسال رسالة التحقق" });
+      }
+
+      res.json({ message: "تم إرسال رسالة التحقق بنجاح. يرجى فحص بريدك الإلكتروني" });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({ message: "خطأ في إرسال رسالة التحقق" });
     }
   });
 
