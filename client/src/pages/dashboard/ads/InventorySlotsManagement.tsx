@@ -173,7 +173,8 @@ export default function InventorySlotsManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [slotToDelete, setSlotToDelete] = useState<InventorySlot | null>(null);
 
-  const isAdmin = ["admin", "superadmin"].includes(user?.role || "");
+  // Allow advertiser, admin, and superadmin to manage inventory slots
+  const isAdmin = ["admin", "superadmin", "advertiser"].includes(user?.role || "");
 
   useEffect(() => {
     document.title = "إدارة أماكن العرض الإعلانية - لوحة تحكم الإعلانات";

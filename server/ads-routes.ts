@@ -1898,8 +1898,8 @@ router.get("/inventory-slots", requireAdvertiser, async (req, res) => {
   }
 });
 
-// إنشاء مكان ظهور جديد (للمشرفين فقط)
-router.post("/inventory-slots", requireAdmin, async (req, res) => {
+// إنشاء مكان ظهور جديد (للمعلنين والمشرفين)
+router.post("/inventory-slots", requireAdvertiser, async (req, res) => {
   try {
     const userId = (req.user as any).id;
     
@@ -1935,8 +1935,8 @@ router.post("/inventory-slots", requireAdmin, async (req, res) => {
   }
 });
 
-// تحديث مكان ظهور (للمشرفين فقط)
-router.put("/inventory-slots/:id", requireAdmin, async (req, res) => {
+// تحديث مكان ظهور (للمعلنين والمشرفين)
+router.put("/inventory-slots/:id", requireAdvertiser, async (req, res) => {
   try {
     const slotId = req.params.id;
     const userId = (req.user as any).id;
@@ -1981,8 +1981,8 @@ router.put("/inventory-slots/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// حذف مكان ظهور (للمشرفين فقط)
-router.delete("/inventory-slots/:id", requireAdmin, async (req, res) => {
+// حذف مكان ظهور (للمعلنين والمشرفين)
+router.delete("/inventory-slots/:id", requireAdvertiser, async (req, res) => {
   try {
     const slotId = req.params.id;
     const userId = (req.user as any).id;
