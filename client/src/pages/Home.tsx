@@ -16,6 +16,7 @@ import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
+import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -229,6 +230,11 @@ export default function Home() {
               <HeroCarousel articles={homepage.hero} />
             </div>
           )}
+
+          {/* Ad Banner Slot - Below Featured News */}
+          <div className="mb-8">
+            <AdSlot slotId="header-banner" className="w-full" />
+          </div>
 
           {/* Smart Blocks: below_featured */}
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
