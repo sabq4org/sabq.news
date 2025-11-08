@@ -74,6 +74,7 @@ type InventorySlot = {
   location: "header" | "sidebar" | "footer" | "inline" | "between_articles";
   size: string;
   pageType: "all" | "home" | "article" | "category";
+  deviceType: "desktop" | "mobile" | "tablet" | "all";
   isActive: boolean;
   floorPrice: number;
   createdAt: string;
@@ -97,6 +98,14 @@ const pageTypeLabels: Record<InventorySlot["pageType"], string> = {
   category: "صفحات الأقسام",
 };
 
+// Device type labels
+const deviceTypeLabels: Record<InventorySlot["deviceType"], string> = {
+  all: "جميع الأجهزة",
+  desktop: "الكمبيوتر فقط",
+  mobile: "الهاتف فقط",
+  tablet: "التابلت فقط",
+};
+
 // Available sizes
 const availableSizes = [
   { value: "728x90", label: "728x90 (Leaderboard)" },
@@ -117,6 +126,9 @@ const formSchema = z.object({
   pageType: z.enum(["all", "home", "article", "category"], {
     required_error: "نوع الصفحة مطلوب"
   }),
+  deviceType: z.enum(["desktop", "mobile", "tablet", "all"], {
+    required_error: "نوع الجهاز مطلوب"
+  }).default("all"),
   floorPrice: z.coerce.number().min(0, "السعر يجب أن يكون صفراً أو أكثر").optional().default(0),
   isActive: z.boolean().default(true),
 });
@@ -194,6 +206,7 @@ export default function InventorySlotsManagement() {
       location: "header",
       size: "728x90",
       pageType: "all",
+      deviceType: "all",
       floorPrice: 0,
       isActive: true,
     },
@@ -294,6 +307,7 @@ export default function InventorySlotsManagement() {
         location: slot.location,
         size: slot.size,
         pageType: slot.pageType,
+        deviceType: slot.deviceType || "all",
         floorPrice: slot.floorPrice,
         isActive: isActive,
       };
@@ -330,6 +344,7 @@ export default function InventorySlotsManagement() {
       name: "",
       location: "header",
       size: "728x90",
+      deviceType: "all",
       pageType: "all",
       floorPrice: 0,
       isActive: true,
@@ -344,6 +359,7 @@ export default function InventorySlotsManagement() {
       location: slot.location,
       size: slot.size,
       pageType: slot.pageType,
+      deviceType: slot.deviceType || "all",
       floorPrice: slot.floorPrice,
       isActive: slot.isActive,
     });
@@ -498,6 +514,7 @@ export default function InventorySlotsManagement() {
                       <TableHead className="text-right">الموقع</TableHead>
                       <TableHead className="text-right">الحجم</TableHead>
                       <TableHead className="text-right">نوع الصفحة</TableHead>
+                      <TableHead className="text-right">نوع الجهاز</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">الحد الأدنى للسعر</TableHead>
                       <TableHead className="text-left">الإجراءات</TableHead>
@@ -523,6 +540,11 @@ export default function InventorySlotsManagement() {
                             <Monitor className="h-4 w-4 text-muted-foreground" />
                             {pageTypeLabels[slot.pageType]}
                           </div>
+                        </TableCell>
+                        <TableCell data-testid={`text-slot-device-type-${slot.id}`}>
+                          <Badge variant="outline">
+                            {deviceTypeLabels[slot.deviceType || "all"]}
+                          </Badge>
                         </TableCell>
                         <TableCell data-testid={`badge-slot-status-${slot.id}`}>
                           <Badge
@@ -693,6 +715,34 @@ export default function InventorySlotsManagement() {
                           <SelectItem value="category">صفحات الأقسام</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Device Type */}
+                <FormField
+                  control={form.control}
+                  name="deviceType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>نوع الجهاز</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-slot-device-type">
+                            <SelectValue placeholder="اختر نوع الجهاز" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="all">جميع الأجهزة</SelectItem>
+                          <SelectItem value="desktop">الكمبيوتر فقط</SelectItem>
+                          <SelectItem value="mobile">الهاتف فقط</SelectItem>
+                          <SelectItem value="tablet">التابلت فقط</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        حدد الأجهزة التي سيظهر عليها هذا المكان
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
