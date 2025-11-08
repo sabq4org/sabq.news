@@ -1884,7 +1884,7 @@ export function getUserStatusMessage(user: User): string | null {
       return `حسابك مقفل بسبب محاولات دخول فاشلة متعددة. يرجى التواصل مع الإدارة.`;
     
     case "pending":
-      return `يرجى تفعيل حسابك عبر البريد الإلكتروني للوصول الكامل للميزات.`;
+      return `يرجى تفعيل حسابك عبر البريد الإلكتروني أولاً`;
     
     case "deleted":
       return `هذا الحساب محذوف.`;

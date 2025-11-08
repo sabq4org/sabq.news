@@ -30,6 +30,26 @@ async function throwIfResNotOk(res: Response) {
       handleSessionExpiration();
     }
     
+    // Handle 403 Forbidden - show user-friendly message
+    if (res.status === 403) {
+      try {
+        const data = JSON.parse(text);
+        if (data.message) {
+          toast({
+            title: "تنبيه",
+            description: data.message,
+            variant: "destructive",
+          });
+          throw new Error(data.message);
+        }
+      } catch (e) {
+        // If parsing fails or no message, use default
+        if (e instanceof Error && e.message !== text) {
+          throw e; // Re-throw if it's our custom error
+        }
+      }
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -72,6 +92,25 @@ export async function apiRequest<T = any>(
           if (xhr.status === 401) {
             handleSessionExpiration();
           }
+          
+          // Handle 403 Forbidden - show user-friendly message
+          if (xhr.status === 403) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.message) {
+                toast({
+                  title: "تنبيه",
+                  description: data.message,
+                  variant: "destructive",
+                });
+                reject(new Error(data.message));
+                return;
+              }
+            } catch (e) {
+              // If parsing fails, continue to default error
+            }
+          }
+          
           reject(new Error(`${xhr.status}: ${xhr.responseText || xhr.statusText}`));
         }
       });
