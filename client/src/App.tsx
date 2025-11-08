@@ -4,9 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ChatWebSocketProvider } from "@/contexts/ChatWebSocketContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import AIChatBot from "@/components/AIChatBot";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -101,8 +99,6 @@ import ShortsEditor from "@/pages/ShortsEditor";
 import QuadCategoriesBlockSettings from "@/pages/QuadCategoriesBlockSettings";
 import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
 import OpinionManagement from "@/pages/dashboard/OpinionManagement";
-import Chat from "@/pages/dashboard/Chat";
-import ChatAdmin from "@/pages/dashboard/ChatAdmin";
 import MediaLibrary from "@/pages/dashboard/MediaLibrary";
 import AdminLogin from "@/pages/AdminLogin";
 import CalendarPage from "@/pages/CalendarPage";
@@ -260,10 +256,6 @@ function Router() {
       {/* Smart Categories Management */}
       <Route path="/dashboard/smart-categories" component={SmartCategoriesManagement} />
       
-      {/* Chat */}
-      <Route path="/dashboard/chat" component={Chat} />
-      <Route path="/dashboard/chat-admin" component={ChatAdmin} />
-      
       {/* Calendar */}
       <Route path="/dashboard/calendar" component={CalendarPage} />
       <Route path="/dashboard/calendar/:action" component={CalendarEventForm} />
@@ -344,13 +336,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <ThemeProvider defaultTheme="light">
-          <ChatWebSocketProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-              <AIChatBot />
-            </TooltipProvider>
-          </ChatWebSocketProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
         </ThemeProvider>
       </LanguageProvider>
     </QueryClientProvider>

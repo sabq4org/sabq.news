@@ -32,8 +32,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useNav, trackNavClick } from "@/nav/useNav";
 import { AppBreadcrumbs } from "./AppBreadcrumbs";
 import { InternalAnnouncement } from "./InternalAnnouncement";
-import { NotificationBadge } from "./chat/NotificationBadge";
-import { NotificationsPanel } from "./chat/NotificationsPanel";
 import type { UserRole } from "@/nav/types";
 import type { NavItem } from "@/nav/types";
 
@@ -47,7 +45,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
   const { user, isLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
-  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
   
   // Load collapsed state from localStorage
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
@@ -296,7 +293,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="flex h-16 items-center gap-4 border-b px-4 md:px-6">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex-1" />
-            <NotificationBadge onClick={() => setNotificationsPanelOpen(true)} />
             <ThemeToggle />
           </header>
           
@@ -308,11 +304,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </main>
         </SidebarInset>
       </div>
-      
-      <NotificationsPanel 
-        open={notificationsPanelOpen} 
-        onOpenChange={setNotificationsPanelOpen} 
-      />
     </SidebarProvider>
   );
 }
