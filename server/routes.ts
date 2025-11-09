@@ -19252,6 +19252,140 @@ Allow: /
     }
   });
 
+  // English Category Analytics Endpoint
+  app.get("/api/en/categories/:id/analytics", async (req, res) => {
+    try {
+      const categoryId = req.params.id;
+      const now = new Date();
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Get category details
+      const [category] = await db
+        .select()
+        .from(enCategories)
+        .where(eq(enCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      // Get total article count in this category
+      const [totalCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published")
+        ));
+
+      // Get articles published in last 30 days
+      const [recentCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(enArticles)
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published"),
+          gte(enArticles.publishedAt, monthAgo)
+        ));
+
+      // Get total views
+      const [totalViewsResult] = await db.select({
+        total: sql<number>`COALESCE(SUM(${enArticles.views}), 0)::int`
+      })
+        .from(enArticles)
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published")
+        ));
+
+      // Calculate average views
+      const avgViews = totalCount.count > 0 
+        ? Math.round(totalViewsResult.total / totalCount.count)
+        : 0;
+
+      // Get most active reporter in this category
+      let topAuthor = await db.select({
+        userId: enArticles.reporterId,
+        count: sql<number>`count(*)::int`,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      })
+        .from(enArticles)
+        .innerJoin(users, eq(enArticles.reporterId, users.id))
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published"),
+          isNotNull(enArticles.reporterId)
+        ))
+        .groupBy(enArticles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
+        .orderBy(sql`count(*) DESC`)
+        .limit(1);
+
+      // Fallback to authorId
+      if (!topAuthor || topAuthor.length === 0) {
+        topAuthor = await db.select({
+          userId: enArticles.authorId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(enArticles)
+          .innerJoin(users, eq(enArticles.authorId, users.id))
+          .where(and(
+            eq(enArticles.categoryId, categoryId),
+            eq(enArticles.status, "published"),
+            isNotNull(enArticles.authorId)
+          ))
+          .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+      }
+
+      // Get total interactions
+      const [reactionsCount] = await db.select({
+        count: sql<number>`count(*)::int`
+      })
+        .from(enReactions)
+        .leftJoin(enArticles, eq(enReactions.articleId, enArticles.id))
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published")
+        ));
+
+      const [commentsCount] = await db.select({
+        count: sql<number>`count(*)::int`
+      })
+        .from(enComments)
+        .leftJoin(enArticles, eq(enComments.articleId, enArticles.id))
+        .where(and(
+          eq(enArticles.categoryId, categoryId),
+          eq(enArticles.status, "published")
+        ));
+
+      const totalInteractions = (reactionsCount?.count || 0) + (commentsCount?.count || 0);
+
+      res.json({
+        categoryName: category.name,
+        categoryIcon: category.icon,
+        categoryColor: category.color,
+        totalArticles: totalCount.count || 0,
+        recentArticles: recentCount.count || 0,
+        totalViews: totalViewsResult.total || 0,
+        avgViewsPerArticle: avgViews,
+        totalInteractions: totalInteractions,
+        topAuthor: topAuthor && topAuthor.length > 0 ? {
+          name: `${topAuthor[0].firstName} ${topAuthor[0].lastName}`.trim(),
+          profileImageUrl: topAuthor[0].profileImageUrl,
+          count: topAuthor[0].count
+        } : null
+      });
+    } catch (error) {
+      console.error("Error fetching EN category analytics:", error);
+      res.status(500).json({ message: "Failed to fetch category analytics" });
+    }
+  });
+
   // GET English Articles (with filters)
   app.get("/api/en/articles", async (req, res) => {
     try {

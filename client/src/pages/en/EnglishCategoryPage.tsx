@@ -8,6 +8,7 @@ import { Clock, Eye, Newspaper, Zap, Flame, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import type { EnCategory, EnArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+import { CategoryAnalytics } from "@/components/CategoryAnalytics";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -41,6 +42,17 @@ export default function EnglishCategoryPage() {
       if (!category) return [];
       const res = await fetch(`/api/en/categories/${category.id}/articles`, { credentials: 'include' });
       if (!res.ok) throw new Error("Failed to fetch articles");
+      return res.json();
+    },
+    enabled: !!category,
+  });
+
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<any>({
+    queryKey: ["/api/en/categories", category?.id, "analytics"],
+    queryFn: async () => {
+      if (!category) return null;
+      const res = await fetch(`/api/en/categories/${category.id}/analytics`, { credentials: 'include' });
+      if (!res.ok) throw new Error("Failed to fetch analytics");
       return res.json();
     },
     enabled: !!category,
@@ -114,6 +126,25 @@ export default function EnglishCategoryPage() {
           </div>
         </div>
       )}
+
+      {/* Category Analytics */}
+      {analyticsLoading ? (
+        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="border-0 dark:border dark:border-card-border">
+                <CardContent className="p-4 sm:p-6">
+                  <Skeleton className="h-24 sm:h-32 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : analytics ? (
+        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <CategoryAnalytics analytics={analytics} />
+        </div>
+      ) : null}
 
       {/* Articles Grid */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
