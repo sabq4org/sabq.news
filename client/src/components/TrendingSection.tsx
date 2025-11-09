@@ -214,7 +214,7 @@ function EmptyState({ mode }: { mode: TrendMode }) {
           </p>
         </div>
         <Link href="/login" data-testid="link-trending-login">
-          <Button>
+          <Button data-testid="button-trending-login">
             <LogIn className="h-4 w-4 ml-2" />
             تسجيل الدخول
           </Button>
