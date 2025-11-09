@@ -50,13 +50,17 @@ export function OpinionArticlesBlock() {
               <h2 className="text-2xl md:text-3xl font-bold">مقالات الرأي</h2>
             </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-48 bg-muted rounded-lg mb-4"></div>
-                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </div>
+              <Card key={i} className="shadow-sm border border-border dark:border-card-border">
+                <CardContent className="p-4 sm:p-5 space-y-3">
+                  <div className="h-6 bg-muted rounded w-1/3"></div>
+                  <div className="h-5 bg-muted rounded w-full"></div>
+                  <div className="h-5 bg-muted rounded w-4/5"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
@@ -84,7 +88,7 @@ export function OpinionArticlesBlock() {
           </Link>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {articles.articles.map((article) => {
             const authorName = article.author
               ? `${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() || "كاتب"
@@ -92,8 +96,8 @@ export function OpinionArticlesBlock() {
 
             return (
               <Link key={article.id} href={`/opinion/${article.slug}`}>
-                <Card className="h-full hover-elevate active-elevate-2 overflow-hidden" data-testid={`opinion-card-${article.id}`}>
-                  <CardContent className="p-4 space-y-3">
+                <Card className="h-full hover-elevate active-elevate-2 overflow-hidden shadow-sm border border-border dark:border-card-border" data-testid={`opinion-card-${article.id}`}>
+                  <CardContent className="p-4 sm:p-5 space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="default" className="gap-1">
                         <BookOpen className="h-3 w-3" />
@@ -106,17 +110,17 @@ export function OpinionArticlesBlock() {
                       )}
                     </div>
 
-                    <h3 className="text-lg font-bold line-clamp-2 leading-tight">
+                    <h3 className="text-base sm:text-lg font-bold line-clamp-2 leading-tight">
                       {article.title}
                     </h3>
 
                     {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {article.excerpt}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground pt-2 border-t border-border dark:border-border/60">
                       <div className="flex items-center gap-2">
                         {article.author?.profileImageUrl ? (
                           <img

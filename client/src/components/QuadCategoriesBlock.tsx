@@ -126,7 +126,7 @@ function TitleList({ items }: { items: CategoryColumnData["list"] }) {
       {items.map((item, index) => (
         <Link key={item.id} href={item.href}>
           <div
-            className="group py-2 border-b border-border last:border-0 cursor-pointer"
+            className="group py-2 border-b border-border dark:border-border/60 last:border-0 cursor-pointer"
             data-testid={`list-item-${index}`}
           >
             <h4 className="text-sm font-medium line-clamp-2 mb-1 group-hover:text-primary transition-colors">
@@ -179,7 +179,7 @@ function CategoryColumn({ data, index }: { data: CategoryColumnData; index: numb
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-card border border-border rounded-xl p-4"
+      className="bg-card shadow-sm border border-border dark:border-card-border rounded-xl p-4"
       data-testid={`category-column-${data.category.slug}`}
     >
       <ColumnHeader 
@@ -232,7 +232,7 @@ function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
       </div>
 
       {/* Indicators - دوائر صغيرة فقط */}
-      <div className="flex justify-center gap-1 mt-3">
+      <div className="flex justify-center gap-2 mt-4">
         {items.map((_, index) => (
           <button
             key={index}
@@ -245,8 +245,8 @@ function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
             }}
             className={`rounded-full transition-all ${
               index === currentIndex 
-                ? 'bg-primary w-2 h-2' 
-                : 'bg-muted-foreground/30 w-1.5 h-1.5'
+                ? 'bg-primary w-2.5 h-2.5' 
+                : 'bg-border dark:bg-muted-foreground/30 w-2 h-2'
             }`}
             data-testid={`carousel-indicator-${index}`}
           />
