@@ -237,9 +237,9 @@ export default function EnglishNewsPage() {
         ) : (
           <>
             {/* Mobile View: Vertical List */}
-            <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
+            <Card className="overflow-hidden lg:hidden shadow-sm border border-border/40 dark:border-card-border">
               <CardContent className="p-0">
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/50 dark:divide-border">
                   {currentArticles.map((article) => {
                     const timeAgo = article.publishedAt
                       ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
@@ -333,7 +333,7 @@ export default function EnglishNewsPage() {
               {currentArticles.map((article) => (
                 <Link key={article.id} href={`/en/article/${article.slug}`}>
                   <Card 
-                    className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
+                    className={`cursor-pointer h-full overflow-hidden shadow-sm border border-border/40 dark:border-card-border ${
                       article.newsType === "breaking" ? "bg-destructive/5" : ""
                     }`}
                     data-testid={`card-article-${article.id}`}

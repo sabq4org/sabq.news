@@ -132,7 +132,7 @@ export default function EnglishCategoryPage() {
         <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="border-0 dark:border dark:border-card-border">
+              <Card key={i} className="shadow-sm border border-border/40 dark:border-card-border">
                 <CardContent className="p-4 sm:p-6">
                   <Skeleton className="h-24 sm:h-32 w-full" />
                 </CardContent>
@@ -165,9 +165,9 @@ export default function EnglishCategoryPage() {
         ) : (
           <>
             {/* Mobile View: Vertical List */}
-            <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
+            <Card className="overflow-hidden lg:hidden shadow-sm border border-border/40 dark:border-card-border">
               <CardContent className="p-0">
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/50 dark:divide-border">
                   {articles.map((article) => {
                     const timeAgo = article.publishedAt
                       ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
@@ -261,7 +261,7 @@ export default function EnglishCategoryPage() {
               {articles.map((article) => (
                 <Link key={article.id} href={`/en/article/${article.slug}`}>
                   <Card 
-                    className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
+                    className={`cursor-pointer h-full overflow-hidden shadow-sm border border-border/40 dark:border-card-border ${
                       article.newsType === "breaking" ? "bg-destructive/5" : ""
                     }`}
                     data-testid={`card-article-${article.id}`}

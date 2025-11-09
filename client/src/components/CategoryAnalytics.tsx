@@ -92,7 +92,7 @@ export function CategoryAnalytics({ analytics, language = 'ar' }: CategoryAnalyt
     >
       {/* Total Articles Card */}
       <motion.div variants={itemVariants}>
-        <Card className="hover-elevate border-0 dark:border dark:border-card-border">
+        <Card className="hover-elevate shadow-sm border border-border/40 dark:border-card-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10">
@@ -116,7 +116,7 @@ export function CategoryAnalytics({ analytics, language = 'ar' }: CategoryAnalyt
 
       {/* Total Views Card */}
       <motion.div variants={itemVariants}>
-        <Card className="hover-elevate border-0 dark:border dark:border-card-border">
+        <Card className="hover-elevate shadow-sm border border-border/40 dark:border-card-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="p-2.5 sm:p-3 rounded-lg bg-blue-500/10">
@@ -139,7 +139,7 @@ export function CategoryAnalytics({ analytics, language = 'ar' }: CategoryAnalyt
 
       {/* Total Interactions Card */}
       <motion.div variants={itemVariants}>
-        <Card className="hover-elevate border-0 dark:border dark:border-card-border">
+        <Card className="hover-elevate shadow-sm border border-border/40 dark:border-card-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="p-2.5 sm:p-3 rounded-lg bg-red-500/10">
@@ -158,7 +158,7 @@ export function CategoryAnalytics({ analytics, language = 'ar' }: CategoryAnalyt
 
       {/* Top Author Card */}
       <motion.div variants={itemVariants}>
-        <Card className="hover-elevate border-0 dark:border dark:border-card-border">
+        <Card className="hover-elevate shadow-sm border border-border/40 dark:border-card-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="p-2.5 sm:p-3 rounded-lg bg-green-500/10">
