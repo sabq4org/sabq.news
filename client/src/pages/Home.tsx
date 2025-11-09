@@ -235,11 +235,6 @@ export default function Home() {
           <div className="mb-8">
             <AdSlot slotId="header-banner" className="w-full" />
           </div>
-
-          {/* Smart Blocks: below_featured */}
-          {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
-            <SmartNewsBlock key={block.id} config={block} />
-          ))}
         </div>
 
         {/* AI Section with soft gradient background */}
@@ -265,6 +260,11 @@ export default function Home() {
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
+          {/* Smart Blocks: below_featured (moved here from below hero) */}
+          {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
+            <SmartNewsBlock key={block.id} config={block} />
+          ))}
+
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
