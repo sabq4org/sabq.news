@@ -123,6 +123,7 @@ import EnglishDailyBrief from "@/pages/en/EnglishDailyBrief";
 import EnglishNotificationSettings from "@/pages/en/EnglishNotificationSettings";
 import EnglishSmartBlocksPage from "@/pages/en/EnglishSmartBlocksPage";
 import EnglishQuadCategoriesBlockSettings from "@/pages/en/EnglishQuadCategoriesBlockSettings";
+import EnglishReporterProfile from "@/pages/en/EnglishReporterProfile";
 import AdvertiserDashboard from "@/pages/dashboard/AdvertiserDashboard";
 import CampaignsList from "@/pages/dashboard/ads/CampaignsList";
 import CampaignDetail from "@/pages/dashboard/ads/CampaignDetail";
@@ -167,6 +168,7 @@ function Router() {
         <Route path="/en/profile" component={EnglishProfile} />
         <Route path="/en/daily-brief" component={EnglishDailyBrief} />
         <Route path="/en/notification-settings" component={EnglishNotificationSettings} />
+        <Route path="/en/reporter/:slug" component={EnglishReporterProfile} />
         
         {/* Arabic Version Routes */}
         <Route path="/" component={Home} />

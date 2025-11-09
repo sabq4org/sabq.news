@@ -13981,7 +13981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reporter/Staff Routes
   // ==========================================
 
-  // GET /api/reporters/:slug - Get reporter profile
+  // GET /api/reporters/:slug - Get reporter profile (Arabic)
   app.get("/api/reporters/:slug", async (req: any, res) => {
     try {
       const { slug } = req.params;
@@ -13991,7 +13991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرّف المراسل مطلوب" });
       }
 
-      const profile = await storage.getReporterProfile(slug, windowDays);
+      const profile = await storage.getReporterProfile(slug, windowDays, 'ar');
 
       if (!profile) {
         return res.status(404).json({ message: "المراسل غير موجود" });
@@ -14001,6 +14001,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching reporter profile:", error);
       res.status(500).json({ message: "فشل في جلب بيانات المراسل" });
+    }
+  });
+
+  // GET /api/en/reporters/:slug - Get reporter profile (English)
+  app.get("/api/en/reporters/:slug", async (req: any, res) => {
+    try {
+      const { slug } = req.params;
+      const windowDays = parseInt(req.query.windowDays as string) || 90;
+
+      if (!slug) {
+        return res.status(400).json({ message: "Reporter identifier required" });
+      }
+
+      const profile = await storage.getReporterProfile(slug, windowDays, 'en');
+
+      if (!profile) {
+        return res.status(404).json({ message: "Reporter not found" });
+      }
+
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Error fetching reporter profile:", error);
+      res.status(500).json({ message: "Failed to fetch reporter data" });
     }
   });
 

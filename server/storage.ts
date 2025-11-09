@@ -586,7 +586,7 @@ export interface IStorage {
 
   // Reporter/Staff operations
   getReporterBySlug(slug: string): Promise<Staff | undefined>;
-  getReporterProfile(slug: string, windowDays?: number): Promise<ReporterProfile | undefined>;
+  getReporterProfile(slug: string, windowDays?: number, language?: 'ar' | 'en'): Promise<ReporterProfile | undefined>;
   ensureReporterStaffRecord(userId: string): Promise<Staff>;
 
   // Activity Logs operations
@@ -5762,7 +5762,7 @@ export class DatabaseStorage implements IStorage {
     return staffRecord;
   }
 
-  async getReporterProfile(slug: string, windowDays: number = 90): Promise<ReporterProfile | undefined> {
+  async getReporterProfile(slug: string, windowDays: number = 90, language: 'ar' | 'en' = 'ar'): Promise<ReporterProfile | undefined> {
     // Get reporter basic info
     const reporter = await this.getReporterBySlug(slug);
     if (!reporter) return undefined;
@@ -5781,6 +5781,7 @@ export class DatabaseStorage implements IStorage {
         views: articles.views,
         categoryId: categories.id,
         categoryNameAr: categories.nameAr,
+        categoryNameEn: categories.nameEn,
         categorySlug: categories.slug,
         categoryColor: categories.color,
         categoryIcon: categories.icon,
@@ -5858,7 +5859,7 @@ export class DatabaseStorage implements IStorage {
       slug: a.slug,
       publishedAt: a.publishedAt,
       category: a.categoryId ? {
-        name: a.categoryNameAr || '',
+        name: language === 'en' ? (a.categoryNameEn || a.categoryNameAr || '') : (a.categoryNameAr || ''),
         slug: a.categorySlug || '',
         color: a.categoryColor,
         icon: a.categoryIcon,
@@ -5872,12 +5873,13 @@ export class DatabaseStorage implements IStorage {
 
     // Get top categories
     const categoryStats = reporterArticles.reduce((acc, a) => {
-      if (!a.categoryId || !a.categoryNameAr) return acc;
+      const categoryName = language === 'en' ? (a.categoryNameEn || a.categoryNameAr) : a.categoryNameAr;
+      if (!a.categoryId || !categoryName) return acc;
       
       const key = a.categoryId;
       if (!acc[key]) {
         acc[key] = {
-          name: a.categoryNameAr,
+          name: categoryName,
           slug: a.categorySlug || '',
           color: a.categoryColor,
           articles: 0,
@@ -5928,27 +5930,35 @@ export class DatabaseStorage implements IStorage {
     const badges: Array<{ key: string; label: string }> = [];
     
     if (reporter.isVerified) {
-      badges.push({ key: 'verified', label: 'موثق' });
+      badges.push({ 
+        key: 'verified', 
+        label: language === 'en' ? 'Verified' : 'موثق' 
+      });
     }
     
     if (totalArticles >= 20) {
-      badges.push({ key: 'active_contributor', label: 'كاتب نشط' });
+      badges.push({ 
+        key: 'active_contributor', 
+        label: language === 'en' ? 'Active Contributor' : 'كاتب نشط' 
+      });
     }
     
     if (reporter.specializations.length > 0) {
       badges.push({ 
         key: 'specialist', 
-        label: `متخصص في ${reporter.specializations[0]}` 
+        label: language === 'en' 
+          ? `Specialized in ${reporter.specializations[0]}` 
+          : `متخصص في ${reporter.specializations[0]}` 
       });
     }
 
     return {
       id: reporter.id,
       slug: reporter.slug,
-      fullName: reporter.nameAr,
-      title: reporter.titleAr,
+      fullName: language === 'en' ? (reporter.name || reporter.nameAr) : reporter.nameAr,
+      title: language === 'en' ? (reporter.title || reporter.titleAr) : reporter.titleAr,
       avatarUrl: reporter.profileImage,
-      bio: reporter.bioAr,
+      bio: language === 'en' ? (reporter.bio || reporter.bioAr) : reporter.bioAr,
       isVerified: reporter.isVerified,
       tags: reporter.specializations,
       kpis: {
