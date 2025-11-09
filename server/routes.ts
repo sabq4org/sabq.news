@@ -6,7 +6,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import adsRoutes from "./ads-routes";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent, analyzeDailyPulse, analyzePersonalizedTrend, analyzePredictiveTrend } from "./openai";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
@@ -85,6 +85,7 @@ import {
   recommendationMetrics,
   userEvents,
   readingHistory,
+  enReadingHistory,
   stories,
   storyLinks,
   storyFollows,
@@ -20606,6 +20607,790 @@ Allow: /
   // ============================================================
   // END ENGLISH VERSION API ENDPOINTS
   // ============================================================
+
+  // ============================================================
+  // TREND ANALYSIS ENDPOINTS - نقاط تحليل الاتجاهات
+  // ============================================================
+
+  // Zod schema for trend mode validation
+  const trendModeSchema = z.object({
+    mode: z.enum(['daily', 'personalized', 'predictive']),
+    limit: z.coerce.number().min(1).max(50).optional().default(10),
+  });
+
+  // GET /api/trends - Arabic trending articles
+  app.get("/api/trends", async (req: any, res) => {
+    try {
+      const validation = trendModeSchema.safeParse(req.query);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "معامل mode مطلوب ويجب أن يكون daily أو personalized أو predictive" 
+        });
+      }
+
+      const { mode, limit } = validation.data;
+
+      // Check authentication for personalized mode
+      if (mode === 'personalized' && !req.user) {
+        return res.status(401).json({ 
+          message: "يتطلب الوضع الشخصي تسجيل الدخول" 
+        });
+      }
+
+      const userId = req.user?.id;
+      const language = 'ar';
+
+      // Check cache first
+      const cachedTrend = await storage.getTrendCache(mode, language, userId);
+      
+      if (cachedTrend && new Date(cachedTrend.expiresAt) > new Date()) {
+        console.log(`[Trends API] ✅ Cache hit for ${mode} mode (${language})`);
+        return res.json(cachedTrend.data);
+      }
+
+      console.log(`[Trends API] ⚠️ Cache miss for ${mode} mode (${language}), generating...`);
+
+      let trendData: any;
+      let cacheExpiry: number;
+
+      if (mode === 'daily') {
+        // Daily Mode - 15 minute cache
+        cacheExpiry = 15 * 60 * 1000;
+
+        // Get recent articles with metrics
+        const recentArticles = await db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            slug: articles.slug,
+            excerpt: articles.excerpt,
+            imageUrl: articles.imageUrl,
+            categoryId: articles.categoryId,
+            views: articles.views,
+            publishedAt: articles.publishedAt,
+            categoryNameAr: categories.nameAr,
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(
+            and(
+              eq(articles.status, 'published'),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            )
+          )
+          .orderBy(desc(articles.views))
+          .limit(50);
+
+        // Get metrics for each article (reactions, comments, shares)
+        const articlesWithMetrics = await Promise.all(
+          recentArticles
+            .filter(article => article.publishedAt !== null)
+            .map(async (article) => {
+              const [reactionResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(reactions)
+                .where(eq(reactions.articleId, article.id));
+
+              const [commentResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(comments)
+                .where(eq(comments.articleId, article.id));
+
+              // Calculate shares from bookmarks as proxy
+              const [shareResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(bookmarks)
+                .where(eq(bookmarks.articleId, article.id));
+
+              // Calculate momentum: (views per hour since published)
+              const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+              const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+
+              return {
+                id: article.id,
+                title: article.title,
+                slug: article.slug,
+                excerpt: article.excerpt,
+                imageUrl: article.imageUrl,
+                categoryNameAr: article.categoryNameAr || '',
+                views: article.views,
+                reactions: reactionResult?.count || 0,
+                comments: commentResult?.count || 0,
+                shares: shareResult?.count || 0,
+                momentum,
+                publishedAt: article.publishedAt!,
+              };
+            })
+        );
+
+        // Call AI to analyze daily pulse
+        const aiResult = await analyzeDailyPulse(articlesWithMetrics, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(articlesWithMetrics.map(a => [a.id, a]));
+        const mappedArticles = aiResult.trendingArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.score,
+            reason: ai.trendReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            pulseStatus: aiResult.pulseStatus,
+            topCategory: aiResult.topCategory,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+
+      } else if (mode === 'personalized') {
+        // Personalized Mode - 5 minute cache
+        cacheExpiry = 5 * 60 * 1000;
+
+        // Get user reading history
+        const userHistory = await db
+          .select({
+            articleId: readingHistory.articleId,
+            articleTitle: articles.title,
+            categoryNameAr: categories.nameAr,
+            readAt: readingHistory.readAt,
+          })
+          .from(readingHistory)
+          .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(eq(readingHistory.userId, userId!))
+          .orderBy(desc(readingHistory.readAt))
+          .limit(20);
+
+        // Get available articles
+        const availableArticlesQuery = await db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            slug: articles.slug,
+            excerpt: articles.excerpt,
+            imageUrl: articles.imageUrl,
+            categoryId: articles.categoryId,
+            categoryNameAr: categories.nameAr,
+            views: articles.views,
+            publishedAt: articles.publishedAt,
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(
+            and(
+              eq(articles.status, 'published'),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '48 hours'`)
+            )
+          )
+          .orderBy(desc(articles.publishedAt))
+          .limit(50);
+
+        // Filter user history to remove nulls and add momentum calculation to available articles
+        const userHistoryFiltered = userHistory
+          .filter(h => h.categoryNameAr !== null)
+          .map(h => ({
+            articleTitle: h.articleTitle,
+            categoryNameAr: h.categoryNameAr!,
+            readAt: h.readAt,
+          }));
+
+        const availableArticles = availableArticlesQuery
+          .filter(article => article.publishedAt !== null)
+          .map(article => {
+            const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+            const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+            return {
+              id: article.id,
+              title: article.title,
+              slug: article.slug,
+              excerpt: article.excerpt,
+              imageUrl: article.imageUrl,
+              categoryNameAr: article.categoryNameAr || '',
+              views: article.views,
+              momentum,
+            };
+          });
+
+        // Call AI to analyze personalized trend (with userId as first parameter)
+        const aiResult = await analyzePersonalizedTrend(userId!, userHistoryFiltered, availableArticles, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(availableArticles.map(a => [a.id, a]));
+        const mappedArticles = aiResult.personalizedArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.score,
+            reason: ai.matchReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            userProfile: aiResult.userProfile,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+
+      } else {
+        // Predictive Mode - 15 minute cache
+        cacheExpiry = 15 * 60 * 1000;
+
+        // Get recent articles with content preview
+        const recentArticlesQuery = await db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            slug: articles.slug,
+            excerpt: articles.excerpt,
+            imageUrl: articles.imageUrl,
+            content: articles.content,
+            categoryId: articles.categoryId,
+            categoryNameAr: categories.nameAr,
+            views: articles.views,
+            publishedAt: articles.publishedAt,
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(
+            and(
+              eq(articles.status, 'published'),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '12 hours'`)
+            )
+          )
+          .orderBy(desc(articles.publishedAt))
+          .limit(30);
+
+        // Add momentum calculation to articles and filter null publishedAt
+        const recentArticles = recentArticlesQuery
+          .filter(article => article.publishedAt !== null)
+          .map(article => {
+            const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+            const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+            return {
+              id: article.id,
+              title: article.title,
+              slug: article.slug,
+              excerpt: article.excerpt,
+              imageUrl: article.imageUrl,
+              content: article.content,
+              categoryNameAr: article.categoryNameAr || '',
+              views: article.views,
+              momentum,
+              publishedAt: article.publishedAt!,
+            };
+          });
+
+        // Call AI to analyze predictive trend
+        const aiResult = await analyzePredictiveTrend(recentArticles, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(recentArticles.map(a => [a.id, a]));
+        const mappedArticles = aiResult.predictedArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.confidenceScore,
+            reason: ai.predictionReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            trendForecast: aiResult.trendForecast,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+      }
+
+      // Save to cache
+      await storage.setTrendCache(mode, language, userId, trendData, cacheExpiry);
+
+      console.log(`[Trends API] ✅ Generated and cached ${mode} trend (${language})`);
+      res.json(trendData);
+
+    } catch (error) {
+      console.error("[Trends API] Error:", error);
+      
+      // Fallback to basic sorting if AI fails
+      try {
+        const fallbackArticles = await db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            slug: articles.slug,
+            excerpt: articles.excerpt,
+            imageUrl: articles.imageUrl,
+            categoryNameAr: categories.nameAr,
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(
+            and(
+              eq(articles.status, 'published'),
+              gte(articles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            )
+          )
+          .orderBy(desc(articles.views))
+          .limit(req.query.limit || 10);
+
+        const generatedAt = new Date();
+        
+        res.json({
+          mode: req.query.mode || 'daily',
+          language: 'ar',
+          articles: fallbackArticles.map((article, index) => ({
+            id: article.id,
+            title: article.title,
+            slug: article.slug,
+            excerpt: article.excerpt || '',
+            imageUrl: article.imageUrl || '',
+            categoryNameAr: article.categoryNameAr || '',
+            rank: index + 1,
+            score: 0,
+            reason: 'مقال رائج حسب عدد المشاهدات',
+          })),
+          metadata: {},
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: generatedAt.toISOString(),
+        });
+      } catch (fallbackError) {
+        res.status(500).json({ 
+          message: "حدث خطأ أثناء جلب الاتجاهات" 
+        });
+      }
+    }
+  });
+
+  // GET /api/en/trends - English trending articles
+  app.get("/api/en/trends", async (req: any, res) => {
+    try {
+      const validation = trendModeSchema.safeParse(req.query);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Mode parameter is required and must be daily, personalized, or predictive" 
+        });
+      }
+
+      const { mode, limit } = validation.data;
+
+      // Check authentication for personalized mode
+      if (mode === 'personalized' && !req.user) {
+        return res.status(401).json({ 
+          message: "Personalized mode requires authentication" 
+        });
+      }
+
+      const userId = req.user?.id;
+      const language = 'en';
+
+      // Check cache first
+      const cachedTrend = await storage.getTrendCache(mode, language, userId);
+      
+      if (cachedTrend && new Date(cachedTrend.expiresAt) > new Date()) {
+        console.log(`[Trends API] ✅ Cache hit for ${mode} mode (${language})`);
+        return res.json(cachedTrend.data);
+      }
+
+      console.log(`[Trends API] ⚠️ Cache miss for ${mode} mode (${language}), generating...`);
+
+      let trendData: any;
+      let cacheExpiry: number;
+
+      if (mode === 'daily') {
+        // Daily Mode - 15 minute cache
+        cacheExpiry = 15 * 60 * 1000;
+
+        // Get recent English articles with metrics
+        const recentArticles = await db
+          .select({
+            id: enArticles.id,
+            title: enArticles.title,
+            slug: enArticles.slug,
+            excerpt: enArticles.excerpt,
+            imageUrl: enArticles.imageUrl,
+            categoryId: enArticles.categoryId,
+            views: enArticles.views,
+            publishedAt: enArticles.publishedAt,
+            categoryName: enCategories.name,
+          })
+          .from(enArticles)
+          .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+          .where(
+            and(
+              eq(enArticles.status, 'published'),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            )
+          )
+          .orderBy(desc(enArticles.views))
+          .limit(50);
+
+        // Get metrics for each article (reactions, comments, shares)
+        const articlesWithMetrics = await Promise.all(
+          recentArticles
+            .filter(article => article.publishedAt !== null)
+            .map(async (article) => {
+              const [reactionResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(enReactions)
+                .where(eq(enReactions.articleId, article.id));
+
+              const [commentResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(enComments)
+                .where(eq(enComments.articleId, article.id));
+
+              // Calculate shares from bookmarks as proxy
+              const [shareResult] = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(enBookmarks)
+                .where(eq(enBookmarks.articleId, article.id));
+
+              // Calculate momentum: (views per hour since published)
+              const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+              const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+
+              return {
+                id: article.id,
+                title: article.title,
+                slug: article.slug,
+                excerpt: article.excerpt,
+                imageUrl: article.imageUrl,
+                categoryNameAr: article.categoryName || '',
+                views: article.views,
+                reactions: reactionResult?.count || 0,
+                comments: commentResult?.count || 0,
+                shares: shareResult?.count || 0,
+                momentum,
+                publishedAt: article.publishedAt!,
+              };
+            })
+        );
+
+        // Call AI to analyze daily pulse
+        const aiResult = await analyzeDailyPulse(articlesWithMetrics, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(articlesWithMetrics.map(a => [a.id, a]));
+        const mappedArticles = aiResult.trendingArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.score,
+            reason: ai.trendReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            pulseStatus: aiResult.pulseStatus,
+            topCategory: aiResult.topCategory,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+
+      } else if (mode === 'personalized') {
+        // Personalized Mode - 5 minute cache
+        cacheExpiry = 5 * 60 * 1000;
+
+        // Get user reading history (use enReadingHistory table for English articles)
+        const userHistory = await db
+          .select({
+            articleId: enReadingHistory.articleId,
+            articleTitle: enArticles.title,
+            categoryNameAr: enCategories.name,
+            readAt: enReadingHistory.readAt,
+          })
+          .from(enReadingHistory)
+          .innerJoin(enArticles, eq(enReadingHistory.articleId, enArticles.id))
+          .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+          .where(eq(enReadingHistory.userId, userId!))
+          .orderBy(desc(enReadingHistory.readAt))
+          .limit(20);
+
+        // Get available English articles
+        const availableArticlesQuery = await db
+          .select({
+            id: enArticles.id,
+            title: enArticles.title,
+            slug: enArticles.slug,
+            excerpt: enArticles.excerpt,
+            imageUrl: enArticles.imageUrl,
+            categoryId: enArticles.categoryId,
+            categoryNameAr: enCategories.name,
+            views: enArticles.views,
+            publishedAt: enArticles.publishedAt,
+          })
+          .from(enArticles)
+          .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+          .where(
+            and(
+              eq(enArticles.status, 'published'),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '48 hours'`)
+            )
+          )
+          .orderBy(desc(enArticles.publishedAt))
+          .limit(50);
+
+        // Filter user history to remove nulls and add momentum calculation to available articles
+        const userHistoryFiltered = userHistory
+          .filter(h => h.categoryNameAr !== null)
+          .map(h => ({
+            articleTitle: h.articleTitle,
+            categoryNameAr: h.categoryNameAr!,
+            readAt: h.readAt,
+          }));
+
+        const availableArticles = availableArticlesQuery
+          .filter(article => article.publishedAt !== null)
+          .map(article => {
+            const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+            const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+            return {
+              id: article.id,
+              title: article.title,
+              slug: article.slug,
+              excerpt: article.excerpt,
+              imageUrl: article.imageUrl,
+              categoryNameAr: article.categoryNameAr || '',
+              views: article.views,
+              momentum,
+            };
+          });
+
+        // Call AI to analyze personalized trend (with userId as first parameter)
+        const aiResult = await analyzePersonalizedTrend(userId!, userHistoryFiltered, availableArticles, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(availableArticles.map(a => [a.id, a]));
+        const mappedArticles = aiResult.personalizedArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.score,
+            reason: ai.matchReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            userProfile: aiResult.userProfile,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+
+      } else {
+        // Predictive Mode - 15 minute cache
+        cacheExpiry = 15 * 60 * 1000;
+
+        // Get recent English articles with content preview
+        const recentArticlesQuery = await db
+          .select({
+            id: enArticles.id,
+            title: enArticles.title,
+            slug: enArticles.slug,
+            excerpt: enArticles.excerpt,
+            imageUrl: enArticles.imageUrl,
+            content: enArticles.content,
+            categoryId: enArticles.categoryId,
+            categoryNameAr: enCategories.name,
+            views: enArticles.views,
+            publishedAt: enArticles.publishedAt,
+          })
+          .from(enArticles)
+          .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+          .where(
+            and(
+              eq(enArticles.status, 'published'),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '12 hours'`)
+            )
+          )
+          .orderBy(desc(enArticles.publishedAt))
+          .limit(30);
+
+        // Add momentum calculation to articles and filter null publishedAt
+        const recentArticles = recentArticlesQuery
+          .filter(article => article.publishedAt !== null)
+          .map(article => {
+            const hoursAgo = (Date.now() - new Date(article.publishedAt!).getTime()) / (1000 * 60 * 60);
+            const momentum = hoursAgo > 0 ? Math.round(article.views / hoursAgo) : article.views;
+            return {
+              id: article.id,
+              title: article.title,
+              slug: article.slug,
+              excerpt: article.excerpt,
+              imageUrl: article.imageUrl,
+              content: article.content,
+              categoryNameAr: article.categoryNameAr || '',
+              views: article.views,
+              momentum,
+              publishedAt: article.publishedAt!,
+            };
+          });
+
+        // Call AI to analyze predictive trend
+        const aiResult = await analyzePredictiveTrend(recentArticles, language);
+
+        // Map AI results (articleIds) back to full article objects
+        const articlesMap = new Map(recentArticles.map(a => [a.id, a]));
+        const mappedArticles = aiResult.predictedArticles.map(ai => {
+          const article = articlesMap.get(ai.articleId);
+          return {
+            id: ai.articleId,
+            title: article?.title || '',
+            slug: article?.slug || '',
+            excerpt: article?.excerpt || '',
+            imageUrl: article?.imageUrl || '',
+            categoryNameAr: article?.categoryNameAr || '',
+            rank: ai.rank,
+            score: ai.confidenceScore,
+            reason: ai.predictionReason,
+          };
+        });
+
+        const generatedAt = new Date();
+        const expiresAt = new Date(generatedAt.getTime() + cacheExpiry);
+
+        trendData = {
+          mode,
+          language,
+          articles: mappedArticles.slice(0, limit),
+          metadata: {
+            trendForecast: aiResult.trendForecast,
+          },
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+      }
+
+      // Save to cache
+      await storage.setTrendCache(mode, language, userId, trendData, cacheExpiry);
+
+      console.log(`[Trends API] ✅ Generated and cached ${mode} trend (${language})`);
+      res.json(trendData);
+
+    } catch (error) {
+      console.error("[Trends API] Error:", error);
+      
+      // Fallback to basic sorting if AI fails
+      try {
+        const fallbackArticles = await db
+          .select({
+            id: enArticles.id,
+            title: enArticles.title,
+            slug: enArticles.slug,
+            excerpt: enArticles.excerpt,
+            imageUrl: enArticles.imageUrl,
+            categoryNameAr: enCategories.name,
+          })
+          .from(enArticles)
+          .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+          .where(
+            and(
+              eq(enArticles.status, 'published'),
+              gte(enArticles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            )
+          )
+          .orderBy(desc(enArticles.views))
+          .limit(req.query.limit || 10);
+
+        const generatedAt = new Date();
+        
+        res.json({
+          mode: req.query.mode || 'daily',
+          language: 'en',
+          articles: fallbackArticles.map((article, index) => ({
+            id: article.id,
+            title: article.title,
+            slug: article.slug,
+            excerpt: article.excerpt || '',
+            imageUrl: article.imageUrl || '',
+            categoryNameAr: article.categoryNameAr || '',
+            rank: index + 1,
+            score: 0,
+            reason: 'Trending article based on views',
+          })),
+          metadata: {},
+          generatedAt: generatedAt.toISOString(),
+          expiresAt: generatedAt.toISOString(),
+        });
+      } catch (fallbackError) {
+        res.status(500).json({ 
+          message: "Error fetching trends" 
+        });
+      }
+    }
+  });
 
   // ============================================================
   // ADVERTISING SYSTEM - نظام الإعلانات الذكي
