@@ -20631,15 +20631,23 @@ Allow: /
 
       const { mode, limit } = validation.data;
 
-      // Check authentication for personalized mode
-      if (mode === 'personalized' && !req.user) {
-        return res.status(401).json({ 
-          message: "يتطلب الوضع الشخصي تسجيل الدخول" 
-        });
-      }
-
       const userId = req.user?.id;
       const language = 'ar';
+
+      // Check authentication for personalized mode - return structured response
+      if (mode === 'personalized' && !req.user) {
+        return res.json({ 
+          mode,
+          articles: [],
+          requiresAuth: true,
+          language,
+          metadata: {
+            message: "يتطلب الوضع الشخصي تسجيل الدخول"
+          },
+          generatedAt: new Date().toISOString(),
+          expiresAt: new Date().toISOString()
+        });
+      }
 
       // Check cache first
       const cachedTrend = await storage.getTrendCache(mode, language, userId);
@@ -21018,15 +21026,23 @@ Allow: /
 
       const { mode, limit } = validation.data;
 
-      // Check authentication for personalized mode
-      if (mode === 'personalized' && !req.user) {
-        return res.status(401).json({ 
-          message: "Personalized mode requires authentication" 
-        });
-      }
-
       const userId = req.user?.id;
       const language = 'en';
+
+      // Check authentication for personalized mode - return structured response
+      if (mode === 'personalized' && !req.user) {
+        return res.json({ 
+          mode,
+          articles: [],
+          requiresAuth: true,
+          language,
+          metadata: {
+            message: "Personalized mode requires authentication"
+          },
+          generatedAt: new Date().toISOString(),
+          expiresAt: new Date().toISOString()
+        });
+      }
 
       // Check cache first
       const cachedTrend = await storage.getTrendCache(mode, language, userId);
