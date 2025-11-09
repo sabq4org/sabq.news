@@ -10597,6 +10597,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/themes/seed/sabq-red - Create Sabq Red theme (one-time setup)
+  app.post("/api/themes/seed/sabq-red", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      // Check if already exists
+      const existing = await db
+        .select()
+        .from(themes)
+        .where(eq(themes.slug, "sabq-red"))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.json({ 
+          message: "Theme 'سبق الأحمر' already exists",
+          theme: existing[0] 
+        });
+      }
+
+      // Create the Sabq Red theme
+      const sabqRedTheme = await storage.createTheme({
+        name: "سبق الأحمر",
+        slug: "sabq-red",
+        isDefault: false,
+        priority: 0,
+        status: "draft",
+        assets: {
+          logoLight: "/assets/sabq_no_bg_high_res_1762663557037.png",
+          logoDark: "/assets/sabq_no_bg_high_res_1762663557037.png",
+        },
+        tokens: {
+          colors: {
+            "primary-light": "348 100% 45%",
+            "primary-dark": "348 95% 60%",
+            "primary-foreground-light": "0 0% 100%",
+            "primary-foreground-dark": "0 0% 100%",
+            "secondary-light": "220 9% 62%",
+            "secondary-dark": "220 9% 62%",
+            "secondary-foreground-light": "0 0% 0%",
+            "secondary-foreground-dark": "0 0% 100%",
+            "muted-light": "220 8% 33%",
+            "muted-dark": "220 8% 33%",
+            "muted-foreground-light": "0 0% 100%",
+            "muted-foreground-dark": "0 0% 100%",
+            "accent-light": "348 100% 45%",
+            "accent-dark": "348 95% 60%",
+            "accent-foreground-light": "0 0% 100%",
+            "accent-foreground-dark": "0 0% 100%",
+            "destructive-light": "0 84% 60%",
+            "destructive-dark": "0 62% 30%",
+            "destructive-foreground-light": "0 0% 100%",
+            "destructive-foreground-dark": "0 0% 100%",
+            "border-light": "220 13% 91%",
+            "border-dark": "220 13% 18%",
+            "input-light": "220 13% 91%",
+            "input-dark": "220 13% 18%",
+            "ring-light": "348 100% 45%",
+            "ring-dark": "348 95% 60%",
+            "background-light": "0 0% 100%",
+            "background-dark": "220 15% 8%",
+            "foreground-light": "220 9% 15%",
+            "foreground-dark": "0 0% 95%",
+            "card-light": "0 0% 100%",
+            "card-dark": "220 15% 12%",
+            "card-foreground-light": "220 9% 15%",
+            "card-foreground-dark": "0 0% 95%",
+            "popover-light": "0 0% 100%",
+            "popover-dark": "220 15% 12%",
+            "popover-foreground-light": "220 9% 15%",
+            "popover-foreground-dark": "0 0% 95%",
+          },
+        },
+        applyTo: ["site_full"],
+        createdBy: req.user.id,
+      });
+
+      res.json({
+        message: "تم إنشاء ثيم 'سبق الأحمر' بنجاح",
+        theme: sabqRedTheme,
+      });
+    } catch (error: any) {
+      console.error("Error creating Sabq Red theme:", error);
+      res.status(500).json({ message: error.message || "Failed to create theme" });
+    }
+  });
+
   app.post("/api/themes/:id/expire", isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.id);
