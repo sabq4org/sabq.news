@@ -6051,10 +6051,10 @@ export class DatabaseStorage implements IStorage {
     return {
       id: reporter.id,
       slug: reporter.slug,
-      fullName: language === 'en' ? (reporter.name || reporter.nameAr) : reporter.nameAr,
-      title: language === 'en' ? (reporter.title || reporter.titleAr) : reporter.titleAr,
+      fullName: language === 'en' ? (reporter.name || reporter.nameAr) : (reporter.nameAr || reporter.name),
+      title: language === 'en' ? (reporter.title || reporter.titleAr) : (reporter.titleAr || reporter.title),
       avatarUrl: reporter.profileImage,
-      bio: language === 'en' ? (reporter.bio || reporter.bioAr) : reporter.bioAr,
+      bio: language === 'en' ? (reporter.bio || reporter.bioAr) : (reporter.bioAr || reporter.bio),
       isVerified: reporter.isVerified,
       tags: reporter.specializations,
       kpis: {
