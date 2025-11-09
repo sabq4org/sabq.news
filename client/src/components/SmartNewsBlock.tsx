@@ -448,14 +448,14 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
       </Link>
 
       {sideArticles.length > 0 && (
-        <div className="lg:col-span-2 grid grid-cols-2 gap-2 h-80 md:h-96">
+        <div className="lg:col-span-2 grid grid-cols-2 gap-2">
           {sideArticles.map((article) => (
-            <Link key={article.id} href={`/article/${article.slug}`} className="col-span-2 lg:col-span-1">
+            <Link key={article.id} href={`/article/${article.slug}`} className="col-span-1">
               <Card 
-                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0 h-full"
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0"
                 data-testid={`card-smart-article-featured-${article.id}`}
               >
-                <div className="relative h-full overflow-hidden bg-muted">
+                <div className="relative aspect-[4/3] md:aspect-auto md:h-48 lg:h-[11.5rem] overflow-hidden bg-muted">
                   {article.imageUrl ? (
                     <img
                       src={article.imageUrl}
@@ -470,12 +470,12 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
-                      <Newspaper className="h-8 w-8 text-muted-foreground/30" />
+                      <Newspaper className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground/30" />
                     </div>
                   )}
                   
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-4 md:p-6">
-                    <h4 className="font-bold text-base md:text-lg leading-tight text-white line-clamp-3" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-2 sm:p-3 lg:p-4">
+                    <h4 className="font-bold text-sm md:text-base lg:text-lg leading-tight text-white line-clamp-2 lg:line-clamp-3" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
                       {article.title}
                     </h4>
                   </div>
