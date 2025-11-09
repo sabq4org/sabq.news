@@ -86,13 +86,14 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
 
   return (
     <section className="space-y-4" dir="rtl" data-testid={`smart-block-${config.id}`}>
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[auto,1fr] gap-2">
         <div 
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{ backgroundColor: config.color }}
         >
           <Tag className="h-3.5 w-3.5 text-white" />
         </div>
+        
         <h2 
           className="text-2xl md:text-3xl font-bold" 
           style={{ color: config.color }}
@@ -100,6 +101,13 @@ export function SmartNewsBlock({ config }: SmartNewsBlockProps) {
         >
           {config.title}
         </h2>
+        
+        <div className="col-start-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Tag className="h-3.5 w-3.5" />
+          <span data-testid={`text-smart-block-keyword-${config.id}`}>
+            الكلمة المفتاحية: {config.keyword}
+          </span>
+        </div>
       </div>
 
       {config.layoutStyle === 'grid' && <GridLayout articles={articles} blockId={config.id} />}
