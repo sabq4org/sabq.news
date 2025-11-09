@@ -5859,7 +5859,10 @@ export class DatabaseStorage implements IStorage {
       slug: a.slug,
       publishedAt: a.publishedAt,
       category: a.categoryId ? {
-        name: language === 'en' ? (a.categoryNameEn || a.categoryNameAr || '') : (a.categoryNameAr || ''),
+        // Always fallback to Arabic if English is missing
+        name: language === 'en' 
+          ? (a.categoryNameEn || a.categoryNameAr || '') 
+          : (a.categoryNameAr || ''),
         slug: a.categorySlug || '',
         color: a.categoryColor,
         icon: a.categoryIcon,
@@ -5873,7 +5876,10 @@ export class DatabaseStorage implements IStorage {
 
     // Get top categories
     const categoryStats = reporterArticles.reduce((acc, a) => {
-      const categoryName = language === 'en' ? (a.categoryNameEn || a.categoryNameAr) : a.categoryNameAr;
+      // Always fallback to Arabic if English is missing
+      const categoryName = language === 'en' 
+        ? (a.categoryNameEn || a.categoryNameAr) 
+        : a.categoryNameAr;
       if (!a.categoryId || !categoryName) return acc;
       
       const key = a.categoryId;
@@ -5926,6 +5932,9 @@ export class DatabaseStorage implements IStorage {
 
     timeseries.sort((a, b) => a.date.localeCompare(b.date));
 
+    // Helper function to check if text contains Arabic characters
+    const hasArabic = (text: string) => /[\u0600-\u06FF]/.test(text);
+    
     // Generate badges
     const badges: Array<{ key: string; label: string }> = [];
     
@@ -5944,12 +5953,23 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (reporter.specializations.length > 0) {
-      badges.push({ 
-        key: 'specialist', 
-        label: language === 'en' 
-          ? `Specialized in ${reporter.specializations[0]}` 
-          : `متخصص في ${reporter.specializations[0]}` 
-      });
+      if (language === 'en') {
+        // For English, find first non-Arabic specialization
+        const firstEnglishSpec = reporter.specializations.find(spec => !hasArabic(spec));
+        if (firstEnglishSpec) {
+          badges.push({ 
+            key: 'specialist', 
+            label: `Specialized in ${firstEnglishSpec}` 
+          });
+        }
+        // If all specializations are in Arabic, skip the badge entirely
+      } else {
+        // For Arabic, use first specialization
+        badges.push({ 
+          key: 'specialist', 
+          label: `متخصص في ${reporter.specializations[0]}` 
+        });
+      }
     }
 
     return {

@@ -42,6 +42,13 @@ Key features include:
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
 -   **Locale-Isolated User Pages:** Complete English-specific user profile pages querying English-only data.
 -   **Related Articles Feature (Bilingual):** Intelligent article recommendations with language-specific formatting.
+-   **Reporter Profile System (Bilingual):** Complete bilingual implementation with language-specific content display. System includes:
+    - Dual API endpoints (`/api/reporters/:slug` for Arabic, `/api/en/reporters/:slug` for English)
+    - Automatic fallback to Arabic content when English data is missing (name, title, bio, category names)
+    - Smart badge filtering (hides Arabic-only specializations in English version)
+    - Dual page components (`/reporter/:slug` RTL Arabic, `/en/reporter/:slug` LTR English)
+    - Comprehensive analytics including KPIs, article history, top categories, and activity timelines
+    - Bio field displays correctly under reporter name/title in both language versions
 -   **Smart Advertising System (Arabic - Phase 1 Implemented):** Enterprise-grade advertising platform with AI-powered optimization, including Ad Account, Campaign, Performance Dashboard, Ad Creatives, Inventory Slots, and Creative Placements Management with PostgreSQL EXCLUSION constraint for overlap prevention. RBAC integrated for admin and advertiser roles.
 -   **SEO and Social Sharing:** Comprehensive Open Graph and Twitter Card meta tags for homepage and article pages, with server-side rendering for social media crawlers.
 
