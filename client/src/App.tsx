@@ -32,6 +32,7 @@ import SelectInterests from "@/pages/SelectInterests";
 import EditInterests from "@/pages/EditInterests";
 import ThemeManager from "@/pages/ThemeManager";
 import ThemeEditor from "@/pages/ThemeEditor";
+import ThemeSwitcher from "@/pages/dashboard/ThemeSwitcher";
 import NotificationSettings from "@/pages/NotificationSettings";
 import Welcome from "@/pages/onboarding/Welcome";
 import OnboardingInterests from "@/pages/onboarding/SelectInterests";
@@ -285,6 +286,7 @@ function Router() {
       <Route path="/dashboard/ads/creatives" component={CreativesManagement} />
       <Route path="/dashboard/ads/inventory-slots" component={InventorySlotsManagement} />
       <Route path="/dashboard/ads/account" component={AdAccountPage} />
+      <Route path="/dashboard/themes/switcher" component={ThemeSwitcher} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile" component={Profile} />

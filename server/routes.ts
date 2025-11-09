@@ -10461,6 +10461,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/themes/:id/duplicate - Duplicate existing theme
+  app.post("/api/themes/:id/duplicate", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const sourceTheme = await storage.getThemeById(req.params.id);
+      if (!sourceTheme) {
+        return res.status(404).json({ message: "Theme not found" });
+      }
+
+      const { name, slug } = req.body;
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Name and slug are required" });
+      }
+
+      // Create duplicated theme
+      const duplicatedTheme = await storage.createTheme({
+        name,
+        slug,
+        isDefault: false,
+        priority: 0,
+        status: 'draft',
+        assets: sourceTheme.assets,
+        tokens: sourceTheme.tokens,
+        applyTo: sourceTheme.applyTo,
+        createdBy: req.user.id,
+      });
+
+      // Log duplication
+      await storage.createThemeAuditLog({
+        themeId: duplicatedTheme.id,
+        userId: req.user.id,
+        action: 'duplicate',
+        metadata: {
+          reason: `Duplicated from theme ${sourceTheme.name} (ID: ${sourceTheme.id})`,
+        },
+      });
+
+      res.json(duplicatedTheme);
+    } catch (error: any) {
+      console.error("Error duplicating theme:", error);
+      res.status(500).json({ message: error.message || "Failed to duplicate theme" });
+    }
+  });
+
+  // POST /api/themes/:id/activate - Activate theme and deactivate others (transactional)
+  app.post("/api/themes/:id/activate", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden - Admin only" });
+      }
+
+      const themeToActivate = await storage.getThemeById(req.params.id);
+      if (!themeToActivate) {
+        return res.status(404).json({ message: "Theme not found" });
+      }
+
+      // Use transaction to ensure atomic activation
+      await db.transaction(async (tx) => {
+        // 1. Get all currently active themes
+        const activeThemes = await tx
+          .select()
+          .from(themes)
+          .where(eq(themes.status, 'active'));
+
+        // 2. Deactivate all active themes
+        for (const activeTheme of activeThemes) {
+          await tx
+            .update(themes)
+            .set({
+              status: 'draft',
+              updatedAt: new Date(),
+            })
+            .where(eq(themes.id, activeTheme.id));
+
+          await tx.insert(themeAuditLog).values({
+            themeId: activeTheme.id,
+            userId: req.user.id,
+            action: 'deactivate',
+            metadata: {
+              reason: `Deactivated to activate theme ${themeToActivate.name}`,
+              previousStatus: 'active',
+              newStatus: 'draft',
+            },
+          });
+        }
+
+        // 3. Activate the selected theme
+        await tx
+          .update(themes)
+          .set({
+            status: 'active',
+            updatedAt: new Date(),
+          })
+          .where(eq(themes.id, req.params.id));
+
+        await tx.insert(themeAuditLog).values({
+          themeId: req.params.id,
+          userId: req.user.id,
+          action: 'activate',
+          metadata: {
+            previousStatus: themeToActivate.status,
+            newStatus: 'active',
+          },
+        });
+      });
+
+      // Fetch and return the activated theme
+      const activatedTheme = await storage.getThemeById(req.params.id);
+
+      res.json(activatedTheme);
+    } catch (error) {
+      console.error("Error activating theme:", error);
+      res.status(500).json({ message: "Failed to activate theme" });
+    }
+  });
+
   app.post("/api/themes/:id/publish", isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.id);
