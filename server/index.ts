@@ -5,6 +5,7 @@ import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
+import { startTrendCacheJob } from "./jobs/trendCacheJob";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -461,6 +462,18 @@ app.use((req, res, next) => {
           } catch (error) {
             console.error("[Server] ⚠️  Error starting campaign daily reset job:", error);
             console.error("[Server] Server will continue running without campaign daily reset automation");
+          }
+        });
+      }
+
+      // Start Trend Cache Job (refreshes trend cache every 15 minutes)
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startTrendCacheJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting trend cache job:", error);
+            console.error("[Server] Server will continue running without trend cache automation");
           }
         });
       }

@@ -8914,28 +8914,50 @@ export class DatabaseStorage implements IStorage {
   ): Promise<TrendCache> {
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
     
-    const [cache] = await db
-      .insert(trendCache)
-      .values({
-        mode,
-        language,
-        userId: userId || null,
-        data,
-        expiresAt,
-      })
-      .onConflictDoUpdate({
-        target: userId 
-          ? [trendCache.mode, trendCache.language, trendCache.userId]
-          : [trendCache.mode, trendCache.language],
-        set: {
+    // Try to find existing cache
+    const conditions = [
+      eq(trendCache.mode, mode),
+      eq(trendCache.language, language),
+    ];
+
+    if (userId) {
+      conditions.push(eq(trendCache.userId, userId));
+    } else {
+      conditions.push(isNull(trendCache.userId));
+    }
+
+    const [existing] = await db
+      .select()
+      .from(trendCache)
+      .where(and(...conditions))
+      .limit(1);
+
+    if (existing) {
+      // Update existing cache
+      const [updated] = await db
+        .update(trendCache)
+        .set({
           data,
           lastUpdated: new Date(),
           expiresAt,
-        },
-      })
-      .returning();
-
-    return cache;
+        })
+        .where(eq(trendCache.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Insert new cache
+      const [inserted] = await db
+        .insert(trendCache)
+        .values({
+          mode,
+          language,
+          userId: userId || null,
+          data,
+          expiresAt,
+        })
+        .returning();
+      return inserted;
+    }
   }
 
   async invalidateTrendCache(mode?: 'daily' | 'personalized' | 'predictive', language?: 'ar' | 'en', userId?: string): Promise<void> {
