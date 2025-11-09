@@ -1,19 +1,24 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, UserCircle } from "lucide-react";
+import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, FileText, Target } from "lucide-react";
 import { Link } from "wouter";
 import type { ReporterProfile as ReporterProfileType } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { motion } from "framer-motion";
 
 export default function ReporterProfile() {
   const { slug } = useParams<{ slug: string }>();
+
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
 
   const { data: profile, isLoading, error } = useQuery<ReporterProfileType>({
     queryKey: ['/api/reporters', slug],
@@ -23,7 +28,8 @@ export default function ReporterProfile() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
-        <div className="container max-w-7xl mx-auto px-4 py-8">
+        <Header user={user} />
+        <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-48 bg-muted rounded-lg"></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -39,12 +45,15 @@ export default function ReporterProfile() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <p className="text-lg text-muted-foreground">المراسل غير موجود</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Header user={user} />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardContent className="p-8 text-center">
+              <p className="text-lg text-muted-foreground">المراسل غير موجود</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -65,192 +74,109 @@ export default function ReporterProfile() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <div className="container max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-xl p-8 sm:p-12"
-          style={{
-            background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 50%, transparent 100%)',
-          }}
-        >
-          <div className="relative z-10 flex items-center gap-4" dir="rtl">
-            <motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="rounded-full p-3 sm:p-4"
-              style={{
-                background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
-              }}
-            >
-              <UserCircle className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground" />
-            </motion.div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2" data-testid="page-title">
-                الملف الشخصي للمراسل
-              </h1>
-              <p className="text-base sm:text-lg text-muted-foreground" data-testid="page-subtitle">
-                استكشف مسيرة وإنجازات المراسل
-              </p>
+      <Header user={user} />
+
+      {/* Hero Section */}
+      <section 
+        className="relative overflow-hidden py-12"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 100%)'
+        }}
+      >
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <Avatar className="h-32 w-32 border-4 border-background shadow-lg" data-testid="avatar-reporter">
+              <AvatarImage src={avatarUrl || ''} alt={fullName} />
+              <AvatarFallback className="text-2xl">
+                {fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 text-center md:text-right space-y-3">
+              <div className="flex items-center gap-2 justify-center md:justify-start">
+                <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-reporter-name">{fullName}</h1>
+                {isVerified && <CheckCircle2 className="h-6 w-6 text-primary" data-testid="icon-verified" />}
+              </div>
+              {title && <p className="text-xl text-muted-foreground" data-testid="text-reporter-title">{title}</p>}
+              {bio && <p className="text-base max-w-2xl" data-testid="text-reporter-bio">{bio}</p>}
+              {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {tags.map((tag, idx) => <Badge key={idx} variant="secondary" data-testid={`badge-tag-${idx}`}>{tag}</Badge>)}
+                </div>
+              )}
+              {badges && badges.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {badges.map((badge) => <Badge key={badge.key} variant="outline" data-testid={`badge-achievement-${badge.key}`}>{badge.label}</Badge>)}
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Decorative gradient orbs */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/3 rounded-full blur-3xl -z-0" />
-        </motion.div>
-
-        {/* Profile Header Section */}
-        <Card>
-          <CardContent className="p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row gap-6">
-              {/* Avatar */}
-              <Avatar className="h-24 w-24 sm:h-32 sm:w-32" data-testid="avatar-reporter">
-                <AvatarImage src={avatarUrl || ''} alt={fullName} />
-                <AvatarFallback className="text-2xl">
-                  {fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Info */}
-              <div className="flex-1 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-reporter-name">
-                    {fullName}
-                  </h1>
-                  {isVerified && (
-                    <CheckCircle2 
-                      className="h-6 w-6 text-primary" 
-                      data-testid="icon-verified"
-                    />
-                  )}
-                </div>
-
-                {title && (
-                  <p className="text-lg text-muted-foreground" data-testid="text-reporter-title">
-                    {title}
-                  </p>
-                )}
-
-                {bio && (
-                  <p className="text-base leading-relaxed max-w-3xl" data-testid="text-reporter-bio">
-                    {bio}
-                  </p>
-                )}
-
-                {/* Tags */}
-                {tags && tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, idx) => (
-                      <Badge 
-                        key={idx} 
-                        variant="secondary"
-                        data-testid={`badge-tag-${idx}`}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                {/* Badges */}
-                {badges && badges.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {badges.map((badge) => (
-                      <Badge 
-                        key={badge.key}
-                        variant="outline"
-                        className="gap-1"
-                        data-testid={`badge-achievement-${badge.key}`}
-                      >
-                        {badge.label}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-8 space-y-8">
 
         {/* KPIs Section */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm">المقالات</span>
+          <Card className="shadow-sm border border-border dark:border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-articles">
-                  {kpis.totalArticles}
-                </p>
+                <span className="text-sm text-muted-foreground">المقالات</span>
               </div>
+              <p className="text-3xl font-bold" data-testid="text-kpi-articles">{kpis.totalArticles}</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Eye className="h-4 w-4" />
-                  <span className="text-sm">المشاهدات</span>
+          <Card className="shadow-sm border border-border dark:border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Eye className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-views">
-                  {kpis.totalViews}
-                </p>
+                <span className="text-sm text-muted-foreground">المشاهدات</span>
               </div>
+              <p className="text-3xl font-bold" data-testid="text-kpi-views">{kpis.totalViews}</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <ThumbsUp className="h-4 w-4" />
-                  <span className="text-sm">الإعجابات</span>
+          <Card className="shadow-sm border border-border dark:border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <ThumbsUp className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-likes">
-                  {kpis.totalLikes}
-                </p>
+                <span className="text-sm text-muted-foreground">الإعجابات</span>
               </div>
+              <p className="text-3xl font-bold" data-testid="text-kpi-likes">{kpis.totalLikes}</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">وقت القراءة</span>
+          <Card className="shadow-sm border border-border dark:border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Clock className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-readtime">
-                  {kpis.avgReadTimeMin}
-                  <span className="text-base font-normal text-muted-foreground mr-1">د</span>
-                </p>
+                <span className="text-sm text-muted-foreground">وقت القراءة</span>
               </div>
+              <p className="text-3xl font-bold" data-testid="text-kpi-readtime">
+                {kpis.avgReadTimeMin}
+                <span className="text-base font-normal text-muted-foreground mr-1">د</span>
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm">نسبة الإكمال</span>
+          <Card className="shadow-sm border border-border dark:border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Target className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold" data-testid="text-kpi-completion">
-                  {kpis.avgCompletionRate}%
-                </p>
+                <span className="text-sm text-muted-foreground">نسبة الإكمال</span>
               </div>
+              <p className="text-3xl font-bold" data-testid="text-kpi-completion">{kpis.avgCompletionRate}%</p>
             </CardContent>
           </Card>
         </div>
