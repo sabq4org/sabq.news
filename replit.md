@@ -23,6 +23,13 @@ The platform now implements a unified brand color system derived from the "سب�
 - **UI Components:** Gradient backgrounds, subtle shadows, consistent borders, and full dark mode support throughout
 - The system includes sticky core categories bar, redesigned footer, and enhanced card layouts with icon-pill headers for analytics displays
 
+**Smart Blocks System (Bilingual):**
+Both Arabic and English versions implement a consistent smart blocks architecture:
+- **Block Header Design:** Icon pill (colored circle with tag icon) + bold colored title + keyword metadata line
+- **Featured Layout:** Large hero article (3/5 width) + 4 grid articles (2/5 width, 2x2 grid) with dark gradient overlays and white text
+- **Grid Layout:** Responsive 4-column desktop grid with mobile vertical list view
+- **Quad Categories Block:** Redesigned with compact mobile list view (horizontal thumbnail + 3 headlines), shadow-enhanced cards with dark mode borders
+
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
 
@@ -44,7 +51,7 @@ Key features include:
 -   **Related Articles Feature (Bilingual):** Intelligent article recommendations with language-specific formatting.
 -   **Reporter Profile System (Bilingual):** Complete bilingual implementation with language-specific content display. System includes:
     - Dual API endpoints (`/api/reporters/:slug` for Arabic, `/api/en/reporters/:slug` for English)
-    - Automatic fallback to Arabic content when English data is missing (name, title, bio, category names)
+    - **Bidirectional Fallback Logic:** Arabic version falls back to English when `nameAr` is empty; English version falls back to Arabic when `name` is empty - ensures reporter names always display
     - Smart badge filtering (hides Arabic-only specializations in English version)
     - Dual page components (`/reporter/:slug` RTL Arabic, `/en/reporter/:slug` LTR English)
     - Comprehensive analytics including KPIs, article history, top categories, and activity timelines

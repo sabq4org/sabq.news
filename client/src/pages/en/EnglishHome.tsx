@@ -93,33 +93,32 @@ export default function EnglishHome() {
   return (
     <EnglishLayout>
       <main className="flex-1">
-        {/* Featured News and Latest Articles in Container */}
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-          
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Featured News Carousel */}
           {featuredArticles.length > 0 && (
-            <section className="scroll-fade-in">
-              <div className="flex items-center gap-3 mb-6">
-                <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
-                <h2 className="text-2xl md:text-3xl font-bold">Featured News</h2>
-              </div>
-
+            <div className="mb-8">
               <EnglishHeroCarousel articles={featuredArticles} />
-            </section>
+            </div>
           )}
 
           {/* Smart Blocks: below_featured */}
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
             <EnglishSmartNewsBlock key={block.id} config={block} />
           ))}
+        </div>
 
-          {/* Smart Summary Block - Only for authenticated users */}
-          {user && (
-            <div className="scroll-fade-in">
-              <EnglishSmartSummaryBlock />
+        {/* Smart Summary Block - Only for authenticated users */}
+        {user && (
+          <div className="bg-ai-gradient-soft py-8">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+              <div className="scroll-fade-in">
+                <EnglishSmartSummaryBlock />
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
             <EnglishSmartNewsBlock key={block.id} config={block} />
@@ -127,7 +126,7 @@ export default function EnglishHome() {
 
           {/* Latest Articles Section */}
           {regularArticles.length > 0 && (
-            <section className="scroll-fade-in">
+            <div className="scroll-fade-in">
               <div className="flex items-center gap-3 mb-6">
                 <TrendingUp className="h-6 w-6 text-primary" />
                 <h2 className="text-2xl md:text-3xl font-bold">Latest News</h2>
@@ -313,9 +312,16 @@ export default function EnglishHome() {
                   </Link>
                 ))}
               </div>
-            </section>
+            </div>
           )}
+        </div>
 
+        {/* Quad Categories Block - Full Width */}
+        <div className="scroll-fade-in">
+          <EnglishQuadCategoriesBlock />
+        </div>
+
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: between_all_and_murqap */}
           {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
             <EnglishSmartNewsBlock key={block.id} config={block} />
@@ -337,11 +343,6 @@ export default function EnglishHome() {
           {blocksAboveFooter && blocksAboveFooter.map((block) => (
             <EnglishSmartNewsBlock key={block.id} config={block} />
           ))}
-        </div>
-
-        {/* Quad Categories Block - Full Width Outside Container */}
-        <div className="scroll-fade-in">
-          <EnglishQuadCategoriesBlock />
         </div>
       </main>
 
