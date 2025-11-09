@@ -3955,6 +3955,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(themes.isDefault, true),
+          eq(themes.status, 'active'),
           sql`${themes.startAt} IS NULL OR ${themes.startAt} <= ${now.toISOString()}`,
           sql`${themes.endAt} IS NULL OR ${themes.endAt} >= ${now.toISOString()}`,
           sql`${scope} = ANY(${themes.applyTo}) OR array_length(${themes.applyTo}, 1) = 0 OR array_length(${themes.applyTo}, 1) IS NULL`
