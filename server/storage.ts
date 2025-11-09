@@ -588,6 +588,8 @@ export interface IStorage {
   getReporterBySlug(slug: string): Promise<Staff | undefined>;
   getReporterProfile(slug: string, windowDays?: number, language?: 'ar' | 'en'): Promise<ReporterProfile | undefined>;
   ensureReporterStaffRecord(userId: string): Promise<Staff>;
+  getStaffByUserId(userId: string): Promise<Staff | null>;
+  upsertStaff(userId: string, data: { bio?: string; bioAr?: string; title?: string; titleAr?: string }): Promise<Staff>;
 
   // Activity Logs operations
   getActivityLogs(filters?: {
@@ -5760,6 +5762,80 @@ export class DatabaseStorage implements IStorage {
 
     console.log(`✅ Created staff record for reporter ${userId} with slug: ${slug}`);
     return staffRecord;
+  }
+
+  async getStaffByUserId(userId: string): Promise<Staff | null> {
+    const [staffRecord] = await db
+      .select()
+      .from(staff)
+      .where(eq(staff.userId, userId))
+      .limit(1);
+    
+    return staffRecord || null;
+  }
+
+  async upsertStaff(userId: string, data: { bio?: string; bioAr?: string; title?: string; titleAr?: string }): Promise<Staff> {
+    const existingStaff = await this.getStaffByUserId(userId);
+    
+    if (existingStaff) {
+      const [updated] = await db
+        .update(staff)
+        .set({
+          bio: data.bio !== undefined ? (data.bio || null) : existingStaff.bio,
+          bioAr: data.bioAr !== undefined ? (data.bioAr || null) : existingStaff.bioAr,
+          title: data.title !== undefined ? (data.title || null) : existingStaff.title,
+          titleAr: data.titleAr !== undefined ? (data.titleAr || null) : existingStaff.titleAr,
+          updatedAt: new Date(),
+        })
+        .where(eq(staff.id, existingStaff.id))
+        .returning();
+      
+      return updated;
+    } else {
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+
+      const baseSlug = this.generateSlug(user.firstName || '', user.lastName || '');
+      
+      let slug = baseSlug;
+      let counter = 1;
+      while (true) {
+        const [conflict] = await db
+          .select()
+          .from(staff)
+          .where(eq(staff.slug, slug))
+          .limit(1);
+        
+        if (!conflict) break;
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      const nameAr = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'موظف';
+      const name = nameAr;
+
+      const [staffRecord] = await db
+        .insert(staff)
+        .values({
+          userId: userId,
+          slug: slug,
+          name: name,
+          nameAr: nameAr,
+          staffType: 'writer',
+          bio: data.bio || null,
+          bioAr: data.bioAr || null,
+          title: data.title || null,
+          titleAr: data.titleAr || null,
+          profileImage: user.profileImageUrl || null,
+          isActive: true,
+          isVerified: false,
+        })
+        .returning();
+
+      return staffRecord;
+    }
   }
 
   async getReporterProfile(slug: string, windowDays: number = 90, language: 'ar' | 'en' = 'ar'): Promise<ReporterProfile | undefined> {

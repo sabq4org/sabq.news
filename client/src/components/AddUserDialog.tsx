@@ -31,6 +31,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -50,7 +51,14 @@ interface Role {
   nameAr: string;
 }
 
-type FormData = z.infer<typeof adminCreateUserSchema>;
+const extendedCreateUserSchema = adminCreateUserSchema.extend({
+  bioAr: z.string().optional().or(z.literal("")),
+  bio: z.string().optional().or(z.literal("")),
+  titleAr: z.string().optional().or(z.literal("")),
+  title: z.string().optional().or(z.literal("")),
+});
+
+type FormData = z.infer<typeof extendedCreateUserSchema>;
 
 export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   const { toast } = useToast();
@@ -70,7 +78,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   });
 
   const form = useForm<FormData>({
-    resolver: zodResolver(adminCreateUserSchema),
+    resolver: zodResolver(extendedCreateUserSchema),
     defaultValues: {
       email: "",
       firstName: "",
@@ -79,6 +87,10 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
       lastNameEn: "",
       phoneNumber: "",
       profileImageUrl: null,
+      bioAr: "",
+      bio: "",
+      titleAr: "",
+      title: "",
       roleIds: [],
       status: "active",
       emailVerified: false,
@@ -88,10 +100,22 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
 
   const createUserMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("/api/admin/users", {
+      const { bioAr, bio, titleAr, title, ...userData } = data;
+      
+      const response = await apiRequest("/api/admin/users", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify(userData),
       });
+
+      // Only create staff record if at least one field has a value
+      if (response.user && (bioAr || bio || titleAr || title)) {
+        await apiRequest(`/api/admin/users/${response.user.id}/staff`, {
+          method: "PATCH",
+          body: JSON.stringify({ bioAr, bio, titleAr, title }),
+        });
+      }
+
+      return response;
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -292,6 +316,91 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-1">
+                <h3 className="font-medium">معلومات الموظف</h3>
+                <p className="text-sm text-muted-foreground">هذه الحقول تظهر في صفحة المراسل العامة</p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="bioAr"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-bioAr">السيرة الذاتية (عربي)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="نبذة مختصرة عن الكاتب..."
+                        data-testid="textarea-bioAr"
+                        dir="rtl"
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-bioAr" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-bio">Biography (English)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Brief bio about the writer..."
+                        data-testid="textarea-bio"
+                        dir="ltr"
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-bio" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="titleAr"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-titleAr">المسمى الوظيفي (عربي)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="مثال: كاتب صحفي"
+                        data-testid="input-titleAr"
+                        dir="rtl"
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-titleAr" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-title">Job Title (English)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g. Journalist"
+                        data-testid="input-title"
+                        dir="ltr"
+                      />
+                    </FormControl>
+                    <FormMessage data-testid="error-title" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="space-y-3">
               <FormLabel data-testid="label-roles">الأدوار *</FormLabel>

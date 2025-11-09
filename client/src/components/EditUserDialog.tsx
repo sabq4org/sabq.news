@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,6 +64,10 @@ const editUserSchema = z.object({
   lastNameEn: z.union([z.string().min(2, "English last name must be at least 2 characters"), z.literal("")]).optional(),
   phoneNumber: z.string().regex(/^[0-9+\-\s()]*$/, "رقم الهاتف غير صحيح").optional().or(z.literal("")),
   profileImageUrl: z.string().nullable().optional(),
+  bioAr: z.string().optional().or(z.literal("")),
+  bio: z.string().optional().or(z.literal("")),
+  titleAr: z.string().optional().or(z.literal("")),
+  title: z.string().optional().or(z.literal("")),
   roleIds: z.array(z.string().uuid("معرف الدور غير صحيح")).min(1, "يجب اختيار دور واحد على الأقل"),
   status: z.enum(["active", "pending", "suspended", "banned", "locked"]).default("active"),
   emailVerified: z.boolean().default(false),
@@ -95,6 +100,16 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
     },
   });
 
+  const { data: staffData } = useQuery<{ bio?: string; bioAr?: string; title?: string; titleAr?: string } | null>({
+    queryKey: ["/api/admin/users", userId, "staff"],
+    enabled: open && !!userId,
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users/${userId}/staff`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
   const form = useForm<FormData>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
@@ -104,6 +119,10 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
       lastNameEn: "",
       phoneNumber: "",
       profileImageUrl: null,
+      bioAr: "",
+      bio: "",
+      titleAr: "",
+      title: "",
       roleIds: [],
       status: "active",
       emailVerified: false,
@@ -120,17 +139,21 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
         lastNameEn: user.lastNameEn || "",
         phoneNumber: user.phoneNumber || "",
         profileImageUrl: user.profileImageUrl,
+        bioAr: staffData?.bioAr || "",
+        bio: staffData?.bio || "",
+        titleAr: staffData?.titleAr || "",
+        title: staffData?.title || "",
         roleIds: user.roles?.map(r => r.id) || [],
         status: user.status as any,
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
       });
     }
-  }, [user, form]);
+  }, [user, staffData, form]);
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const { roleIds, ...userData } = data;
+      const { roleIds, bioAr, bio, titleAr, title, ...userData } = data;
       
       await apiRequest(`/api/admin/users/${userId}`, {
         method: "PATCH",
@@ -143,10 +166,19 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
           body: JSON.stringify({ roleIds }),
         });
       }
+
+      // Only update staff data if at least one field has a value
+      if (bioAr || bio || titleAr || title) {
+        await apiRequest(`/api/admin/users/${userId}/staff`, {
+          method: "PATCH",
+          body: JSON.stringify({ bioAr, bio, titleAr, title }),
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users", userId, "staff"] });
       
       toast({
         title: "تم تحديث المستخدم بنجاح",
@@ -303,6 +335,91 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-4 border-t pt-4">
+                <div className="space-y-1">
+                  <h3 className="font-medium">معلومات الموظف</h3>
+                  <p className="text-sm text-muted-foreground">هذه الحقول تظهر في صفحة المراسل العامة</p>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="bioAr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-bioAr">السيرة الذاتية (عربي)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="نبذة مختصرة عن الكاتب..."
+                          data-testid="textarea-bioAr"
+                          dir="rtl"
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-bioAr" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-bio">Biography (English)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Brief bio about the writer..."
+                          data-testid="textarea-bio"
+                          dir="ltr"
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-bio" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="titleAr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-titleAr">المسمى الوظيفي (عربي)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="مثال: كاتب صحفي"
+                          data-testid="input-titleAr"
+                          dir="rtl"
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-titleAr" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-title">Job Title (English)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g. Journalist"
+                          data-testid="input-title"
+                          dir="ltr"
+                        />
+                      </FormControl>
+                      <FormMessage data-testid="error-title" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="space-y-3">
                 <FormLabel data-testid="label-roles">الأدوار *</FormLabel>

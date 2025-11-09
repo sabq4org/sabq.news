@@ -4734,6 +4734,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get staff data for a user
+  app.get("/api/admin/users/:id/staff", requireAuth, requirePermission("users.view"), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const staffData = await storage.getStaffByUserId(userId);
+      res.json(staffData);
+    } catch (error) {
+      console.error("❌ [GET USER STAFF] Error fetching staff data:", error);
+      res.status(500).json({ message: "Failed to fetch staff data" });
+    }
+  });
+
+  // Update or create staff data for a user
+  app.patch("/api/admin/users/:id/staff", requireAuth, requirePermission("users.update"), async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const { bio, bioAr, title, titleAr } = req.body;
+
+      const staffData = await storage.upsertStaff(userId, {
+        bio,
+        bioAr,
+        title,
+        titleAr,
+      });
+
+      console.log("✅ [UPDATE USER STAFF] Staff data updated successfully", { userId });
+      res.json(staffData);
+    } catch (error) {
+      console.error("❌ [UPDATE USER STAFF] Error updating staff data:", error);
+      res.status(500).json({ message: "Failed to update staff data" });
+    }
+  });
+
   // Get role permissions by role ID
   app.get("/api/admin/roles/:id/permissions", requireAuth, async (req: any, res) => {
     try {
