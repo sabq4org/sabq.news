@@ -142,7 +142,7 @@ export default function EnglishCategoryPage() {
         </div>
       ) : analytics ? (
         <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <CategoryAnalytics analytics={analytics} />
+          <CategoryAnalytics analytics={analytics} language="en" />
         </div>
       ) : null}
 

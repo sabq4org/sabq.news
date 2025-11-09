@@ -28,9 +28,37 @@ interface CategoryAnalytics {
 
 interface CategoryAnalyticsProps {
   analytics: CategoryAnalytics;
+  language?: 'ar' | 'en';
 }
 
-export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
+const translations = {
+  ar: {
+    totalArticles: 'إجمالي المقالات',
+    new: 'جديد',
+    totalViews: 'إجمالي المشاهدات',
+    avgPerArticle: 'متوسط',
+    perArticle: 'لكل مقالة',
+    totalInteractions: 'إجمالي التفاعلات',
+    topAuthor: 'الكاتب الأنشط',
+    articles: 'مقالة',
+    noAuthors: 'لا يوجد كتّاب',
+  },
+  en: {
+    totalArticles: 'Total Articles',
+    new: 'New',
+    totalViews: 'Total Views',
+    avgPerArticle: 'Avg',
+    perArticle: 'per article',
+    totalInteractions: 'Total Interactions',
+    topAuthor: 'Most Active Author',
+    articles: 'articles',
+    noAuthors: 'No authors',
+  }
+};
+
+export function CategoryAnalytics({ analytics, language = 'ar' }: CategoryAnalyticsProps) {
+  const t = translations[language];
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -72,7 +100,7 @@ export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
               </div>
               {analytics.recentArticles > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {analytics.recentArticles} جديد
+                  {analytics.recentArticles} {t.new}
                 </Badge>
               )}
             </div>
@@ -80,7 +108,7 @@ export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
               {analytics.totalArticles.toLocaleString('en-US')}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              إجمالي المقالات
+              {t.totalArticles}
             </p>
           </CardContent>
         </Card>
@@ -99,11 +127,11 @@ export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
               {analytics.totalViews.toLocaleString('en-US')}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground mb-2">
-              إجمالي المشاهدات
+              {t.totalViews}
             </p>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
-              <span>متوسط {analytics.avgViewsPerArticle.toLocaleString('en-US')} لكل مقالة</span>
+              <span>{t.avgPerArticle} {analytics.avgViewsPerArticle.toLocaleString('en-US')} {t.perArticle}</span>
             </div>
           </CardContent>
         </Card>
@@ -122,7 +150,7 @@ export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
               {analytics.totalInteractions.toLocaleString('en-US')}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              إجمالي التفاعلات
+              {t.totalInteractions}
             </p>
           </CardContent>
         </Card>
@@ -153,19 +181,19 @@ export function CategoryAnalytics({ analytics }: CategoryAnalyticsProps) {
                       {analytics.topAuthor.name}
                     </h4>
                     <p className="text-xs text-muted-foreground">
-                      {analytics.topAuthor.count} مقالة
+                      {analytics.topAuthor.count} {t.articles}
                     </p>
                   </div>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  الكاتب الأنشط
+                  {t.topAuthor}
                 </p>
               </>
             ) : (
               <>
                 <h3 className="text-lg sm:text-xl font-bold mb-1">-</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  لا يوجد كتّاب
+                  {t.noAuthors}
                 </p>
               </>
             )}
