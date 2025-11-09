@@ -1215,42 +1215,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "الملف غير موجود" });
       }
 
-      // Parse storage path: gs://bucket-name/path/to/file
       const storagePath = mediaFile.url;
       
-      // If it's already a proxy URL, extract the original storage path from metadata
-      // For now, we store the gs:// path directly
-      if (!storagePath.startsWith('gs://')) {
-        return res.status(400).json({ message: "مسار التخزين غير صحيح" });
-      }
-
-      const pathParts = storagePath.replace('gs://', '').split('/');
-      const bucketName = pathParts[0];
-      const objectPath = pathParts.slice(1).join('/');
-
-      // Get file from Object Storage
-      const { objectStorageClient } = await import('./objectStorage');
-      const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectPath);
-
-      // Check if file exists
-      const [exists] = await file.exists();
-      if (!exists) {
-        return res.status(404).json({ message: "الملف غير موجود في التخزين" });
-      }
-
-      // Stream the file to response
-      res.setHeader('Content-Type', mediaFile.mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      // Handle different URL types
       
-      file.createReadStream()
-        .on('error', (error) => {
-          console.error('[Media Proxy] Error streaming file:', error);
-          if (!res.headersSent) {
-            res.status(500).json({ message: "فشل في تحميل الملف" });
-          }
-        })
-        .pipe(res);
+      // Type 1: Public URLs (https://) - redirect or return URL
+      if (storagePath.startsWith('https://') || storagePath.startsWith('http://')) {
+        return res.redirect(storagePath);
+      }
+      
+      // Type 2: Public object paths (/public-objects/) - redirect to public route
+      if (storagePath.startsWith('/public-objects/')) {
+        return res.redirect(storagePath);
+      }
+      
+      // Type 3: GCS paths (gs://) - stream from Object Storage
+      if (storagePath.startsWith('gs://')) {
+        const pathParts = storagePath.replace('gs://', '').split('/');
+        const bucketName = pathParts[0];
+        const objectPath = pathParts.slice(1).join('/');
+
+        // Get file from Object Storage
+        const { objectStorageClient } = await import('./objectStorage');
+        const bucket = objectStorageClient.bucket(bucketName);
+        const file = bucket.file(objectPath);
+
+        // Check if file exists
+        const [exists] = await file.exists();
+        if (!exists) {
+          return res.status(404).json({ message: "الملف غير موجود في التخزين" });
+        }
+
+        // Stream the file to response
+        res.setHeader('Content-Type', mediaFile.mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+        
+        file.createReadStream()
+          .on('error', (error) => {
+            console.error('[Media Proxy] Error streaming file:', error);
+            if (!res.headersSent) {
+              res.status(500).json({ message: "فشل في تحميل الملف" });
+            }
+          })
+          .pipe(res);
+        
+        return;
+      }
+      
+      // Invalid storage path format
+      return res.status(400).json({ message: "مسار التخزين غير صحيح" });
 
     } catch (error) {
       console.error('[Media Proxy] Error:', error);
