@@ -20,7 +20,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 Key features include:
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth). Email verification system implemented. OAuth features include automatic email verification, account linking by email, first-time user onboarding flow, and proper redirect logic (new users → onboarding, existing users → dashboard).
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO, and bulk operations. Includes a Smart Media Library System (Arabic) with AI-powered image suggestions.
--   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English, displaying engagement metrics with Recharts and Framer Motion animations.
+-   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English, displaying engagement metrics with Recharts and Framer Motion animations. **Reporter Attribution System:** Analytics prioritize `reporterId` (credited reporter/writer) over `authorId` (system user who published), with fallback to maintain backward compatibility for legacy content.
 -   **Comments & Engagement:** Nested comment system with real-time moderation, integrated with user authentication.
 -   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
 -   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
