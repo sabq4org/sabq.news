@@ -11,7 +11,17 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation. Mobile responsiveness is achieved through a mobile-first approach.
 
-A core architectural decision is the **bilingual system** with separate database architecture, language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented. The design system uses an enhanced color palette, gradient backgrounds, subtle shadows, and full dark mode support, with a sticky core categories bar and a redesigned footer.
+A core architectural decision is the **bilingual system** with separate database architecture, language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented.
+
+**Design System & Color Palette (November 2025 Update):**
+The platform now implements a unified brand color system derived from the "سبق الذكية" logo, ensuring visual consistency and reinforcing brand identity:
+- **Primary Brand Blue:** `hsl(220, 84%, 53%)` (#2464ec) - Used for primary buttons, links, interactive elements, and brand accents
+- **Secondary (Header/Footer):** `hsl(220, 15%, 30%)` (#414857) - Professional dark tone for navigation bars and footers
+- **Typography:** Neutral Dark `hsl(220, 20%, 15%)` (#1e232d) for headings and main text; Neutral Light `hsl(220, 10%, 70%)` (#aaafba) for metadata and secondary information
+- **State Colors:** Success (green), Warning (orange), Danger (red), Info (cyan) - Distinct semantic colors for user feedback
+- **Dark Mode:** Parallel adjustments maintain brand colors with enhanced readability on dark surfaces
+- **UI Components:** Gradient backgrounds, subtle shadows, consistent borders, and full dark mode support throughout
+- The system includes sticky core categories bar, redesigned footer, and enhanced card layouts with icon-pill headers for analytics displays
 
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
