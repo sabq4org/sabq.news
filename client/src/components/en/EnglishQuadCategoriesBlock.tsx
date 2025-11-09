@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Eye, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Icon mapper
 const getIcon = (iconName: string) => {
@@ -126,7 +126,7 @@ function TitleList({ items }: { items: CategoryColumnData["list"] }) {
       {items.map((item, index) => (
         <Link key={item.id} href={item.href}>
           <div
-            className="group py-2 border-b border-border last:border-0 cursor-pointer"
+            className="group py-2 border-b border-border dark:border-border/60 last:border-0 cursor-pointer"
             data-testid={`list-item-${index}`}
           >
             <h4 className="text-sm font-medium line-clamp-2 mb-1 group-hover:text-primary transition-colors">
@@ -179,7 +179,7 @@ function CategoryColumn({ data, index }: { data: CategoryColumnData; index: numb
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-card border border-border rounded-xl p-4"
+      className="bg-card shadow-sm border border-border dark:border-card-border rounded-xl p-4"
       data-testid={`category-column-${data.category.slug}`}
     >
       <ColumnHeader 
@@ -193,65 +193,101 @@ function CategoryColumn({ data, index }: { data: CategoryColumnData; index: numb
   );
 }
 
-// Horizontal Carousel Component (Mobile)
-function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    
-    const container = scrollRef.current;
-    const cardWidth = container.scrollWidth / items.length;
-    
-    if (direction === 'left' && currentIndex < items.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      container.scrollTo({ left: (currentIndex + 1) * cardWidth, behavior: 'smooth' });
-    } else if (direction === 'right' && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      container.scrollTo({ left: (currentIndex - 1) * cardWidth, behavior: 'smooth' });
-    }
+// Mobile Compact List Component
+function MobileCompactList({ items }: { items: CategoryColumnData[] }) {
+  const IconComponent = (iconName: string) => {
+    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Folder;
+    return Icon;
   };
 
   return (
-    <div className="relative" data-testid="mobile-carousel">
-      {/* Scroll Container */}
-      <div
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
-        style={{ scrollSnapType: 'x mandatory' }}
-      >
-        {items.map((item, index) => (
-          <div 
-            key={item.category.slug} 
-            className="flex-shrink-0 w-[85vw] max-w-md snap-start"
+    <div className="space-y-4" data-testid="mobile-compact-list">
+      {items.map((item, index) => {
+        const Icon = IconComponent(item.category.icon);
+        
+        return (
+          <motion.div
+            key={item.category.slug}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
+            className="bg-card shadow-sm border border-border dark:border-card-border rounded-lg p-3"
+            data-testid={`mobile-category-${item.category.slug}`}
           >
-            <CategoryColumn data={item} index={index} />
-          </div>
-        ))}
-      </div>
+            {/* Compact Header - Single Row */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <Icon className="w-4 h-4 text-primary flex-shrink-0" />
+                <h3 className="text-sm font-bold">{item.category.name}</h3>
+              </div>
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 whitespace-nowrap">
+                {item.stats.value.toLocaleString('en-US')} {item.stats.label}
+              </Badge>
+            </div>
 
-      {/* Indicators - small dots only */}
-      <div className="flex justify-center gap-1 mt-3">
-        {items.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              setCurrentIndex(index);
-              if (scrollRef.current) {
-                const cardWidth = scrollRef.current.scrollWidth / items.length;
-                scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
-              }
-            }}
-            className={`rounded-full transition-all ${
-              index === currentIndex 
-                ? 'bg-primary w-2 h-2' 
-                : 'bg-muted-foreground/30 w-1.5 h-1.5'
-            }`}
-            data-testid={`carousel-indicator-${index}`}
-          />
-        ))}
-      </div>
+            {/* Featured Article - Horizontal Layout */}
+            <Link href={item.featured.href}>
+              <div className="flex gap-2 mb-2 group" data-testid={`mobile-featured-${item.featured.id}`}>
+                {/* Small Square Thumbnail */}
+                <div className="relative flex-shrink-0 w-20 h-20 rounded overflow-hidden">
+                  {item.featured.image ? (
+                    <img
+                      src={item.featured.image}
+                      alt={item.featured.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
+                  )}
+                  {item.featured.meta.badge && (
+                    <Badge 
+                      variant={item.featured.meta.badge === "Breaking" ? "destructive" : "secondary"}
+                      className="absolute top-1 left-1 text-[10px] px-1 py-0"
+                    >
+                      {item.featured.meta.badge}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                    {item.featured.title}
+                  </h4>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      {item.featured.meta.age}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <Eye className="w-2.5 h-2.5" />
+                      {item.featured.meta.views.toLocaleString('en-US')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Top 3 Headlines - Ultra Compact */}
+            <div className="space-y-1.5 pt-2 border-t border-border dark:border-border/60">
+              {item.list.slice(0, 3).map((article, idx) => (
+                <Link key={article.id} href={article.href}>
+                  <div 
+                    className="group flex items-start gap-1.5 py-1"
+                    data-testid={`mobile-list-item-${idx}`}
+                  >
+                    <span className="text-[10px] text-muted-foreground mt-0.5 flex-shrink-0">•</span>
+                    <h5 className="text-xs font-medium line-clamp-1 flex-1 group-hover:text-primary transition-colors">
+                      {article.title}
+                    </h5>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -260,8 +296,33 @@ function HorizontalCarousel({ items }: { items: CategoryColumnData[] }) {
 function QuadCategoriesSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Mobile Skeleton - Compact */}
+      <div className="lg:hidden space-y-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-card shadow-sm border border-border dark:border-card-border rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-5 w-12" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="w-20 h-20 rounded flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-2 w-1/2" />
+              </div>
+            </div>
+            <div className="space-y-1.5 pt-2 border-t">
+              {[1, 2, 3].map((j) => (
+                <Skeleton key={j} className="h-3 w-full" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tablet/Desktop Skeleton */}
+      <div className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="h-6 w-full" />
@@ -300,21 +361,10 @@ export function EnglishQuadCategoriesBlock() {
     >
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-6">
-          {/* Mobile View: Carousel */}
-          {data.mobileCarousel && (
-            <div className="lg:hidden">
-              <HorizontalCarousel items={data.items} />
-            </div>
-          )}
-
-          {/* Mobile View: Grid (if carousel disabled) */}
-          {!data.mobileCarousel && (
-            <div className="lg:hidden grid grid-cols-1 gap-4">
-              {data.items.map((item, index) => (
-                <CategoryColumn key={item.category.slug} data={item} index={index} />
-              ))}
-            </div>
-          )}
+          {/* Mobile View: Compact List (always on mobile) */}
+          <div className="lg:hidden">
+            <MobileCompactList items={data.items} />
+          </div>
 
           {/* Tablet View: 2 columns */}
           <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">

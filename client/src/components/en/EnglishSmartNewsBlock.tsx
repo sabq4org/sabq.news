@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag, User, Eye, Flame, Zap } from "lucide-react";
+import { Clock, Tag, Newspaper, Eye, Flame, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnSmartBlock } from "@shared/schema";
 
@@ -92,13 +92,14 @@ export function EnglishSmartNewsBlock({ config }: EnglishSmartNewsBlockProps) {
 
   return (
     <section className="space-y-4" data-testid={`smart-block-${config.id}`}>
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[auto,1fr] gap-2">
         <div 
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{ backgroundColor: config.color }}
         >
           <Tag className="h-3.5 w-3.5 text-white" />
         </div>
+        
         <h2 
           className="text-2xl md:text-3xl font-bold" 
           style={{ color: config.color }}
@@ -106,6 +107,13 @@ export function EnglishSmartNewsBlock({ config }: EnglishSmartNewsBlockProps) {
         >
           {config.title}
         </h2>
+        
+        <div className="col-start-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Tag className="h-3.5 w-3.5" />
+          <span data-testid={`text-smart-block-keyword-${config.id}`}>
+            Keyword: {config.keyword}
+          </span>
+        </div>
       </div>
 
       {config.layoutStyle === 'grid' && <GridLayout articles={articles} blockId={config.id} />}
@@ -379,114 +387,105 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; blockId: string }) {
   if (articles.length === 0) return null;
 
-  const featured = articles[0];
-  const others = articles.slice(1);
-  const featuredTimeAgo = featured.publishedAt
-    ? formatDistanceToNow(new Date(featured.publishedAt), { addSuffix: true })
-    : null;
+  const [featured, ...rest] = articles;
+  const sideArticles = rest.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Link href={`/en/article/${featured.slug}`}>
-        <Card className="hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group" data-testid={`card-featured-smart-article-${featured.id}`}>
-          {featured.imageUrl && (
-            <div className="relative h-64 overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-2" data-testid={`smart-block-featured-${blockId}`}>
+      <Link href={`/en/article/${featured.slug}`} className="lg:col-span-3">
+        <Card 
+          className="group cursor-pointer overflow-hidden h-full hover-elevate active-elevate-2 relative border-0"
+          data-testid={`card-smart-article-featured-main-${featured.id}`}
+        >
+          <div className="relative h-80 md:h-96 overflow-hidden bg-muted">
+            {featured.imageUrl ? (
               <img
                 src={featured.imageUrl}
                 alt={featured.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
-              />
-            </div>
-          )}
-          <CardContent className="p-6 space-y-3">
-            {featured.category && (
-              <Badge 
-                variant="outline"
-                style={{ 
-                  borderColor: featured.category.color || undefined,
-                  color: featured.category.color || undefined,
+                style={{
+                  objectPosition: (featured as any).imageFocalPoint
+                    ? `${(featured as any).imageFocalPoint.x}% ${(featured as any).imageFocalPoint.y}%`
+                    : 'center'
                 }}
-              >
-                {featured.category.name}
-              </Badge>
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+                <Newspaper className="h-16 w-16 text-muted-foreground/30" />
+              </div>
             )}
-            <h3 className="font-bold text-xl line-clamp-2 group-hover:text-primary transition-colors">
-              {featured.title}
-            </h3>
-            <div className="flex flex-col gap-2">
-              {featured.author && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <User className="h-3.5 w-3.5" />
-                  <span className="font-medium">
-                    {featured.author.firstName && featured.author.lastName
-                      ? `${featured.author.firstName} ${featured.author.lastName}`
-                      : featured.author.email}
-                  </span>
-                </div>
-              )}
-              {featuredTimeAgo && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  {featuredTimeAgo}
-                </div>
-              )}
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
+              <h3 className="font-bold text-2xl md:text-3xl lg:text-4xl leading-tight text-white mb-4" data-testid={`text-smart-article-featured-title-${featured.id}`}>
+                {featured.title}
+              </h3>
+
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                {featured.category && (
+                  <Badge 
+                    variant="outline"
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white"
+                    data-testid={`badge-smart-article-featured-category-${featured.id}`}
+                  >
+                    {featured.category.name}
+                  </Badge>
+                )}
+                
+                {featured.publishedAt && (
+                  <div className="flex items-center gap-1.5 text-white/90">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {formatDistanceToNow(new Date(featured.publishedAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </Link>
 
-      <div className="space-y-3">
-        {others.map((article) => {
-          const timeAgo = article.publishedAt
-            ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
-            : null;
-
-          return (
-            <Link key={article.id} href={`/en/article/${article.slug}`}>
-              <Card className="hover-elevate active-elevate-2 cursor-pointer overflow-hidden group" data-testid={`card-small-smart-article-${article.id}`}>
-                <CardContent className="p-4">
-                  <div className="flex gap-3">
-                    {article.imageUrl && (
-                      <div className="relative flex-shrink-0 w-24 h-20 rounded overflow-hidden">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                        {article.title}
-                      </h4>
-                      <div className="flex flex-col gap-1">
-                        {article.author && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <User className="h-3 w-3" />
-                            <span className="font-medium">
-                              {article.author.firstName && article.author.lastName
-                                ? `${article.author.firstName} ${article.author.lastName}`
-                                : article.author.email}
-                            </span>
-                          </div>
-                        )}
-                        {timeAgo && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {timeAgo}
-                          </div>
-                        )}
-                      </div>
+      {sideArticles.length > 0 && (
+        <div className="lg:col-span-2 grid grid-cols-2 gap-2">
+          {sideArticles.map((article) => (
+            <Link key={article.id} href={`/en/article/${article.slug}`} className="col-span-1">
+              <Card 
+                className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0"
+                data-testid={`card-smart-article-featured-${article.id}`}
+              >
+                <div className="relative aspect-[4/3] md:aspect-auto md:h-48 lg:h-[11.5rem] overflow-hidden bg-muted">
+                  {article.imageUrl ? (
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                      style={{
+                        objectPosition: (article as any).imageFocalPoint
+                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                          : 'center'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+                      <Newspaper className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground/30" />
                     </div>
+                  )}
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-2 sm:p-3 lg:p-4">
+                    <h4 className="font-bold text-sm md:text-base lg:text-lg leading-tight text-white line-clamp-2 lg:line-clamp-3" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
+                      {article.title}
+                    </h4>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </Link>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
