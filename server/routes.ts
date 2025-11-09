@@ -3311,6 +3311,201 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Category Analytics Endpoint - Statistics for a specific category
+  app.get("/api/categories/:slug/analytics", async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      const category = categories.find(c => c.slug === req.params.slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const now = new Date();
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Determine which articles to analyze based on category type
+      let articleIds: string[] = [];
+      
+      if (category.type === "dynamic" || category.type === "smart") {
+        // For smart/dynamic categories, get articles from articleSmartCategories
+        const smartAssignments = await db
+          .select({ articleId: articleSmartCategories.articleId })
+          .from(articleSmartCategories)
+          .where(eq(articleSmartCategories.categoryId, category.id));
+        
+        articleIds = smartAssignments.map(item => item.articleId);
+      }
+
+      // Build WHERE conditions for category articles
+      const categoryConditions = category.type === "dynamic" || category.type === "smart"
+        ? and(
+            inArray(articles.id, articleIds.length > 0 ? articleIds : ['']), // Prevent empty array
+            eq(articles.status, "published")
+          )
+        : and(
+            eq(articles.categoryId, category.id),
+            eq(articles.status, "published")
+          );
+
+      // Get total article count in this category
+      const [totalCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(categoryConditions);
+
+      // Get articles published in last 30 days
+      const [recentCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(and(
+          categoryConditions,
+          gte(articles.publishedAt, monthAgo)
+        ));
+
+      // Get total views for all articles in this category
+      const [totalViewsResult] = await db.select({
+        total: sql<number>`COALESCE(SUM(${articles.views}), 0)::int`
+      })
+        .from(articles)
+        .where(categoryConditions);
+
+      // Calculate average views per article
+      const avgViews = totalCount.count > 0 
+        ? Math.round(totalViewsResult.total / totalCount.count)
+        : 0;
+
+      // Get most active reporter in this category
+      let topAuthor;
+      
+      if (category.type === "dynamic" || category.type === "smart") {
+        topAuthor = await db.select({
+          userId: articles.reporterId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(articles)
+          .innerJoin(users, eq(articles.reporterId, users.id))
+          .where(and(
+            inArray(articles.id, articleIds.length > 0 ? articleIds : ['']),
+            eq(articles.status, "published"),
+            isNotNull(articles.reporterId)
+          ))
+          .groupBy(articles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+
+        // Fallback to authorId if no reporter
+        if (!topAuthor || topAuthor.length === 0) {
+          topAuthor = await db.select({
+            userId: articles.authorId,
+            count: sql<number>`count(*)::int`,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          })
+            .from(articles)
+            .innerJoin(users, eq(articles.authorId, users.id))
+            .where(and(
+              inArray(articles.id, articleIds.length > 0 ? articleIds : ['']),
+              eq(articles.status, "published"),
+              isNotNull(articles.authorId)
+            ))
+            .groupBy(articles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+            .orderBy(sql`count(*) DESC`)
+            .limit(1);
+        }
+      } else {
+        topAuthor = await db.select({
+          userId: articles.reporterId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(articles)
+          .innerJoin(users, eq(articles.reporterId, users.id))
+          .where(and(
+            eq(articles.categoryId, category.id),
+            eq(articles.status, "published"),
+            isNotNull(articles.reporterId)
+          ))
+          .groupBy(articles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+
+        // Fallback to authorId
+        if (!topAuthor || topAuthor.length === 0) {
+          topAuthor = await db.select({
+            userId: articles.authorId,
+            count: sql<number>`count(*)::int`,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          })
+            .from(articles)
+            .innerJoin(users, eq(articles.authorId, users.id))
+            .where(and(
+              eq(articles.categoryId, category.id),
+              eq(articles.status, "published"),
+              isNotNull(articles.authorId)
+            ))
+            .groupBy(articles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+            .orderBy(sql`count(*) DESC`)
+            .limit(1);
+        }
+      }
+
+      // Get total interactions (reactions + comments) for category articles
+      let totalInteractions = 0;
+      
+      if (articleIds.length > 0 || !(category.type === "dynamic" || category.type === "smart")) {
+        const interactionCondition = category.type === "dynamic" || category.type === "smart"
+          ? inArray(reactions.articleId, articleIds.length > 0 ? articleIds : [''])
+          : eq(reactions.articleId, articles.id);
+
+        const [reactionsCount] = await db.select({
+          count: sql<number>`count(*)::int`
+        })
+          .from(reactions)
+          .leftJoin(articles, eq(reactions.articleId, articles.id))
+          .where(categoryConditions);
+
+        const commentsCondition = category.type === "dynamic" || category.type === "smart"
+          ? inArray(comments.articleId, articleIds.length > 0 ? articleIds : [''])
+          : eq(comments.articleId, articles.id);
+
+        const [commentsCount] = await db.select({
+          count: sql<number>`count(*)::int`
+        })
+          .from(comments)
+          .leftJoin(articles, eq(comments.articleId, articles.id))
+          .where(categoryConditions);
+
+        totalInteractions = (reactionsCount?.count || 0) + (commentsCount?.count || 0);
+      }
+
+      res.json({
+        categoryName: category.nameAr,
+        categoryIcon: category.icon,
+        categoryColor: category.color,
+        totalArticles: totalCount.count || 0,
+        recentArticles: recentCount.count || 0,
+        totalViews: totalViewsResult.total || 0,
+        avgViewsPerArticle: avgViews,
+        totalInteractions: totalInteractions,
+        topAuthor: topAuthor && topAuthor.length > 0 ? {
+          name: `${topAuthor[0].firstName} ${topAuthor[0].lastName}`.trim(),
+          profileImageUrl: topAuthor[0].profileImageUrl,
+          count: topAuthor[0].count
+        } : null
+      });
+    } catch (error) {
+      console.error("Error fetching category analytics:", error);
+      res.status(500).json({ message: "Failed to fetch category analytics" });
+    }
+  });
+
   // GET /api/categories/smart - Get categories with filtering support
   app.get("/api/categories/smart", async (req, res) => {
     try {
