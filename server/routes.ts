@@ -19,7 +19,7 @@ import { findSimilarArticles, getPersonalizedRecommendations } from "./similarit
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
 import { db } from "./db";
-import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -7281,11 +7281,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: users.profileImageUrl,
       })
         .from(articles)
-        .leftJoin(users, eq(articles.authorId, users.id))
+        .innerJoin(users, eq(articles.authorId, users.id))
         .where(and(
           gte(articles.publishedAt, monthAgo),
           eq(articles.status, "published"),
-          or(isNull(articles.articleType), ne(articles.articleType, 'opinion'))
+          or(isNull(articles.articleType), ne(articles.articleType, 'opinion')),
+          isNotNull(articles.authorId)
         ))
         .groupBy(articles.authorId, users.firstName, users.lastName, users.profileImageUrl)
         .orderBy(sql`count(*) DESC`)
@@ -19188,10 +19189,11 @@ Allow: /
         profileImageUrl: users.profileImageUrl,
       })
         .from(enArticles)
-        .leftJoin(users, eq(enArticles.authorId, users.id))
+        .innerJoin(users, eq(enArticles.authorId, users.id))
         .where(and(
           gte(enArticles.publishedAt, monthAgo),
-          eq(enArticles.status, "published")
+          eq(enArticles.status, "published"),
+          isNotNull(enArticles.authorId)
         ))
         .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
         .orderBy(sql`count(*) DESC`)
