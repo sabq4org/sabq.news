@@ -4,14 +4,22 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Sparkles, Flame, Brain, Calendar, Zap, TrendingUp, Bot } from "lucide-react";
+import { Clock, Sparkles, Flame, Brain, Calendar, Zap, TrendingUp, Bot, MessageSquare } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
-import { AIArticleCard } from "@/components/AIArticleCard";
+import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 // Helper function to get category type badge
 function getCategoryTypeBadge(type?: string) {
@@ -295,18 +303,10 @@ export default function CategoryPage() {
         </div>
 
         {articlesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Card key={i}>
-                <Skeleton className="w-full h-44 sm:h-48" />
-                <CardContent className="p-3 sm:p-4 space-y-3">
-                  <Skeleton className="h-6 w-20" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-4 w-24" />
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
           </div>
         ) : articles.length === 0 ? (
           <div className="text-center py-16 sm:py-20">
@@ -314,114 +314,220 @@ export default function CategoryPage() {
               لا توجد مقالات في هذا التصنيف حالياً
             </p>
           </div>
-        ) : isSmartCategory ? (
-          // AI-Powered Articles Grid for Smart Categories
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {articles.map((article, index) => {
-              // Determine selection reason based on article properties
-              let selectionReason: "breaking" | "trending" | "featured" | "recommended" = "recommended";
-              if (article.newsType === "breaking") {
-                selectionReason = "breaking";
-              } else if (article.views && article.views > 500) {
-                selectionReason = "trending";
-              } else if (article.isFeatured) {
-                selectionReason = "featured";
-              }
-              
-              // Calculate AI score (simulated based on engagement)
-              const engagementScore = (article.views || 0) + (article.reactionsCount || 0) * 10 + (article.commentsCount || 0) * 15;
-              const normalizedScore = Math.min(0.95, Math.max(0.70, 0.70 + (engagementScore / 1000) * 0.25));
-              
-              return (
-                <AIArticleCard 
-                  key={article.id}
-                  article={article}
-                  aiScore={normalizedScore}
-                  selectionReason={selectionReason}
-                  variant="grid"
-                />
-              );
-            })}
-          </div>
         ) : (
-          // Standard Articles Grid for Regular Categories
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {articles.map((article) => (
-              <Link key={article.id} href={`/article/${article.slug}`}>
-                <Card 
-                  className="group hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden"
-                  data-testid={`card-article-${article.id}`}
-                >
-                  {article.imageUrl && (
-                    <div className="relative h-44 sm:h-48 overflow-hidden">
-                      <img
-                        src={article.imageUrl}
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        style={{
-                          objectPosition: (article as any).imageFocalPoint
-                            ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                            : 'center'
-                        }}
-                      />
-                      {article.category && (
-                        <Badge 
-                          variant="default" 
-                          className="absolute top-2 sm:top-3 right-2 sm:right-3 shadow-md text-xs min-h-7 px-2.5" 
-                          data-testid={`badge-category-${article.id}`}
-                        >
-                          {article.category.icon} {article.category.nameAr}
-                        </Badge>
-                      )}
-                      {article.aiSummary && (
-                        <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-                          <Badge variant="secondary" className="bg-primary/90 text-primary-foreground text-xs min-h-7 px-2.5">
-                            <Sparkles className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                            ذكاء اصطناعي
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                    
-                    <h3 
-                      className="font-bold text-base sm:text-lg line-clamp-2 text-foreground leading-snug"
-                      data-testid={`text-article-title-${article.id}`}
-                    >
-                      {article.title}
-                    </h3>
-                    
-                    {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                        {article.excerpt}
-                      </p>
-                    )}
+          <>
+            {/* Mobile View: Vertical List */}
+            <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
+              <CardContent className="p-0">
+                <div className="dark:divide-y">
+                  {articles.map((article) => {
+                    const timeAgo = article.publishedAt
+                      ? formatDistanceToNow(new Date(article.publishedAt), {
+                          addSuffix: true,
+                          locale: arSA,
+                        })
+                      : null;
 
-                    <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-xs text-muted-foreground pt-1 sm:pt-2">
-                      {article.publishedAt && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
-                          <span className="leading-tight">
-                            {formatDistanceToNow(new Date(article.publishedAt), {
-                              addSuffix: true,
-                              locale: ar,
-                            })}
-                          </span>
-                        </div>
-                      )}
+                    return (
+                      <div key={article.id}>
+                        <Link href={`/article/${article.slug}`}>
+                          <div 
+                            className="block group cursor-pointer"
+                            data-testid={`link-article-mobile-${article.id}`}
+                          >
+                            <div className={`p-4 hover-elevate active-elevate-2 transition-all ${
+                              article.newsType === "breaking" ? "bg-destructive/5" : ""
+                            }`}>
+                              <div className="flex gap-3">
+                                {/* Image */}
+                                <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                                  {article.imageUrl ? (
+                                    <img
+                                      src={article.imageUrl}
+                                      alt={article.title}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                      loading="lazy"
+                                      style={{
+                                        objectPosition: (article as any).imageFocalPoint
+                                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                          : 'center'
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+                                  )}
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 space-y-2">
+                                  {/* Breaking/Featured/Category Badge */}
+                                  {article.newsType === "breaking" ? (
+                                    <Badge 
+                                      variant="destructive" 
+                                      className="text-xs h-5 gap-1"
+                                      data-testid={`badge-breaking-${article.id}`}
+                                    >
+                                      <Zap className="h-3 w-3" />
+                                      عاجل
+                                    </Badge>
+                                  ) : isNewArticle(article.publishedAt) ? (
+                                    <Badge 
+                                      className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                      data-testid={`badge-new-${article.id}`}
+                                    >
+                                      <Flame className="h-3 w-3" />
+                                      جديد
+                                    </Badge>
+                                  ) : article.category ? (
+                                    <Badge 
+                                      className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
+                                      data-testid={`badge-article-category-${article.id}`}
+                                    >
+                                      {article.category.nameAr}
+                                    </Badge>
+                                  ) : null}
+
+                                  {/* Title */}
+                                  <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                                    article.newsType === "breaking"
+                                      ? "text-destructive"
+                                      : "group-hover:text-primary"
+                                  }`} data-testid={`text-article-title-${article.id}`}>
+                                    {article.title}
+                                  </h4>
+
+                                  {/* Meta Info */}
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                    {timeAgo && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {timeAgo}
+                                      </span>
+                                    )}
+                                    <ViewsCount 
+                                      views={article.views || 0}
+                                      iconClassName="h-3 w-3"
+                                    />
+                                    {(article.commentsCount ?? 0) > 0 && (
+                                      <span className="flex items-center gap-1">
+                                        <MessageSquare className="h-3 w-3" />
+                                        {article.commentsCount}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Desktop View: Grid with 4 columns */}
+            <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {articles.map((article) => (
+                <Link key={article.id} href={`/article/${article.slug}`}>
+                  <Card 
+                    className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
+                      article.newsType === "breaking" ? "bg-destructive/5" : ""
+                    }`}
+                    data-testid={`card-article-${article.id}`}
+                  >
+                    {article.imageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          style={{
+                            objectPosition: (article as any).imageFocalPoint
+                              ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                              : 'center'
+                          }}
+                        />
+                        {article.newsType === "breaking" ? (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute top-3 right-3 gap-1" 
+                            data-testid={`badge-breaking-${article.id}`}
+                          >
+                            <Zap className="h-3 w-3" />
+                            عاجل
+                          </Badge>
+                        ) : isNewArticle(article.publishedAt) ? (
+                          <Badge 
+                            className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                            data-testid={`badge-new-${article.id}`}
+                          >
+                            <Flame className="h-3 w-3" />
+                            جديد
+                          </Badge>
+                        ) : article.category ? (
+                          <Badge 
+                            className="absolute top-3 right-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0" 
+                            data-testid={`badge-category-${article.id}`}
+                          >
+                            {article.category.nameAr}
+                          </Badge>
+                        ) : null}
+                        {article.aiSummary && (
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                              <Sparkles className="h-3 w-3 ml-1" />
+                              ذكاء اصطناعي
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <CardContent className="p-4 space-y-3">
+                      <h3 
+                        className={`font-bold text-lg line-clamp-2 ${
+                          article.newsType === "breaking"
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`}
+                        data-testid={`text-article-title-${article.id}`}
+                      >
+                        {article.title}
+                      </h3>
                       
-                      <ViewsCount 
-                        views={article.views || 0}
-                        iconClassName="h-3.5 w-3.5 sm:h-3 sm:w-3"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                        {article.publishedAt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {formatDistanceToNow(new Date(article.publishedAt), {
+                                addSuffix: true,
+                                locale: arSA,
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        
+                        <ViewsCount 
+                          views={article.views || 0}
+                          iconClassName="h-3 w-3"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
