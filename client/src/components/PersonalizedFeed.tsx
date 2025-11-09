@@ -102,11 +102,10 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                               </Badge>
                             ) : article.category ? (
                               <Badge 
-                                variant="outline" 
-                                className="text-xs h-5"
+                                className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
                                 data-testid={`badge-article-category-${article.id}`}
                               >
-                                {article.category.icon} {article.category.nameAr}
+                                {article.category.nameAr}
                               </Badge>
                             ) : null}
 
@@ -192,11 +191,10 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
                     </Badge>
                   ) : article.category ? (
                     <Badge 
-                      variant="default" 
-                      className="absolute top-3 right-3" 
+                      className="absolute top-3 right-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0" 
                       data-testid={`badge-category-${article.id}`}
                     >
-                      {article.category.icon} {article.category.nameAr}
+                      {article.category.nameAr}
                     </Badge>
                   ) : null}
                   {article.aiSummary && (
