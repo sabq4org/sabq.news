@@ -5630,13 +5630,42 @@ export class DatabaseStorage implements IStorage {
 
   // Reporter/Staff operations
   async getReporterBySlug(slug: string): Promise<Staff | undefined> {
-    const [reporter] = await db
-      .select()
+    const [result] = await db
+      .select({
+        id: staff.id,
+        userId: staff.userId,
+        slug: staff.slug,
+        name: staff.name,
+        nameAr: staff.nameAr,
+        title: staff.title,
+        titleAr: staff.titleAr,
+        bio: staff.bio,
+        bioAr: staff.bioAr,
+        profileImage: staff.profileImage,
+        userProfileImage: users.profileImageUrl,
+        staffType: staff.staffType,
+        specializations: staff.specializations,
+        isActive: staff.isActive,
+        isVerified: staff.isVerified,
+        publishedCount: staff.publishedCount,
+        totalViews: staff.totalViews,
+        totalLikes: staff.totalLikes,
+        lastActiveAt: staff.lastActiveAt,
+        createdAt: staff.createdAt,
+        updatedAt: staff.updatedAt,
+      })
       .from(staff)
+      .leftJoin(users, eq(staff.userId, users.id))
       .where(and(eq(staff.slug, slug), eq(staff.isActive, true)))
       .limit(1);
     
-    return reporter;
+    if (!result) return undefined;
+
+    // Use staff profileImage first, fallback to user profileImage
+    return {
+      ...result,
+      profileImage: result.profileImage || result.userProfileImage || null,
+    } as Staff;
   }
 
   // Helper function to generate URL-friendly slug from Arabic/English names

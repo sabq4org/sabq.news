@@ -86,7 +86,7 @@ export default function ReporterProfile() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <Avatar className="h-32 w-32 border-4 border-background shadow-lg" data-testid="avatar-reporter">
-              <AvatarImage src={avatarUrl || ''} alt={fullName} />
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
               <AvatarFallback className="text-2xl">
                 {fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
