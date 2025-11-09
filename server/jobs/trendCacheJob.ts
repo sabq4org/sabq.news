@@ -7,7 +7,7 @@ import cron from "node-cron";
 import { analyzeDailyPulse, analyzePredictiveTrend } from "../openai";
 import { storage } from "../storage";
 import { db } from "../db";
-import { articles, categories, reactions, comments, enArticles, enCategories } from "@shared/schema";
+import { articles, categories, reactions, comments, enArticles, enCategories, enReactions, enComments } from "@shared/schema";
 import { eq, desc, gte, sql, and } from "drizzle-orm";
 
 let isRefreshing = false;
@@ -168,12 +168,168 @@ async function refreshArabicPredictiveCache() {
 }
 
 /**
- * Refresh English caches (same logic)
+ * Refresh daily pulse cache for English
+ */
+async function refreshEnglishDailyCache() {
+  try {
+    console.log('[Trend Cache] 🔄 Refreshing English daily pulse...');
+    
+    // Get recent articles with metrics (last 24 hours)
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const recentArticles = await db
+      .select({
+        id: enArticles.id,
+        title: enArticles.title,
+        slug: enArticles.slug,
+        excerpt: enArticles.excerpt,
+        imageUrl: enArticles.imageUrl,
+        views: enArticles.views,
+        publishedAt: enArticles.publishedAt,
+        categoryName: enCategories.name,
+        reactionCount: sql<number>`cast(count(distinct ${enReactions.id}) as int)`,
+        commentCount: sql<number>`cast(count(distinct ${enComments.id}) as int)`,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .leftJoin(enReactions, eq(enReactions.articleId, enArticles.id))
+      .leftJoin(enComments, eq(enComments.articleId, enArticles.id))
+      .where(and(
+        eq(enArticles.status, "published"),
+        gte(enArticles.publishedAt, twentyFourHoursAgo)
+      ))
+      .groupBy(enArticles.id, enArticles.title, enArticles.slug, enArticles.excerpt, enArticles.imageUrl, enArticles.views, enArticles.publishedAt, enCategories.name)
+      .orderBy(desc(enArticles.views))
+      .limit(50)
+      .then(rows => rows.filter(r => r.publishedAt !== null));
+
+    if (recentArticles.length === 0) {
+      console.log('[Trend Cache] ℹ️ No articles for English daily pulse');
+      return;
+    }
+
+    // Call AI analysis
+    const aiResult = await analyzeDailyPulse(recentArticles as any, 'en');
+    
+    // Build response
+    const articlesMap = new Map(recentArticles.map(a => [a.id, a]));
+    const trendingArticles = aiResult.trendingArticles.map(ai => {
+      const article = articlesMap.get(ai.articleId);
+      return article ? {
+        id: ai.articleId,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt || '',
+        imageUrl: article.imageUrl || '',
+        categoryName: article.categoryName || '',
+        rank: ai.rank,
+        score: ai.score,
+        trendReason: ai.trendReason
+      } : null;
+    }).filter(a => a !== null);
+
+    // Cache for 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const cacheData = {
+      mode: 'daily' as const,
+      language: 'en' as const,
+      articles: trendingArticles as any,
+      metadata: {
+        pulseStatus: aiResult.pulseStatus,
+        topCategory: aiResult.topCategory
+      },
+      generatedAt: new Date(),
+      expiresAt
+    };
+    await storage.setTrendCache('daily', 'en', undefined, cacheData, 15 * 60);
+
+    console.log(`[Trend Cache] ✅ English daily pulse cached (${trendingArticles.length} articles)`);
+  } catch (error) {
+    console.error('[Trend Cache] ❌ Error refreshing English daily cache:', error);
+  }
+}
+
+/**
+ * Refresh predictive trends cache for English
+ */
+async function refreshEnglishPredictiveCache() {
+  try {
+    console.log('[Trend Cache] 🔮 Refreshing English predictive trends...');
+    
+    // Get recent articles with content
+    const recentArticles = await db
+      .select({
+        id: enArticles.id,
+        title: enArticles.title,
+        slug: enArticles.slug,
+        excerpt: enArticles.excerpt,
+        imageUrl: enArticles.imageUrl,
+        content: enArticles.content,
+        views: enArticles.views,
+        publishedAt: enArticles.publishedAt,
+        categoryName: enCategories.name,
+      })
+      .from(enArticles)
+      .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+      .where(eq(enArticles.status, "published"))
+      .orderBy(desc(enArticles.publishedAt))
+      .limit(30)
+      .then(rows => rows.filter(r => r.publishedAt !== null));
+
+    if (recentArticles.length === 0) {
+      console.log('[Trend Cache] ℹ️ No articles for English predictive trends');
+      return;
+    }
+
+    // Call AI prediction
+    const aiResult = await analyzePredictiveTrend(recentArticles as any, 'en');
+    
+    // Build response
+    const articlesMap = new Map(recentArticles.map(a => [a.id, a]));
+    const predictedArticles = aiResult.predictedArticles.map(ai => {
+      const article = articlesMap.get(ai.articleId);
+      return article ? {
+        id: ai.articleId,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt || '',
+        imageUrl: article.imageUrl || '',
+        categoryName: article.categoryName || '',
+        rank: ai.rank,
+        score: ai.confidenceScore,
+        trendReason: ai.predictionReason
+      } : null;
+    }).filter(a => a !== null);
+
+    // Cache for 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const cacheData = {
+      mode: 'predictive' as const,
+      language: 'en' as const,
+      articles: predictedArticles as any,
+      metadata: {
+        trendForecast: aiResult.trendForecast
+      },
+      generatedAt: new Date(),
+      expiresAt
+    };
+    await storage.setTrendCache('predictive', 'en', undefined, cacheData, 15 * 60);
+
+    console.log(`[Trend Cache] ✅ English predictive trends cached (${predictedArticles.length} articles)`);
+  } catch (error) {
+    console.error('[Trend Cache] ❌ Error refreshing English predictive cache:', error);
+  }
+}
+
+/**
+ * Refresh English caches
  */
 async function refreshEnglishCaches() {
-  // Similar implementation for English using enArticles, enCategories
-  // Omitted for brevity - implement same pattern
-  console.log('[Trend Cache] 🌐 English cache refresh not yet implemented');
+  await Promise.all([
+    refreshEnglishDailyCache(),
+    refreshEnglishPredictiveCache(),
+  ]);
 }
 
 /**
