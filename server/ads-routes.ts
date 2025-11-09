@@ -2883,6 +2883,32 @@ router.get("/slot/:slotId", async (req, res) => {
     const deviceType = (req.query.deviceType as string) || "desktop"; // desktop, mobile, tablet
     const now = new Date();
     
+    // Auto-reset daily impressions for campaigns where lastResetDate is not today
+    // This ensures daily limits work even when background jobs are disabled (Autoscale)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    try {
+      const resetResult = await db
+        .update(campaigns)
+        .set({
+          spentToday: 0,
+          lastResetDate: now,
+          updatedAt: now,
+        })
+        .where(and(
+          sql`${campaigns.lastResetDate} < ${todayStart}`,
+          sql`${campaigns.spentToday} > 0`
+        ));
+      
+      if (resetResult.rowCount && resetResult.rowCount > 0) {
+        console.log(`[Ads] Auto-reset daily impressions for ${resetResult.rowCount} campaigns`);
+      }
+    } catch (resetError) {
+      console.error("[Ads] Error auto-resetting daily impressions:", resetError);
+      // Continue even if reset fails - this is a best-effort optimization
+    }
+    
     // Find ALL active placements for this slot (not just highest priority)
     // Filter by device type AND budget constraints
     const activePlacements = await db
