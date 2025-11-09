@@ -3,10 +3,19 @@ import { useParams, Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Eye, Tag } from "lucide-react";
+import { Clock, Eye, Tag, Zap, Flame, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnArticle } from "@shared/schema";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
+
+// Helper function to check if article is new (published within last 3 hours)
+const isNewArticle = (publishedAt: Date | string | null | undefined) => {
+  if (!publishedAt) return false;
+  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
+  const now = new Date();
+  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
+  return diffInHours <= 3;
+};
 
 export default function EnglishKeywordPage() {
   const params = useParams();
@@ -48,90 +57,206 @@ export default function EnglishKeywordPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6 space-y-4">
-                  <Skeleton className="h-48 w-full rounded-lg" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
           </div>
         )}
 
-        {/* Articles Grid */}
+        {/* Articles - Unified Layout */}
         {!isLoading && articles && articles.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {articles.map((article) => {
-              const timeAgo = article.publishedAt
-                ? formatDistanceToNow(new Date(article.publishedAt), {
-                    addSuffix: true,
-                  })
-                : null;
+          <>
+            {/* Mobile View: Vertical List */}
+            <Card className="overflow-hidden lg:hidden border-0 dark:border dark:border-card-border">
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {articles.map((article) => {
+                    const timeAgo = article.publishedAt
+                      ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+                      : null;
 
-              return (
-                <Link 
-                  key={article.id} 
-                  href={`/en/article/${article.slug}`}
-                  data-testid={`link-article-${article.slug}`}
-                >
-                  <Card className="group cursor-pointer h-full hover-elevate active-elevate-2 transition-all duration-300" data-testid={`card-article-${article.slug}`}>
-                    <CardContent className="p-0">
-                      {article.imageUrl && (
-                        <div className="relative h-48 overflow-hidden rounded-t-lg">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            data-testid={`img-article-${article.slug}`}
-                            style={{
-                              objectPosition: (article as any).imageFocalPoint
-                                ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                : 'center'
-                            }}
-                          />
-                        </div>
+                    return (
+                      <div key={article.id}>
+                        <Link href={`/en/article/${article.slug}`}>
+                          <div 
+                            className="block group cursor-pointer"
+                            data-testid={`link-article-mobile-${article.id}`}
+                          >
+                            <div className={`p-4 hover-elevate active-elevate-2 transition-all ${
+                              article.newsType === "breaking" ? "bg-destructive/5" : ""
+                            }`}>
+                              <div className="flex gap-3">
+                                {/* Image */}
+                                <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                                  {article.imageUrl ? (
+                                    <img
+                                      src={article.imageUrl}
+                                      alt={article.title}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                      loading="lazy"
+                                      style={{
+                                        objectPosition: (article as any).imageFocalPoint
+                                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                          : 'center'
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
+                                  )}
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 space-y-2">
+                                  {/* Breaking/New Badge */}
+                                  {article.newsType === "breaking" ? (
+                                    <Badge 
+                                      variant="destructive" 
+                                      className="text-xs h-5 gap-1"
+                                      data-testid={`badge-breaking-${article.id}`}
+                                    >
+                                      <Zap className="h-3 w-3" />
+                                      Breaking
+                                    </Badge>
+                                  ) : isNewArticle(article.publishedAt) ? (
+                                    <Badge 
+                                      className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                      data-testid={`badge-new-${article.id}`}
+                                    >
+                                      <Flame className="h-3 w-3" />
+                                      New
+                                    </Badge>
+                                  ) : null}
+
+                                  {/* Title */}
+                                  <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
+                                    article.newsType === "breaking"
+                                      ? "text-destructive"
+                                      : "group-hover:text-primary"
+                                  }`} data-testid={`text-article-title-${article.id}`}>
+                                    {article.title}
+                                  </h4>
+
+                                  {/* Meta Info */}
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                    {timeAgo && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {timeAgo}
+                                      </span>
+                                    )}
+                                    {article.views !== undefined && (
+                                      <span className="flex items-center gap-1">
+                                        <Eye className="h-3 w-3" />
+                                        {article.views.toLocaleString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Desktop View: Grid with 4 columns */}
+            <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {articles.map((article) => (
+                <Link key={article.id} href={`/en/article/${article.slug}`}>
+                  <Card 
+                    className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
+                      article.newsType === "breaking" ? "bg-destructive/5" : ""
+                    }`}
+                    data-testid={`card-article-${article.id}`}
+                  >
+                    {article.imageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          style={{
+                            objectPosition: (article as any).imageFocalPoint
+                              ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                              : 'center'
+                          }}
+                        />
+                        {article.newsType === "breaking" ? (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute top-3 left-3 gap-1" 
+                            data-testid={`badge-breaking-${article.id}`}
+                          >
+                            <Zap className="h-3 w-3" />
+                            Breaking
+                          </Badge>
+                        ) : isNewArticle(article.publishedAt) ? (
+                          <Badge 
+                            className="absolute top-3 left-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                            data-testid={`badge-new-${article.id}`}
+                          >
+                            <Flame className="h-3 w-3" />
+                            New
+                          </Badge>
+                        ) : null}
+                        {article.aiSummary && (
+                          <div className="absolute top-3 right-3">
+                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              AI
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <CardContent className="p-4 space-y-3">
+                      <h3 
+                        className={`font-bold text-lg line-clamp-2 ${
+                          article.newsType === "breaking"
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`}
+                        data-testid={`text-article-title-${article.id}`}
+                      >
+                        {article.title}
+                      </h3>
+                      
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {article.excerpt}
+                        </p>
                       )}
 
-                      <div className="p-4 space-y-3">
-                        <h2 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors" data-testid="text-article-title">
-                          {article.title}
-                        </h2>
-
-                        {article.excerpt && (
-                          <p className="text-muted-foreground line-clamp-2 text-sm" data-testid="text-article-excerpt">
-                            {article.excerpt}
-                          </p>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                        {article.publishedAt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                            </span>
+                          </div>
                         )}
-
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          {timeAgo && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{timeAgo}</span>
-                            </div>
-                          )}
-                          {article.views !== undefined && (
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{article.views.toLocaleString()}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {article.isFeatured && (
-                          <Badge variant="default" className="text-xs">Featured</Badge>
+                        
+                        {article.views !== undefined && (
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{article.views.toLocaleString()}</span>
+                          </div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Empty State */}
