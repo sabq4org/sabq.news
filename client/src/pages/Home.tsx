@@ -16,6 +16,7 @@ import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
+import { TrendingSection } from "@/components/TrendingSection";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -285,6 +286,11 @@ export default function Home() {
         {/* Quad Categories Block - Full Width */}
         <div className="scroll-fade-in">
           <QuadCategoriesBlock />
+        </div>
+
+        {/* AI-Powered Trending System */}
+        <div className="scroll-fade-in">
+          <TrendingSection />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
