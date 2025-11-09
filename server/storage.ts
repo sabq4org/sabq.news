@@ -62,9 +62,6 @@ import {
   enBookmarks,
   enReactions,
   enReadingHistory,
-  trendSnapshots,
-  trendPredictions,
-  trendCache,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -214,12 +211,6 @@ import {
   type InsertSmartTerm,
   type InsertArticleSmartLink,
   type EnArticleWithDetails,
-  type TrendSnapshot,
-  type InsertTrendSnapshot,
-  type TrendPrediction,
-  type InsertTrendPrediction,
-  type TrendCache,
-  type InsertTrendCache,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -956,42 +947,6 @@ export interface IStorage {
   getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]>;
   getEnUserReadingHistory(userId: string, limit?: number): Promise<EnArticleWithDetails[]>;
   getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined>;
-
-  // ==========================================
-  // Trend Analytics Operations - عمليات تحليل الاتجاهات
-  // ==========================================
-  
-  // Trend Snapshot Methods
-  saveTrendSnapshot(articleId: string, metrics: {
-    views: number;
-    reactions: number;
-    comments: number;
-    shares: number;
-    momentum: number;
-    demographicDiversity: number;
-  }): Promise<TrendSnapshot>;
-  getTrendSnapshots(articleId: string, since?: Date): Promise<TrendSnapshot[]>;
-  getRecentTrendSnapshots(limit: number): Promise<TrendSnapshot[]>;
-
-  // Trend Prediction Methods
-  saveTrendPrediction(prediction: InsertTrendPrediction): Promise<TrendPrediction>;
-  getTrendPredictions(options?: {
-    validOnly?: boolean;
-    minConfidence?: number;
-    limit?: number;
-  }): Promise<TrendPrediction[]>;
-  invalidateOldPredictions(): Promise<void>;
-
-  // Trend Cache Methods
-  getTrendCache(mode: 'daily' | 'personalized' | 'predictive', language: 'ar' | 'en', userId?: string): Promise<TrendCache | undefined>;
-  setTrendCache(mode: 'daily' | 'personalized' | 'predictive', language: 'ar' | 'en', userId: string | undefined, data: any, expiresIn: number): Promise<TrendCache>;
-  invalidateTrendCache(mode?: 'daily' | 'personalized' | 'predictive', language?: 'ar' | 'en', userId?: string): Promise<void>;
-
-  // Analytics Methods
-  getArticleMomentum(articleId: string, timeWindow: number): Promise<number>;
-  getDemographicDiversity(articleId: string): Promise<number>;
-  getPersonalizedTrendArticles(userId: string, limit: number): Promise<ArticleWithDetails[]>;
-  getPredictiveTrendArticles(language: 'ar' | 'en', limit: number): Promise<ArticleWithDetails[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1656,15 +1611,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
-    // @ts-expect-error - Drizzle type mismatch between InsertCategory and insert values
-    const [created] = await db.insert(categories).values([category]).returning();
+    const [created] = await db.insert(categories).values(category).returning();
     return created;
   }
 
   async updateCategory(id: string, categoryData: Partial<InsertCategory>): Promise<Category> {
     const [updated] = await db
       .update(categories)
-      .set(categoryData as any)
+      .set(categoryData)
       .where(eq(categories.id, id))
       .returning();
     return updated;
@@ -2453,7 +2407,6 @@ export class DatabaseStorage implements IStorage {
           a.content,
           a.excerpt,
           a.image_url,
-          a.image_focal_point,
           a.category_id,
           a.author_id,
           a.reporter_id,
@@ -2462,15 +2415,10 @@ export class DatabaseStorage implements IStorage {
           a.publish_type,
           a.scheduled_at,
           a.status,
-          a.review_status,
-          a.reviewed_by,
-          a.reviewed_at,
-          a.review_notes,
           a.hide_from_homepage,
           a.ai_summary,
           a.ai_generated,
           a.is_featured,
-          a.display_order,
           a.views,
           a.seo,
           a.published_at,
@@ -2546,7 +2494,6 @@ export class DatabaseStorage implements IStorage {
       ORDER BY ascores.total_score DESC, ascores.published_at DESC
     `);
 
-    // @ts-expect-error - Complex SQL query result mapping to ArticleWithDetails has type mismatches
     return (results.rows as any[]).map((row) => ({
       id: row.id,
       title: row.title,
@@ -2555,7 +2502,6 @@ export class DatabaseStorage implements IStorage {
       content: row.content,
       excerpt: row.excerpt,
       imageUrl: row.image_url,
-      imageFocalPoint: row.image_focal_point,
       categoryId: row.category_id,
       authorId: row.author_id,
       reporterId: row.reporter_id,
@@ -2564,10 +2510,6 @@ export class DatabaseStorage implements IStorage {
       publishType: row.publish_type,
       scheduledAt: row.scheduled_at,
       status: row.status,
-      reviewStatus: row.review_status,
-      reviewedBy: row.reviewed_by,
-      reviewedAt: row.reviewed_at,
-      reviewNotes: row.review_notes,
       hideFromHomepage: row.hide_from_homepage,
       aiSummary: row.ai_summary,
       aiGenerated: row.ai_generated,
@@ -3286,9 +3228,6 @@ export class DatabaseStorage implements IStorage {
 
     const recentArticles = recentArticlesData.map((r) => ({
       ...r.article,
-      credibilityScore: r.article.credibilityScore || null,
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -3325,9 +3264,6 @@ export class DatabaseStorage implements IStorage {
 
     const topArticles = topArticlesData.map((r) => ({
       ...r.article,
-      credibilityScore: r.article.credibilityScore || null,
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -3518,12 +3454,6 @@ export class DatabaseStorage implements IStorage {
 
     const recentArticles = recentArticlesData.map((r) => ({
       ...r.article,
-      // @ts-expect-error - credibilityScore properties not yet in enArticles schema
-      credibilityScore: r.article.credibilityScore || null,
-      // @ts-expect-error - credibilityAnalysis property not yet in enArticles schema
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      // @ts-expect-error - credibilityLastUpdated property not yet in enArticles schema
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -3560,12 +3490,6 @@ export class DatabaseStorage implements IStorage {
 
     const topArticles = topArticlesData.map((r) => ({
       ...r.article,
-      // @ts-expect-error - credibilityScore properties not yet in enArticles schema
-      credibilityScore: r.article.credibilityScore || null,
-      // @ts-expect-error - credibilityAnalysis property not yet in enArticles schema
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      // @ts-expect-error - credibilityLastUpdated property not yet in enArticles schema
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -3609,10 +3533,8 @@ export class DatabaseStorage implements IStorage {
         totalReads: Number(engagementStats.totalReads),
         readsToday: Number(engagementStats.readsToday),
       },
-      // @ts-expect-error - Category type mismatch between enCategories and expected category structure
       recentArticles,
       recentComments,
-      // @ts-expect-error - Category type mismatch between enCategories and expected category structure
       topArticles,
     };
   }
@@ -8783,367 +8705,6 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.reporter || r.author || undefined,
     }));
-  }
-
-  // ==========================================
-  // Trend Analytics Operations - عمليات تحليل الاتجاهات
-  // ==========================================
-
-  async saveTrendSnapshot(articleId: string, metrics: {
-    views: number;
-    reactions: number;
-    comments: number;
-    shares: number;
-    momentum: number;
-    demographicDiversity: number;
-  }): Promise<TrendSnapshot> {
-    const [snapshot] = await db
-      .insert(trendSnapshots)
-      .values({
-        articleId,
-        timestamp: new Date(),
-        views: metrics.views,
-        reactions: metrics.reactions,
-        comments: metrics.comments,
-        shares: metrics.shares,
-        momentum: metrics.momentum,
-        demographicDiversity: metrics.demographicDiversity,
-      })
-      .returning();
-    
-    return snapshot;
-  }
-
-  async getTrendSnapshots(articleId: string, since?: Date): Promise<TrendSnapshot[]> {
-    const conditions = [eq(trendSnapshots.articleId, articleId)];
-    
-    if (since) {
-      conditions.push(gte(trendSnapshots.timestamp, since));
-    }
-
-    return await db
-      .select()
-      .from(trendSnapshots)
-      .where(and(...conditions))
-      .orderBy(desc(trendSnapshots.timestamp));
-  }
-
-  async getRecentTrendSnapshots(limit: number): Promise<TrendSnapshot[]> {
-    return await db
-      .select()
-      .from(trendSnapshots)
-      .orderBy(desc(trendSnapshots.timestamp))
-      .limit(limit);
-  }
-
-  async saveTrendPrediction(prediction: InsertTrendPrediction): Promise<TrendPrediction> {
-    const [saved] = await db
-      .insert(trendPredictions)
-      .values(prediction)
-      .returning();
-    
-    return saved;
-  }
-
-  async getTrendPredictions(options?: {
-    validOnly?: boolean;
-    minConfidence?: number;
-    limit?: number;
-  }): Promise<TrendPrediction[]> {
-    const conditions = [];
-    
-    if (options?.validOnly) {
-      conditions.push(gte(trendPredictions.validUntil, new Date()));
-    }
-    
-    if (options?.minConfidence !== undefined) {
-      conditions.push(gte(trendPredictions.confidenceScore, options.minConfidence));
-    }
-
-    let query = db
-      .select()
-      .from(trendPredictions)
-      .orderBy(desc(trendPredictions.confidenceScore));
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-    }
-
-    if (options?.limit) {
-      query = query.limit(options.limit) as any;
-    }
-
-    return await query;
-  }
-
-  async invalidateOldPredictions(): Promise<void> {
-    await db
-      .delete(trendPredictions)
-      .where(lte(trendPredictions.validUntil, new Date()));
-  }
-
-  async getTrendCache(mode: 'daily' | 'personalized' | 'predictive', language: 'ar' | 'en', userId?: string): Promise<TrendCache | undefined> {
-    const conditions = [
-      eq(trendCache.mode, mode),
-      eq(trendCache.language, language),
-    ];
-
-    if (userId) {
-      conditions.push(eq(trendCache.userId, userId));
-    } else {
-      conditions.push(isNull(trendCache.userId));
-    }
-
-    conditions.push(gte(trendCache.expiresAt, new Date()));
-
-    const [cache] = await db
-      .select()
-      .from(trendCache)
-      .where(and(...conditions))
-      .limit(1);
-
-    return cache;
-  }
-
-  async setTrendCache(
-    mode: 'daily' | 'personalized' | 'predictive',
-    language: 'ar' | 'en',
-    userId: string | undefined,
-    data: any,
-    expiresIn: number
-  ): Promise<TrendCache> {
-    const expiresAt = new Date(Date.now() + expiresIn * 1000);
-    
-    // Try to find existing cache
-    const conditions = [
-      eq(trendCache.mode, mode),
-      eq(trendCache.language, language),
-    ];
-
-    if (userId) {
-      conditions.push(eq(trendCache.userId, userId));
-    } else {
-      conditions.push(isNull(trendCache.userId));
-    }
-
-    const [existing] = await db
-      .select()
-      .from(trendCache)
-      .where(and(...conditions))
-      .limit(1);
-
-    if (existing) {
-      // Update existing cache
-      const [updated] = await db
-        .update(trendCache)
-        .set({
-          data,
-          lastUpdated: new Date(),
-          expiresAt,
-        })
-        .where(eq(trendCache.id, existing.id))
-        .returning();
-      return updated;
-    } else {
-      // Insert new cache
-      const [inserted] = await db
-        .insert(trendCache)
-        .values({
-          mode,
-          language,
-          userId: userId || null,
-          data,
-          expiresAt,
-        })
-        .returning();
-      return inserted;
-    }
-  }
-
-  async invalidateTrendCache(mode?: 'daily' | 'personalized' | 'predictive', language?: 'ar' | 'en', userId?: string): Promise<void> {
-    const conditions = [];
-    
-    if (mode) {
-      conditions.push(eq(trendCache.mode, mode));
-    }
-    
-    if (language) {
-      conditions.push(eq(trendCache.language, language));
-    }
-    
-    if (userId) {
-      conditions.push(eq(trendCache.userId, userId));
-    }
-
-    if (conditions.length > 0) {
-      await db.delete(trendCache).where(and(...conditions));
-    } else {
-      await db.delete(trendCache);
-    }
-  }
-
-  async getArticleMomentum(articleId: string, timeWindow: number): Promise<number> {
-    const windowStart = new Date(Date.now() - timeWindow * 1000);
-    
-    const snapshots = await db
-      .select()
-      .from(trendSnapshots)
-      .where(and(
-        eq(trendSnapshots.articleId, articleId),
-        gte(trendSnapshots.timestamp, windowStart)
-      ))
-      .orderBy(asc(trendSnapshots.timestamp));
-
-    if (snapshots.length < 2) {
-      return 0;
-    }
-
-    const oldest = snapshots[0];
-    const newest = snapshots[snapshots.length - 1];
-    
-    const viewsGrowth = newest.views - oldest.views;
-    const reactionsGrowth = newest.reactions - oldest.reactions;
-    const commentsGrowth = newest.comments - oldest.comments;
-    const sharesGrowth = newest.shares - oldest.shares;
-    
-    const timeElapsed = (newest.timestamp.getTime() - oldest.timestamp.getTime()) / 1000;
-    
-    if (timeElapsed === 0) {
-      return 0;
-    }
-    
-    const momentum = (
-      (viewsGrowth * 1) +
-      (reactionsGrowth * 3) +
-      (commentsGrowth * 2) +
-      (sharesGrowth * 5)
-    ) / timeElapsed;
-    
-    return Math.max(0, momentum);
-  }
-
-  async getDemographicDiversity(articleId: string): Promise<number> {
-    const [result] = await db
-      .select({
-        uniqueUsers: sql<number>`COUNT(DISTINCT ${readingHistory.userId})`,
-        totalReads: sql<number>`COUNT(*)`,
-      })
-      .from(readingHistory)
-      .where(eq(readingHistory.articleId, articleId));
-
-    if (!result || result.totalReads === 0) {
-      return 0;
-    }
-
-    const diversityScore = Math.min(1, Number(result.uniqueUsers) / Math.max(1, Number(result.totalReads)));
-    
-    return diversityScore;
-  }
-
-  async getPersonalizedTrendArticles(userId: string, limit: number): Promise<ArticleWithDetails[]> {
-    const userInterestsData = await db
-      .select()
-      .from(userInterests)
-      .where(eq(userInterests.userId, userId));
-
-    if (userInterestsData.length === 0) {
-      return this.getPredictiveTrendArticles('ar', limit);
-    }
-
-    const categoryIds = userInterestsData.map(ui => ui.categoryId);
-    const reporterAlias = aliasedTable(users, 'reporter');
-
-    const results = await db
-      .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
-      })
-      .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .leftJoin(users, eq(articles.authorId, users.id))
-      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(and(
-        eq(articles.status, "published"),
-        inArray(articles.categoryId, categoryIds)
-      ))
-      .orderBy(desc(articles.views), desc(articles.publishedAt))
-      .limit(limit);
-
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
-  }
-
-  async getPredictiveTrendArticles(language: 'ar' | 'en', limit: number): Promise<ArticleWithDetails[]> {
-    const validPredictions = await db
-      .select()
-      .from(trendPredictions)
-      .where(gte(trendPredictions.validUntil, new Date()))
-      .orderBy(desc(trendPredictions.confidenceScore))
-      .limit(limit);
-
-    if (validPredictions.length === 0) {
-      const reporterAlias = aliasedTable(users, 'reporter');
-      
-      const results = await db
-        .select({
-          article: articles,
-          category: categories,
-          author: users,
-          reporter: reporterAlias,
-        })
-        .from(articles)
-        .leftJoin(categories, eq(articles.categoryId, categories.id))
-        .leftJoin(users, eq(articles.authorId, users.id))
-        .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-        .where(eq(articles.status, "published"))
-        .orderBy(desc(articles.views), desc(articles.publishedAt))
-        .limit(limit);
-
-      return results.map((r) => ({
-        ...r.article,
-        category: r.category || undefined,
-        author: r.reporter || r.author || undefined,
-      }));
-    }
-
-    const articleIds = validPredictions.map(p => p.articleId);
-    const reporterAlias = aliasedTable(users, 'reporter');
-    
-    const results = await db
-      .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
-      })
-      .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .leftJoin(users, eq(articles.authorId, users.id))
-      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(and(
-        eq(articles.status, "published"),
-        inArray(articles.id, articleIds)
-      ));
-
-    const articlesMap = new Map<string, ArticleWithDetails>(
-      results.map((r) => [
-        r.article.id,
-        {
-          ...r.article,
-          category: r.category || undefined,
-          author: r.reporter || r.author || undefined,
-        } as ArticleWithDetails
-      ])
-    );
-
-    return validPredictions
-      .map(p => articlesMap.get(p.articleId))
-      .filter((a): a is ArticleWithDetails => a !== undefined);
   }
 }
 

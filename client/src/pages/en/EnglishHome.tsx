@@ -10,7 +10,6 @@ import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
 import { EnglishSmartSummaryBlock } from "@/components/en/EnglishSmartSummaryBlock";
-import { EnglishTrendingSection } from "@/components/en/EnglishTrendingSection";
 import { useAuth } from "@/hooks/useAuth";
 import type { EnArticleWithDetails, EnSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -320,11 +319,6 @@ export default function EnglishHome() {
         {/* Quad Categories Block - Full Width */}
         <div className="scroll-fade-in">
           <EnglishQuadCategoriesBlock />
-        </div>
-
-        {/* AI-Powered Trending System */}
-        <div className="scroll-fade-in">
-          <EnglishTrendingSection />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">

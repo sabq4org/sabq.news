@@ -961,75 +961,6 @@ export const storyNotifications = pgTable("story_notifications", {
   index("idx_story_notifications_article").on(table.articleId),
 ]);
 
-// ============================================
-// Trend Analytics Tables
-// ============================================
-
-// Trend snapshots - periodic captures of article metrics
-export const trendSnapshots = pgTable("trend_snapshots", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
-  timestamp: timestamp("timestamp").notNull(),
-  views: integer("views").default(0).notNull(),
-  reactions: integer("reactions").default(0).notNull(),
-  comments: integer("comments").default(0).notNull(),
-  shares: integer("shares").default(0).notNull(),
-  momentum: real("momentum").default(0).notNull(), // Calculated growth rate
-  demographicDiversity: real("demographic_diversity").default(0).notNull(), // 0-1 score
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_trend_snapshots_article").on(table.articleId),
-  index("idx_trend_snapshots_timestamp").on(table.timestamp.desc()),
-  index("idx_trend_snapshots_article_timestamp").on(table.articleId, table.timestamp.desc()),
-]);
-
-// Trend predictions - AI predictions about when articles will trend
-export const trendPredictions = pgTable("trend_predictions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
-  predictedTrendTime: timestamp("predicted_trend_time").notNull(),
-  confidenceScore: real("confidence_score").notNull(), // 0-1
-  aiReasoning: text("ai_reasoning"),
-  predictedRank: integer("predicted_rank"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  validUntil: timestamp("valid_until").notNull(),
-}, (table) => [
-  index("idx_trend_predictions_article").on(table.articleId),
-  index("idx_trend_predictions_time").on(table.predictedTrendTime),
-  index("idx_trend_predictions_valid").on(table.validUntil),
-  index("idx_trend_predictions_confidence").on(table.confidenceScore.desc()),
-]);
-
-// Trend cache - cached computed trend data for performance
-export const trendCache = pgTable("trend_cache", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  mode: text("mode").notNull(), // daily, personalized, predictive
-  language: text("language").notNull(), // ar, en
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
-  data: jsonb("data").notNull().$type<{
-    articles?: Array<{
-      articleId: string;
-      rank: number;
-      score: number;
-      momentum: number;
-      [key: string]: any;
-    }>;
-    generatedAt?: string;
-    [key: string]: any;
-  }>(),
-  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-}, (table) => [
-  index("idx_trend_cache_mode").on(table.mode),
-  index("idx_trend_cache_language").on(table.language),
-  index("idx_trend_cache_user").on(table.userId),
-  index("idx_trend_cache_expires").on(table.expiresAt),
-  index("idx_trend_cache_mode_lang_user").on(table.mode, table.language, table.userId),
-  // Unique constraints to prevent cache duplication
-  uniqueIndex("trend_cache_mode_lang_user_unique").on(table.mode, table.language, table.userId).where(sql`${table.userId} IS NOT NULL`),
-  uniqueIndex("trend_cache_mode_lang_global_unique").on(table.mode, table.language).where(sql`${table.userId} IS NULL`),
-]);
-
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
@@ -1417,22 +1348,6 @@ export const insertStoryFollowSchema = createInsertSchema(storyFollows).omit({
 export const insertStoryNotificationSchema = createInsertSchema(storyNotifications).omit({ 
   id: true, 
   createdAt: true 
-});
-
-// Trend analytics schemas
-export const insertTrendSnapshotSchema = createInsertSchema(trendSnapshots).omit({ 
-  id: true, 
-  createdAt: true 
-});
-
-export const insertTrendPredictionSchema = createInsertSchema(trendPredictions).omit({ 
-  id: true, 
-  createdAt: true 
-});
-
-export const insertTrendCacheSchema = createInsertSchema(trendCache).omit({ 
-  id: true, 
-  lastUpdated: true 
 });
 
 export const updateArticleSchema = z.object({
@@ -1835,16 +1750,6 @@ export type InsertStoryFollow = z.infer<typeof insertStoryFollowSchema>;
 export type StoryNotification = typeof storyNotifications.$inferSelect;
 export type InsertStoryNotification = z.infer<typeof insertStoryNotificationSchema>;
 
-// Trend analytics types
-export type TrendSnapshot = typeof trendSnapshots.$inferSelect;
-export type InsertTrendSnapshot = z.infer<typeof insertTrendSnapshotSchema>;
-
-export type TrendPrediction = typeof trendPredictions.$inferSelect;
-export type InsertTrendPrediction = z.infer<typeof insertTrendPredictionSchema>;
-
-export type TrendCache = typeof trendCache.$inferSelect;
-export type InsertTrendCache = z.infer<typeof insertTrendCacheSchema>;
-
 // Drizzle Relations
 export const sectionsRelations = relations(sections, ({ many }) => ({
   angles: many(angles),
@@ -1861,8 +1766,6 @@ export const anglesRelations = relations(angles, ({ one, many }) => ({
 export const articlesRelations = relations(articles, ({ many }) => ({
   articleAngles: many(articleAngles),
   articleTags: many(articleTags),
-  trendSnapshots: many(trendSnapshots),
-  trendPredictions: many(trendPredictions),
 }));
 
 export const articleAnglesRelations = relations(articleAngles, ({ one }) => ({
@@ -1900,28 +1803,6 @@ export const userFollowedTermsRelations = relations(userFollowedTerms, ({ one })
   tag: one(tags, {
     fields: [userFollowedTerms.tagId],
     references: [tags.id],
-  }),
-}));
-
-// Trend analytics relations
-export const trendSnapshotsRelations = relations(trendSnapshots, ({ one }) => ({
-  article: one(articles, {
-    fields: [trendSnapshots.articleId],
-    references: [articles.id],
-  }),
-}));
-
-export const trendPredictionsRelations = relations(trendPredictions, ({ one }) => ({
-  article: one(articles, {
-    fields: [trendPredictions.articleId],
-    references: [articles.id],
-  }),
-}));
-
-export const trendCacheRelations = relations(trendCache, ({ one }) => ({
-  user: one(users, {
-    fields: [trendCache.userId],
-    references: [users.id],
   }),
 }));
 
