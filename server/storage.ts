@@ -3937,10 +3937,10 @@ export class DatabaseStorage implements IStorage {
       .from(themes)
       .where(
         and(
-          sql`${themes.status} IN ('active', 'scheduled')`,
-          sql`${themes.startAt} IS NULL OR ${themes.startAt} <= ${now.toISOString()}`,
-          sql`${themes.endAt} IS NULL OR ${themes.endAt} >= ${now.toISOString()}`,
-          sql`${scope} = ANY(${themes.applyTo}) OR array_length(${themes.applyTo}, 1) IS NULL`
+          inArray(themes.status, ['active', 'scheduled']),
+          or(isNull(themes.startAt), lte(themes.startAt, now)),
+          or(isNull(themes.endAt), gte(themes.endAt, now)),
+          sql`${scope} = ANY(${themes.applyTo})`
         )
       )
       .orderBy(desc(themes.priority), desc(themes.version), desc(themes.updatedAt));
@@ -3956,11 +3956,12 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(themes.isDefault, true),
           eq(themes.status, 'active'),
-          sql`${themes.startAt} IS NULL OR ${themes.startAt} <= ${now.toISOString()}`,
-          sql`${themes.endAt} IS NULL OR ${themes.endAt} >= ${now.toISOString()}`,
-          sql`${scope} = ANY(${themes.applyTo}) OR array_length(${themes.applyTo}, 1) = 0 OR array_length(${themes.applyTo}, 1) IS NULL`
+          or(isNull(themes.startAt), lte(themes.startAt, now)),
+          or(isNull(themes.endAt), gte(themes.endAt, now)),
+          sql`${scope} = ANY(${themes.applyTo})`
         )
       )
+      .orderBy(desc(themes.priority))
       .limit(1);
 
     return defaultTheme[0];
