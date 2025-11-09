@@ -8,8 +8,6 @@ import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import { RelatedOpinionsSection } from "@/components/RelatedOpinionsSection";
 import { ViewsCount } from "@/components/ViewsCount";
-import { ExportPdfButton } from "@/components/ExportPdfButton";
-import { ArticlePdfView } from "@/components/ArticlePdfView";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -647,13 +645,6 @@ export default function OpinionDetailPage() {
                   <Share2 />
                   مشاركة
                 </Button>
-
-                <ExportPdfButton
-                  articleSlug={article.slug}
-                  articleUrl={`${window.location.origin}/opinion/${article.slug}`}
-                  variant="outline"
-                  className="gap-2 hover-elevate"
-                />
               </div>
 
               <Separator />
@@ -694,12 +685,6 @@ export default function OpinionDetailPage() {
           </div>
         </div>
       </main>
-
-      {/* PDF View - Hidden component for PDF export */}
-      <ArticlePdfView
-        article={article}
-        articleUrl={`${window.location.origin}/opinion/${article.slug}`}
-      />
 
       <Footer />
     </div>
