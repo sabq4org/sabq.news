@@ -19302,12 +19302,12 @@ Allow: /
         ? Math.round(totalViewsResult.total / totalCount.count)
         : 0;
 
-      // Get most active reporter in this category
+      // Get most active reporter in this category (using English names with Arabic fallback)
       let topAuthor = await db.select({
         userId: enArticles.reporterId,
         count: sql<number>`count(*)::int`,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        firstName: sql<string>`COALESCE(${users.firstNameEn}, ${users.firstName})`,
+        lastName: sql<string>`COALESCE(${users.lastNameEn}, ${users.lastName})`,
         profileImageUrl: users.profileImageUrl,
       })
         .from(enArticles)
@@ -19317,17 +19317,24 @@ Allow: /
           eq(enArticles.status, "published"),
           isNotNull(enArticles.reporterId)
         ))
-        .groupBy(enArticles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
+        .groupBy(
+          enArticles.reporterId, 
+          users.firstName, 
+          users.lastName, 
+          users.firstNameEn, 
+          users.lastNameEn, 
+          users.profileImageUrl
+        )
         .orderBy(sql`count(*) DESC`)
         .limit(1);
 
-      // Fallback to authorId
+      // Fallback to authorId (using English names with Arabic fallback)
       if (!topAuthor || topAuthor.length === 0) {
         topAuthor = await db.select({
           userId: enArticles.authorId,
           count: sql<number>`count(*)::int`,
-          firstName: users.firstName,
-          lastName: users.lastName,
+          firstName: sql<string>`COALESCE(${users.firstNameEn}, ${users.firstName})`,
+          lastName: sql<string>`COALESCE(${users.lastNameEn}, ${users.lastName})`,
           profileImageUrl: users.profileImageUrl,
         })
           .from(enArticles)
@@ -19337,7 +19344,14 @@ Allow: /
             eq(enArticles.status, "published"),
             isNotNull(enArticles.authorId)
           ))
-          .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+          .groupBy(
+            enArticles.authorId, 
+            users.firstName, 
+            users.lastName, 
+            users.firstNameEn, 
+            users.lastNameEn, 
+            users.profileImageUrl
+          )
           .orderBy(sql`count(*) DESC`)
           .limit(1);
       }
