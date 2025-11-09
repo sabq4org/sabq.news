@@ -7272,25 +7272,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(sql`count(*) DESC`)
         .limit(1);
 
-      // Get most active author
-      const topAuthor = await db.select({
-        authorId: articles.authorId,
+      // Get most active reporter (prefer reporter over system author)
+      let topAuthor = await db.select({
+        userId: articles.reporterId,
         count: sql<number>`count(*)::int`,
         firstName: users.firstName,
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
       })
         .from(articles)
-        .innerJoin(users, eq(articles.authorId, users.id))
+        .innerJoin(users, eq(articles.reporterId, users.id))
         .where(and(
           gte(articles.publishedAt, monthAgo),
           eq(articles.status, "published"),
           or(isNull(articles.articleType), ne(articles.articleType, 'opinion')),
-          isNotNull(articles.authorId)
+          isNotNull(articles.reporterId)
         ))
-        .groupBy(articles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+        .groupBy(articles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
         .orderBy(sql`count(*) DESC`)
         .limit(1);
+
+      // Fallback to authorId if no reporter found
+      if (!topAuthor || topAuthor.length === 0) {
+        topAuthor = await db.select({
+          userId: articles.authorId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(articles)
+          .innerJoin(users, eq(articles.authorId, users.id))
+          .where(and(
+            gte(articles.publishedAt, monthAgo),
+            eq(articles.status, "published"),
+            or(isNull(articles.articleType), ne(articles.articleType, 'opinion')),
+            isNotNull(articles.authorId)
+          ))
+          .groupBy(articles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+      }
 
       // Get total views
       const [totalViewsResult] = await db.select({
@@ -19180,24 +19202,45 @@ Allow: /
         .orderBy(sql`count(*) DESC`)
         .limit(1);
 
-      // Get most active author
-      const topAuthor = await db.select({
-        authorId: enArticles.authorId,
+      // Get most active reporter (prefer reporter over system author)
+      let topAuthor = await db.select({
+        userId: enArticles.reporterId,
         count: sql<number>`count(*)::int`,
         firstName: users.firstName,
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
       })
         .from(enArticles)
-        .innerJoin(users, eq(enArticles.authorId, users.id))
+        .innerJoin(users, eq(enArticles.reporterId, users.id))
         .where(and(
           gte(enArticles.publishedAt, monthAgo),
           eq(enArticles.status, "published"),
-          isNotNull(enArticles.authorId)
+          isNotNull(enArticles.reporterId)
         ))
-        .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+        .groupBy(enArticles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
         .orderBy(sql`count(*) DESC`)
         .limit(1);
+
+      // Fallback to authorId if no reporter found
+      if (!topAuthor || topAuthor.length === 0) {
+        topAuthor = await db.select({
+          userId: enArticles.authorId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(enArticles)
+          .innerJoin(users, eq(enArticles.authorId, users.id))
+          .where(and(
+            gte(enArticles.publishedAt, monthAgo),
+            eq(enArticles.status, "published"),
+            isNotNull(enArticles.authorId)
+          ))
+          .groupBy(enArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+      }
 
       // Get total views
       const [totalViewsResult] = await db.select({
