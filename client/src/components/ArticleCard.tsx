@@ -100,10 +100,10 @@ export function ArticleCard({
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
               {article.category && (
                 <Badge 
-                  className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs sm:text-sm shadow-md" 
+                  className="bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-sm text-gray-700 dark:text-gray-200 border-0 text-xs sm:text-sm shadow-md" 
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {article.category.icon} {article.category.nameAr}
+                  {article.category.nameAr}
                 </Badge>
               )}
             </div>
@@ -333,10 +333,10 @@ export function ArticleCard({
             <div className="absolute top-3 right-3 flex flex-wrap gap-2">
               {article.category && (
                 <Badge 
-                  className="bg-primary/90 backdrop-blur-sm text-white border-0 text-xs shadow-md"
+                  className="bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-sm text-gray-700 dark:text-gray-200 border-0 text-xs shadow-md"
                   data-testid={`badge-category-${article.id}`}
                 >
-                  {article.category.icon} {article.category.nameAr}
+                  {article.category.nameAr}
                 </Badge>
               )}
               {aiInsight && (
