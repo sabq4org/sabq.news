@@ -23,6 +23,7 @@ import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import FollowStoryButton from "./FollowStoryButton";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
@@ -85,12 +86,13 @@ export function ArticleCard({
         <Card className="group overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 !border-0 !bg-transparent">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             {displayImageUrl ? (
-              <img
+              <OptimizedImage
                 src={displayImageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                style={{ objectPosition: getObjectPosition() }}
-                loading="lazy"
+                objectPosition={getObjectPosition()}
+                priority={true}
+                fallbackGradient="from-primary/20 via-accent/20 to-primary/10"
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
@@ -205,12 +207,13 @@ export function ArticleCard({
             <Link href={`/article/${article.slug}`} className="flex-shrink-0" data-testid={`link-article-${article.id}`}>
               <div className="relative w-32 h-32 rounded-lg overflow-hidden">
                 {displayImageUrl ? (
-                  <img
+                  <OptimizedImage
                     src={displayImageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    style={{ objectPosition: getObjectPosition() }}
-                    loading="lazy"
+                    objectPosition={getObjectPosition()}
+                    priority={false}
+                    fallbackGradient="from-primary/10 to-accent/10"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
@@ -319,12 +322,13 @@ export function ArticleCard({
         <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
           <div className="relative aspect-[16/9] overflow-hidden">
             {displayImageUrl ? (
-              <img
+              <OptimizedImage
                 src={displayImageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                style={{ objectPosition: getObjectPosition() }}
-                loading="lazy"
+                objectPosition={getObjectPosition()}
+                priority={false}
+                fallbackGradient="from-primary/10 to-accent/10"
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
