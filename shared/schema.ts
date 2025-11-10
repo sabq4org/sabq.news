@@ -459,7 +459,7 @@ export const staff = pgTable("staff", {
   userId: varchar("user_id").references(() => users.id),
   slug: text("slug").notNull().unique(),
   
-  // Legacy bilingual fields (kept for backward compatibility)
+  // Bilingual fields (English and Arabic only - Urdu version uses English names)
   name: text("name").notNull(),
   nameAr: text("name_ar").notNull(),
   title: text("title"),
@@ -467,12 +467,6 @@ export const staff = pgTable("staff", {
   bio: text("bio"),
   bioAr: text("bio_ar"),
   specializations: text("specializations").array().default(sql`ARRAY[]::text[]`).notNull(),
-  
-  // New multilingual JSONB fields (for Urdu and future languages)
-  nameUr: text("name_ur"),
-  titleUr: text("title_ur"),
-  bioUr: text("bio_ur"),
-  specializationsUr: text("specializations_ur").array(),
   
   profileImage: text("profile_image"),
   staffType: text("staff_type").notNull(), // reporter, writer, supervisor
