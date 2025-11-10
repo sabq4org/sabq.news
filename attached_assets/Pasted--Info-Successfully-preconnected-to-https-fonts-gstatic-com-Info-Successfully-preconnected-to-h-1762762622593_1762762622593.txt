@@ -1,0 +1,56 @@
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] reporterId state changed to: – null (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+[Warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. (index-Bw41OaLB.js, line 7909)
+[Error] Refused to load https://platform.twitter.com/widgets.js because it does not appear in the script-src directive of the Content Security Policy.
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+[Log] [Nav] Item clicked: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [Nav] Item clicked: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+[Warning] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. (index-Bw41OaLB.js, line 7909)
+[Error] Refused to load https://platform.twitter.com/widgets.js because it does not appear in the script-src directive of the Content Security Policy.
+[Log] [EnglishArticleEditor] reporterId state changed to: – null (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] params: – Object (index-Bw41OaLB.js, line 8200)
+Object
+[Log] [EnglishArticleEditor] location: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] pathname: – "/ur/dashboard/articles/new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] extracted id: – "new" (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] isNewArticle: – true (index-Bw41OaLB.js, line 8200)
+[Log] [EnglishArticleEditor] type query param: – null (index-Bw41OaLB.js, line 8200)
+> Selected Element
+< <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">…</div>
