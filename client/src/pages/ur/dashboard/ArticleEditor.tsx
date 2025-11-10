@@ -348,16 +348,16 @@ export default function EnglishArticleEditor() {
       });
 
       if (isNewArticle) {
-        console.log('[Save Article] Creating NEW article via POST /api/ur/articles');
-        const result = await apiRequest("/api/ur/articles", {
+        console.log('[Save Article] Creating NEW article via POST /api/ur/dashboard/articles');
+        const result = await apiRequest("/api/ur/dashboard/articles", {
           method: "POST",
           body: JSON.stringify(articleData),
         });
         console.log('[Save Article] POST result:', result);
         return result;
       } else {
-        console.log('[Save Article] Updating EXISTING article via PATCH /api/ur/articles/' + id);
-        const result = await apiRequest(`/api/ur/articles/${id}`, {
+        console.log('[Save Article] Updating EXISTING article via PATCH /api/ur/dashboard/articles/' + id);
+        const result = await apiRequest(`/api/ur/dashboard/articles/${id}`, {
           method: "PATCH",
           body: JSON.stringify(articleData),
         });
@@ -367,12 +367,11 @@ export default function EnglishArticleEditor() {
     },
     onSuccess: (data, variables) => {
       // Invalidate all article-related queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/ur/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ur/dashboard/articles"] });
       
       // If updating existing article, also invalidate its specific query
       if (!isNewArticle && id) {
-        queryClient.invalidateQueries({ queryKey: ["/api/ur/articles", id] });
+        queryClient.invalidateQueries({ queryKey: ["/api/ur/dashboard/articles", id] });
       }
       
       toast({
@@ -380,9 +379,9 @@ export default function EnglishArticleEditor() {
         description: variables.publishNow ? "Article published successfully" : "Article saved as draft",
       });
       
-      // Navigate back to articles list
+      // Navigate back to Urdu articles list
       setTimeout(() => {
-        navigate("/en/dashboard/articles");
+        navigate("/ur/dashboard/articles");
       }, 1000);
     },
     onError: (error: Error) => {
@@ -449,7 +448,7 @@ export default function EnglishArticleEditor() {
         throw new Error("Please save the article first before analyzing SEO");
       }
       setIsAnalyzingSEO(true);
-      return await apiRequest(`/api/ur/articles/${id}/analyze-seo`, {
+      return await apiRequest(`/api/ur/dashboard/articles/${id}/analyze-seo`, {
         method: "POST",
         body: JSON.stringify({ applyChanges: false }),
       });
