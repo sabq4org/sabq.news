@@ -245,12 +245,10 @@ export default function Home() {
         {/* AI Section with soft gradient background */}
         <div className="bg-ai-gradient-soft py-8">
           <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-            {/* Smart Summary Block (صباح الخير) - Only for authenticated users */}
-            {user && (
-              <div className="scroll-fade-in">
-                <SmartSummaryBlock />
-              </div>
-            )}
+            {/* Smart Summary Block (صباح الخير) - Shows personalized content for logged-in users, promotional content for guests */}
+            <div className="scroll-fade-in">
+              <SmartSummaryBlock />
+            </div>
 
             {/* AI Insights Block (مؤشرات الأسبوع) */}
             <div className="scroll-fade-in">

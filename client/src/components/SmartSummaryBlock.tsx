@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,12 @@ import {
   Heart, 
   MessageSquare,
   TrendingUp,
-  ChevronDown
+  ChevronDown,
+  UserPlus,
+  Star,
+  Zap,
+  Bell,
+  Bookmark
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,12 +72,127 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
 export function SmartSummaryBlock() {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const { data: insights, isLoading } = useQuery<TodayInsightsData>({
-    queryKey: ["/api/ai/insights/today"],
+  // Check if user is logged in
+  const { data: user, isLoading: isLoadingUser } = useQuery<{ id: string; name?: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
     retry: false,
   });
+  
+  const { data: insights, isLoading: isLoadingInsights } = useQuery<TodayInsightsData>({
+    queryKey: ["/api/ai/insights/today"],
+    retry: false,
+    enabled: !!user, // Only fetch insights if user is logged in
+  });
 
-  if (isLoading) {
+  // Loading state while checking authentication
+  if (isLoadingUser) {
+    return (
+      <Card className="rounded-2xl p-5 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-5 w-5 rounded-full" />
+        </div>
+      </Card>
+    );
+  }
+
+  // Show promotional card for non-logged-in users
+  if (!user) {
+    return (
+      <Card 
+        className="rounded-2xl p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 shadow-sm border-2 border-primary/20"
+        data-testid="card-guest-welcome"
+        dir="rtl"
+      >
+        <div className="flex items-start gap-4 mb-5">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex-shrink-0">
+            <Sparkles className="h-6 w-6 text-white" />
+          </div>
+          
+          <div className="flex-1">
+            <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+              مرحباً بك في سبق الذكية!
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              انضم إلى آلاف القراء واستمتع بتجربة إخبارية ذكية ومخصصة
+            </p>
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Bookmark className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">حفظ المقالات المفضلة</p>
+              <p className="text-xs text-muted-foreground">احفظ ما يهمك واقرأه لاحقاً</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Star className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">توصيات مخصصة</p>
+              <p className="text-xs text-muted-foreground">أخبار تناسب اهتماماتك</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+            <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+              <Zap className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">ملخصات ذكية</p>
+              <p className="text-xs text-muted-foreground">اطلع على أهم الأخبار بسرعة</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <Bell className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">إشعارات فورية</p>
+              <p className="text-xs text-muted-foreground">كن أول من يعلم بالأخبار العاجلة</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            asChild
+            className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg"
+            data-testid="button-register"
+          >
+            <Link href="/register">
+              <UserPlus className="h-4 w-4 ml-2" />
+              سجل الآن مجاناً
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            variant="outline"
+            className="w-full sm:w-auto border-2 border-primary/30 hover:bg-primary/5"
+            data-testid="button-login"
+          >
+            <Link href="/login">
+              لديك حساب؟ تسجيل الدخول
+            </Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isLoadingInsights) {
     return (
       <Card className="rounded-2xl p-5 shadow-sm">
         <div className="flex justify-between items-center mb-3">
