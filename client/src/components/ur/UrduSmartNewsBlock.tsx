@@ -48,11 +48,11 @@ interface UrduSmartNewsBlockProps {
 
 export function UrduSmartNewsBlock({ config }: UrduSmartNewsBlockProps) {
   const { data: articles, isLoading } = useQuery<ArticleResult[]>({
-    queryKey: ['/api/ur/smart-blocks/query/articles', config.config?.keyword, config.config?.limitCount],
+    queryKey: ['/api/ur/smart-blocks/query/articles', config.keyword, config.limitCount],
     queryFn: async () => {
       const params = new URLSearchParams({
-        keyword: config.config?.keyword || '',
-        limit: (config.config?.limitCount || 6).toString(),
+        keyword: config.keyword,
+        limit: config.limitCount.toString(),
       });
       const res = await fetch(`/api/ur/smart-blocks/query/articles?${params}`, {
         credentials: 'include',
@@ -70,9 +70,9 @@ export function UrduSmartNewsBlock({ config }: UrduSmartNewsBlockProps) {
           <Skeleton className="h-6 w-6 rounded-full" />
           <Skeleton className="h-6 w-48" />
         </div>
-        <div className={config.config?.layoutStyle === 'list' ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'}>
+        <div className={config.layoutStyle === 'list' ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'}>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className={config.config?.layoutStyle === 'list' ? 'h-32' : 'h-48'} />
+            <Skeleton key={i} className={config.layoutStyle === 'list' ? 'h-32' : 'h-48'} />
           ))}
         </div>
       </div>
@@ -97,14 +97,14 @@ export function UrduSmartNewsBlock({ config }: UrduSmartNewsBlockProps) {
       <div className="grid grid-cols-[auto,1fr] gap-2">
         <div 
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ backgroundColor: config.config?.color }}
+          style={{ backgroundColor: config.color }}
         >
           <Tag className="h-3.5 w-3.5 text-white" />
         </div>
         
         <h2 
           className="text-2xl md:text-3xl font-bold" 
-          style={{ color: config.config?.color }}
+          style={{ color: config.color }}
           data-testid={`heading-smart-block-${config.id}`}
         >
           {config.title}
@@ -113,14 +113,14 @@ export function UrduSmartNewsBlock({ config }: UrduSmartNewsBlockProps) {
         <div className="col-start-2 flex items-center gap-1.5 text-sm text-muted-foreground">
           <Tag className="h-3.5 w-3.5" />
           <span data-testid={`text-smart-block-keyword-${config.id}`}>
-            مطلوبہ الفاظ: {config.config?.keyword}
+            مطلوبہ الفاظ: {config.keyword}
           </span>
         </div>
       </div>
 
-      {config.config?.layoutStyle === 'grid' && <GridLayout articles={articles} blockId={config.id} />}
-      {config.config?.layoutStyle === 'list' && <ListLayout articles={articles} blockId={config.id} />}
-      {config.config?.layoutStyle === 'featured' && <FeaturedLayout articles={articles} blockId={config.id} />}
+      {config.layoutStyle === 'grid' && <GridLayout articles={articles} blockId={config.id} />}
+      {config.layoutStyle === 'list' && <ListLayout articles={articles} blockId={config.id} />}
+      {config.layoutStyle === 'featured' && <FeaturedLayout articles={articles} blockId={config.id} />}
     </section>
   );
 }
@@ -154,12 +154,6 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
                             />
-                            {isNewArticle(article.publishedAt) && (
-                              <div className="absolute top-1 left-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                                <Flame className="h-2.5 w-2.5" />
-                                نیا
-                              </div>
-                            )}
                           </div>
                         )}
 
@@ -251,32 +245,6 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                     />
-                    {article.newsType === "breaking" ? (
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute top-3 left-3 gap-1" 
-                        data-testid={`badge-smart-breaking-${article.id}`}
-                      >
-                        <Zap className="h-3 w-3" />
-                        تازہ خبر
-                      </Badge>
-                    ) : isNewArticle(article.publishedAt) ? (
-                      <Badge 
-                        className="absolute top-3 left-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
-                        data-testid={`badge-smart-new-${article.id}`}
-                      >
-                        <Flame className="h-3 w-3" />
-                        نیا
-                      </Badge>
-                    ) : article.category ? (
-                      <Badge 
-                        variant="default" 
-                        className="absolute top-3 left-3" 
-                        data-testid={`badge-smart-category-${article.id}`}
-                      >
-                        {article.category.icon} {article.category.name}
-                      </Badge>
-                    ) : null}
                   </div>
                 )}
                 <CardContent className="p-5 space-y-3">
