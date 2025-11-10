@@ -23,18 +23,34 @@ export function AppBreadcrumbs({ role, flags }: AppBreadcrumbsProps) {
     return null;
   }
 
+  // Determine language from pathname
+  const isUrdu = pathname.startsWith('/ur/');
+  const isEnglish = pathname.startsWith('/en/');
+  const isArabic = !isUrdu && !isEnglish; // Default to Arabic
+
+  // Get appropriate label based on language
+  const getLabel = (item: any) => {
+    if (isUrdu) return item.labelUr || item.labelEn || item.labelKey;
+    if (isEnglish) return item.labelEn || item.labelKey;
+    return item.labelAr || item.labelKey;
+  };
+
+  // Home label in different languages
+  const homeLabel = isUrdu ? "ہوم" : isEnglish ? "Home" : "الرئيسية";
+  const homePath = isUrdu ? "/ur/dashboard" : isEnglish ? "/en/dashboard" : "/dashboard";
+
   // بناء المسار: الصفحة الرئيسية + الآباء + العنصر النشط
   // Build path: Home + Parents + Active Item
   const breadcrumbItems = [
-    { id: "home", labelAr: "الرئيسية", path: "/dashboard", icon: Home },
+    { id: "home", label: homeLabel, path: homePath, icon: Home },
     ...parents.map(parent => ({
       id: parent.id,
-      labelAr: parent.labelAr || parent.labelKey,
+      label: getLabel(parent),
       path: parent.path,
     })),
     {
       id: activeItem.id,
-      labelAr: activeItem.labelAr || activeItem.labelKey,
+      label: getLabel(activeItem),
       path: activeItem.path,
     },
   ];
@@ -56,15 +72,15 @@ export function AppBreadcrumbs({ role, flags }: AppBreadcrumbsProps) {
                 aria-current="page"
               >
                 {Icon && <Icon className="h-4 w-4" />}
-                {item.labelAr}
+                {item.label}
               </span>
             ) : (
               <Link 
-                href={item.path || "/dashboard"}
+                href={item.path || homePath}
                 className="hover:text-foreground transition-colors flex items-center gap-2"
               >
                 {Icon && <Icon className="h-4 w-4" />}
-                {item.labelAr}
+                {item.label}
               </Link>
             )}
           </Fragment>
