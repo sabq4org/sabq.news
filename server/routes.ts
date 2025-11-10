@@ -20897,18 +20897,84 @@ Allow: /
     }
   });
 
-  // Get Urdu article by slug
-  app.get("/api/ur/article/:slug", async (req: any, res) => {
+  // Get Single Urdu Article by Slug - with full details
+  app.get("/api/ur/articles/:slug", async (req: any, res) => {
     try {
-      const article = await storage.getUrArticleBySlug(req.params.slug);
+      const userId = req.user?.id;
       
-      if (!article) {
+      // Create alias for reporter
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      // Get article with category, author, and reporter joins
+      const results = await db
+        .select()
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(eq(urArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!results || results.length === 0) {
         return res.status(404).json({ message: "Article not found" });
       }
+
+      // Access joined tables by their actual table names
+      const result: any = results[0];
+      const article = result.ur_articles;
+      const category = result.ur_categories;
+      const authorData = result.users;
+      const reporterData = result.reporter;
+
+      // Run all queries in parallel for better performance
+      const [
+        bookmarkResult,
+        reactionResult,
+        reactionsCountResult,
+        commentsCountResult
+      ] = await Promise.all([
+        userId ? db.select().from(urBookmarks)
+          .where(and(eq(urBookmarks.articleId, article.id), eq(urBookmarks.userId, userId)))
+          .limit(1) : Promise.resolve([]),
+        userId ? db.select().from(urReactions)
+          .where(and(eq(urReactions.articleId, article.id), eq(urReactions.userId, userId)))
+          .limit(1) : Promise.resolve([]),
+        db.select({ count: sql<number>`count(*)` })
+          .from(urReactions)
+          .where(eq(urReactions.articleId, article.id)),
+        db.select({ count: sql<number>`count(*)` })
+          .from(urComments)
+          .where(eq(urComments.articleId, article.id))
+      ]);
+
+      const isBookmarked = bookmarkResult.length > 0;
+      const hasReacted = reactionResult.length > 0;
+      const reactionsCount = Number(reactionsCountResult[0].count);
+      const commentsCount = Number(commentsCountResult[0].count);
+
+      // Increment views
+      await db
+        .update(urArticles)
+        .set({ views: sql`${urArticles.views} + 1` })
+        .where(eq(urArticles.id, article.id));
+
+      // Priority: reporter > author (same as dashboard)
+      const displayAuthor = reporterData || authorData;
+
+      // Return full article details with ALL article fields
+      const articleWithDetails: UrArticleWithDetails = {
+        ...article,
+        category: category || undefined,
+        author: displayAuthor || undefined,
+        isBookmarked,
+        hasReacted,
+        reactionsCount,
+        commentsCount,
+      };
       
-      res.json(article);
+      res.json(articleWithDetails);
     } catch (error) {
-      console.error("Error fetching Urdu article by slug:", error);
+      console.error("Error fetching Urdu article:", error);
       res.status(500).json({ message: "Failed to fetch article" });
     }
   });
