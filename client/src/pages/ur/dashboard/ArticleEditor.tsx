@@ -717,17 +717,17 @@ export default function EnglishArticleEditor() {
               variant="ghost"
               size="sm"
               asChild
-              data-testid="button-back-en"
+              data-testid="button-back-ur"
             >
-              <Link href="/en/dashboard/articles">
+              <Link href="/ur/dashboard/articles">
                 <a className="gap-2">
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  واپس
                 </a>
               </Link>
             </Button>
             <h1 className="text-2xl font-bold">
-              {isNewArticle ? "New Article" : "Edit Article"}
+              {isNewArticle ? "نیا مضمون" : "مضمون میں ترمیم"}
             </h1>
           </div>
 
@@ -737,19 +737,19 @@ export default function EnglishArticleEditor() {
               onClick={() => handleSave(false)}
               disabled={isSaving}
               className="gap-2"
-              data-testid="button-save-draft-en"
+              data-testid="button-save-draft-ur"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save as Draft
+              مسودے کے طور پر محفوظ کریں
             </Button>
             <Button
               onClick={() => handleSave(true)}
               disabled={isSaving}
               className="gap-2"
-              data-testid="button-publish-en"
+              data-testid="button-publish-ur"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Publish
+              شائع کریں
             </Button>
           </div>
         </div>
@@ -760,24 +760,24 @@ export default function EnglishArticleEditor() {
             {/* Title with AI */}
             <Card>
               <CardHeader>
-                <CardTitle>Title</CardTitle>
+                <CardTitle>عنوان</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
                   <Input
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
-                    placeholder="Enter article title..."
+                    placeholder="مضمون کا عنوان درج کریں..."
                     className="flex-1"
-                    data-testid="input-title-en"
+                    data-testid="input-title-ur"
                   />
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={handleGenerateTitle}
                     disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
-                    title="AI Suggestion"
-                    data-testid="button-ai-title-en"
+                    title="AI تجویز"
+                    data-testid="button-ai-title-ur"
                   >
                     {isGeneratingAI ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1028,17 +1028,17 @@ export default function EnglishArticleEditor() {
             {/* Category */}
             <Card>
               <CardHeader>
-                <CardTitle>Category</CardTitle>
+                <CardTitle>زمرہ</CardTitle>
               </CardHeader>
               <CardContent>
                 <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger data-testid="select-category-en">
-                    <SelectValue placeholder="Select category" />
+                  <SelectTrigger data-testid="select-category-ur">
+                    <SelectValue placeholder="زمرہ منتخب کریں" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
-                        {category.icon && <span className="mr-2">{category.icon}</span>}
+                        {category.icon && <span className="ml-2">{category.icon}</span>}
                         {category.name}
                       </SelectItem>
                     ))}
