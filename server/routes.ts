@@ -20949,24 +20949,8 @@ Allow: /
           )
         );
 
-      // Get total interactions (reactions, bookmarks, comments)
-      const [interactionsCount] = await db
-        .select({ 
-          reactions: sql<number>`COALESCE(SUM(${urArticles.reactionsCount}), 0)::int`,
-          bookmarks: sql<number>`COALESCE(SUM(${urArticles.bookmarksCount}), 0)::int`,
-          comments: sql<number>`COALESCE(SUM(${urArticles.commentsCount}), 0)::int`,
-        })
-        .from(urArticles)
-        .where(
-          and(
-            eq(urArticles.categoryId, categoryId),
-            eq(urArticles.status, "published")
-          )
-        );
-
-      const totalInteractions = (interactionsCount.reactions || 0) + 
-                               (interactionsCount.bookmarks || 0) + 
-                               (interactionsCount.comments || 0);
+      // Total interactions not available for Urdu version yet
+      const totalInteractions = 0;
 
       // Get most active author (prioritize reporterId)
       const reporterAlias = aliasedTable(users, 'reporter');

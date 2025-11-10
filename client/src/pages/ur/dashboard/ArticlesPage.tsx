@@ -599,21 +599,21 @@ export default function EnglishArticlesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold" data-testid="heading-en-title">
-              News & Articles Management
+            <h1 className="text-xl md:text-2xl font-bold" data-testid="heading-ur-title">
+              خبریں اور مضامین کا نظم
             </h1>
             <p className="text-xs md:text-sm text-muted-foreground">
-              Manage news content and articles
+              خبروں اور مضامین کا انتظام کریں
             </p>
           </div>
           <Button
-            onClick={() => setLocation("/en/dashboard/articles/new")}
+            onClick={() => setLocation("/ur/dashboard/articles/new")}
             className="gap-2 w-full sm:w-auto"
             size="sm"
-            data-testid="button-create-en-article"
+            data-testid="button-create-ur-article"
           >
             <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            New Article
+            نیا مضمون
           </Button>
         </div>
 

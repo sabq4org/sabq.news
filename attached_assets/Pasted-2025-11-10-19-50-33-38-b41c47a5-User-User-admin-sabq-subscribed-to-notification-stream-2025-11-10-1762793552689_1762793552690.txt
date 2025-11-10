@@ -1,0 +1,116 @@
+2025-11-10 19:50:33.38
+b41c47a5
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-10 19:50:33.39
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:33.39
+b41c47a5
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-10 19:50:33.39
+b41c47a5
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-10 19:50:43.32
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:43.32
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:43.32
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:43.33
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:43.34
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:43.34
+b41c47a5
+User
+🔍 /api/auth/user check: {
+2025-11-10 19:50:43.34
+b41c47a5
+User
+isAuthenticated: true,
+2025-11-10 19:50:43.34
+b41c47a5
+User
+hasUser: true,
+2025-11-10 19:50:43.34
+b41c47a5
+User
+userId: 'admin-sabq',
+2025-11-10 19:50:43.34
+b41c47a5
+User
+sessionID: 'unGKv_pPw1eVBQCi04CUR9gli6ohB3Ot'
+2025-11-10 19:50:43.34
+b41c47a5
+User
+}
+2025-11-10 19:50:43.35
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:43.41
+b41c47a5
+User
+4:50:43 PM [express] GET /api/auth/user 200 in 108ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-10 19:50:43.47
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:43.47
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:43.49
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:43.49
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:43.51
+b41c47a5
+User
+4:50:43 PM [express] GET /api/ur/dashboard/categories 200 in 209ms :: [{"id":"dfedc101-442e-4273-ac2…
+2025-11-10 19:50:43.54
+b41c47a5
+User
+4:50:43 PM [express] GET /api/themes/active 200 in 235ms
+2025-11-10 19:50:43.58
+b41c47a5
+User
+4:50:43 PM [express] GET /api/announcements/active 200 in 263ms :: []
+2025-11-10 19:50:43.73
+b41c47a5
+User
+4:50:43 PM [express] GET /api/admin/users 200 in 412ms :: {"items":[{"id":"Ne7mIRvWJ2oWI6hDZy4LA","n…
+2025-11-10 19:50:46.04
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:46.05
+b41c47a5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-10 19:50:46.06
+b41c47a5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-10 19:50:46.06
+b41c47a5
+User
+📡 SSE connection opened for user: admin-sabq
