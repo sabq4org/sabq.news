@@ -143,64 +143,85 @@ export function UrduHeroCarousel({ articles }: UrduHeroCarouselProps) {
                   </div>
                 </div>
 
-                {/* Desktop: Horizontal Layout */}
-                <div className="hidden md:block relative h-96 cursor-pointer group">
-                  {article.imageUrl && (
-                    <div className="absolute inset-0 overflow-hidden rounded-lg">
-                      <img
-                        src={article.imageUrl}
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        style={{ objectPosition: getObjectPosition(article) }}
-                        loading="eager"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                    </div>
-                  )}
-                  
-                  <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                    <div className="max-w-3xl space-y-4">
-                      {article.newsType === "breaking" ? (
-                        <Badge 
-                          variant="destructive" 
-                          className="w-fit gap-1.5 text-sm"
-                          data-testid={`badge-breaking-desktop-${article.id}`}
-                        >
-                          <Zap className="h-4 w-4" />
-                          تازہ خبر
-                        </Badge>
-                      ) : isNewArticle(article.publishedAt) ? (
-                        <Badge 
-                          className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1.5 text-sm"
-                          data-testid={`badge-new-desktop-${article.id}`}
-                        >
-                          <Flame className="h-4 w-4" />
-                          نیا
-                        </Badge>
+                {/* Desktop: Horizontal Split-Screen Layout */}
+                <div className="hidden md:block relative h-[400px] cursor-pointer group">
+                  <div className="flex flex-row h-full">
+                    {/* Image - 50% of width */}
+                    <div className="w-1/2 h-full relative overflow-hidden">
+                      {article.imageUrl ? (
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                          style={{ objectPosition: getObjectPosition(article) }}
+                          loading="eager"
+                        />
                       ) : (
-                        <Badge 
-                          variant="secondary" 
-                          className="w-fit bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm text-sm"
-                          data-testid={`badge-category-desktop-${article.id}`}
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                      )}
+                    </div>
+
+                    {/* Content - 50% of width */}
+                    <div className={`w-1/2 h-full flex flex-col justify-center p-8 lg:p-12 ${
+                      article.newsType === "breaking" 
+                        ? "bg-destructive/10" 
+                        : "bg-card"
+                    }`}>
+                      <div className="space-y-4">
+                        {article.newsType === "breaking" ? (
+                          <Badge 
+                            variant="destructive" 
+                            className="w-fit gap-1"
+                            data-testid={`badge-breaking-${article.id}`}
+                          >
+                            <Zap className="h-3 w-3" />
+                            تازہ خبر
+                          </Badge>
+                        ) : isNewArticle(article.publishedAt) ? (
+                          <Badge 
+                            className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1"
+                            data-testid={`badge-new-${article.id}`}
+                          >
+                            <Flame className="h-3 w-3" />
+                            نیا
+                          </Badge>
+                        ) : (
+                          <Badge 
+                            variant="default" 
+                            data-testid={`badge-category-${article.id}`}
+                          >
+                            اہم خبر
+                          </Badge>
+                        )}
+                        
+                        <h2 
+                          className={`text-3xl lg:text-4xl font-bold line-clamp-3 ${
+                            article.newsType === "breaking"
+                              ? "text-destructive"
+                              : "text-foreground"
+                          }`}
+                          data-testid={`text-title-desktop-${article.id}`}
                         >
-                          خبریں
-                        </Badge>
-                      )}
-                      
-                      <h2 className="text-4xl md:text-5xl font-bold line-clamp-2 drop-shadow-lg" data-testid={`text-title-desktop-${article.id}`}>
-                        {article.title}
-                      </h2>
-                      
-                      {article.excerpt && (
-                        <p className="text-lg md:text-xl text-white/90 line-clamp-2 drop-shadow" data-testid={`text-summary-desktop-${article.id}`}>
-                          {article.excerpt}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center gap-6 text-sm text-white/80">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{formatPublishedDate(article.publishedAt)}</span>
+                          {article.title}
+                        </h2>
+                        
+                        {article.excerpt && (
+                          <p className="text-muted-foreground text-base line-clamp-2">
+                            {article.excerpt}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{(article.views || 0).toLocaleString()} مناظر</span>
+                          </div>
+                          {article.publishedAt && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{formatPublishedDate(article.publishedAt)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -213,21 +234,32 @@ export function UrduHeroCarousel({ articles }: UrduHeroCarouselProps) {
         </div>
       </div>
 
-      {/* Carousel Dots */}
+      {/* Carousel Thumbnails */}
       {articles.length > 1 && (
-        <div className="flex justify-center gap-2 mt-4" data-testid="carousel-dots">
-          {articles.map((_, index) => (
+        <div className="mt-4 flex gap-2 justify-center w-full px-4">
+          {articles.slice(0, 3).map((article, index) => (
             <button
               key={index}
-              className={`h-2 rounded-full transition-all ${
+              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden border-2 transition-all ${
                 index === selectedIndex
-                  ? "w-8 bg-primary"
-                  : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  ? "border-primary"
+                  : "border-transparent opacity-70 hover:opacity-100 hover:border-border"
               }`}
               onClick={() => emblaApi?.scrollTo(index)}
-              aria-label={`${index + 1} نمبر سلائیڈ پر جائیں`}
-              data-testid={`button-dot-${index}`}
-            />
+              data-testid={`button-carousel-thumbnail-${index}`}
+            >
+              {article.imageUrl ? (
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: getObjectPosition(article) }}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+              )}
+            </button>
           ))}
         </div>
       )}
