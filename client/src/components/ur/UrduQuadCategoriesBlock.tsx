@@ -246,14 +246,6 @@ function MobileCompactList({ items }: { items: CategoryColumnData[] }) {
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
                   )}
-                  {item.featured.meta.badge && (
-                    <Badge 
-                      variant={item.featured.meta.badge === "عاجل" ? "destructive" : "secondary"}
-                      className="absolute top-1 right-1 text-[10px] px-1 py-0"
-                    >
-                      {item.featured.meta.badge}
-                    </Badge>
-                  )}
                 </div>
               </div>
             </Link>

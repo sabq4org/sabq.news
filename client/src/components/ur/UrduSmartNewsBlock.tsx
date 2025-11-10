@@ -392,16 +392,6 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
               </h3>
 
               <div className="flex flex-wrap items-center gap-3 text-sm">
-                {featured.category && (
-                  <Badge 
-                    variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white"
-                    data-testid={`badge-smart-article-featured-category-${featured.id}`}
-                  >
-                    {featured.category.name}
-                  </Badge>
-                )}
-                
                 {featured.publishedAt && (
                   <div className="flex items-center gap-1.5 text-white/90">
                     <Clock className="h-4 w-4" />
