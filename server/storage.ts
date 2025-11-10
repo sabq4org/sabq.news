@@ -9148,7 +9148,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(eq(urSmartBlocks.isActive, filters.isActive));
     }
     
-    return await query.orderBy(asc(urSmartBlocks.displayOrder));
+    return await query.orderBy(desc(urSmartBlocks.createdAt));
   }
 
   async getUrSmartBlockById(id: string): Promise<UrSmartBlock | undefined> {
