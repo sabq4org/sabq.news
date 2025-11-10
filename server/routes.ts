@@ -116,6 +116,11 @@ import {
   enReactions,
   enBookmarks,
   enSmartBlocks,
+  urArticles,
+  urCategories,
+  urComments,
+  urReactions,
+  urBookmarks,
   mediaFiles,
   mediaFolders,
   mediaUsageLog,
@@ -188,6 +193,9 @@ import {
   insertEnArticleSchema,
   insertEnCommentSchema,
   insertEnSmartBlockSchema,
+  insertUrCategorySchema,
+  insertUrArticleSchema,
+  insertUrCommentSchema,
   insertMediaFolderSchema,
   insertMediaFileSchema,
   insertMediaUsageLogSchema,
@@ -20605,6 +20613,1090 @@ Allow: /
 
   // ============================================================
   // END ENGLISH VERSION API ENDPOINTS
+  // ============================================================
+
+  // ============================================================
+  // URDU VERSION API ENDPOINTS
+  // ============================================================
+
+  // Public Urdu Categories endpoint
+  app.get("/api/ur/categories", async (req, res) => {
+    try {
+      const categories = await storage.getUrCategories({ status: "active" });
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching Urdu categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Get specific Urdu category
+  app.get("/api/ur/categories/:id", async (req, res) => {
+    try {
+      const [category] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.id, req.params.id))
+        .limit(1);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching Urdu category:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // Get Urdu articles (published)
+  app.get("/api/ur/articles", async (req, res) => {
+    try {
+      const { categoryId, status = "published", limit = 20, offset = 0 } = req.query;
+      
+      const conditions: any[] = [];
+      if (status) {
+        conditions.push(eq(urArticles.status, status as string));
+      }
+      if (categoryId) {
+        conditions.push(eq(urArticles.categoryId, categoryId as string));
+      }
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      const results = await db
+        .select()
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(urArticles.publishedAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+      const articles = results.map((result: any) => {
+        const article = result.ur_articles;
+        const category = result.ur_categories;
+        const authorData = result.users;
+        const reporterData = result.reporter;
+        const displayAuthor = reporterData || authorData;
+
+        return {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          imageFocalPoint: article.imageFocalPoint,
+          categoryId: article.categoryId,
+          authorId: article.authorId,
+          reporterId: article.reporterId,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          status: article.status,
+          isFeatured: article.isFeatured,
+          views: article.views,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          category: category ? {
+            id: category.id,
+            name: category.name,
+            slug: category.slug,
+            icon: category.icon,
+            color: category.color,
+            description: category.description,
+          } : undefined,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+            bio: displayAuthor.bio,
+          } : undefined,
+        };
+      });
+      
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching Urdu articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // Get Urdu article by slug
+  app.get("/api/ur/article/:slug", async (req: any, res) => {
+    try {
+      const article = await storage.getUrArticleBySlug(req.params.slug);
+      
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching Urdu article by slug:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  // Get Urdu category articles by slug
+  app.get("/api/ur/category/:slug/articles", async (req, res) => {
+    try {
+      const { limit = 50, offset = 0 } = req.query;
+      
+      const [category] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.slug, req.params.slug))
+        .limit(1);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      const results = await db
+        .select()
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(
+          and(
+            eq(urArticles.categoryId, category.id),
+            eq(urArticles.status, "published")
+          )
+        )
+        .orderBy(desc(urArticles.publishedAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+      const articles = results.map((result: any) => {
+        const article = result.ur_articles;
+        const categoryData = result.ur_categories;
+        const authorData = result.users;
+        const reporterData = result.reporter;
+        const displayAuthor = reporterData || authorData;
+
+        return {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          imageFocalPoint: article.imageFocalPoint,
+          categoryId: article.categoryId,
+          authorId: article.authorId,
+          reporterId: article.reporterId,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          status: article.status,
+          isFeatured: article.isFeatured,
+          views: article.views,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          category: categoryData ? {
+            id: categoryData.id,
+            name: categoryData.name,
+            slug: categoryData.slug,
+            icon: categoryData.icon,
+            color: categoryData.color,
+            description: categoryData.description,
+          } : undefined,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+            bio: displayAuthor.bio,
+          } : undefined,
+        };
+      });
+      
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching Urdu category articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // ============================================================
+  // URDU DASHBOARD ENDPOINTS
+  // ============================================================
+
+  // Urdu Dashboard Statistics
+  app.get("/api/ur/dashboard/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const stats = await storage.getUrDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching Urdu dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+
+  // Get Urdu dashboard categories
+  app.get("/api/ur/dashboard/categories", requireAuth, requirePermission("categories.view"), async (req: any, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(urCategories)
+        .orderBy(asc(urCategories.displayOrder));
+
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching Urdu categories:", error);
+      res.status(500).json({ message: "Failed to fetch Urdu categories" });
+    }
+  });
+
+  // Get single Urdu category by ID (for editing)
+  app.get("/api/ur/dashboard/categories/:id", requireAuth, requirePermission("categories.view"), async (req: any, res) => {
+    try {
+      const categoryId = req.params.id;
+
+      const [category] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching Urdu category:", error);
+      res.status(500).json({ message: "Failed to fetch Urdu category" });
+    }
+  });
+
+  // Create new Urdu category
+  app.post("/api/ur/dashboard/categories", requireAuth, requirePermission("categories.create"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsed = insertUrCategorySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const [existingCategory] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.slug, parsed.data.slug))
+        .limit(1);
+
+      if (existingCategory) {
+        return res.status(409).json({ message: "Category slug already exists" });
+      }
+
+      const [category] = await db
+        .insert(urCategories)
+        .values(parsed.data)
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "created",
+        entityType: "ur_category",
+        entityId: category.id,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating Urdu category:", error);
+      res.status(500).json({ message: "Failed to create Urdu category" });
+    }
+  });
+
+  // Update Urdu category
+  app.patch("/api/ur/dashboard/categories/:id", requireAuth, requirePermission("categories.update"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const [oldCategory] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.id, categoryId))
+        .limit(1);
+
+      if (!oldCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const parsed = insertUrCategorySchema.partial().safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      if (parsed.data.slug && parsed.data.slug !== oldCategory.slug) {
+        const [existingCategory] = await db
+          .select()
+          .from(urCategories)
+          .where(eq(urCategories.slug, parsed.data.slug))
+          .limit(1);
+
+        if (existingCategory && existingCategory.id !== categoryId) {
+          return res.status(409).json({ message: "Category slug already exists" });
+        }
+      }
+
+      const [category] = await db
+        .update(urCategories)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(urCategories.id, categoryId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "ur_category",
+        entityId: categoryId,
+        oldValue: oldCategory,
+        newValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating Urdu category:", error);
+      res.status(500).json({ message: "Failed to update Urdu category" });
+    }
+  });
+
+  // Delete Urdu category
+  app.delete("/api/ur/dashboard/categories/:id", requireAuth, requirePermission("categories.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const categoryId = req.params.id;
+
+      const [category] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const [articleCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(eq(urArticles.categoryId, categoryId));
+
+      if (articleCount.count > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete category with ${articleCount.count} articles. Please reassign or delete the articles first.` 
+        });
+      }
+
+      await db.delete(urCategories).where(eq(urCategories.id, categoryId));
+
+      await logActivity({
+        userId,
+        action: "deleted",
+        entityType: "ur_category",
+        entityId: categoryId,
+        oldValue: category,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Urdu category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting Urdu category:", error);
+      res.status(500).json({ message: "Failed to delete Urdu category" });
+    }
+  });
+
+  // Urdu Articles Metrics
+  app.get("/api/ur/dashboard/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const [publishedCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(eq(urArticles.status, "published"));
+
+      const [draftCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(eq(urArticles.status, "draft"));
+
+      const [scheduledCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(eq(urArticles.status, "scheduled"));
+
+      const [totalViews] = await db
+        .select({ total: sql<number>`COALESCE(SUM(${urArticles.views}), 0)::int` })
+        .from(urArticles)
+        .where(eq(urArticles.status, "published"));
+
+      res.json({
+        published: publishedCount.count,
+        draft: draftCount.count,
+        scheduled: scheduledCount.count,
+        totalViews: totalViews.total,
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu articles metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  // Get Urdu dashboard articles
+  app.get("/api/ur/dashboard/articles", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { status, categoryId, limit = 50, offset = 0 } = req.query;
+
+      const conditions: any[] = [];
+      if (status) {
+        conditions.push(eq(urArticles.status, status as string));
+      }
+      if (categoryId) {
+        conditions.push(eq(urArticles.categoryId, categoryId as string));
+      }
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      const results = await db
+        .select()
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(urArticles.createdAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+      const articles = results.map((result: any) => {
+        const article = result.ur_articles;
+        const category = result.ur_categories;
+        const authorData = result.users;
+        const reporterData = result.reporter;
+        const displayAuthor = reporterData || authorData;
+
+        return {
+          ...article,
+          category: category ? {
+            id: category.id,
+            name: category.name,
+            slug: category.slug,
+            icon: category.icon,
+            color: category.color,
+          } : undefined,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+          } : undefined,
+        };
+      });
+
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching Urdu articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // Create Urdu article
+  app.post("/api/ur/dashboard/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsed = insertUrArticleSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const [existingArticle] = await db
+        .select()
+        .from(urArticles)
+        .where(eq(urArticles.slug, parsed.data.slug))
+        .limit(1);
+
+      if (existingArticle) {
+        return res.status(409).json({ message: "Article slug already exists" });
+      }
+
+      const [article] = await db
+        .insert(urArticles)
+        .values({
+          ...parsed.data,
+          authorId: userId,
+        })
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "created",
+        entityType: "ur_article",
+        entityId: article.id,
+        newValue: article,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(article);
+    } catch (error) {
+      console.error("Error creating Urdu article:", error);
+      res.status(500).json({ message: "Failed to create Urdu article" });
+    }
+  });
+
+  // Update Urdu article
+  app.patch("/api/ur/dashboard/articles/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [oldArticle] = await db
+        .select()
+        .from(urArticles)
+        .where(eq(urArticles.id, articleId))
+        .limit(1);
+
+      if (!oldArticle) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const permissions = await getUserPermissions(userId);
+      const canEditAny = permissions.includes("articles.edit_any");
+      const canEditOwn = permissions.includes("articles.edit_own");
+
+      if (!canEditAny && (!canEditOwn || oldArticle.authorId !== userId)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const parsed = insertUrArticleSchema.partial().safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      if (parsed.data.slug && parsed.data.slug !== oldArticle.slug) {
+        const [existingArticle] = await db
+          .select()
+          .from(urArticles)
+          .where(eq(urArticles.slug, parsed.data.slug))
+          .limit(1);
+
+        if (existingArticle && existingArticle.id !== articleId) {
+          return res.status(409).json({ message: "Article slug already exists" });
+        }
+      }
+
+      const [article] = await db
+        .update(urArticles)
+        .set({
+          ...parsed.data,
+          updatedAt: new Date(),
+        })
+        .where(eq(urArticles.id, articleId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "updated",
+        entityType: "ur_article",
+        entityId: articleId,
+        oldValue: oldArticle,
+        newValue: article,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json(article);
+    } catch (error) {
+      console.error("Error updating Urdu article:", error);
+      res.status(500).json({ message: "Failed to update Urdu article" });
+    }
+  });
+
+  // Delete/Archive Urdu article
+  app.delete("/api/ur/dashboard/articles/:id", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [article] = await db
+        .select()
+        .from(urArticles)
+        .where(eq(urArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      await db
+        .update(urArticles)
+        .set({ status: "archived", updatedAt: new Date() })
+        .where(eq(urArticles.id, articleId));
+
+      await logActivity({
+        userId,
+        action: "archived",
+        entityType: "ur_article",
+        entityId: articleId,
+        oldValue: article,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Urdu article archived successfully" });
+    } catch (error) {
+      console.error("Error archiving Urdu article:", error);
+      res.status(500).json({ message: "Failed to archive Urdu article" });
+    }
+  });
+
+  // ============================================================
+  // URDU COMMENTS ENDPOINTS
+  // ============================================================
+
+  // Get Urdu article comments
+  app.get("/api/ur/article/:id/comments", async (req, res) => {
+    try {
+      const articleId = req.params.id;
+
+      const commentsData = await db
+        .select({
+          comment: urComments,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(urComments)
+        .leftJoin(users, eq(urComments.userId, users.id))
+        .where(
+          and(
+            eq(urComments.articleId, articleId),
+            eq(urComments.status, "approved")
+          )
+        )
+        .orderBy(desc(urComments.createdAt));
+
+      const comments = commentsData.map((row) => ({
+        ...row.comment,
+        user: row.user,
+      }));
+
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching Urdu comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Create Urdu comment
+  app.post("/api/ur/article/:id/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const parsed = insertUrCommentSchema.safeParse({
+        ...req.body,
+        articleId,
+        userId,
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const [comment] = await db
+        .insert(urComments)
+        .values(parsed.data)
+        .returning();
+
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating Urdu comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Get all Urdu comments (dashboard)
+  app.get("/api/ur/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+
+      let query = db
+        .select({
+          comment: urComments,
+          article: {
+            id: urArticles.id,
+            title: urArticles.title,
+          },
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(urComments)
+        .leftJoin(urArticles, eq(urComments.articleId, urArticles.id))
+        .leftJoin(users, eq(urComments.userId, users.id))
+        .$dynamic();
+
+      if (status) {
+        query = query.where(eq(urComments.status, status));
+      }
+
+      if (articleId) {
+        query = query.where(eq(urComments.articleId, articleId));
+      }
+
+      query = query.orderBy(desc(urComments.createdAt));
+
+      const results = await query;
+
+      const formattedComments = results.map((row) => ({
+        ...row.comment,
+        article: row.article,
+        user: row.user,
+      }));
+
+      res.json(formattedComments);
+    } catch (error) {
+      console.error("Error fetching Urdu comments:", error);
+      res.status(500).json({ message: "Failed to fetch Urdu comments" });
+    }
+  });
+
+  // Approve Urdu comment
+  app.patch("/api/ur/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(urComments)
+        .where(eq(urComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [approved] = await db
+        .update(urComments)
+        .set({
+          status: "approved",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+        })
+        .where(eq(urComments.id, commentId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "approved",
+        entityType: "ur_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: approved,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Urdu comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving Urdu comment:", error);
+      res.status(500).json({ message: "Failed to approve Urdu comment" });
+    }
+  });
+
+  // Reject Urdu comment
+  app.patch("/api/ur/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+
+      const [comment] = await db
+        .select()
+        .from(urComments)
+        .where(eq(urComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [rejected] = await db
+        .update(urComments)
+        .set({
+          status: "rejected",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+          moderationReason: reason || null,
+        })
+        .where(eq(urComments.id, commentId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "rejected",
+        entityType: "ur_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: rejected,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason,
+        },
+      });
+
+      res.json({ message: "Urdu comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting Urdu comment:", error);
+      res.status(500).json({ message: "Failed to reject Urdu comment" });
+    }
+  });
+
+  // ============================================================
+  // URDU ENGAGEMENT ENDPOINTS
+  // ============================================================
+
+  // Add reaction to Urdu article
+  app.post("/api/ur/article/:id/react", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      const { type = "like" } = req.body;
+
+      const [existingReaction] = await db
+        .select()
+        .from(urReactions)
+        .where(
+          and(
+            eq(urReactions.articleId, articleId),
+            eq(urReactions.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (existingReaction) {
+        return res.status(409).json({ message: "Already reacted" });
+      }
+
+      const [reaction] = await db
+        .insert(urReactions)
+        .values({
+          articleId,
+          userId,
+          type,
+        })
+        .returning();
+
+      res.json(reaction);
+    } catch (error) {
+      console.error("Error adding Urdu reaction:", error);
+      res.status(500).json({ message: "Failed to add reaction" });
+    }
+  });
+
+  // Remove reaction from Urdu article
+  app.delete("/api/ur/article/:id/react", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      await db
+        .delete(urReactions)
+        .where(
+          and(
+            eq(urReactions.articleId, articleId),
+            eq(urReactions.userId, userId)
+          )
+        );
+
+      res.json({ message: "Reaction removed" });
+    } catch (error) {
+      console.error("Error removing Urdu reaction:", error);
+      res.status(500).json({ message: "Failed to remove reaction" });
+    }
+  });
+
+  // Add bookmark to Urdu article
+  app.post("/api/ur/article/:id/bookmark", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const [existingBookmark] = await db
+        .select()
+        .from(urBookmarks)
+        .where(
+          and(
+            eq(urBookmarks.articleId, articleId),
+            eq(urBookmarks.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (existingBookmark) {
+        return res.status(409).json({ message: "Already bookmarked" });
+      }
+
+      const [bookmark] = await db
+        .insert(urBookmarks)
+        .values({
+          articleId,
+          userId,
+        })
+        .returning();
+
+      res.json(bookmark);
+    } catch (error) {
+      console.error("Error adding Urdu bookmark:", error);
+      res.status(500).json({ message: "Failed to add bookmark" });
+    }
+  });
+
+  // Remove bookmark from Urdu article
+  app.delete("/api/ur/article/:id/bookmark", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      await db
+        .delete(urBookmarks)
+        .where(
+          and(
+            eq(urBookmarks.articleId, articleId),
+            eq(urBookmarks.userId, userId)
+          )
+        );
+
+      res.json({ message: "Bookmark removed" });
+    } catch (error) {
+      console.error("Error removing Urdu bookmark:", error);
+      res.status(500).json({ message: "Failed to remove bookmark" });
+    }
+  });
+
+  // ============================================================
+  // END URDU VERSION API ENDPOINTS
   // ============================================================
 
   // ============================================================

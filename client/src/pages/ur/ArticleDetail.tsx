@@ -1,0 +1,379 @@
+import { useParams, Link, useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Heart,
+  Bookmark,
+  Share2,
+  Clock,
+  Eye,
+  Sparkles,
+  User,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import type { UrArticleWithDetails } from "@shared/schema";
+import DOMPurify from "isomorphic-dompurify";
+import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
+import { EnglishRecommendationsWidget } from "@/components/EnglishRecommendationsWidget";
+
+export default function UrduArticleDetail() {
+  const params = useParams<{ slug: string }>();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
+  const { data: article, isLoading } = useQuery<UrArticleWithDetails>({
+    queryKey: ["/api/ur/articles", params.slug],
+    enabled: !!params.slug,
+  });
+
+  const { data: relatedArticles = [] } = useQuery<any[]>({
+    queryKey: [`/api/ur/articles/${params.slug}/related`],
+    enabled: !!params.slug,
+  });
+
+  const reactMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest<{ hasReacted: boolean }>(`/api/ur/articles/${article.id}/react`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ur/articles", params.slug] });
+      toast({
+        title: data?.hasReacted ? "مضمون کو پسند کیا گیا!" : "ردعمل ہٹا دیا گیا",
+        description: data?.hasReacted ? "آپ کے تاثرات کے لیے شکریہ" : "آپ کا ردعمل ہٹا دیا گیا ہے",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "خرابی",
+        description: error.message || "مضمون پر ردعمل دینے میں ناکام",
+      });
+    },
+  });
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) return;
+      return await apiRequest<{ isBookmarked: boolean }>(`/api/ur/articles/${article.id}/bookmark`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ur/articles", params.slug] });
+      toast({
+        title: data?.isBookmarked ? "مضمون محفوظ ہو گیا!" : "بک مارک ہٹا دیا گیا",
+        description: data?.isBookmarked ? "آپ کے بک مارکس میں شامل ہو گیا" : "آپ کے بک مارکس سے ہٹا دیا گیا",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "خرابی",
+        description: error.message || "بک مارک کرنے میں ناکام",
+      });
+    },
+  });
+
+  const handleShare = async () => {
+    if (navigator.share && article) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt || article.aiSummary || "",
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "لنک کاپی ہو گیا!",
+        description: "مضمون کا لنک کلپ بورڈ پر کاپی ہو گیا",
+      });
+    }
+  };
+
+  // Ensure RTL direction is applied for Urdu content
+  useEffect(() => {
+    const previousDir = document.documentElement.dir;
+    const previousLang = document.documentElement.lang;
+    
+    document.documentElement.dir = "rtl";
+    document.documentElement.lang = "ur";
+    
+    // Cleanup: restore previous values when unmounting
+    return () => {
+      document.documentElement.dir = previousDir || "ltr";
+      document.documentElement.lang = previousLang || "en";
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <EnglishLayout>
+        <div className="container mx-auto px-4 py-8 max-w-4xl" dir="rtl" lang="ur">
+          <Skeleton className="h-8 w-24 mb-6" />
+          <Skeleton className="h-12 w-full mb-4" />
+          <Skeleton className="h-6 w-3/4 mb-8" />
+          <Skeleton className="h-96 w-full mb-8" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </EnglishLayout>
+    );
+  }
+
+  if (!article) {
+    return (
+      <EnglishLayout>
+        <div className="container mx-auto px-4 py-12 max-w-2xl text-center" dir="rtl" lang="ur">
+          <h2 className="text-2xl font-bold mb-4">مضمون نہیں ملا</h2>
+          <p className="text-muted-foreground mb-6">
+            جو مضمون آپ تلاش کر رہے ہیں وہ موجود نہیں ہے یا ہٹا دیا گیا ہے
+          </p>
+          <Link href="/ur">
+            <Button data-testid="button-back-home">
+              واپس ہوم پر
+            </Button>
+          </Link>
+        </div>
+      </EnglishLayout>
+    );
+  }
+
+  // Sanitize HTML content with XSS protection
+  const sanitizedContent = DOMPurify.sanitize(article.content, {
+    ADD_TAGS: ['iframe'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  });
+
+  return (
+    <EnglishLayout>
+      <div className="container mx-auto px-4 py-8" dir="rtl" lang="ur">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 max-w-7xl mx-auto">
+          {/* Main Content */}
+          <article>
+            {/* Breadcrumb / Category Badge */}
+            {article.category && (
+              <div className="mb-6">
+                <Badge variant="secondary" data-testid="badge-category">
+                  {article.category.name}
+                </Badge>
+              </div>
+            )}
+
+            {/* Title Section */}
+            <header className="mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight" data-testid="text-article-title">
+                {article.title}
+              </h1>
+              {article.subtitle && (
+                <p className="text-xl text-muted-foreground leading-relaxed" data-testid="text-article-subtitle">
+                  {article.subtitle}
+                </p>
+              )}
+            </header>
+
+            {/* Meta Information */}
+            <div className="flex flex-wrap items-center gap-6 mb-8 text-sm text-muted-foreground">
+              {article.author && (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10" data-testid="avatar-author">
+                    <AvatarImage src={article.author.profileImageUrl || undefined} />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-foreground" data-testid="text-author-name">
+                      {article.author.firstName && article.author.lastName
+                        ? `${article.author.firstName} ${article.author.lastName}`
+                        : article.author.email}
+                    </p>
+                    <p className="text-xs">رپورٹر</p>
+                  </div>
+                </div>
+              )}
+              
+              <Separator orientation="vertical" className="h-10" />
+              
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                {article.publishedAt ? (
+                  <time dateTime={article.publishedAt.toString()} data-testid="text-publish-date">
+                    {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                  </time>
+                ) : (
+                  <span>مسودہ</span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                <span data-testid="text-views">{article.views || 0} ملاحظات</span>
+              </div>
+            </div>
+
+            {/* Featured Image */}
+            {article.imageUrl && (
+              <div className="mb-8 rounded-lg overflow-hidden">
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-auto"
+                  data-testid="img-article-cover"
+                />
+              </div>
+            )}
+
+            {/* AI Summary */}
+            {(article.aiSummary || article.excerpt) && (
+              <div className="mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-base text-primary">سمارٹ خلاصہ</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                    className="h-7 text-xs text-primary hover:text-primary/80"
+                    data-testid="button-toggle-summary"
+                  >
+                    {isSummaryExpanded ? (
+                      <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        کم دکھائیں
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        مزید پڑھیں
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p 
+                  className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} 
+                  data-testid="text-smart-summary"
+                >
+                  {article.aiSummary || article.excerpt}
+                </p>
+              </div>
+            )}
+
+            {/* Article Content */}
+            <div
+              className="prose prose-lg max-w-none dark:prose-invert mb-12 
+                         prose-headings:font-bold prose-headings:text-foreground
+                         prose-p:text-foreground prose-p:leading-relaxed
+                         prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                         prose-strong:text-foreground prose-strong:font-semibold
+                         prose-ul:text-foreground prose-ol:text-foreground
+                         prose-li:text-foreground prose-li:marker:text-muted-foreground
+                         prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
+                         prose-img:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              data-testid="text-article-content"
+            />
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 border-t pt-6 mb-8">
+              <Button
+                variant={article.hasReacted ? "default" : "outline"}
+                size="sm"
+                onClick={() => reactMutation.mutate()}
+                disabled={!user || reactMutation.isPending}
+                data-testid="button-like"
+              >
+                <Heart className={`w-4 h-4 mr-2 ${article.hasReacted ? 'fill-current' : ''}`} />
+                {article.hasReacted ? 'پسند کیا گیا' : 'پسند کریں'}
+                {article.reactionsCount && article.reactionsCount > 0 ? ` (${article.reactionsCount})` : ''}
+              </Button>
+              
+              <Button
+                variant={article.isBookmarked ? "default" : "outline"}
+                size="sm"
+                onClick={() => bookmarkMutation.mutate()}
+                disabled={!user || bookmarkMutation.isPending}
+                data-testid="button-bookmark"
+              >
+                <Bookmark className={`w-4 h-4 mr-2 ${article.isBookmarked ? 'fill-current' : ''}`} />
+                {article.isBookmarked ? 'محفوظ شدہ' : 'محفوظ کریں'}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                data-testid="button-share"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                شیئر کریں
+              </Button>
+            </div>
+
+            {/* Keywords/Tags */}
+            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+              <div className="pt-8 border-t">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                  متعلقہ عنوانات
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {article.seo.keywords.map((keyword, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
+                      onClick={() => setLocation(`/ur/keyword/${encodeURIComponent(keyword)}`)}
+                      data-testid={`badge-keyword-${index}`}
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            {/* AI Article Analytics */}
+            <EnAiArticleStats slug={params.slug || ""} />
+
+            {/* Related Articles */}
+            {relatedArticles.length > 0 && (
+              <EnglishRecommendationsWidget
+                articles={relatedArticles}
+                title="متعلقہ مضامین"
+                reason="آپ کو یہ بھی پسند آ سکتے ہیں"
+              />
+            )}
+          </aside>
+        </div>
+      </div>
+    </EnglishLayout>
+  );
+}

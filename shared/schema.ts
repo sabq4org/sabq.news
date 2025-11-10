@@ -3885,6 +3885,21 @@ export const insertUrCommentSchema = createInsertSchema(urComments).omit({
   content: z.string().min(1, "Comment content is required"),
 });
 
+export const insertUrReactionSchema = createInsertSchema(urReactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUrBookmarkSchema = createInsertSchema(urBookmarks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUrReadingHistorySchema = createInsertSchema(urReadingHistory).omit({
+  id: true,
+  readAt: true,
+});
+
 // ============================================
 // URDU VERSION - SELECT TYPES
 // ============================================
@@ -3899,8 +3914,13 @@ export type UrComment = typeof urComments.$inferSelect;
 export type InsertUrComment = z.infer<typeof insertUrCommentSchema>;
 
 export type UrReaction = typeof urReactions.$inferSelect;
+export type InsertUrReaction = z.infer<typeof insertUrReactionSchema>;
+
 export type UrBookmark = typeof urBookmarks.$inferSelect;
+export type InsertUrBookmark = z.infer<typeof insertUrBookmarkSchema>;
+
 export type UrReadingHistory = typeof urReadingHistory.$inferSelect;
+export type InsertUrReadingHistory = z.infer<typeof insertUrReadingHistorySchema>;
 
 // Urdu Article with full details (similar to ArticleWithDetails for Arabic/English)
 export type UrArticleWithDetails = UrArticle & {

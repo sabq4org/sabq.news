@@ -124,6 +124,14 @@ import EnglishNotificationSettings from "@/pages/en/EnglishNotificationSettings"
 import EnglishSmartBlocksPage from "@/pages/en/EnglishSmartBlocksPage";
 import EnglishQuadCategoriesBlockSettings from "@/pages/en/EnglishQuadCategoriesBlockSettings";
 import EnglishReporterProfile from "@/pages/en/EnglishReporterProfile";
+import UrduHome from "@/pages/ur/Home";
+import UrduCategoryPage from "@/pages/ur/CategoryPage";
+import UrduArticleDetail from "@/pages/ur/ArticleDetail";
+import UrduDashboard from "@/pages/ur/dashboard/Dashboard";
+import UrduArticlesPage from "@/pages/ur/dashboard/ArticlesPage";
+import UrduArticleEditor from "@/pages/ur/dashboard/ArticleEditor";
+import UrduCategoriesPage from "@/pages/ur/dashboard/CategoriesPage";
+import UrduCommentsPage from "@/pages/ur/dashboard/CommentsPage";
 import AdvertiserDashboard from "@/pages/dashboard/AdvertiserDashboard";
 import CampaignsList from "@/pages/dashboard/ads/CampaignsList";
 import CampaignDetail from "@/pages/dashboard/ads/CampaignDetail";
@@ -169,6 +177,17 @@ function Router() {
         <Route path="/en/daily-brief" component={EnglishDailyBrief} />
         <Route path="/en/notification-settings" component={EnglishNotificationSettings} />
         <Route path="/en/reporter/:slug" component={EnglishReporterProfile} />
+        
+        {/* Urdu Version Routes */}
+        <Route path="/ur" component={UrduHome} />
+        <Route path="/ur/category/:slug" component={UrduCategoryPage} />
+        <Route path="/ur/article/:slug" component={UrduArticleDetail} />
+        <Route path="/ur/dashboard/articles/new" component={UrduArticleEditor} />
+        <Route path="/ur/dashboard/articles/:id/edit" component={UrduArticleEditor} />
+        <Route path="/ur/dashboard/articles" component={UrduArticlesPage} />
+        <Route path="/ur/dashboard/categories" component={UrduCategoriesPage} />
+        <Route path="/ur/dashboard/comments" component={UrduCommentsPage} />
+        <Route path="/ur/dashboard" component={UrduDashboard} />
         
         {/* Arabic Version Routes */}
         <Route path="/" component={Home} />

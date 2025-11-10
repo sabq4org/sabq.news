@@ -62,6 +62,12 @@ import {
   enBookmarks,
   enReactions,
   enReadingHistory,
+  urArticles,
+  urCategories,
+  urComments,
+  urBookmarks,
+  urReactions,
+  urReadingHistory,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -211,6 +217,20 @@ import {
   type InsertSmartTerm,
   type InsertArticleSmartLink,
   type EnArticleWithDetails,
+  type UrCategory,
+  type InsertUrCategory,
+  type UrArticle,
+  type InsertUrArticle,
+  type UrComment,
+  type InsertUrComment,
+  type UrReaction,
+  type InsertUrReaction,
+  type UrBookmark,
+  type InsertUrBookmark,
+  type UrReadingHistory,
+  type InsertUrReadingHistory,
+  type UrArticleWithDetails,
+  type UrCommentWithUser,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -947,6 +967,70 @@ export interface IStorage {
   getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]>;
   getEnUserReadingHistory(userId: string, limit?: number): Promise<EnArticleWithDetails[]>;
   getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined>;
+
+  // ==========================================
+  // Urdu Operations - عملیات اردو
+  // ==========================================
+  
+  // Urdu Categories
+  getUrCategories(filters?: { status?: string }): Promise<UrCategory[]>;
+  getUrCategoryById(id: string): Promise<UrCategory | undefined>;
+  getUrCategoryBySlug(slug: string): Promise<UrCategory | undefined>;
+  createUrCategory(category: InsertUrCategory): Promise<UrCategory>;
+  updateUrCategory(id: string, updates: Partial<InsertUrCategory>): Promise<UrCategory>;
+  deleteUrCategory(id: string): Promise<void>;
+  
+  // Urdu Articles
+  getUrArticles(filters?: {
+    categoryId?: string;
+    status?: string;
+    authorId?: string;
+    searchQuery?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<UrArticleWithDetails[]>;
+  getUrArticleBySlug(slug: string): Promise<UrArticleWithDetails | undefined>;
+  getUrArticleById(id: string): Promise<UrArticleWithDetails | undefined>;
+  createUrArticle(article: InsertUrArticle): Promise<UrArticle>;
+  updateUrArticle(id: string, updates: Partial<InsertUrArticle>): Promise<UrArticle>;
+  deleteUrArticle(id: string): Promise<void>;
+  incrementUrArticleViews(id: string): Promise<void>;
+  
+  // Urdu Comments
+  getUrArticleComments(articleId: string): Promise<UrCommentWithUser[]>;
+  createUrComment(comment: InsertUrComment): Promise<UrComment>;
+  updateUrComment(id: string, updates: Partial<InsertUrComment>): Promise<UrComment>;
+  deleteUrComment(id: string): Promise<void>;
+  
+  // Urdu Reactions
+  getUrArticleReactions(articleId: string): Promise<UrReaction[]>;
+  getUserUrReaction(articleId: string, userId: string): Promise<UrReaction | undefined>;
+  createUrReaction(reaction: InsertUrReaction): Promise<UrReaction>;
+  deleteUrReaction(id: string): Promise<void>;
+  
+  // Urdu Bookmarks
+  getUrUserBookmarks(userId: string): Promise<UrArticleWithDetails[]>;
+  getUserUrBookmark(articleId: string, userId: string): Promise<UrBookmark | undefined>;
+  createUrBookmark(bookmark: InsertUrBookmark): Promise<UrBookmark>;
+  deleteUrBookmark(id: string): Promise<void>;
+  
+  // Urdu Reading History
+  getUrUserReadingHistory(userId: string, limit?: number): Promise<UrArticleWithDetails[]>;
+  createUrReadingHistory(history: InsertUrReadingHistory): Promise<UrReadingHistory>;
+  
+  // Urdu Dashboard Statistics
+  getUrDashboardStats(): Promise<{
+    articles: {
+      published: number;
+      draft: number;
+      archived: number;
+      scheduled: number;
+      totalViews: number;
+    };
+    categories: { total: number; active: number };
+    recentArticles: Array<any>;
+    topArticles: Array<any>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1611,14 +1695,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
-    const [created] = await db.insert(categories).values(category).returning();
+    const [created] = await db.insert(categories).values([category]).returning();
     return created;
   }
 
   async updateCategory(id: string, categoryData: Partial<InsertCategory>): Promise<Category> {
     const [updated] = await db
       .update(categories)
-      .set(categoryData)
+      .set({ ...categoryData, updatedAt: new Date() })
       .where(eq(categories.id, id))
       .returning();
     return updated;
@@ -2502,6 +2586,7 @@ export class DatabaseStorage implements IStorage {
       content: row.content,
       excerpt: row.excerpt,
       imageUrl: row.image_url,
+      imageFocalPoint: row.image_focal_point || null,
       categoryId: row.category_id,
       authorId: row.author_id,
       reporterId: row.reporter_id,
@@ -2510,6 +2595,10 @@ export class DatabaseStorage implements IStorage {
       publishType: row.publish_type,
       scheduledAt: row.scheduled_at,
       status: row.status,
+      reviewStatus: row.review_status || null,
+      reviewedBy: row.reviewed_by || null,
+      reviewedAt: row.reviewed_at || null,
+      reviewNotes: row.review_notes || null,
       hideFromHomepage: row.hide_from_homepage,
       aiSummary: row.ai_summary,
       aiGenerated: row.ai_generated,
@@ -3226,8 +3315,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(articles.createdAt))
       .limit(5);
 
-    const recentArticles = recentArticlesData.map((r) => ({
+    const recentArticles: ArticleWithDetails[] = recentArticlesData.map((r) => ({
       ...r.article,
+      credibilityScore: r.article.credibilityScore || null,
+      credibilityAnalysis: r.article.credibilityAnalysis || null,
+      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -3262,8 +3354,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(articles.views))
       .limit(5);
 
-    const topArticles = topArticlesData.map((r) => ({
+    const topArticles: ArticleWithDetails[] = topArticlesData.map((r) => ({
       ...r.article,
+      credibilityScore: r.article.credibilityScore || null,
+      credibilityAnalysis: r.article.credibilityAnalysis || null,
+      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -5643,6 +5738,10 @@ export class DatabaseStorage implements IStorage {
         titleAr: staff.titleAr,
         bio: staff.bio,
         bioAr: staff.bioAr,
+        nameUr: staff.nameUr,
+        titleUr: staff.titleUr,
+        bioUr: staff.bioUr,
+        specializationsUr: staff.specializationsUr,
         profileImage: staff.profileImage,
         userProfileImage: users.profileImageUrl,
         staffType: staff.staffType,
@@ -8705,6 +8804,414 @@ export class DatabaseStorage implements IStorage {
       category: r.category || undefined,
       author: r.reporter || r.author || undefined,
     }));
+  }
+
+  // =====================================================
+  // URDU OPERATIONS - عملیات اردو
+  // =====================================================
+
+  // Urdu Categories
+  async getUrCategories(filters?: { status?: string }): Promise<UrCategory[]> {
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(urCategories.status, filters.status));
+    }
+
+    const query = conditions.length > 0
+      ? db.select().from(urCategories).where(and(...conditions)).orderBy(asc(urCategories.displayOrder))
+      : db.select().from(urCategories).orderBy(asc(urCategories.displayOrder));
+
+    return await query;
+  }
+
+  async getUrCategoryById(id: string): Promise<UrCategory | undefined> {
+    const [category] = await db.select().from(urCategories).where(eq(urCategories.id, id));
+    return category;
+  }
+
+  async getUrCategoryBySlug(slug: string): Promise<UrCategory | undefined> {
+    const [category] = await db.select().from(urCategories).where(eq(urCategories.slug, slug));
+    return category;
+  }
+
+  async createUrCategory(category: InsertUrCategory): Promise<UrCategory> {
+    const [newCategory] = await db.insert(urCategories).values(category).returning();
+    return newCategory;
+  }
+
+  async updateUrCategory(id: string, updates: Partial<InsertUrCategory>): Promise<UrCategory> {
+    const [updatedCategory] = await db
+      .update(urCategories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(urCategories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+
+  async deleteUrCategory(id: string): Promise<void> {
+    await db.delete(urCategories).where(eq(urCategories.id, id));
+  }
+
+  // Urdu Articles
+  async getUrArticles(filters?: {
+    categoryId?: string;
+    status?: string;
+    authorId?: string;
+    searchQuery?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<UrArticleWithDetails[]> {
+    const conditions = [];
+
+    if (filters?.categoryId) {
+      conditions.push(eq(urArticles.categoryId, filters.categoryId));
+    }
+    if (filters?.status) {
+      conditions.push(eq(urArticles.status, filters.status));
+    }
+    if (filters?.authorId) {
+      conditions.push(eq(urArticles.authorId, filters.authorId));
+    }
+    if (filters?.searchQuery) {
+      conditions.push(
+        or(
+          ilike(urArticles.title, `%${filters.searchQuery}%`),
+          ilike(urArticles.content, `%${filters.searchQuery}%`)
+        )!
+      );
+    }
+
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    let query = db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    query = query.orderBy(desc(urArticles.publishedAt)) as any;
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as any;
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset) as any;
+    }
+
+    const results = await query;
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+    }));
+  }
+
+  async getUrArticleBySlug(slug: string): Promise<UrArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .where(eq(urArticles.slug, slug));
+
+    if (results.length === 0) return undefined;
+
+    const result = results[0];
+    return {
+      ...result.article,
+      category: result.category || undefined,
+      author: result.reporter || result.author || undefined,
+    };
+  }
+
+  async getUrArticleById(id: string): Promise<UrArticleWithDetails | undefined> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .where(eq(urArticles.id, id));
+
+    if (results.length === 0) return undefined;
+
+    const result = results[0];
+    return {
+      ...result.article,
+      category: result.category || undefined,
+      author: result.reporter || result.author || undefined,
+    };
+  }
+
+  async createUrArticle(article: InsertUrArticle): Promise<UrArticle> {
+    const [newArticle] = await db.insert(urArticles).values([article]).returning();
+    return newArticle;
+  }
+
+  async updateUrArticle(id: string, updates: Partial<InsertUrArticle>): Promise<UrArticle> {
+    const [updatedArticle] = await db
+      .update(urArticles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(urArticles.id, id))
+      .returning();
+    return updatedArticle;
+  }
+
+  async deleteUrArticle(id: string): Promise<void> {
+    await db.delete(urArticles).where(eq(urArticles.id, id));
+  }
+
+  async incrementUrArticleViews(id: string): Promise<void> {
+    await db
+      .update(urArticles)
+      .set({ views: sql`${urArticles.views} + 1` })
+      .where(eq(urArticles.id, id));
+  }
+
+  // Urdu Comments
+  async getUrArticleComments(articleId: string): Promise<UrCommentWithUser[]> {
+    const results = await db
+      .select({
+        comment: urComments,
+        user: users,
+      })
+      .from(urComments)
+      .leftJoin(users, eq(urComments.userId, users.id))
+      .where(eq(urComments.articleId, articleId))
+      .orderBy(desc(urComments.createdAt));
+
+    return results.map((r) => ({
+      ...r.comment,
+      user: r.user!,
+    }));
+  }
+
+  async createUrComment(comment: InsertUrComment): Promise<UrComment> {
+    const [newComment] = await db.insert(urComments).values(comment).returning();
+    return newComment;
+  }
+
+  async updateUrComment(id: string, updates: Partial<InsertUrComment>): Promise<UrComment> {
+    const [updatedComment] = await db
+      .update(urComments)
+      .set(updates)
+      .where(eq(urComments.id, id))
+      .returning();
+    return updatedComment;
+  }
+
+  async deleteUrComment(id: string): Promise<void> {
+    await db.delete(urComments).where(eq(urComments.id, id));
+  }
+
+  // Urdu Reactions
+  async getUrArticleReactions(articleId: string): Promise<UrReaction[]> {
+    return await db.select().from(urReactions).where(eq(urReactions.articleId, articleId));
+  }
+
+  async getUserUrReaction(articleId: string, userId: string): Promise<UrReaction | undefined> {
+    const [reaction] = await db
+      .select()
+      .from(urReactions)
+      .where(and(eq(urReactions.articleId, articleId), eq(urReactions.userId, userId)));
+    return reaction;
+  }
+
+  async createUrReaction(reaction: InsertUrReaction): Promise<UrReaction> {
+    const [newReaction] = await db.insert(urReactions).values(reaction).returning();
+    return newReaction;
+  }
+
+  async deleteUrReaction(id: string): Promise<void> {
+    await db.delete(urReactions).where(eq(urReactions.id, id));
+  }
+
+  // Urdu Bookmarks
+  async getUrUserBookmarks(userId: string): Promise<UrArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urBookmarks)
+      .innerJoin(urArticles, eq(urBookmarks.articleId, urArticles.id))
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .where(eq(urBookmarks.userId, userId))
+      .orderBy(desc(urBookmarks.createdAt));
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+      isBookmarked: true,
+    }));
+  }
+
+  async getUserUrBookmark(articleId: string, userId: string): Promise<UrBookmark | undefined> {
+    const [bookmark] = await db
+      .select()
+      .from(urBookmarks)
+      .where(and(eq(urBookmarks.articleId, articleId), eq(urBookmarks.userId, userId)));
+    return bookmark;
+  }
+
+  async createUrBookmark(bookmark: InsertUrBookmark): Promise<UrBookmark> {
+    const [newBookmark] = await db.insert(urBookmarks).values(bookmark).returning();
+    return newBookmark;
+  }
+
+  async deleteUrBookmark(id: string): Promise<void> {
+    await db.delete(urBookmarks).where(eq(urBookmarks.id, id));
+  }
+
+  // Urdu Reading History
+  async getUrUserReadingHistory(userId: string, limit: number = 20): Promise<UrArticleWithDetails[]> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urReadingHistory)
+      .innerJoin(urArticles, eq(urReadingHistory.articleId, urArticles.id))
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .where(eq(urReadingHistory.userId, userId))
+      .orderBy(desc(urReadingHistory.readAt))
+      .limit(limit);
+
+    return results.map((r) => ({
+      ...r.article,
+      category: r.category || undefined,
+      author: r.reporter || r.author || undefined,
+    }));
+  }
+
+  async createUrReadingHistory(history: InsertUrReadingHistory): Promise<UrReadingHistory> {
+    const [newHistory] = await db.insert(urReadingHistory).values(history).returning();
+    return newHistory;
+  }
+
+  // Urdu Dashboard Statistics
+  async getUrDashboardStats(): Promise<{
+    articles: {
+      published: number;
+      draft: number;
+      archived: number;
+      scheduled: number;
+      totalViews: number;
+    };
+    categories: { total: number; active: number };
+    recentArticles: Array<any>;
+    topArticles: Array<any>;
+  }> {
+    const [articlesStats] = await db
+      .select({
+        published: sql<number>`count(*) filter (where ${urArticles.status} = 'published')`,
+        draft: sql<number>`count(*) filter (where ${urArticles.status} = 'draft')`,
+        archived: sql<number>`count(*) filter (where ${urArticles.status} = 'archived')`,
+        scheduled: sql<number>`count(*) filter (where ${urArticles.status} = 'scheduled')`,
+        totalViews: sql<number>`coalesce(sum(${urArticles.views}), 0)`,
+      })
+      .from(urArticles);
+
+    const [categoriesStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        active: sql<number>`count(*) filter (where ${urCategories.status} = 'active')`,
+      })
+      .from(urCategories);
+
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const recentArticles = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .orderBy(desc(urArticles.createdAt))
+      .limit(5);
+
+    const topArticles = await db
+      .select({
+        article: urArticles,
+        category: urCategories,
+        author: users,
+        reporter: reporterAlias,
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .leftJoin(users, eq(urArticles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+      .where(eq(urArticles.status, "published"))
+      .orderBy(desc(urArticles.views))
+      .limit(5);
+
+    return {
+      articles: {
+        published: Number(articlesStats.published),
+        draft: Number(articlesStats.draft),
+        archived: Number(articlesStats.archived),
+        scheduled: Number(articlesStats.scheduled),
+        totalViews: Number(articlesStats.totalViews),
+      },
+      categories: {
+        total: Number(categoriesStats.total),
+        active: Number(categoriesStats.active),
+      },
+      recentArticles: recentArticles.map((r) => ({
+        ...r.article,
+        category: r.category || undefined,
+        author: r.reporter || r.author || undefined,
+      })),
+      topArticles: topArticles.map((r) => ({
+        ...r.article,
+        category: r.category || undefined,
+        author: r.reporter || r.author || undefined,
+      })),
+    };
   }
 }
 

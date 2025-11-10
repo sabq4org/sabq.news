@@ -20,6 +20,8 @@ export interface NavItem {
   id: string;
   labelKey: string;
   labelAr?: string; // Direct Arabic label
+  labelEn?: string; // Direct English label
+  labelUr?: string; // Direct Urdu label
   path?: string;
   icon?: LucideIcon;
   roles: UserRole[];
