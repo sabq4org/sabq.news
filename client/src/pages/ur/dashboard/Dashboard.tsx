@@ -214,7 +214,7 @@ function Dashboard() {
 
   return (
     <UrduDashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6" dir="rtl">
         {/* Welcome Section with Greeting */}
         <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
           <CardContent className="pt-6">

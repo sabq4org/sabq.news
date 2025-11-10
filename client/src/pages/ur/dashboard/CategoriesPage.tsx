@@ -431,7 +431,7 @@ export default function EnglishCategoriesPage() {
 
   return (
     <UrduDashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6" dir="rtl">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -544,7 +544,7 @@ export default function EnglishCategoriesPage() {
                     <FormItem>
                       <FormLabel>Slug *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="technology" data-testid="input-slug" />
+                        <Input {...field} placeholder="technology" dir="ltr" data-testid="input-slug" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -709,7 +709,7 @@ export default function EnglishArticleEditor() {
 
   return (
     <UrduDashboardLayout>
-      <div className="container mx-auto px-4 py-6" dir="ltr">
+      <div className="container mx-auto px-4 py-6" dir="rtl">
         {/* Page Header with Actions */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -894,9 +894,9 @@ export default function EnglishArticleEditor() {
                 <RichTextEditor
                   content={content}
                   onChange={setContent}
-                  placeholder="Start writing the article..."
+                  placeholder="مضمون لکھنا شروع کریں..."
                   editorRef={setEditorInstance}
-                  dir="ltr"
+                  dir="rtl"
                 />
               </CardContent>
             </Card>
@@ -1147,7 +1147,8 @@ export default function EnglishArticleEditor() {
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   placeholder="article-slug"
-                  data-testid="input-slug-en"
+                  dir="ltr"
+                  data-testid="input-slug-ur"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   {isNewArticle ? "Auto-generated from title" : "Edit slug carefully"}

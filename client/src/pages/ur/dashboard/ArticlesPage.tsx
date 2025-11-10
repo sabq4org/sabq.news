@@ -595,7 +595,7 @@ export default function EnglishArticlesPage() {
 
   return (
     <UrduDashboardLayout>
-      <div className="space-y-4 md:space-y-6 p-3 md:p-0" dir="ltr">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-0" dir="rtl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>

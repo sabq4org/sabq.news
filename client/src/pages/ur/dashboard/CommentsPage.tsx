@@ -207,7 +207,7 @@ export default function EnglishCommentsPage() {
 
   return (
     <UrduDashboardLayout>
-      <div className="space-y-6" dir="ltr">
+      <div className="space-y-6" dir="rtl">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2" data-testid="heading-comments-management">Comments Management</h1>
@@ -371,7 +371,7 @@ export default function EnglishCommentsPage() {
 
         {/* Reject Dialog */}
         <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent dir="ltr">
+        <DialogContent dir="rtl">
           <DialogHeader>
             <DialogTitle>Reject Comment</DialogTitle>
             <DialogDescription>
