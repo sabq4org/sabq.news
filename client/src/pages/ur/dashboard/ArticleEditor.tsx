@@ -525,7 +525,7 @@ export default function EnglishArticleEditor() {
     
     const slug = text
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "") // Keep English, numbers, spaces, hyphens
+      .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "") // Keep Urdu/Arabic, English, numbers, spaces, hyphens
       .replace(/\s+/g, "-") // Replace spaces with hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
       .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
