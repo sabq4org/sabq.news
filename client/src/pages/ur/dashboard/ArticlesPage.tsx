@@ -101,10 +101,10 @@ function SortableRow({ article, children }: { article: Article; children: React.
       ref={setNodeRef}
       style={style}
       className="border-b border-border hover:bg-muted/30"
-      data-testid={`row-en-article-${article.id}`}
+      data-testid={`row-ur-article-${article.id}`}
     >
       <td className="py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-        <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-en-${article.id}`} />
+        <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-ur-${article.id}`} />
       </td>
       {children}
     </tr>
@@ -176,7 +176,7 @@ export default function EnglishArticlesPage() {
 
   // Fetch categories for filter
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/ur/dashboard/categories"],
     enabled: !!user,
   });
 
@@ -460,10 +460,10 @@ export default function EnglishArticlesPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      draft: <Badge variant="secondary" data-testid="badge-en-draft">Draft</Badge>,
-      scheduled: <Badge variant="outline" data-testid="badge-en-scheduled">Scheduled</Badge>,
-      published: <Badge variant="default" data-testid="badge-en-published">Published</Badge>,
-      archived: <Badge variant="destructive" data-testid="badge-en-archived">Archived</Badge>,
+      draft: <Badge variant="secondary" data-testid="badge-ur-draft">مسودہ</Badge>,
+      scheduled: <Badge variant="outline" data-testid="badge-ur-scheduled">شیڈول شدہ</Badge>,
+      published: <Badge variant="default" data-testid="badge-ur-published">شائع شدہ</Badge>,
+      archived: <Badge variant="destructive" data-testid="badge-ur-archived">محفوظ شدہ</Badge>,
     };
     return badges[status as keyof typeof badges] || <Badge>{status}</Badge>;
   };
@@ -505,7 +505,7 @@ export default function EnglishArticlesPage() {
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card border-border"
             }`}
-            data-testid={`status-card-en-${status}`}
+            data-testid={`status-card-ur-${status}`}
           >
             <div className="text-xl md:text-2xl font-bold">{count}</div>
             <div className="text-xs md:text-sm">{label}</div>
@@ -531,7 +531,7 @@ export default function EnglishArticlesPage() {
             ? "bg-destructive text-destructive-foreground"
             : "bg-muted text-muted-foreground"
         }`}
-        data-testid={`breaking-switch-en-${articleId}`}
+        data-testid={`breaking-switch-ur-${articleId}`}
       >
         {initialValue ? "Breaking" : "Regular"}
       </button>
@@ -557,7 +557,7 @@ export default function EnglishArticlesPage() {
           size="sm"
           variant="ghost"
           onClick={onEdit}
-          data-testid={`button-edit-en-${articleId}`}
+          data-testid={`button-edit-ur-${articleId}`}
         >
           <Edit className="h-4 w-4" />
         </Button>
@@ -566,7 +566,7 @@ export default function EnglishArticlesPage() {
           variant="ghost"
           onClick={() => featureMutation.mutate({ id: articleId, featured: !isFeatured })}
           disabled={featureMutation.isPending}
-          data-testid={`button-feature-en-${articleId}`}
+          data-testid={`button-feature-ur-${articleId}`}
         >
           <Star className={`h-4 w-4 ${isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
         </Button>
@@ -576,7 +576,7 @@ export default function EnglishArticlesPage() {
             variant="ghost"
             onClick={() => publishMutation.mutate(articleId)}
             disabled={publishMutation.isPending}
-            data-testid={`button-publish-en-${articleId}`}
+            data-testid={`button-publish-ur-${articleId}`}
           >
             <Send className="h-4 w-4" />
           </Button>
@@ -585,7 +585,7 @@ export default function EnglishArticlesPage() {
           size="sm"
           variant="ghost"
           onClick={onDelete}
-          data-testid={`button-delete-en-${articleId}`}
+          data-testid={`button-delete-ur-${articleId}`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -645,13 +645,13 @@ export default function EnglishArticlesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-9 md:h-10 text-sm"
-                data-testid="input-en-search"
+                data-testid="input-ur-search"
               />
             </div>
 
             <div>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger data-testid="select-en-type-filter" className="h-9 md:h-10 text-sm">
+                <SelectTrigger data-testid="select-ur-type-filter" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -666,7 +666,7 @@ export default function EnglishArticlesPage() {
 
             <div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger data-testid="select-en-category-filter" className="h-9 md:h-10 text-sm">
+                <SelectTrigger data-testid="select-ur-category-filter" className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -749,7 +749,7 @@ export default function EnglishArticlesPage() {
                 <table className="w-full">
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                      <th className="text-center py-3 px-2 w-10" data-testid="header-en-drag"></th>
+                      <th className="text-center py-3 px-2 w-10" data-testid="header-ur-drag"></th>
                       <th className="text-center py-3 px-4 w-12">
                         <Checkbox
                           checked={localArticles.length > 0 && selectedArticles.size === localArticles.length}
@@ -777,7 +777,7 @@ export default function EnglishArticlesPage() {
                             <Checkbox
                               checked={selectedArticles.has(article.id)}
                               onCheckedChange={() => toggleArticleSelection(article.id)}
-                              data-testid={`checkbox-en-article-${article.id}`}
+                              data-testid={`checkbox-ur-article-${article.id}`}
                             />
                           </td>
                           <td className="py-3 px-4">
@@ -848,14 +848,14 @@ export default function EnglishArticlesPage() {
               <div 
                 key={article.id} 
                 className="bg-card border rounded-lg p-3 space-y-3 hover-elevate"
-                data-testid={`card-en-article-${article.id}`}
+                data-testid={`card-ur-article-${article.id}`}
               >
                 {/* Checkbox and Title */}
                 <div className="flex items-start gap-2">
                   <Checkbox
                     checked={selectedArticles.has(article.id)}
                     onCheckedChange={() => toggleArticleSelection(article.id)}
-                    data-testid={`checkbox-en-article-mobile-${article.id}`}
+                    data-testid={`checkbox-ur-article-mobile-${article.id}`}
                     className="mt-0.5"
                   />
                   <div className="flex-1 flex items-start justify-between gap-2">
@@ -917,7 +917,7 @@ export default function EnglishArticlesPage() {
                     variant="outline"
                     onClick={() => handleEdit(article)}
                     className="flex-1"
-                    data-testid={`button-edit-mobile-en-${article.id}`}
+                    data-testid={`button-edit-mobile-ur-${article.id}`}
                   >
                     <Edit className="mr-1.5 h-3.5 w-3.5" />
                     Edit
