@@ -82,11 +82,11 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60" dir="rtl">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo - Right side (Desktop only) for RTL */}
-          <div className="hidden md:flex items-center gap-3 order-3">
+          {/* Logo - Right side (Desktop only) - automatically positioned right in RTL */}
+          <div className="hidden md:flex items-center gap-3">
             <Link href="/ur">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home">
                 <img 
@@ -99,7 +99,7 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
           </div>
 
           {/* Mobile Logo */}
-          <div className="md:hidden flex items-center order-3">
+          <div className="md:hidden flex items-center">
             <Link href="/ur">
               <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile">
                 <img 
@@ -112,7 +112,7 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
           </div>
 
           {/* Main Navigation - Center (Desktop only) */}
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center order-2">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {mainSections.map((section) => (
               <Link key={section.name} href={section.href}>
                 <span className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" data-testid={`link-section-${section.name}`}>
@@ -122,8 +122,8 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
             ))}
           </nav>
 
-          {/* Actions - Left side for RTL */}
-          <div className="flex items-center gap-2 order-1">
+          {/* Actions - Left side - automatically positioned left in RTL */}
+          <div className="flex items-center gap-2">
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
