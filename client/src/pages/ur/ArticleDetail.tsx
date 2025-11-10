@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UrduLayout } from "@/components/ur/UrduLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,21 @@ export default function UrduArticleDetail() {
     queryKey: ["/api/auth/user"],
     retry: false,
   });
+
+  // Ensure RTL direction is applied for Urdu content
+  useEffect(() => {
+    const previousDir = document.documentElement.dir;
+    const previousLang = document.documentElement.lang;
+    
+    document.documentElement.dir = "rtl";
+    document.documentElement.lang = "ur";
+    
+    // Cleanup: restore previous values when unmounting
+    return () => {
+      document.documentElement.dir = previousDir || "ltr";
+      document.documentElement.lang = previousLang || "en";
+    };
+  }, []);
 
   const { data: article, isLoading } = useQuery<UrArticleWithDetails>({
     queryKey: ["/api/ur/articles", params.slug],

@@ -92,6 +92,7 @@ export default function UrduHome() {
 
   return (
     <UrduLayout>
+      <main className="flex-1">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Featured News Carousel */}
           {featuredArticles.length > 0 && (
@@ -343,15 +344,16 @@ export default function UrduHome() {
             <UrduSmartNewsBlock key={block.id} config={block} />
           ))}
         </div>
+      </main>
 
-        {/* Footer */}
-        <footer className="border-t bg-card mt-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center text-sm text-muted-foreground">
-              <p>&copy; 2025 Sabq Smart. تمام حقوق محفوظ ہیں</p>
-            </div>
+      {/* Footer */}
+      <footer className="border-t bg-card mt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-sm text-muted-foreground">
+            <p>&copy; 2025 Sabq Smart. تمام حقوق محفوظ ہیں</p>
           </div>
-        </footer>
+        </div>
+      </footer>
     </UrduLayout>
   );
 }
