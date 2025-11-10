@@ -112,9 +112,10 @@ export default function EnglishArticleEditor() {
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
-  // Fetch categories - using English endpoint
+  // Fetch categories - using Urdu dashboard endpoint for admin access
   const { data: allCategories = [] } = useQuery<UrCategory[]>({
-    queryKey: ["/api/ur/categories"],
+    queryKey: ["/api/ur/dashboard/categories"],
+    enabled: !!user, // Only fetch when authenticated
   });
 
   // Filter to show only core categories (exclude smart, dynamic, seasonal)
