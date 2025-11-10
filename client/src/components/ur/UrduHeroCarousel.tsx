@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Star, Eye, Clock, Flame } from "lucide-react";
 import type { UrArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
-import { ur } from "date-fns/locale";
+import { arSA } from "date-fns/locale";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -141,7 +141,7 @@ export function UrduHeroCarousel({ articles }: UrduHeroCarouselProps) {
                         {article.publishedAt && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: ur })}</span>
+                            <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: arSA })}</span>
                           </div>
                         )}
                       </div>

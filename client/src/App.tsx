@@ -134,6 +134,8 @@ import UrduArticlesPage from "@/pages/ur/dashboard/ArticlesPage";
 import UrduArticleEditor from "@/pages/ur/dashboard/ArticleEditor";
 import UrduCategoriesPage from "@/pages/ur/dashboard/CategoriesPage";
 import UrduCommentsPage from "@/pages/ur/dashboard/CommentsPage";
+import UrduSmartBlocksPage from "@/pages/ur/dashboard/UrduSmartBlocksPage";
+import UrduQuadCategoriesPage from "@/pages/ur/dashboard/UrduQuadCategoriesPage";
 import AdvertiserDashboard from "@/pages/dashboard/AdvertiserDashboard";
 import CampaignsList from "@/pages/dashboard/ads/CampaignsList";
 import CampaignDetail from "@/pages/dashboard/ads/CampaignDetail";
@@ -191,6 +193,8 @@ function Router() {
         <Route path="/ur/dashboard/articles" component={UrduArticlesPage} />
         <Route path="/ur/dashboard/categories" component={UrduCategoriesPage} />
         <Route path="/ur/dashboard/comments" component={UrduCommentsPage} />
+        <Route path="/ur/dashboard/smart-blocks" component={UrduSmartBlocksPage} />
+        <Route path="/ur/dashboard/quad-categories" component={UrduQuadCategoriesPage} />
         <Route path="/ur/dashboard" component={UrduDashboard} />
         
         {/* Arabic Version Routes */}

@@ -17308,6 +17308,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== Urdu Quad Categories Block APIs ====================
+  
+  // GET /api/ur/blocks/quad-categories - Get Urdu quad categories block data for frontend
+  app.get("/api/ur/blocks/quad-categories", async (req, res) => {
+    try {
+      // Get active settings
+      const [settings] = await db
+        .select()
+        .from(urQuadCategoriesSettings)
+        .where(eq(urQuadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        return res.json({ items: [] });
+      }
+
+      const { config } = settings;
+      const sections = config.sections || [];
+
+      // Fetch articles for each category
+      const items = await Promise.all(
+        sections.map(async (section: any) => {
+          const category = await db.query.urCategories.findFirst({
+            where: eq(urCategories.slug, section.categorySlug),
+          });
+
+          if (!category) return null;
+
+          // Build conditions for headline mode
+          let articlesQuery = db
+            .select()
+            .from(urArticles)
+            .where(
+              and(
+                eq(urArticles.categoryId, category.id),
+                eq(urArticles.status, "published")
+              )
+            )
+            .limit(section.listSize || 5);
+
+          // Apply headline mode
+          if (section.headlineMode === "latest") {
+            articlesQuery = articlesQuery.orderBy(desc(urArticles.publishedAt));
+          } else if (section.headlineMode === "mostViewed") {
+            articlesQuery = articlesQuery.orderBy(desc(urArticles.viewsCount));
+          }
+
+          const articlesData = await articlesQuery;
+
+          // Calculate stat based on statType
+          let stat: number | string = 0;
+          if (section.statType === "dailyCount") {
+            const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const count = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(urArticles)
+              .where(
+                and(
+                  eq(urArticles.categoryId, category.id),
+                  eq(urArticles.status, "published"),
+                  gte(urArticles.publishedAt, dayAgo)
+                )
+              );
+            stat = count[0]?.count || 0;
+          } else if (section.statType === "weeklyCount") {
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const count = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(urArticles)
+              .where(
+                and(
+                  eq(urArticles.categoryId, category.id),
+                  eq(urArticles.status, "published"),
+                  gte(urArticles.publishedAt, weekAgo)
+                )
+              );
+            stat = count[0]?.count || 0;
+          } else if (section.statType === "totalViews") {
+            const total = await db
+              .select({ total: sql<number>`SUM(${urArticles.viewsCount})` })
+              .from(urArticles)
+              .where(
+                and(
+                  eq(urArticles.categoryId, category.id),
+                  eq(urArticles.status, "published")
+                )
+              );
+            stat = total[0]?.total || 0;
+          }
+
+          return {
+            category,
+            articles: articlesData,
+            stat,
+            statType: section.statType,
+            headlineMode: section.headlineMode,
+            teaser: section.teaser,
+          };
+        })
+      );
+
+      // Filter out nulls
+      const validItems = items.filter((item) => item !== null);
+
+      res.json({
+        items: validItems,
+        config: {
+          mobileCarousel: config.mobileCarousel,
+          freshHours: config.freshHours,
+          badges: config.badges,
+          backgroundColor: config.backgroundColor,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu quad categories block:", error);
+      res.status(500).json({ message: "Failed to load quad categories block" });
+    }
+  });
+
+  // GET /api/ur/admin/blocks/quad-categories/settings - Get current settings (admin)
+  app.get("/api/ur/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const [settings] = await db
+        .select()
+        .from(urQuadCategoriesSettings)
+        .where(eq(urQuadCategoriesSettings.isActive, true))
+        .limit(1);
+
+      if (!settings) {
+        // Return default configuration
+        return res.json({
+          config: {
+            sections: [
+              { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
+              { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
+              { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
+              { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
+            ],
+            mobileCarousel: true,
+            freshHours: 12,
+            badges: {
+              exclusive: true,
+              breaking: true,
+              analysis: true,
+            },
+          },
+          isActive: false,
+        });
+      }
+
+      res.json({
+        config: settings.config,
+        isActive: settings.isActive,
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu quad categories settings:", error);
+      res.status(500).json({ message: "Failed to load settings" });
+    }
+  });
+
+  // PUT /api/ur/admin/blocks/quad-categories/settings - Update settings (admin)
+  app.put("/api/ur/admin/blocks/quad-categories/settings", requireAuth, requireAnyPermission("system.manage_themes", "articles.edit_any"), async (req, res) => {
+    try {
+      const validated = insertUrQuadCategoriesSettingsSchema.parse(req.body);
+
+      // Deactivate existing settings
+      await db
+        .update(urQuadCategoriesSettings)
+        .set({ isActive: false })
+        .where(eq(urQuadCategoriesSettings.isActive, true));
+
+      // Create new settings
+      const [newSettings] = await db
+        .insert(urQuadCategoriesSettings)
+        .values({
+          config: validated.config,
+          isActive: true,
+        })
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId: (req.user as any).id,
+        action: "ur_quad_categories_settings_update",
+        entityType: "ur_quad_categories_settings",
+        entityId: newSettings.id,
+        newValue: { config: validated.config },
+      });
+
+      res.json({
+        message: "Settings saved successfully",
+        settings: newSettings,
+      });
+    } catch (error: any) {
+      console.error("Error updating Urdu quad categories settings:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save settings" });
+    }
+  });
+
   // ============================================================================
   // Opinion Articles Routes - مقالات الرأي
   // ============================================================================
