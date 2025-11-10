@@ -132,12 +132,18 @@ export function UrduHeroCarousel({ articles }: UrduHeroCarouselProps) {
                           {article.excerpt}
                         </p>
                       )}
-                      
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatPublishedDate(article.publishedAt)}</span>
+                          <Eye className="h-3 w-3" />
+                          <span>{(article.views || 0).toLocaleString('ur-PK')} مناظر</span>
                         </div>
+                        {article.publishedAt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: arSA })}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
