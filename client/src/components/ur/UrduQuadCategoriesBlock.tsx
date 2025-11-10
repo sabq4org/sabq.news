@@ -81,19 +81,6 @@ function FeaturedCard({ data }: { data: CategoryColumnData["featured"] }) {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
           )}
-          
-          {/* Badge */}
-          {data.meta.badge && (
-            <div className="absolute top-2 right-2">
-              <Badge 
-                variant={data.meta.badge === "عاجل" ? "destructive" : "secondary"}
-                className="text-xs font-bold"
-                data-testid="featured-badge"
-              >
-                {data.meta.badge}
-              </Badge>
-            </div>
-          )}
         </div>
 
         {/* Title */}
