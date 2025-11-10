@@ -232,7 +232,7 @@ export function UrduDashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full" dir="rtl">
-        <Sidebar side="left" collapsible="offcanvas">
+        <Sidebar side="right" collapsible="offcanvas">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel className="text-lg font-bold mb-4">
