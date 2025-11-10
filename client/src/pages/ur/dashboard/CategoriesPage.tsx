@@ -46,7 +46,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import type { UrCategory } from "@shared/schema";
 import { insertUrCategorySchema } from "@shared/schema";
 import {
@@ -430,7 +430,7 @@ export default function EnglishCategoriesPage() {
   );
 
   return (
-    <EnglishDashboardLayout>
+    <UrduDashboardLayout>
       <div className="p-6 space-y-6">
         <Card>
           <CardHeader>
@@ -726,6 +726,6 @@ export default function EnglishCategoriesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </EnglishDashboardLayout>
+    </UrduDashboardLayout>
   );
 }

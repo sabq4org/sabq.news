@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import { StatsCard } from "@/components/en/dashboard/StatsCard";
 import { ChartCard } from "@/components/en/dashboard/ChartCard";
 import { ActivityCard } from "@/components/en/dashboard/ActivityCard";
@@ -196,7 +196,7 @@ function Dashboard() {
 
   if (isUserLoading || !user) {
     return (
-      <EnglishDashboardLayout>
+      <UrduDashboardLayout>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -205,7 +205,7 @@ function Dashboard() {
             ))}
           </div>
         </div>
-      </EnglishDashboardLayout>
+      </UrduDashboardLayout>
     );
   }
 
@@ -213,7 +213,7 @@ function Dashboard() {
   // The nav system will automatically filter menu items based on role permissions
 
   return (
-    <EnglishDashboardLayout>
+    <UrduDashboardLayout>
       <div className="space-y-6">
         {/* Welcome Section with Greeting */}
         <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
@@ -590,7 +590,7 @@ function Dashboard() {
           </CardContent>
         </Card>
       </div>
-    </EnglishDashboardLayout>
+    </UrduDashboardLayout>
   );
 }
 

@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
-import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import {
   DndContext,
   closestCenter,
@@ -594,7 +594,7 @@ export default function EnglishArticlesPage() {
   };
 
   return (
-    <EnglishDashboardLayout>
+    <UrduDashboardLayout>
       <div className="space-y-4 md:space-y-6 p-3 md:p-0" dir="ltr">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -1021,6 +1021,6 @@ export default function EnglishArticlesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </EnglishDashboardLayout>
+    </UrduDashboardLayout>
   );
 }

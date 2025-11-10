@@ -20,7 +20,7 @@ import { enUS } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 
 interface Comment {
   id: string;
@@ -191,12 +191,12 @@ export default function EnglishCommentsPage() {
 
   if (isLoading) {
     return (
-      <EnglishDashboardLayout>
+      <UrduDashboardLayout>
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </EnglishDashboardLayout>
+      </UrduDashboardLayout>
     );
   }
 
@@ -206,7 +206,7 @@ export default function EnglishCommentsPage() {
   const rejectedCount = allComments?.filter(c => c.status === "rejected").length || 0;
 
   return (
-    <EnglishDashboardLayout>
+    <UrduDashboardLayout>
       <div className="space-y-6" dir="ltr">
         <div className="flex items-center justify-between">
           <div>
@@ -405,6 +405,6 @@ export default function EnglishCommentsPage() {
         </DialogContent>
         </Dialog>
       </div>
-    </EnglishDashboardLayout>
+    </UrduDashboardLayout>
   );
 }

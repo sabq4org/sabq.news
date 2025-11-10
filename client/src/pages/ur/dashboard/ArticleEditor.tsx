@@ -32,7 +32,7 @@ import {
   Hash,
   EyeOff,
 } from "lucide-react";
-import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
+import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -708,7 +708,7 @@ export default function EnglishArticleEditor() {
   const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending || generateSmartContentMutation.isPending;
 
   return (
-    <EnglishDashboardLayout>
+    <UrduDashboardLayout>
       <div className="container mx-auto px-4 py-6" dir="ltr">
         {/* Page Header with Actions */}
         <div className="mb-6 flex items-center justify-between">
@@ -1251,6 +1251,6 @@ export default function EnglishArticleEditor() {
           </div>
         </div>
       </div>
-    </EnglishDashboardLayout>
+    </UrduDashboardLayout>
   );
 }
