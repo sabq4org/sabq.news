@@ -61,17 +61,17 @@ export function TrendingKeywords() {
 
   if (isLoading) {
     return (
-      <section className="space-y-3" dir="rtl">
+      <section className="space-y-4" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-5 w-5 text-primary" />
-          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-full" />
           ))}
@@ -82,17 +82,17 @@ export function TrendingKeywords() {
 
   if (error) {
     return (
-      <section className="space-y-3" dir="rtl">
+      <section className="space-y-4" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-5 w-5 text-primary" />
-          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
           <p className="text-sm text-muted-foreground">حدث خطأ أثناء تحميل الكلمات المتداولة</p>
         </div>
       </section>
@@ -101,17 +101,17 @@ export function TrendingKeywords() {
 
   if (!keywords || keywords.length === 0) {
     return (
-      <section className="space-y-3" dir="rtl">
+      <section className="space-y-4" dir="rtl">
         <div className="flex items-center gap-2">
-          <Hash className="h-5 w-5 text-primary" />
-          <h2 className="text-xl md:text-2xl font-bold">الكلمات الأكثر تداولًا</h2>
+          <Hash className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl md:text-3xl font-bold">الكلمات الأكثر تداولًا</h2>
         </div>
         
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           خلال الـ 24 ساعة الماضية
         </p>
         
-        <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+        <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
           <div className="flex flex-col items-center justify-center py-3 w-full">
             <Search className="h-6 w-6 text-muted-foreground/50 mb-2" />
             <p className="text-sm text-muted-foreground">
@@ -124,19 +124,19 @@ export function TrendingKeywords() {
   }
 
   return (
-    <section className="space-y-3" dir="rtl">
+    <section className="space-y-4" dir="rtl">
       <div className="flex items-center gap-2">
-        <Hash className="h-5 w-5 text-primary" />
-        <h2 className="text-xl md:text-2xl font-bold" data-testid="heading-trending-keywords">
+        <Hash className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl md:text-3xl font-bold" data-testid="heading-trending-keywords">
           الكلمات الأكثر تداولًا
         </h2>
       </div>
       
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground">
         خلال الـ 24 ساعة الماضية
       </p>
 
-      <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border shadow-sm">
+      <div className="flex flex-wrap gap-3 p-6 bg-card rounded-lg border">
         {keywords
           .filter((item) => item.keyword && typeof item.keyword === 'string' && item.keyword.trim())
           .slice(0, 8)
