@@ -20827,6 +20827,212 @@ Allow: /
     }
   });
 
+  // Get Urdu category by slug
+  app.get("/api/ur/categories/slug/:slug", async (req, res) => {
+    try {
+      const [category] = await db
+        .select()
+        .from(urCategories)
+        .where(eq(urCategories.slug, req.params.slug))
+        .limit(1);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching Urdu category by slug:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // Get Urdu articles by category ID
+  app.get("/api/ur/categories/:id/articles", async (req, res) => {
+    try {
+      const categoryId = req.params.id;
+      const { limit = 50, offset = 0 } = req.query;
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+
+      const results = await db
+        .select()
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(
+          and(
+            eq(urArticles.categoryId, categoryId),
+            eq(urArticles.status, "published")
+          )
+        )
+        .orderBy(desc(urArticles.publishedAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+      const articles = results.map((result: any) => {
+        const article = result.ur_articles;
+        const categoryData = result.ur_categories;
+        const authorData = result.users;
+        const reporterData = result.reporter;
+        const displayAuthor = reporterData || authorData;
+
+        return {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          imageFocalPoint: article.imageFocalPoint,
+          categoryId: article.categoryId,
+          authorId: article.authorId,
+          reporterId: article.reporterId,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          status: article.status,
+          isFeatured: article.isFeatured,
+          views: article.views,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          category: categoryData ? {
+            id: categoryData.id,
+            name: categoryData.name,
+            slug: categoryData.slug,
+            icon: categoryData.icon,
+            color: categoryData.color,
+            description: categoryData.description,
+          } : undefined,
+          author: displayAuthor ? {
+            id: displayAuthor.id,
+            email: displayAuthor.email,
+            firstName: displayAuthor.firstName,
+            lastName: displayAuthor.lastName,
+            profileImageUrl: displayAuthor.profileImageUrl,
+            bio: displayAuthor.bio,
+          } : undefined,
+        };
+      });
+      
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching Urdu category articles by ID:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  // Get Urdu category analytics
+  app.get("/api/ur/categories/:id/analytics", async (req, res) => {
+    try {
+      const categoryId = req.params.id;
+
+      // Get total articles in category
+      const [articleCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(
+          and(
+            eq(urArticles.categoryId, categoryId),
+            eq(urArticles.status, "published")
+          )
+        );
+
+      // Get total views
+      const [viewsSum] = await db
+        .select({ total: sql<number>`COALESCE(SUM(${urArticles.views}), 0)::int` })
+        .from(urArticles)
+        .where(
+          and(
+            eq(urArticles.categoryId, categoryId),
+            eq(urArticles.status, "published")
+          )
+        );
+
+      // Get total interactions (reactions, bookmarks, comments)
+      const [interactionsCount] = await db
+        .select({ 
+          reactions: sql<number>`COALESCE(SUM(${urArticles.reactionsCount}), 0)::int`,
+          bookmarks: sql<number>`COALESCE(SUM(${urArticles.bookmarksCount}), 0)::int`,
+          comments: sql<number>`COALESCE(SUM(${urArticles.commentsCount}), 0)::int`,
+        })
+        .from(urArticles)
+        .where(
+          and(
+            eq(urArticles.categoryId, categoryId),
+            eq(urArticles.status, "published")
+          )
+        );
+
+      const totalInteractions = (interactionsCount.reactions || 0) + 
+                               (interactionsCount.bookmarks || 0) + 
+                               (interactionsCount.comments || 0);
+
+      // Get most active author (prioritize reporterId)
+      const reporterAlias = aliasedTable(users, 'reporter');
+      const authorResults = await db
+        .select({
+          reporterId: urArticles.reporterId,
+          authorId: urArticles.authorId,
+          count: sql<number>`count(*)::int`,
+          reporter: {
+            id: reporterAlias.id,
+            firstName: reporterAlias.firstName,
+            lastName: reporterAlias.lastName,
+            profileImageUrl: reporterAlias.profileImageUrl,
+          },
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(urArticles)
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .where(
+          and(
+            eq(urArticles.categoryId, categoryId),
+            eq(urArticles.status, "published")
+          )
+        )
+        .groupBy(urArticles.reporterId, urArticles.authorId, reporterAlias.id, reporterAlias.firstName, reporterAlias.lastName, reporterAlias.profileImageUrl, users.id, users.firstName, users.lastName, users.profileImageUrl)
+        .orderBy(desc(sql`count(*)`))
+        .limit(1);
+
+      let mostActiveAuthor = null;
+      if (authorResults.length > 0) {
+        const result = authorResults[0];
+        const displayAuthor = result.reporter?.id ? result.reporter : result.author;
+        if (displayAuthor?.id) {
+          mostActiveAuthor = {
+            id: displayAuthor.id,
+            name: `${displayAuthor.firstName || ''} ${displayAuthor.lastName || ''}`.trim() || 'Unknown',
+            profileImageUrl: displayAuthor.profileImageUrl,
+            articleCount: result.count,
+          };
+        }
+      }
+
+      // Calculate average views per article
+      const avgViews = articleCount.count > 0 
+        ? Math.round((viewsSum.total || 0) / articleCount.count)
+        : 0;
+
+      res.json({
+        totalArticles: articleCount.count || 0,
+        totalViews: viewsSum.total || 0,
+        totalInteractions,
+        mostActiveAuthor,
+        avgViewsPerArticle: avgViews,
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu category analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // ============================================================
   // URDU DASHBOARD ENDPOINTS
   // ============================================================
