@@ -163,7 +163,7 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56">
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -249,7 +249,7 @@ export function UrduHeader({ user, onMenuClick }: UrduHeaderProps) {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56">
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
