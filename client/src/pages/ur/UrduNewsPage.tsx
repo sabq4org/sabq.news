@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UrduLayout } from "@/components/ur/UrduLayout";
 import { UrduNewsAnalyticsHero } from "@/components/ur/UrduNewsAnalyticsHero";
@@ -33,21 +33,6 @@ export default function UrduNewsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [mood, setMood] = useState<Mood>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  // Ensure RTL direction is applied for Urdu content
-  useEffect(() => {
-    const previousDir = document.documentElement.dir;
-    const previousLang = document.documentElement.lang;
-    
-    document.documentElement.dir = "rtl";
-    document.documentElement.lang = "ur";
-    
-    // Cleanup: restore previous values when unmounting
-    return () => {
-      document.documentElement.dir = previousDir || "ltr";
-      document.documentElement.lang = previousLang || "en";
-    };
-  }, []);
 
   const { data: user } = useQuery<{ id: string; firstName?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
