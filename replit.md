@@ -31,7 +31,9 @@ Both Arabic and English versions implement a consistent smart blocks architectur
 - **Quad Categories Block:** Redesigned with compact mobile list view (horizontal thumbnail + 3 headlines), shadow-enhanced cards with dark mode borders
 
 ### Technical Implementations
-The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, and a Content Security Policy (CSP).
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include:
+-   **Gzip compression, smart HTTP caching, background jobs, and Content Security Policy (CSP)**
+-   **OptimizedImage Component (November 2025):** Production-grade image optimization system with skeleton placeholders, smooth fade-in transitions, IntersectionObserver-based lazy loading, priority loading for above-the-fold images, per-instance refs to support duplicate URLs, and error handling with fallback gradients. Implemented across ArticleCard and SmartNewsBlock components to eliminate progressive image loading and improve perceived performance.
 
 ### Feature Specifications
 Key features include:
