@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Clock, Eye, TrendingUp, Flame, Zap } from "lucide-react";
 import { UrduLayout } from "@/components/ur/UrduLayout";
-import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
-import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
-import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
-import { EnglishSmartSummaryBlock } from "@/components/en/EnglishSmartSummaryBlock";
+import { UrduHeroCarousel } from "@/components/ur/UrduHeroCarousel";
+import { UrduQuadCategoriesBlock } from "@/components/ur/UrduQuadCategoriesBlock";
+import { UrduSmartNewsBlock } from "@/components/ur/UrduSmartNewsBlock";
+import { UrduSmartSummaryBlock } from "@/components/ur/UrduSmartSummaryBlock";
 import { useAuth } from "@/hooks/useAuth";
 import type { UrArticleWithDetails, UrSmartBlock } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -92,18 +92,17 @@ export default function UrduHome() {
 
   return (
     <UrduLayout>
-      <main className="flex-1" dir="rtl" lang="ur">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Featured News Carousel */}
           {featuredArticles.length > 0 && (
             <div className="mb-8">
-              <EnglishHeroCarousel articles={featuredArticles} />
+              <UrduHeroCarousel articles={featuredArticles} />
             </div>
           )}
 
           {/* Smart Blocks: below_featured */}
           {blocksBelowFeatured && blocksBelowFeatured.map((block) => (
-            <EnglishSmartNewsBlock key={block.id} config={block} />
+            <UrduSmartNewsBlock key={block.id} config={block} />
           ))}
         </div>
 
@@ -112,7 +111,7 @@ export default function UrduHome() {
           <div className="bg-ai-gradient-soft py-8">
             <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
               <div className="scroll-fade-in">
-                <EnglishSmartSummaryBlock />
+                <UrduSmartSummaryBlock />
               </div>
             </div>
           </div>
@@ -121,7 +120,7 @@ export default function UrduHome() {
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
-            <EnglishSmartNewsBlock key={block.id} config={block} />
+            <UrduSmartNewsBlock key={block.id} config={block} />
           ))}
 
           {/* Latest Articles Section */}
@@ -318,13 +317,13 @@ export default function UrduHome() {
 
         {/* Quad Categories Block - Full Width */}
         <div className="scroll-fade-in">
-          <EnglishQuadCategoriesBlock />
+          <UrduQuadCategoriesBlock />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: between_all_and_murqap */}
           {blocksBetweenAllAndMurqap && blocksBetweenAllAndMurqap.map((block) => (
-            <EnglishSmartNewsBlock key={block.id} config={block} />
+            <UrduSmartNewsBlock key={block.id} config={block} />
           ))}
 
           {/* Empty State */}
@@ -341,19 +340,18 @@ export default function UrduHome() {
 
           {/* Smart Blocks: above_footer */}
           {blocksAboveFooter && blocksAboveFooter.map((block) => (
-            <EnglishSmartNewsBlock key={block.id} config={block} />
+            <UrduSmartNewsBlock key={block.id} config={block} />
           ))}
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-card mt-16" dir="rtl">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Sabq Smart. تمام حقوق محفوظ ہیں</p>
+        {/* Footer */}
+        <footer className="border-t bg-card mt-16">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center text-sm text-muted-foreground">
+              <p>&copy; 2025 Sabq Smart. تمام حقوق محفوظ ہیں</p>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
     </UrduLayout>
   );
 }
