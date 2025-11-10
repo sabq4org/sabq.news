@@ -202,6 +202,7 @@ import {
   updateMediaFileSchema,
   updateMediaFolderSchema,
   type EnArticleWithDetails,
+  type UrArticleWithDetails,
   type User,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
