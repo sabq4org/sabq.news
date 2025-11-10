@@ -28,7 +28,7 @@ interface CategoryAnalytics {
 
 interface CategoryAnalyticsProps {
   analytics: CategoryAnalytics;
-  language?: 'ar' | 'en';
+  language?: 'ar' | 'en' | 'ur';
 }
 
 const translations = {
@@ -53,6 +53,17 @@ const translations = {
     topAuthor: 'Most Active Author',
     articles: 'articles',
     noAuthors: 'No authors',
+  },
+  ur: {
+    totalArticles: 'کل مضامین',
+    new: 'نیا',
+    totalViews: 'کل نظریں',
+    avgPerArticle: 'اوسط',
+    perArticle: 'فی مضمون',
+    totalInteractions: 'کل تعاملات',
+    topAuthor: 'سب سے زیادہ فعال مصنف',
+    articles: 'مضامین',
+    noAuthors: 'کوئی مصنف نہیں',
   }
 };
 

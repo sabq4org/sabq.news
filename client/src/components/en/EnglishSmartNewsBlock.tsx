@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag, Newspaper, Eye, Flame, Zap } from "lucide-react";
+import { Clock, Tag, Newspaper, Eye, Flame, Zap, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { EnSmartBlock } from "@shared/schema";
 
