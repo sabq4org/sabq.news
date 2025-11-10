@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Clock, Eye, TrendingUp, Flame, Zap } from "lucide-react";
-import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { UrduLayout } from "@/components/ur/UrduLayout";
 import { EnglishHeroCarousel } from "@/components/en/EnglishHeroCarousel";
 import { EnglishQuadCategoriesBlock } from "@/components/en/EnglishQuadCategoriesBlock";
 import { EnglishSmartNewsBlock } from "@/components/en/EnglishSmartNewsBlock";
@@ -77,8 +77,8 @@ export default function UrduHome() {
 
   if (articlesLoading) {
     return (
-      <EnglishLayout>
-        <div className="container max-w-7xl mx-auto px-4 py-8" dir="rtl" lang="ur">
+      <UrduLayout>
+        <div className="container max-w-7xl mx-auto px-4 py-8">
           <Skeleton className="h-12 w-48 mb-8" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -86,12 +86,12 @@ export default function UrduHome() {
             ))}
           </div>
         </div>
-      </EnglishLayout>
+      </UrduLayout>
     );
   }
 
   return (
-    <EnglishLayout>
+    <UrduLayout>
       <main className="flex-1" dir="rtl" lang="ur">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Featured News Carousel */}
@@ -354,6 +354,6 @@ export default function UrduHome() {
           </div>
         </div>
       </footer>
-    </EnglishLayout>
+    </UrduLayout>
   );
 }
