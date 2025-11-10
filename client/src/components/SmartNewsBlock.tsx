@@ -7,6 +7,7 @@ import { Clock, Tag, Newspaper, Eye, Flame, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { SmartBlock } from "@shared/schema";
+import { OptimizedImage } from "./OptimizedImage";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -143,16 +144,14 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         {/* Image */}
                         {article.imageUrl && (
                           <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
-                            <img
+                            <OptimizedImage
                               src={article.imageUrl}
                               alt={article.title}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                              loading="lazy"
-                              style={{
-                                objectPosition: (article as any).imageFocalPoint
-                                  ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                  : 'center'
-                              }}
+                              priority={false}
+                              objectPosition={(article as any).imageFocalPoint
+                                ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                : 'center'}
                             />
                             {isNewArticle(article.publishedAt) && (
                               <div className="absolute top-1 right-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
@@ -243,16 +242,14 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
               }`} data-testid={`card-smart-article-${article.id}`}>
                 {article.imageUrl && (
                   <div className="relative h-48 overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={article.imageUrl}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      style={{
-                        objectPosition: (article as any).imageFocalPoint
-                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                          : 'center'
-                      }}
+                      priority={false}
+                      objectPosition={(article as any).imageFocalPoint
+                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                        : 'center'}
                     />
                     {article.newsType === "breaking" ? (
                       <Badge 
@@ -340,16 +337,14 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                 <div className="flex flex-col md:flex-row gap-0">
                   {article.imageUrl && (
                     <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 h-56 md:h-64 overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={article.imageUrl}
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                        loading="lazy"
-                        style={{
-                          objectPosition: (article as any).imageFocalPoint
-                            ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                            : 'center'
-                        }}
+                        priority={false}
+                        objectPosition={(article as any).imageFocalPoint
+                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                          : 'center'}
                       />
                     </div>
                   )}
@@ -405,16 +400,14 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
         >
           <div className="relative h-80 md:h-96 overflow-hidden bg-muted">
             {featured.imageUrl ? (
-              <img
+              <OptimizedImage
                 src={featured.imageUrl}
                 alt={featured.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                loading="lazy"
-                style={{
-                  objectPosition: (featured as any).imageFocalPoint
-                    ? `${(featured as any).imageFocalPoint.x}% ${(featured as any).imageFocalPoint.y}%`
-                    : 'center'
-                }}
+                priority={true}
+                objectPosition={(featured as any).imageFocalPoint
+                  ? `${(featured as any).imageFocalPoint.x}% ${(featured as any).imageFocalPoint.y}%`
+                  : 'center'}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
@@ -465,16 +458,14 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
               >
                 <div className="relative aspect-[4/3] md:aspect-auto md:h-48 lg:h-[11.5rem] overflow-hidden bg-muted">
                   {article.imageUrl ? (
-                    <img
+                    <OptimizedImage
                       src={article.imageUrl}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                      style={{
-                        objectPosition: (article as any).imageFocalPoint
-                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                          : 'center'
-                      }}
+                      priority={false}
+                      objectPosition={(article as any).imageFocalPoint
+                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                        : 'center'}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">

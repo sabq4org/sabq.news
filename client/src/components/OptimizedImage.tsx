@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageOff } from "lucide-react";
 
@@ -28,6 +28,7 @@ export function OptimizedImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (priority) {
@@ -35,8 +36,8 @@ export function OptimizedImage({
       return;
     }
 
-    const img = document.querySelector(`[data-src="${src}"]`);
-    if (!img) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -52,12 +53,12 @@ export function OptimizedImage({
       }
     );
 
-    observer.observe(img);
+    observer.observe(container);
 
     return () => {
       observer.disconnect();
     };
-  }, [src, priority]);
+  }, [priority]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -82,7 +83,7 @@ export function OptimizedImage({
   }
 
   return (
-    <div className="relative w-full h-full" data-src={src}>
+    <div ref={containerRef} className="relative w-full h-full">
       {!isLoaded && (
         <Skeleton
           className={`absolute inset-0 ${className}`}
