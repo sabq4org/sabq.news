@@ -42,7 +42,7 @@ Key features include:
 -   **Comments & Engagement:** Nested comment system with real-time moderation, integrated with user authentication.
 -   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
 -   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
--   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story/Keyword Following, AI Insights Block, SEO AI Assistant (GPT-5), and Smart Content Generation System (GPT-5).
+-   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story/Keyword Following, AI Insights Block, SEO AI Assistant (GPT-5), and Smart Content Generation System (GPT-5). **Smart Summary Block:** Dual-purpose engagement component serving personalized daily metrics for registered users and promotional content for visitors with feature showcase (4 features: bookmarks, personalized recommendations, smart summaries, instant notifications) and registration CTA buttons.
 -   **Real-Time Features:** "Moment by Moment" activity timeline and Smart Notifications System via SSE.
 -   **Smart Links Management System:** Full CRUD for AI-powered entity/term recognition, direct image upload, AI auto-description, and rich metadata.
 -   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including Schema.org JSON-LD and OpenAPI 3.0 specification.
