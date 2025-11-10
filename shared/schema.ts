@@ -3995,30 +3995,39 @@ export type UrCommentWithUser = UrComment & {
 // Urdu Smart Blocks
 export const urSmartBlocks = pgTable("ur_smart_blocks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  type: text("type").notNull(), // news_list_summary, quad_categories, smart_summary, hero_carousel, etc.
-  placement: text("placement").notNull(), // below_featured, above_all_news, between_all_and_murqap, etc.
-  config: jsonb("config").$type<Record<string, any>>().default({}),
-  isActive: boolean("is_active").default(true).notNull(),
-  displayOrder: integer("display_order").default(0).notNull(),
+  title: varchar("title", { length: 60 }).notNull(),
+  keyword: varchar("keyword", { length: 100 }).notNull(),
+  color: varchar("color", { length: 20 }).notNull(),
+  placement: varchar("placement", { length: 30 }).notNull(),
+  layoutStyle: varchar("layout_style", { length: 20 }).notNull().default('grid'),
+  limitCount: integer("limit_count").notNull().default(6),
+  filters: jsonb("filters").$type<{
+    categories?: string[];
+    dateRange?: { from: string; to: string };
+  }>(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
-  index("idx_ur_smart_blocks_placement").on(table.placement, table.isActive),
-  index("idx_ur_smart_blocks_type").on(table.type),
+  index("idx_ur_smart_blocks_keyword").on(table.keyword),
+  index("idx_ur_smart_blocks_placement").on(table.placement),
+  index("idx_ur_smart_blocks_active").on(table.isActive),
 ]);
 
+export const urSmartBlocksRelations = relations(urSmartBlocks, ({ one }) => ({
+  creator: one(users, {
+    fields: [urSmartBlocks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export type UrSmartBlock = typeof urSmartBlocks.$inferSelect;
 export const insertUrSmartBlockSchema = createInsertSchema(urSmartBlocks).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  title: z.string().min(1, "Title is required"),
-  type: z.string().min(1, "Type is required"),
-  placement: z.string().min(1, "Placement is required"),
 });
-
-export type UrSmartBlock = typeof urSmartBlocks.$inferSelect;
 export type InsertUrSmartBlock = z.infer<typeof insertUrSmartBlockSchema>;
 
 // ============================================
