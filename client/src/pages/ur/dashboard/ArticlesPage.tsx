@@ -433,7 +433,7 @@ export default function EnglishArticlesPage() {
   };
 
   const handleEdit = (article: Article) => {
-    setLocation(`/en/dashboard/articles/${article.id}/edit`);
+    setLocation(`/ur/dashboard/articles/${article.id}/edit`);
   };
 
   // Drag end handler

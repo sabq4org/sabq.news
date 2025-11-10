@@ -21334,6 +21334,79 @@ Allow: /
     }
   });
 
+  // Get single Urdu article by ID for editing
+  app.get("/api/ur/dashboard/articles/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+      
+      const [article] = await db
+        .select({
+          id: urArticles.id,
+          title: urArticles.title,
+          subtitle: urArticles.subtitle,
+          slug: urArticles.slug,
+          content: urArticles.content,
+          excerpt: urArticles.excerpt,
+          imageUrl: urArticles.imageUrl,
+          imageFocalPoint: urArticles.imageFocalPoint,
+          categoryId: urArticles.categoryId,
+          authorId: urArticles.authorId,
+          reporterId: urArticles.reporterId,
+          articleType: urArticles.articleType,
+          newsType: urArticles.newsType,
+          publishType: urArticles.publishType,
+          scheduledAt: urArticles.scheduledAt,
+          status: urArticles.status,
+          reviewStatus: urArticles.reviewStatus,
+          reviewedBy: urArticles.reviewedBy,
+          reviewedAt: urArticles.reviewedAt,
+          reviewNotes: urArticles.reviewNotes,
+          hideFromHomepage: urArticles.hideFromHomepage,
+          aiSummary: urArticles.aiSummary,
+          smartSummary: urArticles.smartSummary,
+          aiGenerated: urArticles.aiGenerated,
+          isFeatured: urArticles.isFeatured,
+          views: urArticles.views,
+          displayOrder: urArticles.displayOrder,
+          seo: urArticles.seo,
+          publishedAt: urArticles.publishedAt,
+          createdAt: urArticles.createdAt,
+          updatedAt: urArticles.updatedAt,
+          category: {
+            id: urCategories.id,
+            name: urCategories.name,
+            slug: urCategories.slug,
+          },
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .where(eq(urArticles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching Urdu article:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
   // Create Urdu article
   app.post("/api/ur/dashboard/articles", requireAuth, requirePermission("articles.create"), async (req: any, res) => {
     try {
