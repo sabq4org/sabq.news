@@ -3719,6 +3719,196 @@ export type EnCommentWithUser = EnComment & {
 };
 
 // ============================================
+// URDU VERSION - DATABASE TABLES
+// ============================================
+
+// Urdu Categories
+export const urCategories = pgTable("ur_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  color: text("color"),
+  icon: text("icon"),
+  heroImageUrl: text("hero_image_url"),
+  displayOrder: integer("display_order").default(0),
+  status: text("status").default("active").notNull(),
+  type: text("type").default("core").notNull(), // core, dynamic, smart, seasonal
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ur_categories_status").on(table.status),
+  index("idx_ur_categories_type_status").on(table.type, table.status),
+]);
+
+// Urdu Articles
+export const urArticles = pgTable("ur_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: text("image_url"),
+  imageFocalPoint: jsonb("image_focal_point").$type<{
+    x: number;
+    y: number;
+  }>(),
+  categoryId: varchar("category_id").references(() => urCategories.id, { onDelete: 'set null' }),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  reporterId: varchar("reporter_id").references(() => users.id),
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
+  publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
+  scheduledAt: timestamp("scheduled_at"),
+  status: text("status").notNull().default("draft"), // draft, scheduled, published, archived
+  reviewStatus: text("review_status"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  hideFromHomepage: boolean("hide_from_homepage").default(false).notNull(),
+  aiSummary: text("ai_summary"),
+  smartSummary: text("smart_summary"),
+  aiGenerated: boolean("ai_generated").default(false),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  views: integer("views").default(0).notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+  seo: jsonb("seo").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    socialTitle?: string;
+    socialDescription?: string;
+    imageAltText?: string;
+  }>(),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ur_articles_status_published").on(table.status, table.publishedAt.desc()),
+  index("idx_ur_articles_category_status").on(table.categoryId, table.status),
+  index("idx_ur_articles_author_status").on(table.authorId, table.status),
+  index("idx_ur_articles_type").on(table.articleType),
+  index("idx_ur_articles_published_at").on(table.publishedAt.desc()),
+]);
+
+// Urdu Comments
+export const urComments = pgTable("ur_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => urArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
+  parentId: varchar("parent_id"),
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  moderationReason: text("moderation_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ur_comments_article_status").on(table.articleId, table.status),
+  index("idx_ur_comments_user").on(table.userId),
+]);
+
+// Urdu Reactions
+export const urReactions = pgTable("ur_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => urArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull().default("like"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ur_reactions_article").on(table.articleId),
+  index("idx_ur_reactions_user_article").on(table.userId, table.articleId),
+]);
+
+// Urdu Bookmarks
+export const urBookmarks = pgTable("ur_bookmarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => urArticles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ur_bookmarks_user").on(table.userId, table.createdAt.desc()),
+  index("idx_ur_bookmarks_article").on(table.articleId),
+]);
+
+// Urdu Reading History
+export const urReadingHistory = pgTable("ur_reading_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  articleId: varchar("article_id").references(() => urArticles.id, { onDelete: "cascade" }).notNull(),
+  readAt: timestamp("read_at").defaultNow().notNull(),
+  readDuration: integer("read_duration"),
+}, (table) => [
+  index("idx_ur_reading_history_user").on(table.userId, table.readAt.desc()),
+  index("idx_ur_reading_history_article").on(table.articleId),
+]);
+
+// ============================================
+// URDU VERSION - INSERT SCHEMAS
+// ============================================
+
+export const insertUrCategorySchema = createInsertSchema(urCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Category name is required"),
+  slug: z.string().min(1, "Slug is required"),
+});
+
+export const insertUrArticleSchema = createInsertSchema(urArticles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+  views: true,
+}).extend({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  slug: z.string().min(1, "Slug is required"),
+});
+
+export const insertUrCommentSchema = createInsertSchema(urComments).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  content: z.string().min(1, "Comment content is required"),
+});
+
+// ============================================
+// URDU VERSION - SELECT TYPES
+// ============================================
+
+export type UrCategory = typeof urCategories.$inferSelect;
+export type InsertUrCategory = z.infer<typeof insertUrCategorySchema>;
+
+export type UrArticle = typeof urArticles.$inferSelect;
+export type InsertUrArticle = z.infer<typeof insertUrArticleSchema>;
+
+export type UrComment = typeof urComments.$inferSelect;
+export type InsertUrComment = z.infer<typeof insertUrCommentSchema>;
+
+export type UrReaction = typeof urReactions.$inferSelect;
+export type UrBookmark = typeof urBookmarks.$inferSelect;
+export type UrReadingHistory = typeof urReadingHistory.$inferSelect;
+
+// Urdu Article with full details (similar to ArticleWithDetails for Arabic/English)
+export type UrArticleWithDetails = UrArticle & {
+  category?: UrCategory;
+  author?: User;
+  commentsCount?: number;
+  reactionsCount?: number;
+  isBookmarked?: boolean;
+  hasReacted?: boolean;
+};
+
+export type UrCommentWithUser = UrComment & {
+  user: User;
+  replies?: UrCommentWithUser[];
+};
+
+// ============================================
 // MEDIA LIBRARY (Arabic Version Only)
 // ============================================
 
