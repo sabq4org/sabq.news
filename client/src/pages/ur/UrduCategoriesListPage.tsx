@@ -58,7 +58,7 @@ export default function UrduCategoriesListPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories
-              .filter((cat) => cat.status === "active" && cat.type === "core")
+              .filter((cat) => cat.status === "active")
               .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
               .map((category) => (
                 <Link key={category.id} href={`/ur/category/${category.slug}`}>
