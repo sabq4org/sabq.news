@@ -118,8 +118,8 @@ export default function EnglishArticleEditor() {
     enabled: !!user, // Only fetch when authenticated
   });
 
-  // Filter to show only core categories (exclude smart, dynamic, seasonal)
-  const categories = allCategories.filter(cat => cat.type === "core" || !cat.type);
+  // Show all categories for Urdu version (no filtering needed)
+  const categories = allCategories;
 
   // Fetch article - using English endpoint
   const { data: article } = useQuery<ArticleWithDetails>({
