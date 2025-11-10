@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered, bilingual (Arabic and English) news platform designed to deliver an advanced news experience through AI-driven article summarization, personalized recommendations, and comprehensive content management. It aims to enrich news consumption with AI and content enrichment, featuring an MVP with a complete English dashboard and independent content management for both languages. Key capabilities include a smart links system, an AI-powered SEO optimization platform, and one-click AI content generation. The platform is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management.
+Sabq Smart is an AI-powered, **trilingual** (Arabic, English, and Urdu) news platform designed to deliver an advanced news experience through AI-driven article summarization, personalized recommendations, and comprehensive content management. It aims to enrich news consumption with AI and content enrichment, featuring an MVP with complete trilingual dashboards and independent content management for all three languages. Key capabilities include a smart links system, an AI-powered SEO optimization platform, and one-click AI content generation. The platform is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -11,7 +11,7 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, AI-summarized article detail pages, a three-page onboarding flow, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation. Mobile responsiveness is achieved through a mobile-first approach.
 
-A core architectural decision is the **bilingual system** with separate database architecture, language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented.
+A core architectural decision is the **trilingual system** with separate database architecture (ar_*, en_*, ur_* tables), language-specific dashboards and API layers, and shared resources for users, roles, and authentication. An i18n system with LanguageContext and bidirectional routing is implemented across all three languages (Arabic RTL, English LTR, Urdu RTL).
 
 **Design System & Color Palette (November 2025 Update):**
 The platform now implements a unified brand color system derived from the "سبق الذكية" logo, ensuring visual consistency and reinforcing brand identity:
@@ -23,8 +23,8 @@ The platform now implements a unified brand color system derived from the "سب�
 - **UI Components:** Gradient backgrounds, subtle shadows, consistent borders, and full dark mode support throughout
 - The system includes sticky core categories bar, redesigned footer, and enhanced card layouts with icon-pill headers for analytics displays
 
-**Smart Blocks System (Bilingual):**
-Both Arabic and English versions implement a consistent smart blocks architecture:
+**Smart Blocks System (Trilingual):**
+All three language versions (Arabic, English, Urdu) implement a consistent smart blocks architecture:
 - **Block Header Design:** Icon pill (colored circle with tag icon) + bold colored title + keyword metadata line
 - **Featured Layout:** Large hero article (3/5 width) + 4 grid articles (2/5 width, 2x2 grid) with dark gradient overlays and white text
 - **Grid Layout:** Responsive 4-column desktop grid with mobile vertical list view
@@ -39,8 +39,8 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 Key features include:
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth). Email verification system implemented. OAuth features include automatic email verification, account linking by email, first-time user onboarding flow, and proper redirect logic (new users → onboarding, existing users → dashboard).
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO, and bulk operations. Includes a Smart Media Library System (Arabic) with AI-powered image suggestions.
--   **AI Analytics Dashboard (Bilingual):** Complete implementation for both Arabic and English, displaying engagement metrics with Recharts and Framer Motion animations. **Reporter Attribution System:** Analytics prioritize `reporterId` (credited reporter/writer) over `authorId` (system user who published), with fallback to maintain backward compatibility for legacy content.
--   **Category Analytics System (Bilingual):** Comprehensive analytics dashboard for category pages showing total articles, total views, total interactions (reactions + bookmarks + comments), most active author (with reporterId prioritization), and average views per article. Professional card layout with Framer Motion animations displayed between hero section and article cards on both Arabic and English category pages. Reusable CategoryAnalytics component with language-specific endpoints (`/api/categories/:id/analytics` and `/api/en/categories/:id/analytics`).
+-   **AI Analytics Dashboard (Trilingual):** Complete implementation for Arabic, English, and Urdu, displaying engagement metrics with Recharts and Framer Motion animations. **Reporter Attribution System:** Analytics prioritize `reporterId` (credited reporter/writer) over `authorId` (system user who published), with fallback to maintain backward compatibility for legacy content.
+-   **Category Analytics System (Trilingual):** Comprehensive analytics dashboard for category pages showing total articles, total views, total interactions (reactions + bookmarks + comments), most active author (with reporterId prioritization), and average views per article. Professional card layout with Framer Motion animations displayed between hero section and article cards across all three language versions. Reusable CategoryAnalytics component with language-specific endpoints (`/api/categories/:id/analytics`, `/api/en/categories/:id/analytics`, `/api/ur/categories/:id/analytics`).
 -   **Comments & Engagement:** Nested comment system with real-time moderation, integrated with user authentication.
 -   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
 -   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
@@ -50,14 +50,14 @@ Key features include:
 -   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including Schema.org JSON-LD and OpenAPI 3.0 specification.
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
 -   **Locale-Isolated User Pages:** Complete English-specific user profile pages querying English-only data.
--   **Related Articles Feature (Bilingual):** Intelligent article recommendations with language-specific formatting.
--   **Reporter Profile System (Bilingual):** Complete bilingual implementation with language-specific content display. System includes:
-    - Dual API endpoints (`/api/reporters/:slug` for Arabic, `/api/en/reporters/:slug` for English)
-    - **Bidirectional Fallback Logic:** Arabic version falls back to English when `nameAr` is empty; English version falls back to Arabic when `name` is empty - ensures reporter names always display
-    - Smart badge filtering (hides Arabic-only specializations in English version)
-    - Dual page components (`/reporter/:slug` RTL Arabic, `/en/reporter/:slug` LTR English)
+-   **Related Articles Feature (Trilingual):** Intelligent article recommendations with language-specific formatting across Arabic, English, and Urdu.
+-   **Reporter Profile System (Trilingual):** Complete trilingual implementation with language-specific content display. System includes:
+    - Triple API endpoints (`/api/reporters/:slug` for Arabic, `/api/en/reporters/:slug` for English, `/api/ur/reporters/:slug` for Urdu)
+    - **Bidirectional Fallback Logic:** Arabic version falls back to English when `nameAr` is empty; English version falls back to Arabic when `name` is empty; Urdu version falls back to English when `nameUr` is empty - ensures reporter names always display
+    - Smart badge filtering (hides language-specific specializations appropriately in each version)
+    - Triple page components (`/reporter/:slug` RTL Arabic, `/en/reporter/:slug` LTR English, `/ur/reporter/:slug` RTL Urdu)
     - Comprehensive analytics including KPIs, article history, top categories, and activity timelines
-    - Bio field displays correctly under reporter name/title in both language versions
+    - Bio field displays correctly under reporter name/title in all three language versions
 -   **Smart Advertising System (Arabic - Phase 1 Implemented):** Enterprise-grade advertising platform with AI-powered optimization, including Ad Account, Campaign, Performance Dashboard, Ad Creatives, Inventory Slots, and Creative Placements Management with PostgreSQL EXCLUSION constraint for overlap prevention. RBAC integrated for admin and advertiser roles.
 -   **SEO and Social Sharing:** Comprehensive Open Graph and Twitter Card meta tags for homepage and article pages, with server-side rendering for social media crawlers.
 

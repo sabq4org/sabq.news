@@ -21696,6 +21696,123 @@ Allow: /
   });
 
   // ============================================================
+  // URDU SMART BLOCKS - سمارٹ بلاکس
+  // ============================================================
+
+  // GET /api/ur/smart-blocks - List all Urdu smart blocks
+  app.get("/api/ur/smart-blocks", async (req: any, res) => {
+    try {
+      const { isActive, placement, type } = req.query;
+      
+      const filters: any = {};
+      if (isActive !== undefined) {
+        filters.isActive = isActive === 'true';
+      }
+      if (placement) {
+        filters.placement = placement;
+      }
+      if (type) {
+        filters.type = type;
+      }
+
+      const blocks = await storage.getUrSmartBlocks(filters);
+      res.json(blocks);
+    } catch (error) {
+      console.error("Error fetching Urdu smart blocks:", error);
+      res.status(500).json({ message: "Failed to fetch smart blocks" });
+    }
+  });
+
+  // POST /api/ur/smart-blocks - Create new Urdu smart block
+  app.post("/api/ur/smart-blocks", requireAuth, requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const block = await storage.createUrSmartBlock(req.body);
+      
+      await logActivity({
+        userId: req.user?.id,
+        action: "create",
+        entityType: "ur_smart_block",
+        entityId: block.id,
+        newValue: block,
+      });
+
+      res.json(block);
+    } catch (error) {
+      console.error("Error creating Urdu smart block:", error);
+      res.status(500).json({ message: "Failed to create smart block" });
+    }
+  });
+
+  // GET /api/ur/smart-blocks/:id - Get specific Urdu smart block
+  app.get("/api/ur/smart-blocks/:id", async (req: any, res) => {
+    try {
+      const block = await storage.getUrSmartBlockById(req.params.id);
+      
+      if (!block) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      res.json(block);
+    } catch (error) {
+      console.error("Error fetching Urdu smart block:", error);
+      res.status(500).json({ message: "Failed to fetch smart block" });
+    }
+  });
+
+  // PUT /api/ur/smart-blocks/:id - Update Urdu smart block
+  app.put("/api/ur/smart-blocks/:id", requireAuth, requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await storage.getUrSmartBlockById(req.params.id);
+
+      if (!existingBlock) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      const updated = await storage.updateUrSmartBlock(req.params.id, req.body);
+
+      await logActivity({
+        userId: req.user?.id,
+        action: "update",
+        entityType: "ur_smart_block",
+        entityId: req.params.id,
+        oldValue: existingBlock,
+        newValue: updated,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating Urdu smart block:", error);
+      res.status(500).json({ message: "Failed to update smart block" });
+    }
+  });
+
+  // DELETE /api/ur/smart-blocks/:id - Delete Urdu smart block
+  app.delete("/api/ur/smart-blocks/:id", requireAuth, requirePermission('system.manage_settings'), async (req: any, res) => {
+    try {
+      const existingBlock = await storage.getUrSmartBlockById(req.params.id);
+
+      if (!existingBlock) {
+        return res.status(404).json({ message: "Smart block not found" });
+      }
+
+      await storage.deleteUrSmartBlock(req.params.id);
+
+      await logActivity({
+        userId: req.user?.id,
+        action: "delete",
+        entityType: "ur_smart_block",
+        entityId: req.params.id,
+        oldValue: existingBlock,
+      });
+
+      res.json({ message: "Smart block deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting Urdu smart block:", error);
+      res.status(500).json({ message: "Failed to delete smart block" });
+    }
+  });
+
+  // ============================================================
   // END URDU VERSION API ENDPOINTS
   // ============================================================
 

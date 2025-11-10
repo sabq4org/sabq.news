@@ -68,6 +68,7 @@ import {
   urBookmarks,
   urReactions,
   urReadingHistory,
+  urSmartBlocks,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -231,6 +232,8 @@ import {
   type InsertUrReadingHistory,
   type UrArticleWithDetails,
   type UrCommentWithUser,
+  type UrSmartBlock,
+  type InsertUrSmartBlock,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1017,6 +1020,13 @@ export interface IStorage {
   // Urdu Reading History
   getUrUserReadingHistory(userId: string, limit?: number): Promise<UrArticleWithDetails[]>;
   createUrReadingHistory(history: InsertUrReadingHistory): Promise<UrReadingHistory>;
+  
+  // Urdu Smart Blocks
+  getUrSmartBlocks(filters?: { placement?: string; type?: string; isActive?: boolean }): Promise<UrSmartBlock[]>;
+  getUrSmartBlockById(id: string): Promise<UrSmartBlock | undefined>;
+  createUrSmartBlock(block: InsertUrSmartBlock): Promise<UrSmartBlock>;
+  updateUrSmartBlock(id: string, updates: Partial<InsertUrSmartBlock>): Promise<UrSmartBlock>;
+  deleteUrSmartBlock(id: string): Promise<void>;
   
   // Urdu Dashboard Statistics
   getUrDashboardStats(): Promise<{
@@ -9126,6 +9136,46 @@ export class DatabaseStorage implements IStorage {
   async createUrReadingHistory(history: InsertUrReadingHistory): Promise<UrReadingHistory> {
     const [newHistory] = await db.insert(urReadingHistory).values(history).returning();
     return newHistory;
+  }
+
+  // Urdu Smart Blocks
+  async getUrSmartBlocks(filters?: { placement?: string; type?: string; isActive?: boolean }): Promise<UrSmartBlock[]> {
+    let query = db.select().from(urSmartBlocks).$dynamic();
+    
+    if (filters?.placement) {
+      query = query.where(eq(urSmartBlocks.placement, filters.placement));
+    }
+    if (filters?.type) {
+      query = query.where(eq(urSmartBlocks.type, filters.type));
+    }
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(urSmartBlocks.isActive, filters.isActive));
+    }
+    
+    return await query.orderBy(asc(urSmartBlocks.displayOrder));
+  }
+
+  async getUrSmartBlockById(id: string): Promise<UrSmartBlock | undefined> {
+    const [block] = await db.select().from(urSmartBlocks).where(eq(urSmartBlocks.id, id));
+    return block;
+  }
+
+  async createUrSmartBlock(block: InsertUrSmartBlock): Promise<UrSmartBlock> {
+    const [newBlock] = await db.insert(urSmartBlocks).values(block).returning();
+    return newBlock;
+  }
+
+  async updateUrSmartBlock(id: string, updates: Partial<InsertUrSmartBlock>): Promise<UrSmartBlock> {
+    const [updated] = await db
+      .update(urSmartBlocks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(urSmartBlocks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteUrSmartBlock(id: string): Promise<void> {
+    await db.delete(urSmartBlocks).where(eq(urSmartBlocks.id, id));
   }
 
   // Urdu Dashboard Statistics
