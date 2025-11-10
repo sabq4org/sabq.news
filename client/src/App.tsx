@@ -127,6 +127,7 @@ import EnglishReporterProfile from "@/pages/en/EnglishReporterProfile";
 import UrduHome from "@/pages/ur/Home";
 import UrduCategoryPage from "@/pages/ur/CategoryPage";
 import UrduArticleDetail from "@/pages/ur/ArticleDetail";
+import UrduCategoriesListPage from "@/pages/ur/UrduCategoriesListPage";
 import UrduDashboard from "@/pages/ur/dashboard/Dashboard";
 import UrduArticlesPage from "@/pages/ur/dashboard/ArticlesPage";
 import UrduArticleEditor from "@/pages/ur/dashboard/ArticleEditor";
@@ -180,6 +181,7 @@ function Router() {
         
         {/* Urdu Version Routes */}
         <Route path="/ur" component={UrduHome} />
+        <Route path="/ur/categories" component={UrduCategoriesListPage} />
         <Route path="/ur/category/:slug" component={UrduCategoryPage} />
         <Route path="/ur/article/:slug" component={UrduArticleDetail} />
         <Route path="/ur/dashboard/articles/new" component={UrduArticleEditor} />
