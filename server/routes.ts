@@ -19717,6 +19717,176 @@ Allow: /
     }
   });
 
+  // GET Urdu News Analytics
+  app.get("/api/ur/news/analytics", async (req, res) => {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const prevMonthStart = new Date(monthAgo.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Get article counts for different periods
+      const [todayCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(and(
+          gte(urArticles.publishedAt, today),
+          eq(urArticles.status, "published")
+        ));
+
+      const [weekCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(and(
+          gte(urArticles.publishedAt, weekAgo),
+          eq(urArticles.status, "published")
+        ));
+
+      const [monthCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(and(
+          gte(urArticles.publishedAt, monthAgo),
+          eq(urArticles.status, "published")
+        ));
+
+      const [prevMonthCount] = await db.select({ count: sql<number>`count(*)::int` })
+        .from(urArticles)
+        .where(and(
+          gte(urArticles.publishedAt, prevMonthStart),
+          sql`${urArticles.publishedAt} < ${monthAgo}`,
+          eq(urArticles.status, "published")
+        ));
+
+      // Calculate growth percentage
+      const growthPercentage = prevMonthCount.count > 0
+        ? ((monthCount.count - prevMonthCount.count) / prevMonthCount.count) * 100
+        : 0;
+
+      // Get most active category
+      const topCategory = await db.select({
+        categoryId: urArticles.categoryId,
+        count: sql<number>`count(*)::int`,
+        name: urCategories.name,
+        icon: urCategories.icon,
+        color: urCategories.color,
+      })
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .where(and(
+          gte(urArticles.publishedAt, monthAgo),
+          eq(urArticles.status, "published")
+        ))
+        .groupBy(urArticles.categoryId, urCategories.name, urCategories.icon, urCategories.color)
+        .orderBy(sql`count(*) DESC`)
+        .limit(1);
+
+      // Get most active reporter (prefer reporter over system author)
+      let topAuthor = await db.select({
+        userId: urArticles.reporterId,
+        count: sql<number>`count(*)::int`,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      })
+        .from(urArticles)
+        .innerJoin(users, eq(urArticles.reporterId, users.id))
+        .where(and(
+          gte(urArticles.publishedAt, monthAgo),
+          eq(urArticles.status, "published"),
+          isNotNull(urArticles.reporterId)
+        ))
+        .groupBy(urArticles.reporterId, users.firstName, users.lastName, users.profileImageUrl)
+        .orderBy(sql`count(*) DESC`)
+        .limit(1);
+
+      // Fallback to authorId if no reporter found
+      if (!topAuthor || topAuthor.length === 0) {
+        topAuthor = await db.select({
+          userId: urArticles.authorId,
+          count: sql<number>`count(*)::int`,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+          .from(urArticles)
+          .innerJoin(users, eq(urArticles.authorId, users.id))
+          .where(and(
+            gte(urArticles.publishedAt, monthAgo),
+            eq(urArticles.status, "published"),
+            isNotNull(urArticles.authorId)
+          ))
+          .groupBy(urArticles.authorId, users.firstName, users.lastName, users.profileImageUrl)
+          .orderBy(sql`count(*) DESC`)
+          .limit(1);
+      }
+
+      // Get total views
+      const [totalViewsResult] = await db.select({
+        total: sql<number>`COALESCE(SUM(${urArticles.views}), 0)::int`
+      })
+        .from(urArticles)
+        .where(eq(urArticles.status, "published"));
+
+      // Get total interactions (reactions + bookmarks + comments)
+      const [totalReactions] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(urReactions);
+
+      const [totalBookmarks] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(urBookmarks);
+
+      const [totalComments] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(urComments);
+
+      const totalInteractions = (totalReactions?.count || 0) + 
+                                (totalBookmarks?.count || 0) + 
+                                (totalComments?.count || 0);
+
+      // Generate AI insights
+      const insights = {
+        dailySummary: "سبق سمارٹ قارئین کو تازہ ترین خبریں اور تجزیہ پیش کرتا رہتا ہے",
+        topTopics: [],
+        activityTrend: growthPercentage > 5 ? "سرگرمی میں نمایاں اضافہ" : growthPercentage < -5 ? "سرگرمی میں کمی" : "مستحکم سرگرمی",
+        keyHighlights: [
+          `آج ${todayCount.count} مضامین شائع ہوئے`,
+          topCategory[0] ? `${topCategory[0].name} سب سے زیادہ فعال زمرہ ہے` : "مختلف زمروں میں متنوع کوریج",
+          `کل ${totalInteractions.toLocaleString('ur-PK')} تعاملات`
+        ]
+      };
+
+      res.json({
+        period: {
+          today: todayCount.count || 0,
+          week: weekCount.count || 0,
+          month: monthCount.count || 0,
+        },
+        growth: {
+          percentage: Math.round(growthPercentage * 10) / 10,
+          trend: growthPercentage > 0 ? 'up' : growthPercentage < 0 ? 'down' : 'stable',
+          previousMonth: prevMonthCount.count || 0,
+        },
+        topCategory: topCategory[0] ? {
+          name: topCategory[0].name,
+          icon: topCategory[0].icon,
+          color: topCategory[0].color,
+          count: topCategory[0].count,
+        } : null,
+        topAuthor: topAuthor[0] ? {
+          name: `${topAuthor[0].firstName || ''} ${topAuthor[0].lastName || ''}`.trim(),
+          profileImageUrl: topAuthor[0].profileImageUrl,
+          count: topAuthor[0].count,
+        } : null,
+        totalViews: totalViewsResult.total || 0,
+        totalInteractions,
+        aiInsights: insights,
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu news analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // GET Single English Article by Slug - with full details
   app.get("/api/en/articles/:slug", async (req: any, res) => {
     try {
@@ -21438,7 +21608,7 @@ Allow: /
         .values({
           ...parsed.data,
           authorId: userId,
-        })
+        } as any)
         .returning();
 
       await logActivity({
@@ -21513,7 +21683,7 @@ Allow: /
         .set({
           ...parsed.data,
           updatedAt: new Date(),
-        })
+        } as any)
         .where(eq(urArticles.id, articleId))
         .returning();
 

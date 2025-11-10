@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UrduLayout } from "@/components/ur/UrduLayout";
+import { UrduNewsAnalyticsHero } from "@/components/ur/UrduNewsAnalyticsHero";
+import { UrduAIInsightsPanel } from "@/components/ur/UrduAIInsightsPanel";
+import { UrduSmartFilterBar } from "@/components/ur/UrduSmartFilterBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ChevronLeft, Clock, Eye, Zap, Flame } from "lucide-react";
+import { ChevronRight, ChevronLeft, Clock, Eye, Zap, Flame, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import type { EnArticle, EnCategory } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -34,6 +37,11 @@ export default function UrduNewsPage() {
   const { data: user } = useQuery<{ id: string; firstName?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
+  });
+
+  // Fetch analytics
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<any>({
+    queryKey: ["/api/ur/news/analytics"],
   });
 
   // Fetch categories for filter
@@ -132,64 +140,53 @@ export default function UrduNewsPage() {
     <UrduLayout>
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8" dir="rtl">
           <h1 className="text-4xl md:text-5xl font-bold mb-3" data-testid="heading-news">
             <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              تازہ ترین خبریں
+              سمارٹ خبریں
             </span>
           </h1>
           <p className="text-lg text-muted-foreground">
-            تمام تازہ ترین خبریں اور اپ ڈیٹس
+            AI سے چلنے والی تجزیات اور بصیرت کے ساتھ تازہ ترین خبروں کو دریافت کریں
           </p>
         </div>
 
-        {/* Simple Filter Bar */}
-        <div className="mb-6 flex flex-wrap gap-3">
-          <Button
-            variant={timeRange === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setTimeRange('all');
-              handleFilterChange();
-            }}
-            data-testid="button-filter-all"
-          >
-            تمام
-          </Button>
-          <Button
-            variant={timeRange === 'today' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setTimeRange('today');
-              handleFilterChange();
-            }}
-            data-testid="button-filter-today"
-          >
-            آج
-          </Button>
-          <Button
-            variant={timeRange === 'week' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setTimeRange('week');
-              handleFilterChange();
-            }}
-            data-testid="button-filter-week"
-          >
-            اس ہفتے
-          </Button>
-          <Button
-            variant={timeRange === 'month' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setTimeRange('month');
-              handleFilterChange();
-            }}
-            data-testid="button-filter-month"
-          >
-            اس مہینے
-          </Button>
-        </div>
+        {/* Analytics Hero Section */}
+        {analyticsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-32 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : analytics ? (
+          <UrduNewsAnalyticsHero analytics={analytics} />
+        ) : null}
+
+        {/* AI Insights Panel */}
+        {analytics?.aiInsights && (
+          <UrduAIInsightsPanel insights={analytics.aiInsights} />
+        )}
+
+        {/* Smart Filter Bar */}
+        <UrduSmartFilterBar
+          onTimeRangeChange={(range) => {
+            setTimeRange(range);
+            handleFilterChange();
+          }}
+          onMoodChange={(newMood) => {
+            setMood(newMood);
+            handleFilterChange();
+          }}
+          onCategoryChange={(categoryId) => {
+            setSelectedCategory(categoryId);
+            handleFilterChange();
+          }}
+          categories={categories.map(c => ({ id: c.id, name: c.name, icon: c.icon || undefined }))}
+        />
 
         {/* Results Summary */}
         <div className="mb-6 flex items-center justify-between">
@@ -367,6 +364,14 @@ export default function UrduNewsPage() {
                             نیا
                           </Badge>
                         ) : null}
+                        {article.aiSummary && (
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
+                              <Sparkles className="h-3 w-3 ml-1" />
+                              AI
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     )}
                     
