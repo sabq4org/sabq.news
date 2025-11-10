@@ -3676,6 +3676,7 @@ export const insertEnArticleSchema = createInsertSchema(enArticles).omit({
   updatedAt: true,
   publishedAt: true,
   views: true,
+  authorId: true, // Backend adds this from req.user.id
 }).extend({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
@@ -3866,6 +3867,7 @@ export const insertUrArticleSchema = createInsertSchema(urArticles).omit({
   updatedAt: true,
   publishedAt: true,
   views: true,
+  authorId: true, // Backend adds this from req.user.id
 }).extend({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
