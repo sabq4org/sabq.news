@@ -1,7 +1,7 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { useState } from "react";
+import { UrduLayout } from "@/components/ur/UrduLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { arSA } from "date-fns/locale";
 import type { UrArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
 import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
@@ -114,39 +115,24 @@ export default function UrduArticleDetail() {
     }
   };
 
-  // Ensure RTL direction is applied for Urdu content
-  useEffect(() => {
-    const previousDir = document.documentElement.dir;
-    const previousLang = document.documentElement.lang;
-    
-    document.documentElement.dir = "rtl";
-    document.documentElement.lang = "ur";
-    
-    // Cleanup: restore previous values when unmounting
-    return () => {
-      document.documentElement.dir = previousDir || "ltr";
-      document.documentElement.lang = previousLang || "en";
-    };
-  }, []);
-
   if (isLoading) {
     return (
-      <EnglishLayout>
-        <div className="container mx-auto px-4 py-8 max-w-4xl" dir="rtl" lang="ur">
+      <UrduLayout>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
           <Skeleton className="h-8 w-24 mb-6" />
           <Skeleton className="h-12 w-full mb-4" />
           <Skeleton className="h-6 w-3/4 mb-8" />
           <Skeleton className="h-96 w-full mb-8" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </EnglishLayout>
+      </UrduLayout>
     );
   }
 
   if (!article) {
     return (
-      <EnglishLayout>
-        <div className="container mx-auto px-4 py-12 max-w-2xl text-center" dir="rtl" lang="ur">
+      <UrduLayout>
+        <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
           <h2 className="text-2xl font-bold mb-4">مضمون نہیں ملا</h2>
           <p className="text-muted-foreground mb-6">
             جو مضمون آپ تلاش کر رہے ہیں وہ موجود نہیں ہے یا ہٹا دیا گیا ہے
@@ -157,7 +143,7 @@ export default function UrduArticleDetail() {
             </Button>
           </Link>
         </div>
-      </EnglishLayout>
+      </UrduLayout>
     );
   }
 
@@ -169,8 +155,8 @@ export default function UrduArticleDetail() {
   });
 
   return (
-    <EnglishLayout>
-      <div className="container mx-auto px-4 py-8" dir="rtl" lang="ur">
+    <UrduLayout>
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 max-w-7xl mx-auto">
           {/* Main Content */}
           <article>
@@ -222,7 +208,7 @@ export default function UrduArticleDetail() {
                 <Clock className="w-4 h-4" />
                 {article.publishedAt ? (
                   <time dateTime={article.publishedAt.toString()} data-testid="text-publish-date">
-                    {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: arSA })}
                   </time>
                 ) : (
                   <span>مسودہ</span>
@@ -231,7 +217,7 @@ export default function UrduArticleDetail() {
               
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4" />
-                <span data-testid="text-views">{article.views || 0} ملاحظات</span>
+                <span data-testid="text-views">{article.views || 0} نظریں</span>
               </div>
             </div>
 
@@ -374,6 +360,6 @@ export default function UrduArticleDetail() {
           </aside>
         </div>
       </div>
-    </EnglishLayout>
+    </UrduLayout>
   );
 }

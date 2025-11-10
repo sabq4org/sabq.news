@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { EnglishLayout } from "@/components/en/EnglishLayout";
+import { UrduLayout } from "@/components/ur/UrduLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Clock, Eye, Newspaper, Zap, Flame } from "lucide-react";
 import { Link } from "wouter";
 import type { UrCategory, UrArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+import { arSA } from "date-fns/locale";
 import { CategoryAnalytics } from "@/components/CategoryAnalytics";
 
 // Helper function to check if article is new (published within last 3 hours)
@@ -60,8 +61,8 @@ export default function UrduCategoryPage() {
 
   if (categoryLoading) {
     return (
-      <EnglishLayout>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" dir="rtl" lang="ur">
+      <UrduLayout>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Skeleton className="h-64 w-full mb-8 rounded-xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -69,24 +70,24 @@ export default function UrduCategoryPage() {
             ))}
           </div>
         </div>
-      </EnglishLayout>
+      </UrduLayout>
     );
   }
 
   if (!category) {
     return (
-      <EnglishLayout>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center" dir="rtl" lang="ur">
+      <UrduLayout>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h1 className="text-3xl font-bold mb-4">زمرہ نہیں ملا</h1>
           <p className="text-muted-foreground">ہمیں یہ زمرہ نہیں مل سکا</p>
         </div>
-      </EnglishLayout>
+      </UrduLayout>
     );
   }
 
   return (
-    <EnglishLayout>
-      <div dir="rtl" lang="ur">
+    <UrduLayout>
+      <div>
         {/* Hero Section */}
         {category.heroImageUrl ? (
           <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden">
@@ -170,7 +171,7 @@ export default function UrduCategoryPage() {
                   <div className="divide-y divide-border/50 dark:divide-border">
                     {articles.map((article) => {
                       const timeAgo = article.publishedAt
-                        ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+                        ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: arSA })
                         : null;
 
                       return (
@@ -208,7 +209,7 @@ export default function UrduCategoryPage() {
                                         data-testid={`badge-breaking-${article.id}`}
                                       >
                                         <Zap className="h-3 w-3" />
-                                        بریکنگ
+                                        تازہ خبر
                                       </Badge>
                                     ) : isNewArticle(article.publishedAt) ? (
                                       <Badge 
@@ -281,7 +282,7 @@ export default function UrduCategoryPage() {
                               data-testid={`badge-breaking-${article.id}`}
                             >
                               <Zap className="h-3 w-3" />
-                              بریکنگ
+                              تازہ خبر
                             </Badge>
                           ) : isNewArticle(article.publishedAt) ? (
                             <Badge 
@@ -318,7 +319,7 @@ export default function UrduCategoryPage() {
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               <span>
-                                {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true, locale: arSA })}
                               </span>
                             </div>
                           )}
@@ -339,6 +340,6 @@ export default function UrduCategoryPage() {
           )}
         </div>
       </div>
-    </EnglishLayout>
+    </UrduLayout>
   );
 }
