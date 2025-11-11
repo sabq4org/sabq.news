@@ -9205,19 +9205,25 @@ export class DatabaseStorage implements IStorage {
 
   // Urdu Smart Blocks
   async getUrSmartBlocks(filters?: { placement?: string; type?: string; isActive?: boolean }): Promise<UrSmartBlock[]> {
-    let query = db.select().from(urSmartBlocks).$dynamic();
-    
+    let query = db.select().from(urSmartBlocks);
+
+    const conditions = [];
     if (filters?.placement) {
-      query = query.where(eq(urSmartBlocks.placement, filters.placement));
+      conditions.push(eq(urSmartBlocks.placement, filters.placement));
     }
     if (filters?.type) {
-      query = query.where(eq(urSmartBlocks.type, filters.type));
+      conditions.push(eq(urSmartBlocks.type, filters.type));
     }
     if (filters?.isActive !== undefined) {
-      query = query.where(eq(urSmartBlocks.isActive, filters.isActive));
+      conditions.push(eq(urSmartBlocks.isActive, filters.isActive));
     }
-    
-    return await query.orderBy(desc(urSmartBlocks.createdAt));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const blocks = await query.orderBy(desc(urSmartBlocks.createdAt));
+    return blocks;
   }
 
   async getUrSmartBlockById(id: string): Promise<UrSmartBlock | undefined> {
