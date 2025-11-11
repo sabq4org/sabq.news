@@ -1266,7 +1266,7 @@ export default function EnglishArticleEditor() {
                     </Button>
                     
                     {/* Analyze SEO button - only for saved articles */}
-                    {!isNewArticle && (
+                    {!isNewArticle && article?.id && (
                       <Button
                         variant="default"
                         size="sm"
