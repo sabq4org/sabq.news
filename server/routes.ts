@@ -9766,6 +9766,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Smart Headline Comparison - Multi-Model AI
+  app.post("/api/ai/compare-headlines", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { content, currentTitle } = req.body;
+      if (!content) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+
+      // Dynamic import to avoid circular dependencies
+      const { aiManager, AI_MODELS } = await import("./ai-manager");
+
+      // Build prompt
+      const prompt = `أنت محرر خبير في كتابة العناوين الصحفية الجذابة باللغة العربية.
+
+المحتوى:
+${content.substring(0, 500)}...
+
+${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
+المطلوب: اقترح عنوانًا واحدًا جذابًا وواضحًا يلخص المحتوى (لا تكتب أي شيء آخر، فقط العنوان).`;
+
+      // Generate titles from 3 different AI models in parallel
+      const results = await aiManager.generateMultiple(prompt, [
+        { ...AI_MODELS.GPT5, maxTokens: 100, temperature: 0.8 },
+        { ...AI_MODELS.CLAUDE_SONNET, maxTokens: 100, temperature: 0.8 },
+        { ...AI_MODELS.GEMINI_FLASH, maxTokens: 100, temperature: 0.8 },
+      ]);
+
+      // Clean up titles (remove quotes, extra whitespace)
+      const suggestions = results.map((result) => ({
+        provider: result.provider,
+        model: result.model,
+        title: result.content.replace(/^["']|["']$/g, '').trim(),
+        error: result.error,
+      }));
+
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error comparing headlines:", error);
+      res.status(500).json({ message: "Failed to compare headlines" });
+    }
+  });
+
   // Text-to-Speech using ElevenLabs
   app.post("/api/ai/text-to-speech", async (req: any, res) => {
     try {
