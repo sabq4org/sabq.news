@@ -108,6 +108,7 @@ export default function ArticleEditor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
@@ -464,6 +465,56 @@ export default function ArticleEditor() {
       toast({
         title: "خطأ",
         description: error.message || "فشل في توليد العناوين",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const autoClassifyMutation = useMutation({
+    mutationFn: async () => {
+      if (!id || isNewArticle) {
+        throw new Error("يجب حفظ المقال كمسودة أولاً");
+      }
+      setIsClassifying(true);
+      return await apiRequest(`/api/articles/${id}/auto-categorize`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data: {
+      primaryCategory: {
+        categoryId: string;
+        categoryName: string;
+        confidence: number;
+        reasoning: string;
+      };
+      suggestedCategories: Array<{
+        categoryId: string;
+        categoryName: string;
+        confidence: number;
+        reasoning: string;
+      }>;
+      provider: string;
+      model: string;
+    }) => {
+      setIsClassifying(false);
+      // Auto-fill the primary category
+      setCategoryId(data.primaryCategory.categoryId);
+      
+      // Show success with category info
+      const suggestedText = data.suggestedCategories.length > 0
+        ? `\n\nتصنيفات مقترحة أخرى: ${data.suggestedCategories.map(c => `${c.categoryName} (${Math.round(c.confidence * 100)}%)`).join(', ')}`
+        : '';
+      
+      toast({
+        title: "تم التصنيف بنجاح",
+        description: `التصنيف: ${data.primaryCategory.categoryName} (${Math.round(data.primaryCategory.confidence * 100)}% ثقة)${suggestedText}`,
+      });
+    },
+    onError: (error: Error) => {
+      setIsClassifying(false);
+      toast({
+        title: "خطأ في التصنيف",
+        description: error.message || "فشل في تصنيف المقال",
         variant: "destructive",
       });
     },
@@ -1080,9 +1131,24 @@ const generateSlug = (text: string) => {
             {/* Category */}
             <Card>
               <CardHeader>
-                <CardTitle>التصنيف</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>التصنيف</span>
+                  {!isNewArticle && id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => autoClassifyMutation.mutate()}
+                      disabled={isClassifying || !title || !content}
+                      title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "تصنيف ذكي بالذكاء الاصطناعي"}
+                      data-testid="button-auto-classify"
+                    >
+                      <Sparkles className={`h-4 w-4 ml-1 ${isClassifying ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
+                      <span className="text-sm">{isClassifying ? 'جاري التصنيف...' : 'تصنيف ذكي'}</span>
+                    </Button>
+                  )}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <Select value={categoryId} onValueChange={setCategoryId}>
                   <SelectTrigger data-testid="select-category">
                     <SelectValue placeholder="اختر تصنيف" />
@@ -1096,6 +1162,13 @@ const generateSlug = (text: string) => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {isNewArticle && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    التصنيف الذكي متاح بعد حفظ المقال كمسودة
+                  </p>
+                )}
               </CardContent>
             </Card>
 
