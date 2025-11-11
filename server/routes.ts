@@ -22518,6 +22518,49 @@ Allow: /
     }
   });
 
+  // GET /api/ur/smart-blocks/query/articles - Query Urdu articles by keyword
+  app.get("/api/ur/smart-blocks/query/articles", async (req: any, res) => {
+    try {
+      const { keyword, limit = 6, categories, dateFrom, dateTo } = req.query;
+
+      if (!keyword) {
+        return res.status(400).json({ message: "مطلوبہ مطلوبہ لفظ" });
+      }
+
+      console.log(`🔍 [Urdu Smart Block] Searching for keyword: "${keyword}", limit: ${limit}`);
+
+      const filters: any = {};
+      if (categories) {
+        filters.categories = Array.isArray(categories) ? categories : [categories];
+      }
+      if (dateFrom) {
+        filters.dateFrom = dateFrom;
+      }
+      if (dateTo) {
+        filters.dateTo = dateTo;
+      }
+
+      const articles = await storage.queryUrArticlesByKeyword(
+        keyword,
+        parseInt(limit as string) || 6,
+        filters
+      );
+
+      console.log(`✅ [Urdu Smart Block] Found ${articles.length} articles for "${keyword}"`);
+      articles.forEach((article, index) => {
+        console.log(`   ${index + 1}. "${article.title.substring(0, 60)}..."`);
+      });
+
+      res.json({
+        items: articles,
+        total: articles.length
+      });
+    } catch (error) {
+      console.error("Error querying Urdu articles by keyword:", error);
+      res.status(500).json({ message: "Failed to query articles" });
+    }
+  });
+
   // ============================================================
   // END URDU VERSION API ENDPOINTS
   // ============================================================
