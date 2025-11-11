@@ -17328,102 +17328,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ items: [] });
       }
 
-      const { config } = settings;
-      const sections = config.sections || [];
+      const config = settings.config;
+      const items = [];
 
-      // Fetch articles for each category
-      const items = await Promise.all(
-        sections.map(async (section: any) => {
-          const category = await db.query.urCategories.findFirst({
-            where: eq(urCategories.slug, section.categorySlug),
-          });
+      // Process each section
+      for (const section of config.sections) {
+        const category = await db
+          .select()
+          .from(urCategories)
+          .where(and(
+            eq(urCategories.slug, section.categorySlug),
+            eq(urCategories.status, "active")
+          ))
+          .limit(1);
 
-          if (!category) return null;
+        if (!category.length) continue;
 
-          // Build conditions for headline mode
-          let articlesQuery = db
-            .select()
+        const cat = category[0];
+
+        // Calculate stats based on statType
+        let stats: { label: string; value: number; trend?: string } = { label: "", value: 0 };
+        
+        if (section.statType === "dailyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
             .from(urArticles)
-            .where(
-              and(
-                eq(urArticles.categoryId, category.id),
-                eq(urArticles.status, "published")
-              )
-            )
-            .limit(section.listSize || 5);
+            .where(and(
+              eq(urArticles.categoryId, cat.id),
+              eq(urArticles.status, "published"),
+              gte(urArticles.publishedAt, sql`NOW() - INTERVAL '24 hours'`)
+            ));
+          stats = { label: "آج کی خبریں", value: count[0]?.count || 0 };
+        } else if (section.statType === "weeklyCount") {
+          const count = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(urArticles)
+            .where(and(
+              eq(urArticles.categoryId, cat.id),
+              eq(urArticles.status, "published"),
+              gte(urArticles.publishedAt, sql`NOW() - INTERVAL '7 days'`)
+            ));
+          stats = { label: "اس ہفتے", value: count[0]?.count || 0 };
+        } else if (section.statType === "totalViews") {
+          const sum = await db
+            .select({ total: sql<number>`COALESCE(SUM(${urArticles.views}), 0)::int` })
+            .from(urArticles)
+            .where(and(
+              eq(urArticles.categoryId, cat.id),
+              eq(urArticles.status, "published")
+            ));
+          stats = { label: "کل ملاحظات", value: sum[0]?.total || 0 };
+        }
 
-          // Apply headline mode
-          if (section.headlineMode === "latest") {
-            articlesQuery = articlesQuery.orderBy(desc(urArticles.publishedAt));
-          } else if (section.headlineMode === "mostViewed") {
-            articlesQuery = articlesQuery.orderBy(desc(urArticles.viewsCount));
-          }
+        // Get articles based on headlineMode
+        let articlesQuery = db
+          .select()
+          .from(urArticles)
+          .where(and(
+            eq(urArticles.categoryId, cat.id),
+            eq(urArticles.status, "published")
+          ))
+          .$dynamic();
 
-          const articlesData = await articlesQuery;
+        if (section.headlineMode === "mostViewed") {
+          articlesQuery = articlesQuery.orderBy(desc(urArticles.views), desc(urArticles.publishedAt));
+        } else if (section.headlineMode === "editorsPick") {
+          articlesQuery = articlesQuery
+            .where(and(
+              eq(urArticles.categoryId, cat.id),
+              eq(urArticles.status, "published"),
+              eq(urArticles.isFeatured, true)
+            ))
+            .orderBy(desc(urArticles.publishedAt));
+        } else {
+          articlesQuery = articlesQuery.orderBy(desc(urArticles.publishedAt));
+        }
 
-          // Calculate stat based on statType
-          let stat: number | string = 0;
-          if (section.statType === "dailyCount") {
-            const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const count = await db
-              .select({ count: sql<number>`count(*)` })
-              .from(urArticles)
-              .where(
-                and(
-                  eq(urArticles.categoryId, category.id),
-                  eq(urArticles.status, "published"),
-                  gte(urArticles.publishedAt, dayAgo)
-                )
-              );
-            stat = count[0]?.count || 0;
-          } else if (section.statType === "weeklyCount") {
-            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            const count = await db
-              .select({ count: sql<number>`count(*)` })
-              .from(urArticles)
-              .where(
-                and(
-                  eq(urArticles.categoryId, category.id),
-                  eq(urArticles.status, "published"),
-                  gte(urArticles.publishedAt, weekAgo)
-                )
-              );
-            stat = count[0]?.count || 0;
-          } else if (section.statType === "totalViews") {
-            const total = await db
-              .select({ total: sql<number>`SUM(${urArticles.viewsCount})` })
-              .from(urArticles)
-              .where(
-                and(
-                  eq(urArticles.categoryId, category.id),
-                  eq(urArticles.status, "published")
-                )
-              );
-            stat = total[0]?.total || 0;
-          }
+        const articlesList = await articlesQuery.limit(section.listSize + 1);
+
+        if (!articlesList.length) continue;
+
+        // Featured article (first one)
+        const featuredArticle = articlesList[0];
+        const timeDiff = featuredArticle.publishedAt 
+          ? Date.now() - new Date(featuredArticle.publishedAt).getTime()
+          : 0;
+        const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+        const isFresh = hoursAgo <= config.freshHours;
+
+        let badge = null;
+        if (config.badges.breaking && featuredArticle.newsType === "breaking") {
+          badge = "تازہ";
+        }
+
+        const featured = {
+          id: featuredArticle.id,
+          title: featuredArticle.title,
+          image: featuredArticle.imageUrl,
+          href: `/ur/article/${featuredArticle.slug}`,
+          meta: {
+            age: hoursAgo < 1 ? "منٹ قبل" : hoursAgo < 24 ? `${hoursAgo} گھنٹے قبل` : `${Math.floor(hoursAgo / 24)} دن قبل`,
+            readMins: 3,
+            views: featuredArticle.views,
+            badge: isFresh && hoursAgo < 2 ? "نیا" : badge,
+          },
+        };
+
+        // List items (remaining articles)
+        const list = articlesList.slice(1).map((item) => {
+          const timeDiff = item.publishedAt 
+            ? Date.now() - new Date(item.publishedAt).getTime()
+            : 0;
+          const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
 
           return {
-            category,
-            articles: articlesData,
-            stat,
-            statType: section.statType,
-            headlineMode: section.headlineMode,
-            teaser: section.teaser,
+            id: item.id,
+            title: item.title,
+            href: `/ur/article/${item.slug}`,
+            meta: {
+              views: item.views,
+              age: hoursAgo < 1 ? "منٹ" : hoursAgo < 24 ? `${hoursAgo}گھ` : `${Math.floor(hoursAgo / 24)}د`,
+            },
           };
-        })
-      );
+        });
 
-      // Filter out nulls
-      const validItems = items.filter((item) => item !== null);
+        items.push({
+          category: {
+            slug: cat.slug,
+            name: cat.name,
+            icon: cat.icon || "folder",
+          },
+          stats,
+          featured,
+          list,
+          teaser: section.teaser || "",
+        });
+      }
 
       res.json({
-        items: validItems,
-        config: {
-          mobileCarousel: config.mobileCarousel,
-          freshHours: config.freshHours,
-          badges: config.badges,
-          backgroundColor: config.backgroundColor,
-        },
+        items,
+        mobileCarousel: config.mobileCarousel,
+        backgroundColor: config.backgroundColor,
       });
     } catch (error) {
       console.error("Error fetching Urdu quad categories block:", error);
