@@ -44,6 +44,7 @@ import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
+import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import type { Editor } from "@tiptap/react";
 
 export default function EnglishArticleEditor() {
@@ -786,6 +787,12 @@ export default function EnglishArticleEditor() {
                     )}
                   </Button>
                 </div>
+                <InlineHeadlineSuggestions
+                  language="ur"
+                  editorInstance={editorInstance}
+                  currentTitle={title}
+                  onTitleChange={setTitle}
+                />
                 <p className="text-xs text-muted-foreground">
                   {(title || "").length}/200 characters
                 </p>
