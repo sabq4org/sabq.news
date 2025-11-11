@@ -20,6 +20,7 @@ import { findSimilarArticles, getPersonalizedRecommendations } from "./similarit
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
+import { classifyArticle } from './ai-classifier';
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
