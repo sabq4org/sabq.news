@@ -12788,6 +12788,105 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // ============================================================
+  // AI ARTICLE CLASSIFICATION ENDPOINTS
+  // ============================================================
+
+  // POST /api/articles/:id/auto-categorize - Auto-categorize article using AI
+  app.post("/api/articles/:id/auto-categorize", requireAuth, requireAnyPermission("articles.edit", "system.admin"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get article
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, id))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      // Get all active categories
+      const activeCategories = await db
+        .select({
+          id: categories.id,
+          slug: categories.slug,
+          nameAr: categories.nameAr,
+          nameEn: categories.nameEn,
+        })
+        .from(categories)
+        .where(eq(categories.status, "active"));
+
+      if (activeCategories.length === 0) {
+        return res.status(400).json({ message: "لا توجد تصنيفات متاحة" });
+      }
+
+      // Classify article using AI
+      const classification = await classifyArticle(
+        article.title,
+        article.content,
+        activeCategories
+      );
+
+      // Delete existing smart category assignments for this article
+      await db
+        .delete(articleSmartCategories)
+        .where(eq(articleSmartCategories.articleId, id));
+
+      // Insert primary category
+      await db
+        .insert(articleSmartCategories)
+        .values({
+          id: randomUUID(),
+          articleId: id,
+          categoryId: classification.primaryCategory.categoryId,
+          score: classification.primaryCategory.confidence,
+          assignedAt: new Date(),
+        });
+
+      // Insert suggested categories
+      for (const suggestion of classification.suggestedCategories) {
+        await db
+          .insert(articleSmartCategories)
+          .values({
+            id: randomUUID(),
+            articleId: id,
+            categoryId: suggestion.categoryId,
+            score: suggestion.confidence,
+            assignedAt: new Date(),
+          });
+      }
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "auto_categorize_article",
+        entityType: "article",
+        entityId: id,
+        newValue: {
+          primary: classification.primaryCategory.categoryName,
+          suggested: classification.suggestedCategories.map(s => s.categoryName),
+        },
+      });
+
+      res.json({
+        success: true,
+        primaryCategory: classification.primaryCategory,
+        suggestedCategories: classification.suggestedCategories,
+        provider: classification.provider,
+        model: classification.model,
+      });
+    } catch (error) {
+      console.error("Error auto-categorizing article:", error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "فشل في تصنيف المقال تلقائياً",
+      });
+    }
+  });
+
+  // ============================================================
   // SENTIMENT ANALYSIS ENDPOINTS
   // ============================================================
 
