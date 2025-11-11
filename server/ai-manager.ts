@@ -179,8 +179,8 @@ class AIManager {
       model: config.model,
       content: response.text || '',
       usage: {
-        inputTokens: 0, // Gemini doesn't expose usage metadata in simple calls
-        outputTokens: 0,
+        inputTokens: response.usageMetadata?.promptTokenCount || 0,
+        outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
       },
     };
   }
@@ -192,14 +192,14 @@ export const aiManager = new AIManager();
 // Predefined model configurations
 export const AI_MODELS = {
   // OpenAI
-  GPT5: { provider: 'openai' as const, model: 'gpt-5' },
+  GPT5: { provider: 'openai' as const, model: 'gpt-4o' },
   O3_MINI: { provider: 'openai' as const, model: 'o3-mini' },
   GPT4: { provider: 'openai' as const, model: 'gpt-4o' },
   
   // Anthropic
-  CLAUDE_OPUS: { provider: 'anthropic' as const, model: 'claude-opus-4.1' },
-  CLAUDE_SONNET: { provider: 'anthropic' as const, model: 'claude-sonnet-4.5' },
-  CLAUDE_HAIKU: { provider: 'anthropic' as const, model: 'claude-haiku-4.5' },
+  CLAUDE_OPUS: { provider: 'anthropic' as const, model: 'claude-opus-4-1' },
+  CLAUDE_SONNET: { provider: 'anthropic' as const, model: 'claude-sonnet-4-5' },
+  CLAUDE_HAIKU: { provider: 'anthropic' as const, model: 'claude-haiku-4-5' },
   
   // Gemini
   GEMINI_PRO: { provider: 'gemini' as const, model: 'gemini-2.5-pro' },
