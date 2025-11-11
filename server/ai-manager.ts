@@ -162,7 +162,12 @@ class AIManager {
   ): Promise<AIResponse> {
     const response = await this.gemini.models.generateContent({
       model: config.model,
-      contents: prompt,
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ],
       config: {
         temperature: config.temperature || 0.7,
         maxOutputTokens: config.maxTokens || 500,

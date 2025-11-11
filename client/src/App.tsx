@@ -102,6 +102,7 @@ import QuadCategoriesBlockSettings from "@/pages/QuadCategoriesBlockSettings";
 import SmartCategoriesManagement from "@/pages/SmartCategoriesManagement";
 import OpinionManagement from "@/pages/dashboard/OpinionManagement";
 import MediaLibrary from "@/pages/dashboard/MediaLibrary";
+import AITools from "@/pages/dashboard/AITools";
 import AdminLogin from "@/pages/AdminLogin";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
@@ -302,6 +303,7 @@ function Router() {
       <Route path="/dashboard/opinion" component={OpinionManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/media-library" component={MediaLibrary} />
+      <Route path="/dashboard/ai-tools" component={AITools} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       
