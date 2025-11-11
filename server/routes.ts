@@ -18,6 +18,8 @@ import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
+import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
+import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -60,6 +62,7 @@ import {
   articles, 
   categories, 
   comments,
+  commentSentiments,
   rssFeeds,
   systemSettings,
   themes,
@@ -12700,6 +12703,355 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     } catch (error) {
       console.error("Error getting recommendation analytics:", error);
       res.status(500).json({ message: "فشل في جلب إحصائيات التوصيات" });
+    }
+  });
+
+  // ============================================================
+  // SENTIMENT ANALYSIS ENDPOINTS
+  // ============================================================
+
+  // POST /api/comments/:id/analyze-sentiment - Analyze single comment
+  app.post("/api/comments/:id/analyze-sentiment", requireAuth, requireAnyPermission("comments.moderate", "system.admin"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Validate comment exists
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, id))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      // Detect language and analyze sentiment
+      const language = detectLanguage(comment.content);
+      const result = await analyzeSentiment(comment.content, language);
+
+      // Save sentiment analysis to comment_sentiments table
+      const [sentimentRecord] = await db
+        .insert(commentSentiments)
+        .values({
+          id: randomUUID(),
+          commentId: id,
+          sentiment: result.sentiment,
+          confidence: result.confidence,
+          provider: result.provider,
+          model: result.model,
+          language: language,
+          rawMetadata: result.rawMetadata,
+          analyzedAt: new Date(),
+        })
+        .returning();
+
+      // Update comment's current sentiment fields
+      await db
+        .update(comments)
+        .set({
+          currentSentiment: result.sentiment,
+          currentSentimentConfidence: result.confidence,
+          sentimentAnalyzedAt: new Date(),
+        })
+        .where(eq(comments.id, id));
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "analyze_sentiment",
+        entityType: "comment",
+        entityId: id,
+        newValue: { sentiment: result.sentiment, confidence: result.confidence },
+      });
+
+      res.json({
+        success: true,
+        sentiment: result.sentiment,
+        confidence: result.confidence,
+        provider: result.provider,
+        model: result.model,
+      });
+    } catch (error) {
+      console.error("Error analyzing comment sentiment:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في تحليل مشاعر التعليق" 
+      });
+    }
+  });
+
+  // POST /api/comments/analyze-batch - Analyze multiple comments
+  app.post("/api/comments/analyze-batch", requireAuth, requireAnyPermission("comments.moderate", "system.admin"), async (req: any, res) => {
+    try {
+      // Validate request body
+      const bodySchema = z.object({
+        commentIds: z.array(z.string()).min(1).max(100),
+      });
+
+      const { commentIds } = bodySchema.parse(req.body);
+
+      // Fetch all comments
+      const commentsToAnalyze = await db
+        .select()
+        .from(comments)
+        .where(inArray(comments.id, commentIds));
+
+      if (commentsToAnalyze.length === 0) {
+        return res.status(404).json({ message: "لم يتم العثور على تعليقات" });
+      }
+
+      // Process comments in parallel with concurrency limit of 3
+      const limit = pLimit(3);
+      const results = await Promise.allSettled(
+        commentsToAnalyze.map(comment =>
+          limit(async () => {
+            try {
+              // Detect language and analyze sentiment
+              const language = detectLanguage(comment.content);
+              const result = await analyzeSentiment(comment.content, language);
+
+              // Save sentiment analysis
+              await db.insert(commentSentiments).values({
+                id: randomUUID(),
+                commentId: comment.id,
+                sentiment: result.sentiment,
+                confidence: result.confidence,
+                provider: result.provider,
+                model: result.model,
+                language: language,
+                rawMetadata: result.rawMetadata,
+                analyzedAt: new Date(),
+              });
+
+              // Update comment's current sentiment
+              await db
+                .update(comments)
+                .set({
+                  currentSentiment: result.sentiment,
+                  currentSentimentConfidence: result.confidence,
+                  sentimentAnalyzedAt: new Date(),
+                })
+                .where(eq(comments.id, comment.id));
+
+              return {
+                commentId: comment.id,
+                success: true,
+                sentiment: result.sentiment,
+                confidence: result.confidence,
+                provider: result.provider,
+                model: result.model,
+              };
+            } catch (error: any) {
+              return {
+                commentId: comment.id,
+                success: false,
+                error: error.message || "فشل التحليل",
+              };
+            }
+          })
+        )
+      );
+
+      // Map results
+      const processedResults = results.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          return {
+            commentId: commentsToAnalyze[index].id,
+            success: false,
+            error: result.reason?.message || "فشل التحليل",
+          };
+        }
+      });
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "batch_analyze_sentiment",
+        entityType: "comment",
+        entityId: "batch",
+        newValue: { 
+          total: commentIds.length,
+          successful: processedResults.filter(r => r.success).length,
+          failed: processedResults.filter(r => !r.success).length,
+        },
+      });
+
+      res.json({
+        success: true,
+        results: processedResults,
+        summary: {
+          total: commentIds.length,
+          successful: processedResults.filter(r => r.success).length,
+          failed: processedResults.filter(r => !r.success).length,
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false,
+          message: "بيانات الطلب غير صالحة",
+          errors: error.errors,
+        });
+      }
+
+      console.error("Error in batch sentiment analysis:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في تحليل المشاعر" 
+      });
+    }
+  });
+
+  // GET /api/comments/:id/sentiment-history - Get sentiment analysis history
+  app.get("/api/comments/:id/sentiment-history", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Validate comment exists
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, id))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      // Get sentiment history
+      const history = await db
+        .select({
+          id: commentSentiments.id,
+          sentiment: commentSentiments.sentiment,
+          confidence: commentSentiments.confidence,
+          provider: commentSentiments.provider,
+          model: commentSentiments.model,
+          language: commentSentiments.language,
+          analyzedAt: commentSentiments.analyzedAt,
+        })
+        .from(commentSentiments)
+        .where(eq(commentSentiments.commentId, id))
+        .orderBy(desc(commentSentiments.analyzedAt));
+
+      res.json({
+        commentId: id,
+        currentSentiment: comment.currentSentiment,
+        currentConfidence: comment.currentSentimentConfidence,
+        lastAnalyzedAt: comment.sentimentAnalyzedAt,
+        history: history,
+      });
+    } catch (error) {
+      console.error("Error getting sentiment history:", error);
+      res.status(500).json({ message: "فشل في جلب سجل تحليل المشاعر" });
+    }
+  });
+
+  // GET /api/sentiment/analytics - Get sentiment analytics dashboard data
+  app.get("/api/sentiment/analytics", requireAuth, requireRole("admin"), async (req: any, res) => {
+    try {
+      const { days = 30 } = req.query;
+      const daysNum = parseInt(days as string, 10);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysNum);
+
+      // Overall sentiment distribution
+      const distribution = await db
+        .select({
+          sentiment: comments.currentSentiment,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(comments)
+        .where(
+          and(
+            isNotNull(comments.currentSentiment),
+            gte(comments.sentimentAnalyzedAt, startDate)
+          )
+        )
+        .groupBy(comments.currentSentiment);
+
+      // Sentiment trend over time (last N days)
+      const trend = await db
+        .select({
+          date: sql<string>`DATE(${comments.sentimentAnalyzedAt})`,
+          sentiment: comments.currentSentiment,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(comments)
+        .where(
+          and(
+            isNotNull(comments.currentSentiment),
+            gte(comments.sentimentAnalyzedAt, startDate)
+          )
+        )
+        .groupBy(sql`DATE(${comments.sentimentAnalyzedAt})`, comments.currentSentiment)
+        .orderBy(sql`DATE(${comments.sentimentAnalyzedAt})`);
+
+      // Top articles by sentiment (most positive and most negative)
+      const articleSentiment = await db
+        .select({
+          articleId: comments.articleId,
+          articleTitle: articles.title,
+          positiveCount: sql<number>`count(*) FILTER (WHERE ${comments.currentSentiment} = 'positive')::int`,
+          neutralCount: sql<number>`count(*) FILTER (WHERE ${comments.currentSentiment} = 'neutral')::int`,
+          negativeCount: sql<number>`count(*) FILTER (WHERE ${comments.currentSentiment} = 'negative')::int`,
+          totalComments: sql<number>`count(*)::int`,
+          avgConfidence: sql<number>`avg(${comments.currentSentimentConfidence})::float`,
+        })
+        .from(comments)
+        .leftJoin(articles, eq(comments.articleId, articles.id))
+        .where(
+          and(
+            isNotNull(comments.currentSentiment),
+            gte(comments.sentimentAnalyzedAt, startDate)
+          )
+        )
+        .groupBy(comments.articleId, articles.title)
+        .orderBy(sql`count(*) DESC`)
+        .limit(20);
+
+      // Calculate overall stats
+      const totalAnalyzed = distribution.reduce((sum, item) => sum + item.count, 0);
+      const positiveCount = distribution.find(d => d.sentiment === 'positive')?.count || 0;
+      const neutralCount = distribution.find(d => d.sentiment === 'neutral')?.count || 0;
+      const negativeCount = distribution.find(d => d.sentiment === 'negative')?.count || 0;
+
+      res.json({
+        period: {
+          days: daysNum,
+          startDate: startDate.toISOString(),
+          endDate: new Date().toISOString(),
+        },
+        overview: {
+          totalAnalyzed,
+          distribution: {
+            positive: positiveCount,
+            neutral: neutralCount,
+            negative: negativeCount,
+            positivePercentage: totalAnalyzed > 0 ? ((positiveCount / totalAnalyzed) * 100).toFixed(2) : "0.00",
+            neutralPercentage: totalAnalyzed > 0 ? ((neutralCount / totalAnalyzed) * 100).toFixed(2) : "0.00",
+            negativePercentage: totalAnalyzed > 0 ? ((negativeCount / totalAnalyzed) * 100).toFixed(2) : "0.00",
+          },
+        },
+        trend: trend,
+        topArticles: articleSentiment.map(a => ({
+          articleId: a.articleId,
+          title: a.articleTitle,
+          positive: a.positiveCount,
+          neutral: a.neutralCount,
+          negative: a.negativeCount,
+          total: a.totalComments,
+          avgConfidence: a.avgConfidence ? parseFloat(a.avgConfidence.toFixed(2)) : 0,
+          sentimentScore: a.totalComments > 0 
+            ? (((a.positiveCount - a.negativeCount) / a.totalComments) * 100).toFixed(2)
+            : "0.00",
+        })),
+      });
+    } catch (error) {
+      console.error("Error getting sentiment analytics:", error);
+      res.status(500).json({ message: "فشل في جلب تحليلات المشاعر" });
     }
   });
 
