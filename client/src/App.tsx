@@ -146,6 +146,7 @@ import AdAccountPage from "@/pages/dashboard/ads/AdAccountPage";
 import CreativesManagement from "@/pages/dashboard/ads/CreativesManagement";
 import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManagement";
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
+import ChatbotPage from "@/pages/ChatbotPage";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -236,6 +237,7 @@ function Router() {
       <Route path="/mirqab/algorithm-writes/:slug" component={AlgorithmWriteDetailPage} />
       
       <Route path="/article/:slug" component={ArticleDetail} />
+      <Route path="/chatbot" component={ChatbotPage} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
       {/* Smart Links pages */}
