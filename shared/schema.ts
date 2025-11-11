@@ -4628,6 +4628,186 @@ export const auditLogs = pgTable("audit_logs", {
 ]);
 
 // ============================================
+// DATA-STORY GENERATOR SYSTEM
+// ============================================
+
+// Data story source files (uploaded datasets)
+export const dataStorySources = pgTable("data_story_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(), // uploader
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(), // csv, excel, json
+  fileSize: integer("file_size").notNull(), // bytes
+  storageKey: text("storage_key").notNull(), // object storage path
+  storageUrl: text("storage_url"), // public URL if needed
+  
+  // Parsing status
+  parseStatus: text("parse_status").default("pending").notNull(), // pending, parsing, completed, failed
+  parseError: text("parse_error"),
+  parsedAt: timestamp("parsed_at"),
+  
+  // Dataset metadata (populated after parsing)
+  rowCount: integer("row_count"),
+  columnCount: integer("column_count"),
+  columns: jsonb("columns").$type<{
+    name: string;
+    type: "number" | "string" | "date" | "boolean";
+    sampleValues?: any[];
+    uniqueCount?: number;
+    nullCount?: number;
+  }[]>(),
+  
+  // Preview data (first 10 rows)
+  previewData: jsonb("preview_data"),
+  
+  status: text("status").default("active").notNull(), // active, archived, deleted
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Data story analyses (AI-generated insights)
+export const dataStoryAnalyses = pgTable("data_story_analyses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sourceId: varchar("source_id").references(() => dataStorySources.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  
+  // Analysis status
+  status: text("status").default("pending").notNull(), // pending, analyzing, completed, failed
+  error: text("error"),
+  
+  // Statistical insights (computed locally)
+  statistics: jsonb("statistics").$type<{
+    summary?: {
+      totalRows: number;
+      totalColumns: number;
+      numericColumns: number;
+      categoricalColumns: number;
+    };
+    columnStats?: Record<string, {
+      mean?: number;
+      median?: number;
+      min?: number;
+      max?: number;
+      stdDev?: number;
+      topValues?: Array<{ value: any; count: number; percentage: number }>;
+    }>;
+  }>(),
+  
+  // AI-generated insights
+  aiInsights: jsonb("ai_insights").$type<{
+    keyFindings?: string[];
+    trends?: string[];
+    anomalies?: string[];
+    recommendations?: string[];
+    narrative?: string; // Arabic narrative summary
+  }>(),
+  
+  // Chart configurations (for Recharts)
+  chartConfigs: jsonb("chart_configs").$type<Array<{
+    id: string;
+    type: "bar" | "line" | "pie" | "area" | "scatter";
+    title: string;
+    description?: string;
+    dataKey: string;
+    xAxis?: string;
+    yAxis?: string;
+    data?: any[];
+    config?: any;
+  }>>(),
+  
+  // AI metadata
+  aiProvider: text("ai_provider"), // openai, anthropic, gemini
+  aiModel: text("ai_model"),
+  tokensUsed: integer("tokens_used"),
+  processingTime: integer("processing_time"), // milliseconds
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Data story drafts (AI-generated Arabic news stories)
+export const dataStoryDrafts = pgTable("data_story_drafts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").references(() => dataStoryAnalyses.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  
+  // Draft content
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  content: text("content").notNull(), // Main article content in Arabic
+  excerpt: text("excerpt"),
+  
+  // Story structure
+  outline: jsonb("outline").$type<{
+    sections?: Array<{
+      heading: string;
+      content: string;
+      dataReferences?: string[]; // references to charts/stats
+    }>;
+  }>(),
+  
+  // Status
+  status: text("status").default("draft").notNull(), // draft, review, approved, published, converted_to_article
+  
+  // Link to published article (if converted)
+  articleId: varchar("article_id").references(() => articles.id),
+  convertedAt: timestamp("converted_at"),
+  
+  // AI metadata
+  aiProvider: text("ai_provider"), // anthropic (Claude for Arabic)
+  aiModel: text("ai_model"),
+  tokensUsed: integer("tokens_used"),
+  generationTime: integer("generation_time"), // milliseconds
+  
+  // Editor metadata
+  editedBy: varchar("edited_by").references(() => users.id),
+  editedAt: timestamp("edited_at"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Data story relations
+export const dataStorySourcesRelations = relations(dataStorySources, ({ one, many }) => ({
+  user: one(users, {
+    fields: [dataStorySources.userId],
+    references: [users.id],
+  }),
+  analyses: many(dataStoryAnalyses),
+}));
+
+export const dataStoryAnalysesRelations = relations(dataStoryAnalyses, ({ one, many }) => ({
+  source: one(dataStorySources, {
+    fields: [dataStoryAnalyses.sourceId],
+    references: [dataStorySources.id],
+  }),
+  user: one(users, {
+    fields: [dataStoryAnalyses.userId],
+    references: [users.id],
+  }),
+  drafts: many(dataStoryDrafts),
+}));
+
+export const dataStoryDraftsRelations = relations(dataStoryDrafts, ({ one }) => ({
+  analysis: one(dataStoryAnalyses, {
+    fields: [dataStoryDrafts.analysisId],
+    references: [dataStoryAnalyses.id],
+  }),
+  user: one(users, {
+    fields: [dataStoryDrafts.userId],
+    references: [users.id],
+  }),
+  article: one(articles, {
+    fields: [dataStoryDrafts.articleId],
+    references: [articles.id],
+  }),
+  editedByUser: one(users, {
+    fields: [dataStoryDrafts.editedBy],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
 // ADVERTISING SYSTEM - INSERT SCHEMAS
 // ============================================
 
@@ -4753,4 +4933,49 @@ export type CampaignWithDetails = Campaign & {
     conversionRate: number;
   };
   recommendations?: AIRecommendation[];
+};
+
+// ============================================
+// DATA-STORY GENERATOR - INSERT SCHEMAS
+// ============================================
+
+export const insertDataStorySourceSchema = createInsertSchema(dataStorySources).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDataStoryAnalysisSchema = createInsertSchema(dataStoryAnalyses).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertDataStoryDraftSchema = createInsertSchema(dataStoryDrafts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "عنوان القصة مطلوب"),
+  content: z.string().min(10, "محتوى القصة مطلوب"),
+});
+
+// ============================================
+// DATA-STORY GENERATOR - SELECT TYPES
+// ============================================
+
+export type DataStorySource = typeof dataStorySources.$inferSelect;
+export type InsertDataStorySource = z.infer<typeof insertDataStorySourceSchema>;
+
+export type DataStoryAnalysis = typeof dataStoryAnalyses.$inferSelect;
+export type InsertDataStoryAnalysis = z.infer<typeof insertDataStoryAnalysisSchema>;
+
+export type DataStoryDraft = typeof dataStoryDrafts.$inferSelect;
+export type InsertDataStoryDraft = z.infer<typeof insertDataStoryDraftSchema>;
+
+// Combined type with relations
+export type DataStoryWithDetails = DataStorySource & {
+  analyses?: (DataStoryAnalysis & {
+    drafts?: DataStoryDraft[];
+  })[];
 };
