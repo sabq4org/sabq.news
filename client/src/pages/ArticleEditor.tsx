@@ -520,6 +520,50 @@ export default function ArticleEditor() {
     },
   });
 
+  const generateSeoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/seo/generate`, {
+        method: "POST",
+        body: JSON.stringify({ articleId: id, language: "ar" }),
+      });
+      return response;
+    },
+    onSuccess: (data: {
+      seo: {
+        metaTitle: string;
+        metaDescription: string;
+        keywords: string[];
+      };
+      provider: string;
+      model: string;
+    }) => {
+      // Auto-fill SEO fields from data.seo object
+      if (data.seo && data.seo.metaTitle) {
+        setMetaTitle(data.seo.metaTitle);
+        setMetaDescription(data.seo.metaDescription || "");
+        setKeywords(data.seo.keywords || []);
+      }
+      
+      // Invalidate queries to refetch article with updated SEO data
+      queryClient.invalidateQueries({ queryKey: ['/api/articles', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/articles', id] });
+      
+      // Show success toast
+      toast({
+        title: "تم توليد SEO بنجاح",
+        description: `المزود: ${data.provider} | النموذج: ${data.model}`,
+      });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "فشل في توليد SEO";
+      toast({
+        title: "فشل توليد SEO",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -1171,6 +1215,70 @@ const generateSlug = (text: string) => {
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     التصنيف الذكي متاح بعد حفظ المقال كمسودة
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SEO Optimization */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>تحسين محركات البحث (SEO)</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => generateSeoMutation.mutate()}
+                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
+                    title={
+                      isNewArticle 
+                        ? "احفظ المقال كمسودة أولاً لاستخدام توليد SEO" 
+                        : !title || !content 
+                          ? "يجب إدخال العنوان والمحتوى أولاً" 
+                          : "توليد SEO ذكي بالذكاء الاصطناعي"
+                    }
+                    data-testid="button-generate-seo"
+                  >
+                    <Sparkles className={`h-4 w-4 ml-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <span className="text-sm">{generateSeoMutation.isPending ? 'جاري التوليد...' : 'توليد SEO'}</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label>عنوان Meta (50-60 حرف) - {metaTitle.length}/60</Label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="عنوان محسّن لمحركات البحث"
+                    maxLength={60}
+                    data-testid="input-meta-title"
+                  />
+                </div>
+                <div>
+                  <Label>وصف Meta (140-160 حرف) - {metaDescription.length}/160</Label>
+                  <Textarea
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="وصف مقنع لمحركات البحث"
+                    maxLength={160}
+                    rows={3}
+                    data-testid="textarea-meta-description"
+                  />
+                </div>
+                <div>
+                  <Label>الكلمات المفتاحية</Label>
+                  <Input
+                    value={keywords.join(", ")}
+                    onChange={(e) => setKeywords(e.target.value.split(",").map(k => k.trim()).filter(Boolean))}
+                    placeholder="كلمة1, كلمة2, كلمة3"
+                    data-testid="input-keywords"
+                  />
+                </div>
+                {isNewArticle && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    توليد SEO متاح بعد حفظ المقال كمسودة
                   </p>
                 )}
               </CardContent>

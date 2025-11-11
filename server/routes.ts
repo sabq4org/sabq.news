@@ -21,6 +21,7 @@ import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
+import { generateSeoMetadata } from './seo-generator';
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -12882,6 +12883,108 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "فشل في تصنيف المقال تلقائياً",
+      });
+    }
+  });
+
+  // ============================================================
+  // SEO GENERATION ENDPOINTS
+  // ============================================================
+
+  // POST /api/seo/generate - Generate SEO metadata for article using AI
+  app.post("/api/seo/generate", strictLimiter, requireAuth, requireAnyPermission("articles.create", "system.admin"), async (req: any, res) => {
+    try {
+      const { articleId, language } = req.body;
+
+      // Validate inputs
+      if (!articleId || !language) {
+        return res.status(400).json({ message: "معرف المقال واللغة مطلوبان" });
+      }
+
+      if (!["ar", "en", "ur"].includes(language)) {
+        return res.status(400).json({ message: "اللغة يجب أن تكون ar أو en أو ur" });
+      }
+
+      // Fetch article using storage method
+      const article = await storage.getArticleForSeo(articleId, language as "ar" | "en" | "ur");
+
+      if (!article) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      // Generate SEO metadata using AI
+      const seoResult = await generateSeoMetadata({
+        title: article.title,
+        subtitle: article.subtitle || undefined,
+        content: article.content,
+        excerpt: article.excerpt || undefined,
+        language: language as "ar" | "en" | "ur",
+      });
+
+      // Prepare SEO content and metadata
+      const seoContent = {
+        metaTitle: seoResult.metaTitle,
+        metaDescription: seoResult.metaDescription,
+        keywords: seoResult.keywords,
+        socialTitle: seoResult.socialTitle,
+        socialDescription: seoResult.socialDescription,
+        imageAltText: seoResult.imageAltText,
+        ogImageUrl: seoResult.ogImageUrl,
+      };
+
+      const seoMetadata = {
+        status: "generated" as const,
+        generatedAt: new Date().toISOString(),
+        generatedBy: req.user?.id,
+        provider: seoResult.provider,
+        model: seoResult.model,
+        manualOverride: false,
+      };
+
+      // Save SEO metadata to article
+      await storage.saveSeoMetadata(
+        articleId,
+        language as "ar" | "en" | "ur",
+        seoContent,
+        seoMetadata
+      );
+
+      // Create history entry
+      await storage.createSeoHistoryEntry({
+        articleId,
+        language: language as "ar" | "en" | "ur",
+        seoContent,
+        seoMetadata,
+        provider: seoResult.provider,
+        model: seoResult.model,
+        generatedBy: req.user?.id,
+      });
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "generate_seo_metadata",
+        entityType: "article",
+        entityId: articleId,
+        metadata: {
+          language,
+          provider: seoResult.provider,
+          model: seoResult.model,
+        },
+      });
+
+      res.json({
+        success: true,
+        seo: seoContent,
+        metadata: seoMetadata,
+        provider: seoResult.provider,
+        model: seoResult.model,
+      });
+    } catch (error) {
+      console.error("Error generating SEO metadata:", error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "فشل في توليد البيانات الوصفية لتحسين محركات البحث",
       });
     }
   });

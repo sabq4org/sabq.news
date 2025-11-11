@@ -443,6 +443,49 @@ export default function EnglishArticleEditor() {
     },
   });
 
+  const generateSeoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/seo/generate`, {
+        method: "POST",
+        body: JSON.stringify({ articleId: id, language: "ur" }),
+      });
+      return response;
+    },
+    onSuccess: (data: {
+      seo: {
+        metaTitle: string;
+        metaDescription: string;
+        keywords: string[];
+      };
+      provider: string;
+      model: string;
+    }) => {
+      // Auto-fill SEO fields from data.seo object
+      if (data.seo && data.seo.metaTitle) {
+        setMetaTitle(data.seo.metaTitle);
+        setMetaDescription(data.seo.metaDescription || "");
+        setKeywords(data.seo.keywords || []);
+      }
+      
+      // Invalidate queries to refetch article with updated SEO data
+      queryClient.invalidateQueries({ queryKey: ['/api/ur/dashboard/articles', id] });
+      
+      // Show success toast
+      toast({
+        title: "SEO کامیابی سے تیار کر دیا گیا",
+        description: `فراہم کنندہ: ${data.provider} | ماڈل: ${data.model}`,
+      });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "تیار کرنے میں ناکامی";
+      toast({
+        title: "SEO تیار کرنے میں ناکامی",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -1051,6 +1094,70 @@ export default function EnglishArticleEditor() {
                     ))}
                   </SelectContent>
                 </Select>
+              </CardContent>
+            </Card>
+
+            {/* SEO Optimization */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>SEO بہتری</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => generateSeoMutation.mutate()}
+                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
+                    title={
+                      isNewArticle 
+                        ? "SEO تیار کرنے کے لیے پہلے مضمون کو مسودے کے طور پر محفوظ کریں" 
+                        : !title || !content 
+                          ? "عنوان اور مواد ضروری ہے" 
+                          : "AI سے SEO ذہین تیاری"
+                    }
+                    data-testid="button-generate-seo"
+                  >
+                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <span className="text-sm">{generateSeoMutation.isPending ? 'تیار ہو رہا ہے...' : 'SEO تیار کریں'}</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label>Meta عنوان (50-60 حروف) - {metaTitle.length}/60</Label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="سرچ انجن کے لیے بہتر عنوان"
+                    maxLength={60}
+                    data-testid="input-meta-title"
+                  />
+                </div>
+                <div>
+                  <Label>Meta تفصیل (140-160 حروف) - {metaDescription.length}/160</Label>
+                  <Textarea
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="سرچ انجن کے لیے دلکش تفصیل"
+                    maxLength={160}
+                    rows={3}
+                    data-testid="textarea-meta-description"
+                  />
+                </div>
+                <div>
+                  <Label>مطلوبہ الفاظ</Label>
+                  <Input
+                    value={keywords.join(", ")}
+                    onChange={(e) => setKeywords(e.target.value.split(",").map(k => k.trim()).filter(Boolean))}
+                    placeholder="لفظ1, لفظ2, لفظ3"
+                    data-testid="input-keywords"
+                  />
+                </div>
+                {isNewArticle && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    SEO تیاری مسودے کے طور پر محفوظ کرنے کے بعد دستیاب ہے
+                  </p>
+                )}
               </CardContent>
             </Card>
 

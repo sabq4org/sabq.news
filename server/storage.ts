@@ -69,6 +69,7 @@ import {
   urReactions,
   urReadingHistory,
   urSmartBlocks,
+  articleSeoHistory,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -355,6 +356,68 @@ export interface IStorage {
   archiveArticle(id: string, userId: string): Promise<Article>;
   restoreArticle(id: string, userId: string): Promise<Article>;
   toggleArticleBreaking(id: string, userId: string): Promise<Article>;
+  
+  // SEO operations
+  getArticleForSeo(id: string, language: "ar" | "en" | "ur"): Promise<{
+    id: string;
+    title: string;
+    subtitle?: string | null;
+    content: string;
+    excerpt?: string | null;
+  } | undefined>;
+  saveSeoMetadata(
+    articleId: string,
+    language: "ar" | "en" | "ur",
+    seo: {
+      metaTitle?: string;
+      metaDescription?: string;
+      keywords?: string[];
+      socialTitle?: string;
+      socialDescription?: string;
+      imageAltText?: string;
+      ogImageUrl?: string;
+    },
+    metadata: {
+      status?: "draft" | "generated" | "approved" | "rejected";
+      version?: number;
+      generatedAt?: string;
+      generatedBy?: string;
+      provider?: "anthropic" | "openai" | "gemini" | "qwen";
+      model?: string;
+      manualOverride?: boolean;
+      overrideBy?: string;
+      overrideReason?: string;
+      rawResponse?: any;
+    }
+  ): Promise<void>;
+  createSeoHistoryEntry(params: {
+    articleId: string;
+    language: "ar" | "en" | "ur";
+    seoContent: {
+      metaTitle?: string;
+      metaDescription?: string;
+      keywords?: string[];
+      socialTitle?: string;
+      socialDescription?: string;
+      imageAltText?: string;
+      ogImageUrl?: string;
+    };
+    seoMetadata: {
+      status?: "draft" | "generated" | "approved" | "rejected";
+      version?: number;
+      generatedAt?: string;
+      generatedBy?: string;
+      provider?: "anthropic" | "openai" | "gemini" | "qwen";
+      model?: string;
+      manualOverride?: boolean;
+      overrideBy?: string;
+      overrideReason?: string;
+      rawResponse?: any;
+    };
+    provider: string;
+    model: string;
+    generatedBy: string;
+  }): Promise<void>;
   
   // RSS Feed operations
   getAllRssFeeds(): Promise<RssFeed[]>;
@@ -2135,6 +2198,124 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  // SEO operations
+  async getArticleForSeo(id: string, language: "ar" | "en" | "ur"): Promise<{
+    id: string;
+    title: string;
+    subtitle?: string | null;
+    content: string;
+    excerpt?: string | null;
+  } | undefined> {
+    const table = language === "ar" ? articles : language === "en" ? enArticles : urArticles;
+    
+    const [article] = await db
+      .select({
+        id: table.id,
+        title: table.title,
+        subtitle: table.subtitle,
+        content: table.content,
+        excerpt: table.excerpt,
+      })
+      .from(table)
+      .where(eq(table.id, id))
+      .limit(1);
+
+    return article;
+  }
+
+  async saveSeoMetadata(
+    articleId: string,
+    language: "ar" | "en" | "ur",
+    seo: {
+      metaTitle?: string;
+      metaDescription?: string;
+      keywords?: string[];
+      socialTitle?: string;
+      socialDescription?: string;
+      imageAltText?: string;
+      ogImageUrl?: string;
+    },
+    metadata: {
+      status?: "draft" | "generated" | "approved" | "rejected";
+      version?: number;
+      generatedAt?: string;
+      generatedBy?: string;
+      provider?: "anthropic" | "openai" | "gemini" | "qwen";
+      model?: string;
+      manualOverride?: boolean;
+      overrideBy?: string;
+      overrideReason?: string;
+      rawResponse?: any;
+    }
+  ): Promise<void> {
+    const table = language === "ar" ? articles : language === "en" ? enArticles : urArticles;
+    
+    await db
+      .update(table)
+      .set({
+        seo,
+        seoMetadata: metadata,
+        updatedAt: new Date(),
+      })
+      .where(eq(table.id, articleId));
+  }
+
+  async createSeoHistoryEntry(params: {
+    articleId: string;
+    language: "ar" | "en" | "ur";
+    seoContent: {
+      metaTitle?: string;
+      metaDescription?: string;
+      keywords?: string[];
+      socialTitle?: string;
+      socialDescription?: string;
+      imageAltText?: string;
+      ogImageUrl?: string;
+    };
+    seoMetadata: {
+      status?: "draft" | "generated" | "approved" | "rejected";
+      version?: number;
+      generatedAt?: string;
+      generatedBy?: string;
+      provider?: "anthropic" | "openai" | "gemini" | "qwen";
+      model?: string;
+      manualOverride?: boolean;
+      overrideBy?: string;
+      overrideReason?: string;
+      rawResponse?: any;
+    };
+    provider: string;
+    model: string;
+    generatedBy: string;
+  }): Promise<void> {
+    // Get the latest version for this article and language
+    const [latestHistory] = await db
+      .select({ version: articleSeoHistory.version })
+      .from(articleSeoHistory)
+      .where(
+        and(
+          eq(articleSeoHistory.articleId, params.articleId),
+          eq(articleSeoHistory.language, params.language)
+        )
+      )
+      .orderBy(desc(articleSeoHistory.version))
+      .limit(1);
+
+    const nextVersion = latestHistory ? latestHistory.version + 1 : 1;
+
+    await db.insert(articleSeoHistory).values({
+      id: nanoid(),
+      articleId: params.articleId,
+      language: params.language,
+      seoContent: params.seoContent,
+      seoMetadata: params.seoMetadata,
+      version: nextVersion,
+      provider: params.provider,
+      model: params.model,
+      generatedBy: params.generatedBy,
+    });
   }
 
   // RSS Feed operations

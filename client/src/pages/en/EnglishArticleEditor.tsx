@@ -443,6 +443,50 @@ export default function EnglishArticleEditor() {
     },
   });
 
+  const generateSeoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/seo/generate`, {
+        method: "POST",
+        body: JSON.stringify({ articleId: id, language: "en" }),
+      });
+      return response;
+    },
+    onSuccess: (data: {
+      seo: {
+        metaTitle: string;
+        metaDescription: string;
+        keywords: string[];
+      };
+      provider: string;
+      model: string;
+    }) => {
+      // Auto-fill SEO fields from data.seo object
+      if (data.seo && data.seo.metaTitle) {
+        setMetaTitle(data.seo.metaTitle);
+        setMetaDescription(data.seo.metaDescription || "");
+        setKeywords(data.seo.keywords || []);
+      }
+      
+      // Invalidate queries to refetch article with updated SEO data
+      queryClient.invalidateQueries({ queryKey: ['/api/en/articles', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/en/dashboard/articles', id] });
+      
+      // Show success toast
+      toast({
+        title: "SEO Generated Successfully",
+        description: `Provider: ${data.provider} | Model: ${data.model}`,
+      });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "Generation failed";
+      toast({
+        title: "SEO Generation Failed",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -1051,6 +1095,70 @@ export default function EnglishArticleEditor() {
                     ))}
                   </SelectContent>
                 </Select>
+              </CardContent>
+            </Card>
+
+            {/* SEO Optimization */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>SEO Optimization</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => generateSeoMutation.mutate()}
+                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
+                    title={
+                      isNewArticle 
+                        ? "Save article as draft first to use SEO generation" 
+                        : !title || !content 
+                          ? "Title and content are required" 
+                          : "AI-powered smart SEO generation"
+                    }
+                    data-testid="button-generate-seo"
+                  >
+                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <span className="text-sm">{generateSeoMutation.isPending ? 'Generating...' : 'Generate SEO'}</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label>Meta Title (50-60 characters) - {metaTitle.length}/60</Label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="Optimized title for search engines"
+                    maxLength={60}
+                    data-testid="input-meta-title"
+                  />
+                </div>
+                <div>
+                  <Label>Meta Description (140-160 characters) - {metaDescription.length}/160</Label>
+                  <Textarea
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="Compelling description for search engines"
+                    maxLength={160}
+                    rows={3}
+                    data-testid="textarea-meta-description"
+                  />
+                </div>
+                <div>
+                  <Label>Keywords</Label>
+                  <Input
+                    value={keywords.join(", ")}
+                    onChange={(e) => setKeywords(e.target.value.split(",").map(k => k.trim()).filter(Boolean))}
+                    placeholder="keyword1, keyword2, keyword3"
+                    data-testid="input-keywords"
+                  />
+                </div>
+                {isNewArticle && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    SEO generation available after saving article as draft
+                  </p>
+                )}
               </CardContent>
             </Card>
 

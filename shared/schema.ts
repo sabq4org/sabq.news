@@ -191,6 +191,22 @@ export const articles = pgTable("articles", {
     metaTitle?: string;
     metaDescription?: string;
     keywords?: string[];
+    socialTitle?: string;
+    socialDescription?: string;
+    imageAltText?: string;
+    ogImageUrl?: string;
+  }>(),
+  seoMetadata: jsonb("seo_metadata").$type<{
+    status?: "draft" | "generated" | "approved" | "rejected";
+    version?: number;
+    generatedAt?: string;
+    generatedBy?: string;
+    provider?: "anthropic" | "openai" | "gemini" | "qwen";
+    model?: string;
+    manualOverride?: boolean;
+    overrideBy?: string;
+    overrideReason?: string;
+    rawResponse?: any;
   }>(),
   credibilityScore: integer("credibility_score"),
   credibilityAnalysis: text("credibility_analysis"),
@@ -267,6 +283,44 @@ export const commentSentiments = pgTable("comment_sentiments", {
   index("idx_sentiment_comment").on(table.commentId),
   index("idx_sentiment_sentiment").on(table.sentiment),
   index("idx_sentiment_analyzed").on(table.analyzedAt),
+]);
+
+// Article SEO generation history (unified for all languages)
+export const articleSeoHistory = pgTable("article_seo_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull(), // Article ID from any language table
+  language: text("language").notNull(), // ar, en, ur
+  seoContent: jsonb("seo_content").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    socialTitle?: string;
+    socialDescription?: string;
+    imageAltText?: string;
+    ogImageUrl?: string;
+  }>().notNull(),
+  seoMetadata: jsonb("seo_metadata").$type<{
+    status?: "draft" | "generated" | "approved" | "rejected";
+    version?: number;
+    generatedAt?: string;
+    generatedBy?: string;
+    provider?: "anthropic" | "openai" | "gemini" | "qwen";
+    model?: string;
+    manualOverride?: boolean;
+    overrideBy?: string;
+    overrideReason?: string;
+    rawResponse?: any;
+  }>().notNull(),
+  version: integer("version").notNull(),
+  provider: text("provider").notNull(), // anthropic, openai, gemini, qwen
+  model: text("model").notNull(),
+  generatedBy: varchar("generated_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_seo_history_article_lang").on(table.articleId, table.language),
+  index("idx_seo_history_version").on(table.articleId, table.language, table.version.desc()),
+  index("idx_seo_history_created").on(table.createdAt.desc()),
+  uniqueIndex("idx_seo_history_unique_version").on(table.articleId, table.language, table.version),
 ]);
 
 // Likes/reactions
@@ -3680,6 +3734,19 @@ export const enArticles = pgTable("en_articles", {
     socialTitle?: string;
     socialDescription?: string;
     imageAltText?: string;
+    ogImageUrl?: string;
+  }>(),
+  seoMetadata: jsonb("seo_metadata").$type<{
+    status?: "draft" | "generated" | "approved" | "rejected";
+    version?: number;
+    generatedAt?: string;
+    generatedBy?: string;
+    provider?: "anthropic" | "openai" | "gemini" | "qwen";
+    model?: string;
+    manualOverride?: boolean;
+    overrideBy?: string;
+    overrideReason?: string;
+    rawResponse?: any;
   }>(),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -3872,6 +3939,19 @@ export const urArticles = pgTable("ur_articles", {
     socialTitle?: string;
     socialDescription?: string;
     imageAltText?: string;
+    ogImageUrl?: string;
+  }>(),
+  seoMetadata: jsonb("seo_metadata").$type<{
+    status?: "draft" | "generated" | "approved" | "rejected";
+    version?: number;
+    generatedAt?: string;
+    generatedBy?: string;
+    provider?: "anthropic" | "openai" | "gemini" | "qwen";
+    model?: string;
+    manualOverride?: boolean;
+    overrideBy?: string;
+    overrideReason?: string;
+    rawResponse?: any;
   }>(),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
