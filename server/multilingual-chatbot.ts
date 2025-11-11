@@ -78,69 +78,48 @@ export async function chatWithMultilingualAssistant(
   language: ChatLanguage,
   context?: ChatContext
 ): Promise<string> {
-  try {
-    console.log(`[MultilingualChatbot] Processing ${language} message:`, message.substring(0, 100));
+  console.log(`[MultilingualChatbot] Processing ${language} message:`, message.substring(0, 100));
 
-    const articlesContext = context?.recentArticles
-      ? context.recentArticles
-          .map((article, index) => {
-            const parts = [`${index + 1}. ${article.title}`];
-            if (article.categoryName) parts.push(`(${article.categoryName})`);
-            if (article.summary) parts.push(`\n   Summary: ${article.summary}`);
-            return parts.join(' ');
-          })
-          .join('\n')
-      : '';
+  const articlesContext = context?.recentArticles
+    ? context.recentArticles
+        .map((article, index) => {
+          const parts = [`${index + 1}. ${article.title}`];
+          if (article.categoryName) parts.push(`(${article.categoryName})`);
+          if (article.summary) parts.push(`\n   Summary: ${article.summary}`);
+          return parts.join(' ');
+        })
+        .join('\n')
+    : '';
 
-    const systemPrompt = SYSTEM_PROMPTS[language](articlesContext);
-    const modelConfig = LANGUAGE_MODEL_MAPPING[language];
+  const systemPrompt = SYSTEM_PROMPTS[language](articlesContext);
+  const modelConfig = LANGUAGE_MODEL_MAPPING[language];
 
-    console.log(`[MultilingualChatbot] Using model: ${modelConfig.provider}/${modelConfig.model} for language: ${language}`);
+  console.log(`[MultilingualChatbot] Using model: ${modelConfig.provider}/${modelConfig.model} for language: ${language}`);
 
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-    ];
+  const messages: ChatMessage[] = [
+    { role: 'system', content: systemPrompt },
+  ];
 
-    if (context?.conversationHistory) {
-      messages.push(...context.conversationHistory);
-    }
-
-    messages.push({ role: 'user', content: message });
-
-    const fullPrompt = messages.map(msg => {
-      if (msg.role === 'system') return msg.content;
-      return `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`;
-    }).join('\n\n');
-
-    const response = await aiManager.generate(fullPrompt, modelConfig);
-
-    if (!response.content) {
-      console.warn('[MultilingualChatbot] Empty response from AI');
-      return ERROR_MESSAGES[language].general;
-    }
-
-    console.log(`[MultilingualChatbot] Response generated successfully (${response.usage?.outputTokens || 0} tokens)`);
-    return response.content;
-
-  } catch (error: any) {
-    console.error('[MultilingualChatbot] Error:', error);
-    console.error('[MultilingualChatbot] Error details:', {
-      message: error.message,
-      status: error.status,
-      type: error.type,
-      code: error.code,
-    });
-
-    if (error.status === 401 || error.message?.includes('authentication')) {
-      return ERROR_MESSAGES[language].auth;
-    }
-
-    if (error.status === 429 || error.message?.includes('rate limit')) {
-      return ERROR_MESSAGES[language].rate;
-    }
-
-    return ERROR_MESSAGES[language].general;
+  if (context?.conversationHistory) {
+    messages.push(...context.conversationHistory);
   }
+
+  messages.push({ role: 'user', content: message });
+
+  const fullPrompt = messages.map(msg => {
+    if (msg.role === 'system') return msg.content;
+    return `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`;
+  }).join('\n\n');
+
+  const response = await aiManager.generate(fullPrompt, modelConfig);
+
+  if (!response.content) {
+    console.warn('[MultilingualChatbot] Empty response from AI');
+    throw new Error('AI_EMPTY_RESPONSE');
+  }
+
+  console.log(`[MultilingualChatbot] Response generated successfully (${response.usage?.outputTokens || 0} tokens)`);
+  return response.content;
 }
 
 export async function chatWithAssistantFallback(

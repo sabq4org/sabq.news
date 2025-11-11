@@ -9894,11 +9894,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         categoryName: article.categoryName || undefined,
       }));
 
-      const aiResponse = await chatWithMultilingualAssistant(message, 'ar', {
+      const result = await chatWithAssistantFallback(message, 'ar', {
         recentArticles: articlesForContext,
       });
       
-      res.json({ response: aiResponse });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (Arabic):", error);
       res.status(500).json({ message: "فشل في معالجة الرسالة" });
@@ -9932,11 +9932,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         categoryName: article.categoryName || undefined,
       }));
 
-      const aiResponse = await chatWithMultilingualAssistant(message, 'en', {
+      const result = await chatWithAssistantFallback(message, 'en', {
         recentArticles: articlesForContext,
       });
       
-      res.json({ response: aiResponse });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (English):", error);
       res.status(500).json({ message: "Failed to process message" });
@@ -9970,11 +9970,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         categoryName: article.categoryName || undefined,
       }));
 
-      const aiResponse = await chatWithMultilingualAssistant(message, 'ur', {
+      const result = await chatWithAssistantFallback(message, 'ur', {
         recentArticles: articlesForContext,
       });
       
-      res.json({ response: aiResponse });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (Urdu):", error);
       res.status(500).json({ message: "پیغام پر کارروائی ناکام" });
