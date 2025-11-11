@@ -51,6 +51,16 @@ Key features include:
     - **RBAC Security:** Admin/moderator permissions for analysis operations, admin-only analytics access
     - **Multilingual Support:** Language-specific prompts and SSR-safe UI components across all three platform languages
     - **API Endpoints:** 4 RESTful endpoints (`/api/comments/:id/analyze-sentiment`, `/api/comments/analyze-batch`, `/api/comments/:id/sentiment-history`, `/api/sentiment/analytics`)
+-   **Smart Article Classification System (November 2025):** AI-powered auto-categorization for Arabic articles using Claude Sonnet 3.5. Features include:
+    - **One-Click Classification:** Sparkles button in ArticlesManagement triggers intelligent article analysis
+    - **Multi-Category Suggestions:** Primary category with 1-3 additional suggested categories, each with confidence scores (0-1 scale)
+    - **Intelligent Analysis:** AI analyzes article title and content (3000 chars) against available categories with Arabic reasoning
+    - **Visual Feedback:** Interactive dialog showing primary category highlight, suggested categories grid, and model metadata
+    - **Loading States:** Animated pulse feedback on classification button during AI processing
+    - **Database Integration:** Results stored in `articleSmartCategories` junction table with confidence scores
+    - **RBAC Protection:** Requires "articles.create" or "system.admin" permissions
+    - **Robust JSON Parsing:** Iterates over all Claude response blocks for reliable extraction
+    - **API Endpoint:** POST `/api/articles/:id/auto-categorize` with full error handling and logging
 -   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
 -   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
 -   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story/Keyword Following, AI Insights Block, SEO AI Assistant (GPT-5), and Smart Content Generation System (GPT-5). **Smart Summary Block:** Dual-purpose engagement component serving personalized daily metrics for registered users and promotional content for visitors with feature showcase (4 features: bookmarks, personalized recommendations, smart summaries, instant notifications) and registration CTA buttons.

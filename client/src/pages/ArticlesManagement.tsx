@@ -746,10 +746,10 @@ export default function ArticlesManagement() {
                                   size="icon"
                                   onClick={() => classifyMutation.mutate(article.id)}
                                   disabled={classifyMutation.isPending}
-                                  title="تصنيف ذكي"
+                                  title={classifyMutation.isPending ? "جاري التصنيف..." : "تصنيف ذكي"}
                                   data-testid={`button-classify-${article.id}`}
                                 >
-                                  <Sparkles className="w-4 h-4 text-primary" />
+                                  <Sparkles className={`w-4 h-4 ${classifyMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
                                 </Button>
                                 <RowActions 
                                   articleId={article.id}

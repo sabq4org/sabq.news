@@ -86,10 +86,22 @@ ${categoriesText}
       ],
     });
 
-    const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+    // Iterate over all content blocks to find JSON (more robust than regex)
+    let responseText = "";
+    for (const block of message.content) {
+      if (block.type === "text") {
+        responseText += block.text;
+      }
+    }
     
+    if (!responseText) {
+      throw new Error("No text content in AI response");
+    }
+
+    // Extract JSON - try to find the most complete JSON object
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error("AI response without JSON:", responseText);
       throw new Error("Failed to extract JSON from AI response");
     }
 
