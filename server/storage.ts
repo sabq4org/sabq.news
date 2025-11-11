@@ -70,6 +70,9 @@ import {
   urReadingHistory,
   urSmartBlocks,
   articleSeoHistory,
+  dataStorySources,
+  dataStoryAnalyses,
+  dataStoryDrafts,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -235,6 +238,13 @@ import {
   type UrCommentWithUser,
   type UrSmartBlock,
   type InsertUrSmartBlock,
+  type DataStorySource,
+  type InsertDataStorySource,
+  type DataStoryAnalysis,
+  type InsertDataStoryAnalysis,
+  type DataStoryDraft,
+  type InsertDataStoryDraft,
+  type DataStoryWithDetails,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1109,6 +1119,26 @@ export interface IStorage {
     recentArticles: Array<any>;
     topArticles: Array<any>;
   }>;
+  
+  // Data Story operations
+  createDataStorySource(source: InsertDataStorySource): Promise<DataStorySource>;
+  getDataStorySource(id: string): Promise<DataStorySource | undefined>;
+  updateDataStorySource(id: string, data: Partial<InsertDataStorySource>): Promise<DataStorySource>;
+  getUserDataStorySources(userId: string, limit?: number): Promise<DataStorySource[]>;
+  
+  createDataStoryAnalysis(analysis: InsertDataStoryAnalysis): Promise<DataStoryAnalysis>;
+  getDataStoryAnalysis(id: string): Promise<DataStoryAnalysis | undefined>;
+  updateDataStoryAnalysis(id: string, data: Partial<InsertDataStoryAnalysis>): Promise<DataStoryAnalysis>;
+  getAnalysesBySourceId(sourceId: string): Promise<DataStoryAnalysis[]>;
+  
+  createDataStoryDraft(draft: InsertDataStoryDraft): Promise<DataStoryDraft>;
+  getDataStoryDraft(id: string): Promise<DataStoryDraft | undefined>;
+  updateDataStoryDraft(id: string, data: Partial<InsertDataStoryDraft>): Promise<DataStoryDraft>;
+  getDraftsByAnalysisId(analysisId: string): Promise<DataStoryDraft[]>;
+  getUserDataStoryDrafts(userId: string, limit?: number): Promise<DataStoryDraft[]>;
+  convertDraftToArticle(draftId: string, articleId: string): Promise<DataStoryDraft>;
+  
+  getDataStoryWithDetails(sourceId: string): Promise<DataStoryWithDetails | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -9514,6 +9544,128 @@ export class DatabaseStorage implements IStorage {
         author: r.reporter || r.author || undefined,
       })),
     };
+  }
+  
+  // Data Story operations
+  async createDataStorySource(source: InsertDataStorySource): Promise<DataStorySource> {
+    const [created] = await db.insert(dataStorySources).values(source).returning();
+    return created;
+  }
+
+  async getDataStorySource(id: string): Promise<DataStorySource | undefined> {
+    const [source] = await db.select().from(dataStorySources).where(eq(dataStorySources.id, id)).limit(1);
+    return source;
+  }
+
+  async updateDataStorySource(id: string, data: Partial<InsertDataStorySource>): Promise<DataStorySource> {
+    const [updated] = await db
+      .update(dataStorySources)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(dataStorySources.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUserDataStorySources(userId: string, limit: number = 50): Promise<DataStorySource[]> {
+    return await db
+      .select()
+      .from(dataStorySources)
+      .where(eq(dataStorySources.userId, userId))
+      .orderBy(desc(dataStorySources.createdAt))
+      .limit(limit);
+  }
+
+  async createDataStoryAnalysis(analysis: InsertDataStoryAnalysis): Promise<DataStoryAnalysis> {
+    const [created] = await db.insert(dataStoryAnalyses).values(analysis).returning();
+    return created;
+  }
+
+  async getDataStoryAnalysis(id: string): Promise<DataStoryAnalysis | undefined> {
+    const [analysis] = await db.select().from(dataStoryAnalyses).where(eq(dataStoryAnalyses.id, id)).limit(1);
+    return analysis;
+  }
+
+  async updateDataStoryAnalysis(id: string, data: Partial<InsertDataStoryAnalysis>): Promise<DataStoryAnalysis> {
+    const [updated] = await db
+      .update(dataStoryAnalyses)
+      .set(data)
+      .where(eq(dataStoryAnalyses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAnalysesBySourceId(sourceId: string): Promise<DataStoryAnalysis[]> {
+    return await db
+      .select()
+      .from(dataStoryAnalyses)
+      .where(eq(dataStoryAnalyses.sourceId, sourceId))
+      .orderBy(desc(dataStoryAnalyses.createdAt));
+  }
+
+  async createDataStoryDraft(draft: InsertDataStoryDraft): Promise<DataStoryDraft> {
+    const [created] = await db.insert(dataStoryDrafts).values(draft).returning();
+    return created;
+  }
+
+  async getDataStoryDraft(id: string): Promise<DataStoryDraft | undefined> {
+    const [draft] = await db.select().from(dataStoryDrafts).where(eq(dataStoryDrafts.id, id)).limit(1);
+    return draft;
+  }
+
+  async updateDataStoryDraft(id: string, data: Partial<InsertDataStoryDraft>): Promise<DataStoryDraft> {
+    const [updated] = await db
+      .update(dataStoryDrafts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(dataStoryDrafts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getDraftsByAnalysisId(analysisId: string): Promise<DataStoryDraft[]> {
+    return await db
+      .select()
+      .from(dataStoryDrafts)
+      .where(eq(dataStoryDrafts.analysisId, analysisId))
+      .orderBy(desc(dataStoryDrafts.createdAt));
+  }
+
+  async getUserDataStoryDrafts(userId: string, limit: number = 50): Promise<DataStoryDraft[]> {
+    return await db
+      .select()
+      .from(dataStoryDrafts)
+      .where(eq(dataStoryDrafts.userId, userId))
+      .orderBy(desc(dataStoryDrafts.createdAt))
+      .limit(limit);
+  }
+
+  async convertDraftToArticle(draftId: string, articleId: string): Promise<DataStoryDraft> {
+    const [updated] = await db
+      .update(dataStoryDrafts)
+      .set({
+        articleId,
+        convertedAt: new Date(),
+        status: 'converted_to_article',
+        updatedAt: new Date()
+      })
+      .where(eq(dataStoryDrafts.id, draftId))
+      .returning();
+    return updated;
+  }
+
+  async getDataStoryWithDetails(sourceId: string): Promise<DataStoryWithDetails | undefined> {
+    const source = await this.getDataStorySource(sourceId);
+    if (!source) return undefined;
+
+    const analyses = await this.getAnalysesBySourceId(sourceId);
+    
+    const analysesWithDrafts = await Promise.all(
+      analyses.map(async (analysis) => {
+        const drafts = await this.getDraftsByAnalysisId(analysis.id);
+        return { ...analysis, drafts };
+      })
+    );
+
+    return { ...source, analyses: analysesWithDrafts };
   }
 }
 

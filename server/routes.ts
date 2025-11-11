@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import adsRoutes from "./ads-routes";
+import { registerDataStoryRoutes } from './data-story-routes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
@@ -23428,6 +23429,11 @@ Allow: /
   // ADVERTISING SYSTEM - نظام الإعلانات الذكي
   // ============================================================
   app.use("/api/ads", adsRoutes);
+
+  // ============================================================
+  // DATA STORY GENERATOR - مولد القصص من البيانات
+  // ============================================================
+  registerDataStoryRoutes(app, storage);
 
   const httpServer = createServer(app);
   return httpServer;
