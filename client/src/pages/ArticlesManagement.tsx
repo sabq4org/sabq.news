@@ -24,9 +24,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatusCards } from "@/components/admin/StatusCards";
@@ -132,6 +139,10 @@ export default function ArticlesManagement() {
 
   // State for drag and drop
   const [localArticles, setLocalArticles] = useState<Article[]>([]);
+
+  // State for AI classification
+  const [classificationResult, setClassificationResult] = useState<any>(null);
+  const [showClassificationDialog, setShowClassificationDialog] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -248,6 +259,27 @@ export default function ArticlesManagement() {
       toast({
         title: "خطأ",
         description: error.message || "فشلت عملية الأرشفة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // AI Classification mutation
+  const classifyMutation = useMutation({
+    mutationFn: async (articleId: string) => {
+      return await apiRequest(`/api/articles/${articleId}/auto-categorize`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data: any) => {
+      setClassificationResult(data);
+      setShowClassificationDialog(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في التصنيف",
+        description: error.message || "فشل تصنيف المقال تلقائياً",
         variant: "destructive",
       });
     },
@@ -708,13 +740,25 @@ export default function ArticlesManagement() {
                               />
                             </td>
                             <td className="py-3 px-4">
-                              <RowActions 
-                                articleId={article.id}
-                                status={article.status}
-                                onEdit={() => handleEdit(article)}
-                                isFeatured={article.isFeatured}
-                                onDelete={() => setDeletingArticle(article)}
-                              />
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => classifyMutation.mutate(article.id)}
+                                  disabled={classifyMutation.isPending}
+                                  title="تصنيف ذكي"
+                                  data-testid={`button-classify-${article.id}`}
+                                >
+                                  <Sparkles className="w-4 h-4 text-primary" />
+                                </Button>
+                                <RowActions 
+                                  articleId={article.id}
+                                  status={article.status}
+                                  onEdit={() => handleEdit(article)}
+                                  isFeatured={article.isFeatured}
+                                  onDelete={() => setDeletingArticle(article)}
+                                />
+                              </div>
                             </td>
                           </SortableRow>
                         ))}
@@ -914,6 +958,70 @@ export default function ArticlesManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AI Classification Results Dialog */}
+      <Dialog open={showClassificationDialog} onOpenChange={setShowClassificationDialog}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-classification-results">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              نتائج التصنيف الذكي
+            </DialogTitle>
+            <DialogDescription>
+              تم تحليل المقال بواسطة الذكاء الاصطناعي وتصنيفه تلقائياً
+            </DialogDescription>
+          </DialogHeader>
+          
+          {classificationResult && (
+            <div className="space-y-4">
+              {/* Primary Category */}
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">التصنيف الأساسي</h3>
+                  <Badge variant="default" data-testid="badge-primary-category">
+                    {Math.round(classificationResult.primaryCategory.confidence * 100)}% ثقة
+                  </Badge>
+                </div>
+                <p className="text-xl font-bold text-primary mb-2" data-testid="text-primary-category-name">
+                  {classificationResult.primaryCategory.categoryName}
+                </p>
+                <p className="text-sm text-muted-foreground" data-testid="text-primary-reasoning">
+                  {classificationResult.primaryCategory.reasoning}
+                </p>
+              </div>
+
+              {/* Suggested Categories */}
+              {classificationResult.suggestedCategories && classificationResult.suggestedCategories.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">تصنيفات مقترحة إضافية</h3>
+                  <div className="space-y-3">
+                    {classificationResult.suggestedCategories.map((cat: any, index: number) => (
+                      <div 
+                        key={cat.categoryId} 
+                        className="bg-muted/50 border rounded-lg p-3"
+                        data-testid={`suggested-category-${index}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium">{cat.categoryName}</p>
+                          <Badge variant="secondary">
+                            {Math.round(cat.confidence * 100)}%
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{cat.reasoning}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Model Info */}
+              <div className="text-xs text-muted-foreground border-t pt-3">
+                النموذج المستخدم: {classificationResult.model} ({classificationResult.provider})
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
