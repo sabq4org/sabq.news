@@ -241,11 +241,32 @@ export const comments = pgTable("comments", {
   moderatedBy: varchar("moderated_by").references(() => users.id),
   moderatedAt: timestamp("moderated_at"),
   moderationReason: text("moderation_reason"),
+  // Sentiment analysis fields
+  currentSentiment: text("current_sentiment"), // positive, neutral, negative (denormalized for performance)
+  currentSentimentConfidence: real("current_sentiment_confidence"), // 0-1
+  sentimentAnalyzedAt: timestamp("sentiment_analyzed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_comments_article_status").on(table.articleId, table.status),
   index("idx_comments_user").on(table.userId),
   index("idx_comments_status").on(table.status),
+]);
+
+// Comment sentiment analysis (tracks sentiment history)
+export const commentSentiments = pgTable("comment_sentiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").references(() => comments.id, { onDelete: "cascade" }).notNull(),
+  sentiment: text("sentiment").notNull(), // positive, neutral, negative
+  confidence: real("confidence").notNull(), // 0-1 scale
+  provider: text("provider").notNull(), // openai, anthropic, gemini
+  model: text("model").notNull(), // specific model used
+  language: text("language").notNull(), // ar, en, ur
+  rawMetadata: jsonb("raw_metadata"), // full AI response for debugging
+  analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_sentiment_comment").on(table.commentId),
+  index("idx_sentiment_sentiment").on(table.sentiment),
+  index("idx_sentiment_analyzed").on(table.analyzedAt),
 ]);
 
 // Likes/reactions
@@ -1074,6 +1095,11 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   moderatedAt: true,
   moderationReason: true,
 });
+// Comment sentiments schemas
+export const insertCommentSentimentSchema = createInsertSchema(commentSentiments).omit({
+  id: true,
+  analyzedAt: true,
+});
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
 export const insertInterestSchema = createInsertSchema(interests).omit({ id: true, createdAt: true });
@@ -1475,6 +1501,9 @@ export type InsertRssFeed = z.infer<typeof insertRssFeedSchema>;
 
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+export type InsertCommentSentiment = z.infer<typeof insertCommentSentimentSchema>;
+export type CommentSentiment = typeof commentSentiments.$inferSelect;
 
 export type Reaction = typeof reactions.$inferSelect;
 export type InsertReaction = z.infer<typeof insertReactionSchema>;
