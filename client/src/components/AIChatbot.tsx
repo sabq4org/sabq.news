@@ -52,13 +52,10 @@ export function AIChatbot() {
     setIsLoading(true);
 
     try {
-      const response = await apiRequest('/api/ai/chat', {
+      const data = await apiRequest('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage.content }),
       });
-
-      const data = await response.json();
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
