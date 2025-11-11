@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -14,13 +21,14 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, MessageCircle, User, Calendar, AlertCircle, RotateCcw } from "lucide-react";
+import { Check, X, MessageCircle, User, Calendar, AlertCircle, RotateCcw, Brain, Filter, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { SentimentIndicator } from "@/components/SentimentIndicator";
 
 interface Comment {
   id: string;
@@ -29,6 +37,11 @@ interface Comment {
   createdAt: string;
   moderatedAt?: string;
   moderationReason?: string;
+  sentiment?: 'positive' | 'neutral' | 'negative' | null;
+  sentimentConfidence?: number;
+  sentimentProvider?: string;
+  sentimentModel?: string;
+  sentimentAnalyzedAt?: string;
   user: {
     id: string;
     firstName?: string;
@@ -50,16 +63,22 @@ export default function DashboardComments() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [sentimentFilter, setSentimentFilter] = useState<'all' | 'positive' | 'neutral' | 'negative' | 'unanalyzed'>('all');
 
   // Fetch ALL comments once - we'll filter in the UI
   const { data: allComments, isLoading } = useQuery<Comment[]>({
     queryKey: ["/api/dashboard/comments"],
   });
 
-  // Filter comments based on active tab
+  // Filter comments based on active tab and sentiment
   const comments = allComments?.filter(c => {
-    if (activeTab === "all") return true;
-    return c.status === activeTab;
+    // Filter by status tab
+    if (activeTab !== "all" && c.status !== activeTab) return false;
+    
+    // Filter by sentiment
+    if (sentimentFilter === 'all') return true;
+    if (sentimentFilter === 'unanalyzed') return !c.sentiment;
+    return c.sentiment === sentimentFilter;
   });
 
   // Fetch articles to show titles
@@ -147,6 +166,53 @@ export default function DashboardComments() {
     },
   });
 
+  const analyzeSentimentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return await apiRequest(`/api/comments/${commentId}/analyze-sentiment`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      toast({
+        title: "تم تحليل المشاعر بنجاح",
+        description: "تم تحليل مشاعر التعليق باستخدام الذكاء الاصطناعي",
+      });
+    },
+    onError: (error: any) => {
+      const message = error?.message || "فشل تحليل المشاعر";
+      toast({
+        title: "خطأ",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const analyzeBatchMutation = useMutation({
+    mutationFn: async (commentIds: string[]) => {
+      return await apiRequest(`/api/comments/analyze-batch`, {
+        method: "POST",
+        body: JSON.stringify({ commentIds }),
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      toast({
+        title: "تم تحليل المشاعر بنجاح",
+        description: `تم تحليل ${data?.analyzed || 0} تعليق بنجاح`,
+      });
+    },
+    onError: (error: any) => {
+      const message = error?.message || "فشل تحليل المشاعر";
+      toast({
+        title: "خطأ",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleApprove = (comment: Comment) => {
     approveMutation.mutate(comment.id);
   };
@@ -167,6 +233,24 @@ export default function DashboardComments() {
 
   const handleRestore = (comment: Comment) => {
     restoreMutation.mutate(comment.id);
+  };
+
+  const handleAnalyzeSentiment = (commentId: string) => {
+    analyzeSentimentMutation.mutate(commentId);
+  };
+
+  const handleAnalyzeAll = () => {
+    if (!comments || comments.length === 0) {
+      toast({
+        title: "تنبيه",
+        description: "لا توجد تعليقات لتحليلها",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const commentIds = comments.map(c => c.id);
+    analyzeBatchMutation.mutate(commentIds);
   };
 
   const getStatusBadge = (status: string) => {
@@ -216,8 +300,47 @@ export default function DashboardComments() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={handleAnalyzeAll}
+              disabled={analyzeBatchMutation.isPending || !comments || comments.length === 0}
+              className="gap-2"
+              data-testid="button-analyze-all"
+            >
+              {analyzeBatchMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري التحليل...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4" />
+                  تحليل الكل
+                </>
+              )}
+            </Button>
             <MessageCircle className="h-8 w-8 text-primary" />
           </div>
+        </div>
+
+        {/* Sentiment Filter */}
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={sentimentFilter}
+            onValueChange={(value) => setSentimentFilter(value as typeof sentimentFilter)}
+            data-testid="select-sentiment-filter"
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="تصفية حسب المشاعر" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" data-testid="sentiment-option-all">الكل</SelectItem>
+              <SelectItem value="positive" data-testid="sentiment-option-positive">إيجابي</SelectItem>
+              <SelectItem value="neutral" data-testid="sentiment-option-neutral">محايد</SelectItem>
+              <SelectItem value="negative" data-testid="sentiment-option-negative">سلبي</SelectItem>
+              <SelectItem value="unanalyzed" data-testid="sentiment-option-unanalyzed">غير محلل</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Stats Cards */}
@@ -314,6 +437,20 @@ export default function DashboardComments() {
                   <CardContent className="space-y-4">
                     <p className="text-sm leading-relaxed">{comment.content}</p>
 
+                    {/* Sentiment Indicator */}
+                    <div>
+                      <SentimentIndicator
+                        sentiment={comment.sentiment || null}
+                        confidence={comment.sentimentConfidence}
+                        provider={comment.sentimentProvider}
+                        model={comment.sentimentModel}
+                        analyzedAt={comment.sentimentAnalyzedAt}
+                        size="sm"
+                        showLabel={true}
+                        showTooltip={true}
+                      />
+                    </div>
+
                     {comment.moderationReason && (
                       <div className="bg-muted p-3 rounded-md">
                         <p className="text-xs text-muted-foreground mb-1">سبب الرفض:</p>
@@ -321,34 +458,51 @@ export default function DashboardComments() {
                       </div>
                     )}
 
-                    {comment.status === "pending" && (
-                      <div className="flex items-center gap-2 pt-3 border-t">
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(comment)}
-                          disabled={approveMutation.isPending}
-                          className="gap-2"
-                          data-testid={`button-approve-${comment.id}`}
-                        >
-                          <Check className="h-4 w-4" />
-                          اعتماد
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleRejectClick(comment)}
-                          disabled={rejectMutation.isPending}
-                          className="gap-2"
-                          data-testid={`button-reject-${comment.id}`}
-                        >
-                          <X className="h-4 w-4" />
-                          رفض
-                        </Button>
-                      </div>
-                    )}
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-3 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAnalyzeSentiment(comment.id)}
+                        disabled={analyzeSentimentMutation.isPending}
+                        className="gap-2"
+                        data-testid={`button-analyze-sentiment-${comment.id}`}
+                      >
+                        {analyzeSentimentMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Brain className="h-4 w-4" />
+                        )}
+                        تحليل المشاعر
+                      </Button>
 
-                    {comment.status === "rejected" && (
-                      <div className="flex items-center gap-2 pt-3 border-t">
+                      {comment.status === "pending" && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleApprove(comment)}
+                            disabled={approveMutation.isPending}
+                            className="gap-2"
+                            data-testid={`button-approve-${comment.id}`}
+                          >
+                            <Check className="h-4 w-4" />
+                            اعتماد
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRejectClick(comment)}
+                            disabled={rejectMutation.isPending}
+                            className="gap-2"
+                            data-testid={`button-reject-${comment.id}`}
+                          >
+                            <X className="h-4 w-4" />
+                            رفض
+                          </Button>
+                        </>
+                      )}
+
+                      {comment.status === "rejected" && (
                         <Button
                           size="sm"
                           onClick={() => handleRestore(comment)}
@@ -359,8 +513,8 @@ export default function DashboardComments() {
                           <RotateCcw className="h-4 w-4" />
                           استرجاع
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

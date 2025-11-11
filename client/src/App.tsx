@@ -54,6 +54,7 @@ import RecommendationSettings from "@/pages/recommendation-settings";
 import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
+import SentimentAnalytics from "@/pages/dashboard/SentimentAnalytics";
 import DashboardComments from "@/pages/DashboardComments";
 import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
@@ -354,6 +355,7 @@ function Router() {
       <Route path="/dashboard/analytics/ab-tests/:id" component={ABTestDetail} />
       <Route path="/dashboard/analytics/ab-tests" component={ABTestsManagement} />
       <Route path="/dashboard/analytics/recommendations" component={RecommendationAnalytics} />
+      <Route path="/dashboard/sentiment-analytics" component={SentimentAnalytics} />
       <Route path="/dashboard/rss-feeds" component={ComingSoon} />
       <Route path="/dashboard/integrations" component={ComingSoon} />
       <Route path="/dashboard/storage" component={ComingSoon} />

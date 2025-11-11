@@ -357,6 +357,14 @@ export const navConfig: NavItem[] = [
         icon: Lightbulb,
         roles: ["admin", "analyst"],
       },
+      {
+        id: "sentiment-analytics",
+        labelKey: "nav.sentiment_analytics",
+        labelAr: "تحليل المشاعر",
+        path: "/dashboard/sentiment-analytics",
+        icon: Brain,
+        roles: ["admin", "analyst"],
+      },
     ],
   },
 
