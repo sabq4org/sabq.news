@@ -112,26 +112,26 @@ interface AdminDashboardStats {
   }>;
 }
 
-// Motivational quotes in English
+// Motivational quotes in Urdu
 const MOTIVATIONAL_QUOTES = [
-  "A new day, a new achievement ✨… Let's start strong, champion!",
-  "Start your day with enthusiasm—every idea you have makes a difference at Sabq 💪",
-  "Good morning of intelligence and creativity… You're the center of excellence today! 🚀",
-  "Remember: Quality starts with the smallest details 👀",
-  "Your presence makes an impact, and your results inspire the team 🌟",
-  "Every article you write today… is a mark added to Sabq's history 🖋️",
-  "Be the best version of yourself in every task 🔥",
-  "Excellence isn't a choice… it's a way of life at Sabq 👑",
-  "Innovate as if you're creating news that's read for the first time 💡",
-  "Every click you make makes a difference in the experience of thousands of readers 🌍",
+  "نیا دن، نئی کامیابی ✨… آئیں زور دار شروعات کریں، چیمپئن!",
+  "اپنے دن کا آغاز جوش و جذبے سے کریں—آپ کا ہر خیال سبق میں فرق ڈالتا ہے 💪",
+  "ذہانت اور تخلیقیت کی صبح بخیر… آج آپ ہی بہترین کا مرکز ہیں! 🚀",
+  "یاد رکھیں: معیار سب سے چھوٹی تفصیلات سے شروع ہوتا ہے 👀",
+  "آپ کی موجودگی اثر ڈالتی ہے، اور آپ کے نتائج ٹیم کو متاثر کرتے ہیں 🌟",
+  "ہر مضمون جو آپ آج لکھتے ہیں… سبق کی تاریخ میں ایک نشان ہے 🖋️",
+  "ہر کام میں اپنے آپ کا بہترین ورژن بنیں 🔥",
+  "بہترین ہونا کوئی انتخاب نہیں… یہ سبق میں زندگی کا طریقہ ہے 👑",
+  "ایسے جدت کریں جیسے آپ پہلی بار پڑھی جانے والی خبر بنا رہے ہیں 💡",
+  "آپ کا ہر کلک ہزاروں قارئین کے تجربے میں فرق ڈالتا ہے 🌍",
 ];
 
 // Get time-based greeting
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 18) return "Good Afternoon";
-  return "Good Evening";
+  if (hour < 12) return "صبح بخیر";
+  if (hour < 18) return "سہ پہر بخیر";
+  return "شام بخیر";
 }
 
 // Get random motivational quote (changes on each visit)
@@ -164,12 +164,12 @@ function Dashboard() {
       archived: "outline",
     };
     const labels: Record<string, string> = {
-      published: "Published",
-      draft: "Draft",
-      pending: "Pending",
-      approved: "Approved",
-      rejected: "Rejected",
-      archived: "Archived",
+      published: "شائع",
+      draft: "مسودہ",
+      pending: "زیر التواء",
+      approved: "منظور شدہ",
+      rejected: "مسترد",
+      archived: "محفوظ شدہ",
     };
     return (
       <Badge variant={variants[status] || "outline"} data-testid={`badge-status-${status}`}>
@@ -183,15 +183,15 @@ function Dashboard() {
 
   // Prepare chart data
   const articleChartData = stats ? [
-    { name: "Published", value: stats.articles.published, color: COLORS[0] },
-    { name: "Draft", value: stats.articles.draft, color: COLORS[1] },
-    { name: "Archived", value: stats.articles.archived, color: COLORS[2] },
+    { name: "شائع", value: stats.articles.published, color: COLORS[0] },
+    { name: "مسودہ", value: stats.articles.draft, color: COLORS[1] },
+    { name: "محفوظ شدہ", value: stats.articles.archived, color: COLORS[2] },
   ] : [];
 
   const commentChartData = stats ? [
-    { name: "Approved", value: stats.comments.approved, color: COLORS[0] },
-    { name: "Pending", value: stats.comments.pending, color: COLORS[1] },
-    { name: "Rejected", value: stats.comments.rejected, color: COLORS[2] },
+    { name: "منظور شدہ", value: stats.comments.approved, color: COLORS[0] },
+    { name: "زیر التواء", value: stats.comments.pending, color: COLORS[1] },
+    { name: "مسترد", value: stats.comments.rejected, color: COLORS[2] },
   ] : [];
 
   if (isUserLoading || !user) {
@@ -256,9 +256,9 @@ function Dashboard() {
         {/* Main Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
-            title="Articles"
+            title="مضامین"
             value={stats?.articles.total || 0}
-            description={`${stats?.articles.published || 0} published · ${stats?.articles.draft || 0} draft · ${stats?.articles.scheduled || 0} scheduled`}
+            description={`${stats?.articles.published || 0} شائع · ${stats?.articles.draft || 0} مسودہ · ${stats?.articles.scheduled || 0} مقرر`}
             icon={FileText}
             iconColor="text-primary"
             iconBgColor="bg-primary/10"
@@ -266,9 +266,9 @@ function Dashboard() {
             testId="card-articles-stats"
           />
           <StatsCard
-            title="Users"
+            title="صارفین"
             value={stats?.users.total || 0}
-            description={`${stats?.users.active24h || 0} active today · ${stats?.users.newThisWeek || 0} new this week`}
+            description={`${stats?.users.active24h || 0} آج فعال · ${stats?.users.newThisWeek || 0} اس ہفتے نئے`}
             icon={Users}
             iconColor="text-purple-600 dark:text-purple-400"
             iconBgColor="bg-purple-100/50 dark:bg-purple-900/20"
@@ -276,9 +276,9 @@ function Dashboard() {
             testId="card-users-stats"
           />
           <StatsCard
-            title="Comments"
+            title="تبصرے"
             value={stats?.comments.total || 0}
-            description={`${stats?.comments.pending || 0} pending · ${stats?.comments.approved || 0} approved`}
+            description={`${stats?.comments.pending || 0} زیر التواء · ${stats?.comments.approved || 0} منظور شدہ`}
             icon={MessageSquare}
             iconColor="text-green-600 dark:text-green-400"
             iconBgColor="bg-green-100/50 dark:bg-green-900/20"
@@ -286,9 +286,9 @@ function Dashboard() {
             testId="card-comments-stats"
           />
           <StatsCard
-            title="Total Views"
+            title="کل ملاحظات"
             value={stats?.articles.totalViews || 0}
-            description="Total article views"
+            description="کل مضمون ملاحظات"
             icon={Eye}
             iconColor="text-primary"
             iconBgColor="bg-primary/10"
@@ -300,9 +300,9 @@ function Dashboard() {
         {/* Today's Activity Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
-            title="Views Today"
+            title="آج کے ملاحظات"
             value={stats?.articles.viewsToday || 0}
-            description="new views today"
+            description="آج نئے ملاحظات"
             icon={Activity}
             iconColor="text-primary"
             iconBgColor="bg-primary/10"
@@ -310,9 +310,9 @@ function Dashboard() {
             testId="card-views-today-stats"
           />
           <StatsCard
-            title="Active Readers Today"
+            title="آج فعال قارئین"
             value={stats?.users.activeToday || 0}
-            description="visitors active now"
+            description="اب فعال زائرین"
             icon={Users}
             iconColor="text-chart-2"
             iconBgColor="bg-blue-100/50 dark:bg-blue-900/20"
@@ -320,9 +320,9 @@ function Dashboard() {
             testId="card-active-today-stats"
           />
           <StatsCard
-            title="Reads Today"
+            title="آج پڑھا گیا"
             value={stats?.engagement.readsToday || 0}
-            description={`of ${stats?.engagement.totalReads || 0} total`}
+            description={`کل ${stats?.engagement.totalReads || 0} میں سے`}
             icon={FileText}
             iconColor="text-chart-3"
             iconBgColor="bg-cyan-100/50 dark:bg-cyan-900/20"
@@ -330,9 +330,9 @@ function Dashboard() {
             testId="card-reads-today-stats"
           />
           <StatsCard
-            title="Engagement Today"
+            title="آج مشغولیت"
             value={stats?.reactions.todayCount || 0}
-            description={`of ${stats?.reactions.total || 0} total`}
+            description={`کل ${stats?.reactions.total || 0} میں سے`}
             icon={Heart}
             iconColor="text-chart-4"
             iconBgColor="bg-pink-100/50 dark:bg-pink-900/20"
@@ -344,7 +344,7 @@ function Dashboard() {
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatsCard
-            title="Categories"
+            title="زمرے"
             value={stats?.categories.total || 0}
             icon={FolderTree}
             iconColor="text-amber-600 dark:text-amber-400"
@@ -353,9 +353,9 @@ function Dashboard() {
             testId="card-categories-stats"
           />
           <StatsCard
-            title="A/B Tests"
+            title="A/B ٹیسٹ"
             value={stats?.abTests.total || 0}
-            description={`${stats?.abTests.running || 0} running`}
+            description={`${stats?.abTests.running || 0} چل رہا ہے`}
             icon={FlaskConical}
             iconColor="text-indigo-600 dark:text-indigo-400"
             iconBgColor="bg-indigo-100/50 dark:bg-indigo-900/20"
@@ -363,9 +363,9 @@ function Dashboard() {
             testId="card-abtests-stats"
           />
           <StatsCard
-            title="Average Reading Time"
+            title="اوسط پڑھنے کا وقت"
             value={`${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}`}
-            description="min:sec per article"
+            description="منٹ:سیکنڈ فی مضمون"
             icon={Clock}
             iconColor="text-teal-600 dark:text-teal-400"
             iconBgColor="bg-teal-100/50 dark:bg-teal-900/20"
@@ -377,8 +377,8 @@ function Dashboard() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard
-            title="Articles Distribution"
-            description="By Status"
+            title="مضامین کی تقسیم"
+            description="حیثیت کے لحاظ سے"
             isLoading={isLoading}
             testId="card-articles-chart"
           >
@@ -404,8 +404,8 @@ function Dashboard() {
           </ChartCard>
 
           <ChartCard
-            title="Comments Distribution"
-            description="By Status"
+            title="تبصروں کی تقسیم"
+            description="حیثیت کے لحاظ سے"
             isLoading={isLoading}
             testId="card-comments-chart"
           >
@@ -424,8 +424,8 @@ function Dashboard() {
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ActivityCard
-            title="Recent Articles"
-            description="Last 5 articles created"
+            title="حالیہ مضامین"
+            description="آخری 5 مضامین"
             items={(stats?.recentArticles || []).map(article => ({
               id: article.id,
               title: article.title,
@@ -434,11 +434,11 @@ function Dashboard() {
               metadata: { views: article.views }
             }))}
             isLoading={isLoading}
-            emptyMessage="No recent articles"
+            emptyMessage="کوئی حالیہ مضمون نہیں"
             testId="card-recent-articles"
             actions={
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-articles">
-                <Link href="/dashboard/articles">View All</Link>
+                <Link href="/dashboard/articles">تمام دیکھیں</Link>
               </Button>
             }
             renderItem={(item) => (
@@ -474,8 +474,8 @@ function Dashboard() {
           />
 
           <ActivityCard
-            title="Recent Comments"
-            description="Last 5 comments"
+            title="حالیہ تبصرے"
+            description="آخری 5 تبصرے"
             items={(stats?.recentComments || []).map(comment => ({
               id: comment.id,
               title: comment.content.substring(0, 80) + "...",
@@ -484,11 +484,11 @@ function Dashboard() {
               metadata: { user: comment.user }
             }))}
             isLoading={isLoading}
-            emptyMessage="No recent comments"
+            emptyMessage="کوئی حالیہ تبصرہ نہیں"
             testId="card-recent-comments"
             actions={
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
-                <Link href="/dashboard/comments">View All</Link>
+                <Link href="/dashboard/comments">تمام دیکھیں</Link>
               </Button>
             }
             renderItem={(item) => (
@@ -506,7 +506,7 @@ function Dashboard() {
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>
-                      {item.metadata?.user?.firstName || item.metadata?.user?.email || "User"}
+                      {item.metadata?.user?.firstName || item.metadata?.user?.email || "صارف"}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -536,9 +536,9 @@ function Dashboard() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Most Viewed Articles
+                  سب سے زیادہ دیکھے گئے مضامین
                 </CardTitle>
-                <CardDescription>Top 5 articles by views</CardDescription>
+                <CardDescription>ملاحظات کی بنیاد پر ٹاپ 5 مضامین</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -575,7 +575,7 @@ function Dashboard() {
                             views={article.views}
                             iconClassName="h-3 w-3"
                           />
-                          <span>views</span>
+                          <span>ملاحظات</span>
                         </span>
                       </div>
                     </div>
@@ -584,7 +584,7 @@ function Dashboard() {
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8" data-testid="text-no-top-articles">
-                No articles
+                کوئی مضمون نہیں
               </p>
             )}
           </CardContent>
@@ -611,7 +611,7 @@ function UpcomingRemindersWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" data-testid="icon-reminders" />
-          Upcoming Reminders
+          آنے والی یاد دہانیاں
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -650,10 +650,10 @@ function UpcomingRemindersWidget() {
                       })()}
                     </span>
                     <Badge variant="outline" data-testid={`badge-reminder-channel-${reminder.id}`}>
-                      {reminder.channelType === 'IN_APP' ? 'In-App' :
-                       reminder.channelType === 'EMAIL' ? 'Email' : 
-                       reminder.channelType === 'WHATSAPP' ? 'WhatsApp' :
-                       reminder.channelType === 'SLACK' ? 'Slack' : 
+                      {reminder.channelType === 'IN_APP' ? 'ایپ میں' :
+                       reminder.channelType === 'EMAIL' ? 'ای میل' : 
+                       reminder.channelType === 'WHATSAPP' ? 'واٹس ایپ' :
+                       reminder.channelType === 'SLACK' ? 'سلیک' : 
                        reminder.channelType}
                     </Badge>
                   </div>
@@ -663,7 +663,7 @@ function UpcomingRemindersWidget() {
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-8" data-testid="text-no-reminders">
-            No upcoming reminders
+            کوئی آنے والی یاد دہانی نہیں
           </p>
         )}
       </CardContent>
@@ -695,7 +695,7 @@ function UpcomingTasksWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5" data-testid="icon-tasks" />
-          Upcoming Tasks
+          آنے والے کام
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -719,19 +719,19 @@ function UpcomingTasksWidget() {
                   </h4>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="secondary" data-testid={`badge-task-role-${task.id}`}>
-                      {task.role === 'coordinator' ? 'Coordinator' :
-                       task.role === 'reporter' ? 'Reporter' :
-                       task.role === 'photographer' ? 'Photographer' :
-                       task.role === 'editor' ? 'Editor' :
+                      {task.role === 'coordinator' ? 'کوآرڈینیٹر' :
+                       task.role === 'reporter' ? 'رپورٹر' :
+                       task.role === 'photographer' ? 'فوٹوگرافر' :
+                       task.role === 'editor' ? 'ایڈیٹر' :
                        task.role}
                     </Badge>
                     <Badge 
                       variant={task.status === 'pending' ? 'outline' : 'default'}
                       data-testid={`badge-task-status-${task.id}`}
                     >
-                      {task.status === 'pending' ? 'Pending' :
-                       task.status === 'in_progress' ? 'In Progress' :
-                       task.status === 'completed' ? 'Completed' :
+                      {task.status === 'pending' ? 'زیر التواء' :
+                       task.status === 'in_progress' ? 'جاری' :
+                       task.status === 'completed' ? 'مکمل' :
                        task.status}
                     </Badge>
                   </div>
@@ -741,7 +741,7 @@ function UpcomingTasksWidget() {
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-8" data-testid="text-no-tasks">
-            No upcoming tasks
+            کوئی آنے والا کام نہیں
           </p>
         )}
       </CardContent>
@@ -802,14 +802,14 @@ function UrgentReminderBanner() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100" data-testid="text-banner-title">
-                  Reminder Very Soon
+                  یاد دہانی بہت جلد
                 </h3>
                 <Badge 
                   variant="outline" 
                   className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-700"
                   data-testid="badge-urgent-time"
                 >
-                  {minutesUntil > 0 ? `in ${minutesUntil} min` : 'Now'}
+                  {minutesUntil > 0 ? `${minutesUntil} منٹ میں` : 'ابھی'}
                 </Badge>
               </div>
               
@@ -830,10 +830,10 @@ function UrgentReminderBanner() {
                 </span>
                 <span className="text-blue-500 dark:text-blue-400">•</span>
                 <span>
-                  {reminder.channelType === 'IN_APP' ? 'In-App' :
-                   reminder.channelType === 'EMAIL' ? 'Email' : 
-                   reminder.channelType === 'WHATSAPP' ? 'WhatsApp' :
-                   reminder.channelType === 'SLACK' ? 'Slack' : 
+                  {reminder.channelType === 'IN_APP' ? 'ایپ میں' :
+                   reminder.channelType === 'EMAIL' ? 'ای میل' : 
+                   reminder.channelType === 'WHATSAPP' ? 'واٹس ایپ' :
+                   reminder.channelType === 'SLACK' ? 'سلیک' : 
                    reminder.channelType}
                 </span>
               </div>
@@ -852,7 +852,7 @@ function UrgentReminderBanner() {
           
           {urgentReminders.length > 1 && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-2" data-testid="text-more-reminders">
-              + {urgentReminders.length - 1} more upcoming reminder(s)
+              + {urgentReminders.length - 1} مزید آنے والی یاد دہانیاں
             </p>
           )}
         </div>
