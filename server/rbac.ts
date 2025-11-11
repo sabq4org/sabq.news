@@ -13,7 +13,19 @@ export async function userHasPermission(
   permissionCode: PermissionCode
 ): Promise<boolean> {
   try {
-    // Use a single JOIN query to check permission
+    // First check if user has system.admin or admin role (legacy support)
+    const [user] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (user && (user.role === 'system.admin' || user.role === 'admin')) {
+      console.log(`[RBAC] User ${userId} has legacy admin role, granting all permissions`);
+      return true;
+    }
+
+    // Use a single JOIN query to check permission via RBAC
     const result = await db
       .select({ permissionCode: permissions.code })
       .from(userRoles)
