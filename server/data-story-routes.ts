@@ -11,10 +11,19 @@ import { eq } from 'drizzle-orm';
 
 const router = Router();
 
-// Use existing object storage client with proper credentials
-const bucketName = process.env.REPL_ID 
-  ? `replit-objstore-${process.env.REPL_ID}`
-  : 'replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52';
+// Extract bucket name from PRIVATE_OBJECT_DIR environment variable
+function getBucketName(): string {
+  const privateDir = process.env.PRIVATE_OBJECT_DIR || '';
+  if (privateDir) {
+    const match = privateDir.match(/\/(replit-objstore-[^/]+)/);
+    if (match) {
+      return match[1];
+    }
+  }
+  return 'replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52';
+}
+
+const bucketName = getBucketName();
 
 // Configure multer for memory storage
 const upload = multer({
