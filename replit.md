@@ -52,10 +52,12 @@ Key features include:
     - **Multilingual Support:** Language-specific prompts and SSR-safe UI components across all three platform languages
     - **API Endpoints:** 4 RESTful endpoints (`/api/comments/:id/analyze-sentiment`, `/api/comments/analyze-batch`, `/api/comments/:id/sentiment-history`, `/api/sentiment/analytics`)
 -   **Smart Article Classification System (November 2025):** AI-powered auto-categorization for Arabic articles using Claude Sonnet 3.5. Features include:
-    - **One-Click Classification:** Sparkles button in ArticlesManagement triggers intelligent article analysis
+    - **Editor-Integrated UX:** Sparkles button in ArticleEditor (next to category selector) enables classification during article creation/editing workflow
+    - **Smart Availability:** Button always visible but disabled for new articles with helpful tooltip; enabled after first draft save
+    - **Auto-Fill Category:** Automatically fills primary category field with AI's top suggestion upon successful classification
     - **Multi-Category Suggestions:** Primary category with 1-3 additional suggested categories, each with confidence scores (0-1 scale)
     - **Intelligent Analysis:** AI analyzes article title and content (3000 chars) against available categories with Arabic reasoning
-    - **Visual Feedback:** Interactive dialog showing primary category highlight, suggested categories grid, and model metadata
+    - **Toast Notifications:** Inline feedback showing primary category, confidence percentage, and suggested alternatives
     - **Loading States:** Animated pulse feedback on classification button during AI processing
     - **Database Integration:** Results stored in `articleSmartCategories` junction table with confidence scores
     - **RBAC Protection:** Requires "articles.create" or "system.admin" permissions

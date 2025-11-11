@@ -1133,19 +1133,23 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>التصنيف</span>
-                  {!isNewArticle && id && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => autoClassifyMutation.mutate()}
-                      disabled={isClassifying || !title || !content}
-                      title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "تصنيف ذكي بالذكاء الاصطناعي"}
-                      data-testid="button-auto-classify"
-                    >
-                      <Sparkles className={`h-4 w-4 ml-1 ${isClassifying ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
-                      <span className="text-sm">{isClassifying ? 'جاري التصنيف...' : 'تصنيف ذكي'}</span>
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => autoClassifyMutation.mutate()}
+                    disabled={isClassifying || !title || !content || isNewArticle}
+                    title={
+                      isNewArticle 
+                        ? "احفظ المقال كمسودة أولاً لاستخدام التصنيف الذكي" 
+                        : !title || !content 
+                          ? "يجب إدخال العنوان والمحتوى أولاً" 
+                          : "تصنيف ذكي بالذكاء الاصطناعي"
+                    }
+                    data-testid="button-auto-classify"
+                  >
+                    <Sparkles className={`h-4 w-4 ml-1 ${isClassifying ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <span className="text-sm">{isClassifying ? 'جاري التصنيف...' : 'تصنيف ذكي'}</span>
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
