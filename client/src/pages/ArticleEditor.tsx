@@ -171,7 +171,7 @@ export default function ArticleEditor() {
       setHideFromHomepage(article.hideFromHomepage || false);
       // Validate SEO fields - truncate if too long (legacy data cleanup)
       const validMetaTitle = article.seo?.metaTitle 
-        ? article.seo.metaTitle.substring(0, 70) 
+        ? article.seo.metaTitle.substring(0, 60) 
         : "";
       const validMetaDescription = article.seo?.metaDescription 
         ? article.seo.metaDescription.substring(0, 160) 
@@ -327,7 +327,7 @@ export default function ArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: metaTitle ? metaTitle.substring(0, 70) : (title ? title.substring(0, 70) : ""),
+          metaTitle: metaTitle ? metaTitle.substring(0, 60) : (title ? title.substring(0, 60) : ""),
           metaDescription: metaDescription ? metaDescription.substring(0, 160) : (excerpt ? excerpt.substring(0, 160) : ""),
           keywords: keywords,
         },
@@ -494,7 +494,7 @@ export default function ArticleEditor() {
             publishType: "instant",
             hideFromHomepage,
             seo: {
-              metaTitle: metaTitle || title.substring(0, 70),
+              metaTitle: metaTitle || title.substring(0, 60),
               metaDescription: metaDescription || excerpt.substring(0, 160),
               keywords: keywords,
             },
@@ -579,7 +579,7 @@ export default function ArticleEditor() {
             publishType: "instant",
             hideFromHomepage,
             seo: {
-              metaTitle: metaTitle || title.substring(0, 70),
+              metaTitle: metaTitle || title.substring(0, 60),
               metaDescription: metaDescription || excerpt.substring(0, 160),
               keywords: keywords,
             },
