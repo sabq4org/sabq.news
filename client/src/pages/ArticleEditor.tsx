@@ -448,7 +448,7 @@ export default function ArticleEditor() {
     mutationFn: async () => {
       return await apiRequest("/api/ai/generate-titles", {
         method: "POST",
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, language: "ar" }),
       });
     },
     onSuccess: (data: { titles: string[] }) => {

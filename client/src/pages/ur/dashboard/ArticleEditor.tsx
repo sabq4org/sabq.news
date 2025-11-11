@@ -421,7 +421,7 @@ export default function EnglishArticleEditor() {
     mutationFn: async () => {
       return await apiRequest("/api/ai/generate-titles", {
         method: "POST",
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, language: "ur" }),
       });
     },
     onSuccess: (data: { titles: string[] }) => {

@@ -9759,12 +9759,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const { content } = req.body;
+      const { content, language = "ar" } = req.body;
       if (!content) {
         return res.status(400).json({ message: "Content is required" });
       }
+      
+      if (!["ar", "en", "ur"].includes(language)) {
+        return res.status(400).json({ message: "Invalid language parameter" });
+      }
 
-      const titles = await generateTitle(content);
+      const titles = await generateTitle(content, language as "ar" | "en" | "ur");
       res.json({ titles });
     } catch (error) {
       console.error("Error generating titles:", error);
@@ -12914,22 +12918,22 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       // Generate SEO metadata using AI
       const seoResult = await generateSeoMetadata({
+        id: articleId,
         title: article.title,
         subtitle: article.subtitle || undefined,
         content: article.content,
         excerpt: article.excerpt || undefined,
-        language: language as "ar" | "en" | "ur",
-      });
+      }, language as "ar" | "en" | "ur");
 
       // Prepare SEO content and metadata
       const seoContent = {
-        metaTitle: seoResult.metaTitle,
-        metaDescription: seoResult.metaDescription,
-        keywords: seoResult.keywords,
-        socialTitle: seoResult.socialTitle,
-        socialDescription: seoResult.socialDescription,
-        imageAltText: seoResult.imageAltText,
-        ogImageUrl: seoResult.ogImageUrl,
+        metaTitle: seoResult.content.metaTitle,
+        metaDescription: seoResult.content.metaDescription,
+        keywords: seoResult.content.keywords,
+        socialTitle: seoResult.content.socialTitle,
+        socialDescription: seoResult.content.socialDescription,
+        imageAltText: seoResult.content.imageAltText,
+        ogImageUrl: seoResult.content.ogImageUrl,
       };
 
       const seoMetadata = {
@@ -12966,11 +12970,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         action: "generate_seo_metadata",
         entityType: "article",
         entityId: articleId,
-        metadata: {
-          language,
-          provider: seoResult.provider,
-          model: seoResult.model,
-        },
       });
 
       res.json({

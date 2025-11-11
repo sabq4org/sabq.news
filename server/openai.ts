@@ -28,18 +28,30 @@ export async function summarizeArticle(text: string): Promise<string> {
   }
 }
 
-export async function generateTitle(content: string): Promise<string[]> {
+export async function generateTitle(content: string, language: "ar" | "en" | "ur" = "ar"): Promise<string[]> {
   try {
+    const SYSTEM_PROMPTS = {
+      ar: "أنت مساعد ذكي متخصص في إنشاء عناوين جذابة للمقالات الإخبارية باللغة العربية. قم بإنشاء عناوين واضحة ومثيرة للاهتمام.",
+      en: "You are a smart assistant specialized in creating catchy headlines for news articles in English. Generate clear and interesting headlines.",
+      ur: "آپ ایک ذہین معاون ہیں جو اردو میں خبروں کے مضامین کے لیے دلکش عنوانات بنانے میں مہارت رکھتے ہیں۔ واضح اور دلچسپ عنوانات تخلیق کریں۔"
+    };
+
+    const USER_PROMPTS = {
+      ar: `اقترح 3 عناوين مختلفة للمقال التالي. أعد النتيجة بصيغة JSON كمصفوفة من النصوص:\n\n${content.substring(0, 1000)}`,
+      en: `Suggest 3 different headlines for the following article. Return the result in JSON format as an array of strings:\n\n${content.substring(0, 1000)}`,
+      ur: `مندرجہ ذیل مضمون کے لیے 3 مختلف عنوانات تجویز کریں۔ نتیجہ JSON فارمیٹ میں سٹرنگز کی صف کے طور پر واپس کریں:\n\n${content.substring(0, 1000)}`
+    };
+
     const response = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
         {
           role: "system",
-          content: "أنت مساعد ذكي متخصص في إنشاء عناوين جذابة للمقالات الإخبارية باللغة العربية. قم بإنشاء عناوين واضحة ومثيرة للاهتمام.",
+          content: SYSTEM_PROMPTS[language],
         },
         {
           role: "user",
-          content: `اقترح 3 عناوين مختلفة للمقال التالي. أعد النتيجة بصيغة JSON كمصفوفة من النصوص:\n\n${content.substring(0, 1000)}`,
+          content: USER_PROMPTS[language],
         },
       ],
       response_format: { type: "json_object" },
