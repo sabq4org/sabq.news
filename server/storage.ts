@@ -755,6 +755,11 @@ export interface IStorage {
     dateFrom?: string;
     dateTo?: string;
   }): Promise<Array<any>>;
+  queryUrArticlesByKeyword(keyword: string, limit: number, filters?: {
+    categories?: string[];
+    dateFrom?: string;
+    dateTo?: string;
+  }): Promise<Array<any>>;
 
   // ============================================
   // Audio News Briefs Operations - الأخبار الصوتية السريعة
@@ -6928,6 +6933,70 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(and(...conditions))
       .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
+    console.log(`✓ [Storage] Query returned ${results.length} results`);
+    
+    // Log each result
+    results.forEach((article, index) => {
+      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." [Image: ${article.imageUrl ? '✓' : '✗'}]`);
+    });
+
+    return results;
+  }
+
+  async queryUrArticlesByKeyword(
+    keyword: string,
+    limit: number,
+    filters?: {
+      categories?: string[];
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): Promise<Array<any>> {
+    console.log(`🔎 [Storage] Searching Urdu articles with keyword: "${keyword}"`);
+    
+    const conditions = [
+      eq(urArticles.status, 'published'),
+      // Search ONLY in seo.keywords JSONB array - not in title/excerpt
+      sql`${urArticles.seo}::jsonb -> 'keywords' @> ${JSON.stringify([keyword])}::jsonb`
+    ];
+
+    if (filters?.categories && filters.categories.length > 0) {
+      conditions.push(inArray(urArticles.categoryId, filters.categories));
+      console.log(`   - Filtering by categories: ${filters.categories.join(', ')}`);
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(urArticles.publishedAt, new Date(filters.dateFrom)));
+      console.log(`   - Date from: ${filters.dateFrom}`);
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(urArticles.publishedAt, new Date(filters.dateTo)));
+      console.log(`   - Date to: ${filters.dateTo}`);
+    }
+
+    console.log(`   - Limit: ${limit}`);
+
+    const results = await db
+      .select({
+        id: urArticles.id,
+        title: urArticles.title,
+        slug: urArticles.slug,
+        publishedAt: urArticles.publishedAt,
+        imageUrl: urArticles.imageUrl,
+        categoryId: urCategories.id,
+        category: {
+          name: urCategories.name,
+          slug: urCategories.slug,
+          color: urCategories.color,
+        }
+      })
+      .from(urArticles)
+      .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+      .where(and(...conditions))
+      .orderBy(desc(urArticles.publishedAt))
       .limit(limit);
 
     console.log(`✓ [Storage] Query returned ${results.length} results`);
