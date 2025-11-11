@@ -46,6 +46,7 @@ import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
 import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
+import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -823,6 +824,12 @@ const generateSlug = (text: string) => {
                     )}
                   </Button>
                 </div>
+                <InlineHeadlineSuggestions
+                  language="ar"
+                  editorInstance={editorInstance}
+                  currentTitle={title}
+                  onTitleChange={setTitle}
+                />
                 <p className="text-xs text-muted-foreground">
                   {(title || "").length}/200 حرف
                 </p>
