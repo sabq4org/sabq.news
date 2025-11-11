@@ -80,12 +80,14 @@ const sizeConfig = {
   }
 };
 
-function detectLanguage(): 'ar' | 'en' | 'ur' {
+const detectLanguage = (): 'ar' | 'en' | 'ur' => {
+  if (typeof window === 'undefined') return 'ar'; // SSR fallback
+  
   const path = window.location.pathname;
-  if (path.startsWith("/en")) return "en";
-  if (path.startsWith("/ur")) return "ur";
-  return "ar";
-}
+  if (path.startsWith('/en')) return 'en';
+  if (path.startsWith('/ur')) return 'ur';
+  return 'ar'; // Default
+};
 
 export function SentimentIndicator({
   sentiment,
