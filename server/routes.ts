@@ -7,6 +7,7 @@ import adsRoutes from "./ads-routes";
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
+import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
@@ -9866,7 +9867,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
-  // AI Chat Assistant (Public)
+  // AI Chat Assistant - Arabic (Enhanced with multilingual support)
   app.post("/api/ai/chat", async (req: any, res) => {
     try {
       const { message } = req.body;
@@ -9879,7 +9880,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .select({
           title: articles.title,
           summary: articles.aiSummary,
-          categoryNameAr: categories.nameAr,
+          categoryName: categories.nameAr,
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -9890,14 +9891,93 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const articlesForContext = recentArticles.map(article => ({
         title: article.title,
         summary: article.summary || undefined,
-        categoryNameAr: article.categoryNameAr || undefined,
+        categoryName: article.categoryName || undefined,
       }));
 
-      const aiResponse = await chatWithAssistant(message, articlesForContext);
+      const aiResponse = await chatWithMultilingualAssistant(message, 'ar', {
+        recentArticles: articlesForContext,
+      });
+      
       res.json({ response: aiResponse });
     } catch (error) {
-      console.error("Error in AI chat:", error);
+      console.error("Error in AI chat (Arabic):", error);
       res.status(500).json({ message: "فشل في معالجة الرسالة" });
+    }
+  });
+
+  // AI Chat Assistant - English
+  app.post("/api/en/chat", async (req: any, res) => {
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      // Get last 10 published English articles for context
+      const recentArticles = await db
+        .select({
+          title: enArticles.title,
+          summary: enArticles.aiSummary,
+          categoryName: enCategories.name,
+        })
+        .from(enArticles)
+        .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
+        .where(eq(enArticles.status, "published"))
+        .orderBy(desc(enArticles.publishedAt))
+        .limit(10);
+
+      const articlesForContext = recentArticles.map(article => ({
+        title: article.title,
+        summary: article.summary || undefined,
+        categoryName: article.categoryName || undefined,
+      }));
+
+      const aiResponse = await chatWithMultilingualAssistant(message, 'en', {
+        recentArticles: articlesForContext,
+      });
+      
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error("Error in AI chat (English):", error);
+      res.status(500).json({ message: "Failed to process message" });
+    }
+  });
+
+  // AI Chat Assistant - Urdu
+  app.post("/api/ur/chat", async (req: any, res) => {
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "پیغام ضروری ہے" });
+      }
+
+      // Get last 10 published Urdu articles for context
+      const recentArticles = await db
+        .select({
+          title: urArticles.title,
+          summary: urArticles.aiSummary,
+          categoryName: urCategories.name,
+        })
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .where(eq(urArticles.status, "published"))
+        .orderBy(desc(urArticles.publishedAt))
+        .limit(10);
+
+      const articlesForContext = recentArticles.map(article => ({
+        title: article.title,
+        summary: article.summary || undefined,
+        categoryName: article.categoryName || undefined,
+      }));
+
+      const aiResponse = await chatWithMultilingualAssistant(message, 'ur', {
+        recentArticles: articlesForContext,
+      });
+      
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error("Error in AI chat (Urdu):", error);
+      res.status(500).json({ message: "پیغام پر کارروائی ناکام" });
     }
   });
 
