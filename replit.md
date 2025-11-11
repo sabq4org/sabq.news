@@ -15,8 +15,6 @@ A core architectural decision is the **trilingual system** with separate databas
 
 The platform implements a unified brand color system and a consistent smart blocks architecture across all three languages, featuring distinct header designs, featured layouts, responsive grid layouts, and quad categories blocks.
 
-**Article Editor SEO Section (November 2025):** All three article editors (Arabic, English, Urdu) feature a single consolidated "SEO Settings" card with both AI buttons in the CardHeader. The "Generate SEO" button is always visible for all articles, while the "Analyze SEO" button appears only for saved articles (gated by `!isNewArticle && article?.id`). Character limits are standardized at 60 characters for Meta Title and 160 characters for Meta Description across all editors, enforced in both UI (`maxLength`) and data layer (`substring`).
-
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, Content Security Policy (CSP), and a production-grade `OptimizedImage` component with lazy loading and error handling.
 

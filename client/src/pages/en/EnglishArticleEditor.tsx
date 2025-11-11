@@ -173,7 +173,7 @@ export default function EnglishArticleEditor() {
       
       // Validate SEO fields - truncate if too long (legacy data cleanup)
       const validMetaTitle = article.seo?.metaTitle 
-        ? article.seo.metaTitle.substring(0, 60) 
+        ? article.seo.metaTitle.substring(0, 70) 
         : "";
       const validMetaDescription = article.seo?.metaDescription 
         ? article.seo.metaDescription.substring(0, 160) 
@@ -300,7 +300,7 @@ export default function EnglishArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: metaTitle ? metaTitle.substring(0, 60) : (title ? title.substring(0, 60) : ""),
+          metaTitle: metaTitle ? metaTitle.substring(0, 70) : (title ? title.substring(0, 70) : ""),
           metaDescription: metaDescription ? metaDescription.substring(0, 160) : (excerpt ? excerpt.substring(0, 160) : ""),
           keywords: keywords,
         },
@@ -466,7 +466,7 @@ export default function EnglishArticleEditor() {
             publishType: "instant",
             hideFromHomepage,
             seo: {
-              metaTitle: metaTitle || title.substring(0, 60),
+              metaTitle: metaTitle || title.substring(0, 70),
               metaDescription: metaDescription || excerpt.substring(0, 160),
               keywords: keywords,
             },
@@ -1136,6 +1136,58 @@ export default function EnglishArticleEditor() {
               </CardContent>
             </Card>
 
+            {/* SEO Optimization */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>SEO Optimization</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => generateSeoMutation.mutate()}
+                    disabled={generateSeoMutation.isPending || !title || !content}
+                    title={!title || !content ? "Title and content are required" : "AI-powered smart SEO generation"}
+                    data-testid="button-generate-seo"
+                  >
+                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
+                    <span className="text-sm">{generateSeoMutation.isPending ? 'Generating...' : 'Generate SEO'}</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label>Meta Title (50-60 characters) - {metaTitle.length}/60</Label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="Optimized title for search engines"
+                    maxLength={60}
+                    data-testid="input-meta-title"
+                  />
+                </div>
+                <div>
+                  <Label>Meta Description (140-160 characters) - {metaDescription.length}/160</Label>
+                  <Textarea
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="Compelling description for search engines"
+                    maxLength={160}
+                    rows={3}
+                    data-testid="textarea-meta-description"
+                  />
+                </div>
+                <div>
+                  <Label>Keywords</Label>
+                  <Input
+                    value={keywords.join(", ")}
+                    onChange={(e) => setKeywords(e.target.value.split(",").map(k => k.trim()).filter(Boolean))}
+                    placeholder="keyword1, keyword2, keyword3"
+                    data-testid="input-keywords"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Reporter - Hidden for opinion articles */}
             {articleType !== "opinion" && (
               <Card>
@@ -1247,47 +1299,9 @@ export default function EnglishArticleEditor() {
             {/* SEO Settings */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Hash className="h-4 w-4" />
-                    SEO Settings
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {/* Generate SEO button - always visible */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => generateSeoMutation.mutate()}
-                      disabled={generateSeoMutation.isPending || !title || !content}
-                      data-testid="button-generate-seo"
-                    >
-                      <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
-                      <span className="text-sm">{generateSeoMutation.isPending ? 'Generating...' : 'Generate SEO'}</span>
-                    </Button>
-                    
-                    {/* Analyze SEO button - only for saved articles */}
-                    {!isNewArticle && article?.id && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => analyzeSEOMutation.mutate()}
-                        disabled={isAnalyzingSEO || !id}
-                        data-testid="button-analyze-seo"
-                      >
-                        {isAnalyzingSEO ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4" />
-                            Analyze SEO
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  SEO Settings
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1298,17 +1312,44 @@ export default function EnglishArticleEditor() {
                   </TabsList>
                   
                   <TabsContent value="seo" className="space-y-4">
+                    {/* SEO AI Analysis Button */}
+                    {!isNewArticle && (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="text-sm">
+                          <p className="font-medium">AI SEO Analysis</p>
+                          <p className="text-xs text-muted-foreground">
+                            Get optimization suggestions
+                          </p>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => analyzeSEOMutation.mutate()}
+                          disabled={isAnalyzingSEO}
+                          className="gap-2"
+                          data-testid="button-analyze-seo-en"
+                        >
+                          {isAnalyzingSEO ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                          Analyze
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label>Meta Title</Label>
                       <Input
                         value={metaTitle}
                         onChange={(e) => setMetaTitle(e.target.value)}
-                        placeholder="SEO title (max 60 chars)"
-                        maxLength={60}
+                        placeholder="SEO title (max 70 chars)"
+                        maxLength={70}
                         data-testid="input-meta-title-en"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {(metaTitle || "").length}/60 characters
+                        {(metaTitle || "").length}/70 characters
                       </p>
                     </div>
 

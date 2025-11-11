@@ -171,7 +171,7 @@ export default function ArticleEditor() {
       setHideFromHomepage(article.hideFromHomepage || false);
       // Validate SEO fields - truncate if too long (legacy data cleanup)
       const validMetaTitle = article.seo?.metaTitle 
-        ? article.seo.metaTitle.substring(0, 60) 
+        ? article.seo.metaTitle.substring(0, 70) 
         : "";
       const validMetaDescription = article.seo?.metaDescription 
         ? article.seo.metaDescription.substring(0, 160) 
@@ -327,7 +327,7 @@ export default function ArticleEditor() {
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
         seo: {
-          metaTitle: metaTitle ? metaTitle.substring(0, 60) : (title ? title.substring(0, 60) : ""),
+          metaTitle: metaTitle ? metaTitle.substring(0, 70) : (title ? title.substring(0, 70) : ""),
           metaDescription: metaDescription ? metaDescription.substring(0, 160) : (excerpt ? excerpt.substring(0, 160) : ""),
           keywords: keywords,
         },
@@ -494,7 +494,7 @@ export default function ArticleEditor() {
             publishType: "instant",
             hideFromHomepage,
             seo: {
-              metaTitle: metaTitle || title.substring(0, 60),
+              metaTitle: metaTitle || title.substring(0, 70),
               metaDescription: metaDescription || excerpt.substring(0, 160),
               keywords: keywords,
             },
@@ -579,7 +579,7 @@ export default function ArticleEditor() {
             publishType: "instant",
             hideFromHomepage,
             seo: {
-              metaTitle: metaTitle || title.substring(0, 60),
+              metaTitle: metaTitle || title.substring(0, 70),
               metaDescription: metaDescription || excerpt.substring(0, 160),
               keywords: keywords,
             },
@@ -1281,6 +1281,58 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
+            {/* SEO Optimization */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>تحسين محركات البحث (SEO)</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => generateSeoMutation.mutate()}
+                    disabled={generateSeoMutation.isPending || !title || !content}
+                    title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "توليد SEO ذكي بالذكاء الاصطناعي"}
+                    data-testid="button-generate-seo"
+                  >
+                    <Sparkles className={`h-4 w-4 ml-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
+                    <span className="text-sm">{generateSeoMutation.isPending ? 'جاري التوليد...' : 'توليد SEO'}</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label>عنوان Meta (50-60 حرف) - {metaTitle.length}/60</Label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="عنوان محسّن لمحركات البحث"
+                    maxLength={60}
+                    data-testid="input-meta-title"
+                  />
+                </div>
+                <div>
+                  <Label>وصف Meta (140-160 حرف) - {metaDescription.length}/160</Label>
+                  <Textarea
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="وصف مقنع لمحركات البحث"
+                    maxLength={160}
+                    rows={3}
+                    data-testid="textarea-meta-description"
+                  />
+                </div>
+                <div>
+                  <Label>الكلمات المفتاحية</Label>
+                  <Input
+                    value={keywords.join(", ")}
+                    onChange={(e) => setKeywords(e.target.value.split(",").map(k => k.trim()).filter(Boolean))}
+                    placeholder="كلمة1, كلمة2, كلمة3"
+                    data-testid="input-keywords"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Reporter - Hidden for opinion articles */}
             {articleType !== "opinion" && (
               <Card>
@@ -1374,48 +1426,9 @@ const generateSlug = (text: string) => {
             {/* SEO Settings */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Hash className="h-4 w-4" />
-                    إعدادات SEO
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {/* Generate SEO button - always visible */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => generateSeoMutation.mutate()}
-                      disabled={generateSeoMutation.isPending || !title || !content}
-                      title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "توليد SEO ذكي بالذكاء الاصطناعي"}
-                      data-testid="button-generate-seo"
-                    >
-                      <Sparkles className={`h-4 w-4 ml-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
-                      <span className="text-sm">{generateSeoMutation.isPending ? 'جاري التوليد...' : 'توليد SEO'}</span>
-                    </Button>
-                    
-                    {/* Analyze SEO button - only for saved articles */}
-                    {!isNewArticle && article?.id && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => analyzeSEOMutation.mutate()}
-                        disabled={isAnalyzingSEO || !id}
-                        data-testid="button-analyze-seo"
-                      >
-                        {isAnalyzingSEO ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin ml-2" />
-                            جاري التحليل...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 ml-2" />
-                            تحليل SEO
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  إعدادات SEO
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1426,17 +1439,48 @@ const generateSlug = (text: string) => {
                   </TabsList>
                   
                   <TabsContent value="seo" className="space-y-4">
+                    {/* SEO AI Analysis Button */}
+                    {!isNewArticle && (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">تحليل SEO بالذكاء الاصطناعي</p>
+                          <p className="text-xs text-muted-foreground">
+                            احصل على توصيات تلقائية لتحسين ظهور المقال في محركات البحث
+                          </p>
+                        </div>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => analyzeSEOMutation.mutate()}
+                          disabled={isAnalyzingSEO || !id}
+                          data-testid="button-analyze-seo"
+                        >
+                          {isAnalyzingSEO ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                              جاري التحليل...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 ml-2" />
+                              تحليل SEO
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label>عنوان SEO</Label>
                       <Input
                         value={metaTitle}
                         onChange={(e) => setMetaTitle(e.target.value)}
                         placeholder={title || "عنوان للصفحة..."}
-                        maxLength={60}
+                        maxLength={70}
                         data-testid="input-meta-title"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {(metaTitle || "").length}/60 حرف
+                        {(metaTitle || "").length}/70 حرف
                       </p>
                     </div>
 
