@@ -25,8 +25,8 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { UrArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
-import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
-import { EnglishRecommendationsWidget } from "@/components/EnglishRecommendationsWidget";
+import { UrAiArticleStats } from "@/components/ur/UrAiArticleStats";
+import { UrduRecommendationsWidget } from "@/components/UrduRecommendationsWidget";
 
 export default function UrduArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -347,11 +347,11 @@ export default function UrduArticleDetail() {
           {/* Sidebar */}
           <aside className="space-y-6">
             {/* AI Article Analytics */}
-            <EnAiArticleStats slug={params.slug || ""} />
+            <UrAiArticleStats slug={params.slug || ""} />
 
             {/* Related Articles */}
             {relatedArticles.length > 0 && (
-              <EnglishRecommendationsWidget
+              <UrduRecommendationsWidget
                 articles={relatedArticles}
                 title="متعلقہ مضامین"
                 reason="آپ کو یہ بھی پسند آ سکتے ہیں"

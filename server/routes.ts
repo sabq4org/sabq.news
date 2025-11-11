@@ -21231,6 +21231,139 @@ Allow: /
     }
   });
 
+  // Get related articles for a Urdu article
+  app.get("/api/ur/articles/:slug/related", async (req: any, res) => {
+    try {
+      // Get the Urdu article by slug
+      const articleResults = await db
+        .select()
+        .from(urArticles)
+        .where(eq(urArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!articleResults || articleResults.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const article = articleResults[0];
+
+      // Get related articles - same logic as English version
+      const conditions = [
+        eq(urArticles.status, "published"),
+        ne(urArticles.id, article.id),
+      ];
+
+      if (article.categoryId) {
+        conditions.push(eq(urArticles.categoryId, article.categoryId));
+      }
+
+      const reporterAlias = aliasedTable(users, 'reporter');
+      
+      const results = await db
+        .select({
+          article: urArticles,
+          category: urCategories,
+          author: users,
+          reporter: reporterAlias,
+        })
+        .from(urArticles)
+        .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
+        .leftJoin(users, eq(urArticles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(urArticles.reporterId, reporterAlias.id))
+        .where(and(...conditions))
+        .orderBy(desc(urArticles.publishedAt))
+        .limit(5);
+
+      const related = results.map((r) => ({
+        ...r.article,
+        category: r.category || undefined,
+        author: r.reporter || r.author || undefined,
+      }));
+
+      res.json(related);
+    } catch (error) {
+      console.error("Error fetching related Urdu articles:", error);
+      res.status(500).json({ message: "Failed to fetch related articles" });
+    }
+  });
+
+  // Get AI-powered analytics/insights for a Urdu article
+  app.get("/api/ur/articles/:slug/ai-insights", async (req: any, res) => {
+    try {
+      // Get the Urdu article by slug
+      const articleResults = await db
+        .select()
+        .from(urArticles)
+        .where(eq(urArticles.slug, req.params.slug))
+        .limit(1);
+      
+      if (!articleResults || articleResults.length === 0) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const article = articleResults[0];
+
+      // Get reading history stats (shared table uses article.id)
+      const readingStats = await db
+        .select({
+          avgDuration: sql<number>`AVG(${readingHistory.readDuration})`,
+          totalReads: sql<number>`COUNT(*)`,
+        })
+        .from(readingHistory)
+        .where(eq(readingHistory.articleId, article.id));
+
+      // Get reactions count (Urdu reactions table: ur_reactions)
+      const reactionsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(urReactions)
+        .where(eq(urReactions.articleId, article.id));
+
+      // Get comments count (Urdu comments table: ur_comments)
+      const commentsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(urComments)
+        .where(and(
+          eq(urComments.articleId, article.id),
+          eq(urComments.status, "approved")
+        ));
+
+      const avgReadTime = readingStats[0]?.avgDuration || 0;
+      const totalReads = Number(readingStats[0]?.totalReads || 0);
+      const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
+      const totalViews = article.views || 0;
+
+      // Calculate engagement rate: (reactions + comments) / views
+      const engagementRate = totalViews > 0 
+        ? ((totalReactions + totalComments) / totalViews) 
+        : 0;
+
+      // Estimate reading completion based on avg read time
+      // Assuming 200 words per minute reading speed
+      const estimatedReadTime = article.content 
+        ? Math.ceil(article.content.split(/\s+/).length / 200) * 60 
+        : 180; // default 3 min
+      
+      const completionRate = avgReadTime > 0 && estimatedReadTime > 0
+        ? Math.min(100, (avgReadTime / estimatedReadTime) * 100)
+        : 0;
+
+      res.json({
+        avgReadTime: Math.round(avgReadTime), // in seconds
+        totalReads,
+        totalReactions,
+        totalComments,
+        totalViews,
+        engagementRate: parseFloat(engagementRate.toFixed(2)),
+        completionRate: Math.round(completionRate), // percentage
+        totalInteractions: totalReactions + totalComments,
+      });
+    } catch (error) {
+      console.error("Error fetching Urdu article AI insights:", error);
+      res.status(500).json({ message: "Failed to fetch article insights" });
+    }
+  });
+
   // Get Urdu category articles by slug
   app.get("/api/ur/category/:slug/articles", async (req, res) => {
     try {
