@@ -172,11 +172,21 @@ export default function DashboardComments() {
         method: "POST",
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      
+      const sentimentLabels: Record<string, string> = {
+        positive: "إيجابي",
+        negative: "سلبي",
+        neutral: "محايد",
+      };
+      
+      const sentimentText = sentimentLabels[data.sentiment] || data.sentiment;
+      const confidencePercent = Math.round(data.confidence * 100);
+      
       toast({
         title: "تم تحليل المشاعر بنجاح",
-        description: "تم تحليل مشاعر التعليق باستخدام الذكاء الاصطناعي",
+        description: `المشاعر: ${sentimentText} | الثقة: ${confidencePercent}% | النموذج: ${data.model}`,
       });
     },
     onError: (error: any) => {
