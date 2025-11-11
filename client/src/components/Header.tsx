@@ -76,6 +76,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   const mainSections = [
     { name: "الأخبار", href: "/news" },
     { name: "التصنيفات", href: "/categories" },
+    { name: "المساعد الذكي", href: "/chatbot" },
     { name: "عمق", href: "/omq" },
     { name: "المرقاب", href: "/mirqab" },
     { name: "مقالات", href: "/articles" },
