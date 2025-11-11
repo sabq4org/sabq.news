@@ -472,11 +472,47 @@ export default function ArticleEditor() {
 
   const autoClassifyMutation = useMutation({
     mutationFn: async () => {
-      if (!id || isNewArticle) {
-        throw new Error("يجب حفظ المقال كمسودة أولاً");
+      let articleId = id;
+      
+      // If new article (no id), auto-save as draft first
+      if (!articleId && title && content) {
+        setIsClassifying(true);
+        const saveResponse = await apiRequest(`/api/articles`, {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            subtitle: subtitle || "",
+            content,
+            excerpt: excerpt || "",
+            status: "draft",
+            imageUrl: imageUrl || "",
+            imageFocalPoint: imageFocalPoint || null,
+            articleType,
+            categoryId: categoryId || null,
+            reporterId: reporterId || null,
+            newsType,
+            publishType: "instant",
+            hideFromHomepage,
+            seo: {
+              metaTitle: metaTitle || title.substring(0, 70),
+              metaDescription: metaDescription || excerpt.substring(0, 160),
+              keywords: keywords,
+            },
+          }),
+        });
+        const savedArticle = await saveResponse.json();
+        articleId = savedArticle.id;
+        
+        // Update URL to edit mode
+        window.history.replaceState({}, '', `/dashboard/articles/edit/${articleId}`);
       }
+      
+      if (!articleId) {
+        throw new Error("يجب إدخال العنوان والمحتوى أولاً");
+      }
+      
       setIsClassifying(true);
-      return await apiRequest(`/api/articles/${id}/auto-categorize`, {
+      return await apiRequest(`/api/articles/${articleId}/auto-categorize`, {
         method: "POST",
       });
     },
@@ -522,9 +558,47 @@ export default function ArticleEditor() {
 
   const generateSeoMutation = useMutation({
     mutationFn: async () => {
+      let articleId = id;
+      
+      // If new article (no id), auto-save as draft first
+      if (!articleId && title && content) {
+        const saveResponse = await apiRequest(`/api/articles`, {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            subtitle: subtitle || "",
+            content,
+            excerpt: excerpt || "",
+            status: "draft",
+            imageUrl: imageUrl || "",
+            imageFocalPoint: imageFocalPoint || null,
+            articleType,
+            categoryId: categoryId || null,
+            reporterId: reporterId || null,
+            newsType,
+            publishType: "instant",
+            hideFromHomepage,
+            seo: {
+              metaTitle: metaTitle || title.substring(0, 70),
+              metaDescription: metaDescription || excerpt.substring(0, 160),
+              keywords: keywords,
+            },
+          }),
+        });
+        const savedArticle = await saveResponse.json();
+        articleId = savedArticle.id;
+        
+        // Update URL to edit mode
+        window.history.replaceState({}, '', `/dashboard/articles/edit/${articleId}`);
+      }
+      
+      if (!articleId) {
+        throw new Error("يجب إدخال العنوان والمحتوى أولاً");
+      }
+      
       const response = await apiRequest(`/api/seo/generate`, {
         method: "POST",
-        body: JSON.stringify({ articleId: id, language: "ar" }),
+        body: JSON.stringify({ articleId, language: "ar" }),
       });
       return response;
     },
@@ -1181,17 +1255,11 @@ const generateSlug = (text: string) => {
                     variant="ghost"
                     size="sm"
                     onClick={() => autoClassifyMutation.mutate()}
-                    disabled={isClassifying || !title || !content || isNewArticle}
-                    title={
-                      isNewArticle 
-                        ? "احفظ المقال كمسودة أولاً لاستخدام التصنيف الذكي" 
-                        : !title || !content 
-                          ? "يجب إدخال العنوان والمحتوى أولاً" 
-                          : "تصنيف ذكي بالذكاء الاصطناعي"
-                    }
+                    disabled={isClassifying || !title || !content}
+                    title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "تصنيف ذكي بالذكاء الاصطناعي"}
                     data-testid="button-auto-classify"
                   >
-                    <Sparkles className={`h-4 w-4 ml-1 ${isClassifying ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <Sparkles className={`h-4 w-4 ml-1 ${isClassifying ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
                     <span className="text-sm">{isClassifying ? 'جاري التصنيف...' : 'تصنيف ذكي'}</span>
                   </Button>
                 </CardTitle>
@@ -1210,13 +1278,6 @@ const generateSlug = (text: string) => {
                     ))}
                   </SelectContent>
                 </Select>
-                
-                {isNewArticle && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    التصنيف الذكي متاح بعد حفظ المقال كمسودة
-                  </p>
-                )}
               </CardContent>
             </Card>
 
@@ -1229,17 +1290,11 @@ const generateSlug = (text: string) => {
                     variant="ghost"
                     size="sm"
                     onClick={() => generateSeoMutation.mutate()}
-                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
-                    title={
-                      isNewArticle 
-                        ? "احفظ المقال كمسودة أولاً لاستخدام توليد SEO" 
-                        : !title || !content 
-                          ? "يجب إدخال العنوان والمحتوى أولاً" 
-                          : "توليد SEO ذكي بالذكاء الاصطناعي"
-                    }
+                    disabled={generateSeoMutation.isPending || !title || !content}
+                    title={!title || !content ? "يجب إدخال العنوان والمحتوى أولاً" : "توليد SEO ذكي بالذكاء الاصطناعي"}
                     data-testid="button-generate-seo"
                   >
-                    <Sparkles className={`h-4 w-4 ml-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <Sparkles className={`h-4 w-4 ml-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
                     <span className="text-sm">{generateSeoMutation.isPending ? 'جاري التوليد...' : 'توليد SEO'}</span>
                   </Button>
                 </CardTitle>
@@ -1275,12 +1330,6 @@ const generateSlug = (text: string) => {
                     data-testid="input-keywords"
                   />
                 </div>
-                {isNewArticle && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    توليد SEO متاح بعد حفظ المقال كمسودة
-                  </p>
-                )}
               </CardContent>
             </Card>
 

@@ -1,0 +1,112 @@
+2025-11-11 21:57:25.66
+c18ed12b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-11 21:57:25.68
+c18ed12b
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-11 21:57:25.68
+c18ed12b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-11 21:57:25.70
+c18ed12b
+User
+6:57:25 PM [express] GET /api/categories 200 in 93ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55e…
+2025-11-11 21:57:25.70
+c18ed12b
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-11 21:57:25.73
+c18ed12b
+User
+Error fetching articles: error: column articles.seo_metadata does not exist
+2025-11-11 21:57:25.73
+c18ed12b
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-11 21:57:25.73
+c18ed12b
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-11 21:57:25.73
+c18ed12b
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-11 21:57:25.73
+c18ed12b
+User
+at async file:///home/runner/workspace/dist/index.js:20166:23 {
+2025-11-11 21:57:25.73
+c18ed12b
+User
+length: 120,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+severity: 'ERROR',
+2025-11-11 21:57:25.73
+c18ed12b
+User
+code: '42703',
+2025-11-11 21:57:25.73
+c18ed12b
+User
+detail: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+hint: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+position: '673',
+2025-11-11 21:57:25.73
+c18ed12b
+User
+internalPosition: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+internalQuery: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+where: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+schema: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+table: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+column: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+dataType: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+constraint: undefined,
+2025-11-11 21:57:25.73
+c18ed12b
+User
+file: 'parse_relation.c',
+2025-11-11 21:57:25.73
+c18ed12b
+User
+line: '3722',
+2025-11-11 21:57:25.73
+c18ed12b
+User
+routine: 'errorMissingColumn'
+2025-11-11 21:57:25.73
+c18ed12b
+User
+}

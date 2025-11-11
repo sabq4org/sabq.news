@@ -445,9 +445,47 @@ export default function EnglishArticleEditor() {
 
   const generateSeoMutation = useMutation({
     mutationFn: async () => {
+      let articleId = id;
+      
+      // If new article (no id), auto-save as draft first
+      if (!articleId && title && content) {
+        const saveResponse = await apiRequest(`/api/en/articles`, {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            subtitle: subtitle || "",
+            content,
+            excerpt: excerpt || "",
+            status: "draft",
+            imageUrl: imageUrl || "",
+            imageFocalPoint: imageFocalPoint || null,
+            articleType,
+            categoryId: categoryId || null,
+            reporterId: reporterId || null,
+            newsType,
+            publishType: "instant",
+            hideFromHomepage,
+            seo: {
+              metaTitle: metaTitle || title.substring(0, 70),
+              metaDescription: metaDescription || excerpt.substring(0, 160),
+              keywords: keywords,
+            },
+          }),
+        });
+        const savedArticle = await saveResponse.json();
+        articleId = savedArticle.id;
+        
+        // Update URL to edit mode
+        window.history.replaceState({}, '', `/dashboard/en/articles/edit/${articleId}`);
+      }
+      
+      if (!articleId) {
+        throw new Error("Title and content are required");
+      }
+      
       const response = await apiRequest(`/api/seo/generate`, {
         method: "POST",
-        body: JSON.stringify({ articleId: id, language: "en" }),
+        body: JSON.stringify({ articleId, language: "en" }),
       });
       return response;
     },
@@ -1107,17 +1145,11 @@ export default function EnglishArticleEditor() {
                     variant="ghost"
                     size="sm"
                     onClick={() => generateSeoMutation.mutate()}
-                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
-                    title={
-                      isNewArticle 
-                        ? "Save article as draft first to use SEO generation" 
-                        : !title || !content 
-                          ? "Title and content are required" 
-                          : "AI-powered smart SEO generation"
-                    }
+                    disabled={generateSeoMutation.isPending || !title || !content}
+                    title={!title || !content ? "Title and content are required" : "AI-powered smart SEO generation"}
                     data-testid="button-generate-seo"
                   >
-                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
                     <span className="text-sm">{generateSeoMutation.isPending ? 'Generating...' : 'Generate SEO'}</span>
                   </Button>
                 </CardTitle>
@@ -1153,12 +1185,6 @@ export default function EnglishArticleEditor() {
                     data-testid="input-keywords"
                   />
                 </div>
-                {isNewArticle && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    SEO generation available after saving article as draft
-                  </p>
-                )}
               </CardContent>
             </Card>
 

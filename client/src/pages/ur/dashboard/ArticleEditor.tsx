@@ -445,9 +445,47 @@ export default function EnglishArticleEditor() {
 
   const generateSeoMutation = useMutation({
     mutationFn: async () => {
+      let articleId = id;
+      
+      // If new article (no id), auto-save as draft first
+      if (!articleId && title && content) {
+        const saveResponse = await apiRequest(`/api/ur/dashboard/articles`, {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            subtitle: subtitle || "",
+            content,
+            excerpt: excerpt || "",
+            status: "draft",
+            imageUrl: imageUrl || "",
+            imageFocalPoint: imageFocalPoint || null,
+            articleType,
+            categoryId: categoryId || null,
+            reporterId: reporterId || null,
+            newsType,
+            publishType: "instant",
+            hideFromHomepage,
+            seo: {
+              metaTitle: metaTitle || title.substring(0, 70),
+              metaDescription: metaDescription || excerpt.substring(0, 160),
+              keywords: keywords,
+            },
+          }),
+        });
+        const savedArticle = await saveResponse.json();
+        articleId = savedArticle.id;
+        
+        // Update URL to edit mode
+        window.history.replaceState({}, '', `/dashboard/ur/articles/edit/${articleId}`);
+      }
+      
+      if (!articleId) {
+        throw new Error("عنوان اور مواد ضروری ہے");
+      }
+      
       const response = await apiRequest(`/api/seo/generate`, {
         method: "POST",
-        body: JSON.stringify({ articleId: id, language: "ur" }),
+        body: JSON.stringify({ articleId, language: "ur" }),
       });
       return response;
     },
@@ -1106,17 +1144,11 @@ export default function EnglishArticleEditor() {
                     variant="ghost"
                     size="sm"
                     onClick={() => generateSeoMutation.mutate()}
-                    disabled={generateSeoMutation.isPending || !title || !content || isNewArticle}
-                    title={
-                      isNewArticle 
-                        ? "SEO تیار کرنے کے لیے پہلے مضمون کو مسودے کے طور پر محفوظ کریں" 
-                        : !title || !content 
-                          ? "عنوان اور مواد ضروری ہے" 
-                          : "AI سے SEO ذہین تیاری"
-                    }
+                    disabled={generateSeoMutation.isPending || !title || !content}
+                    title={!title || !content ? "عنوان اور مواد ضروری ہے" : "AI سے SEO ذہین تیاری"}
                     data-testid="button-generate-seo"
                   >
-                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : isNewArticle ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <Sparkles className={`h-4 w-4 mr-1 ${generateSeoMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
                     <span className="text-sm">{generateSeoMutation.isPending ? 'تیار ہو رہا ہے...' : 'SEO تیار کریں'}</span>
                   </Button>
                 </CardTitle>
@@ -1152,12 +1184,6 @@ export default function EnglishArticleEditor() {
                     data-testid="input-keywords"
                   />
                 </div>
-                {isNewArticle && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    SEO تیاری مسودے کے طور پر محفوظ کرنے کے بعد دستیاب ہے
-                  </p>
-                )}
               </CardContent>
             </Card>
 
