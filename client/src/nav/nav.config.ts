@@ -257,6 +257,14 @@ export const navConfig: NavItem[] = [
     roles: ["admin", "editor"],
     children: [
       {
+        id: "smart_journalist",
+        labelKey: "nav.smart_journalist",
+        labelAr: "الوكيل الصحفي الذكي",
+        path: "/dashboard/smart-journalist",
+        icon: Brain,
+        roles: ["admin", "editor"],
+      },
+      {
         id: "ai_tools",
         labelKey: "nav.ai_tools",
         labelAr: "توليد العناوين الذكية",
