@@ -361,6 +361,40 @@ ${researchSummary}
 
     console.log(`✅ [Journalist Agent] Draft validated - Title: ${titleWords.length} words, Total: ${wordCount} words`);
 
+    // Enhanced validation for Sabq standards
+    const validationIssues: string[] = [];
+
+    // Check word count (300-500)
+    if (wordCount < 300) {
+      validationIssues.push(`عدد الكلمات قليل: ${wordCount} (الحد الأدنى 300)`);
+    } else if (wordCount > 500) {
+      validationIssues.push(`عدد الكلمات كثير: ${wordCount} (الحد الأقصى 500)`);
+    }
+
+    // Check body paragraphs count (should be at least 2-3)
+    if (draft.bodyParagraphs.length < 2) {
+      validationIssues.push(`عدد الفقرات قليل: ${draft.bodyParagraphs.length} (الحد الأدنى 2)`);
+    }
+
+    // Check that all fields are non-empty
+    if (!draft.leadSentence1.trim() || !draft.leadSentence2.trim()) {
+      validationIssues.push("المقدمة يجب أن تحتوي على جملتين غير فارغتين");
+    }
+
+    if (!draft.reactionsParagraph.trim()) {
+      validationIssues.push("فقرة ردود الفعل فارغة");
+    }
+
+    if (!draft.conclusion.trim()) {
+      validationIssues.push("الخاتمة فارغة");
+    }
+
+    // Log warnings (don't reject, just warn)
+    if (validationIssues.length > 0) {
+      console.warn(`⚠️ [Journalist Agent] Validation issues found:`, validationIssues);
+      console.warn("⚠️ المسودة قد لا تلتزم بمعايير سبق بالكامل");
+    }
+
     return {
       title: draft.title,
       content: fullContent,
@@ -370,6 +404,7 @@ ${researchSummary}
         bodyParagraphs: draft.bodyParagraphs,
         reactionsParagraph: draft.reactionsParagraph,
         conclusion: draft.conclusion,
+        validationIssues: validationIssues.length > 0 ? validationIssues : undefined,
       }
     };
   } catch (error) {
@@ -418,6 +453,19 @@ function validateHeadline(headline: string): string {
   
   // Count words
   const words = cleaned.split(/\s+/);
+  
+  // Arabic verb patterns (common present/past tense prefixes)
+  const verbPatterns = [
+    /^(ي|ت|أ|ن)/,  // Present tense prefixes
+    /^(أ|ت|است|ان)/,  // Past tense patterns
+  ];
+  
+  const firstWord = words[0] || '';
+  const hasVerbLike = verbPatterns.some(pattern => pattern.test(firstWord));
+  
+  if (!hasVerbLike && words.length > 0) {
+    console.warn(`⚠️ العنوان قد لا يبدأ بفعل: "${firstWord}"`);
+  }
   
   // If exceeds 10 words, truncate
   if (words.length > 10) {
