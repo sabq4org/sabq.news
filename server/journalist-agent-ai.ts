@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from "./db";
 import { journalistTasks } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -15,9 +15,9 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const genai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY!,
-});
+const genai = new GoogleGenerativeAI(
+  process.env.AI_INTEGRATIONS_GEMINI_API_KEY!
+);
 
 // Helper: Update task progress
 async function updateTaskProgress(
@@ -612,21 +612,12 @@ async function generateHeadlines(
 
     // Gemini headline (SEO-optimized but still follows Sabq rules)
     try {
-      const geminiResponse = await genai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: sabqHeadlineRules + `\n\nنمط هذا العنوان: محسّن لمحركات البحث (SEO) مع الالتزام بمعايير سبق`,
-              },
-            ],
-          },
-        ],
-      });
+      const geminiModel = genai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const geminiResponse = await geminiModel.generateContent(
+        sabqHeadlineRules + `\n\nنمط هذا العنوان: محسّن لمحركات البحث (SEO) مع الالتزام بمعايير سبق`
+      );
 
-      const rawHeadline = geminiResponse.text?.trim() || draftTitle;
+      const rawHeadline = geminiResponse.response.text()?.trim() || draftTitle;
       headlines.push({
         text: validateHeadline(rawHeadline),
         style: "seo",

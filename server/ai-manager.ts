@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
 import pRetry from 'p-retry';
 
@@ -29,7 +29,7 @@ export interface AIResponse {
 class AIManager {
   private openai: OpenAI;
   private anthropic: Anthropic;
-  private gemini: GoogleGenAI;
+  private gemini: GoogleGenerativeAI;
   private limiter = pLimit(3); // Max 3 concurrent requests
 
   constructor() {
@@ -46,9 +46,9 @@ class AIManager {
     });
 
     // Gemini - Use Replit AI Integrations
-    this.gemini = new GoogleGenAI({
-      apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY!,
-    });
+    this.gemini = new GoogleGenerativeAI(
+      process.env.AI_INTEGRATIONS_GEMINI_API_KEY!
+    );
   }
 
   // Generate text with a single model
@@ -160,27 +160,24 @@ class AIManager {
     prompt: string,
     config: AIModelConfig
   ): Promise<AIResponse> {
-    const response = await this.gemini.models.generateContent({
+    const model = this.gemini.getGenerativeModel({ 
       model: config.model,
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
-      config: {
+      generationConfig: {
         temperature: config.temperature || 0.7,
         maxOutputTokens: config.maxTokens || 500,
       },
     });
 
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+
     return {
       provider: 'gemini',
       model: config.model,
-      content: response.text || '',
+      content: response.text() || '',
       usage: {
-        inputTokens: response.usageMetadata?.promptTokenCount || 0,
-        outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
+        inputTokens: result.response.usageMetadata?.promptTokenCount || 0,
+        outputTokens: result.response.usageMetadata?.candidatesTokenCount || 0,
       },
     };
   }

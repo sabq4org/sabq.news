@@ -267,9 +267,9 @@ export const navConfig: NavItem[] = [
       {
         id: "ai_tools",
         labelKey: "nav.ai_tools",
-        labelAr: "توليد العناوين الذكية",
+        labelAr: "مركز الذكاء الاصطناعي",
         path: "/dashboard/ai-tools",
-        icon: Type,
+        icon: Sparkles,
         roles: ["admin", "editor"],
       },
       {

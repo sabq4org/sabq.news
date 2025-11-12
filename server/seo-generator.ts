@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // SEO Generator for multilingual articles
 // Supports Arabic (Claude), English (GPT-4o), and Urdu (Gemini)
@@ -268,24 +268,28 @@ async function generateWithGemini(
   language: "ar" | "en" | "ur",
   model: string
 ): Promise<SeoGenerationResult> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenerativeAI(
+    (process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY)!
+  );
 
   const prompt = `${SYSTEM_PROMPTS[language]}\n\n${createUserPrompt(article, language)}`;
 
-  const response = await ai.models.generateContent({
+  const geminiModel = ai.getGenerativeModel({ 
     model: model,
-    contents: prompt,
-    config: {
+    generationConfig: {
       temperature: 0.3,
       maxOutputTokens: 1024,
     },
   });
 
-  if (!response.text) {
+  const response = await geminiModel.generateContent(prompt);
+
+  const text = response.response.text();
+  if (!text) {
     throw new Error("No text in Gemini response");
   }
 
-  let jsonText = response.text.trim();
+  let jsonText = text.trim();
 
   // Remove markdown code blocks if present
   if (jsonText.startsWith("```json")) {
