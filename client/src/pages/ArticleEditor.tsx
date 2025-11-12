@@ -1272,22 +1272,42 @@ const generateSlug = (text: string) => {
                 <CardTitle className="flex items-center justify-between">
                   <span>محتوى المقال</span>
                   {/* All-in-One AI Button */}
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handleGenerateAllInOne}
-                    disabled={isGeneratingAI || !title || !content || content.length < 100}
-                    className="gap-2"
-                    data-testid="button-generate-all-in-one"
-                    title="توليد جميع التوليدات الذكية دفعة واحدة: العناوين، التصنيف، SEO، والموجز"
-                  >
-                    {generateAllInOneMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
+                  <div className="flex flex-col items-end gap-1">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleGenerateAllInOne}
+                      disabled={isGeneratingAI || !title || !content || content.length < 100}
+                      className="gap-2"
+                      data-testid="button-generate-all-in-one"
+                      title={
+                        !title 
+                          ? "يجب كتابة العنوان أولاً (10+ أحرف)"
+                          : !content 
+                          ? "يجب كتابة المحتوى أولاً (100+ حرف)"
+                          : content.length < 100
+                          ? `المحتوى قصير جداً (${content.length}/100 حرف)`
+                          : "توليد جميع التوليدات الذكية دفعة واحدة: العناوين، التصنيف، SEO، والموجز"
+                      }
+                    >
+                      {generateAllInOneMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      توليد ذكي شامل
+                    </Button>
+                    {(!title || !content || content.length < 100) && (
+                      <span className="text-xs text-muted-foreground">
+                        {!title 
+                          ? "يجب كتابة العنوان أولاً"
+                          : !content 
+                          ? "يجب كتابة المحتوى أولاً"
+                          : `المحتوى: ${content.length}/100 حرف`
+                        }
+                      </span>
                     )}
-                    توليد ذكي شامل
-                  </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
