@@ -778,17 +778,17 @@ export default function DataStoryGenerator() {
                   </CardContent>
                 </Card>
 
-                {currentDraft.outline && (
+                {currentDraft.outline && Array.isArray(currentDraft.outline) && currentDraft.outline.length > 0 && (
                   <Card data-testid="card-story-outline">
                     <CardHeader>
                       <CardTitle>هيكل القصة</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        {(currentDraft.outline as any[]).map((section, idx) => (
+                        {currentDraft.outline.map((section: any, idx: number) => (
                           <div key={idx} className="p-3 border rounded-md" data-testid={`item-outline-${idx}`}>
                             <p className="font-medium">{section.title || section.heading}</p>
-                            {section.points && (
+                            {section.points && Array.isArray(section.points) && (
                               <ul className="text-sm text-muted-foreground mt-1 mr-4 list-disc">
                                 {section.points.map((point: string, i: number) => (
                                   <li key={i}>{point}</li>
