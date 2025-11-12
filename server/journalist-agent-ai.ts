@@ -312,7 +312,29 @@ ${researchSummary}
 }
 
 ⚠️ تحذير: التزم بالبنية أعلاه بدقة. كل حقل منفصل. لا تدمج النصوص.
-تذكر: الخبر يجب أن يكون جاهزاً للنشر مباشرة في "سبق" دون أي تعديل!`,
+تذكر: الخبر يجب أن يكون جاهزاً للنشر مباشرة في "سبق" دون أي تعديل!
+
+⚠️ مهم جداً - صيغة JSON الصحيحة:
+1. لا تكتب أي نص قبل أو بعد JSON
+2. استخدم اقتباسات مزدوجة فقط للـ keys والـ values
+3. للنصوص التي تحتوي اقتباسات، استخدم \\" للـ escape
+4. لا تضع أسطر جديدة (newlines) داخل القيم النصية
+5. تأكد من إغلاق جميع الأقواس والاقتباسات
+
+مثال صحيح:
+{
+  "title": "يطلق المشروع الجديد بعد شهر",
+  "leadSentence1": "أعلنت الشركة عن إطلاق مشروع كبير.",
+  "leadSentence2": "يهدف المشروع إلى تحسين الخدمات.",
+  "bodyParagraphs": [
+    "الفقرة الأولى تحتوي على تفاصيل.",
+    "الفقرة الثانية تشرح الخلفية."
+  ],
+  "reactionsParagraph": "ردود الفعل إيجابية.",
+  "conclusion": "التوقعات مشجعة."
+}
+
+⚠️ أرسل JSON فقط، لا مقدمة ولا شرح!`,
         },
       ],
     });
@@ -322,13 +344,33 @@ ${researchSummary}
         ? draftResponse.content[0].text
         : "{}";
 
-    // Extract JSON
+    // Extract JSON with better handling
+    console.log("🔍 [Journalist Agent] Extracting JSON from AI response...");
+
     const jsonMatch = draftText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("فشل في استخراج المسودة من الاستجابة");
+      console.error("❌ [Journalist Agent] No JSON found in response");
+      console.error("📄 [Journalist Agent] Full response:", draftText);
+      throw new Error("فشل في استخراج المسودة من الاستجابة. لم يتم العثور على JSON في الرد.");
     }
 
-    const draft = JSON.parse(jsonMatch[0]);
+    let draft;
+    try {
+      // Try to parse JSON directly
+      draft = JSON.parse(jsonMatch[0]);
+      console.log("✅ [Journalist Agent] JSON parsed successfully");
+    } catch (parseError) {
+      console.error("❌ [Journalist Agent] JSON parse error:", parseError);
+      console.error("📄 [Journalist Agent] Problematic JSON (first 500 chars):", jsonMatch[0].substring(0, 500));
+      
+      // Don't try to auto-fix - instead provide helpful error
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      throw new Error(
+        `فشل في تحليل استجابة AI. الرجاء المحاولة مرة أخرى.\n` +
+        `تفاصيل تقنية: ${errorMessage}\n` +
+        `قد تحتاج إلى تبسيط الطلب أو إعادة صياغته.`
+      );
+    }
     
     // Validate structured response
     if (!draft.title || !draft.leadSentence1 || !draft.leadSentence2 || 
@@ -360,6 +402,13 @@ ${researchSummary}
     const wordCount = fullContent.split(/\s+/).filter(w => w.length > 0).length;
 
     console.log(`✅ [Journalist Agent] Draft validated - Title: ${titleWords.length} words, Total: ${wordCount} words`);
+    console.log(`✅ [Journalist Agent] Draft structure validated:`, {
+      title: draft.title.substring(0, 50),
+      leadSentences: 2,
+      bodyParagraphs: draft.bodyParagraphs.length,
+      hasReactions: !!draft.reactionsParagraph,
+      hasConclusion: !!draft.conclusion,
+    });
 
     // Enhanced validation for Sabq standards
     const validationIssues: string[] = [];
@@ -408,7 +457,12 @@ ${researchSummary}
       }
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`❌ [Journalist Agent] Draft writing failed:`, error);
+    console.error(`📋 [Journalist Agent] Error details:`, {
+      message: errorMessage,
+      prompt: prompt.substring(0, 100),
+    });
     throw error;
   }
 }
