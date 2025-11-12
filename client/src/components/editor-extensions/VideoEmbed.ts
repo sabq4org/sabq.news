@@ -12,7 +12,12 @@ declare module '@tiptap/core' {
   }
 }
 
-const getVideoEmbedUrl = (url: string): string | null => {
+const getVideoEmbedUrl = (url: string | null | undefined): string | null => {
+  // Safety check: return null if url is null, undefined, or empty
+  if (!url || typeof url !== 'string' || url.trim().length === 0) {
+    return null;
+  }
+
   // YouTube
   const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
   const youtubeMatch = url.match(youtubeRegex);
