@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -12,9 +12,9 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const genai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY!,
-});
+const genai = new GoogleGenerativeAI(
+  process.env.AI_INTEGRATIONS_GEMINI_API_KEY!
+);
 
 export async function summarizeText(
   text: string,
@@ -675,7 +675,9 @@ export async function analyzeTrends(
   ],
   "overallSentiment": "positive",
   "summary": "ملخص الاتجاهات..."
-}`,
+}
+
+⚠️ مهم: أرجع JSON فقط بدون أي نص إضافي. تأكد من صحة التنسيق.`,
         },
       ],
     });
@@ -708,33 +710,73 @@ ${combinedText.substring(0, 10000)}
   ],
   "engagementLevel": "high",
   "recommendations": ["توصية 1", "توصية 2"]
-}`);
+}
+
+⚠️ مهم: أرجع JSON فقط بدون أي شرح أو مقدمة.`);
 
     // انتظار كلا النموذجين
     const [claudeResponse, geminiResult] = await Promise.all([claudePromise, geminiPromise]);
 
-    // استخراج نتائج Claude
+    // Claude extraction
     const claudeContent =
       claudeResponse.content[0].type === "text"
         ? claudeResponse.content[0].text
         : "";
+
+    console.log("🔍 [Claude] Extracting JSON from response...");
     const claudeJsonMatch = claudeContent.match(/\{[\s\S]*\}/);
     if (!claudeJsonMatch) {
-      throw new Error("فشل استخراج JSON من استجابة Claude");
+      console.error("❌ [Claude] No JSON found in response");
+      throw new Error("فشل في استخراج نتائج التحليل من Claude. الرجاء المحاولة مرة أخرى.");
     }
-    const claudeAnalysis = JSON.parse(claudeJsonMatch[0]);
 
-    console.log(`✅ [Claude] Found ${claudeAnalysis.topics?.length || 0} trending topics`);
+    let claudeAnalysis;
+    try {
+      claudeAnalysis = JSON.parse(claudeJsonMatch[0]);
+      console.log("✅ [Claude] JSON parsed successfully");
+    } catch (parseError) {
+      console.error("❌ [Claude] JSON parse error:", parseError);
+      console.error("📄 [Claude] Problematic JSON (first 300 chars):", claudeJsonMatch[0].substring(0, 300));
+      throw new Error(`فشل في تحليل استجابة Claude. الرجاء المحاولة مرة أخرى.`);
+    }
 
-    // استخراج نتائج Gemini
+    // Validate Claude output structure
+    if (!claudeAnalysis.topics || !Array.isArray(claudeAnalysis.topics) || 
+        !claudeAnalysis.overallSentiment || !claudeAnalysis.summary) {
+      console.error("⚠️ [Claude] Invalid analysis structure:", claudeAnalysis);
+      throw new Error("البنية المرجعة من Claude غير صحيحة");
+    }
+
+    console.log(`✅ [Claude] Found ${claudeAnalysis.topics.length} topics`);
+
+    // Gemini extraction
     const geminiText = geminiResult.response.text();
+
+    console.log("🔍 [Gemini] Extracting JSON from response...");
     const geminiJsonMatch = geminiText.match(/\{[\s\S]*\}/);
     if (!geminiJsonMatch) {
-      throw new Error("فشل استخراج JSON من استجابة Gemini");
+      console.error("❌ [Gemini] No JSON found in response");
+      throw new Error("فشل في استخراج نتائج التحليل من Gemini. الرجاء المحاولة مرة أخرى.");
     }
-    const geminiAnalysis = JSON.parse(geminiJsonMatch[0]);
 
-    console.log(`✅ [Gemini] Found ${geminiAnalysis.keywords?.length || 0} keywords`);
+    let geminiAnalysis;
+    try {
+      geminiAnalysis = JSON.parse(geminiJsonMatch[0]);
+      console.log("✅ [Gemini] JSON parsed successfully");
+    } catch (parseError) {
+      console.error("❌ [Gemini] JSON parse error:", parseError);
+      console.error("📄 [Gemini] Problematic JSON (first 300 chars):", geminiJsonMatch[0].substring(0, 300));
+      throw new Error(`فشل في تحليل استجابة Gemini. الرجاء المحاولة مرة أخرى.`);
+    }
+
+    // Validate Gemini output structure
+    if (!geminiAnalysis.keywords || !Array.isArray(geminiAnalysis.keywords) || 
+        !geminiAnalysis.engagementLevel || !geminiAnalysis.recommendations) {
+      console.error("⚠️ [Gemini] Invalid analysis structure:", geminiAnalysis);
+      throw new Error("البنية المرجعة من Gemini غير صحيحة");
+    }
+
+    console.log(`✅ [Gemini] Found ${geminiAnalysis.keywords.length} keywords`);
 
     // 5. دمج النتائج من النموذجين
     
@@ -753,23 +795,37 @@ ${combinedText.substring(0, 10000)}
 
     const keywords = (geminiAnalysis.keywords || []).slice(0, 30);
 
-    // دمج التوصيات من كلا النموذجين
-    const recommendations = [
+    // دمج التوصيات من كلا النموذجين مع إزالة التكرار
+    const allRecommendations = [
       ...(geminiAnalysis.recommendations || []),
     ];
 
-    // إضافة توصيات إضافية بناءً على التحليل
+    // إضافة توصيات ذكية بناءً على التحليل
     if (claudeAnalysis.overallSentiment === "negative") {
-      recommendations.push("ركز على المحتوى الإيجابي والحلول لتحسين تفاعل القراء");
+      allRecommendations.push("ركز على المحتوى الإيجابي والحلول لتحسين تفاعل القراء");
     }
 
     if (geminiAnalysis.engagementLevel === "low") {
-      recommendations.push("استخدم عناوين أكثر جاذبية وصور ملفتة لزيادة التفاعل");
+      allRecommendations.push("استخدم عناوين أكثر جاذبية وصور ملفتة لزيادة التفاعل");
+    } else if (geminiAnalysis.engagementLevel === "high") {
+      allRecommendations.push("حافظ على مستوى التفاعل العالي من خلال استمرارية المحتوى الجذاب");
     }
 
     if (trendingTopics.length > 0) {
-      recommendations.push(`استثمر في تغطية موضوع "${trendingTopics[0].topic}" الذي يحظى بأعلى اهتمام`);
+      allRecommendations.push(`استثمر في تغطية موضوع "${trendingTopics[0].topic}" الذي يحظى بأعلى اهتمام`);
     }
+
+    if (trendingTopics.length > 2) {
+      allRecommendations.push("نوّع المحتوى لتغطية جميع الموضوعات الرائجة لتحسين الوصول");
+    }
+
+    // إزالة التكرار
+    const uniqueRecommendations = Array.from(new Set(allRecommendations));
+
+    // الحد الأقصى 5 توصيات
+    const recommendations = uniqueRecommendations.slice(0, 5);
+
+    console.log(`✅ [Trends] Generated ${recommendations.length} unique recommendations`);
 
     console.log(`✅ [Trends] Analysis complete - ${trendingTopics.length} topics, ${keywords.length} keywords`);
 
@@ -780,12 +836,29 @@ ${combinedText.substring(0, 10000)}
         overallSentiment: claudeAnalysis.overallSentiment,
         engagementLevel: geminiAnalysis.engagementLevel,
         summary: claudeAnalysis.summary,
-        recommendations: recommendations.slice(0, 5),
+        recommendations,
       },
       timeRange,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`❌ [AI Tools] Trends analysis failed:`, error);
-    throw new Error("فشل تحليل الاتجاهات. يرجى المحاولة مرة أخرى");
+    
+    // Granular error logging
+    console.error(`📋 [Trends] Error details:`, {
+      message: errorMessage,
+      timeframe,
+      limit,
+      type: error instanceof Error ? error.constructor.name : typeof error,
+    });
+
+    // Return user-friendly error based on context
+    if (errorMessage.includes("Claude") || errorMessage.includes("Gemini")) {
+      throw new Error("فشل في الاتصال بخدمة الذكاء الاصطناعي. يرجى المحاولة مرة أخرى.");
+    } else if (errorMessage.includes("JSON")) {
+      throw new Error("حدث خطأ في معالجة نتائج التحليل. يرجى المحاولة مرة أخرى.");
+    } else {
+      throw new Error("فشل تحليل الاتجاهات. يرجى التحقق من البيانات والمحاولة مرة أخرى.");
+    }
   }
 }
