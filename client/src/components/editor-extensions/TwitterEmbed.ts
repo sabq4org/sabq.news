@@ -42,10 +42,7 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    // Detect dark mode from document
-    const isDark = typeof window !== 'undefined' && 
-                   document.documentElement.classList.contains('dark');
-    
+    // Don't hardcode theme - it will be set at view-time based on reader's preference
     return [
       'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
@@ -58,7 +55,7 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
           class: 'twitter-tweet',
           'data-lang': 'ar',
           'data-dnt': 'true',
-          'data-theme': isDark ? 'dark' : 'light',
+          // Theme will be set dynamically before rendering
         },
         [
           'p',

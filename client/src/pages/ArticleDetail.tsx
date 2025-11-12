@@ -98,9 +98,24 @@ export default function ArticleDetail() {
     }
   }, [article?.id, user?.id]);
 
-  // Load Twitter widgets script and render embedded tweets
+  // Load Twitter widgets script and render embedded tweets with theme support
   useEffect(() => {
     if (!article?.content) return;
+
+    // Function to apply theme to all tweet blockquotes
+    const applyThemeToTweets = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      const theme = isDark ? 'dark' : 'light';
+      
+      // Find all twitter blockquotes and set their theme
+      const tweetBlocks = document.querySelectorAll('blockquote.twitter-tweet');
+      tweetBlocks.forEach((block) => {
+        block.setAttribute('data-theme', theme);
+      });
+    };
+
+    // Apply theme before loading widgets
+    applyThemeToTweets();
 
     // Load Twitter widgets script
     const script = document.createElement('script');
@@ -114,8 +129,27 @@ export default function ArticleDetail() {
     };
     document.body.appendChild(script);
 
+    // Listen for theme changes and reload tweets
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          applyThemeToTweets();
+          // Reload widgets to apply new theme
+          if (window.twttr?.widgets) {
+            window.twttr.widgets.load();
+          }
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
     return () => {
       document.body.removeChild(script);
+      observer.disconnect();
     };
   }, [article?.content]);
 

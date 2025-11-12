@@ -191,10 +191,21 @@ export function RichTextEditor({
       setTwitterUrl("");
       setTwitterDialogOpen(false);
       
-      // Reload Twitter widgets to render the newly added tweet
+      // Apply theme to newly added tweet and reload widgets
       setTimeout(() => {
+        const isDark = document.documentElement.classList.contains('dark');
+        const theme = isDark ? 'dark' : 'light';
+        
+        // Find all twitter blockquotes in editor and set theme
+        const editorElement = editor.view.dom;
+        const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+        tweetBlocks.forEach((block) => {
+          block.setAttribute('data-theme', theme);
+        });
+        
+        // Reload Twitter widgets to render the newly added tweet
         if (window.twttr?.widgets) {
-          window.twttr.widgets.load(editor.view.dom);
+          window.twttr.widgets.load(editorElement);
         }
       }, 100);
     }
