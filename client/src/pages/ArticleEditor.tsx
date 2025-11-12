@@ -472,48 +472,38 @@ export default function ArticleEditor() {
 
   const autoClassifyMutation = useMutation({
     mutationFn: async () => {
-      let articleId = id;
-      
-      // If new article (no id), auto-save as draft first
-      if (!articleId && title && content) {
-        setIsClassifying(true);
-        const saveResponse = await apiRequest(`/api/articles`, {
-          method: "POST",
-          body: JSON.stringify({
-            title,
-            subtitle: subtitle || "",
-            content,
-            excerpt: excerpt || "",
-            status: "draft",
-            imageUrl: imageUrl || "",
-            imageFocalPoint: imageFocalPoint || null,
-            articleType,
-            categoryId: categoryId || null,
-            reporterId: reporterId || null,
-            newsType,
-            publishType: "instant",
-            hideFromHomepage,
-            seo: {
-              metaTitle: metaTitle || title.substring(0, 70),
-              metaDescription: metaDescription || excerpt.substring(0, 160),
-              keywords: keywords,
-            },
-          }),
-        });
-        const savedArticle = await saveResponse.json();
-        articleId = savedArticle.id;
-        
-        // Update URL to edit mode
-        window.history.replaceState({}, '', `/dashboard/articles/edit/${articleId}`);
-      }
-      
-      if (!articleId) {
+      // Validation
+      if (!title || !content) {
         throw new Error("يجب إدخال العنوان والمحتوى أولاً");
       }
       
+      if (title.length < 10) {
+        throw new Error("العنوان يجب أن يكون 10 أحرف على الأقل");
+      }
+      
+      if (content.length < 100) {
+        throw new Error("المحتوى يجب أن يكون 100 حرف على الأقل");
+      }
+      
       setIsClassifying(true);
-      return await apiRequest(`/api/articles/${articleId}/auto-categorize`, {
+      
+      // If editing existing article, use old endpoint
+      if (!isNewArticle && id) {
+        console.log('[Classification] Using saved endpoint for existing article:', id);
+        return await apiRequest(`/api/articles/${id}/auto-categorize`, {
+          method: "POST",
+        });
+      }
+      
+      // If new article, use draft endpoint (no save to DB)
+      console.log('[Classification] Using draft endpoint for new article');
+      return await apiRequest(`/api/articles/auto-classify-draft`, {
         method: "POST",
+        body: JSON.stringify({
+          title,
+          content,
+          language: "ar",
+        }),
       });
     },
     onSuccess: (data: {
@@ -533,11 +523,9 @@ export default function ArticleEditor() {
       model: string;
     }) => {
       setIsClassifying(false);
-      // Auto-fill the primary category
       setCategoryId(data.primaryCategory.categoryId);
       
-      // Show success with category info
-      const suggestedText = data.suggestedCategories.length > 0
+      const suggestedText = data.suggestedCategories?.length > 0
         ? `\n\nتصنيفات مقترحة أخرى: ${data.suggestedCategories.map(c => `${c.categoryName} (${Math.round(c.confidence * 100)}%)`).join(', ')}`
         : '';
       
@@ -550,7 +538,7 @@ export default function ArticleEditor() {
       setIsClassifying(false);
       toast({
         title: "خطأ في التصنيف",
-        description: error.message || "فشل في تصنيف المقال",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -558,49 +546,46 @@ export default function ArticleEditor() {
 
   const generateSeoMutation = useMutation({
     mutationFn: async () => {
-      let articleId = id;
-      
-      // If new article (no id), auto-save as draft first
-      if (!articleId && title && content) {
-        const saveResponse = await apiRequest(`/api/articles`, {
-          method: "POST",
-          body: JSON.stringify({
-            title,
-            subtitle: subtitle || "",
-            content,
-            excerpt: excerpt || "",
-            status: "draft",
-            imageUrl: imageUrl || "",
-            imageFocalPoint: imageFocalPoint || null,
-            articleType,
-            categoryId: categoryId || null,
-            reporterId: reporterId || null,
-            newsType,
-            publishType: "instant",
-            hideFromHomepage,
-            seo: {
-              metaTitle: metaTitle || title.substring(0, 70),
-              metaDescription: metaDescription || excerpt.substring(0, 160),
-              keywords: keywords,
-            },
-          }),
-        });
-        const savedArticle = await saveResponse.json();
-        articleId = savedArticle.id;
-        
-        // Update URL to edit mode
-        window.history.replaceState({}, '', `/dashboard/articles/edit/${articleId}`);
-      }
-      
-      if (!articleId) {
+      // Validation
+      if (!title || !content) {
         throw new Error("يجب إدخال العنوان والمحتوى أولاً");
       }
       
-      const response = await apiRequest(`/api/seo/generate`, {
+      if (title.length < 10) {
+        throw new Error("العنوان يجب أن يكون 10 أحرف على الأقل");
+      }
+      
+      if (content.length < 100) {
+        throw new Error("المحتوى يجب أن يكون 100 حرف على الأقل");
+      }
+      
+      // If editing existing article, use saved mode
+      if (!isNewArticle && id) {
+        console.log('[SEO] Using saved mode for existing article:', id);
+        return await apiRequest(`/api/seo/generate`, {
+          method: "POST",
+          body: JSON.stringify({
+            mode: "saved",
+            articleId: id,
+            language: "ar"
+          }),
+        });
+      }
+      
+      // If new article, use draft mode (no save to DB)
+      console.log('[SEO] Using draft mode for new article');
+      return await apiRequest(`/api/seo/generate`, {
         method: "POST",
-        body: JSON.stringify({ articleId, language: "ar" }),
+        body: JSON.stringify({
+          mode: "draft",
+          draftData: {
+            title,
+            content,
+            excerpt: excerpt || undefined,
+          },
+          language: "ar"
+        }),
       });
-      return response;
     },
     onSuccess: (data: {
       seo: {
@@ -611,28 +596,28 @@ export default function ArticleEditor() {
       provider: string;
       model: string;
     }) => {
-      // Auto-fill SEO fields from data.seo object
-      if (data.seo && data.seo.metaTitle) {
+      // Auto-fill SEO fields
+      if (data.seo) {
         setMetaTitle(data.seo.metaTitle);
         setMetaDescription(data.seo.metaDescription || "");
         setKeywords(data.seo.keywords || []);
       }
       
-      // Invalidate queries to refetch article with updated SEO data
-      queryClient.invalidateQueries({ queryKey: ['/api/articles', id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/articles', id] });
+      // Only invalidate queries if editing existing article
+      if (!isNewArticle && id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/articles', id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard/articles', id] });
+      }
       
-      // Show success toast
       toast({
-        title: "تم توليد SEO بنجاح",
-        description: `المزود: ${data.provider} | النموذج: ${data.model}`,
+        title: "تم توليد بيانات SEO",
+        description: `تم إنشاء عنوان SEO ووصف وكلمات مفتاحية بواسطة ${data.provider}`,
       });
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || "فشل في توليد SEO";
+    onError: (error: Error) => {
       toast({
-        title: "فشل توليد SEO",
-        description: message,
+        title: "خطأ في توليد SEO",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -998,6 +983,7 @@ const generateSlug = (text: string) => {
                   editorInstance={editorInstance}
                   currentTitle={title}
                   onTitleChange={setTitle}
+                  onSlugChange={setSlug}
                 />
                 <p className="text-xs text-muted-foreground">
                   {(title || "").length}/200 حرف

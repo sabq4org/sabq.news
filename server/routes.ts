@@ -13237,96 +13237,221 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // Zod schema for draft classification
+  const classifyDraftSchema = z.object({
+    title: z.string().min(10, "العنوان يجب أن يكون 10 أحرف على الأقل").max(200, "العنوان يجب أن يكون أقل من 200 حرف"),
+    content: z.string().min(100, "المحتوى يجب أن يكون 100 حرف على الأقل"),
+    language: z.enum(["ar", "en", "ur"]).default("ar"),
+  });
+
+  // POST /api/articles/auto-classify-draft - Auto-classify draft article (before saving)
+  app.post("/api/articles/auto-classify-draft", strictLimiter, requireAuth, requireAnyPermission("articles.create", "system.admin"), async (req: any, res) => {
+    try {
+      // Validate request body
+      const { title, content, language } = classifyDraftSchema.parse(req.body);
+      console.log('[Classification] Draft classification request:', { titleLength: title.length, contentLength: content.length, language });
+
+      // Get all active categories
+      const activeCategories = await db
+        .select({
+          id: categories.id,
+          slug: categories.slug,
+          nameAr: categories.nameAr,
+          nameEn: categories.nameEn,
+        })
+        .from(categories)
+        .where(eq(categories.status, "active"));
+
+      if (activeCategories.length === 0) {
+        return res.status(400).json({ message: "لا توجد تصنيفات متاحة" });
+      }
+
+      // Classify using AI (same logic as saved articles, but without article ID)
+      const classification = await classifyArticle(title, content, activeCategories);
+
+      console.log('[Classification] Draft classification successful:', {
+        primary: classification.primaryCategory.categoryName,
+        confidence: classification.primaryCategory.confidence,
+      });
+
+      // Return classification results without saving to database
+      res.json({
+        success: true,
+        primaryCategory: classification.primaryCategory,
+        suggestedCategories: classification.suggestedCategories,
+        provider: classification.provider,
+        model: classification.model,
+      });
+    } catch (error) {
+      console.error("Error auto-classifying draft:", error);
+      
+      // Handle Zod validation errors
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        return res.status(400).json({
+          success: false,
+          message: firstError.message,
+        });
+      }
+      
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "فشل في تصنيف المقال تلقائياً",
+      });
+    }
+  });
+
   // ============================================================
   // SEO GENERATION ENDPOINTS
   // ============================================================
 
-  // POST /api/seo/generate - Generate SEO metadata for article using AI
+  // Zod schema for SEO generation (supports both saved articles and draft data)
+  const seoGenerateSchema = z.discriminatedUnion("mode", [
+    z.object({
+      mode: z.literal("saved"),
+      articleId: z.string(),
+      language: z.enum(["ar", "en", "ur"]).default("ar"),
+    }),
+    z.object({
+      mode: z.literal("draft"),
+      draftData: z.object({
+        title: z.string().min(10, "العنوان يجب أن يكون 10 أحرف على الأقل").max(200, "العنوان يجب أن يكون أقل من 200 حرف"),
+        content: z.string().min(100, "المحتوى يجب أن يكون 100 حرف على الأقل"),
+        excerpt: z.string().optional(),
+      }),
+      language: z.enum(["ar", "en", "ur"]).default("ar"),
+    }),
+  ]);
+
+  // POST /api/seo/generate - Generate SEO metadata for article using AI (supports draft mode)
   app.post("/api/seo/generate", strictLimiter, requireAuth, requireAnyPermission("articles.create", "system.admin"), async (req: any, res) => {
     try {
-      const { articleId, language } = req.body;
+      // Validate request body using Zod schema
+      const validated = seoGenerateSchema.parse(req.body);
+      console.log('[SEO] Generation request:', { mode: validated.mode, language: validated.language });
 
-      // Validate inputs
-      if (!articleId || !language) {
-        return res.status(400).json({ message: "معرف المقال واللغة مطلوبان" });
+      if (validated.mode === "saved") {
+        // Existing flow: generate SEO for saved article
+        const { articleId, language } = validated;
+
+        // Fetch article using storage method
+        const article = await storage.getArticleForSeo(articleId, language);
+
+        if (!article) {
+          return res.status(404).json({ message: "المقال غير موجود" });
+        }
+
+        // Generate SEO metadata using AI
+        const seoResult = await generateSeoMetadata({
+          id: articleId,
+          title: article.title,
+          subtitle: article.subtitle || undefined,
+          content: article.content,
+          excerpt: article.excerpt || undefined,
+        }, language);
+
+        // Prepare SEO content and metadata
+        const seoContent = {
+          metaTitle: seoResult.content.metaTitle,
+          metaDescription: seoResult.content.metaDescription,
+          keywords: seoResult.content.keywords,
+          socialTitle: seoResult.content.socialTitle,
+          socialDescription: seoResult.content.socialDescription,
+          imageAltText: seoResult.content.imageAltText,
+          ogImageUrl: seoResult.content.ogImageUrl,
+        };
+
+        const seoMetadata = {
+          status: "generated" as const,
+          generatedAt: new Date().toISOString(),
+          generatedBy: req.user?.id,
+          provider: seoResult.provider,
+          model: seoResult.model,
+          manualOverride: false,
+        };
+
+        // Save SEO metadata to article
+        await storage.saveSeoMetadata(
+          articleId,
+          language,
+          seoContent,
+          seoMetadata
+        );
+
+        // Create history entry
+        await storage.createSeoHistoryEntry({
+          articleId,
+          language,
+          seoContent,
+          seoMetadata,
+          provider: seoResult.provider,
+          model: seoResult.model,
+          generatedBy: req.user?.id,
+        });
+
+        // Log activity
+        await logActivity({
+          userId: req.user?.id,
+          action: "generate_seo_metadata",
+          entityType: "article",
+          entityId: articleId,
+        });
+
+        console.log('[SEO] Generated and saved for article:', articleId);
+        res.json({
+          success: true,
+          seo: seoContent,
+          metadata: seoMetadata,
+          provider: seoResult.provider,
+          model: seoResult.model,
+        });
+      } else {
+        // Draft mode: generate SEO without saving to database
+        const { draftData, language } = validated;
+        console.log('[SEO] Generating for draft (no save):', { titleLength: draftData.title.length, contentLength: draftData.content.length });
+
+        // Generate SEO metadata using AI
+        const seoResult = await generateSeoMetadata({
+          id: "draft-" + Date.now(), // Temporary ID for draft
+          title: draftData.title,
+          subtitle: undefined,
+          content: draftData.content,
+          excerpt: draftData.excerpt || undefined,
+        }, language);
+
+        // Prepare SEO content (no metadata needed for draft)
+        const seoContent = {
+          metaTitle: seoResult.content.metaTitle,
+          metaDescription: seoResult.content.metaDescription,
+          keywords: seoResult.content.keywords,
+          socialTitle: seoResult.content.socialTitle,
+          socialDescription: seoResult.content.socialDescription,
+          imageAltText: seoResult.content.imageAltText,
+          ogImageUrl: seoResult.content.ogImageUrl,
+        };
+
+        console.log('[SEO] Draft generation successful');
+        
+        // Return results without saving to database
+        res.json({
+          success: true,
+          seo: seoContent,
+          provider: seoResult.provider,
+          model: seoResult.model,
+        });
       }
-
-      if (!["ar", "en", "ur"].includes(language)) {
-        return res.status(400).json({ message: "اللغة يجب أن تكون ar أو en أو ur" });
-      }
-
-      // Fetch article using storage method
-      const article = await storage.getArticleForSeo(articleId, language as "ar" | "en" | "ur");
-
-      if (!article) {
-        return res.status(404).json({ message: "المقال غير موجود" });
-      }
-
-      // Generate SEO metadata using AI
-      const seoResult = await generateSeoMetadata({
-        id: articleId,
-        title: article.title,
-        subtitle: article.subtitle || undefined,
-        content: article.content,
-        excerpt: article.excerpt || undefined,
-      }, language as "ar" | "en" | "ur");
-
-      // Prepare SEO content and metadata
-      const seoContent = {
-        metaTitle: seoResult.content.metaTitle,
-        metaDescription: seoResult.content.metaDescription,
-        keywords: seoResult.content.keywords,
-        socialTitle: seoResult.content.socialTitle,
-        socialDescription: seoResult.content.socialDescription,
-        imageAltText: seoResult.content.imageAltText,
-        ogImageUrl: seoResult.content.ogImageUrl,
-      };
-
-      const seoMetadata = {
-        status: "generated" as const,
-        generatedAt: new Date().toISOString(),
-        generatedBy: req.user?.id,
-        provider: seoResult.provider,
-        model: seoResult.model,
-        manualOverride: false,
-      };
-
-      // Save SEO metadata to article
-      await storage.saveSeoMetadata(
-        articleId,
-        language as "ar" | "en" | "ur",
-        seoContent,
-        seoMetadata
-      );
-
-      // Create history entry
-      await storage.createSeoHistoryEntry({
-        articleId,
-        language: language as "ar" | "en" | "ur",
-        seoContent,
-        seoMetadata,
-        provider: seoResult.provider,
-        model: seoResult.model,
-        generatedBy: req.user?.id,
-      });
-
-      // Log activity
-      await logActivity({
-        userId: req.user?.id,
-        action: "generate_seo_metadata",
-        entityType: "article",
-        entityId: articleId,
-      });
-
-      res.json({
-        success: true,
-        seo: seoContent,
-        metadata: seoMetadata,
-        provider: seoResult.provider,
-        model: seoResult.model,
-      });
     } catch (error) {
       console.error("Error generating SEO metadata:", error);
+      
+      // Handle Zod validation errors
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        return res.status(400).json({
+          success: false,
+          message: firstError.message,
+        });
+      }
+      
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "فشل في توليد البيانات الوصفية لتحسين محركات البحث",

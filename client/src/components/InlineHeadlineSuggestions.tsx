@@ -13,6 +13,7 @@ interface InlineHeadlineSuggestionsProps {
   editorInstance: Editor | null;
   currentTitle: string;
   onTitleChange: (newTitle: string) => void;
+  onSlugChange?: (newSlug: string) => void;
 }
 
 interface HeadlineSuggestion {
@@ -26,15 +27,33 @@ const LABELS = {
   ar: {
     button: "اقترح عناوين ذكية",
     error: "فشل في توليد العناوين",
+    slugGenerated: "تم توليد الرابط الدائم تلقائياً",
   },
   en: {
     button: "Suggest Smart Headlines",
     error: "Failed to generate headlines",
+    slugGenerated: "Slug automatically generated",
   },
   ur: {
     button: "سمارٹ عنوانات تجویز کریں",
     error: "عنوانات بنانے میں ناکامی",
+    slugGenerated: "slug خودکار طور پر تیار کیا گیا",
   },
+};
+
+// Helper function to generate slug from title
+const generateSlug = (text: string): string => {
+  if (!text || typeof text !== 'string') return "";
+  
+  const slug = text
+    .toLowerCase()
+    .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "") // Keep Arabic, English, numbers, spaces, hyphens
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+    .substring(0, 150); // Limit to 150 characters
+  
+  return slug;
 };
 
 export function InlineHeadlineSuggestions({
@@ -42,6 +61,7 @@ export function InlineHeadlineSuggestions({
   editorInstance,
   currentTitle,
   onTitleChange,
+  onSlugChange,
 }: InlineHeadlineSuggestionsProps) {
   const [suggestions, setSuggestions] = useState<HeadlineSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +114,22 @@ export function InlineHeadlineSuggestions({
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
+    // Update title
     onTitleChange(suggestion);
+    
+    // Auto-generate and update slug if callback is provided
+    if (onSlugChange) {
+      const newSlug = generateSlug(suggestion);
+      onSlugChange(newSlug);
+      console.log('[InlineHeadlineSuggestions] Auto-generated slug:', newSlug);
+      
+      // Show toast notification
+      toast({
+        title: suggestion,
+        description: labels.slugGenerated,
+      });
+    }
+    
     setSuggestions([]);
   };
 
