@@ -297,12 +297,21 @@ ${researchSummary}
 5. الفقرة الثالثة: ردود الفعل/التصريحات
 6. الخاتمة: الأثر والتوقعات
 
-قدم الإجابة بصيغة JSON:
+قدم الإجابة بصيغة JSON محددة البنية (STRICT):
 {
-  "title": "عنوان يبدأ بفعل (10 كلمات أو أقل)",
-  "content": "المحتوى الكامل مقسم إلى فقرات حسب الترتيب أعلاه"
+  "title": "عنوان يبدأ بفعل (10 كلمات بالضبط أو أقل)",
+  "leadSentence1": "الجملة الأولى من المقدمة",
+  "leadSentence2": "الجملة الثانية من المقدمة",
+  "bodyParagraphs": [
+    "الفقرة الأولى: التفاصيل الرئيسية (3 أسطر كحد أقصى)",
+    "الفقرة الثانية: معلومات إضافية/خلفية (3 أسطر كحد أقصى)",
+    "الفقرة الثالثة: أي تفاصيل أخرى (3 أسطر كحد أقصى)"
+  ],
+  "reactionsParagraph": "فقرة ردود الفعل والتصريحات",
+  "conclusion": "الخاتمة: الأثر والتوقعات"
 }
 
+⚠️ تحذير: التزم بالبنية أعلاه بدقة. كل حقل منفصل. لا تدمج النصوص.
 تذكر: الخبر يجب أن يكون جاهزاً للنشر مباشرة في "سبق" دون أي تعديل!`,
         },
       ],
@@ -320,12 +329,48 @@ ${researchSummary}
     }
 
     const draft = JSON.parse(jsonMatch[0]);
-    const wordCount = draft.content.split(/\s+/).length;
+    
+    // Validate structured response
+    if (!draft.title || !draft.leadSentence1 || !draft.leadSentence2 || 
+        !Array.isArray(draft.bodyParagraphs) || !draft.reactionsParagraph || !draft.conclusion) {
+      console.error("⚠️ [Journalist Agent] Invalid draft structure:", draft);
+      throw new Error("البنية المرجعة من AI غير صحيحة");
+    }
+
+    // Validate title constraints (≤10 words)
+    const titleWords = draft.title.trim().split(/\s+/);
+    if (titleWords.length > 10) {
+      console.warn(`⚠️ [Journalist Agent] Title exceeds 10 words: ${titleWords.length} words`);
+      // Trim to 10 words as fallback
+      draft.title = titleWords.slice(0, 10).join(" ");
+    }
+
+    // Construct full content from structured parts
+    const contentParts = [
+      draft.leadSentence1,
+      draft.leadSentence2,
+      "",
+      ...draft.bodyParagraphs.map((p: string) => p + "\n"),
+      draft.reactionsParagraph,
+      "",
+      draft.conclusion
+    ];
+    
+    const fullContent = contentParts.join("\n");
+    const wordCount = fullContent.split(/\s+/).filter(w => w.length > 0).length;
+
+    console.log(`✅ [Journalist Agent] Draft validated - Title: ${titleWords.length} words, Total: ${wordCount} words`);
 
     return {
       title: draft.title,
-      content: draft.content,
+      content: fullContent,
       wordCount,
+      metadata: {
+        leadSentences: [draft.leadSentence1, draft.leadSentence2],
+        bodyParagraphs: draft.bodyParagraphs,
+        reactionsParagraph: draft.reactionsParagraph,
+        conclusion: draft.conclusion,
+      }
     };
   } catch (error) {
     console.error(`❌ [Journalist Agent] Draft writing failed:`, error);
@@ -361,6 +406,26 @@ async function findRelevantImages(taskId: string, prompt: string, draftTitle: st
     console.error(`❌ [Journalist Agent] Image search failed:`, error);
     return [];
   }
+}
+
+// Helper: Validate and clean headline
+function validateHeadline(headline: string): string {
+  // Remove quotes, numbers, extra whitespace
+  let cleaned = headline
+    .replace(/^["'\d.\-)\s]+/, '') // Remove leading quotes/numbers
+    .replace(/["'\s]+$/, '') // Remove trailing quotes
+    .trim();
+  
+  // Count words
+  const words = cleaned.split(/\s+/);
+  
+  // If exceeds 10 words, truncate
+  if (words.length > 10) {
+    console.warn(`⚠️ Headline too long (${words.length} words), trimming to 10`);
+    cleaned = words.slice(0, 10).join(" ");
+  }
+  
+  return cleaned;
 }
 
 // Step 5: Generate multiple headlines
@@ -408,8 +473,9 @@ async function generateHeadlines(
         max_tokens: 100,
       });
 
+      const rawHeadline = gptResponse.choices[0].message.content?.trim() || draftTitle;
       headlines.push({
-        text: gptResponse.choices[0].message.content?.trim() || draftTitle,
+        text: validateHeadline(rawHeadline),
         style: "formal",
         aiModel: "GPT-4o",
       });
@@ -430,11 +496,11 @@ async function generateHeadlines(
         ],
       });
 
+      const rawHeadline = claudeResponse.content[0].type === "text"
+        ? claudeResponse.content[0].text.trim()
+        : draftTitle;
       headlines.push({
-        text:
-          claudeResponse.content[0].type === "text"
-            ? claudeResponse.content[0].text.trim()
-            : draftTitle,
+        text: validateHeadline(rawHeadline),
         style: "engaging",
         aiModel: "Claude Sonnet 4-5",
       });
@@ -458,8 +524,9 @@ async function generateHeadlines(
         ],
       });
 
+      const rawHeadline = geminiResponse.text?.trim() || draftTitle;
       headlines.push({
-        text: geminiResponse.text?.trim() || draftTitle,
+        text: validateHeadline(rawHeadline),
         style: "seo",
         aiModel: "Gemini 2.0 Flash",
       });
@@ -467,9 +534,9 @@ async function generateHeadlines(
       console.error("Gemini headline generation failed:", error);
     }
 
-    // Keep original from draft
+    // Keep original from draft (already validated)
     headlines.push({
-      text: draftTitle,
+      text: validateHeadline(draftTitle),
       style: "original",
       aiModel: "Original Draft",
     });
