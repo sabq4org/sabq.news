@@ -63,6 +63,14 @@ export const VideoEmbed = Node.create<VideoEmbedOptions>({
     return [
       {
         tag: 'div[data-video-embed]',
+        getAttrs: (dom) => {
+          if (typeof dom === 'string') return {};
+          const element = dom as HTMLElement;
+          return {
+            url: element.getAttribute('data-url'),
+            embedUrl: element.getAttribute('data-embed-url'),
+          };
+        },
       },
     ];
   },
@@ -78,6 +86,8 @@ export const VideoEmbed = Node.create<VideoEmbedOptions>({
       'div',
       mergeAttributes(this.options.HTMLAttributes, {
         'data-video-embed': '',
+        'data-url': HTMLAttributes.url,
+        'data-embed-url': embedUrl,
         class: 'video-embed-wrapper my-4',
       }),
       [

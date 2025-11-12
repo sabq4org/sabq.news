@@ -816,7 +816,7 @@ export default function ArticleDetail() {
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(article.content, {
                   ADD_TAGS: ['iframe', 'blockquote'],
-                  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'data-lang', 'data-theme', 'class'],
+                  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'data-lang', 'data-theme', 'data-video-embed', 'data-url', 'data-embed-url', 'class'],
                   ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
                 })
               }}
