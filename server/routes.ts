@@ -10,6 +10,7 @@ import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
+import { summarizeText, generateSocialPost, suggestImageQuery, translateContent } from "./ai-content-tools";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
@@ -9822,6 +9823,98 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     } catch (error) {
       console.error("Error comparing headlines:", error);
       res.status(500).json({ message: "Failed to compare headlines" });
+    }
+  });
+
+  // AI Content Tools - Text Summarizer
+  app.post("/api/ai-tools/summarize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, language = "ar" } = req.body;
+      
+      if (!text || !text.trim()) {
+        return res.status(400).json({ message: "النص مطلوب" });
+      }
+
+      if (!["ar", "en", "ur"].includes(language)) {
+        return res.status(400).json({ message: "اللغة غير مدعومة" });
+      }
+
+      const result = await summarizeText(text, language as "ar" | "en" | "ur");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error summarizing text:", error);
+      res.status(500).json({ 
+        message: error.message || "فشل تلخيص النص" 
+      });
+    }
+  });
+
+  // AI Content Tools - Social Media Post Generator
+  app.post("/api/ai-tools/social-post", isAuthenticated, async (req: any, res) => {
+    try {
+      const { articleTitle, articleSummary, platform } = req.body;
+      
+      if (!articleTitle || !articleSummary) {
+        return res.status(400).json({ message: "العنوان والملخص مطلوبان" });
+      }
+
+      if (!["twitter", "facebook", "linkedin"].includes(platform)) {
+        return res.status(400).json({ message: "المنصة غير مدعومة" });
+      }
+
+      const result = await generateSocialPost(
+        articleTitle, 
+        articleSummary, 
+        platform as "twitter" | "facebook" | "linkedin"
+      );
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating social post:", error);
+      res.status(500).json({ 
+        message: error.message || "فشل إنشاء المنشور" 
+      });
+    }
+  });
+
+  // AI Content Tools - Smart Image Search
+  app.post("/api/ai-tools/image-search", isAuthenticated, async (req: any, res) => {
+    try {
+      const { contentText } = req.body;
+      
+      if (!contentText || !contentText.trim()) {
+        return res.status(400).json({ message: "المحتوى مطلوب" });
+      }
+
+      const result = await suggestImageQuery(contentText);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error suggesting image query:", error);
+      res.status(500).json({ 
+        message: error.message || "فشل اقتراح كلمات البحث" 
+      });
+    }
+  });
+
+  // AI Content Tools - Instant Translator
+  app.post("/api/ai-tools/translate", isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, fromLang, toLang } = req.body;
+      
+      if (!text || !text.trim()) {
+        return res.status(400).json({ message: "النص مطلوب" });
+      }
+
+      if (!fromLang || !toLang) {
+        return res.status(400).json({ message: "اللغات مطلوبة" });
+      }
+
+      const result = await translateContent(text, fromLang, toLang);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error translating content:", error);
+      res.status(500).json({ 
+        message: error.message || "فشلت الترجمة" 
+      });
     }
   });
 
