@@ -21,7 +21,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript
 ### Feature Specifications
 Key features include:
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication (local + Google OAuth + Apple OAuth), including email verification and onboarding flows.
--   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor, SEO capabilities, and bulk operations. Includes a Smart Media Library System with AI-powered image suggestions.
+-   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced article editor (TipTap-based WYSIWYG with Twitter embed support), SEO capabilities, and bulk operations. Includes a Smart Media Library System with AI-powered image suggestions. The editor supports rich media embedding including Twitter/X posts with automatic widget rendering.
 -   **AI Analytics Dashboard (Trilingual):** Displays engagement metrics with reporter attribution (prioritizing `reporterId`) and comprehensive category analytics dashboards.
 -   **Comments & Engagement:** Nested comment system with real-time moderation and AI-powered comment sentiment analysis (Claude Sonnet 4-5, Gemini Flash) with real-time, batch analysis, historical tracking, and dashboard integration.
 -   **AI-Powered Article Classification:** Smart Article Classification System for Arabic articles using Claude Sonnet 3.5, providing auto-categorization and multi-category suggestions integrated into the article editor.
