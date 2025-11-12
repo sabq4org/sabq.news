@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import adsRoutes from "./ads-routes";
 import { registerDataStoryRoutes } from './data-story-routes';
+import journalistAgentRoutes from './journalist-agent-routes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
@@ -23434,6 +23435,11 @@ Allow: /
   // DATA STORY GENERATOR - مولد القصص من البيانات
   // ============================================================
   registerDataStoryRoutes(app, storage);
+
+  // ============================================================
+  // SMART JOURNALIST AGENT - وكيل الصحفي الذكي
+  // ============================================================
+  app.use(journalistAgentRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
