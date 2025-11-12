@@ -1,0 +1,93 @@
+2025-11-12 14:56:30.12
+d277d096
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 14:56:30.17
+d277d096
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 14:56:30.17
+d277d096
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 14:56:30.19
+d277d096
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-12 14:56:30.22
+d277d096
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-12 14:56:30.23
+d277d096
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 14:56:30.25
+d277d096
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-12 14:56:30.25
+d277d096
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-12 14:56:30.25
+d277d096
+User
+[Classification] Draft classification request: { titleLength: 10, contentLength: 2511, language: 'ar' }
+2025-11-12 14:56:30.26
+d277d096
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 14:56:30.29
+d277d096
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-12 14:56:30.29
+d277d096
+User
+[SEO] Generation request: { mode: 'draft', language: 'ar' }
+2025-11-12 14:56:30.29
+d277d096
+User
+[SEO] Generating for draft (no save): { titleLength: 10, contentLength: 2511 }
+2025-11-12 14:56:30.29
+d277d096
+User
+[SEO] Generating for ar with anthropic (claude-sonnet-4-5)
+2025-11-12 14:56:35.62
+d277d096
+User
+11:56:35 AM [express] POST /api/ai/generate-titles 200 in 5685ms :: {"titles":[]}
+2025-11-12 14:56:37.18
+d277d096
+User
+[SEO] Draft generation successful
+2025-11-12 14:56:37.20
+d277d096
+User
+11:56:37 AM [express] POST /api/seo/generate 200 in 7190ms :: {"success":true,"seo":{"metaTitle":"stc…
+2025-11-12 14:56:38.37
+d277d096
+User
+[Classification] Draft classification successful: { primary: 'سياحة', confidence: 0.92 }
+2025-11-12 14:56:38.40
+d277d096
+User
+11:56:38 AM [express] POST /api/articles/auto-classify-draft 200 in 8456ms :: {"success":true,"primar…
+2025-11-12 14:56:41.42
+d277d096
+User
+11:56:41 AM [express] POST /api/ai/summarize 200 in 11415ms :: {"summary":""}
+2025-11-12 14:56:51.01
+d277d096
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 14:56:51.11
+d277d096
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 14:56:51.18
+d277d096
+User
+11:56:51 AM [express] GET /api/themes/active 200 in 186ms

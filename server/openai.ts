@@ -6,6 +6,10 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function summarizeArticle(text: string): Promise<string> {
   try {
+    console.log("[Summarize] 🚀 Starting article summarization...");
+    console.log("[Summarize] Input text length:", text.length);
+    console.log("[Summarize] Input preview:", text.substring(0, 100) + "...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
@@ -21,15 +25,44 @@ export async function summarizeArticle(text: string): Promise<string> {
       max_completion_tokens: 512,
     });
 
-    return response.choices[0].message.content || "";
+    console.log("[Summarize] ✅ OpenAI response received");
+    console.log("[Summarize] Response structure:", JSON.stringify({
+      hasChoices: !!response.choices,
+      choicesLength: response.choices?.length,
+      firstChoice: response.choices?.[0] ? {
+        hasMessage: !!response.choices[0].message,
+        hasContent: !!response.choices[0].message?.content,
+        contentLength: response.choices[0].message?.content?.length,
+        finishReason: response.choices[0].finish_reason,
+      } : null,
+    }));
+    
+    const content = response.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      console.warn("[Summarize] ⚠️ Empty response from OpenAI!");
+      console.warn("[Summarize] Full response:", JSON.stringify(response, null, 2));
+      return "";
+    }
+    
+    console.log("[Summarize] ✅ Summary generated successfully");
+    console.log("[Summarize] Summary preview:", content.substring(0, 100));
+    console.log("[Summarize] Summary length:", content.length);
+    
+    return content;
   } catch (error) {
-    console.error("Error summarizing article:", error);
+    console.error("[Summarize] ❌ Error summarizing article:", error);
     throw new Error("Failed to summarize article");
   }
 }
 
 export async function generateTitle(content: string, language: "ar" | "en" | "ur" = "ar"): Promise<string[]> {
   try {
+    console.log("[GenerateTitles] 🚀 Starting title generation...");
+    console.log("[GenerateTitles] Language:", language);
+    console.log("[GenerateTitles] Content length:", content.length);
+    console.log("[GenerateTitles] Content preview:", content.substring(0, 100) + "...");
+    
     const SYSTEM_PROMPTS = {
       ar: "أنت مساعد ذكي متخصص في إنشاء عناوين جذابة للمقالات الإخبارية باللغة العربية. قم بإنشاء عناوين واضحة ومثيرة للاهتمام.",
       en: "You are a smart assistant specialized in creating catchy headlines for news articles in English. Generate clear and interesting headlines.",
@@ -42,6 +75,8 @@ export async function generateTitle(content: string, language: "ar" | "en" | "ur
       ur: `مندرجہ ذیل مضمون کے لیے 3 مختلف عنوانات تجویز کریں۔ نتیجہ JSON فارمیٹ میں سٹرنگز کی صف کے طور پر واپس کریں:\n\n${content.substring(0, 1000)}`
     };
 
+    console.log("[GenerateTitles] Calling OpenAI API...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
@@ -58,10 +93,38 @@ export async function generateTitle(content: string, language: "ar" | "en" | "ur
       max_completion_tokens: 256,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result.titles || [];
+    console.log("[GenerateTitles] ✅ OpenAI response received");
+    console.log("[GenerateTitles] Response structure:", JSON.stringify({
+      hasChoices: !!response.choices,
+      choicesLength: response.choices?.length,
+      firstChoice: response.choices?.[0] ? {
+        hasMessage: !!response.choices[0].message,
+        hasContent: !!response.choices[0].message?.content,
+        contentLength: response.choices[0].message?.content?.length,
+        finishReason: response.choices[0].finish_reason,
+      } : null,
+    }));
+    
+    const messageContent = response.choices?.[0]?.message?.content;
+    
+    if (!messageContent) {
+      console.warn("[GenerateTitles] ⚠️ Empty response from OpenAI!");
+      console.warn("[GenerateTitles] Full response:", JSON.stringify(response, null, 2));
+      return [];
+    }
+    
+    console.log("[GenerateTitles] Raw message content:", messageContent);
+    
+    const result = JSON.parse(messageContent);
+    console.log("[GenerateTitles] Parsed JSON result:", JSON.stringify(result, null, 2));
+    
+    const titles = result.titles || [];
+    console.log("[GenerateTitles] ✅ Titles extracted:", titles.length, "titles");
+    console.log("[GenerateTitles] Titles:", titles);
+    
+    return titles;
   } catch (error) {
-    console.error("Error generating titles:", error);
+    console.error("[GenerateTitles] ❌ Error generating titles:", error);
     throw new Error("Failed to generate titles");
   }
 }
