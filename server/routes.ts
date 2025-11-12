@@ -25,6 +25,7 @@ import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
+import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -3167,7 +3168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
 
   // Get all categories
-  app.get("/api/categories", async (req, res) => {
+  app.get("/api/categories", cacheControl({ maxAge: CACHE_DURATIONS.LONG, staleWhileRevalidate: CACHE_DURATIONS.LONG }), async (req, res) => {
     try {
       const withStats = req.query.withStats === 'true';
       
@@ -6247,7 +6248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TRENDING KEYWORDS ROUTE
   // ============================================================
 
-  app.get("/api/trending-keywords", async (req, res) => {
+  app.get("/api/trending-keywords", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM, staleWhileRevalidate: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
       // Fetch published articles from the last 24 hours (1 day)
       const oneDayAgo = new Date();
@@ -10928,7 +10929,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // THEME MANAGEMENT ROUTES
   // ============================================================
 
-  app.get("/api/themes/active", async (req, res) => {
+  app.get("/api/themes/active", cacheControl({ maxAge: CACHE_DURATIONS.LONG }), async (req, res) => {
     try {
       const scope = (req.query.scope as string) || 'site_full';
       const theme = await storage.getActiveTheme(scope);
@@ -15230,7 +15231,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // ==========================================
 
   // GET /api/smart-blocks - List all smart blocks
-  app.get("/api/smart-blocks", async (req: any, res) => {
+  app.get("/api/smart-blocks", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM, staleWhileRevalidate: CACHE_DURATIONS.MEDIUM }), async (req: any, res) => {
     try {
       const { isActive, placement } = req.query;
       

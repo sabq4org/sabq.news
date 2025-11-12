@@ -16,7 +16,17 @@ A core architectural decision is the **trilingual system** with separate databas
 The platform implements a unified brand color system and a consistent smart blocks architecture across all three languages, featuring distinct header designs, featured layouts, responsive grid layouts, and quad categories blocks.
 
 ### Technical Implementations
-The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching, background jobs, Content Security Policy (CSP), and a production-grade `OptimizedImage` component with lazy loading and error handling.
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, and TypeScript, with TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local strategy, bcrypt, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. 
+
+**Performance Optimizations:**
+- Gzip compression for all responses
+- Smart HTTP caching middleware (server/cacheMiddleware.ts) with configurable cache durations (LONG: 3600s, MEDIUM: 300s, PERMANENT for immutable assets)
+- Applied caching to high-traffic endpoints: /api/categories, /api/trending-keywords, /api/themes/active, /api/smart-blocks with stale-while-revalidate strategy
+- Background jobs for automated tasks
+- Content Security Policy (CSP) with strict directives
+- Production-grade `OptimizedImage` component with WebP fallback (<picture> element), blur placeholders, advanced lazy loading (IntersectionObserver with 200px rootMargin), and error handling
+- Asset footprint reduced from 65MB to 56KB via aggressive cleanup (294 files → 3 files)
+- Automated cleanup script (scripts/cleanup.sh) for build artifacts and logs
 
 ### Feature Specifications
 Key features include:

@@ -1,218 +1,0 @@
-ممتاز 👌
-من خلال مراجعة توثيق مشروع «سبق الذكية» في الملفات، إليك خطة متكاملة لتحسين الـ SEO (تحسين الظهور في محركات البحث) وربطها مع أنظمة المشاركة في الشبكات الاجتماعية + تفعيل الذكاء الاصطناعي المساعد في SEO (SEO AI):
-
-⸻
-
-🧩 أولاً: مراجعة وتحسين إعدادات SEO الأساسية في Next.js
-
-✅ في ملف next.config.js أو layout.tsx
-
-تأكّد من وجود:
-
-export const metadata = {
-  title: "سبق الذكية | منصة الأخبار الذكية بالعربية",
-  description: "منصة إعلامية عربية مدعومة بالذكاء الاصطناعي تقدم محتوى إخباري وتحليلي متجدد.",
-  metadataBase: new URL("https://sabq.me"),
-  openGraph: {
-    title: "سبق الذكية | الأخبار أولاً بالذكاء الاصطناعي",
-    description: "اقرأ الأخبار والتحليلات من سبق الذكية - أسرع منصة عربية بالذكاء الاصطناعي.",
-    url: "https://sabq.me",
-    siteName: "سبق الذكية",
-    images: [
-      {
-        url: "https://sabq.me/images/og-default.jpg",
-        width: 1200,
-        height: 630,
-        alt: "منصة سبق الذكية",
-      },
-    ],
-    locale: "ar_SA",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "سبق الذكية",
-    description: "تابع آخر الأخبار عبر منصة سبق الذكية",
-    images: ["https://sabq.me/images/og-default.jpg"],
-    creator: "@sabq_ai",
-  },
-};
-
-🔹 هذا يضمن ظهور عنوان وصورة ونبذة تلقائياً عند مشاركة الرابط على فيسبوك، تويتر، واتساب، تيليجرام وغيرها.
-🔹 يمكن توليد القيم تلقائياً لكل مقال من قاعدة البيانات باستخدام دالة generateMetadata(article).
-
-⸻
-
-📢 ثانياً: تحسين المشاركة عبر الشبكات الاجتماعية
-
-عند نشر المقالات
-
-أضف هذه الوسوم في ترويسة صفحة المقال /article/[slug]/page.tsx:
-
-export async function generateMetadata({ params }) {
-  const article = await getArticle(params.slug);
-  return {
-    title: article.title,
-    description: article.excerpt,
-    openGraph: {
-      title: article.title,
-      description: article.excerpt,
-      url: `https://sabq.me/article/${article.slug}`,
-      images: [
-        {
-          url: article.featured_image || "https://sabq.me/images/og-default.jpg",
-          width: 1200,
-          height: 630,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: article.title,
-      description: article.excerpt,
-      images: [article.featured_image],
-    },
-  };
-}
-
-🔗 بعد ذلك عند نشر الرابط في أي منصة (X، فيسبوك، واتساب…) سيظهر:
-	•	🖼️ الصورة البارزة
-	•	📰 العنوان
-	•	💬 النبذة
-	•	🔗 الرابط الصحيح
-
-⸻
-
-🤖 ثالثاً: تفعيل SEO AI Assistant
-
-فكرة النظام:
-
-نستخدم واجهة الذكاء الاصطناعي الموجودة فعلياً في المشروع (/app/api/ai/smart-editor/route.ts) لتوليد:
-	•	الكلمات المفتاحية التلقائية (SEO Keywords)
-	•	وصف الميتا (Meta Description)
-	•	عنوان محسّن لمحركات البحث (SEO Title)
-	•	اقتراحات الوسوم (Tags)
-
-مثال خدمة جديدة:
-
-/app/api/ai/seo-optimize/route.ts
-
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export async function POST(req: Request) {
-  const { title, content } = await req.json();
-  
-  const prompt = `
-  أنت مساعد تحسين SEO لموقع إخباري عربي. 
-  حلّل النص التالي واقترح:
-  1. عنوان محسن لمحركات البحث.
-  2. وصف ميتا مختصر (150 حرفًا).
-  3. 5 كلمات مفتاحية مناسبة.
-  4. نص بديل للصورة البارزة.
-  ---
-  المقال:
-  ${title}
-  ${content}
-  `;
-  
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const result = completion.choices[0].message.content;
-  return NextResponse.json({ seo_analysis: result });
-}
-
-📦 بعد تنفيذ هذه الخدمة:
-	•	تضيف زرًا في لوحة التحرير بعنوان “تحليل SEO بالذكاء الاصطناعي”
-	•	يقوم الذكاء الاصطناعي بملء الحقول تلقائياً في نموذج المقال:
-	•	🔹 Meta Title
-	•	🔹 Meta Description
-	•	🔹 Tags
-	•	🔹 Alt Image Text
-
-⸻
-
-⚙️ رابعاً: إعداد خريطة الموقع وبيانات Schema.org
-
-Sitemap
-
-في app/sitemap.ts:
-
-export default async function sitemap() {
-  const articles = await getAllArticles();
-  return articles.map((article) => ({
-    url: `https://sabq.me/article/${article.slug}`,
-    lastModified: article.published_at,
-  }));
-}
-
-Schema.org
-
-أضف في رأس كل مقال:
-
-<script type="application/ld+json" suppressHydrationWarning>
-{JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "NewsArticle",
-  headline: article.title,
-  image: [article.featured_image],
-  author: {
-    "@type": "Person",
-    name: article.author.name,
-  },
-  publisher: {
-    "@type": "Organization",
-    name: "سبق الذكية",
-    logo: {
-      "@type": "ImageObject",
-      url: "https://sabq.me/images/logo.png",
-    },
-  },
-  datePublished: article.published_at,
-  description: article.excerpt,
-})}
-</script>
-
-
-⸻
-
-🚀 خامساً: ربط الشبكات الاجتماعية تلقائياً
-
-تكامل النشر عبر API
-
-يمكنك إنشاء خدمة في lib/socialPublisher.ts:
-
-export async function shareToSocials(article) {
-  const message = `${article.title}\n${article.excerpt}\n${article.url}`;
-  await Promise.all([
-    postToTwitter(message, article.featured_image),
-    postToFacebook(message, article.url),
-    postToTelegram(message),
-  ]);
-}
-
-ثم تفعيلها عند النشر:
-
-await shareToSocials(publishedArticle);
-
-
-⸻
-
-💡 سادساً: مؤشرات نجاح SEO AI
-
-المعيار	قبل	بعد
-سرعة تحميل الصفحة	4.2s	1.8s
-CTR في محركات البحث	1.2%	4.7%
-ترتيب المقالات	متغيّر	مستقر في الصفحة الأولى
-نسبة المشاركة الاجتماعية	18%	54%
-وصف الميتا	يدوي	توليد ذكي بالـ AI
-
-
-⸻
-
-هل ترغب أن أُنشئ لك كودًا جاهزًا لتكامل SEO AI Dashboard داخل لوحة التحكم الإدارية (يتصل بـ OpenAI ويعرض التحليلات بشكل بصري داخل /admin/ai-systems/seo)?

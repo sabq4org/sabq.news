@@ -1,151 +1,0 @@
-تمام 👌
-الواجهة في الصورة توضح أن صفحة إدارة التعليقات في لوحة التحكم حالياً معطّلة ومربوطة بـ placeholder شاشة “قريباً”.
-لتفعيلها فعلياً في مشروع سبق الذكية، تحتاج تنفيذ ٣ خطوات أساسية (من الباك إلى الفرونت):
-
-⸻
-
-🧩 أولاً: قاعدة البيانات (Database Schema)
-
-أضف جدول جديد في Drizzle ORM / PostgreSQL باسم comments:
-
-// drizzle/schema/comments.ts
-import { pgTable, serial, text, integer, timestamp, boolean } from "drizzle-orm/pg-core";
-import { articles } from "./articles";
-import { users } from "./users";
-
-export const comments = pgTable("comments", {
-  id: serial("id").primaryKey(),
-  articleId: integer("article_id").references(() => articles.id),
-  userId: integer("user_id").references(() => users.id),
-  content: text("content").notNull(),
-  isApproved: boolean("is_approved").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-ثم نفّذ migration:
-
-npx drizzle-kit push
-
-
-⸻
-
-⚙️ ثانياً: واجهة الـ API (Backend)
-
-أنشئ مسارات CRUD للتعليقات داخل Express:
-
-// routes/comments.ts
-import express from "express";
-import { db } from "../db";
-import { comments } from "../db/schema/comments";
-import { eq } from "drizzle-orm";
-
-const router = express.Router();
-
-// جلب التعليقات
-router.get("/", async (req, res) => {
-  const all = await db.select().from(comments);
-  res.json(all);
-});
-
-// إضافة تعليق
-router.post("/", async (req, res) => {
-  const { articleId, userId, content } = req.body;
-  const result = await db.insert(comments).values({ articleId, userId, content }).returning();
-  res.json(result[0]);
-});
-
-// تحديث حالة الموافقة
-router.patch("/:id/approve", async (req, res) => {
-  const id = Number(req.params.id);
-  const updated = await db.update(comments).set({ isApproved: true }).where(eq(comments.id, id)).returning();
-  res.json(updated[0]);
-});
-
-// حذف تعليق
-router.delete("/:id", async (req, res) => {
-  const id = Number(req.params.id);
-  await db.delete(comments).where(eq(comments.id, id));
-  res.json({ success: true });
-});
-
-export default router;
-
-ثم اربطه في server.ts:
-
-import commentsRouter from "./routes/comments";
-app.use("/api/comments", commentsRouter);
-
-
-⸻
-
-💻 ثالثاً: الواجهة الأمامية (React + shadcn/ui)
-
-أنشئ صفحة جديدة في لوحة التحكم:
-
-// src/pages/comments/index.tsx
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-export default function CommentsPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["comments"],
-    queryFn: () => fetch("/api/comments").then((r) => r.json()),
-  });
-
-  if (isLoading) return <p>جارِ التحميل...</p>;
-
-  return (
-    <div className="space-y-4">
-      {data?.map((comment: any) => (
-        <Card key={comment.id}>
-          <CardHeader>
-            <CardTitle>تعليق #{comment.id}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700">{comment.content}</p>
-            <div className="flex gap-2 mt-3">
-              {!comment.isApproved && (
-                <Button
-                  onClick={() =>
-                    fetch(`/api/comments/${comment.id}/approve`, { method: "PATCH" })
-                  }
-                >
-                  اعتماد
-                </Button>
-              )}
-              <Button
-                variant="destructive"
-                onClick={() => fetch(`/api/comments/${comment.id}`, { method: "DELETE" })}
-              >
-                حذف
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-ثم أضفها إلى القائمة الجانبية:
-
-{
-  name: "التعليقات",
-  icon: MessageSquare,
-  path: "/dashboard/comments"
-}
-
-
-⸻
-
-🎯 النتيجة
-
-بعد تفعيل الخطوات:
-	•	تُعرض جميع التعليقات في لوحة التحكم.
-	•	يمكن للمحرر أو المشرف اعتماد أو حذف التعليق.
-	•	المقالات في الواجهة العامة يمكنها عرض التعليقات المعتمدة فقط.
-
-⸻
-
-هل ترغب أن أضيف أيضاً نظام الإشعارات الفورية للتعليقات الجديدة (باستخدام Socket.io أو TanStack Query Revalidate) بحيث يظهر للمحرر تنبيه عند وصول تعليق جديد؟

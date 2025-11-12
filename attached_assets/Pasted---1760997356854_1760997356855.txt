@@ -1,115 +1,0 @@
-ممتاز يا علي 👌
-بناءً على تصميم لوحة التحكم في “سبق الذكية” اللي واضح بالصورة والتوثيق الفني عندي، بنبني نظام الإعلانات الداخلية للزملاء كـ مكون إداري ذكي (Smart Internal Announcement Banner) ضمن واجهة لوحة التحكم.
-الفكرة أن الإعلان يكون خفيف، أنيق، ديناميكي، وقابل للتحكم من لوحة “الإعدادات” أو جدول settings مباشرة.
-
-⸻
-
-🔧 المواصفات التقنية المقترحة
-
-🧱 الهيكل العام (Component)
-
-// components/InternalAnnouncement.tsx
-"use client";
-
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
-
-export default function InternalAnnouncement() {
-  const [announcement, setAnnouncement] = useState<string | null>(null);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    // جلب الرسالة من إعدادات النظام أو الـ API
-    fetch("/api/system/announcement")
-      .then((res) => res.json())
-      .then((data) => setAnnouncement(data.message))
-      .catch(() => setAnnouncement(null));
-  }, []);
-
-  if (!announcement || !visible) return null;
-
-  return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-gradient-to-l from-blue-50 to-indigo-50 border-b border-blue-200 text-blue-800 text-sm md:text-base py-2 px-4 flex items-center justify-between shadow-sm animate-slideDown">
-      <div className="flex items-center gap-2">
-        <span className="font-semibold">📢 تنويه إداري:</span>
-        <span>{announcement}</span>
-      </div>
-      <button
-        onClick={() => setVisible(false)}
-        className="p-1 hover:bg-blue-100 rounded-full transition"
-        aria-label="إغلاق التنويه"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
-
-✨ إضافات واجهة العرض
-	•	مكان الظهور: أعلى الصفحة (داخل الهيدر أو مباشرة تحته).
-	•	الحركة: دخول خفيف من الأعلى (Framer Motion أو Tailwind Animation).
-	•	إمكانية الإغلاق بـ X.
-	•	تصميم خفيف ولون متغيّر حسب نوع الرسالة (تنويه، تهنئة، طارئ، إلخ).
-
-⸻
-
-🧭 واجهة الـ API
-
-// /app/api/system/announcement/route.ts
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-
-export async function GET() {
-  const setting = await prisma.settings.findUnique({
-    where: { key: "internal_announcement" },
-  });
-
-  return NextResponse.json({
-    message: setting?.value?.message || null,
-    type: setting?.value?.type || "info",
-  });
-}
-
-export async function POST(req: Request) {
-  const body = await req.json();
-  await prisma.settings.upsert({
-    where: { key: "internal_announcement" },
-    update: { value: body },
-    create: { key: "internal_announcement", value: body },
-  });
-  return NextResponse.json({ success: true });
-}
-
-
-⸻
-
-⚙️ القيم في قاعدة البيانات (settings table)
-
-{
-  "key": "internal_announcement",
-  "value": {
-    "message": "تهنئ إدارة الصحيفة جميع الزملاء ببدء الربع الرابع من العام 🎉",
-    "type": "success"
-  },
-  "category": "system",
-  "is_public": false
-}
-
-
-⸻
-
-💡 اقتراحات إضافية
-	1.	دعم أنواع متعددة من الإعلانات:
-	•	info 🔵 للتنويهات
-	•	success 🟢 للتهنئة أو الإنجازات
-	•	warning 🟠 للتذكيرات
-	•	danger 🔴 للتنبيهات الطارئة
-→ اللون والخلفية يتغيران تلقائيًا.
-	2.	جعل الإعلان يتجدد تلقائيًا كل 24 ساعة أو عند تغييره من الإعدادات.
-	3.	سجل آخر 5 إعلانات في قاعدة البيانات للرجوع إليها.
-	4.	إمكانية التفعيل/الإيقاف من لوحة التحكم (Toggle في صفحة الإعدادات العامة).
-
-⸻
-
-هل ترغب أن أجعل الإعلان يظهر فوق الهيدر مباشرة (ثابت) أم داخل لوحة التحكم فقط (تحت شريط العنوان الرئيسي)؟
-أقدر أحدد الموقع الأنسب من ناحية تجربة المستخدم (UX).

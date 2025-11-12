@@ -10,6 +10,9 @@ interface OptimizedImageProps {
   priority?: boolean;
   aspectRatio?: string;
   fallbackGradient?: string;
+  webpSrc?: string;
+  blurDataUrl?: string;
+  threshold?: number;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -22,6 +25,9 @@ export function OptimizedImage({
   priority = false,
   aspectRatio,
   fallbackGradient = "from-primary/10 to-accent/10",
+  webpSrc,
+  blurDataUrl,
+  threshold = 0.1,
   onLoad,
   onError,
 }: OptimizedImageProps) {
@@ -42,14 +48,15 @@ export function OptimizedImage({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
             setIsInView(true);
             observer.disconnect();
           }
         });
       },
       {
-        rootMargin: "50px",
+        rootMargin: "200px",
+        threshold: [0, threshold, 0.5, 1],
       }
     );
 
@@ -74,7 +81,7 @@ export function OptimizedImage({
   if (hasError) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br ${fallbackGradient} ${className}`}
+        className={`relative flex items-center justify-center bg-gradient-to-br ${fallbackGradient} ${className}`}
         style={aspectRatio ? { aspectRatio } : undefined}
       >
         <ImageOff className="h-8 w-8 text-muted-foreground/30" />
@@ -83,27 +90,63 @@ export function OptimizedImage({
   }
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div 
+      ref={containerRef} 
+      className={`relative ${className}`}
+      style={aspectRatio ? { aspectRatio } : undefined}
+    >
       {!isLoaded && (
         <Skeleton
-          className={`absolute inset-0 ${className}`}
+          className="absolute inset-0"
           style={aspectRatio ? { aspectRatio } : undefined}
         />
       )}
       
-      {isInView && (
+      {blurDataUrl && !isLoaded && (
         <img
-          src={src}
-          alt={alt}
-          className={`${className} transition-opacity duration-300 ${
-            isLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ objectPosition }}
-          loading={priority ? "eager" : "lazy"}
-          onLoad={handleLoad}
-          onError={handleError}
-          decoding="async"
+          src={blurDataUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ 
+            objectPosition,
+            filter: 'blur(20px)',
+            transform: 'scale(1.1)',
+          }}
+          aria-hidden="true"
         />
+      )}
+      
+      {isInView && (
+        webpSrc ? (
+          <picture className="contents">
+            <source srcSet={webpSrc} type="image/webp" />
+            <img
+              src={src}
+              alt={alt}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${
+                isLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ objectPosition }}
+              loading={priority ? "eager" : "lazy"}
+              onLoad={handleLoad}
+              onError={handleError}
+              decoding="async"
+            />
+          </picture>
+        ) : (
+          <img
+            src={src}
+            alt={alt}
+            className={`w-full h-full object-cover transition-opacity duration-500 ${
+              isLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ objectPosition }}
+            loading={priority ? "eager" : "lazy"}
+            onLoad={handleLoad}
+            onError={handleError}
+            decoding="async"
+          />
+        )
       )}
     </div>
   );

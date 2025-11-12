@@ -4,3 +4,19 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Build artifacts
+.cache
+*.log
+.turbo
+
+# Android/iOS build outputs
+android/app/build
+android/.gradle
+ios/App/App/public
+ios/build
+
+# Temporary files
+*.tmp
+*.temp
+backup_unused_assets

@@ -155,13 +155,8 @@ app.use((req, res, next) => {
   else if (path.endsWith('.html') || path === '/') {
     res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
   }
-  // API routes - NO cache for real-time data freshness (per user requirement)
-  else if (path.startsWith('/api/')) {
-    // NO cache for all API requests
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
+  // API routes - cache is now controlled per-endpoint in routes.ts via cacheControl middleware
+  // No default cache headers set here to allow individual routes to opt-in
   
   next();
 });
