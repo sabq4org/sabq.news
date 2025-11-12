@@ -60,10 +60,10 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: isDevelopment 
-          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] // Vite needs these in dev
-          : ["'self'", "'unsafe-inline'"], // Production: allow inline scripts for Vite
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow inline styles for Vite
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"] // Vite needs these in dev + Twitter
+          : ["'self'", "'unsafe-inline'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"], // Production: allow inline scripts for Vite + Twitter
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://ton.twimg.com"], // Allow inline styles for Vite + Twitter
+        imgSrc: ["'self'", "data:", "https:", "blob:", "https://*.twimg.com"], // Allow Twitter images
         fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         connectSrc: [
           "'self'",
@@ -71,11 +71,12 @@ app.use(
           "wss:", // WebSocket in production
           "https://api.openai.com",
           "https://api.elevenlabs.io",
-          "https://storage.googleapis.com"
+          "https://storage.googleapis.com",
+          "https://syndication.twitter.com" // Twitter API
         ],
         mediaSrc: ["'self'", "https:", "blob:"],
         objectSrc: ["'none'"],
-        frameSrc: ["'self'"],
+        frameSrc: ["'self'", "https://platform.twitter.com", "https://twitter.com", "https://x.com"], // Allow Twitter embeds
         baseUri: ["'self'"],
         formAction: ["'self'"],
         upgradeInsecureRequests: isDevelopment ? null : [],
