@@ -347,7 +347,7 @@ function Router() {
       <Route path="/dashboard/tags" component={TagsManagement} />
       <Route path="/dashboard/smart-links" component={SmartLinksManagement} />
       <Route path="/dashboard/comments" component={DashboardComments} />
-      <Route path="/data-stories" component={DataStoryGenerator} />
+      <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={ComingSoon} />
       <Route path="/dashboard/ai/headlines" component={ComingSoon} />

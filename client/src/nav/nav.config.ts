@@ -42,6 +42,8 @@ import {
   ImageIcon,
   LayoutGrid,
   MapPin,
+  Wand2,
+  BarChart,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -241,6 +243,25 @@ export const navConfig: NavItem[] = [
         labelAr: "العناوين الذكية",
         path: "/dashboard/ai/headlines",
         icon: Type,
+        roles: ["admin", "editor"],
+      },
+    ],
+  },
+
+  // ===== الأدوات الذكية / Smart Tools =====
+  {
+    id: "smart_tools",
+    labelKey: "nav.smart_tools",
+    labelAr: "الأدوات الذكية",
+    icon: Wand2,
+    roles: ["admin", "editor"],
+    children: [
+      {
+        id: "data_story_generator",
+        labelKey: "nav.data_story_generator",
+        labelAr: "صحافة البيانات",
+        path: "/dashboard/data-stories",
+        icon: BarChart,
         roles: ["admin", "editor"],
       },
     ],
