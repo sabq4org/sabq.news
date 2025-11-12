@@ -4979,3 +4979,104 @@ export type DataStoryWithDetails = DataStorySource & {
     drafts?: DataStoryDraft[];
   })[];
 };
+
+// ============================================
+// SMART JOURNALIST AGENT - TABLES
+// ============================================
+
+export const journalistTasks = pgTable("journalist_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  prompt: text("prompt").notNull(), // The journalist's request
+  
+  // Status tracking
+  status: text("status").default("pending").notNull(), // pending, processing, completed, failed
+  progress: text("progress"), // Current step description
+  progressStep: integer("progress_step").default(0).notNull(), // 0-5 (research, analysis, writing, media, headlines)
+  
+  // Results
+  results: jsonb("results").$type<{
+    research?: {
+      sources: Array<{
+        title: string;
+        url: string;
+        snippet: string;
+      }>;
+      summary: string;
+    };
+    analysis?: {
+      keyPoints: string[];
+      mainTheme: string;
+      suggestedAngle: string;
+    };
+    draft?: {
+      title: string;
+      content: string;
+      wordCount: number;
+    };
+    images?: Array<{
+      url: string;
+      description: string;
+      source: string;
+      license: string;
+    }>;
+    headlines?: Array<{
+      text: string;
+      style: string; // formal, casual, clickbait, seo
+      aiModel: string;
+    }>;
+  }>(),
+  
+  // AI metadata
+  aiProviders: text("ai_providers").array(), // List of AI providers used
+  totalTokens: integer("total_tokens").default(0),
+  processingTime: integer("processing_time"), // Total processing time in milliseconds
+  
+  // Error handling
+  errorMessage: text("error_message"),
+  errorStep: text("error_step"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Journalist tasks relations
+export const journalistTasksRelations = relations(journalistTasks, ({ one }) => ({
+  user: one(users, {
+    fields: [journalistTasks.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// SMART JOURNALIST AGENT - INSERT SCHEMAS
+// ============================================
+
+export const insertJournalistTaskSchema = createInsertSchema(journalistTasks).omit({
+  id: true,
+  status: true,
+  progress: true,
+  progressStep: true,
+  results: true,
+  aiProviders: true,
+  totalTokens: true,
+  processingTime: true,
+  errorMessage: true,
+  errorStep: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+  updatedAt: true,
+}).extend({
+  prompt: z.string().min(10, "الطلب يجب أن يكون 10 أحرف على الأقل").max(2000, "الطلب يجب ألا يتجاوز 2000 حرف"),
+});
+
+// ============================================
+// SMART JOURNALIST AGENT - SELECT TYPES
+// ============================================
+
+export type JournalistTask = typeof journalistTasks.$inferSelect;
+export type InsertJournalistTask = z.infer<typeof insertJournalistTaskSchema>;
