@@ -1,6 +1,52 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { z } from "zod";
+
+// Zod schemas for AI responses validation with coercion
+const ClaudeTopicSchema = z.object({
+  topic: z.string(),
+  category: z.string(),
+  mentionCount: z.coerce.number().int().min(0), // Coerce string to number
+}).transform((data) => ({
+  topic: data.topic || "غير محدد",
+  category: data.category || "عام",
+  mentionCount: typeof data.mentionCount === 'number' && !isNaN(data.mentionCount) ? Math.max(data.mentionCount, 0) : 1,
+}));
+
+const ClaudeTrendsResponseSchema = z.object({
+  topics: z.array(ClaudeTopicSchema),
+  overallSentiment: z.enum(["positive", "neutral", "negative"]),
+  summary: z.string(),
+}).transform((data) => ({
+  topics: data.topics || [],
+  overallSentiment: data.overallSentiment || "neutral" as const,
+  summary: data.summary || "لا يوجد ملخص متاح",
+}));
+
+const GeminiKeywordSchema = z.object({
+  keyword: z.string(),
+  frequency: z.coerce.number().int().min(1), // Coerce string to number
+  sentiment: z.enum(["positive", "neutral", "negative"]),
+}).transform((data) => ({
+  keyword: data.keyword || "",
+  frequency: typeof data.frequency === 'number' && !isNaN(data.frequency) ? Math.max(data.frequency, 1) : 1,
+  sentiment: data.sentiment || "neutral" as const,
+}));
+
+const GeminiTrendsResponseSchema = z.object({
+  keywords: z.array(GeminiKeywordSchema),
+  engagementLevel: z.enum(["high", "medium", "low"]),
+  recommendations: z.array(z.string()),
+}).transform((data) => ({
+  keywords: data.keywords || [],
+  engagementLevel: data.engagementLevel || "medium" as const,
+  recommendations: data.recommendations || [],
+}));
+
+// Type aliases for better TypeScript inference
+type ClaudeTrendsResponse = z.output<typeof ClaudeTrendsResponseSchema>;
+type GeminiTrendsResponse = z.output<typeof GeminiTrendsResponseSchema>;
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -15,6 +61,37 @@ const openai = new OpenAI({
 const genai = new GoogleGenerativeAI(
   process.env.AI_INTEGRATIONS_GEMINI_API_KEY!
 );
+
+// Safe JSON extraction and parsing helper
+function safeParseAiJson<T>(
+  rawText: string,
+  schema: z.ZodType<T>,
+  providerName: string
+): T | null {
+  console.log(`🔍 [${providerName}] Extracting JSON from response...`);
+  
+  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error(`❌ [${providerName}] No JSON found in response`);
+    console.error(`📄 [${providerName}] Response preview:`, rawText.substring(0, 200));
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    const validated = schema.parse(parsed);
+    console.log(`✅ [${providerName}] JSON parsed and validated successfully`);
+    return validated;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error(`❌ [${providerName}] Zod validation error:`, error.errors);
+    } else {
+      console.error(`❌ [${providerName}] JSON parse error:`, error);
+    }
+    console.error(`📄 [${providerName}] Problematic JSON (first 300 chars):`, jsonMatch[0].substring(0, 300));
+    return null;
+  }
+}
 
 export async function summarizeText(
   text: string,
@@ -714,100 +791,106 @@ ${combinedText.substring(0, 10000)}
 
 ⚠️ مهم: أرجع JSON فقط بدون أي شرح أو مقدمة.`);
 
-    // انتظار كلا النموذجين
-    const [claudeResponse, geminiResult] = await Promise.all([claudePromise, geminiPromise]);
+    // انتظار كلا النموذجين بشكل مستقل
+    const results = await Promise.allSettled([claudePromise, geminiPromise]);
 
-    // Claude extraction
-    const claudeContent =
-      claudeResponse.content[0].type === "text"
-        ? claudeResponse.content[0].text
-        : "";
+    // استخراج نتائج Claude
+    let claudeAnalysis = null;
+    const claudeResult = results[0];
+    if (claudeResult.status === "fulfilled") {
+      const claudeContent =
+        claudeResult.value.content[0].type === "text"
+          ? claudeResult.value.content[0].text
+          : "";
 
-    console.log("🔍 [Claude] Extracting JSON from response...");
-    const claudeJsonMatch = claudeContent.match(/\{[\s\S]*\}/);
-    if (!claudeJsonMatch) {
-      console.error("❌ [Claude] No JSON found in response");
-      throw new Error("فشل في استخراج نتائج التحليل من Claude. الرجاء المحاولة مرة أخرى.");
+      claudeAnalysis = safeParseAiJson(
+        claudeContent,
+        ClaudeTrendsResponseSchema,
+        "Claude"
+      );
+    } else {
+      console.error("❌ [Claude] Request failed:", claudeResult.reason);
     }
 
-    let claudeAnalysis;
-    try {
-      claudeAnalysis = JSON.parse(claudeJsonMatch[0]);
-      console.log("✅ [Claude] JSON parsed successfully");
-    } catch (parseError) {
-      console.error("❌ [Claude] JSON parse error:", parseError);
-      console.error("📄 [Claude] Problematic JSON (first 300 chars):", claudeJsonMatch[0].substring(0, 300));
-      throw new Error(`فشل في تحليل استجابة Claude. الرجاء المحاولة مرة أخرى.`);
+    // استخراج نتائج Gemini
+    let geminiAnalysis = null;
+    const geminiResult = results[1];
+    if (geminiResult.status === "fulfilled") {
+      const geminiText = geminiResult.value.response.text();
+
+      geminiAnalysis = safeParseAiJson(
+        geminiText,
+        GeminiTrendsResponseSchema,
+        "Gemini"
+      );
+    } else {
+      console.error("❌ [Gemini] Request failed:", geminiResult.reason);
     }
 
-    // Validate Claude output structure
-    if (!claudeAnalysis.topics || !Array.isArray(claudeAnalysis.topics) || 
-        !claudeAnalysis.overallSentiment || !claudeAnalysis.summary) {
-      console.error("⚠️ [Claude] Invalid analysis structure:", claudeAnalysis);
-      throw new Error("البنية المرجعة من Claude غير صحيحة");
+    // Partial degradation: handle cases where one or both providers failed
+    if (!claudeAnalysis && !geminiAnalysis) {
+      console.error("❌ [Trends] Both AI providers failed to return valid data");
+      throw new Error("فشل في الحصول على نتائج من خدمات الذكاء الاصطناعي. يرجى المحاولة مرة أخرى.");
     }
 
-    console.log(`✅ [Claude] Found ${claudeAnalysis.topics.length} topics`);
-
-    // Gemini extraction
-    const geminiText = geminiResult.response.text();
-
-    console.log("🔍 [Gemini] Extracting JSON from response...");
-    const geminiJsonMatch = geminiText.match(/\{[\s\S]*\}/);
-    if (!geminiJsonMatch) {
-      console.error("❌ [Gemini] No JSON found in response");
-      throw new Error("فشل في استخراج نتائج التحليل من Gemini. الرجاء المحاولة مرة أخرى.");
+    // Log which providers succeeded
+    if (claudeAnalysis && geminiAnalysis) {
+      console.log("✅ [Trends] Both providers returned valid data");
+    } else if (claudeAnalysis) {
+      console.log("⚠️ [Trends] Only Claude returned valid data (Gemini failed)");
+    } else {
+      console.log("⚠️ [Trends] Only Gemini returned valid data (Claude failed)");
     }
 
-    let geminiAnalysis;
-    try {
-      geminiAnalysis = JSON.parse(geminiJsonMatch[0]);
-      console.log("✅ [Gemini] JSON parsed successfully");
-    } catch (parseError) {
-      console.error("❌ [Gemini] JSON parse error:", parseError);
-      console.error("📄 [Gemini] Problematic JSON (first 300 chars):", geminiJsonMatch[0].substring(0, 300));
-      throw new Error(`فشل في تحليل استجابة Gemini. الرجاء المحاولة مرة أخرى.`);
-    }
+    // Use defaults if one provider failed
+    const topics = claudeAnalysis?.topics || [];
+    const overallSentiment = claudeAnalysis?.overallSentiment || "neutral";
+    const summary = claudeAnalysis?.summary || "لا توجد بيانات كافية لتحليل الاتجاهات في هذه الفترة الزمنية.";
 
-    // Validate Gemini output structure
-    if (!geminiAnalysis.keywords || !Array.isArray(geminiAnalysis.keywords) || 
-        !geminiAnalysis.engagementLevel || !geminiAnalysis.recommendations) {
-      console.error("⚠️ [Gemini] Invalid analysis structure:", geminiAnalysis);
-      throw new Error("البنية المرجعة من Gemini غير صحيحة");
-    }
+    const keywords = geminiAnalysis?.keywords || [];
+    const engagementLevel = geminiAnalysis?.engagementLevel || "medium";
+    const geminiRecommendations = geminiAnalysis?.recommendations || [];
 
-    console.log(`✅ [Gemini] Found ${geminiAnalysis.keywords.length} keywords`);
+    console.log(`✅ [Trends] Analysis combined - Claude: ${topics.length} topics, Gemini: ${keywords.length} keywords`);
 
     // 5. دمج النتائج من النموذجين
     
-    // حساب relevanceScore لكل موضوع بناءً على عدد الإشارات
-    const maxMentions = Math.max(...(claudeAnalysis.topics || []).map((t: any) => t.mentionCount || 0), 1);
-    
-    const trendingTopics = (claudeAnalysis.topics || []).map((topic: any) => ({
-      topic: topic.topic,
-      relevanceScore: Math.round((topic.mentionCount / maxMentions) * 100),
-      category: topic.category,
-      mentionCount: topic.mentionCount,
-    }));
+    // حساب relevanceScore بشكل آمن
+    const mentionCounts = topics.map((t) => {
+      const count = typeof t.mentionCount === 'number' ? t.mentionCount : 1;
+      return Math.max(count, 0);
+    });
+
+    const maxMentions = mentionCounts.length > 0 ? Math.max(...mentionCounts, 1) : 1;
+
+    const trendingTopics = topics.map((topic) => {
+      const mentionCount = typeof topic.mentionCount === 'number' ? Math.max(topic.mentionCount, 0) : 1;
+      return {
+        topic: topic.topic || "غير محدد",
+        relevanceScore: Math.round((mentionCount / maxMentions) * 100),
+        category: topic.category || "عام",
+        mentionCount,
+      };
+    });
 
     // ترتيب حسب الأهمية
-    trendingTopics.sort((a: any, b: any) => b.relevanceScore - a.relevanceScore);
+    trendingTopics.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
-    const keywords = (geminiAnalysis.keywords || []).slice(0, 30);
+    const keywordsSliced = keywords.slice(0, 30);
 
-    // دمج التوصيات من كلا النموذجين مع إزالة التكرار
+    // دمج التوصيات مع safe handling
     const allRecommendations = [
-      ...(geminiAnalysis.recommendations || []),
+      ...geminiRecommendations,
     ];
 
-    // إضافة توصيات ذكية بناءً على التحليل
-    if (claudeAnalysis.overallSentiment === "negative") {
+    // إضافة توصيات ذكية
+    if (overallSentiment === "negative") {
       allRecommendations.push("ركز على المحتوى الإيجابي والحلول لتحسين تفاعل القراء");
     }
 
-    if (geminiAnalysis.engagementLevel === "low") {
+    if (engagementLevel === "low") {
       allRecommendations.push("استخدم عناوين أكثر جاذبية وصور ملفتة لزيادة التفاعل");
-    } else if (geminiAnalysis.engagementLevel === "high") {
+    } else if (engagementLevel === "high") {
       allRecommendations.push("حافظ على مستوى التفاعل العالي من خلال استمرارية المحتوى الجذاب");
     }
 
@@ -827,15 +910,15 @@ ${combinedText.substring(0, 10000)}
 
     console.log(`✅ [Trends] Generated ${recommendations.length} unique recommendations`);
 
-    console.log(`✅ [Trends] Analysis complete - ${trendingTopics.length} topics, ${keywords.length} keywords`);
+    console.log(`✅ [Trends] Analysis complete - ${trendingTopics.length} topics, ${keywordsSliced.length} keywords`);
 
     return {
       trendingTopics,
-      keywords,
+      keywords: keywordsSliced,
       insights: {
-        overallSentiment: claudeAnalysis.overallSentiment,
-        engagementLevel: geminiAnalysis.engagementLevel,
-        summary: claudeAnalysis.summary,
+        overallSentiment,
+        engagementLevel,
+        summary,
         recommendations,
       },
       timeRange,
