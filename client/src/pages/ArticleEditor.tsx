@@ -654,59 +654,85 @@ export default function ArticleEditor() {
         summaryResult,
       ] = await Promise.all([
         // 1. Headline Suggestions (will generate title from content)
-        apiRequest("/api/ai/generate-titles", {
-          method: "POST",
-          body: JSON.stringify({ content, language: "ar" }),
-        }).catch(err => {
-          console.error('[All-in-One AI] Headlines failed:', err);
-          return null;
-        }),
+        (async () => {
+          try {
+            console.log('[All-in-One AI] 1️⃣ Generating headlines...');
+            const result = await apiRequest("/api/ai/generate-titles", {
+              method: "POST",
+              body: JSON.stringify({ content, language: "ar" }),
+            });
+            console.log('[All-in-One AI] ✅ Headlines result:', result);
+            return result;
+          } catch (err: any) {
+            console.error('[All-in-One AI] ❌ Headlines failed:', err);
+            console.error('[All-in-One AI] Error details:', err.message, err.status);
+            return { titles: [] };
+          }
+        })(),
         
         // 2. Smart Classification (use generated title or placeholder)
         (async () => {
-          const effectiveTitle = title || "عنوان مؤقت";
-          return (!isNewArticle && id
-            ? apiRequest(`/api/articles/${id}/auto-categorize`, { method: "POST" })
-            : apiRequest(`/api/articles/auto-classify-draft`, {
-                method: "POST",
-                body: JSON.stringify({ title: effectiveTitle, content, language: "ar" }),
-              })
-          );
-        })().catch(err => {
-          console.error('[All-in-One AI] Classification failed:', err);
-          return null;
-        }),
+          try {
+            console.log('[All-in-One AI] 2️⃣ Classifying article...');
+            const effectiveTitle = title || "عنوان مؤقت";
+            const result = !isNewArticle && id
+              ? await apiRequest(`/api/articles/${id}/auto-categorize`, { method: "POST" })
+              : await apiRequest(`/api/articles/auto-classify-draft`, {
+                  method: "POST",
+                  body: JSON.stringify({ title: effectiveTitle, content, language: "ar" }),
+                });
+            console.log('[All-in-One AI] ✅ Classification result:', result);
+            return result;
+          } catch (err: any) {
+            console.error('[All-in-One AI] ❌ Classification failed:', err);
+            console.error('[All-in-One AI] Error details:', err.message, err.status);
+            return null;
+          }
+        })(),
         
         // 3. SEO Generator (use generated title or placeholder)
         (async () => {
-          const effectiveTitle = title || "عنوان مؤقت";
-          return (!isNewArticle && id
-            ? apiRequest(`/api/seo/generate`, {
-                method: "POST",
-                body: JSON.stringify({ mode: "saved", articleId: id, language: "ar" }),
-              })
-            : apiRequest(`/api/seo/generate`, {
-                method: "POST",
-                body: JSON.stringify({
-                  mode: "draft",
-                  draftData: { title: effectiveTitle, content, excerpt: excerpt || undefined },
-                  language: "ar"
-                }),
-              })
-          );
-        })().catch(err => {
-          console.error('[All-in-One AI] SEO failed:', err);
-          return null;
-        }),
+          try {
+            console.log('[All-in-One AI] 3️⃣ Generating SEO...');
+            const effectiveTitle = title || "عنوان مؤقت";
+            const result = !isNewArticle && id
+              ? await apiRequest(`/api/seo/generate`, {
+                  method: "POST",
+                  body: JSON.stringify({ mode: "saved", articleId: id, language: "ar" }),
+                })
+              : await apiRequest(`/api/seo/generate`, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    mode: "draft",
+                    draftData: { title: effectiveTitle, content, excerpt: excerpt || undefined },
+                    language: "ar"
+                  }),
+                });
+            console.log('[All-in-One AI] ✅ SEO result:', result);
+            return result;
+          } catch (err: any) {
+            console.error('[All-in-One AI] ❌ SEO failed:', err);
+            console.error('[All-in-One AI] Error details:', err.message, err.status);
+            return null;
+          }
+        })(),
         
         // 4. Smart Summary
-        apiRequest("/api/ai/summarize", {
-          method: "POST",
-          body: JSON.stringify({ content }),
-        }).catch(err => {
-          console.error('[All-in-One AI] Summary failed:', err);
-          return null;
-        }),
+        (async () => {
+          try {
+            console.log('[All-in-One AI] 4️⃣ Generating summary...');
+            const result = await apiRequest("/api/ai/summarize", {
+              method: "POST",
+              body: JSON.stringify({ content }),
+            });
+            console.log('[All-in-One AI] ✅ Summary result:', result);
+            return result;
+          } catch (err: any) {
+            console.error('[All-in-One AI] ❌ Summary failed:', err);
+            console.error('[All-in-One AI] Error details:', err.message, err.status);
+            return { summary: "" };
+          }
+        })(),
       ]);
       
       return {
