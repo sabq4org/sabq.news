@@ -98,6 +98,27 @@ export default function ArticleDetail() {
     }
   }, [article?.id, user?.id]);
 
+  // Load Twitter widgets script and render embedded tweets
+  useEffect(() => {
+    if (!article?.content) return;
+
+    // Load Twitter widgets script
+    const script = document.createElement('script');
+    script.src = 'https://platform.twitter.com/widgets.js';
+    script.async = true;
+    script.onload = () => {
+      // Re-render all tweets after script loads
+      if (window.twttr?.widgets) {
+        window.twttr.widgets.load();
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [article?.content]);
+
   // Add Schema.org JSON-LD for search engines and LLMs
   useEffect(() => {
     if (!article) return;
