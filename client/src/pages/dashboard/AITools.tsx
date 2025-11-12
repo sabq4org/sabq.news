@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { 
   Sparkles, 
   FileText, 
@@ -17,7 +20,9 @@ import {
   Copy,
   Check,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  ChevronDown
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +51,7 @@ export default function AITools() {
         </Card>
 
         <Tabs defaultValue="headlines" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 gap-1" data-testid="tabs-list">
+          <TabsList className="grid w-full grid-cols-6 gap-1" data-testid="tabs-list">
             <TabsTrigger value="headlines" data-testid="tab-headlines">
               <Sparkles className="w-4 h-4 ml-2" />
               العناوين الذكية
@@ -66,6 +71,10 @@ export default function AITools() {
             <TabsTrigger value="translate" data-testid="tab-translate">
               <Languages className="w-4 h-4 ml-2" />
               الترجمة
+            </TabsTrigger>
+            <TabsTrigger value="fact-checker" data-testid="tab-fact-checker">
+              <Shield className="w-4 h-4 ml-2" />
+              كشف المضلل
             </TabsTrigger>
           </TabsList>
 
@@ -87,6 +96,10 @@ export default function AITools() {
 
           <TabsContent value="translate" className="mt-6">
             <InstantTranslator />
+          </TabsContent>
+
+          <TabsContent value="fact-checker" className="mt-6">
+            <FactChecker />
           </TabsContent>
         </Tabs>
       </div>
@@ -860,6 +873,259 @@ function InstantTranslator() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function FactChecker() {
+  const [claim, setClaim] = useState("");
+  const [context, setContext] = useState("");
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleCheck = async () => {
+    if (!claim.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال المعلومة المراد التحقق منها",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiRequest<{
+        overallVerdict: "credible" | "questionable" | "false";
+        confidenceScore: number;
+        models: Array<{
+          model: string;
+          verdict: "credible" | "questionable" | "false";
+          confidence: number;
+          reasoning: string;
+          redFlags: string[];
+        }>;
+        consensus: string;
+        recommendations: string[];
+      }>("/api/ai-tools/fact-check", {
+        method: "POST",
+        body: JSON.stringify({ claim, context: context || undefined }),
+      });
+
+      setResult(response);
+      toast({
+        title: "تم التحقق بنجاح",
+        description: `النتيجة: ${getVerdictLabel(response.overallVerdict)}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "فشل التحقق",
+        description: error.message || "حدث خطأ أثناء التحقق من المعلومة",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getVerdictLabel = (verdict: "credible" | "questionable" | "false") => {
+    const labels = {
+      credible: "موثوقة",
+      questionable: "مشكوك فيها",
+      false: "كاذبة",
+    };
+    return labels[verdict];
+  };
+
+  const getVerdictColors = (verdict: "credible" | "questionable" | "false") => {
+    const colors = {
+      credible: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      questionable: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      false: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    };
+    return colors[verdict];
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-primary" />
+          <CardTitle>كشف المعلومات المضللة</CardTitle>
+        </div>
+        <CardDescription>
+          تحقق من صحة المعلومات باستخدام 3 نماذج ذكاء اصطناعي (Claude، GPT-4o، Gemini)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="claim">المعلومة المراد التحقق منها</Label>
+          <Textarea
+            id="claim"
+            value={claim}
+            onChange={(e) => setClaim(e.target.value)}
+            placeholder="أدخل المعلومة أو الادعاء المراد التحقق من صحته..."
+            rows={4}
+            className="resize-none"
+            data-testid="input-fact-claim"
+          />
+          <p className="text-xs text-muted-foreground">
+            عدد الأحرف: {claim.length} / 5000
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="context">السياق (اختياري)</Label>
+          <Textarea
+            id="context"
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder="أضف سياقاً إضافياً لمساعدة النماذج في التحليل..."
+            rows={3}
+            className="resize-none"
+            data-testid="input-fact-context"
+          />
+        </div>
+
+        <Button
+          onClick={handleCheck}
+          disabled={loading || !claim.trim()}
+          className="w-full"
+          data-testid="button-check-fact"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+              جاري التحقق من المعلومة...
+            </>
+          ) : (
+            <>
+              <Shield className="w-4 h-4 ml-2" />
+              تحقق من المعلومة
+            </>
+          )}
+        </Button>
+
+        {result && (
+          <div className="space-y-4 pt-4 border-t">
+            {/* Overall Verdict */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">النتيجة النهائية</h3>
+              <div className="flex items-center justify-between">
+                <Badge 
+                  className={getVerdictColors(result.overallVerdict)} 
+                  data-testid="badge-overall-verdict"
+                >
+                  {getVerdictLabel(result.overallVerdict)}
+                </Badge>
+                <span className="text-sm text-muted-foreground" data-testid="text-confidence-score">
+                  مستوى الثقة: {result.confidenceScore}%
+                </span>
+              </div>
+              <Progress 
+                value={result.confidenceScore} 
+                className="h-2" 
+                data-testid="progress-confidence"
+              />
+              <p className="text-sm text-muted-foreground" data-testid="text-consensus">
+                {result.consensus}
+              </p>
+            </div>
+
+            {/* Models Analysis */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">تحليل النماذج</h3>
+              <div className="grid gap-3">
+                {result.models.map((model: any, index: number) => (
+                  <Card key={index} data-testid={`card-model-${index}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm">{model.model}</CardTitle>
+                        <Badge 
+                          variant="outline" 
+                          className={getVerdictColors(model.verdict)}
+                          data-testid={`badge-model-verdict-${index}`}
+                        >
+                          {getVerdictLabel(model.verdict)}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">الثقة:</span>
+                        <Progress value={model.confidence} className="h-1.5 flex-1" />
+                        <span className="text-xs font-medium">{model.confidence}%</span>
+                      </div>
+                      
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="reasoning" className="border-0">
+                          <AccordionTrigger 
+                            className="py-2 text-xs hover:no-underline"
+                            data-testid={`accordion-reasoning-${index}`}
+                          >
+                            <div className="flex items-center gap-1">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>عرض الأسباب التفصيلية</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <p className="text-xs text-muted-foreground leading-relaxed" data-testid={`text-reasoning-${index}`}>
+                              {model.reasoning}
+                            </p>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+
+                      {model.redFlags && model.redFlags.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium">علامات تحذيرية:</p>
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            {model.redFlags.map((flag: string, i: number) => (
+                              <li key={i} className="flex items-start gap-1" data-testid={`text-red-flag-${index}-${i}`}>
+                                <span className="text-red-500 mt-0.5">•</span>
+                                <span>{flag}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Red Flags Alert */}
+            {result.models.some((m: any) => m.redFlags && m.redFlags.length > 0) && (
+              <Alert variant="destructive" data-testid="alert-red-flags">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>تحذير: علامات مشبوهة</AlertTitle>
+                <AlertDescription>
+                  اكتشفت النماذج بعض العلامات التحذيرية في هذه المعلومة. يرجى التحقق من المصادر الأصلية.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Recommendations */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">توصيات للتحقق الإضافي</h3>
+              <Card>
+                <CardContent className="p-4">
+                  <ul className="space-y-2">
+                    {result.recommendations.map((rec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-sm" data-testid={`text-recommendation-${index}`}>
+                        <span className="text-primary mt-0.5">✓</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </CardContent>

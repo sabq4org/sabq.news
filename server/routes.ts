@@ -10,7 +10,7 @@ import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
-import { summarizeText, generateSocialPost, suggestImageQuery, translateContent } from "./ai-content-tools";
+import { summarizeText, generateSocialPost, suggestImageQuery, translateContent, checkFactAccuracy } from "./ai-content-tools";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
@@ -9851,6 +9851,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     toLang: z.string().min(2).max(5),
   });
 
+  const factCheckSchema = z.object({
+    claim: z.string().min(10, "المعلومة قصيرة جداً").max(5000, "المعلومة طويلة جداً"),
+    context: z.string().max(3000).optional(),
+  });
+
   // ============================================================
   // AI CONTENT TOOLS - Endpoints with Validation
   // ============================================================
@@ -9927,6 +9932,26 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       console.error("Error translating content:", error);
       res.status(500).json({ 
         message: error.message || "فشلت الترجمة. يرجى المحاولة مرة أخرى" 
+      });
+    }
+  });
+
+  // AI Content Tools - Fact Checker
+  app.post("/api/ai-tools/fact-check", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = factCheckSchema.parse(req.body);
+      const result = await checkFactAccuracy(
+        validatedData.claim,
+        validatedData.context
+      );
+      res.json(result);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error("❌ [AI Tools] Fact check failed:", error);
+      res.status(500).json({ 
+        message: error.message || "فشل التحقق من المعلومة. يرجى المحاولة مرة أخرى" 
       });
     }
   });

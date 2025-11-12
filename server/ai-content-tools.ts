@@ -302,3 +302,244 @@ ${text}
     throw new Error("فشلت الترجمة. يرجى المحاولة مرة أخرى");
   }
 }
+
+type Verdict = "credible" | "questionable" | "false";
+
+interface ModelAnalysis {
+  model: string;
+  verdict: Verdict;
+  confidence: number;
+  reasoning: string;
+  redFlags: string[];
+}
+
+interface FactCheckResult {
+  overallVerdict: Verdict;
+  confidenceScore: number;
+  models: ModelAnalysis[];
+  consensus: string;
+  recommendations: string[];
+}
+
+export async function checkFactAccuracy(
+  claim: string,
+  context?: string
+): Promise<FactCheckResult> {
+  console.log(`🔍 [AI Tools] Checking fact accuracy for claim (${claim.substring(0, 50)}...)`);
+
+  const prompt = `أنت خبير في التحقق من المعلومات وكشف المعلومات المضللة.
+
+المهمة: تحليل المعلومة التالية وتحديد مصداقيتها.
+
+المعلومة المراد التحقق منها:
+${claim}
+
+${context ? `السياق: ${context}` : ''}
+
+قم بتحليل المعلومة وتقديم:
+1. التقييم (credible/questionable/false)
+2. مستوى الثقة (0-100%)
+3. الأسباب التفصيلية
+4. علامات تحذيرية إن وجدت (مبالغات، تناقضات، ادعاءات غير مدعومة)
+
+أجب بتنسيق JSON فقط:
+{
+  "verdict": "credible|questionable|false",
+  "confidence": 85,
+  "reasoning": "...",
+  "redFlags": ["..."]
+}`;
+
+  // استدعاء النماذج الثلاثة بالتوازي
+  const analysisPromises = [
+    // Claude Sonnet 4-5
+    (async () => {
+      try {
+        console.log(`🤖 [Claude] Starting analysis...`);
+        const response = await anthropic.messages.create({
+          model: "claude-sonnet-4-5",
+          max_tokens: 2000,
+          messages: [{ role: "user", content: prompt }],
+        });
+
+        const content = response.content[0].type === "text" ? response.content[0].text : "";
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("فشل استخراج JSON من استجابة Claude");
+        }
+
+        const analysis = JSON.parse(jsonMatch[0]);
+        console.log(`✅ [Claude] Analysis complete - Verdict: ${analysis.verdict}`);
+
+        return {
+          model: "Claude Sonnet 4-5",
+          verdict: analysis.verdict as Verdict,
+          confidence: analysis.confidence,
+          reasoning: analysis.reasoning,
+          redFlags: analysis.redFlags || [],
+        } as ModelAnalysis;
+      } catch (error) {
+        console.error(`❌ [Claude] Analysis failed:`, error);
+        return null;
+      }
+    })(),
+
+    // GPT-4o
+    (async () => {
+      try {
+        console.log(`🤖 [GPT-4o] Starting analysis...`);
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "أنت خبير في التحقق من المعلومات وكشف المعلومات المضللة.",
+            },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 1500,
+          temperature: 0.3,
+        });
+
+        const content = response.choices[0].message.content || "";
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("فشل استخراج JSON من استجابة GPT-4o");
+        }
+
+        const analysis = JSON.parse(jsonMatch[0]);
+        console.log(`✅ [GPT-4o] Analysis complete - Verdict: ${analysis.verdict}`);
+
+        return {
+          model: "GPT-4o",
+          verdict: analysis.verdict as Verdict,
+          confidence: analysis.confidence,
+          reasoning: analysis.reasoning,
+          redFlags: analysis.redFlags || [],
+        } as ModelAnalysis;
+      } catch (error) {
+        console.error(`❌ [GPT-4o] Analysis failed:`, error);
+        return null;
+      }
+    })(),
+
+    // Gemini 2.0 Flash
+    (async () => {
+      try {
+        console.log(`🤖 [Gemini] Starting analysis...`);
+        const model = genai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("فشل استخراج JSON من استجابة Gemini");
+        }
+
+        const analysis = JSON.parse(jsonMatch[0]);
+        console.log(`✅ [Gemini] Analysis complete - Verdict: ${analysis.verdict}`);
+
+        return {
+          model: "Gemini 2.0 Flash",
+          verdict: analysis.verdict as Verdict,
+          confidence: analysis.confidence,
+          reasoning: analysis.reasoning,
+          redFlags: analysis.redFlags || [],
+        } as ModelAnalysis;
+      } catch (error) {
+        console.error(`❌ [Gemini] Analysis failed:`, error);
+        return null;
+      }
+    })(),
+  ];
+
+  // انتظار جميع النماذج (استمر حتى لو فشل بعضها)
+  const results = await Promise.allSettled(analysisPromises);
+  
+  // تصفية النتائج الناجحة فقط
+  const successfulAnalyses: ModelAnalysis[] = results
+    .filter((r): r is PromiseFulfilledResult<ModelAnalysis | null> => r.status === "fulfilled" && r.value !== null)
+    .map(r => r.value!);
+
+  if (successfulAnalyses.length === 0) {
+    throw new Error("فشلت جميع نماذج التحليل. يرجى المحاولة مرة أخرى");
+  }
+
+  console.log(`📊 [Voting] ${successfulAnalyses.length} models completed successfully`);
+
+  // نظام التصويت
+  const verdictCounts: Record<Verdict, number> = {
+    credible: 0,
+    questionable: 0,
+    false: 0,
+  };
+
+  successfulAnalyses.forEach(analysis => {
+    verdictCounts[analysis.verdict]++;
+  });
+
+  // تحديد النتيجة النهائية
+  let overallVerdict: Verdict;
+  if (verdictCounts.credible >= 2) {
+    overallVerdict = "credible";
+  } else if (verdictCounts.false >= 2) {
+    overallVerdict = "false";
+  } else if (verdictCounts.questionable >= 2) {
+    overallVerdict = "questionable";
+  } else {
+    // لا يوجد إجماع - استخدم "questionable" كقيمة افتراضية
+    overallVerdict = "questionable";
+  }
+
+  // حساب متوسط الثقة
+  const totalConfidence = successfulAnalyses.reduce((sum, a) => sum + a.confidence, 0);
+  const confidenceScore = Math.round(totalConfidence / successfulAnalyses.length);
+
+  // إنشاء شرح الإجماع
+  let consensus: string;
+  const agreementCount = Math.max(...Object.values(verdictCounts));
+  
+  if (agreementCount === successfulAnalyses.length) {
+    consensus = `اتفقت جميع النماذج (${successfulAnalyses.length}/${successfulAnalyses.length}) على أن المعلومة ${getVerdictArabic(overallVerdict)}.`;
+  } else if (agreementCount >= 2) {
+    consensus = `اتفق ${agreementCount} من ${successfulAnalyses.length} نماذج على أن المعلومة ${getVerdictArabic(overallVerdict)}، بينما اختلف البقية.`;
+  } else {
+    consensus = `لم يتم التوصل إلى إجماع واضح بين النماذج. النتيجة: ${getVerdictArabic(overallVerdict)} بناءً على التحليل الشامل.`;
+  }
+
+  // إنشاء التوصيات
+  const recommendations: string[] = [
+    "تحقق من المصادر الأولية للمعلومة",
+    "ابحث عن تقارير إخبارية موثوقة تؤكد أو تنفي المعلومة",
+    "راجع المواقع الإلكترونية المتخصصة في التحقق من الأخبار",
+  ];
+
+  if (overallVerdict === "questionable" || overallVerdict === "false") {
+    recommendations.push("تحقق من تاريخ نشر المعلومة - قد تكون قديمة أو خارج السياق");
+    recommendations.push("ابحث عن أدلة إضافية أو بيانات رسمية");
+  }
+
+  if (confidenceScore < 70) {
+    recommendations.push("استشر خبراء في المجال للحصول على تقييم إضافي");
+  }
+
+  console.log(`✅ [AI Tools] Fact check complete - Verdict: ${overallVerdict}, Confidence: ${confidenceScore}%`);
+
+  return {
+    overallVerdict,
+    confidenceScore,
+    models: successfulAnalyses,
+    consensus,
+    recommendations,
+  };
+}
+
+function getVerdictArabic(verdict: Verdict): string {
+  const translations: Record<Verdict, string> = {
+    credible: "موثوقة ومصداقية",
+    questionable: "مشكوك فيها وتحتاج إلى تدقيق",
+    false: "كاذبة أو مضللة",
+  };
+  return translations[verdict];
+}
