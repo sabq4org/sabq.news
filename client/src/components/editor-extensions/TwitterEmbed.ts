@@ -42,6 +42,10 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
+    // Detect dark mode from document
+    const isDark = typeof window !== 'undefined' && 
+                   document.documentElement.classList.contains('dark');
+    
     return [
       'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
@@ -54,7 +58,13 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
           class: 'twitter-tweet',
           'data-lang': 'ar',
           'data-dnt': 'true',
+          'data-theme': isDark ? 'dark' : 'light',
         },
+        [
+          'p',
+          { dir: 'ltr', lang: 'ar' },
+          'جارٍ تحميل التغريدة...',
+        ],
         [
           'a',
           {
@@ -62,6 +72,7 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
             target: '_blank',
             rel: 'noopener noreferrer',
           },
+          'عرض التغريدة',
         ],
       ],
     ];
