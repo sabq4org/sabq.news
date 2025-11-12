@@ -144,24 +144,45 @@ export function RichTextEditor({
   useEffect(() => {
     if (!editor) return;
 
+    console.log('[RichTextEditor] Editor ready, checking Twitter script...');
+
     // Check if script is already loaded
     const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
+    
     if (existingScript) {
-      // Script already loaded, just reload widgets for existing tweets
-      if (window.twttr?.widgets) {
-        const isDark = document.documentElement.classList.contains('dark');
-        const theme = isDark ? 'dark' : 'light';
-        const editorElement = editor.view.dom;
-        const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
-        tweetBlocks.forEach((block) => {
-          block.setAttribute('data-theme', theme);
-        });
-        window.twttr.widgets.load(editorElement);
-      }
+      console.log('[RichTextEditor] Twitter script already exists in DOM');
+      
+      // Wait for twttr to be available
+      const waitForTwitter = (retries = 0) => {
+        if (window.twttr?.widgets) {
+          console.log('[RichTextEditor] Twitter widgets API is ready');
+          const isDark = document.documentElement.classList.contains('dark');
+          const theme = isDark ? 'dark' : 'light';
+          const editorElement = editor.view.dom;
+          const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+          console.log(`[RichTextEditor] Found ${tweetBlocks.length} tweet blocks in editor`);
+          
+          tweetBlocks.forEach((block) => {
+            block.setAttribute('data-theme', theme);
+          });
+          
+          if (tweetBlocks.length > 0) {
+            window.twttr.widgets.load(editorElement);
+          }
+        } else if (retries < 20) {
+          console.log(`[RichTextEditor] Waiting for Twitter widgets API... (attempt ${retries + 1})`);
+          setTimeout(() => waitForTwitter(retries + 1), 250);
+        } else {
+          console.error('[RichTextEditor] Twitter widgets API failed to load after 5 seconds');
+        }
+      };
+      
+      waitForTwitter();
       return;
     }
 
     // Load script for the first time
+    console.log('[RichTextEditor] Loading Twitter script for the first time...');
     const script = document.createElement('script');
     script.src = 'https://platform.twitter.com/widgets.js';
     script.async = true;
@@ -169,21 +190,37 @@ export function RichTextEditor({
     
     script.onload = () => {
       console.log('[RichTextEditor] Twitter widgets script loaded successfully');
-      // Apply theme and render existing tweets
-      if (window.twttr?.widgets) {
-        const isDark = document.documentElement.classList.contains('dark');
-        const theme = isDark ? 'dark' : 'light';
-        const editorElement = editor.view.dom;
-        const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
-        tweetBlocks.forEach((block) => {
-          block.setAttribute('data-theme', theme);
-        });
-        window.twttr.widgets.load(editorElement);
-      }
+      
+      // Wait for twttr.widgets to be available
+      const checkWidgets = (retries = 0) => {
+        if (window.twttr?.widgets) {
+          console.log('[RichTextEditor] Twitter widgets API is ready');
+          const isDark = document.documentElement.classList.contains('dark');
+          const theme = isDark ? 'dark' : 'light';
+          const editorElement = editor.view.dom;
+          const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+          console.log(`[RichTextEditor] Found ${tweetBlocks.length} tweet blocks in editor`);
+          
+          tweetBlocks.forEach((block) => {
+            block.setAttribute('data-theme', theme);
+          });
+          
+          if (tweetBlocks.length > 0) {
+            window.twttr.widgets.load(editorElement);
+          }
+        } else if (retries < 20) {
+          console.log(`[RichTextEditor] Waiting for widgets API... (attempt ${retries + 1})`);
+          setTimeout(() => checkWidgets(retries + 1), 250);
+        } else {
+          console.error('[RichTextEditor] Widgets API not available after script load');
+        }
+      };
+      
+      checkWidgets();
     };
 
-    script.onerror = () => {
-      console.error('[RichTextEditor] Failed to load Twitter widgets script');
+    script.onerror = (error) => {
+      console.error('[RichTextEditor] Failed to load Twitter widgets script:', error);
     };
 
     document.body.appendChild(script);
@@ -226,6 +263,8 @@ export function RichTextEditor({
   const handleAddTwitter = () => {
     if (!twitterUrl || !editor) return;
 
+    console.log('[RichTextEditor] Adding Twitter embed:', twitterUrl);
+
     // Insert the tweet embed
     editor.chain().focus().setTwitterEmbed({ url: twitterUrl }).run();
     setTwitterUrl("");
@@ -233,24 +272,29 @@ export function RichTextEditor({
 
     // Wait for DOM to update, then render the tweet
     setTimeout(() => {
-      const renderTweet = () => {
+      const renderTweet = (retries = 0) => {
         const isDark = document.documentElement.classList.contains('dark');
         const theme = isDark ? 'dark' : 'light';
         
         const editorElement = editor.view.dom;
         const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
         
-        tweetBlocks.forEach((block) => {
+        console.log(`[RichTextEditor] Found ${tweetBlocks.length} tweet blocks after insert`);
+        
+        tweetBlocks.forEach((block, index) => {
           block.setAttribute('data-theme', theme);
+          console.log(`[RichTextEditor] Set theme "${theme}" on tweet block ${index + 1}`);
         });
         
         if (window.twttr?.widgets) {
-          console.log('[RichTextEditor] Rendering new tweet');
+          console.log('[RichTextEditor] Calling widgets.load() to render tweets');
           window.twttr.widgets.load(editorElement);
+          console.log('[RichTextEditor] ✅ widgets.load() called successfully');
+        } else if (retries < 10) {
+          console.warn(`[RichTextEditor] Twitter widgets not ready, retrying... (attempt ${retries + 1})`);
+          setTimeout(() => renderTweet(retries + 1), 500);
         } else {
-          console.warn('[RichTextEditor] Twitter widgets not ready, retrying...');
-          // Retry after a short delay if widgets aren't ready
-          setTimeout(renderTweet, 500);
+          console.error('[RichTextEditor] ❌ Twitter widgets failed to load after 5 seconds');
         }
       };
 
