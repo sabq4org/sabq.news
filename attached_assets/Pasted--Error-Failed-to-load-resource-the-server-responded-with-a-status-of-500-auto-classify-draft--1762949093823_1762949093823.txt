@@ -1,0 +1,30 @@
+[Error] Failed to load resource: the server responded with a status of 500 () (auto-classify-draft, line 0)
+[Error] [All-in-One AI] ❌ Classification failed: – Error: 500: Internal Server Error — index-zhyYwNsy.js:48:46093
+Error: 500: Internal Server Error — index-zhyYwNsy.js:48:46093
+	(anonymous function) (index-zhyYwNsy.js:8037:2530)
+[Error] [All-in-One AI] Error details: – "500: Internal Server Error" – undefined
+	(anonymous function) (index-zhyYwNsy.js:8037:2591)
+[Log] [All-in-One AI] ✅ Headlines result: – {titles: []} (index-zhyYwNsy.js, line 8037)
+[Log] [All-in-One AI] ✅ SEO result: – {success: true, seo: Object, provider: "anthropic", …} (index-zhyYwNsy.js, line 8037)
+{success: true, seo: Object, provider: "anthropic", model: "claude-sonnet-4-5"}Object
+[Log] [All-in-One AI] ✅ Summary result: – {summary: ""} (index-zhyYwNsy.js, line 8037)
+[Log] [All-in-One AI] Results: – {headlines: {titles: []}, classification: null, seo: Object, …} (index-zhyYwNsy.js, line 8037)
+{headlines: {titles: []}, classification: null, seo: Object, summary: {summary: ""}}Object
+[Log] [ArticleEditor] params: – {} (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] location: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] pathname: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] extracted id: – "new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] isNewArticle: – true (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] type query param: – null (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] params: – {} (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] location: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] pathname: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] extracted id: – "new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] isNewArticle: – true (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] type query param: – null (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] params: – {} (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] location: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] pathname: – "/dashboard/articles/new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] extracted id: – "new" (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] isNewArticle: – true (index-zhyYwNsy.js, line 8035)
+[Log] [ArticleEditor] type query param: – null (index-zhyYwNsy.js, line 8035)

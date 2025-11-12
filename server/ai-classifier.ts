@@ -2,6 +2,27 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
 
+// Helper: Strip HTML tags and decode entities
+function stripHtml(html: string): string {
+  // Remove HTML tags
+  let text = html.replace(/<[^>]*>/g, '');
+  
+  // Decode common HTML entities
+  text = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+  
+  // Remove extra whitespace
+  text = text.replace(/\s+/g, ' ').trim();
+  
+  return text;
+}
+
 let anthropicClient: Anthropic | null = null;
 
 function getAnthropicClient(): Anthropic {
@@ -37,6 +58,13 @@ export async function classifyArticle(
   content: string,
   availableCategories: Array<{ id: string; slug: string; nameAr: string; nameEn: string; nameUr?: string }>
 ): Promise<ClassificationResult> {
+  // Strip HTML tags for clean AI processing
+  const cleanTitle = stripHtml(title);
+  const cleanContent = stripHtml(content);
+  
+  console.log('[Classification] Clean title:', cleanTitle.substring(0, 100));
+  console.log('[Classification] Clean content length:', cleanContent.length);
+  
   const categoriesText = availableCategories
     .map((cat) => `- ${cat.slug}: ${cat.nameAr} (${cat.nameEn})`)
     .join("\n");
@@ -44,8 +72,8 @@ export async function classifyArticle(
   const prompt = `أنت نظام تصنيف ذكي متخصص في تصنيف المقالات الإخبارية العربية.
 
 المقال:
-العنوان: ${title}
-المحتوى: ${content.substring(0, 3000)}
+العنوان: ${cleanTitle}
+المحتوى: ${cleanContent.substring(0, 3000)}
 
 التصنيفات المتاحة:
 ${categoriesText}

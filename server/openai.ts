@@ -4,11 +4,37 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Helper: Strip HTML tags and decode entities
+function stripHtml(html: string): string {
+  // Remove HTML tags
+  let text = html.replace(/<[^>]*>/g, '');
+  
+  // Decode common HTML entities
+  text = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+  
+  // Remove extra whitespace
+  text = text.replace(/\s+/g, ' ').trim();
+  
+  return text;
+}
+
 export async function summarizeArticle(text: string): Promise<string> {
   try {
     console.log("[Summarize] 🚀 Starting article summarization...");
     console.log("[Summarize] Input text length:", text.length);
     console.log("[Summarize] Input preview:", text.substring(0, 100) + "...");
+    
+    // Strip HTML tags for clean processing
+    const cleanText = stripHtml(text);
+    console.log("[Summarize] Clean text length:", cleanText.length);
+    console.log("[Summarize] Clean text preview:", cleanText.substring(0, 100) + "...");
     
     const response = await openai.chat.completions.create({
       model: "gpt-5",
@@ -19,7 +45,7 @@ export async function summarizeArticle(text: string): Promise<string> {
         },
         {
           role: "user",
-          content: `قم بتلخيص المقال التالي في 2-3 جمل:\n\n${text}`,
+          content: `قم بتلخيص المقال التالي في 2-3 جمل:\n\n${cleanText}`,
         },
       ],
       max_completion_tokens: 512,
@@ -63,6 +89,11 @@ export async function generateTitle(content: string, language: "ar" | "en" | "ur
     console.log("[GenerateTitles] Content length:", content.length);
     console.log("[GenerateTitles] Content preview:", content.substring(0, 100) + "...");
     
+    // Strip HTML tags for clean processing
+    const cleanContent = stripHtml(content);
+    console.log("[GenerateTitles] Clean content length:", cleanContent.length);
+    console.log("[GenerateTitles] Clean content preview:", cleanContent.substring(0, 100) + "...");
+    
     const SYSTEM_PROMPTS = {
       ar: "أنت مساعد ذكي متخصص في إنشاء عناوين جذابة للمقالات الإخبارية باللغة العربية. قم بإنشاء عناوين واضحة ومثيرة للاهتمام.",
       en: "You are a smart assistant specialized in creating catchy headlines for news articles in English. Generate clear and interesting headlines.",
@@ -70,9 +101,9 @@ export async function generateTitle(content: string, language: "ar" | "en" | "ur
     };
 
     const USER_PROMPTS = {
-      ar: `اقترح 3 عناوين مختلفة للمقال التالي. أعد النتيجة بصيغة JSON كمصفوفة من النصوص:\n\n${content.substring(0, 1000)}`,
-      en: `Suggest 3 different headlines for the following article. Return the result in JSON format as an array of strings:\n\n${content.substring(0, 1000)}`,
-      ur: `مندرجہ ذیل مضمون کے لیے 3 مختلف عنوانات تجویز کریں۔ نتیجہ JSON فارمیٹ میں سٹرنگز کی صف کے طور پر واپس کریں:\n\n${content.substring(0, 1000)}`
+      ar: `اقترح 3 عناوين مختلفة للمقال التالي. أعد النتيجة بصيغة JSON كمصفوفة من النصوص:\n\n${cleanContent.substring(0, 1000)}`,
+      en: `Suggest 3 different headlines for the following article. Return the result in JSON format as an array of strings:\n\n${cleanContent.substring(0, 1000)}`,
+      ur: `مندرجہ ذیل مضمون کے لیے 3 مختلف عنوانات تجویز کریں۔ نتیجہ JSON فارمیٹ میں سٹرنگز کی صف کے طور پر واپس کریں:\n\n${cleanContent.substring(0, 1000)}`
     };
 
     console.log("[GenerateTitles] Calling OpenAI API...");
