@@ -283,7 +283,14 @@ export function RichTextEditor({
         
         tweetBlocks.forEach((block, index) => {
           block.setAttribute('data-theme', theme);
-          console.log(`[RichTextEditor] Set theme "${theme}" on tweet block ${index + 1}`);
+          const link = block.querySelector('a');
+          const href = link?.getAttribute('href');
+          console.log(`[RichTextEditor] Tweet block ${index + 1}:`, {
+            theme,
+            href,
+            hasLink: !!link,
+            blockHTML: block.outerHTML.substring(0, 200)
+          });
         });
         
         if (window.twttr?.widgets) {

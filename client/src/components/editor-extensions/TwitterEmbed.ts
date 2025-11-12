@@ -37,16 +37,26 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
     return [
       {
         tag: 'div[data-twitter-embed]',
+        getAttrs: (dom) => {
+          // Extract URL from the anchor tag inside blockquote
+          const link = (dom as HTMLElement).querySelector('blockquote.twitter-tweet a');
+          return {
+            url: link?.getAttribute('href') || null,
+          };
+        },
       },
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node }) {
+    const url = node.attrs.url;
+    
     // Don't hardcode theme - it will be set at view-time based on reader's preference
     return [
       'div',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      mergeAttributes(this.options.HTMLAttributes, {
         'data-twitter-embed': '',
+        'data-url': url, // Store URL as data attribute for debugging
         class: 'twitter-embed-wrapper my-4',
       }),
       [
@@ -65,7 +75,7 @@ export const TwitterEmbed = Node.create<TwitterEmbedOptions>({
         [
           'a',
           {
-            href: HTMLAttributes.url,
+            href: url,
             target: '_blank',
             rel: 'noopener noreferrer',
           },
