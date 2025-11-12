@@ -57,6 +57,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
+// Twitter widgets type declaration
+declare global {
+  interface Window {
+    twttr?: {
+      widgets: {
+        load: (element?: HTMLElement) => void;
+      };
+    };
+  }
+}
+
 interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
@@ -181,6 +192,13 @@ export function RichTextEditor({
       editor.chain().focus().setTwitterEmbed({ url: twitterUrl }).run();
       setTwitterUrl("");
       setTwitterDialogOpen(false);
+      
+      // Reload Twitter widgets to render the newly added tweet
+      setTimeout(() => {
+        if (window.twttr?.widgets) {
+          window.twttr.widgets.load(editor.view.dom);
+        }
+      }, 100);
     }
   };
 
