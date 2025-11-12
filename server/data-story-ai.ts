@@ -4,8 +4,14 @@ import type { ParsedDataset } from './data-parser';
 import { calculateStatistics, getTopValues } from './data-parser';
 
 // Initialize AI clients using Replit AI Integrations
-const anthropic = new Anthropic();
-const openai = new OpenAI();
+const anthropic = new Anthropic({
+  apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
+  baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
+});
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 export interface AIInsights {
   keyFindings: string[];
