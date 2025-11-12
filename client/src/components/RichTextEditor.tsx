@@ -140,17 +140,55 @@ export function RichTextEditor({
     }
   }, [content, editor]);
 
+  // Load Twitter widgets script when editor is ready
   useEffect(() => {
-    if (editor) {
-      const script = document.createElement('script');
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      document.body.appendChild(script);
+    if (!editor) return;
 
-      return () => {
-        document.body.removeChild(script);
-      };
+    // Check if script is already loaded
+    const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
+    if (existingScript) {
+      // Script already loaded, just reload widgets for existing tweets
+      if (window.twttr?.widgets) {
+        const isDark = document.documentElement.classList.contains('dark');
+        const theme = isDark ? 'dark' : 'light';
+        const editorElement = editor.view.dom;
+        const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+        tweetBlocks.forEach((block) => {
+          block.setAttribute('data-theme', theme);
+        });
+        window.twttr.widgets.load(editorElement);
+      }
+      return;
     }
+
+    // Load script for the first time
+    const script = document.createElement('script');
+    script.src = 'https://platform.twitter.com/widgets.js';
+    script.async = true;
+    script.charset = 'utf-8';
+    
+    script.onload = () => {
+      console.log('[RichTextEditor] Twitter widgets script loaded successfully');
+      // Apply theme and render existing tweets
+      if (window.twttr?.widgets) {
+        const isDark = document.documentElement.classList.contains('dark');
+        const theme = isDark ? 'dark' : 'light';
+        const editorElement = editor.view.dom;
+        const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+        tweetBlocks.forEach((block) => {
+          block.setAttribute('data-theme', theme);
+        });
+        window.twttr.widgets.load(editorElement);
+      }
+    };
+
+    script.onerror = () => {
+      console.error('[RichTextEditor] Failed to load Twitter widgets script');
+    };
+
+    document.body.appendChild(script);
+
+    // No cleanup - script should stay loaded for the entire session
   }, [editor]);
 
   useEffect(() => {
@@ -186,29 +224,38 @@ export function RichTextEditor({
 
 
   const handleAddTwitter = () => {
-    if (twitterUrl && editor) {
-      editor.chain().focus().setTwitterEmbed({ url: twitterUrl }).run();
-      setTwitterUrl("");
-      setTwitterDialogOpen(false);
-      
-      // Apply theme to newly added tweet and reload widgets
-      setTimeout(() => {
+    if (!twitterUrl || !editor) return;
+
+    // Insert the tweet embed
+    editor.chain().focus().setTwitterEmbed({ url: twitterUrl }).run();
+    setTwitterUrl("");
+    setTwitterDialogOpen(false);
+
+    // Wait for DOM to update, then render the tweet
+    setTimeout(() => {
+      const renderTweet = () => {
         const isDark = document.documentElement.classList.contains('dark');
         const theme = isDark ? 'dark' : 'light';
         
-        // Find all twitter blockquotes in editor and set theme
         const editorElement = editor.view.dom;
         const tweetBlocks = editorElement.querySelectorAll('blockquote.twitter-tweet');
+        
         tweetBlocks.forEach((block) => {
           block.setAttribute('data-theme', theme);
         });
         
-        // Reload Twitter widgets to render the newly added tweet
         if (window.twttr?.widgets) {
+          console.log('[RichTextEditor] Rendering new tweet');
           window.twttr.widgets.load(editorElement);
+        } else {
+          console.warn('[RichTextEditor] Twitter widgets not ready, retrying...');
+          // Retry after a short delay if widgets aren't ready
+          setTimeout(renderTweet, 500);
         }
-      }, 100);
-    }
+      };
+
+      renderTweet();
+    }, 100);
   };
 
   const handleGalleryUploaded = (urls: string[]) => {

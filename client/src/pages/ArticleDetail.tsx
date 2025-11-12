@@ -107,7 +107,6 @@ export default function ArticleDetail() {
       const isDark = document.documentElement.classList.contains('dark');
       const theme = isDark ? 'dark' : 'light';
       
-      // Find all twitter blockquotes and set their theme
       const tweetBlocks = document.querySelectorAll('blockquote.twitter-tweet');
       tweetBlocks.forEach((block) => {
         block.setAttribute('data-theme', theme);
@@ -117,29 +116,50 @@ export default function ArticleDetail() {
     // Apply theme before loading widgets
     applyThemeToTweets();
 
-    // Load Twitter widgets script
-    const script = document.createElement('script');
-    script.src = 'https://platform.twitter.com/widgets.js';
-    script.async = true;
-    script.onload = () => {
-      // Re-render all tweets after script loads
-      if (window.twttr?.widgets) {
-        window.twttr.widgets.load();
-      }
-    };
-    document.body.appendChild(script);
+    // Check if script is already loaded
+    const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
+    
+    if (existingScript && window.twttr?.widgets) {
+      // Script already loaded, just render tweets
+      console.log('[ArticleDetail] Twitter widgets already loaded, rendering tweets');
+      window.twttr.widgets.load();
+    } else if (!existingScript) {
+      // Load script for the first time
+      const script = document.createElement('script');
+      script.src = 'https://platform.twitter.com/widgets.js';
+      script.async = true;
+      script.charset = 'utf-8';
+      
+      script.onload = () => {
+        console.log('[ArticleDetail] Twitter widgets script loaded successfully');
+        applyThemeToTweets();
+        if (window.twttr?.widgets) {
+          window.twttr.widgets.load();
+        }
+      };
+
+      script.onerror = () => {
+        console.error('[ArticleDetail] Failed to load Twitter widgets script');
+      };
+
+      document.body.appendChild(script);
+    }
 
     // Listen for theme changes and reload tweets
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          applyThemeToTweets();
-          // Reload widgets to apply new theme
-          if (window.twttr?.widgets) {
-            window.twttr.widgets.load();
-          }
+    let previousTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    
+    const observer = new MutationObserver(() => {
+      const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      
+      // Only reload if theme actually changed
+      if (currentTheme !== previousTheme) {
+        previousTheme = currentTheme;
+        console.log('[ArticleDetail] Theme changed to', currentTheme);
+        applyThemeToTweets();
+        if (window.twttr?.widgets) {
+          window.twttr.widgets.load();
         }
-      });
+      }
     });
 
     observer.observe(document.documentElement, {
@@ -148,7 +168,6 @@ export default function ArticleDetail() {
     });
 
     return () => {
-      document.body.removeChild(script);
       observer.disconnect();
     };
   }, [article?.content]);
