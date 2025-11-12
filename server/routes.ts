@@ -9826,25 +9826,48 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // ============================================================
+  // AI CONTENT TOOLS - Input Validation Schemas
+  // ============================================================
+
+  const summarizeSchema = z.object({
+    text: z.string().min(10, "النص قصير جداً").max(50000, "النص طويل جداً"),
+    language: z.enum(["ar", "en", "ur"]).default("ar"),
+  });
+
+  const socialPostSchema = z.object({
+    articleTitle: z.string().min(5, "العنوان قصير جداً"),
+    articleSummary: z.string().min(20, "الملخص قصير جداً"),
+    platform: z.enum(["twitter", "facebook", "linkedin"]),
+  });
+
+  const imageSearchSchema = z.object({
+    contentText: z.string().min(10, "النص قصير جداً"),
+  });
+
+  const translateSchema = z.object({
+    text: z.string().min(1, "النص فارغ"),
+    fromLang: z.string().min(2).max(5),
+    toLang: z.string().min(2).max(5),
+  });
+
+  // ============================================================
+  // AI CONTENT TOOLS - Endpoints with Validation
+  // ============================================================
+
   // AI Content Tools - Text Summarizer
   app.post("/api/ai-tools/summarize", isAuthenticated, async (req: any, res) => {
     try {
-      const { text, language = "ar" } = req.body;
-      
-      if (!text || !text.trim()) {
-        return res.status(400).json({ message: "النص مطلوب" });
-      }
-
-      if (!["ar", "en", "ur"].includes(language)) {
-        return res.status(400).json({ message: "اللغة غير مدعومة" });
-      }
-
-      const result = await summarizeText(text, language as "ar" | "en" | "ur");
+      const validatedData = summarizeSchema.parse(req.body);
+      const result = await summarizeText(validatedData.text, validatedData.language);
       res.json(result);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error("Error summarizing text:", error);
       res.status(500).json({ 
-        message: error.message || "فشل تلخيص النص" 
+        message: error.message || "فشل تلخيص النص. يرجى المحاولة مرة أخرى" 
       });
     }
   });
@@ -9852,26 +9875,20 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // AI Content Tools - Social Media Post Generator
   app.post("/api/ai-tools/social-post", isAuthenticated, async (req: any, res) => {
     try {
-      const { articleTitle, articleSummary, platform } = req.body;
-      
-      if (!articleTitle || !articleSummary) {
-        return res.status(400).json({ message: "العنوان والملخص مطلوبان" });
-      }
-
-      if (!["twitter", "facebook", "linkedin"].includes(platform)) {
-        return res.status(400).json({ message: "المنصة غير مدعومة" });
-      }
-
+      const validatedData = socialPostSchema.parse(req.body);
       const result = await generateSocialPost(
-        articleTitle, 
-        articleSummary, 
-        platform as "twitter" | "facebook" | "linkedin"
+        validatedData.articleTitle, 
+        validatedData.articleSummary, 
+        validatedData.platform
       );
       res.json(result);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error("Error generating social post:", error);
       res.status(500).json({ 
-        message: error.message || "فشل إنشاء المنشور" 
+        message: error.message || "فشل إنشاء المنشور. يرجى المحاولة مرة أخرى" 
       });
     }
   });
@@ -9879,18 +9896,16 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // AI Content Tools - Smart Image Search
   app.post("/api/ai-tools/image-search", isAuthenticated, async (req: any, res) => {
     try {
-      const { contentText } = req.body;
-      
-      if (!contentText || !contentText.trim()) {
-        return res.status(400).json({ message: "المحتوى مطلوب" });
-      }
-
-      const result = await suggestImageQuery(contentText);
+      const validatedData = imageSearchSchema.parse(req.body);
+      const result = await suggestImageQuery(validatedData.contentText);
       res.json(result);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error("Error suggesting image query:", error);
       res.status(500).json({ 
-        message: error.message || "فشل اقتراح كلمات البحث" 
+        message: error.message || "فشل اقتراح كلمات البحث. يرجى المحاولة مرة أخرى" 
       });
     }
   });
@@ -9898,22 +9913,20 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // AI Content Tools - Instant Translator
   app.post("/api/ai-tools/translate", isAuthenticated, async (req: any, res) => {
     try {
-      const { text, fromLang, toLang } = req.body;
-      
-      if (!text || !text.trim()) {
-        return res.status(400).json({ message: "النص مطلوب" });
-      }
-
-      if (!fromLang || !toLang) {
-        return res.status(400).json({ message: "اللغات مطلوبة" });
-      }
-
-      const result = await translateContent(text, fromLang, toLang);
+      const validatedData = translateSchema.parse(req.body);
+      const result = await translateContent(
+        validatedData.text, 
+        validatedData.fromLang, 
+        validatedData.toLang
+      );
       res.json(result);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error("Error translating content:", error);
       res.status(500).json({ 
-        message: error.message || "فشلت الترجمة" 
+        message: error.message || "فشلت الترجمة. يرجى المحاولة مرة أخرى" 
       });
     }
   });
