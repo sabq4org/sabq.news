@@ -76,7 +76,14 @@ app.use(
         ],
         mediaSrc: ["'self'", "https:", "blob:"],
         objectSrc: ["'none'"],
-        frameSrc: ["'self'", "https://platform.twitter.com", "https://twitter.com", "https://x.com"], // Allow Twitter embeds
+        frameSrc: [
+          "'self'", 
+          "https://platform.twitter.com", 
+          "https://twitter.com", 
+          "https://x.com", // Twitter embeds
+          "https://www.youtube.com", // YouTube videos
+          "https://www.dailymotion.com" // Dailymotion videos
+        ],
         baseUri: ["'self'"],
         formAction: ["'self'"],
         upgradeInsecureRequests: isDevelopment ? null : [],
