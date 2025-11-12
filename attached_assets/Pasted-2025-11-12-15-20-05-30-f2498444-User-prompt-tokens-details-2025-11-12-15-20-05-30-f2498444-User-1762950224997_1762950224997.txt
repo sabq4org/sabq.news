@@ -1,0 +1,159 @@
+2025-11-12 15:20:05.30
+f2498444
+User
+"prompt_tokens_details": {
+2025-11-12 15:20:05.30
+f2498444
+User
+"cached_tokens": 0,
+2025-11-12 15:20:05.30
+f2498444
+User
+"audio_tokens": 0
+2025-11-12 15:20:05.30
+f2498444
+User
+},
+2025-11-12 15:20:05.30
+f2498444
+User
+"completion_tokens_details": {
+2025-11-12 15:20:05.30
+f2498444
+User
+"reasoning_tokens": 256,
+2025-11-12 15:20:05.30
+f2498444
+User
+"audio_tokens": 0,
+2025-11-12 15:20:05.30
+f2498444
+User
+"accepted_prediction_tokens": 0,
+2025-11-12 15:20:05.30
+f2498444
+User
+"rejected_prediction_tokens": 0
+2025-11-12 15:20:05.30
+f2498444
+User
+}
+2025-11-12 15:20:05.30
+f2498444
+User
+},
+2025-11-12 15:20:05.30
+f2498444
+User
+"service_tier": "default",
+2025-11-12 15:20:05.30
+f2498444
+User
+"system_fingerprint": null
+2025-11-12 15:20:05.30
+f2498444
+User
+}
+2025-11-12 15:20:05.30
+f2498444
+User
+[GenerateTitles] ✅ OpenAI response received
+2025-11-12 15:20:05.30
+f2498444
+User
+[GenerateTitles] Response structure: {"hasChoices":true,"choicesLength":1,"firstChoice":{"hasMessage":true,"hasContent":false,"contentLength":0,"finishReason":"length"}}
+2025-11-12 15:20:05.32
+f2498444
+User
+12:20:05 PM [express] POST /api/ai/generate-titles 200 in 6565ms :: {"titles":[]}
+2025-11-12 15:20:05.74
+f2498444
+User
+[SEO] Draft generation successful
+2025-11-12 15:20:05.76
+f2498444
+User
+12:20:05 PM [express] POST /api/seo/generate 200 in 6900ms :: {"success":true,"seo":{"metaTitle":"stc…
+2025-11-12 15:20:06.46
+f2498444
+User
+[Classification] Draft classification successful: { primary: 'سياحة', confidence: 0.95 }
+2025-11-12 15:20:06.48
+f2498444
+User
+12:20:06 PM [express] POST /api/articles/auto-classify-draft 200 in 7721ms :: {"success":true,"primar…
+2025-11-12 15:20:07.13
+f2498444
+User
+[Summarize] ⚠️ Empty response from OpenAI!
+2025-11-12 15:20:07.13
+f2498444
+User
+[Summarize] Full response: {
+2025-11-12 15:20:07.13
+f2498444
+User
+"id": "chatcmpl-Cb47LsInuKK9zJHH8bX2Ul224Zutn",
+2025-11-12 15:20:07.13
+f2498444
+User
+"object": "chat.completion",
+2025-11-12 15:20:07.13
+f2498444
+User
+"created": 1762949999,
+2025-11-12 15:20:07.13
+f2498444
+User
+"model": "gpt-5-2025-08-07",
+2025-11-12 15:20:07.13
+f2498444
+User
+"choices": [
+2025-11-12 15:20:07.13
+f2498444
+User
+{
+2025-11-12 15:20:07.13
+f2498444
+User
+"index": 0,
+2025-11-12 15:20:07.13
+f2498444
+User
+"content": "",
+2025-11-12 15:20:07.13
+f2498444
+User
+"refusal": null,
+2025-11-12 15:20:07.13
+f2498444
+User
+"annotations": []
+2025-11-12 15:20:07.13
+f2498444
+User
+"prompt_tokens": 715,
+2025-11-12 15:20:07.13
+f2498444
+User
+"completion_tokens_details": {
+2025-11-12 15:20:07.13
+f2498444
+User
+"accepted_prediction_tokens": 0,
+2025-11-12 15:20:07.13
+f2498444
+User
+[Summarize] ✅ OpenAI response received
+2025-11-12 15:20:07.13
+f2498444
+User
+[Summarize] Response structure: {"hasChoices":true,"choicesLength":1,"firstChoice":{"hasMessage":true,"hasContent":false,"contentLength":0,"finishReason":"length"}}
+
+Collapse
+
+Wrap
+
+Colors
+
