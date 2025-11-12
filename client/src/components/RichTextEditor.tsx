@@ -263,10 +263,18 @@ export function RichTextEditor({
   const handleAddTwitter = () => {
     if (!twitterUrl || !editor) return;
 
-    console.log('[RichTextEditor] Adding Twitter embed:', twitterUrl);
+    // Normalize URL: Convert x.com to twitter.com for compatibility
+    let normalizedUrl = twitterUrl.trim();
+    normalizedUrl = normalizedUrl.replace(/^https?:\/\/(www\.)?x\.com/, 'https://twitter.com');
+    normalizedUrl = normalizedUrl.split('?')[0]; // Remove query parameters like ?s=46
+    
+    console.log('[RichTextEditor] Adding Twitter embed:', {
+      original: twitterUrl,
+      normalized: normalizedUrl
+    });
 
-    // Insert the tweet embed
-    editor.chain().focus().setTwitterEmbed({ url: twitterUrl }).run();
+    // Insert the tweet embed with normalized URL
+    editor.chain().focus().setTwitterEmbed({ url: normalizedUrl }).run();
     setTwitterUrl("");
     setTwitterDialogOpen(false);
 
