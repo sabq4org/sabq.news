@@ -42,6 +42,7 @@ import MuqtaribDetail from "@/pages/MuqtaribDetail";
 import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
 import TagsManagement from "@/pages/TagsManagement";
 import SmartLinksManagement from "@/pages/dashboard/SmartLinksManagement";
+import SmartJournalist from "@/pages/dashboard/SmartJournalist";
 import TermDetail from "@/pages/TermDetail";
 import EntityDetail from "@/pages/EntityDetail";
 import DailyBrief from "@/pages/DailyBrief";
@@ -348,6 +349,7 @@ function Router() {
       <Route path="/dashboard/smart-links" component={SmartLinksManagement} />
       <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
+      <Route path="/dashboard/smart-journalist" component={SmartJournalist} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={ComingSoon} />
       <Route path="/dashboard/ai/headlines" component={ComingSoon} />
