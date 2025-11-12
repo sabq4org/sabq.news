@@ -813,7 +813,13 @@ export default function ArticleDetail() {
             {/* Article Content */}
             <div 
               className="prose prose-lg dark:prose-invert max-w-none leading-loose"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
+              dangerouslySetInnerHTML={{ 
+                __html: DOMPurify.sanitize(article.content, {
+                  ADD_TAGS: ['iframe', 'blockquote'],
+                  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'data-lang', 'data-theme', 'class'],
+                  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                })
+              }}
               data-testid="content-article-body"
             />
 
