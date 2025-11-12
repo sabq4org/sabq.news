@@ -56,6 +56,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import { ImageUploadDialog } from "./ImageUploadDialog";
 
 // Twitter widgets type declaration
 declare global {
@@ -86,11 +87,9 @@ export function RichTextEditor({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
   const [twitterDialogOpen, setTwitterDialogOpen] = useState(false);
   const [twitterUrl, setTwitterUrl] = useState("");
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
-  const [galleryUrls, setGalleryUrls] = useState("");
   const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -179,13 +178,12 @@ export function RichTextEditor({
     }
   };
 
-  const handleAddImage = () => {
-    if (imageUrl && editor) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl("");
-      setImageDialogOpen(false);
+  const handleImageUploaded = (url: string) => {
+    if (editor) {
+      editor.chain().focus().setImage({ src: url }).run();
     }
   };
+
 
   const handleAddTwitter = () => {
     if (twitterUrl && editor) {
@@ -202,12 +200,10 @@ export function RichTextEditor({
     }
   };
 
-  const handleAddGallery = () => {
-    if (galleryUrls && editor) {
-      const images = galleryUrls.split('\n').filter(url => url.trim() !== '');
-      editor.chain().focus().setImageGallery({ images }).run();
-      setGalleryUrls("");
-      setGalleryDialogOpen(false);
+  const handleGalleryUploaded = (urls: string[]) => {
+    // Insert all gallery images at once
+    if (editor && urls.length > 0) {
+      editor.chain().focus().setImageGallery({ images: urls }).run();
     }
   };
 
@@ -584,35 +580,13 @@ export function RichTextEditor({
         </DialogContent>
       </Dialog>
 
-      {/* Image Dialog */}
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>إضافة صورة</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-url">رابط الصورة (URL)</Label>
-              <Input
-                id="image-url"
-                placeholder="https://example.com/image.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                dir="ltr"
-                data-testid="input-image-url"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleAddImage} disabled={!imageUrl} data-testid="button-add-image">
-              إضافة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Image Upload Dialog */}
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onImageUploaded={handleImageUploaded}
+        multiple={false}
+      />
 
       {/* Twitter Dialog */}
       <Dialog open={twitterDialogOpen} onOpenChange={setTwitterDialogOpen}>
@@ -647,39 +621,15 @@ export function RichTextEditor({
         </DialogContent>
       </Dialog>
 
-      {/* Image Gallery Dialog */}
-      <Dialog open={galleryDialogOpen} onOpenChange={setGalleryDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>إضافة ألبوم صور</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="gallery-urls">روابط الصور (كل رابط في سطر منفصل)</Label>
-              <Textarea
-                id="gallery-urls"
-                placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"
-                value={galleryUrls}
-                onChange={(e) => setGalleryUrls(e.target.value)}
-                dir="ltr"
-                rows={6}
-                data-testid="input-gallery-urls"
-              />
-              <p className="text-xs text-muted-foreground">
-                أدخل رابط كل صورة في سطر منفصل. سيتم عرض الصور في شبكة منظمة.
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setGalleryDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleAddGallery} disabled={!galleryUrls} data-testid="button-add-gallery">
-              إضافة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Image Gallery Upload Dialog */}
+      <ImageUploadDialog
+        open={galleryDialogOpen}
+        onOpenChange={setGalleryDialogOpen}
+        onImageUploaded={() => {}}
+        onAllImagesUploaded={handleGalleryUploaded}
+        multiple={true}
+        maxFiles={10}
+      />
 
       {/* YouTube Dialog */}
       <Dialog open={youtubeDialogOpen} onOpenChange={setYoutubeDialogOpen}>
