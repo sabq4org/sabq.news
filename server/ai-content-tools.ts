@@ -543,3 +543,249 @@ function getVerdictArabic(verdict: Verdict): string {
   };
   return translations[verdict];
 }
+
+export async function analyzeTrends(
+  timeframe: "day" | "week" | "month",
+  limit: number = 50
+): Promise<{
+  trendingTopics: Array<{
+    topic: string;
+    relevanceScore: number;
+    category: string;
+    mentionCount: number;
+  }>;
+  keywords: Array<{
+    keyword: string;
+    frequency: number;
+    sentiment: "positive" | "neutral" | "negative";
+  }>;
+  insights: {
+    overallSentiment: "positive" | "neutral" | "negative";
+    engagementLevel: "high" | "medium" | "low";
+    summary: string;
+    recommendations: string[];
+  };
+  timeRange: {
+    from: string;
+    to: string;
+  };
+}> {
+  console.log(`📊 [AI Tools] Analyzing trends for timeframe: ${timeframe}, limit: ${limit}`);
+
+  try {
+    // استيراد db هنا لتجنب مشاكل الاستيراد الدائري
+    const { db } = await import("./db");
+    const { articles, comments } = await import("@shared/schema");
+    const { desc, gte } = await import("drizzle-orm");
+
+    // 1. حساب الفترة الزمنية
+    const now = new Date();
+    const from = new Date();
+    if (timeframe === "day") from.setDate(now.getDate() - 1);
+    if (timeframe === "week") from.setDate(now.getDate() - 7);
+    if (timeframe === "month") from.setMonth(now.getMonth() - 1);
+
+    const timeRange = {
+      from: from.toISOString(),
+      to: now.toISOString(),
+    };
+
+    console.log(`📅 [Trends] Time range: ${from.toISOString()} to ${now.toISOString()}`);
+
+    // 2. جلب المقالات والتعليقات من قاعدة البيانات
+    console.log(`🔍 [Trends] Fetching articles and comments...`);
+    
+    const recentArticles = await db
+      .select()
+      .from(articles)
+      .where(gte(articles.publishedAt, from))
+      .orderBy(desc(articles.publishedAt))
+      .limit(limit);
+
+    const recentComments = await db
+      .select()
+      .from(comments)
+      .where(gte(comments.createdAt, from))
+      .orderBy(desc(comments.createdAt))
+      .limit(limit * 2);
+
+    console.log(`✅ [Trends] Found ${recentArticles.length} articles and ${recentComments.length} comments`);
+
+    if (recentArticles.length === 0) {
+      console.log(`⚠️ [Trends] No articles found in the specified timeframe`);
+      return {
+        trendingTopics: [],
+        keywords: [],
+        insights: {
+          overallSentiment: "neutral",
+          engagementLevel: "low",
+          summary: "لا توجد بيانات كافية لتحليل الاتجاهات في هذه الفترة الزمنية.",
+          recommendations: [
+            "قم بنشر المزيد من المقالات لتوليد بيانات كافية للتحليل",
+            "حاول اختيار فترة زمنية أطول",
+          ],
+        },
+        timeRange,
+      };
+    }
+
+    // تحضير النصوص للتحليل
+    const articlesText = recentArticles
+      .map((a) => `العنوان: ${a.title}\nالمحتوى: ${a.content?.substring(0, 500)}...`)
+      .join("\n\n");
+
+    const commentsText = recentComments
+      .map((c) => c.content)
+      .join("\n");
+
+    const combinedText = `${articlesText}\n\n${commentsText}`;
+
+    console.log(`📝 [Trends] Prepared ${articlesText.length + commentsText.length} characters for analysis`);
+
+    // 3. تحليل بـ Claude Sonnet 4-5 - الموضوعات والمشاعر
+    console.log(`🤖 [Claude] Starting topics and sentiment analysis...`);
+    
+    const claudePromise = anthropic.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 3000,
+      messages: [
+        {
+          role: "user",
+          content: `أنت خبير في تحليل البيانات والاتجاهات الصحفية.
+
+المهمة: تحليل المقالات والتعليقات التالية واستخراج الموضوعات الرائجة.
+
+البيانات:
+المقالات: ${articlesText.substring(0, 8000)}
+التعليقات: ${commentsText.substring(0, 2000)}
+
+قم بـ:
+1. استخراج أهم الموضوعات الرائجة (5-10 موضوعات)
+2. تحليل المشاعر العامة (positive/neutral/negative)
+3. كتابة ملخص شامل بالعربية عن الاتجاهات
+
+أجب بتنسيق JSON فقط:
+{
+  "topics": [
+    {
+      "topic": "اسم الموضوع",
+      "category": "التصنيف",
+      "mentionCount": 15
+    }
+  ],
+  "overallSentiment": "positive",
+  "summary": "ملخص الاتجاهات..."
+}`,
+        },
+      ],
+    });
+
+    // 4. تحليل بـ Gemini 2.0 Flash - الكلمات المفتاحية والتوصيات
+    console.log(`🤖 [Gemini] Starting keywords and recommendations analysis...`);
+    
+    const model = genai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const geminiPromise = model.generateContent(`أنت محلل محتوى متخصص في استخراج الكلمات المفتاحية.
+
+المهمة: استخراج أهم الكلمات المفتاحية من المحتوى التالي.
+
+المحتوى:
+${combinedText.substring(0, 10000)}
+
+قم بـ:
+1. استخراج أهم 20-30 كلمة مفتاحية
+2. حساب تكرار كل كلمة
+3. تحديد sentiment لكل كلمة (positive/neutral/negative)
+4. إنشاء توصيات لاستراتيجية المحتوى (3-5 توصيات)
+
+أجب بتنسيق JSON فقط:
+{
+  "keywords": [
+    {
+      "keyword": "الكلمة",
+      "frequency": 10,
+      "sentiment": "positive"
+    }
+  ],
+  "engagementLevel": "high",
+  "recommendations": ["توصية 1", "توصية 2"]
+}`);
+
+    // انتظار كلا النموذجين
+    const [claudeResponse, geminiResult] = await Promise.all([claudePromise, geminiPromise]);
+
+    // استخراج نتائج Claude
+    const claudeContent =
+      claudeResponse.content[0].type === "text"
+        ? claudeResponse.content[0].text
+        : "";
+    const claudeJsonMatch = claudeContent.match(/\{[\s\S]*\}/);
+    if (!claudeJsonMatch) {
+      throw new Error("فشل استخراج JSON من استجابة Claude");
+    }
+    const claudeAnalysis = JSON.parse(claudeJsonMatch[0]);
+
+    console.log(`✅ [Claude] Found ${claudeAnalysis.topics?.length || 0} trending topics`);
+
+    // استخراج نتائج Gemini
+    const geminiText = geminiResult.response.text();
+    const geminiJsonMatch = geminiText.match(/\{[\s\S]*\}/);
+    if (!geminiJsonMatch) {
+      throw new Error("فشل استخراج JSON من استجابة Gemini");
+    }
+    const geminiAnalysis = JSON.parse(geminiJsonMatch[0]);
+
+    console.log(`✅ [Gemini] Found ${geminiAnalysis.keywords?.length || 0} keywords`);
+
+    // 5. دمج النتائج من النموذجين
+    
+    // حساب relevanceScore لكل موضوع بناءً على عدد الإشارات
+    const maxMentions = Math.max(...(claudeAnalysis.topics || []).map((t: any) => t.mentionCount || 0), 1);
+    
+    const trendingTopics = (claudeAnalysis.topics || []).map((topic: any) => ({
+      topic: topic.topic,
+      relevanceScore: Math.round((topic.mentionCount / maxMentions) * 100),
+      category: topic.category,
+      mentionCount: topic.mentionCount,
+    }));
+
+    // ترتيب حسب الأهمية
+    trendingTopics.sort((a: any, b: any) => b.relevanceScore - a.relevanceScore);
+
+    const keywords = (geminiAnalysis.keywords || []).slice(0, 30);
+
+    // دمج التوصيات من كلا النموذجين
+    const recommendations = [
+      ...(geminiAnalysis.recommendations || []),
+    ];
+
+    // إضافة توصيات إضافية بناءً على التحليل
+    if (claudeAnalysis.overallSentiment === "negative") {
+      recommendations.push("ركز على المحتوى الإيجابي والحلول لتحسين تفاعل القراء");
+    }
+
+    if (geminiAnalysis.engagementLevel === "low") {
+      recommendations.push("استخدم عناوين أكثر جاذبية وصور ملفتة لزيادة التفاعل");
+    }
+
+    if (trendingTopics.length > 0) {
+      recommendations.push(`استثمر في تغطية موضوع "${trendingTopics[0].topic}" الذي يحظى بأعلى اهتمام`);
+    }
+
+    console.log(`✅ [Trends] Analysis complete - ${trendingTopics.length} topics, ${keywords.length} keywords`);
+
+    return {
+      trendingTopics,
+      keywords,
+      insights: {
+        overallSentiment: claudeAnalysis.overallSentiment,
+        engagementLevel: geminiAnalysis.engagementLevel,
+        summary: claudeAnalysis.summary,
+        recommendations: recommendations.slice(0, 5),
+      },
+      timeRange,
+    };
+  } catch (error) {
+    console.error(`❌ [AI Tools] Trends analysis failed:`, error);
+    throw new Error("فشل تحليل الاتجاهات. يرجى المحاولة مرة أخرى");
+  }
+}

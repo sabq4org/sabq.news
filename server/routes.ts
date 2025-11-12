@@ -10,7 +10,7 @@ import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
-import { summarizeText, generateSocialPost, suggestImageQuery, translateContent, checkFactAccuracy } from "./ai-content-tools";
+import { summarizeText, generateSocialPost, suggestImageQuery, translateContent, checkFactAccuracy, analyzeTrends } from "./ai-content-tools";
 import { importFromRssFeed } from "./rssImporter";
 import { generateCalendarEventIdeas, generateArticleDraft } from "./services/calendarAi";
 import { requireAuth, requirePermission, requireAnyPermission, requireRole, logActivity, getUserPermissions } from "./rbac";
@@ -9856,6 +9856,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     context: z.string().max(3000).optional(),
   });
 
+  const analyzeTrendsSchema = z.object({
+    timeframe: z.enum(["day", "week", "month"]).default("week"),
+    limit: z.number().min(10).max(200).default(50),
+  });
+
   // ============================================================
   // AI CONTENT TOOLS - Endpoints with Validation
   // ============================================================
@@ -9952,6 +9957,26 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       console.error("❌ [AI Tools] Fact check failed:", error);
       res.status(500).json({ 
         message: error.message || "فشل التحقق من المعلومة. يرجى المحاولة مرة أخرى" 
+      });
+    }
+  });
+
+  // AI Content Tools - Trends Analysis
+  app.post("/api/ai-tools/analyze-trends", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = analyzeTrendsSchema.parse(req.body);
+      const result = await analyzeTrends(
+        validatedData.timeframe,
+        validatedData.limit
+      );
+      res.json(result);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error("❌ [AI Tools] Trends analysis failed:", error);
+      res.status(500).json({ 
+        message: error.message || "فشل تحليل الاتجاهات. يرجى المحاولة مرة أخرى" 
       });
     }
   });

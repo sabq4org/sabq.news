@@ -22,7 +22,8 @@ import {
   Loader2,
   AlertCircle,
   Shield,
-  ChevronDown
+  ChevronDown,
+  TrendingUp
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -51,7 +52,7 @@ export default function AITools() {
         </Card>
 
         <Tabs defaultValue="headlines" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 gap-1" data-testid="tabs-list">
+          <TabsList className="grid w-full grid-cols-7 gap-1" data-testid="tabs-list">
             <TabsTrigger value="headlines" data-testid="tab-headlines">
               <Sparkles className="w-4 h-4 ml-2" />
               العناوين الذكية
@@ -75,6 +76,10 @@ export default function AITools() {
             <TabsTrigger value="fact-checker" data-testid="tab-fact-checker">
               <Shield className="w-4 h-4 ml-2" />
               كشف المضلل
+            </TabsTrigger>
+            <TabsTrigger value="trends-analysis" data-testid="tab-trends-analysis">
+              <TrendingUp className="w-4 h-4 ml-2" />
+              تحليل الاتجاهات
             </TabsTrigger>
           </TabsList>
 
@@ -100,6 +105,10 @@ export default function AITools() {
 
           <TabsContent value="fact-checker" className="mt-6">
             <FactChecker />
+          </TabsContent>
+
+          <TabsContent value="trends-analysis" className="mt-6">
+            <TrendsAnalyzer />
           </TabsContent>
         </Tabs>
       </div>
@@ -873,6 +882,288 @@ function InstantTranslator() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TrendsAnalyzer() {
+  const [timeframe, setTimeframe] = useState<"day" | "week" | "month">("week");
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleAnalyze = async () => {
+    setLoading(true);
+    try {
+      const response = await apiRequest<{
+        trendingTopics: Array<{
+          topic: string;
+          relevanceScore: number;
+          category: string;
+          mentionCount: number;
+        }>;
+        keywords: Array<{
+          keyword: string;
+          frequency: number;
+          sentiment: "positive" | "neutral" | "negative";
+        }>;
+        insights: {
+          overallSentiment: "positive" | "neutral" | "negative";
+          engagementLevel: "high" | "medium" | "low";
+          summary: string;
+          recommendations: string[];
+        };
+        timeRange: {
+          from: string;
+          to: string;
+        };
+      }>("/api/ai-tools/analyze-trends", {
+        method: "POST",
+        body: JSON.stringify({ timeframe, limit: 50 }),
+      });
+
+      setResult(response);
+      toast({
+        title: "تم التحليل بنجاح",
+        description: `تم تحليل ${response.trendingTopics.length} موضوع رائج`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "فشل التحليل",
+        description: error.message || "حدث خطأ أثناء تحليل الاتجاهات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSentimentColors = (sentiment: "positive" | "neutral" | "negative") => {
+    const colors = {
+      positive: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      neutral: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+      negative: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    };
+    return colors[sentiment];
+  };
+
+  const getSentimentLabel = (sentiment: "positive" | "neutral" | "negative") => {
+    const labels = {
+      positive: "إيجابي",
+      neutral: "محايد",
+      negative: "سلبي",
+    };
+    return labels[sentiment];
+  };
+
+  const getEngagementColors = (level: "high" | "medium" | "low") => {
+    const colors = {
+      high: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      low: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+    };
+    return colors[level];
+  };
+
+  const getEngagementLabel = (level: "high" | "medium" | "low") => {
+    const labels = {
+      high: "عالي",
+      medium: "متوسط",
+      low: "منخفض",
+    };
+    return labels[level];
+  };
+
+  const getTimeframeLabel = (tf: "day" | "week" | "month") => {
+    const labels = {
+      day: "آخر يوم",
+      week: "آخر أسبوع",
+      month: "آخر شهر",
+    };
+    return labels[tf];
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <CardTitle>تحليل الاتجاهات والموضوعات الرائجة</CardTitle>
+        </div>
+        <CardDescription>
+          اكتشف ما يهتم به القراء ووجّه استراتيجية المحتوى باستخدام Claude Sonnet 4-5 و Gemini 2.0 Flash
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Select value={timeframe} onValueChange={(v) => setTimeframe(v as any)}>
+            <SelectTrigger className="w-[200px]" data-testid="select-timeframe">
+              <SelectValue placeholder="اختر الفترة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">آخر يوم</SelectItem>
+              <SelectItem value="week">آخر أسبوع</SelectItem>
+              <SelectItem value="month">آخر شهر</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={handleAnalyze}
+            disabled={loading}
+            data-testid="button-analyze-trends"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                جاري التحليل...
+              </>
+            ) : (
+              <>
+                <TrendingUp className="w-4 h-4 ml-2" />
+                تحليل الاتجاهات
+              </>
+            )}
+          </Button>
+        </div>
+
+        {result && (
+          <div className="space-y-6 pt-4">
+            {/* Overall Insights */}
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">الملخص العام</CardTitle>
+                <CardDescription className="text-xs">
+                  {getTimeframeLabel(timeframe)} ({new Date(result.timeRange.from).toLocaleDateString('ar')} - {new Date(result.timeRange.to).toLocaleDateString('ar')})
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Badge className={getSentimentColors(result.insights.overallSentiment)} data-testid="badge-overall-sentiment">
+                    المشاعر العامة: {getSentimentLabel(result.insights.overallSentiment)}
+                  </Badge>
+                  <Badge className={getEngagementColors(result.insights.engagementLevel)} data-testid="badge-engagement-level">
+                    مستوى التفاعل: {getEngagementLabel(result.insights.engagementLevel)}
+                  </Badge>
+                </div>
+                <p className="text-sm leading-relaxed" data-testid="text-summary">
+                  {result.insights.summary}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Trending Topics */}
+            {result.trendingTopics.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">الموضوعات الرائجة ({result.trendingTopics.length})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {result.trendingTopics.map((topic: any, index: number) => (
+                    <Card key={index} data-testid={`card-topic-${index}`}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-sm" data-testid={`text-topic-name-${index}`}>
+                            {topic.topic}
+                          </CardTitle>
+                          <Badge variant="outline" data-testid={`badge-topic-category-${index}`}>
+                            {topic.category}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">مستوى الأهمية</span>
+                            <span className="font-medium" data-testid={`text-topic-score-${index}`}>
+                              {topic.relevanceScore}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={topic.relevanceScore} 
+                            className="h-2" 
+                            data-testid={`progress-topic-${index}`}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground" data-testid={`text-topic-mentions-${index}`}>
+                          عدد الإشارات: {topic.mentionCount}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Keywords */}
+            {result.keywords.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">الكلمات المفتاحية ({result.keywords.length})</h3>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {result.keywords.slice(0, 15).map((keyword: any, index: number) => (
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between gap-2 p-2 rounded-md border"
+                          data-testid={`item-keyword-${index}`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="text-sm font-medium truncate" data-testid={`text-keyword-${index}`}>
+                              {keyword.keyword}
+                            </span>
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${getSentimentColors(keyword.sentiment)}`}
+                              data-testid={`badge-keyword-sentiment-${index}`}
+                            >
+                              {getSentimentLabel(keyword.sentiment)}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground shrink-0" data-testid={`text-keyword-freq-${index}`}>
+                            ×{keyword.frequency}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {result.keywords.length > 15 && (
+                      <p className="text-xs text-muted-foreground text-center mt-3">
+                        وأكثر من {result.keywords.length - 15} كلمة أخرى...
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {result.insights.recommendations.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">توصيات استراتيجية المحتوى</h3>
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                  <CardContent className="p-4">
+                    <ul className="space-y-2">
+                      {result.insights.recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm" data-testid={`text-recommendation-${index}`}>
+                          <span className="text-primary mt-0.5 shrink-0">✓</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {result.trendingTopics.length === 0 && result.keywords.length === 0 && (
+              <Alert data-testid="alert-empty-state">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>لا توجد بيانات كافية</AlertTitle>
+                <AlertDescription>
+                  {result.insights.summary}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )}
       </CardContent>

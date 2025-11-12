@@ -1,0 +1,89 @@
+2025-11-12 09:28:32.47
+38aa11a8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 09:28:32.54
+38aa11a8
+User
+6:28:32 AM [express] GET /api/journalist-tasks/recent 200 in 114ms :: [{"id":"daba662a-2d30-419f-bb1…
+2025-11-12 09:28:35.91
+38aa11a8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 09:28:35.94
+38aa11a8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 09:28:36.00
+38aa11a8
+User
+6:28:36 AM [express] GET /api/journalist-tasks/recent 200 in 109ms :: [{"id":"daba662a-2d30-419f-bb1…
+2025-11-12 09:28:38.91
+38aa11a8
+User
+❌ [Journalist Agent] Draft writing failed: SyntaxError: Expected ',' or '}' after property value in JSON at position 27
+
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at JSON.parse ()
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at writeDraft (file:///home/runner/workspace/dist/index.js:16186:24)
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at async executeJournalistTask (file:///home/runner/workspace/dist/index.js:16413:19)
+2025-11-12 09:28:38.91
+38aa11a8
+User
+❌ [Journalist Agent] Task daba662a-2d30-419f-bb18-32af6448a846 failed: SyntaxError: Expected ',' or '}' after property value in JSON at position 27
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at JSON.parse ()
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at writeDraft (file:///home/runner/workspace/dist/index.js:16186:24)
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-12 09:28:38.91
+38aa11a8
+User
+at async executeJournalistTask (file:///home/runner/workspace/dist/index.js:16413:19)
+2025-11-12 09:28:39.40
+38aa11a8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 09:28:39.42
+38aa11a8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 09:28:39.49
+38aa11a8
+User
+6:28:39 AM [express] GET /api/journalist-tasks/recent 200 in 109ms :: [{"id":"daba662a-2d30-419f-bb1…
+2025-11-12 09:29:18.30
+38aa11a8
+User
+6:29:18 AM [express] GET /api/themes/active 200 in 164ms
+2025-11-12 09:29:30.28
+38aa11a8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 09:29:30.31
+38aa11a8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 09:29:30.38
+38aa11a8
+User
+6:29:30 AM [express] GET /api/themes/active 200 in 241ms
