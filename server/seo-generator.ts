@@ -33,7 +33,7 @@ interface ArticleInput {
 // Configuration: Primary and fallback models per language
 const SEO_MODEL_CONFIG = {
   ar: {
-    primary: { provider: "anthropic" as const, model: "claude-3-5-sonnet-20241022" },
+    primary: { provider: "anthropic" as const, model: "claude-sonnet-4-5" },
     fallback: { provider: "openai" as const, model: "gpt-4o" },
   },
   en: {
@@ -42,7 +42,7 @@ const SEO_MODEL_CONFIG = {
   },
   ur: {
     primary: { provider: "gemini" as const, model: "gemini-2.0-flash-exp" },
-    fallback: { provider: "anthropic" as const, model: "claude-3-5-sonnet-20241022" },
+    fallback: { provider: "anthropic" as const, model: "claude-sonnet-4-5" },
   },
 };
 

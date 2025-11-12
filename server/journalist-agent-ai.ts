@@ -64,7 +64,7 @@ async function performResearch(taskId: string, prompt: string) {
   try {
     // Use Claude to extract search query from prompt
     const searchQueryResponse = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5",
       max_tokens: 200,
       messages: [
         {
@@ -97,7 +97,7 @@ async function performResearch(taskId: string, prompt: string) {
 
     // Create summary using AI
     const summaryResponse = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5",
       max_tokens: 500,
       messages: [
         {
@@ -136,7 +136,7 @@ async function analyzeAndExtractKeyPoints(
 
   try {
     const analysisResponse = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5",
       max_tokens: 800,
       messages: [
         {
@@ -192,7 +192,7 @@ async function writeDraft(
 
   try {
     const draftResponse = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5",
       max_tokens: 2000,
       messages: [
         {
@@ -324,7 +324,7 @@ async function generateHeadlines(
     // Claude headline (engaging)
     try {
       const claudeResponse = await anthropic.messages.create({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-4-5",
         max_tokens: 100,
         messages: [
           {
