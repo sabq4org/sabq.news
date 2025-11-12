@@ -423,6 +423,15 @@ export default function ArticleEditor() {
 
   const generateSummaryMutation = useMutation({
     mutationFn: async () => {
+      // Validation
+      if (!content) {
+        throw new Error("يجب إدخال المحتوى أولاً");
+      }
+      
+      if (content.length < 100) {
+        throw new Error("المحتوى يجب أن يكون 100 حرف على الأقل");
+      }
+      
       return await apiRequest("/api/ai/summarize", {
         method: "POST",
         body: JSON.stringify({ content }),
@@ -623,6 +632,151 @@ export default function ArticleEditor() {
     },
   });
 
+  const generateAllInOneMutation = useMutation({
+    mutationFn: async () => {
+      // Validation
+      if (!title || !content) {
+        throw new Error("يجب إدخال العنوان والمحتوى أولاً");
+      }
+      
+      if (title.length < 10) {
+        throw new Error("العنوان يجب أن يكون 10 أحرف على الأقل");
+      }
+      
+      if (content.length < 100) {
+        throw new Error("المحتوى يجب أن يكون 100 حرف على الأقل");
+      }
+      
+      console.log('[All-in-One AI] Starting comprehensive AI generation...');
+      
+      // Execute all AI tools in PARALLEL for speed
+      const [
+        headlinesResult,
+        classificationResult,
+        seoResult,
+        summaryResult,
+      ] = await Promise.all([
+        // 1. Headline Suggestions
+        apiRequest("/api/ai/generate-titles", {
+          method: "POST",
+          body: JSON.stringify({ content, language: "ar" }),
+        }).catch(err => {
+          console.error('[All-in-One AI] Headlines failed:', err);
+          return null;
+        }),
+        
+        // 2. Smart Classification
+        (!isNewArticle && id
+          ? apiRequest(`/api/articles/${id}/auto-categorize`, { method: "POST" })
+          : apiRequest(`/api/articles/auto-classify-draft`, {
+              method: "POST",
+              body: JSON.stringify({ title, content, language: "ar" }),
+            })
+        ).catch(err => {
+          console.error('[All-in-One AI] Classification failed:', err);
+          return null;
+        }),
+        
+        // 3. SEO Generator
+        (!isNewArticle && id
+          ? apiRequest(`/api/seo/generate`, {
+              method: "POST",
+              body: JSON.stringify({ mode: "saved", articleId: id, language: "ar" }),
+            })
+          : apiRequest(`/api/seo/generate`, {
+              method: "POST",
+              body: JSON.stringify({
+                mode: "draft",
+                draftData: { title, content, excerpt: excerpt || undefined },
+                language: "ar"
+              }),
+            })
+        ).catch(err => {
+          console.error('[All-in-One AI] SEO failed:', err);
+          return null;
+        }),
+        
+        // 4. Smart Summary
+        apiRequest("/api/ai/summarize", {
+          method: "POST",
+          body: JSON.stringify({ content }),
+        }).catch(err => {
+          console.error('[All-in-One AI] Summary failed:', err);
+          return null;
+        }),
+      ]);
+      
+      return {
+        headlines: headlinesResult,
+        classification: classificationResult,
+        seo: seoResult,
+        summary: summaryResult,
+      };
+    },
+    onSuccess: (data) => {
+      console.log('[All-in-One AI] Results:', data);
+      
+      let successCount = 0;
+      let failCount = 0;
+      const details: string[] = [];
+      
+      // Apply Headlines (if available)
+      if (data.headlines?.titles?.length > 0) {
+        const firstHeadline = data.headlines.titles[0];
+        setTitle(firstHeadline);
+        setSlug(generateSlug(firstHeadline));
+        successCount++;
+        details.push(`✓ عنوان: ${firstHeadline.substring(0, 30)}...`);
+      } else {
+        failCount++;
+      }
+      
+      // Apply Classification (if available)
+      if (data.classification?.primaryCategory) {
+        setCategoryId(data.classification.primaryCategory.categoryId);
+        successCount++;
+        details.push(`✓ تصنيف: ${data.classification.primaryCategory.categoryName}`);
+      } else {
+        failCount++;
+      }
+      
+      // Apply SEO (if available)
+      if (data.seo?.seo) {
+        setMetaTitle(data.seo.seo.metaTitle);
+        setMetaDescription(data.seo.seo.metaDescription || "");
+        setKeywords(data.seo.seo.keywords || []);
+        successCount++;
+        details.push(`✓ SEO: تم توليد البيانات`);
+      } else {
+        failCount++;
+      }
+      
+      // Apply Summary (if available)
+      if (data.summary?.summary) {
+        setExcerpt(data.summary.summary);
+        successCount++;
+        details.push(`✓ موجز: ${data.summary.summary.substring(0, 30)}...`);
+      } else {
+        failCount++;
+      }
+      
+      // Show comprehensive toast
+      toast({
+        title: `✨ توليد ذكي شامل (${successCount}/${successCount + failCount})`,
+        description: details.join("\n"),
+        duration: 5000,
+      });
+    },
+    onError: (error: Error) => {
+      console.error('[All-in-One AI] Critical error:', error);
+      toast({
+        title: "خطأ في التوليد الشامل",
+        description: error.message || "فشل في التوليد الذكي",
+        variant: "destructive",
+      });
+    },
+  });
+
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -757,6 +911,37 @@ const generateSlug = (text: string) => {
       return;
     }
     generateSmartContentMutation.mutate();
+  };
+
+  const handleGenerateAllInOne = () => {
+    if (!title || !content) {
+      toast({
+        title: "تنبيه",
+        description: "يجب كتابة العنوان والمحتوى أولاً",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (title.length < 10) {
+      toast({
+        title: "تنبيه",
+        description: "العنوان يجب أن يكون 10 أحرف على الأقل",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (content.length < 100) {
+      toast({
+        title: "تنبيه",
+        description: "المحتوى يجب أن يكون 100 حرف على الأقل",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    generateAllInOneMutation.mutate();
   };
 
   const handleSave = async (publishNow = false) => {
@@ -898,7 +1083,13 @@ const generateSlug = (text: string) => {
   };
 
   const isSaving = saveArticleMutation.isPending;
-  const isGeneratingAI = generateSummaryMutation.isPending || generateTitlesMutation.isPending || generateSmartContentMutation.isPending;
+  const isGeneratingAI = 
+    generateSummaryMutation.isPending || 
+    generateTitlesMutation.isPending || 
+    generateSmartContentMutation.isPending ||
+    generateAllInOneMutation.isPending ||
+    generateSeoMutation.isPending ||
+    autoClassifyMutation.isPending;
 
   return (
     <DashboardLayout>
@@ -1078,25 +1269,26 @@ const generateSlug = (text: string) => {
             {/* Content Editor */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>محتوى المقال</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>محتوى المقال</span>
+                  {/* All-in-One AI Button */}
                   <Button
-                    variant="secondary"
+                    variant="default"
                     size="sm"
-                    onClick={handleGenerateSmartContent}
-                    disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
+                    onClick={handleGenerateAllInOne}
+                    disabled={isGeneratingAI || !title || !content || content.length < 100}
                     className="gap-2"
-                    data-testid="button-smart-generate"
-                    title="توليد جميع العناصر التحريرية تلقائياً"
+                    data-testid="button-generate-all-in-one"
+                    title="توليد جميع التوليدات الذكية دفعة واحدة: العناوين، التصنيف، SEO، والموجز"
                   >
-                    {generateSmartContentMutation.isPending ? (
+                    {generateAllInOneMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Zap className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4" />
                     )}
-                    توليد ذكي
+                    توليد ذكي شامل
                   </Button>
-                </div>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <RichTextEditor
