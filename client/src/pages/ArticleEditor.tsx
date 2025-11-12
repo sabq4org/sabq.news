@@ -634,13 +634,9 @@ export default function ArticleEditor() {
 
   const generateAllInOneMutation = useMutation({
     mutationFn: async () => {
-      // Validation
-      if (!title || !content) {
-        throw new Error("يجب إدخال العنوان والمحتوى أولاً");
-      }
-      
-      if (title.length < 10) {
-        throw new Error("العنوان يجب أن يكون 10 أحرف على الأقل");
+      // Validation - Only require content (title will be generated!)
+      if (!content) {
+        throw new Error("يجب إدخال المحتوى أولاً");
       }
       
       if (content.length < 100) {
@@ -648,6 +644,7 @@ export default function ArticleEditor() {
       }
       
       console.log('[All-in-One AI] Starting comprehensive AI generation...');
+      console.log('[All-in-One AI] Current title:', title || '(سيتم توليده)');
       
       // Execute all AI tools in PARALLEL for speed
       const [
@@ -656,7 +653,7 @@ export default function ArticleEditor() {
         seoResult,
         summaryResult,
       ] = await Promise.all([
-        // 1. Headline Suggestions
+        // 1. Headline Suggestions (will generate title from content)
         apiRequest("/api/ai/generate-titles", {
           method: "POST",
           body: JSON.stringify({ content, language: "ar" }),
@@ -665,33 +662,39 @@ export default function ArticleEditor() {
           return null;
         }),
         
-        // 2. Smart Classification
-        (!isNewArticle && id
-          ? apiRequest(`/api/articles/${id}/auto-categorize`, { method: "POST" })
-          : apiRequest(`/api/articles/auto-classify-draft`, {
-              method: "POST",
-              body: JSON.stringify({ title, content, language: "ar" }),
-            })
-        ).catch(err => {
+        // 2. Smart Classification (use generated title or placeholder)
+        (async () => {
+          const effectiveTitle = title || "عنوان مؤقت";
+          return (!isNewArticle && id
+            ? apiRequest(`/api/articles/${id}/auto-categorize`, { method: "POST" })
+            : apiRequest(`/api/articles/auto-classify-draft`, {
+                method: "POST",
+                body: JSON.stringify({ title: effectiveTitle, content, language: "ar" }),
+              })
+          );
+        })().catch(err => {
           console.error('[All-in-One AI] Classification failed:', err);
           return null;
         }),
         
-        // 3. SEO Generator
-        (!isNewArticle && id
-          ? apiRequest(`/api/seo/generate`, {
-              method: "POST",
-              body: JSON.stringify({ mode: "saved", articleId: id, language: "ar" }),
-            })
-          : apiRequest(`/api/seo/generate`, {
-              method: "POST",
-              body: JSON.stringify({
-                mode: "draft",
-                draftData: { title, content, excerpt: excerpt || undefined },
-                language: "ar"
-              }),
-            })
-        ).catch(err => {
+        // 3. SEO Generator (use generated title or placeholder)
+        (async () => {
+          const effectiveTitle = title || "عنوان مؤقت";
+          return (!isNewArticle && id
+            ? apiRequest(`/api/seo/generate`, {
+                method: "POST",
+                body: JSON.stringify({ mode: "saved", articleId: id, language: "ar" }),
+              })
+            : apiRequest(`/api/seo/generate`, {
+                method: "POST",
+                body: JSON.stringify({
+                  mode: "draft",
+                  draftData: { title: effectiveTitle, content, excerpt: excerpt || undefined },
+                  language: "ar"
+                }),
+              })
+          );
+        })().catch(err => {
           console.error('[All-in-One AI] SEO failed:', err);
           return null;
         }),
@@ -914,19 +917,11 @@ const generateSlug = (text: string) => {
   };
 
   const handleGenerateAllInOne = () => {
-    if (!title || !content) {
+    // Only require content (title will be generated!)
+    if (!content) {
       toast({
         title: "تنبيه",
-        description: "يجب كتابة العنوان والمحتوى أولاً",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (title.length < 10) {
-      toast({
-        title: "تنبيه",
-        description: "العنوان يجب أن يكون 10 أحرف على الأقل",
+        description: "يجب كتابة المحتوى أولاً",
         variant: "destructive",
       });
       return;
@@ -1277,13 +1272,11 @@ const generateSlug = (text: string) => {
                       variant="default"
                       size="sm"
                       onClick={handleGenerateAllInOne}
-                      disabled={isGeneratingAI || !title || !content || content.length < 100}
+                      disabled={isGeneratingAI || !content || content.length < 100}
                       className="gap-2"
                       data-testid="button-generate-all-in-one"
                       title={
-                        !title 
-                          ? "يجب كتابة العنوان أولاً (10+ أحرف)"
-                          : !content 
+                        !content 
                           ? "يجب كتابة المحتوى أولاً (100+ حرف)"
                           : content.length < 100
                           ? `المحتوى قصير جداً (${content.length}/100 حرف)`
@@ -1297,11 +1290,9 @@ const generateSlug = (text: string) => {
                       )}
                       توليد ذكي شامل
                     </Button>
-                    {(!title || !content || content.length < 100) && (
+                    {(!content || content.length < 100) && (
                       <span className="text-xs text-muted-foreground">
-                        {!title 
-                          ? "يجب كتابة العنوان أولاً"
-                          : !content 
+                        {!content 
                           ? "يجب كتابة المحتوى أولاً"
                           : `المحتوى: ${content.length}/100 حرف`
                         }
