@@ -633,9 +633,9 @@ export default function DataStoryGenerator() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {currentAnalysis.aiInsights && (
+                    {currentAnalysis.aiInsights && Array.isArray(currentAnalysis.aiInsights) && currentAnalysis.aiInsights.length > 0 && (
                       <div className="space-y-3">
-                        {(currentAnalysis.aiInsights as any[]).map((insight, idx) => (
+                        {currentAnalysis.aiInsights.map((insight: any, idx: number) => (
                           <div
                             key={idx}
                             className="p-4 border rounded-lg"
