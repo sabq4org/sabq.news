@@ -1,0 +1,105 @@
+2025-11-12 08:05:30.04
+6598b891
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 08:05:30.07
+6598b891
+User
+📝 [Journalist Agent API] Creating new task for user admin-sabq
+2025-11-12 08:05:30.11
+6598b891
+User
+✅ [Journalist Agent API] Task created: 0265d487-e58e-4841-a96e-15a7f3d2f213
+2025-11-12 08:05:30.11
+6598b891
+User
+🚀 [Journalist Agent API] Auto-executing task 0265d487-e58e-4841-a96e-15a7f3d2f213
+
+2025-11-12 08:05:30.11
+6598b891
+User
+🚀 [Journalist Agent] Starting task 0265d487-e58e-4841-a96e-15a7f3d2f213
+2025-11-12 08:05:30.15
+6598b891
+User
+📚 [Journalist Agent] Starting research for task 0265d487-e58e-4841-a96e-15a7f3d2f213
+2025-11-12 08:05:30.15
+6598b891
+User
+5:05:30 AM [express] POST /api/journalist-tasks 201 in 487ms :: {"id":"0265d487-e58e-4841-a96e-15a7f…
+2025-11-12 08:05:30.19
+6598b891
+User
+❌ [Journalist Agent] Research failed: Error: Could not resolve authentication method. Expected either apiKey or authToken to be set. Or for one of the "X-Api-Key" or "Authorization" headers to be explicitly omitted
+2025-11-12 08:05:30.19
+6598b891
+User
+at Anthropic.validateHeaders (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:111:15)
+2025-11-12 08:05:30.19
+6598b891
+User
+at Anthropic.buildHeaders (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:469:14)
+2025-11-12 08:05:30.19
+6598b891
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async Anthropic.buildRequest (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:431:28)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async Anthropic.makeRequest (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:218:39)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async performResearch (file:///home/runner/workspace/dist/index.js:15871:33)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async executeJournalistTask (file:///home/runner/workspace/dist/index.js:16153:22)
+2025-11-12 08:05:30.19
+6598b891
+User
+❌ [Journalist Agent] Task 0265d487-e58e-4841-a96e-15a7f3d2f213 failed: Error: Could not resolve authentication method. Expected either apiKey or authToken to be set. Or for one of the "X-Api-Key" or "Authorization" headers to be explicitly omitted
+2025-11-12 08:05:30.19
+6598b891
+User
+at Anthropic.validateHeaders (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:111:15)
+2025-11-12 08:05:30.19
+6598b891
+User
+at Anthropic.buildHeaders (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:469:14)
+2025-11-12 08:05:30.19
+6598b891
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async Anthropic.buildRequest (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:431:28)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async Anthropic.makeRequest (file:///home/runner/workspace/node_modules/@anthropic-ai/sdk/client.mjs:218:39)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async performResearch (file:///home/runner/workspace/dist/index.js:15871:33)
+2025-11-12 08:05:30.19
+6598b891
+User
+at async executeJournalistTask (file:///home/runner/workspace/dist/index.js:16153:22)
+2025-11-12 08:05:30.55
+6598b891
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-12 08:05:30.59
+6598b891
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-12 08:05:30.65
+6598b891
+User
+5:05:30 AM [express] GET /api/journalist-tasks/recent 200 in 114ms :: [{"id":"0265d487-e58e-4841-a96…
