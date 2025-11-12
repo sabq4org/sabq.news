@@ -257,6 +257,14 @@ export const navConfig: NavItem[] = [
     roles: ["admin", "editor"],
     children: [
       {
+        id: "ai_tools",
+        labelKey: "nav.ai_tools",
+        labelAr: "توليد العناوين الذكية",
+        path: "/dashboard/ai-tools",
+        icon: Type,
+        roles: ["admin", "editor"],
+      },
+      {
         id: "data_story_generator",
         labelKey: "nav.data_story_generator",
         labelAr: "صحافة البيانات",
