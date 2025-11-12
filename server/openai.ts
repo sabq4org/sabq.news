@@ -48,7 +48,7 @@ export async function summarizeArticle(text: string): Promise<string> {
           content: `قم بتلخيص المقال التالي في 2-3 جمل:\n\n${cleanText}`,
         },
       ],
-      max_completion_tokens: 512,
+      max_completion_tokens: 1024,  // Increased for better results
     });
 
     console.log("[Summarize] ✅ OpenAI response received");
@@ -121,7 +121,7 @@ export async function generateTitle(content: string, language: "ar" | "en" | "ur
         },
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 256,
+      max_completion_tokens: 1024,  // Increased for JSON response
     });
 
     console.log("[GenerateTitles] ✅ OpenAI response received");
