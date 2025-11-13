@@ -4469,6 +4469,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parsed.data.emailVerified !== undefined) updateData.emailVerified = parsed.data.emailVerified;
       if (parsed.data.phoneVerified !== undefined) updateData.phoneVerified = parsed.data.phoneVerified;
       if (parsed.data.verificationBadge !== undefined) updateData.verificationBadge = parsed.data.verificationBadge;
+      
+      // Press Card fields (Apple Wallet Digital Press Card)
+      if (parsed.data.hasPressCard !== undefined) {
+        updateData.hasPressCard = parsed.data.hasPressCard;
+        
+        // If press card is disabled, clear all press card data
+        if (!parsed.data.hasPressCard) {
+          updateData.jobTitle = null;
+          updateData.department = null;
+          updateData.pressIdNumber = null;
+          updateData.cardValidUntil = null;
+        } else {
+          // Only update press card fields if press card is enabled
+          if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle || null;
+          if (parsed.data.department !== undefined) updateData.department = parsed.data.department || null;
+          if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber || null;
+          if (parsed.data.cardValidUntil !== undefined) {
+            if (parsed.data.cardValidUntil) {
+              const parsedDate = new Date(parsed.data.cardValidUntil);
+              if (Number.isNaN(parsedDate.getTime())) {
+                return res.status(400).json({ 
+                  message: "Invalid cardValidUntil date format. Expected ISO 8601 date string." 
+                });
+              }
+              updateData.cardValidUntil = parsedDate;
+            } else {
+              updateData.cardValidUntil = null;
+            }
+          }
+        }
+      } else if (parsed.data.hasPressCard === undefined && oldUser.hasPressCard) {
+        // Only allow updating individual fields if press card is currently enabled
+        if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle || null;
+        if (parsed.data.department !== undefined) updateData.department = parsed.data.department || null;
+        if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber || null;
+        if (parsed.data.cardValidUntil !== undefined) {
+          if (parsed.data.cardValidUntil) {
+            const parsedDate = new Date(parsed.data.cardValidUntil);
+            if (Number.isNaN(parsedDate.getTime())) {
+              return res.status(400).json({ 
+                message: "Invalid cardValidUntil date format. Expected ISO 8601 date string." 
+              });
+            }
+            updateData.cardValidUntil = parsedDate;
+          } else {
+            updateData.cardValidUntil = null;
+          }
+        }
+      }
 
       // Update user data if there are any fields to update
       if (Object.keys(updateData).length > 0) {

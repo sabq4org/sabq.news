@@ -1137,6 +1137,13 @@ export const adminUpdateUserSchema = z.object({
   verificationBadge: z.enum(["none", "silver", "gold"]).optional(),
   emailVerified: z.boolean().optional(),
   phoneVerified: z.boolean().optional(),
+  
+  // Press Card fields (Apple Wallet Digital Press Card)
+  hasPressCard: z.boolean().optional(),
+  jobTitle: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
+  pressIdNumber: z.string().nullable().optional(),
+  cardValidUntil: z.string().nullable().optional(), // ISO date string
 });
 
 // Admin schema for creating new users with roles
