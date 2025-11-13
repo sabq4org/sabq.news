@@ -28,6 +28,7 @@ import UsersManagement from "@/pages/UsersManagement";
 import RolesManagement from "@/pages/RolesManagement";
 import Profile from "@/pages/Profile";
 import PublicProfile from "@/pages/PublicProfile";
+import DiscoverUsers from "@/pages/DiscoverUsers";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
 import EditInterests from "@/pages/EditInterests";
@@ -328,6 +329,7 @@ function Router() {
       <Route path="/dashboard/themes" component={ThemeManager} />
       <Route path="/profile/:userId" component={PublicProfile} />
       <Route path="/profile" component={Profile} />
+      <Route path="/discover-users" component={DiscoverUsers} />
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />
       <Route path="/interests/edit" component={EditInterests} />
