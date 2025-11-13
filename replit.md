@@ -16,7 +16,8 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 
 ### Feature Specifications
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles, hybrid authentication, and email verification.
--   **Social Following System:** Complete user-to-user following infrastructure with enhanced analytics tracking and robust API endpoints with security and performance considerations.
+-   **Social Following System:** Complete user-to-user following infrastructure with enhanced analytics tracking, robust API endpoints with security and performance considerations, Profile page with followers/following tabs and interactive lists, PublicProfile page for viewing other users' profiles with follow/unfollow functionality, and comprehensive cache invalidation strategy ensuring real-time updates across both users after follow/unfollow actions.
+-   **Smart Recommendations System:** AI-powered personalized article recommendations using SQL-based scoring algorithm with CTEs, user interests integration, reading history analysis, and author following detection. Backend API endpoint (GET /api/recommendations/personalized) with 300-second caching, ready for future frontend integration.
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced TipTap-based WYSIWYG editor supporting rich media embeds (including Twitter/X with theme detection), and a Smart Media Library System with AI-powered image suggestions.
 -   **AI Analytics Dashboard (Trilingual):** Displays engagement metrics with reporter attribution and comprehensive category analytics.
 -   **Comments & Engagement:** Nested comment system with real-time moderation and AI-powered comment sentiment analysis (Claude Sonnet 4-5, Gemini Flash).
