@@ -176,10 +176,17 @@ export default function AdminUsers() {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
+      console.log("🔍 [DEBUG] API Response:", data);
       // API returns { users: [...], items: [...] } for backward compatibility
       // Always return an array
-      if (Array.isArray(data)) return data;
-      if (data.users && Array.isArray(data.users)) return data.users;
+      if (Array.isArray(data)) {
+        console.log("🔍 [DEBUG] Returning array data, first user:", data[0]);
+        return data;
+      }
+      if (data.users && Array.isArray(data.users)) {
+        console.log("🔍 [DEBUG] Returning data.users, first user:", data.users[0]);
+        return data.users;
+      }
       return [];
     },
     enabled: !!user,
@@ -410,6 +417,7 @@ export default function AdminUsers() {
       cell: (info) => {
         const user = info.row.original;
         const isCurrentUser = user.id === user.id;
+        console.log(`🔍 [DEBUG] User ${user.email} - hasPressCard:`, user.hasPressCard);
         return (
           <div className="flex items-center gap-2">
             {user.hasPressCard && (
