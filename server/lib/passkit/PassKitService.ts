@@ -182,10 +182,12 @@ export class PassKitService {
     const cleaned = pem.replace(/\s/g, '');
     
     // Extract header, body, and footer using regex
-    const certMatch = cleaned.match(/^(-----BEGIN[A-Z\s]+-----)([A-Za-z0-9+/=]+)(-----END[A-Z\s]+-----)$/);
+    // Supports: CERTIFICATE, PRIVATE KEY, RSA PRIVATE KEY, etc.
+    const certMatch = cleaned.match(/^(-----BEGIN[A-Z ]+-----)([A-Za-z0-9+/=]+)(-----END[A-Z ]+-----)$/);
     
     if (!certMatch) {
       console.error('❌ [PassKit] Failed to parse PEM structure');
+      console.error('First 200 chars of cleaned PEM:', cleaned.substring(0, 200));
       return pem; // Return as-is if we can't parse it
     }
     
