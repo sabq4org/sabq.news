@@ -49,6 +49,7 @@ import {
   Users,
   UserPlus,
   UserMinus,
+  IdCard,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -304,6 +305,38 @@ export default function Profile() {
       toast({
         title: "خطأ",
         description: "فشل في إلغاء المتابعة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { data: walletStatus, isLoading: isLoadingWallet } = useQuery<{
+    hasPass: boolean;
+    serialNumber?: string;
+    createdAt?: string;
+    lastUpdated?: string;
+  }>({
+    queryKey: ['/api/wallet/status'],
+    enabled: !!user,
+  });
+
+  const issueWalletPassMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('/api/wallet/issue', {
+        method: 'POST',
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallet/status'] });
+      toast({
+        title: "تم إصدار البطاقة",
+        description: "تم إصدار بطاقتك الرقمية بنجاح ويمكنك إضافتها الآن إلى Apple Wallet",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "تعذر إصدار البطاقة لأن بيانات الاعتماد الخاصة بـ Apple Wallet غير مكتملة. يرجى التواصل مع المسؤول.",
         variant: "destructive",
       });
     },
@@ -1505,6 +1538,94 @@ export default function Profile() {
                         </form>
                       </Form>
                     </div>
+
+                    <Separator className="my-8" />
+
+                    <div>
+                      <Card className="hover-elevate" data-testid="card-wallet">
+                        <CardHeader>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <IdCard className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <CardTitle>البطاقة الصحفية الرقمية</CardTitle>
+                              <CardDescription>
+                                احصل على بطاقة صحفية رسمية يمكن استخدامها عبر Apple Wallet لتأكيد اعتمادك بسرعة
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {isLoadingWallet ? (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>جاري التحميل...</span>
+                            </div>
+                          ) : walletStatus?.hasPass ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="default" data-testid="status-wallet">
+                                  تمت الإضافة
+                                </Badge>
+                              </div>
+                              
+                              {walletStatus.serialNumber && (
+                                <div className="space-y-1">
+                                  <p className="text-sm text-muted-foreground">الرقم التسلسلي</p>
+                                  <p className="text-sm font-mono" data-testid="text-wallet-serial">
+                                    {walletStatus.serialNumber}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {walletStatus.createdAt && (
+                                <div className="space-y-1">
+                                  <p className="text-sm text-muted-foreground">تاريخ الإصدار</p>
+                                  <p className="text-sm" data-testid="text-wallet-created">
+                                    {new Date(walletStatus.createdAt).toLocaleDateString('ar-SA')}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                  البطاقة جاهزة. سيتم تفعيل التحميل بعد إضافة بيانات Apple Developer.
+                                </AlertDescription>
+                              </Alert>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <p className="text-sm text-muted-foreground">
+                                لم تقم بإصدار بطاقتك الرقمية بعد. اضغط على الزر أدناه للحصول على بطاقة رسمية.
+                              </p>
+                              
+                              <Button
+                                onClick={() => issueWalletPassMutation.mutate()}
+                                disabled={issueWalletPassMutation.isPending}
+                                className="w-full sm:w-auto"
+                                data-testid="button-wallet-add"
+                              >
+                                {issueWalletPassMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                                    جاري إصدار البطاقة...
+                                  </>
+                                ) : (
+                                  <>
+                                    <IdCard className="ml-2 h-4 w-4" />
+                                    إضافة إلى Apple Wallet
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Separator className="my-8" />
                   </TabsContent>
 
                   <TabsContent value="security" className="space-y-6">
