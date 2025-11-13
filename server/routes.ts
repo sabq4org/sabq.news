@@ -10797,9 +10797,14 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
 
-  app.post("/api/behavior/log", isAuthenticated, async (req: any, res) => {
+  app.post("/api/behavior/log", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "يجب تسجيل الدخول لتسجيل السلوك" });
+      }
+      
       const { eventType, metadata } = req.body;
 
       const validEventTypes = [
@@ -10811,12 +10816,16 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         "reaction_add",
         "search",
         "category_filter",
-        "interest_update"
+        "interest_update",
+        "social_share"
       ];
 
       if (!eventType || !validEventTypes.includes(eventType)) {
+        console.error("❌ Invalid eventType:", eventType);
         return res.status(400).json({ 
-          message: "Invalid eventType" 
+          message: "Invalid eventType",
+          received: eventType,
+          valid: validEventTypes
         });
       }
 
