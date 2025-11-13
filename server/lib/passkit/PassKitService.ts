@@ -76,17 +76,19 @@ export class PassKitService {
       );
     }
     
+    // Convert all certificates to base64 strings (joi validation works better with strings)
     const config: CertificateConfig = {
-      signerCert: signerCert,
-      signerKey: this.loadCertificate(keyPath),
-      wwdr: wwdrCert,
+      signerCert: signerCert.toString('base64') as any,
+      signerKey: this.loadCertificate(keyPath).toString('base64') as any,
+      wwdr: wwdrCert.toString('base64') as any,
     };
     
     if (process.env.APPLE_PASS_KEY_PASSWORD) {
       config.signerKeyPassphrase = process.env.APPLE_PASS_KEY_PASSWORD;
     }
     
-    console.log(`✅ [PassKit] Certificate config complete - wwdr type: ${typeof config.wwdr}`);
+    console.log(`✅ [PassKit] Certificate config complete - all converted to base64 strings`);
+    console.log(`✅ [PassKit] wwdr type: ${typeof config.wwdr}, length: ${(config.wwdr as any).length}`);
     
     return config;
   }

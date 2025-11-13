@@ -27,9 +27,9 @@ export interface PressPassData extends PassData {
 }
 
 export interface CertificateConfig {
-  signerCert: Buffer;
-  signerKey: Buffer;
-  wwdr: Buffer;
+  signerCert: Buffer | string;
+  signerKey: Buffer | string;
+  wwdr: Buffer | string;
   signerKeyPassphrase?: string;
 }
 
