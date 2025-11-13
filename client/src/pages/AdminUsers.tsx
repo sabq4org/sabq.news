@@ -78,6 +78,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -98,6 +99,7 @@ interface User {
   roleId: string | null;
   createdAt: string;
   lastActivityAt: string | null;
+  hasPressCard: boolean;
 }
 
 interface KPIs {
@@ -409,13 +411,23 @@ export default function AdminUsers() {
         const user = info.row.original;
         const isCurrentUser = user.id === user.id;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" data-testid={`button-actions-${user.id}`}>
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="text-right">
+          <div className="flex items-center gap-2">
+            {user.hasPressCard && (
+              <div 
+                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary"
+                title="بطاقة صحفية مفعلة"
+                data-testid={`icon-press-card-${user.id}`}
+              >
+                <CreditCard className="w-4 h-4" />
+              </div>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid={`button-actions-${user.id}`}>
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="text-right">
               <DropdownMenuItem
                 onClick={() => window.open(`/profile/${user.id}`, "_blank")}
                 data-testid={`action-view-${user.id}`}
@@ -482,6 +494,7 @@ export default function AdminUsers() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         );
       },
     }),

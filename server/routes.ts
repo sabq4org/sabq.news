@@ -4290,6 +4290,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: users.status,
           isProfileComplete: users.isProfileComplete,
           createdAt: users.createdAt,
+          emailVerified: users.emailVerified,
+          verificationBadge: users.verificationBadge,
+          lastActivityAt: users.lastActivityAt,
+          hasPressCard: users.hasPressCard,
         })
         .from(users);
 
@@ -4346,6 +4350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             roleName: firstRole?.name || null,
             roleNameAr: firstRole?.nameAr || null,
             roleId: firstRole?.id || null,
+            role: firstRole?.name || 'user',
           };
         })
       );
@@ -4363,6 +4368,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           roleName: u.roleName,
           roleNameAr: u.roleNameAr,
           roleId: u.roleId,
+          emailVerified: u.emailVerified,
+          verificationBadge: u.verificationBadge,
+          lastActivityAt: u.lastActivityAt,
+          hasPressCard: u.hasPressCard,
         })),
         users: usersWithRoles,
       });
