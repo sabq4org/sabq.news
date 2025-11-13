@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { PressPassBuilder } from './PressPassBuilder';
 import { LoyaltyPassBuilder } from './LoyaltyPassBuilder';
 import { PassBuilder, CertificateConfig, PressPassData, LoyaltyPassData } from './PassBuilder';
@@ -64,7 +66,13 @@ export class PassKitService {
     // Determine WWDR certificate source - MUST be Buffer
     let wwdrCert: Buffer;
     
-    if (wwdr) {
+    // PRIORITY: Try to load from file first (most reliable)
+    const wwdrFilePath = path.join(process.cwd(), 'certs', 'wwdr.pem');
+    
+    if (fs.existsSync(wwdrFilePath)) {
+      console.log(`✅ [PassKit] Loading WWDR from file: ${wwdrFilePath}`);
+      wwdrCert = fs.readFileSync(wwdrFilePath);
+    } else if (wwdr) {
       console.log(`✅ [PassKit] Using WWDR from split certificate`);
       wwdrCert = wwdr;
     } else if (wwdrPath) {
