@@ -1,0 +1,75 @@
+علي يا قائد سبق 👑🔥
+خلني أعطيك برومبت جاهز واحترافي تقدر تستخدمه مباشرة في Midjourney أو DALL·E أو أي أداة تصميم — لإنتاج بطاقة شخصية مخصصة بصحيفة سبق ومهيأة للإضافة في Apple Wallet بشكل رسمي.
+
+💳 البرومبت ينتج بطاقة Wallet بشكل واقعي، مرتبة، وتحمل الهوية البصرية لسبق + معلوماتك + صورتك.
+
+⸻
+
+🎨 🔖 البرومبت الجاهز لإنتاج بطاقة أبل واليت (Apple Wallet ID Card)
+
+استخدمه كما هو، فقط ضع صورتك في المكان المخصص إن احتجت.
+
+Design a realistic Apple Wallet ID card for a professional media organization. 
+Create a digital identification card for "Sabq Electronic Newspaper – صحيفة سبق" 
+with a premium, modern Arabic UI style.
+
+Card layout should match Apple Wallet native design:
+- Rounded corners
+- Clean minimalistic layout
+- High-contrast typography
+- Subtle shadows
+- NFC-style tag icon placement
+- Wallet-ready proportions (1125x725)
+
+Include the following elements on the card:
+
+Front Side:
+- Official Sabq logo in top-left (modern, sleek, high-resolution)
+- Professional portrait photo of the holder (imported image) positioned on the right side
+- Full name: "علي الحازمي (أبو محمد)"
+- Job title: "رئيس تحرير صحيفة سبق الإلكترونية"
+- QR code automatically generated linking to profile
+- ID Number: “SABQ-ID-001”
+- Validity: “2025 – 2027”
+- Department: "التحرير"
+- Background design inspired by Sabq branding:
+  • blue gradient
+  • subtle geometric lines
+  • Arabic calligraphy texture faint in the back
+
+Back Side:
+- Contact email: admin@sabq.ai
+- Personal profile link
+- Role permissions summary
+- Emergency contact section
+- Sabq’s official stamp in high fidelity
+- Security hologram effect
+
+Style guidelines:
+- Arabic-first layout (RTL)
+- High realism, Apple Wallet standard proportions
+- Crisp shadows, smooth highlights
+- Elegant typography matching SF Arabic or similar
+- Corporate press-card aesthetic
+- Ultra-clean, premium, editorial design
+- No clutter, no heavy textures
+
+Output as a photorealistic digital card ready for Wallet integration.
+
+
+⸻
+
+💼 هل تحتاج نسخة بصيغة جاهزة للـ Wallet Pass (.pkpass)؟
+
+أبو محمد… إذا تبغاها جاهزة تُرفع مباشرة على أبل واليت بدون عناء، أقدر أبني لك:
+	•	ملف .pkpass حقيقي
+	•	مع QR Code حي
+	•	مع API للتحديث (نفس نظام boarding passes)
+	•	وربطه مع نظام “سبق الذكية” بحيث تتحدث البطاقة تلقائياً عند تغيير بياناتك.
+
+قول لي:
+تبغى بطاقة ساكنة (Static Wallet Card)
+ولا
+بطاقة ذكية تتحدث عبر الـ API (Dynamic Wallet Pass)؟
+
+أنا جاهز يا علي 🙌🔥
