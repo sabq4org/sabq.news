@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform that enriches news consumption through AI-driven article summarization, personalized recommendations, and comprehensive content management. The platform features trilingual dashboards, independent content management for each language, a smart links system, AI-powered SEO optimization, and one-click AI content generation. It is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver an advanced news experience leveraging AI and content enrichment.
+Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform that enriches news consumption through AI-driven article summarization, personalized recommendations, comprehensive content management, and viral social media distribution. The platform features trilingual dashboards, independent content management for each language, a smart links system, AI-powered SEO optimization, one-click AI content generation, and comprehensive social sharing with click tracking analytics. It is built with React, Express, and PostgreSQL, supporting RTL/LTR layouts, dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver an advanced news experience leveraging AI, content enrichment, and social media virality.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -44,6 +44,20 @@ Key features include:
 -   **Content AI Hub:** Centralized AI tools dashboard for journalists and editors providing 7 integrated tools: (1) Smart Headlines Comparison - generates and compares headlines from GPT-4o, Claude Sonnet 4-5, and Gemini 2.0 Flash; (2) Text Summarizer - uses Claude Sonnet 4-5 for intelligent 30% compression while preserving key points; (3) Social Media Generator - creates platform-optimized posts (Twitter 280, Facebook 500, LinkedIn 700 chars) with GPT-4o; (4) Smart Image Search - suggests image queries and keywords via Gemini 2.0 Flash; (5) Instant Translator - professional translation across 7 languages using Claude Sonnet 4-5; (6) Fact Checker - detects misinformation using ensemble voting from 3 AI models (Claude Sonnet 4-5, GPT-4o, Gemini 2.0 Flash) with confidence scoring, detailed reasoning, red flag detection, and verification recommendations; (7) Trends Analyzer - analyzes trending topics across articles and comments using Claude + Gemini with timeframe filtering (day/week/month), sentiment analysis, and strategic recommendations. All endpoints feature comprehensive Zod input validation (bounds checking, language validation, platform validation) with Arabic error messages, logging, and strict no-emoji policy enforcement.
 -   **Real-Time Features:** "Moment by Moment" Live News Desk - redesigned from scratch with breaking news ticker, compact live feed (20 items/page), auto-refresh (30s), simple filters (breaking/all), optimized performance (<1s load time), and Smart Notifications System via SSE.
 -   **Smart Links Management System:** Full CRUD for AI-powered entity/term recognition, direct image upload, AI auto-description, and rich metadata.
+-   **Social Media Sharing & Distribution System:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics:
+    - **SocialShareBar Component:** Unified sharing interface supporting 6 major platforms (WhatsApp, Twitter/X, Facebook, Telegram, LinkedIn, Copy Link) using lucide-react icons exclusively (NO EMOJI policy enforced)
+    - **Smart Short Links:** Idempotent short URL generation using nanoid(8) codes (218T combinations, collision-resistant) with automatic UTM parameter injection for attribution tracking
+    - **Backend Architecture:** 
+      - `short_links` table: Stores unique short codes, original URLs, UTM parameters, article associations, click counters, expiry dates, and active status
+      - `short_link_clicks` table: Logs individual clicks with IP address, user agent, referer, geolocation data (country/city), and user association
+      - GET /api/shortlinks/article/:articleId - Fetch existing short link (idempotent, cached)
+      - POST /api/shortlinks - Create new short link (rate limited: 10 req/min per IP)
+      - GET /s/:code - Redirect with click tracking and analytics logging
+      - GET /api/shortlinks/analytics/:linkId - Retrieve click analytics (total clicks, unique users, top sources)
+    - **Frontend Integration:** Fetch-before-create flow preventing duplicate short links across page reloads, React Query caching with staleTime: Infinity, loading states during short link creation, graceful fallback to canonical URLs if creation fails
+    - **Click Analytics:** Atomic counter updates, comprehensive metadata tracking (IP/userAgent/referer/geo), unique user counting, source attribution, and real-time dashboard integration
+    - **Security:** Express rate limiting (10 req/min), Zod input validation, nanoid collision resistance, expiry date enforcement, active status filtering
+    - **Performance:** Database indexes on shortCode, articleId+isActive, clickedAt, and shortLinkId for sub-100ms query times
 -   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including Schema.org JSON-LD and OpenAPI 3.0 specification.
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
 -   **Locale-Isolated User Pages:** Complete English-specific user profile pages querying English-only data.
