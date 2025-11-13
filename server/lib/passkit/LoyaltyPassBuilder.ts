@@ -14,7 +14,7 @@ export class LoyaltyPassBuilder extends PassBuilder {
   
   getTemplatePath(): string {
     // Always use the source template, not the dist version
-    return path.resolve(process.cwd(), 'server/lib/passkit/loyalty-pass-template');
+    return path.resolve(process.cwd(), 'server/lib/passkit/loyalty-pass-template.pass');
   }
   
   getPassDescription(): string {
