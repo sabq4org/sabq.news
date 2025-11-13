@@ -366,7 +366,8 @@ export async function setupAuth(app: Express) {
         id: user.id, 
         email: user.email,
         role: user.role,
-        allowedLanguages: user.allowedLanguages || []
+        allowedLanguages: user.allowedLanguages || [],
+        hasPressCard: user.hasPressCard || false,
       });
     } catch (error) {
       console.error('❌ DeserializeUser error:', error);
