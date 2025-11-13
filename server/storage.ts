@@ -73,6 +73,8 @@ import {
   dataStorySources,
   dataStoryAnalyses,
   dataStoryDrafts,
+  shortLinks,
+  shortLinkClicks,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -245,6 +247,10 @@ import {
   type DataStoryDraft,
   type InsertDataStoryDraft,
   type DataStoryWithDetails,
+  type ShortLink,
+  type InsertShortLink,
+  type ShortLinkClick,
+  type InsertShortLinkClick,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1139,6 +1145,17 @@ export interface IStorage {
   convertDraftToArticle(draftId: string, articleId: string): Promise<DataStoryDraft>;
   
   getDataStoryWithDetails(sourceId: string): Promise<DataStoryWithDetails | undefined>;
+  
+  // Short Links operations
+  createShortLink(data: InsertShortLink): Promise<ShortLink>;
+  getShortLinkByCode(code: string): Promise<ShortLink | undefined>;
+  getShortLinkByArticle(articleId: string): Promise<ShortLink | undefined>;
+  incrementShortLinkClick(linkId: string, clickData: InsertShortLinkClick): Promise<void>;
+  getShortLinkAnalytics(linkId: string, days?: number): Promise<{
+    totalClicks: number;
+    uniqueUsers: number;
+    topSources: Array<{ source: string; count: number }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -9666,6 +9683,127 @@ export class DatabaseStorage implements IStorage {
     );
 
     return { ...source, analyses: analysesWithDrafts };
+  }
+  
+  // Short Links operations
+  async createShortLink(data: InsertShortLink): Promise<ShortLink> {
+    const maxRetries = 5;
+    let attempts = 0;
+    
+    while (attempts < maxRetries) {
+      try {
+        const shortCode = nanoid(8);
+        
+        const [created] = await db
+          .insert(shortLinks)
+          .values({
+            ...data,
+            shortCode,
+            utmMedium: data.utmMedium || 'social',
+          })
+          .returning();
+        
+        console.log(`✅ Short link created: ${shortCode} -> ${data.originalUrl}`);
+        return created;
+      } catch (error: any) {
+        if (error.code === '23505' && error.constraint === 'short_links_short_code_unique') {
+          attempts++;
+          console.log(`⚠️  Short code collision (attempt ${attempts}/${maxRetries}), retrying...`);
+          if (attempts >= maxRetries) {
+            throw new Error('Failed to generate unique short code after multiple attempts');
+          }
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    throw new Error('Failed to create short link');
+  }
+
+  async getShortLinkByCode(code: string): Promise<ShortLink | undefined> {
+    const [link] = await db
+      .select()
+      .from(shortLinks)
+      .where(eq(shortLinks.shortCode, code))
+      .limit(1);
+    return link;
+  }
+
+  async getShortLinkByArticle(articleId: string): Promise<ShortLink | undefined> {
+    const [link] = await db
+      .select()
+      .from(shortLinks)
+      .where(
+        and(
+          eq(shortLinks.articleId, articleId),
+          eq(shortLinks.isActive, true)
+        )
+      )
+      .orderBy(desc(shortLinks.createdAt))
+      .limit(1);
+    return link;
+  }
+
+  async incrementShortLinkClick(linkId: string, clickData: InsertShortLinkClick): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(shortLinks)
+        .set({
+          clickCount: sql`${shortLinks.clickCount} + 1`,
+          lastClickedAt: new Date(),
+        })
+        .where(eq(shortLinks.id, linkId));
+
+      await tx.insert(shortLinkClicks).values({
+        shortLinkId: linkId,
+        ...clickData,
+      });
+    });
+    
+    console.log(`📊 Short link click logged: ${linkId}`);
+  }
+
+  async getShortLinkAnalytics(linkId: string, days: number = 30): Promise<{
+    totalClicks: number;
+    uniqueUsers: number;
+    topSources: Array<{ source: string; count: number }>;
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const clicks = await db
+      .select()
+      .from(shortLinkClicks)
+      .where(
+        and(
+          eq(shortLinkClicks.shortLinkId, linkId),
+          gte(shortLinkClicks.clickedAt, startDate)
+        )
+      );
+
+    const uniqueUserIds = new Set(
+      clicks
+        .filter(c => c.userId)
+        .map(c => c.userId)
+    );
+
+    const sourceMap = new Map<string, number>();
+    clicks.forEach(click => {
+      const source = click.referer || 'direct';
+      sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
+    });
+
+    const topSources = Array.from(sourceMap.entries())
+      .map(([source, count]) => ({ source, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    return {
+      totalClicks: clicks.length,
+      uniqueUsers: uniqueUserIds.size,
+      topSources,
+    };
   }
 }
 

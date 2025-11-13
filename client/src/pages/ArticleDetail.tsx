@@ -10,6 +10,7 @@ import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
 import { AiArticleStats } from "@/components/AiArticleStats";
 import { AdSlot } from "@/components/AdSlot";
+import { SocialShareBar } from "@/components/SocialShareBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -70,6 +71,26 @@ export default function ArticleDetail() {
 
   const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles", slug, "related"],
+  });
+
+  // Fetch or create short link for social sharing
+  const { data: shortLink } = useQuery<{ shortCode: string; originalUrl: string }>({
+    queryKey: ["/api/shortlinks", article?.id],
+    queryFn: async () => {
+      if (!article) return null;
+      const response = await apiRequest("/api/shortlinks", {
+        method: "POST",
+        body: JSON.stringify({
+          originalUrl: `/article/${slug}`,
+          articleId: article.id,
+          utmMedium: "social",
+          utmCampaign: "article_share",
+        }),
+      });
+      return response;
+    },
+    enabled: !!article,
+    staleTime: Infinity, // Short link never changes
   });
 
   const { logArticleView } = useArticleReadTracking({
@@ -417,20 +438,6 @@ export default function ArticleDetail() {
 
   const handleBookmark = async () => {
     bookmarkMutation.mutate();
-  };
-
-  const handleShare = async () => {
-    if (navigator.share && article) {
-      try {
-        await navigator.share({
-          title: article.title,
-          text: article.excerpt || "",
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log("Share failed:", err);
-      }
-    }
   };
 
   const handleComment = async (content: string, parentId?: string) => {
@@ -825,37 +832,44 @@ export default function ArticleDetail() {
 
             <Separator />
 
-            {/* Share Actions */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant={article.hasReacted ? "default" : "outline"}
-                className="gap-2 hover-elevate"
-                onClick={handleReact}
-                data-testid="button-article-react"
-              >
-                <Heart className={article.hasReacted ? 'fill-current' : ''} />
-                إعجاب ({article.reactionsCount || 0})
-              </Button>
+            {/* Engagement Actions & Social Share */}
+            <div className="space-y-6">
+              {/* Primary Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  variant={article.hasReacted ? "default" : "outline"}
+                  className="gap-2"
+                  onClick={handleReact}
+                  data-testid="button-article-react"
+                >
+                  <Heart className={article.hasReacted ? 'fill-current' : ''} />
+                  <span className="hidden sm:inline">إعجاب</span> ({article.reactionsCount || 0})
+                </Button>
 
-              <Button
-                variant={article.isBookmarked ? "default" : "outline"}
-                className="gap-2 hover-elevate"
-                onClick={handleBookmark}
-                data-testid="button-article-bookmark"
-              >
-                <Bookmark className={article.isBookmarked ? 'fill-current' : ''} />
-                حفظ
-              </Button>
+                <Button
+                  variant={article.isBookmarked ? "default" : "outline"}
+                  className="gap-2"
+                  onClick={handleBookmark}
+                  data-testid="button-article-bookmark"
+                >
+                  <Bookmark className={article.isBookmarked ? 'fill-current' : ''} />
+                  <span className="hidden sm:inline">حفظ</span>
+                </Button>
+              </div>
 
-              <Button
-                variant="outline"
-                className="gap-2 hover-elevate"
-                onClick={handleShare}
-                data-testid="button-article-share"
-              >
-                <Share2 />
-                مشاركة
-              </Button>
+              {/* Social Share Bar */}
+              <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Share2 className="h-4 w-4" />
+                  شارك المقال
+                </h3>
+                <SocialShareBar
+                  title={article.title}
+                  url={shortLink?.shortCode ? `/s/${shortLink.shortCode}` : `/article/${slug}`}
+                  description={article.excerpt || ""}
+                  articleId={article.id}
+                />
+              </div>
             </div>
 
             <Separator />

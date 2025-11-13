@@ -5080,3 +5080,118 @@ export const insertJournalistTaskSchema = createInsertSchema(journalistTasks).om
 
 export type JournalistTask = typeof journalistTasks.$inferSelect;
 export type InsertJournalistTask = z.infer<typeof insertJournalistTaskSchema>;
+
+// ============================================
+// SOCIAL SHARING - SHORT LINKS TABLE
+// ============================================
+
+export const shortLinks = pgTable("short_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shortCode: varchar("short_code", { length: 12 }).notNull().unique(), // e.g., "a1b2c3"
+  originalUrl: text("original_url").notNull(),
+  
+  // UTM parameters for tracking
+  utmSource: text("utm_source"), // e.g., "twitter", "whatsapp", "facebook"
+  utmMedium: text("utm_medium"), // e.g., "social" - set in service logic
+  utmCampaign: text("utm_campaign"), // e.g., "breaking_news"
+  utmContent: text("utm_content"), // optional additional tracking
+  
+  // Metadata
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: 'set null' }),
+  createdBy: varchar("created_by").references(() => users.id),
+  
+  // Analytics
+  clickCount: integer("click_count").default(0).notNull(),
+  lastClickedAt: timestamp("last_clicked_at"),
+  
+  // Lifecycle
+  expiresAt: timestamp("expires_at"), // optional expiration
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_short_links_code").on(table.shortCode),
+  index("idx_short_links_article_active").on(table.articleId, table.isActive),
+  index("idx_short_links_created").on(table.createdAt.desc()),
+]);
+
+// Short links relations
+export const shortLinksRelations = relations(shortLinks, ({ one }) => ({
+  article: one(articles, {
+    fields: [shortLinks.articleId],
+    references: [articles.id],
+  }),
+  creator: one(users, {
+    fields: [shortLinks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// SOCIAL SHARING - CLICK TRACKING TABLE
+// ============================================
+
+export const shortLinkClicks = pgTable("short_link_clicks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shortLinkId: varchar("short_link_id").references(() => shortLinks.id, { onDelete: 'cascade' }).notNull(),
+  
+  // Click details
+  clickedAt: timestamp("clicked_at").defaultNow().notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  referer: text("referer"),
+  
+  // Geolocation (optional)
+  country: text("country"),
+  city: text("city"),
+  
+  // User tracking (if logged in)
+  userId: varchar("user_id").references(() => users.id),
+}, (table) => [
+  index("idx_short_link_clicks_link").on(table.shortLinkId),
+  index("idx_short_link_clicks_date").on(table.clickedAt.desc()),
+]);
+
+// Short link clicks relations
+export const shortLinkClicksRelations = relations(shortLinkClicks, ({ one }) => ({
+  shortLink: one(shortLinks, {
+    fields: [shortLinkClicks.shortLinkId],
+    references: [shortLinks.id],
+  }),
+  user: one(users, {
+    fields: [shortLinkClicks.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// SOCIAL SHARING - INSERT SCHEMAS
+// ============================================
+
+export const insertShortLinkSchema = createInsertSchema(shortLinks).omit({
+  id: true,
+  shortCode: true, // auto-generated
+  clickCount: true,
+  lastClickedAt: true,
+  createdAt: true,
+}).extend({
+  originalUrl: z.string().url("يجب أن يكون رابط صالح"),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  articleId: z.string().optional(),
+});
+
+export const insertShortLinkClickSchema = createInsertSchema(shortLinkClicks).omit({
+  id: true,
+  clickedAt: true,
+});
+
+// ============================================
+// SOCIAL SHARING - SELECT TYPES
+// ============================================
+
+export type ShortLink = typeof shortLinks.$inferSelect;
+export type InsertShortLink = z.infer<typeof insertShortLinkSchema>;
+export type ShortLinkClick = typeof shortLinkClicks.$inferSelect;
+export type InsertShortLinkClick = z.infer<typeof insertShortLinkClickSchema>;

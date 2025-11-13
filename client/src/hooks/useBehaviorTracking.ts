@@ -10,7 +10,8 @@ export type BehaviorEventType =
   | "reaction_add"
   | "search"
   | "category_filter"
-  | "interest_update";
+  | "interest_update"
+  | "social_share";
 
 interface BehaviorMetadata {
   articleId?: string;

@@ -136,6 +136,8 @@ import {
   mediaFiles,
   mediaFolders,
   mediaUsageLog,
+  shortLinks,
+  shortLinkClicks,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -215,9 +217,12 @@ import {
   insertMediaUsageLogSchema,
   updateMediaFileSchema,
   updateMediaFolderSchema,
+  insertShortLinkSchema,
+  insertShortLinkClickSchema,
   type EnArticleWithDetails,
   type UrArticleWithDetails,
   type User,
+  type InsertShortLinkClick,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -23910,6 +23915,115 @@ Allow: /
   // SMART JOURNALIST AGENT - وكيل الصحفي الذكي
   // ============================================================
   app.use(journalistAgentRoutes);
+
+  // ============================================================
+  // SHORT LINKS - SOCIAL SHARING
+  // ============================================================
+  
+  const shortLinksLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // 10 requests per minute per IP
+    message: { message: "تم تجاوز حد إنشاء الروابط القصيرة. يرجى المحاولة بعد دقيقة" },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // POST /api/shortlinks - Create or get existing short link
+  app.post("/api/shortlinks", shortLinksLimiter, async (req: any, res) => {
+    try {
+      const validatedData = insertShortLinkSchema.parse(req.body);
+      
+      if (validatedData.articleId) {
+        const existingLink = await storage.getShortLinkByArticle(validatedData.articleId);
+        if (existingLink) {
+          console.log(`🔗 Returning existing short link for article ${validatedData.articleId}: ${existingLink.shortCode}`);
+          return res.json(existingLink);
+        }
+      }
+
+      const shortLink = await storage.createShortLink({
+        ...validatedData,
+        createdBy: req.user?.id,
+      });
+
+      await logActivity({
+        userId: req.user?.id,
+        action: "create",
+        entityType: "short_link",
+        entityId: shortLink.id,
+        newValue: { shortCode: shortLink.shortCode, originalUrl: shortLink.originalUrl },
+      });
+
+      res.status(201).json(shortLink);
+    } catch (error) {
+      console.error("Error creating short link:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل إنشاء الرابط القصير" });
+    }
+  });
+
+  // GET /s/:code - Redirect to original URL and log click
+  app.get("/s/:code", async (req, res) => {
+    try {
+      const { code } = req.params;
+      
+      const shortLink = await storage.getShortLinkByCode(code);
+      
+      if (!shortLink) {
+        return res.status(404).send("الرابط غير موجود");
+      }
+
+      if (!shortLink.isActive) {
+        return res.status(410).send("هذا الرابط غير نشط");
+      }
+
+      if (shortLink.expiresAt && new Date(shortLink.expiresAt) < new Date()) {
+        return res.status(410).send("انتهت صلاحية هذا الرابط");
+      }
+
+      const clickData: InsertShortLinkClick = {
+        shortLinkId: shortLink.id,
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        referer: req.get("referer"),
+        userId: (req as any).user?.id,
+      };
+
+      await storage.incrementShortLinkClick(shortLink.id, clickData);
+
+      let redirectUrl = shortLink.originalUrl;
+      
+      const urlObj = new URL(redirectUrl);
+      if (shortLink.utmSource) urlObj.searchParams.set("utm_source", shortLink.utmSource);
+      if (shortLink.utmMedium) urlObj.searchParams.set("utm_medium", shortLink.utmMedium);
+      if (shortLink.utmCampaign) urlObj.searchParams.set("utm_campaign", shortLink.utmCampaign);
+      if (shortLink.utmContent) urlObj.searchParams.set("utm_content", shortLink.utmContent);
+      
+      redirectUrl = urlObj.toString();
+
+      res.redirect(302, redirectUrl);
+    } catch (error) {
+      console.error("Error redirecting short link:", error);
+      res.status(500).send("حدث خطأ في إعادة التوجيه");
+    }
+  });
+
+  // GET /api/shortlinks/analytics/:linkId - Get analytics (auth required)
+  app.get("/api/shortlinks/analytics/:linkId", requireAuth, async (req: any, res) => {
+    try {
+      const { linkId } = req.params;
+      const days = parseInt(req.query.days as string) || 30;
+
+      const analytics = await storage.getShortLinkAnalytics(linkId, days);
+
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching short link analytics:", error);
+      res.status(500).json({ message: "فشل جلب الإحصائيات" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
