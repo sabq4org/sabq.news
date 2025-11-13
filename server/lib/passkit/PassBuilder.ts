@@ -49,14 +49,15 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
-      console.log('🔐 [PassBuilder] Generating pass with strings...');
-      console.log('✅ [PassBuilder] Certificate types (should be strings):', {
+      console.log('🔐 [PassBuilder] Generating pass with v3.x API...');
+      console.log('✅ [PassBuilder] Certificate types:', {
         wwdr: typeof certificates.wwdr,
         signerCert: typeof certificates.signerCert,
         signerKey: typeof certificates.signerKey,
       });
       
-      const pass = new PKPass(
+      // Use v3.x API: PKPass.from() with all pass.json overrides
+      const pass = await PKPass.from(
         {
           model: this.getTemplatePath(),
           certificates: {
@@ -77,19 +78,22 @@ export abstract class PassBuilder {
           backgroundColor: this.getBackgroundColor(),
           foregroundColor: 'rgb(255, 255, 255)',
           labelColor: 'rgb(255, 255, 255)',
-          barcodes: [
-            {
-              format: 'PKBarcodeFormatQR',
-              message: data.userId,
-              messageEncoding: 'iso-8859-1',
-            },
-          ],
         }
       );
       
+      // Add barcode using setBarcodes method
+      pass.setBarcodes({
+        format: 'PKBarcodeFormatQR',
+        message: data.userId,
+        messageEncoding: 'iso-8859-1',
+      });
+      
+      // Configure custom fields
       this.configurePassFields(pass, data);
       
-      const buffer = await pass.getAsBuffer();
+      console.log('✅ [PassBuilder] Pass configured successfully');
+      
+      const buffer = pass.getAsBuffer();
       return buffer;
     } catch (error: any) {
       console.log('❌ [PassBuilder] PKPass error:', error);
