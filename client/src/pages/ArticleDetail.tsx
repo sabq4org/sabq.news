@@ -34,6 +34,8 @@ import {
   VolumeX,
   CheckCircle2,
   Loader2,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -71,6 +73,77 @@ export default function ArticleDetail() {
 
   const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles", slug, "related"],
+  });
+
+  // Determine the author ID to follow (use author.id)
+  const authorId = article?.author?.id;
+  const isOwnArticle = user?.id === authorId;
+
+  // Check if current user follows the author
+  const { data: isFollowingData } = useQuery<{
+    isFollowing: boolean;
+  }>({
+    queryKey: ["/api/social/is-following", authorId],
+    enabled: !!authorId && !!user && !isOwnArticle,
+  });
+
+  const isFollowing = isFollowingData?.isFollowing || false;
+
+  // Follow mutation
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (!authorId) throw new Error("Author ID not found");
+      return apiRequest("/api/social/follow", {
+        method: "POST",
+        body: JSON.stringify({ userId: authorId }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "تمت المتابعة",
+        description: "أصبحت تتابع هذا الكاتب",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unfollow mutation
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      if (!authorId) throw new Error("Author ID not found");
+      return apiRequest(`/api/social/unfollow/${authorId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "تم إلغاء المتابعة",
+        description: "لم تعد تتابع هذا الكاتب",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية إلغاء المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Fetch existing short link for article (idempotent GET first)
@@ -718,34 +791,63 @@ export default function ArticleDetail() {
                         {getInitials(article.author?.firstName, article.author?.lastName, article.author?.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      {article.staff ? (
-                        <Link 
-                          href={`/reporter/${article.staff.slug}`} 
-                          className="font-medium hover:text-primary transition-colors flex items-center gap-1" 
-                          data-testid="link-reporter-profile"
-                        >
-                          <span data-testid="text-author-name">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        {article.staff ? (
+                          <Link 
+                            href={`/reporter/${article.staff.slug}`} 
+                            className="font-medium hover:text-primary transition-colors flex items-center gap-1" 
+                            data-testid="link-reporter-profile"
+                          >
+                            <span data-testid="text-author-name">
+                              {article.author?.firstName && article.author?.lastName
+                                ? `${article.author.firstName} ${article.author.lastName}`
+                                : article.author?.email}
+                            </span>
+                            {article.staff.isVerified && (
+                              <CheckCircle2 className="h-4 w-4 text-primary inline" />
+                            )}
+                          </Link>
+                        ) : (
+                          <p className="font-medium" data-testid="text-author-name">
                             {article.author?.firstName && article.author?.lastName
                               ? `${article.author.firstName} ${article.author.lastName}`
                               : article.author?.email}
-                          </span>
-                          {article.staff.isVerified && (
-                            <CheckCircle2 className="h-4 w-4 text-primary inline" />
-                          )}
-                        </Link>
-                      ) : (
-                        <p className="font-medium" data-testid="text-author-name">
-                          {article.author?.firstName && article.author?.lastName
-                            ? `${article.author.firstName} ${article.author.lastName}`
-                            : article.author?.email}
-                        </p>
-                      )}
-                      {timeAgo && (
-                        <p className="text-muted-foreground text-xs flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {timeAgo}
-                        </p>
+                          </p>
+                        )}
+                        {timeAgo && (
+                          <p className="text-muted-foreground text-xs flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {timeAgo}
+                          </p>
+                        )}
+                      </div>
+                      {user && !isOwnArticle && authorId && (
+                        isFollowing ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => unfollowMutation.mutate()}
+                            disabled={unfollowMutation.isPending}
+                            className="gap-1 shrink-0"
+                            data-testid="button-unfollow-author"
+                          >
+                            <UserCheck className="h-3 w-3" />
+                            متابع
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => followMutation.mutate()}
+                            disabled={followMutation.isPending}
+                            className="gap-1 shrink-0"
+                            data-testid="button-follow-author"
+                          >
+                            <UserPlus className="h-3 w-3" />
+                            متابعة
+                          </Button>
+                        )
                       )}
                     </div>
                   </div>
