@@ -11,6 +11,15 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, AI-summarized article detail pages, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation and mobile responsiveness. A core architectural decision is the trilingual system with separate database schemas (`ar_*`, `en_*`, `ur_*` tables), language-specific dashboards, and an i18n system with LanguageContext and bidirectional routing. The platform utilizes a unified brand color system and a consistent smart blocks architecture across all three languages.
 
+**Modern Profile Page Design (Apple News + LinkedIn Style):**
+- **Clean Header:** Large avatar with upload functionality, name/role/bio display, inline profile editing with smooth animations, press card badge for authorized journalists
+- **Horizontal Stats Row:** 5 clean stat cards (Followers, Likes, Bookmarks, Reads, Points) with consistent iconography and hover effects
+- **Modern Tab System:** 5 primary tabs (Activity, Bookmarks, Followers, Settings, Wallet) with clear visual hierarchy and icon support
+- **Wide Content Area:** Grid layout (2 columns on desktop) for articles with proper spacing, no visual clutter, separate followers/following management interface
+- **Minimal Sidebar:** Clean right sidebar with Smart Interests block, followed keywords (top 5), and loyalty program card with gradient background
+- **Mobile-First Responsive:** Grid adapts to 1 column on mobile, stats row becomes 2x3 grid on small screens, tabs remain accessible with horizontal scroll
+- **No Collapsibles:** Eliminated confusing collapsible cards from mobile view - all content visible and accessible directly
+
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching middleware, production-grade `OptimizedImage` components, and asset footprint reduction.
 
