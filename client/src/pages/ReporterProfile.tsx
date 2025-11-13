@@ -1,19 +1,23 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, FileText, Target } from "lucide-react";
+import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, FileText, Target, UserPlus, UserCheck } from "lucide-react";
 import { Link } from "wouter";
 import type { ReporterProfile as ReporterProfileType } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function ReporterProfile() {
   const { slug } = useParams<{ slug: string }>();
+  const { toast } = useToast();
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
     queryKey: ["/api/auth/user"],
@@ -23,6 +27,73 @@ export default function ReporterProfile() {
   const { data: profile, isLoading, error } = useQuery<ReporterProfileType>({
     queryKey: ['/api/reporters', slug],
     enabled: !!slug,
+  });
+
+  // Check if current user follows this reporter
+  const { data: isFollowingData, isLoading: isLoadingIsFollowing } = useQuery<{
+    isFollowing: boolean;
+  }>({
+    queryKey: ["/api/social/is-following", profile?.id],
+    enabled: !!profile?.id && !!user,
+  });
+
+  // Follow mutation
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) throw new Error("Reporter ID not available");
+      return apiRequest("/api/social/follow", {
+        method: "POST",
+        body: JSON.stringify({ userId: profile.id }),
+      });
+    },
+    onSuccess: () => {
+      if (!profile?.id) return;
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "تمت المتابعة",
+        description: "أصبحت تتابع هذا المحرر",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unfollow mutation
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) throw new Error("Reporter ID not available");
+      return apiRequest(`/api/social/unfollow/${profile.id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      if (!profile?.id) return;
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", profile.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "تم إلغاء المتابعة",
+        description: "لم تعد تتابع هذا المحرر",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية إلغاء المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -59,6 +130,7 @@ export default function ReporterProfile() {
   }
 
   const {
+    id: reporterId,
     fullName,
     title,
     avatarUrl,
@@ -71,6 +143,10 @@ export default function ReporterProfile() {
     timeseries,
     badges,
   } = profile;
+
+  // Check if viewing own profile
+  const isOwnProfile = user?.id === reporterId;
+  const isFollowing = isFollowingData?.isFollowing || false;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -106,6 +182,37 @@ export default function ReporterProfile() {
               {badges && badges.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   {badges.map((badge) => <Badge key={badge.key} variant="outline" data-testid={`badge-achievement-${badge.key}`}>{badge.label}</Badge>)}
+                </div>
+              )}
+              
+              {/* Follow Button */}
+              {user && !isOwnProfile && (
+                <div className="flex justify-center md:justify-start pt-2">
+                  {isFollowing ? (
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={() => unfollowMutation.mutate()}
+                      disabled={unfollowMutation.isPending || isLoadingIsFollowing}
+                      className="gap-2"
+                      data-testid="button-unfollow-reporter"
+                    >
+                      <UserCheck className="h-5 w-5" />
+                      إلغاء المتابعة
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="default"
+                      onClick={() => followMutation.mutate()}
+                      disabled={followMutation.isPending || isLoadingIsFollowing}
+                      className="gap-2"
+                      data-testid="button-follow-reporter"
+                    >
+                      <UserPlus className="h-5 w-5" />
+                      متابعة
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
