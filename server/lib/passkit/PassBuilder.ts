@@ -63,7 +63,12 @@ export abstract class PassBuilder {
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
-          certificates: certificates,
+          certificates: {
+            wwdr: certificates.wwdr,
+            signerCert: certificates.signerCert,
+            signerKey: certificates.signerKey,
+            signerKeyPassphrase: certificates.signerKeyPassphrase,
+          },
         },
         {
           serialNumber: data.serialNumber,
