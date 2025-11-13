@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -122,6 +122,13 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 </span>
               </Link>
             ))}
+            {user && (
+              <Link href="/discover-users">
+                <span className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" data-testid="link-discover-users">
+                  اكتشف
+                </span>
+              </Link>
+            )}
           </nav>
 
           {/* Actions - Right side */}
@@ -332,6 +339,18 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 الأخبار
               </span>
             </Link>
+            {user && (
+              <Link href="/discover-users">
+                <span
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-mobile-discover-users"
+                >
+                  <Users className="h-5 w-5" />
+                  اكتشف
+                </span>
+              </Link>
+            )}
 
             {/* Categories Section */}
             <div className="pt-4 pb-2">
