@@ -4482,9 +4482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updateData.cardValidUntil = null;
         } else {
           // Only update press card fields if press card is enabled
-          if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle || null;
-          if (parsed.data.department !== undefined) updateData.department = parsed.data.department || null;
-          if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber || null;
+          if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle ?? null;
+          if (parsed.data.department !== undefined) updateData.department = parsed.data.department ?? null;
+          if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber ?? null;
           if (parsed.data.cardValidUntil !== undefined) {
             if (parsed.data.cardValidUntil) {
               const parsedDate = new Date(parsed.data.cardValidUntil);
@@ -4501,9 +4501,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else if (parsed.data.hasPressCard === undefined && oldUser.hasPressCard) {
         // Only allow updating individual fields if press card is currently enabled
-        if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle || null;
-        if (parsed.data.department !== undefined) updateData.department = parsed.data.department || null;
-        if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber || null;
+        if (parsed.data.jobTitle !== undefined) updateData.jobTitle = parsed.data.jobTitle ?? null;
+        if (parsed.data.department !== undefined) updateData.department = parsed.data.department ?? null;
+        if (parsed.data.pressIdNumber !== undefined) updateData.pressIdNumber = parsed.data.pressIdNumber ?? null;
         if (parsed.data.cardValidUntil !== undefined) {
           if (parsed.data.cardValidUntil) {
             const parsedDate = new Date(parsed.data.cardValidUntil);
@@ -24789,8 +24789,7 @@ Allow: /
         const { deviceLibraryId, passTypeId } = req.params;
         const passesUpdatedSince = req.query.passesUpdatedSince as string | undefined;
         
-        const since = passesUpdatedSince ? new Date(passesUpdatedSince) : undefined;
-        const serialNumbers = await storage.getUpdatedPasses(deviceLibraryId, passTypeId, since);
+        const serialNumbers = await storage.getUpdatedPasses(deviceLibraryId, passTypeId, passesUpdatedSince);
 
         if (serialNumbers.length === 0) {
           return res.status(204).end();

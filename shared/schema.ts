@@ -1140,10 +1140,10 @@ export const adminUpdateUserSchema = z.object({
   
   // Press Card fields (Apple Wallet Digital Press Card)
   hasPressCard: z.boolean().optional(),
-  jobTitle: z.string().nullable().optional(),
-  department: z.string().nullable().optional(),
-  pressIdNumber: z.string().nullable().optional(),
-  cardValidUntil: z.string().nullable().optional(), // ISO date string
+  jobTitle: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  department: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  pressIdNumber: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  cardValidUntil: z.union([z.string(), z.literal(""), z.null()]).optional(), // ISO date string
 });
 
 // Admin schema for creating new users with roles
