@@ -158,22 +158,50 @@ export class PassKitService {
           throw new Error('Invalid certificate: base64 decoded but no PEM headers found');
         }
         console.log('✅ [PassKit] Successfully decoded base64 to valid PEM format');
-        return Buffer.from(pemString, 'utf-8');
+        return Buffer.from(this.normalizePEM(pemString), 'utf-8');
       } catch (error) {
         console.error('❌ [PassKit] Failed to decode base64 certificate:', error);
         throw new Error('Invalid certificate: failed to decode base64');
       }
     }
     
-    // Otherwise treat as PEM string already - validate it
+    // Otherwise treat as PEM string already - validate and normalize it
     if (envVar.includes('-----BEGIN') && envVar.includes('-----END')) {
       console.log('✅ [PassKit] Using PEM string directly (already in PEM format)');
-      return Buffer.from(envVar, 'utf-8');
+      const normalized = this.normalizePEM(envVar);
+      return Buffer.from(normalized, 'utf-8');
     }
     
     console.error('❌ [PassKit] Certificate format unknown - not base64, not file path, not PEM');
     console.error(`First 200 chars: ${envVar.substring(0, 200)}`);
     throw new Error('Invalid certificate format: must be PEM string, base64 encoded PEM, or file path');
+  }
+  
+  private normalizePEM(pem: string): string {
+    // Remove all existing whitespace
+    const cleaned = pem.replace(/\s/g, '');
+    
+    // Extract header, body, and footer using regex
+    const certMatch = cleaned.match(/^(-----BEGIN[A-Z\s]+-----)([A-Za-z0-9+/=]+)(-----END[A-Z\s]+-----)$/);
+    
+    if (!certMatch) {
+      console.error('❌ [PassKit] Failed to parse PEM structure');
+      return pem; // Return as-is if we can't parse it
+    }
+    
+    const [, header, body, footer] = certMatch;
+    
+    // Split body into 64-character lines
+    const lines = [];
+    for (let i = 0; i < body.length; i += 64) {
+      lines.push(body.substring(i, i + 64));
+    }
+    
+    // Reconstruct with proper line breaks
+    const normalized = `${header}\n${lines.join('\n')}\n${footer}`;
+    console.log('✅ [PassKit] PEM normalized successfully');
+    
+    return normalized;
   }
   
   generateSerialNumber(userId: string, passType: 'press' | 'loyalty'): string {
