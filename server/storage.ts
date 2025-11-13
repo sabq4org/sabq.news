@@ -1206,6 +1206,7 @@ export interface IStorage {
     rankLevel?: number;
     lifetimePoints?: number;
   }): Promise<UserPointsTotal>;
+  triggerLoyaltyPassUpdate(userId: string, reason: string): Promise<void>;
   
   // Press Card Permissions
   updateUserPressCardPermission(userId: string, data: {
@@ -5013,7 +5014,7 @@ export class DatabaseStorage implements IStorage {
     source?: string;
     metadata?: any;
   }): Promise<{ pointsEarned: number; totalPoints: number; rankChanged: boolean; newRank?: string }> {
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const now = new Date();
       
       // 1. Get active campaign inside transaction
@@ -5091,6 +5092,11 @@ export class DatabaseStorage implements IStorage {
         newRank: rankChanged ? newRank : undefined,
       };
     });
+
+    // Trigger loyalty pass update (outside transaction)
+    await this.triggerLoyaltyPassUpdate(params.userId, params.action);
+
+    return result;
   }
 
   async getUserPoints(userId: string): Promise<UserPointsTotal | undefined> {
@@ -10527,6 +10533,19 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`🔄 Press card permissions updated for user ${userId}`);
     return user;
+  }
+
+  async triggerLoyaltyPassUpdate(userId: string, reason: string) {
+    console.log('🔄 [Loyalty Pass] Triggering update for user:', userId, 'Reason:', reason);
+    
+    // Log the update event (Phase 2: will send APNs)
+    const { passUpdateLogger } = await import('./lib/passkit/PassUpdateLogger');
+    passUpdateLogger.log({
+      userId,
+      passType: 'loyalty',
+      updateReason: reason,
+      timestamp: new Date(),
+    });
   }
 }
 

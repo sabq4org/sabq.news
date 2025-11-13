@@ -40,7 +40,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **Reporter Profile System (Trilingual):** Complete trilingual implementation with language-specific content display and bidirectional fallback logic.
 -   **Smart Advertising System (Arabic):** Enterprise-grade advertising platform with AI-powered optimization.
 -   **SEO and Social Sharing:** Comprehensive Open Graph and Twitter Card meta tags with server-side rendering.
--   **Apple Wallet Digital Press Cards:** Enterprise-grade digital credential system allowing all registered members to issue official press cards via Apple Wallet. Features include: (1) PassKit integration with passkit-generator library, (2) Database schema with wallet_passes and wallet_devices tables for pass tracking and device registration, (3) PassKit Web Service Protocol endpoints for device registration and pass updates, (4) Profile page UI with issuance status, serial number display, and one-click issue button, (5) Placeholder architecture ready for Apple Developer credentials (Pass Type ID, Team ID, Pass Certificate, APNs Auth Key), (6) Future support for automatic pass updates via APNs push notifications when user profile changes.
+-   **Apple Wallet Dual Pass System:** Enterprise-grade digital credential system supporting TWO pass types: (1) **Press Card** - Digital press credentials issued to authorized staff (journalists, editors, reporters) with admin-controlled permissions via hasPressCard flag, including job title, department, press ID number, and validity date; (2) **Loyalty Card** - Membership cards for all registered users displaying current points total, rank level (Bronze/Silver/Gold/Platinum), and member-since date, with automatic updates when points change. Architecture features: PassKit integration with passkit-generator library using factory pattern (PressPassBuilder, LoyaltyPassBuilder), unified wallet_passes table with passType column ('press'|'loyalty'), wallet_devices table for device registration, PassKit Web Service Protocol endpoints, separate API routes (/api/wallet/press/*, /api/wallet/loyalty/*), Profile page UI with dual wallet sections (press card visible only if authorized), AdminUsers page with press card management controls, auto-update hooks for loyalty pass with logging (Phase 2: APNs push notifications), and placeholder architecture ready for Apple Developer credentials.
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and intelligent media suggestions. A scope-aware theme management system, Content Import System (RSS feeds with AI), and Smart Categories architecture with a junction table are implemented. The Media Library provides centralized asset management with AI-powered keyword extraction.
@@ -83,11 +83,12 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 ## Environment Variables
 
-### Apple Wallet Pass Configuration
-To enable Apple Wallet digital press card issuance, configure the following environment variables with your Apple Developer credentials:
+### Apple Wallet Dual Pass System Configuration
+To enable Apple Wallet pass issuance for both Press Cards and Loyalty Cards, configure the following environment variables with your Apple Developer credentials:
 
 **Required Credentials:**
--   `APPLE_PASS_TYPE_ID`: Pass Type Identifier from Apple Developer (e.g., `pass.life.sabq.presscard`)
+-   `APPLE_PRESS_PASS_TYPE_ID`: Pass Type Identifier for Press Cards from Apple Developer (e.g., `pass.life.sabq.presscard`)
+-   `APPLE_LOYALTY_PASS_TYPE_ID`: Pass Type Identifier for Loyalty Cards from Apple Developer (e.g., `pass.life.sabq.loyalty`)
 -   `APPLE_TEAM_ID`: 10-character Apple Team Identifier
 -   `APPLE_PASS_CERT`: Path to pass certificate file (PEM format) or base64-encoded certificate
 -   `APPLE_PASS_KEY`: Path to pass private key file (PEM format) or base64-encoded key
@@ -100,13 +101,18 @@ To enable Apple Wallet digital press card issuance, configure the following envi
 
 **How to Obtain These Credentials:**
 1. Enroll in Apple Developer Program ($99/year): https://developer.apple.com/programs/
-2. Create Pass Type ID in Apple Developer Portal → Certificates, Identifiers & Profiles → Identifiers
+2. Create TWO Pass Type IDs in Apple Developer Portal → Certificates, Identifiers & Profiles → Identifiers
+   - One for Press Cards (e.g., `pass.life.sabq.presscard`)
+   - One for Loyalty Cards (e.g., `pass.life.sabq.loyalty`)
 3. Generate Pass Certificate using Certificate Signing Request (CSR)
 4. Download WWDR Certificate from Apple
 5. (Optional) Create APNs Auth Key for push notification support
 
 **Current Status:**
-- Infrastructure is ready with placeholder configuration
-- All API endpoints functional
+- Infrastructure is ready with placeholder configuration for both pass types
+- All API endpoints functional (/api/wallet/press/*, /api/wallet/loyalty/*)
+- Press Card: Admin-controlled via hasPressCard flag in AdminUsers page
+- Loyalty Card: Auto-issued to all registered users with points/rank display
+- Auto-update hooks implemented (Phase 2: APNs push notifications)
 - UI displays appropriate messages when credentials not configured
 - Once credentials added, users can download .pkpass files and add to Apple Wallet

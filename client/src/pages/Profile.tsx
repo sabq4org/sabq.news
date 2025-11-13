@@ -50,6 +50,10 @@ import {
   UserPlus,
   UserMinus,
   IdCard,
+  Check,
+  Download,
+  Plus,
+  Wallet,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -310,33 +314,33 @@ export default function Profile() {
     },
   });
 
-  const { data: walletStatus, isLoading: isLoadingWallet } = useQuery<{
-    hasPass: boolean;
-    serialNumber?: string;
-    createdAt?: string;
-    lastUpdated?: string;
-  }>({
-    queryKey: ['/api/wallet/status'],
+  // Press Card Status Query
+  const { data: pressCardStatus, isLoading: isLoadingPressCard } = useQuery({
+    queryKey: ['/api/wallet/press/status'],
     enabled: !!user,
   });
 
-  const issueWalletPassMutation = useMutation({
+  // Loyalty Card Status Query
+  const { data: loyaltyCardStatus, isLoading: isLoadingLoyaltyCard } = useQuery({
+    queryKey: ['/api/wallet/loyalty/status'],
+    enabled: !!user,
+  });
+
+  // Press Card Issuance Mutation
+  const issuePressCardMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/wallet/issue', {
+      const response = await fetch('/api/wallet/press/issue', {
         method: 'POST',
         credentials: 'include',
       });
-
+      
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to issue pass');
+        throw new Error(error.error || 'Failed to issue press card');
       }
-
-      // Check if response is .pkpass file or JSON
-      const contentType = response.headers.get('Content-Type');
       
+      const contentType = response.headers.get('Content-Type');
       if (contentType === 'application/vnd.apple.pkpass') {
-        // Download .pkpass file
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -346,32 +350,65 @@ export default function Profile() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
         return { success: true, downloaded: true };
-      } else {
-        // JSON response (credentials not configured)
-        return response.json();
       }
+      return response.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wallet/status'] });
-      
-      if (data.downloaded) {
-        toast({
-          title: "تم التحميل بنجاح",
-          description: "تم تحميل البطاقة. افتح الملف لإضافتها إلى Apple Wallet.",
-        });
-      } else {
-        toast({
-          title: "تم الإصدار",
-          description: data.message || "تم إصدار البطاقة بنجاح",
-        });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallet/press/status'] });
+      toast({
+        title: "تم التحميل",
+        description: "تم تحميل البطاقة الصحفية. افتح الملف لإضافتها إلى Apple Wallet.",
+      });
     },
     onError: (error: any) => {
       toast({
         title: "خطأ",
-        description: error.message || "تعذر إصدار البطاقة لأن بيانات الاعتماد الخاصة بـ Apple Wallet غير مكتملة. يرجى التواصل مع المسؤول.",
+        description: error.message || "تعذر إصدار البطاقة الصحفية",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Loyalty Card Issuance Mutation
+  const issueLoyaltyCardMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/wallet/loyalty/issue', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to issue loyalty card');
+      }
+      
+      const contentType = response.headers.get('Content-Type');
+      if (contentType === 'application/vnd.apple.pkpass') {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sabq-loyalty-card.pkpass';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        return { success: true, downloaded: true };
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallet/loyalty/status'] });
+      toast({
+        title: "تم التحميل",
+        description: "تم تحميل بطاقة العضوية. افتح الملف لإضافتها إلى Apple Wallet.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "تعذر إصدار بطاقة العضوية",
         variant: "destructive",
       });
     },
@@ -1576,85 +1613,163 @@ export default function Profile() {
 
                     <Separator className="my-8" />
 
-                    <div>
-                      <Card className="hover-elevate" data-testid="card-wallet">
-                        <CardHeader>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <IdCard className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <CardTitle>البطاقة الصحفية الرقمية</CardTitle>
-                              <CardDescription>
-                                احصل على بطاقة صحفية رسمية يمكن استخدامها عبر Apple Wallet لتأكيد اعتمادك بسرعة
-                              </CardDescription>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          {isLoadingWallet ? (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span>جاري التحميل...</span>
-                            </div>
-                          ) : walletStatus?.hasPass ? (
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="default" data-testid="status-wallet">
-                                  تمت الإضافة
-                                </Badge>
+                    {/* Press Card - Only show if user has permission */}
+                    {pressCardStatus?.authorized && (
+                      <div className="mb-6">
+                        <Card data-testid="card-press-wallet">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <IdCard className="w-5 h-5" />
+                              البطاقة الصحفية الرقمية
+                            </CardTitle>
+                            <CardDescription>
+                              بطاقة هوية صحفية رسمية لفريق سبق
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {isLoadingPressCard ? (
+                              <div className="flex items-center justify-center py-4">
+                                <Loader2 className="w-6 h-6 animate-spin" />
                               </div>
-                              
-                              {walletStatus.serialNumber && (
-                                <div className="space-y-1">
-                                  <p className="text-sm text-muted-foreground">الرقم التسلسلي</p>
-                                  <p className="text-sm font-mono" data-testid="text-wallet-serial">
-                                    {walletStatus.serialNumber}
-                                  </p>
+                            ) : pressCardStatus?.hasPass ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Check className="w-4 h-4 text-green-600" />
+                                  <span>البطاقة مُصدرة</span>
                                 </div>
-                              )}
-                              
-                              {walletStatus.createdAt && (
-                                <div className="space-y-1">
-                                  <p className="text-sm text-muted-foreground">تاريخ الإصدار</p>
-                                  <p className="text-sm" data-testid="text-wallet-created">
-                                    {new Date(walletStatus.createdAt).toLocaleDateString('ar-SA')}
-                                  </p>
+                                <div className="text-sm text-muted-foreground">
+                                  الرقم التسلسلي: {pressCardStatus.serialNumber}
                                 </div>
-                              )}
-                              
-                              <Alert>
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription>
-                                  البطاقة جاهزة. سيتم تفعيل التحميل بعد إضافة بيانات Apple Developer.
-                                </AlertDescription>
-                              </Alert>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              <p className="text-sm text-muted-foreground">
-                                لم تقم بإصدار بطاقتك الرقمية بعد. اضغط على الزر أدناه للحصول على بطاقة رسمية.
-                              </p>
-                              
-                              <Button
-                                onClick={() => issueWalletPassMutation.mutate()}
-                                disabled={issueWalletPassMutation.isPending}
-                                className="w-full sm:w-auto"
-                                data-testid="button-wallet-add"
+                                <div className="text-sm text-muted-foreground">
+                                  آخر تحديث: {new Date(pressCardStatus.lastUpdated).toLocaleDateString('ar-SA')}
+                                </div>
+                                <Button 
+                                  onClick={() => issuePressCardMutation.mutate()}
+                                  disabled={issuePressCardMutation.isPending}
+                                  className="w-full"
+                                  data-testid="button-download-press-card"
+                                >
+                                  {issuePressCardMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                      جاري التحميل...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download className="w-4 h-4 ml-2" />
+                                      تحميل البطاقة مجدداً
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button 
+                                onClick={() => issuePressCardMutation.mutate()}
+                                disabled={issuePressCardMutation.isPending}
+                                className="w-full"
+                                data-testid="button-issue-press-card"
                               >
-                                {issueWalletPassMutation.isPending ? (
+                                {issuePressCardMutation.isPending ? (
                                   <>
-                                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                                    جاري إصدار البطاقة...
+                                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                    جاري الإصدار...
                                   </>
                                 ) : (
                                   <>
-                                    <IdCard className="ml-2 h-4 w-4" />
+                                    <Plus className="w-4 h-4 ml-2" />
                                     إضافة إلى Apple Wallet
                                   </>
                                 )}
                               </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+
+                    {/* Loyalty Card - Always show for all users */}
+                    <div>
+                      <Card data-testid="card-loyalty-wallet">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Wallet className="w-5 h-5" />
+                            بطاقة العضوية
+                          </CardTitle>
+                          <CardDescription>
+                            بطاقة برنامج الولاء - اجمع النقاط واحصل على مكافآت
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {isLoadingLoyaltyCard ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
+                          ) : (
+                            <>
+                              {/* Points Summary */}
+                              {loyaltyCardStatus?.points && (
+                                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                                  <div>
+                                    <div className="text-sm text-muted-foreground">النقاط الحالية</div>
+                                    <div className="text-2xl font-bold">{loyaltyCardStatus.points.total}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm text-muted-foreground">المستوى</div>
+                                    <div className="text-lg font-semibold">{loyaltyCardStatus.points.rank}</div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Pass Status */}
+                              {loyaltyCardStatus?.hasPass ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Check className="w-4 h-4 text-green-600" />
+                                    <span>البطاقة مُصدرة</span>
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    الرقم التسلسلي: {loyaltyCardStatus.serialNumber}
+                                  </div>
+                                  <Button 
+                                    onClick={() => issueLoyaltyCardMutation.mutate()}
+                                    disabled={issueLoyaltyCardMutation.isPending}
+                                    className="w-full"
+                                    data-testid="button-download-loyalty-card"
+                                  >
+                                    {issueLoyaltyCardMutation.isPending ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                        جاري التحميل...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Download className="w-4 h-4 ml-2" />
+                                        تحميل البطاقة مجدداً
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button 
+                                  onClick={() => issueLoyaltyCardMutation.mutate()}
+                                  disabled={issueLoyaltyCardMutation.isPending}
+                                  className="w-full"
+                                  data-testid="button-issue-loyalty-card"
+                                >
+                                  {issueLoyaltyCardMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                      جاري الإصدار...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus className="w-4 h-4 ml-2" />
+                                      إضافة إلى Apple Wallet
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </>
                           )}
                         </CardContent>
                       </Card>

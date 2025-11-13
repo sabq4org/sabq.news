@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, IdCard } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
 interface EditUserDialogProps {
@@ -55,6 +55,11 @@ interface User {
   emailVerified: boolean;
   phoneVerified: boolean;
   roles: Role[];
+  hasPressCard?: boolean;
+  jobTitle?: string | null;
+  department?: string | null;
+  pressIdNumber?: string | null;
+  cardValidUntil?: string | null;
 }
 
 const editUserSchema = z.object({
@@ -72,6 +77,11 @@ const editUserSchema = z.object({
   status: z.enum(["active", "pending", "suspended", "banned", "locked"]).default("active"),
   emailVerified: z.boolean().default(false),
   phoneVerified: z.boolean().default(false),
+  hasPressCard: z.boolean().optional(),
+  jobTitle: z.string().optional(),
+  department: z.string().optional(),
+  pressIdNumber: z.string().optional(),
+  cardValidUntil: z.string().optional(),
 });
 
 type FormData = z.infer<typeof editUserSchema>;
@@ -127,6 +137,11 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
       status: "active",
       emailVerified: false,
       phoneVerified: false,
+      hasPressCard: false,
+      jobTitle: "",
+      department: "",
+      pressIdNumber: "",
+      cardValidUntil: "",
     },
   });
 
@@ -147,17 +162,31 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
         status: user.status as any,
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
+        hasPressCard: user.hasPressCard || false,
+        jobTitle: user.jobTitle || "",
+        department: user.department || "",
+        pressIdNumber: user.pressIdNumber || "",
+        cardValidUntil: user.cardValidUntil || "",
       });
     }
   }, [user, staffData, form]);
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const { roleIds, bioAr, bio, titleAr, title, ...userData } = data;
+      const { roleIds, bioAr, bio, titleAr, title, hasPressCard, jobTitle, department, pressIdNumber, cardValidUntil, ...userData } = data;
+      
+      // Prepare press card data
+      const pressCardData = {
+        hasPressCard,
+        jobTitle: jobTitle || null,
+        department: department || null,
+        pressIdNumber: pressIdNumber || null,
+        cardValidUntil: cardValidUntil || null,
+      };
       
       await apiRequest(`/api/admin/users/${userId}`, {
         method: "PATCH",
-        body: JSON.stringify(userData),
+        body: JSON.stringify({ ...userData, ...pressCardData }),
       });
 
       if (roleIds && roleIds.length > 0) {
@@ -536,6 +565,109 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Press Card Section */}
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <IdCard className="w-4 h-4" />
+                  البطاقة الصحفية الرقمية
+                </h3>
+                
+                <FormField
+                  control={form.control}
+                  name="hasPressCard"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          تفعيل البطاقة الصحفية
+                        </FormLabel>
+                        <FormDescription>
+                          منح المستخدم صلاحية إصدار بطاقة صحفية رقمية
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-has-press-card"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch('hasPressCard') && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="jobTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>المنصب الوظيفي</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="محرر، مراسل، رئيس قسم..." data-testid="input-job-title" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>القسم</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="القسم الرياضي، السياسي..." data-testid="input-department" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="pressIdNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>رقم البطاقة الصحفية</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="PRESS-12345" data-testid="input-press-id-number" />
+                          </FormControl>
+                          <FormDescription>
+                            رقم فريد للبطاقة الصحفية
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="cardValidUntil"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>صالحة حتى</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              {...field} 
+                              value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} 
+                              data-testid="input-card-valid-until"
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            تاريخ انتهاء صلاحية البطاقة (اختياري)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
               </div>
             </div>
 

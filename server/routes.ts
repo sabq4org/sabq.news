@@ -26,7 +26,7 @@ import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
 import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
-import { passKitService, type PassData } from "./lib/passkit/PassKitService";
+import { passKitService, type PressPassData, type LoyaltyPassData } from "./lib/passkit/PassKitService";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -12287,6 +12287,31 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // Manual points update endpoint (for testing/admin use)
+  app.post("/api/loyalty/update-points", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { points, reason } = req.body;
+      
+      if (typeof points !== 'number') {
+        return res.status(400).json({ error: 'Points must be a number' });
+      }
+      
+      // Update points
+      await storage.updateUserPointsTotal(userId, {
+        totalPoints: points,
+      });
+      
+      // Trigger pass update
+      await storage.triggerLoyaltyPassUpdate(userId, reason || 'manual_update');
+      
+      res.json({ success: true, points });
+    } catch (error: any) {
+      console.error('Error updating points:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ============================================================
   // MUQTARIB PUBLIC ROUTES
   // ============================================================
@@ -24404,19 +24429,29 @@ Allow: /
   // APPLE WALLET ROUTES
   // ============================================================
 
-  // Issue new wallet pass for current user
-  app.post("/api/wallet/issue", requireAuth, async (req: any, res) => {
+  // ============================================================
+  // PRESS CARD ENDPOINTS (Admin-Only)
+  // ============================================================
+
+  // Issue press card - requires hasPressCard flag
+  app.post("/api/wallet/press/issue", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       
-      // Check if user already has a pass
-      let existingPass = await storage.getWalletPassByUserId(userId);
+      // Check if user is authorized for press card
+      if (!req.user.hasPressCard) {
+        return res.status(403).json({ 
+          error: 'غير مصرح لك بإصدار بطاقة صحفية. يرجى التواصل مع الإدارة.' 
+        });
+      }
       
-      // If pass exists but generation previously failed, delete it to allow retry
+      // Check if pass already exists
+      let existingPass = await storage.getWalletPassByUserAndType(userId, 'press');
+      
       if (existingPass) {
+        // Regenerate existing pass
         try {
-          // Try to regenerate the pass
-          const passData: PassData = {
+          const passData: PressPassData = {
             userId: req.user.id,
             serialNumber: existingPass.serialNumber,
             authToken: existingPass.authenticationToken,
@@ -24424,32 +24459,37 @@ Allow: /
             userEmail: req.user.email,
             userRole: req.user.role || 'reader',
             profileImageUrl: req.user.profileImageUrl,
+            jobTitle: req.user.jobTitle,
+            department: req.user.department,
+            pressIdNumber: req.user.pressIdNumber,
+            validUntil: req.user.cardValidUntil,
           };
-
-          const passBuffer = await passKitService.generatePass(passData);
-
-          // Success! Return the .pkpass file
+          
+          const passBuffer = await passKitService.generatePressPass(passData);
+          
+          // Update timestamp
+          await storage.updateWalletPassTimestamp(existingPass.id);
+          
           res.set({
             'Content-Type': 'application/vnd.apple.pkpass',
             'Content-Disposition': `attachment; filename="sabq-press-card-${existingPass.serialNumber}.pkpass"`,
             'Content-Length': passBuffer.length,
           });
-
+          
           return res.send(passBuffer);
         } catch (error: any) {
-          // Generation failed - return error message
+          console.error('❌ [Press Card] Generation failed:', error);
           return res.status(400).json({ 
-            error: error.message,
-            serialNumber: existingPass.serialNumber,
+            error: error.message || 'تعذر إنشاء البطاقة. يرجى التحقق من إعدادات Apple Wallet.',
           });
         }
       }
-
-      // No existing pass - create new one
-      const serialNumber = passKitService.generateSerialNumber(userId);
+      
+      // Create new pass
+      const serialNumber = passKitService.generateSerialNumber(userId, 'press');
       const authToken = passKitService.generateAuthToken();
       
-      const passData: PassData = {
+      const passData: PressPassData = {
         userId: req.user.id,
         serialNumber,
         authToken,
@@ -24457,55 +24497,213 @@ Allow: /
         userEmail: req.user.email,
         userRole: req.user.role || 'reader',
         profileImageUrl: req.user.profileImageUrl,
+        jobTitle: req.user.jobTitle,
+        department: req.user.department,
+        pressIdNumber: req.user.pressIdNumber,
+        validUntil: req.user.cardValidUntil,
       };
-
-      // Generate pass FIRST (before saving to DB)
+      
       try {
-        const passBuffer = await passKitService.generatePass(passData);
-
-        // Generation succeeded - NOW save to database
+        const passBuffer = await passKitService.generatePressPass(passData);
+        
+        // Save to database AFTER successful generation
         await storage.createWalletPass({
           userId,
-          passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.life.sabq.presscard',
+          passType: 'press',
+          passTypeIdentifier: process.env.APPLE_PRESS_PASS_TYPE_ID || 'pass.life.sabq.presscard',
           serialNumber,
           authenticationToken: authToken,
         });
-
-        // Return the .pkpass file
+        
+        console.log('✅ [Press Card] Issued successfully for user:', userId);
+        
         res.set({
           'Content-Type': 'application/vnd.apple.pkpass',
           'Content-Disposition': `attachment; filename="sabq-press-card-${serialNumber}.pkpass"`,
           'Content-Length': passBuffer.length,
         });
-
+        
         res.send(passBuffer);
       } catch (error: any) {
-        // Generation failed - don't save to DB, return error
-        console.error('Pass generation failed:', error);
+        console.error('❌ [Press Card] Generation failed:', error);
         res.status(400).json({ 
-          error: error.message || 'Failed to generate pass. Please ensure Apple Developer credentials are configured.',
+          error: error.message || 'تعذر إنشاء البطاقة. يرجى التحقق من إعدادات Apple Wallet.',
         });
       }
     } catch (error: any) {
-      console.error('Error issuing wallet pass:', error);
+      console.error('❌ [Press Card] Issue error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // Get pass status
-  app.get("/api/wallet/status", requireAuth, async (req: any, res) => {
+  // Get press card status
+  app.get("/api/wallet/press/status", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const pass = await storage.getWalletPassByUserId(userId);
       
-      res.json({ 
-        hasPass: !!pass,
-        serialNumber: pass?.serialNumber,
-        createdAt: pass?.createdAt,
-        lastUpdated: pass?.lastUpdated,
+      // Check if user is authorized
+      if (!req.user.hasPressCard) {
+        return res.json({ 
+          hasPass: false,
+          authorized: false,
+          message: 'غير مصرح لك بإصدار بطاقة صحفية',
+        });
+      }
+      
+      const pass = await storage.getWalletPassByUserAndType(userId, 'press');
+      
+      if (!pass) {
+        return res.json({ 
+          hasPass: false,
+          authorized: true,
+        });
+      }
+      
+      res.json({
+        hasPass: true,
+        authorized: true,
+        serialNumber: pass.serialNumber,
+        lastUpdated: pass.lastUpdated,
+        createdAt: pass.createdAt,
       });
     } catch (error: any) {
-      console.error('Error getting wallet pass status:', error);
+      console.error('❌ [Press Card] Status check error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================
+  // LOYALTY CARD ENDPOINTS (All Users)
+  // ============================================================
+
+  // Issue loyalty card - all authenticated users
+  app.post("/api/wallet/loyalty/issue", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get or create user points
+      let userPoints = await storage.getUserPointsTotal(userId);
+      if (!userPoints) {
+        userPoints = await storage.createUserPointsTotal(userId);
+      }
+      
+      // Check if pass already exists
+      let existingPass = await storage.getWalletPassByUserAndType(userId, 'loyalty');
+      
+      if (existingPass) {
+        // Regenerate with latest points
+        try {
+          const passData: LoyaltyPassData = {
+            userId: req.user.id,
+            serialNumber: existingPass.serialNumber,
+            authToken: existingPass.authenticationToken,
+            userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+            userEmail: req.user.email,
+            userRole: req.user.role || 'reader',
+            profileImageUrl: req.user.profileImageUrl,
+            totalPoints: userPoints.totalPoints,
+            currentRank: userPoints.currentRank,
+            rankLevel: userPoints.rankLevel,
+            memberSince: userPoints.createdAt,
+          };
+          
+          const passBuffer = await passKitService.generateLoyaltyPass(passData);
+          
+          // Update timestamp
+          await storage.updateWalletPassTimestamp(existingPass.id);
+          
+          res.set({
+            'Content-Type': 'application/vnd.apple.pkpass',
+            'Content-Disposition': `attachment; filename="sabq-loyalty-card-${existingPass.serialNumber}.pkpass"`,
+            'Content-Length': passBuffer.length,
+          });
+          
+          return res.send(passBuffer);
+        } catch (error: any) {
+          console.error('❌ [Loyalty Card] Generation failed:', error);
+          return res.status(400).json({ 
+            error: error.message || 'تعذر إنشاء بطاقة العضوية. يرجى المحاولة لاحقاً.',
+          });
+        }
+      }
+      
+      // Create new pass
+      const serialNumber = passKitService.generateSerialNumber(userId, 'loyalty');
+      const authToken = passKitService.generateAuthToken();
+      
+      const passData: LoyaltyPassData = {
+        userId: req.user.id,
+        serialNumber,
+        authToken,
+        userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+        userEmail: req.user.email,
+        userRole: req.user.role || 'reader',
+        profileImageUrl: req.user.profileImageUrl,
+        totalPoints: userPoints.totalPoints,
+        currentRank: userPoints.currentRank,
+        rankLevel: userPoints.rankLevel,
+        memberSince: userPoints.createdAt,
+      };
+      
+      try {
+        const passBuffer = await passKitService.generateLoyaltyPass(passData);
+        
+        // Save to database AFTER successful generation
+        await storage.createWalletPass({
+          userId,
+          passType: 'loyalty',
+          passTypeIdentifier: process.env.APPLE_LOYALTY_PASS_TYPE_ID || 'pass.life.sabq.loyalty',
+          serialNumber,
+          authenticationToken: authToken,
+        });
+        
+        console.log('✅ [Loyalty Card] Issued successfully for user:', userId);
+        
+        res.set({
+          'Content-Type': 'application/vnd.apple.pkpass',
+          'Content-Disposition': `attachment; filename="sabq-loyalty-card-${serialNumber}.pkpass"`,
+          'Content-Length': passBuffer.length,
+        });
+        
+        res.send(passBuffer);
+      } catch (error: any) {
+        console.error('❌ [Loyalty Card] Generation failed:', error);
+        res.status(400).json({ 
+          error: error.message || 'تعذر إنشاء بطاقة العضوية. يرجى المحاولة لاحقاً.',
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ [Loyalty Card] Issue error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get loyalty card status with points data
+  app.get("/api/wallet/loyalty/status", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user points
+      const userPoints = await storage.getUserPointsTotal(userId);
+      
+      const pass = await storage.getWalletPassByUserAndType(userId, 'loyalty');
+      
+      res.json({
+        hasPass: !!pass,
+        ...(pass && {
+          serialNumber: pass.serialNumber,
+          lastUpdated: pass.lastUpdated,
+          createdAt: pass.createdAt,
+        }),
+        points: userPoints ? {
+          total: userPoints.totalPoints,
+          rank: userPoints.currentRank,
+          level: userPoints.rankLevel,
+          lifetime: userPoints.lifetimePoints,
+        } : null,
+      });
+    } catch (error: any) {
+      console.error('❌ [Loyalty Card] Status check error:', error);
       res.status(500).json({ error: error.message });
     }
   });
