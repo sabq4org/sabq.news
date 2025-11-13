@@ -1,0 +1,140 @@
+2025-11-13 18:06:56.58
+7eea8765
+User
+details: [
+2025-11-13 18:06:56.58
+7eea8765
+User
+{
+2025-11-13 18:06:56.58
+7eea8765
+User
+message: '"wwdr" is required',
+2025-11-13 18:06:56.58
+7eea8765
+User
+path: [Array],
+2025-11-13 18:06:56.58
+7eea8765
+User
+type: 'any.required',
+2025-11-13 18:06:56.58
+7eea8765
+User
+context: [Object]
+2025-11-13 18:06:56.58
+7eea8765
+User
+}
+2025-11-13 18:06:56.58
+7eea8765
+User
+]
+2025-11-13 18:06:56.58
+7eea8765
+User
+}
+2025-11-13 18:06:56.58
+7eea8765
+User
+❌ [Loyalty Card] Generation failed: Error: Failed to generate pass: ValidationError happened. Invalid certificate(s) loaded. "wwdr" is required. Please provide valid WWDR certificates and developer signer certificate and key (with passphrase).
+2025-11-13 18:06:56.58
+7eea8765
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19830:13)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-13 18:06:56.58
+7eea8765
+User
+❌ [PassBuilder] PKPass error: TypeError: ValidationError happened. Invalid certificate(s) loaded. "wwdr" is required. Please provide valid WWDR certificates and developer signer certificate and key (with passphrase).
+2025-11-13 18:06:56.58
+7eea8765
+User
+Refer to docs to obtain them
+2025-11-13 18:06:56.58
+7eea8765
+User
+at Module.assertValidity (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/schemas/index.js:449:19)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at set certificates [as certificates] (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:133:17)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at new PKPass (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:116:31)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19797:20)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at PassKitService.generateLoyaltyPass (file:///home/runner/workspace/dist/index.js:20018:32)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-13 18:06:56.58
+7eea8765
+User
+at async file:///home/runner/workspace/dist/index.js:38101:28
+2025-11-13 18:06:56.60
+7eea8765
+User
+3:06:56 PM [express] POST /api/wallet/loyalty/issue 400 in 110ms :: {"error":"Failed to generate pas…
+2025-11-13 18:08:18.56
+aba01dea
+User
+📡 User user-1762110633028-hhxe46tlj unsubscribed from notification stream
+2025-11-13 18:08:18.56
+aba01dea
+User
+📡 SSE connection closed for user: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:18.57
+aba01dea
+User
+📡 User user-1762110633028-hhxe46tlj unsubscribed from notification stream
+2025-11-13 18:08:18.57
+aba01dea
+User
+📡 SSE connection closed for user: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:21.07
+aba01dea
+System
+system: received signal terminated
+2025-11-13 18:08:26.65
+7eea8765
+User
+🔸 DeserializeUser called with id: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:26.66
+7eea8765
+User
+🔸 DeserializeUser called with id: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:26.79
+7eea8765
+User
+✅ DeserializeUser: User found: saud@alhazmi.org
+2025-11-13 18:08:26.79
+7eea8765
+User
+📡 SSE connection opened for user: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:26.79
+7eea8765
+User
+📡 User user-1762110633028-hhxe46tlj subscribed to notification stream
+2025-11-13 18:08:28.77
+7eea8765
+User
+✅ DeserializeUser: User found: saud@alhazmi.org
+2025-11-13 18:08:28.77
+7eea8765
+User
+📡 SSE connection opened for user: user-1762110633028-hhxe46tlj
+2025-11-13 18:08:28.77
+7eea8765
+User
+📡 User user-1762110633028-hhxe46tlj subscribed to notification stream
