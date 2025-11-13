@@ -42,7 +42,7 @@ export default function DiscoverUsers() {
     mutationFn: async (userId: string) => {
       return apiRequest("/api/social/follow", {
         method: "POST",
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ followingId: userId }),
       });
     },
     onSuccess: (_, userId) => {

@@ -95,7 +95,7 @@ export default function ArticleDetail() {
       if (!authorId) throw new Error("Author ID not found");
       return apiRequest("/api/social/follow", {
         method: "POST",
-        body: JSON.stringify({ userId: authorId }),
+        body: JSON.stringify({ followingId: authorId }),
       });
     },
     onSuccess: () => {

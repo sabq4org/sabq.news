@@ -112,7 +112,7 @@ export default function PublicProfile() {
     mutationFn: async () => {
       return apiRequest("/api/social/follow", {
         method: "POST",
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ followingId: userId }),
       });
     },
     onSuccess: () => {

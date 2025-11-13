@@ -43,7 +43,7 @@ export default function ReporterProfile() {
       if (!profile?.id) throw new Error("Reporter ID not available");
       return apiRequest("/api/social/follow", {
         method: "POST",
-        body: JSON.stringify({ userId: profile.id }),
+        body: JSON.stringify({ followingId: profile.id }),
       });
     },
     onSuccess: () => {

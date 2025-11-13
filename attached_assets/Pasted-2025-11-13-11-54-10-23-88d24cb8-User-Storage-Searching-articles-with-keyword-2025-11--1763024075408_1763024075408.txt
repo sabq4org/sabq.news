@@ -1,0 +1,120 @@
+2025-11-13 11:54:10.23
+88d24cb8
+User
+🔎 [Storage] Searching articles with keyword: "الرياض"
+2025-11-13 11:54:10.24
+88d24cb8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-13 11:54:10.24
+88d24cb8
+User
+8:54:10 AM [express] GET /api/ai-insights 304 in 202ms :: {"mostViewed":{"article":{"id":"02474aa6-e…
+2025-11-13 11:54:10.26
+88d24cb8
+User
+✓ [Storage] Query returned 5 results
+2025-11-13 11:54:10.26
+88d24cb8
+User
+4. "وزير الصحة يُطلق أول مركز قيادة وتحكم للسكري في ال..." [Image: ✓]
+2025-11-13 11:54:10.28
+88d24cb8
+User
+8:54:10 AM [express] GET /api/smart-blocks/query/articles 304 in 237ms :: {"items":[{"id":"c375b8d7-…
+2025-11-13 11:54:14.28
+88d24cb8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-13 11:54:14.30
+88d24cb8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-13 11:54:14.30
+88d24cb8
+User
+Error following user: ZodError: [
+2025-11-13 11:54:14.30
+88d24cb8
+User
+{
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"code": "invalid_type",
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"expected": "string",
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"received": "undefined",
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"path": [
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"followingId"
+2025-11-13 11:54:14.30
+88d24cb8
+User
+],
+2025-11-13 11:54:14.30
+88d24cb8
+User
+"message": "Required"
+2025-11-13 11:54:14.30
+88d24cb8
+User
+}
+2025-11-13 11:54:14.30
+88d24cb8
+User
+]
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at get error [as error] (file:///home/runner/workspace/node_modules/zod/v3/types.js:39:31)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at ZodEffects.parse (file:///home/runner/workspace/node_modules/zod/v3/types.js:114:22)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at file:///home/runner/workspace/dist/index.js:24541:54
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at requireAuth2 (file:///home/runner/workspace/dist/index.js:11143:3)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:870:7
+2025-11-13 11:54:14.30
+88d24cb8
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-11-13 11:54:14.30
+88d24cb8
+User
+issues: [
