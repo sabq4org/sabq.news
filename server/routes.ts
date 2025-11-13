@@ -24410,32 +24410,53 @@ Allow: /
       const userId = req.user.id;
       
       // Check if user already has a pass
-      const existingPass = await storage.getWalletPassByUserId(userId);
-      if (existingPass) {
-        return res.json({ 
-          success: true, 
-          serialNumber: existingPass.serialNumber,
-          message: 'Pass already exists'
+      let pass = await storage.getWalletPassByUserId(userId);
+      
+      if (!pass) {
+        // Generate serial number and auth token
+        const serialNumber = passKitService.generateSerialNumber(userId);
+        const authToken = passKitService.generateAuthToken();
+        
+        // Create pass record
+        pass = await storage.createWalletPass({
+          userId,
+          passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.life.sabq.presscard',
+          serialNumber,
+          authenticationToken: authToken,
         });
       }
 
-      // Generate serial number and auth token
-      const serialNumber = passKitService.generateSerialNumber(userId);
-      const authToken = passKitService.generateAuthToken();
-      
-      // Create pass record
-      const pass = await storage.createWalletPass({
-        userId,
-        passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.life.sabq.presscard',
-        serialNumber,
-        authenticationToken: authToken,
-      });
+      // Try to generate the .pkpass file
+      try {
+        const passData = {
+          userId: req.user.id,
+          serialNumber: pass.serialNumber,
+          authToken: pass.authenticationToken,
+          userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+          userEmail: req.user.email,
+          userRole: req.user.role || 'reader',
+          profileImageUrl: req.user.profileImageUrl,
+        };
 
-      res.json({ 
-        success: true, 
-        serialNumber: pass.serialNumber,
-        message: 'Pass created successfully. Download will be available once Apple credentials are configured.'
-      });
+        const passBuffer = await passKitService.generatePass(passData);
+
+        // Set proper headers for .pkpass download
+        res.set({
+          'Content-Type': 'application/vnd.apple.pkpass',
+          'Content-Disposition': `attachment; filename="${pass.serialNumber}.pkpass"`,
+          'Content-Length': passBuffer.length,
+        });
+
+        res.send(passBuffer);
+      } catch (error: any) {
+        // If pass generation fails (credentials not configured), return success but with message
+        res.json({ 
+          success: true, 
+          serialNumber: pass.serialNumber,
+          message: 'Pass created successfully. Download will be available once Apple credentials are configured.',
+          error: error.message,
+        });
+      }
     } catch (error: any) {
       console.error('Error issuing wallet pass:', error);
       res.status(500).json({ error: error.message });
