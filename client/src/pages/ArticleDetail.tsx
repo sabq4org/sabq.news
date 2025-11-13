@@ -76,15 +76,34 @@ export default function ArticleDetail() {
   // Fetch existing short link for article (idempotent GET first)
   const { data: existingShortLink, isLoading: isLoadingShortLink, error: shortLinkError } = useQuery<{ shortCode: string; originalUrl: string } | null>({
     queryKey: ["/api/shortlinks/article", article?.id],
+    queryFn: async () => {
+      if (!article?.id) return null;
+      try {
+        const response = await fetch(`/api/shortlinks/article/${article.id}`, {
+          credentials: "include",
+        });
+        if (response.status === 404) {
+          return null;
+        }
+        if (!response.ok) {
+          throw new Error(`${response.status}: ${await response.text()}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("[ShortLink] Error fetching:", error);
+        return null;
+      }
+    },
     enabled: !!article?.id,
     staleTime: Infinity,
     retry: false,
   });
 
-  // Create short link mutation (only called if GET returns 404)
+  // Create short link mutation (only called if no existing link)
   const createShortLinkMutation = useMutation({
     mutationFn: async () => {
       if (!article) throw new Error("Article not loaded");
+      console.log("[ShortLink] Creating new short link for article:", article.id);
       const response = await apiRequest("/api/shortlinks", {
         method: "POST",
         body: JSON.stringify({
@@ -94,6 +113,7 @@ export default function ArticleDetail() {
           utmCampaign: "article_share",
         }),
       });
+      console.log("[ShortLink] Created successfully:", response);
       return response;
     },
     onSuccess: (data) => {
@@ -101,12 +121,20 @@ export default function ArticleDetail() {
     },
   });
 
-  // Trigger creation only if GET returns 404
+  // Trigger creation only if no existing link and not already creating
   useEffect(() => {
-    if (article?.id && !isLoadingShortLink && !existingShortLink && shortLinkError && !createShortLinkMutation.isPending && !createShortLinkMutation.isSuccess) {
+    if (
+      article?.id && 
+      !isLoadingShortLink && 
+      !existingShortLink && 
+      !createShortLinkMutation.isPending && 
+      !createShortLinkMutation.isSuccess &&
+      !createShortLinkMutation.data
+    ) {
+      console.log("[ShortLink] No existing link found, creating new one...");
       createShortLinkMutation.mutate();
     }
-  }, [article?.id, isLoadingShortLink, existingShortLink, shortLinkError]);
+  }, [article?.id, isLoadingShortLink, existingShortLink, createShortLinkMutation.isPending, createShortLinkMutation.isSuccess, createShortLinkMutation.data]);
 
   // Use existing link if found, otherwise use created link, fallback to canonical URL
   const shortLink = existingShortLink || createShortLinkMutation.data;
