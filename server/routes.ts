@@ -4167,6 +4167,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get public user profile (no auth required)
+  app.get("/api/users/:id/public", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      console.log(`📋 [PUBLIC PROFILE] Fetching public profile for user: ${userId}`);
+
+      // Fetch user with public fields only
+      const [user] = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          firstNameEn: users.firstNameEn,
+          lastNameEn: users.lastNameEn,
+          bio: users.bio,
+          avatarUrl: users.profileImageUrl,
+          verificationBadge: users.verificationBadge,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(
+          and(
+            eq(users.id, userId),
+            eq(users.status, 'active'),
+            isNull(users.deletedAt)
+          )
+        )
+        .limit(1);
+
+      if (!user) {
+        console.log(`❌ [PUBLIC PROFILE] User not found: ${userId}`);
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      // Get follow statistics
+      const followStats = await storage.getFollowStats(userId);
+
+      // Count total published articles by this user
+      const [articleCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(
+          and(
+            eq(articles.authorId, userId),
+            eq(articles.status, 'published')
+          )
+        );
+
+      // Count total articles read from reading history
+      const [readingCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(readingHistory)
+        .where(eq(readingHistory.userId, userId));
+
+      const response = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        firstNameEn: user.firstNameEn,
+        lastNameEn: user.lastNameEn,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        isVerified: user.verificationBadge !== 'none',
+        createdAt: user.createdAt,
+        followersCount: followStats.followersCount,
+        followingCount: followStats.followingCount,
+        articlesPublished: articleCount?.count || 0,
+        articlesRead: readingCount?.count || 0,
+      };
+
+      console.log(`✅ [PUBLIC PROFILE] Successfully fetched profile for user: ${userId}`);
+      res.json(response);
+    } catch (error) {
+      console.error("❌ [PUBLIC PROFILE] Error fetching public profile:", error);
+      res.status(500).json({ message: "فشل في جلب الملف الشخصي" });
+    }
+  });
+
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {

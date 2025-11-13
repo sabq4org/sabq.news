@@ -46,6 +46,9 @@ import {
   X,
   AlertCircle,
   Mail,
+  Users,
+  UserPlus,
+  UserMinus,
 } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SmartInterestsBlock } from "@/components/SmartInterestsBlock";
@@ -224,6 +227,65 @@ export default function Profile() {
     },
   });
 
+  const { data: followStats, isLoading: isLoadingFollowStats } = useQuery<{
+    followersCount: number;
+    followingCount: number;
+  }>({
+    queryKey: ['/api/social/stats', user?.id],
+    enabled: !!user,
+  });
+
+  const { data: followers = [], isLoading: isLoadingFollowers } = useQuery<
+    Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      bio: string | null;
+      profileImageUrl: string | null;
+    }>
+  >({
+    queryKey: ['/api/social/followers', user?.id, { params: { limit: 50 } }],
+    enabled: !!user && activeTab === 'following',
+  });
+
+  const { data: following = [], isLoading: isLoadingFollowing } = useQuery<
+    Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      bio: string | null;
+      profileImageUrl: string | null;
+    }>
+  >({
+    queryKey: ['/api/social/following', user?.id, { params: { limit: 50 } }],
+    enabled: !!user && activeTab === 'following',
+  });
+
+  const unfollowUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest(`/api/social/unfollow/${userId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social/following', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/stats', user?.id] });
+      toast({
+        title: "تم إلغاء المتابعة",
+        description: "لم تعد تتابع هذا المستخدم",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في إلغاء المتابعة",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getInitials = () => {
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -378,7 +440,7 @@ export default function Profile() {
             </div>
 
             {/* Quick Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="hover-elevate transition-all">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center gap-4">
@@ -422,6 +484,26 @@ export default function Profile() {
                       <p className="text-2xl font-bold" data-testid="text-stat-history">
                         {readingHistory.length}
                       </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate transition-all">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Users className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">المتابعة</p>
+                      {isLoadingFollowStats ? (
+                        <Skeleton className="h-8 w-24" />
+                      ) : (
+                        <p className="text-2xl font-bold" data-testid="text-stat-following">
+                          {followStats?.followersCount || 0} متابع / {followStats?.followingCount || 0} متابَع
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -909,7 +991,7 @@ export default function Profile() {
             <Card>
               <CardContent className="p-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 mb-6">
+                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-6">
                     <TabsTrigger value="bookmarks" className="gap-2" data-testid="tab-bookmarks">
                       <Bookmark className="h-4 w-4" />
                       <span className="hidden sm:inline">المحفوظات</span>
@@ -937,6 +1019,11 @@ export default function Profile() {
                     <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
                       <Settings className="h-4 w-4" />
                       <span className="hidden sm:inline">الإعدادات</span>
+                    </TabsTrigger>
+                    
+                    <TabsTrigger value="following" className="gap-2" data-testid="tab-following">
+                      <Users className="h-4 w-4" />
+                      <span className="hidden sm:inline">المتابعة</span>
                     </TabsTrigger>
                     
                     <TabsTrigger value="security" className="gap-2" data-testid="tab-security">
@@ -1120,6 +1207,152 @@ export default function Profile() {
                         </Button>
                       </motion.div>
                     )}
+                  </TabsContent>
+
+                  <TabsContent value="following" className="space-y-6">
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {/* Followers Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <UserPlus className="h-5 w-5" />
+                          المتابعون
+                        </h3>
+                        {isLoadingFollowers ? (
+                          <div className="space-y-3">
+                            {[1, 2, 3, 4].map((i) => (
+                              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="flex-1 space-y-2">
+                                  <Skeleton className="h-4 w-32" />
+                                  <Skeleton className="h-3 w-48" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : followers.length > 0 ? (
+                          <div className="space-y-3">
+                            {followers.map((follower) => (
+                              <Link key={follower.id} href={`/user/${follower.id}`}>
+                                <a 
+                                  className="flex items-center gap-3 p-3 rounded-lg border hover-elevate transition-all"
+                                  data-testid={`link-follower-${follower.id}`}
+                                >
+                                  <Avatar className="h-12 w-12">
+                                    <AvatarImage 
+                                      src={follower.profileImageUrl || ""} 
+                                      alt={`${follower.firstName || ''} ${follower.lastName || ''}`}
+                                    />
+                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                      {follower.firstName?.[0] || follower.email[0].toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate" data-testid={`text-follower-name-${follower.id}`}>
+                                      {follower.firstName && follower.lastName
+                                        ? `${follower.firstName} ${follower.lastName}`
+                                        : follower.email}
+                                    </p>
+                                    {follower.bio && (
+                                      <p className="text-sm text-muted-foreground truncate">
+                                        {follower.bio}
+                                      </p>
+                                    )}
+                                  </div>
+                                </a>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 border rounded-lg">
+                            <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">
+                              لا يوجد متابعون بعد
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Following Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <UserMinus className="h-5 w-5" />
+                          المتابَعون
+                        </h3>
+                        {isLoadingFollowing ? (
+                          <div className="space-y-3">
+                            {[1, 2, 3, 4].map((i) => (
+                              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="flex-1 space-y-2">
+                                  <Skeleton className="h-4 w-32" />
+                                  <Skeleton className="h-3 w-48" />
+                                </div>
+                                <Skeleton className="h-8 w-24" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : following.length > 0 ? (
+                          <div className="space-y-3">
+                            {following.map((followedUser) => (
+                              <div 
+                                key={followedUser.id} 
+                                className="flex items-center gap-3 p-3 rounded-lg border hover-elevate transition-all"
+                                data-testid={`card-following-${followedUser.id}`}
+                              >
+                                <Link href={`/user/${followedUser.id}`}>
+                                  <a className="flex items-center gap-3 flex-1 min-w-0">
+                                    <Avatar className="h-12 w-12">
+                                      <AvatarImage 
+                                        src={followedUser.profileImageUrl || ""} 
+                                        alt={`${followedUser.firstName || ''} ${followedUser.lastName || ''}`}
+                                      />
+                                      <AvatarFallback className="bg-primary/10 text-primary">
+                                        {followedUser.firstName?.[0] || followedUser.email[0].toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium truncate" data-testid={`text-following-name-${followedUser.id}`}>
+                                        {followedUser.firstName && followedUser.lastName
+                                          ? `${followedUser.firstName} ${followedUser.lastName}`
+                                          : followedUser.email}
+                                      </p>
+                                      {followedUser.bio && (
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          {followedUser.bio}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </a>
+                                </Link>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => unfollowUserMutation.mutate(followedUser.id)}
+                                  disabled={unfollowUserMutation.isPending}
+                                  data-testid={`button-unfollow-${followedUser.id}`}
+                                >
+                                  {unfollowUserMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <UserMinus className="h-4 w-4 ml-1" />
+                                      إلغاء المتابعة
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 border rounded-lg">
+                            <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">
+                              لا تتابع أي مستخدم بعد
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="settings" className="space-y-6">
