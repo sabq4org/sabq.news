@@ -1,6 +1,11 @@
 import { PassBuilder, PressPassData } from './PassBuilder';
 import { PKPass } from 'passkit-generator';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export class PressPassBuilder extends PassBuilder {
   constructor(passTypeId: string, teamId: string) {
