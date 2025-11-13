@@ -75,6 +75,7 @@ import {
   dataStoryDrafts,
   shortLinks,
   shortLinkClicks,
+  socialFollows,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -251,6 +252,8 @@ import {
   type InsertShortLink,
   type ShortLinkClick,
   type InsertShortLinkClick,
+  type SocialFollow,
+  type InsertSocialFollow,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -630,6 +633,14 @@ export interface IStorage {
   getStoryFollowersByStoryId(storyId: string): Promise<StoryFollow[]>;
   isFollowingStory(userId: string, storyId: string): Promise<boolean>;
   updateStoryFollow(userId: string, storyId: string, data: Partial<InsertStoryFollow>): Promise<StoryFollow>;
+
+  // Social Following System
+  followUser(data: InsertSocialFollow): Promise<SocialFollow>;
+  unfollowUser(followerId: string, followingId: string): Promise<void>;
+  getFollowers(userId: string, limit?: number): Promise<Array<SocialFollow & { follower: User }>>;
+  getFollowing(userId: string, limit?: number): Promise<Array<SocialFollow & { following: User }>>;
+  isFollowing(followerId: string, followingId: string): Promise<boolean>;
+  getFollowStats(userId: string): Promise<{ followersCount: number; followingCount: number }>;
 
   // Story notification operations
   createStoryNotification(notification: InsertStoryNotification): Promise<StoryNotification>;
@@ -5405,6 +5416,123 @@ export class DatabaseStorage implements IStorage {
       ))
       .returning();
     return updated;
+  }
+
+  // Social Following System
+  async followUser(data: InsertSocialFollow): Promise<SocialFollow> {
+    console.log('[Storage] Following user:', data);
+    const [created] = await db
+      .insert(socialFollows)
+      .values(data)
+      .returning();
+    console.log('[Storage] User follow created:', created);
+    return created;
+  }
+
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    console.log('[Storage] Unfollowing user:', { followerId, followingId });
+    await db
+      .delete(socialFollows)
+      .where(and(
+        eq(socialFollows.followerId, followerId),
+        eq(socialFollows.followingId, followingId)
+      ));
+    console.log('[Storage] User unfollowed successfully');
+  }
+
+  async getFollowers(userId: string, limit?: number): Promise<Array<SocialFollow & { follower: User }>> {
+    console.log('[Storage] Getting followers for user:', userId, 'limit:', limit);
+    const followerUser = aliasedTable(users, 'follower');
+    
+    let query = db
+      .select({
+        socialFollow: socialFollows,
+        follower: followerUser,
+      })
+      .from(socialFollows)
+      .leftJoin(followerUser, eq(socialFollows.followerId, followerUser.id))
+      .where(eq(socialFollows.followingId, userId))
+      .orderBy(desc(socialFollows.createdAt));
+
+    if (limit) {
+      query = query.limit(limit) as any;
+    }
+
+    const results = await query;
+    
+    const followers = results.map(r => ({
+      ...r.socialFollow,
+      follower: r.follower!,
+    }));
+    
+    console.log('[Storage] Found followers:', followers.length);
+    return followers;
+  }
+
+  async getFollowing(userId: string, limit?: number): Promise<Array<SocialFollow & { following: User }>> {
+    console.log('[Storage] Getting following for user:', userId, 'limit:', limit);
+    const followingUser = aliasedTable(users, 'following');
+    
+    let query = db
+      .select({
+        socialFollow: socialFollows,
+        following: followingUser,
+      })
+      .from(socialFollows)
+      .leftJoin(followingUser, eq(socialFollows.followingId, followingUser.id))
+      .where(eq(socialFollows.followerId, userId))
+      .orderBy(desc(socialFollows.createdAt));
+
+    if (limit) {
+      query = query.limit(limit) as any;
+    }
+
+    const results = await query;
+    
+    const following = results.map(r => ({
+      ...r.socialFollow,
+      following: r.following!,
+    }));
+    
+    console.log('[Storage] Found following:', following.length);
+    return following;
+  }
+
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    console.log('[Storage] Checking if user is following:', { followerId, followingId });
+    const [result] = await db
+      .select()
+      .from(socialFollows)
+      .where(and(
+        eq(socialFollows.followerId, followerId),
+        eq(socialFollows.followingId, followingId)
+      ));
+    
+    const isFollowing = !!result;
+    console.log('[Storage] Is following:', isFollowing);
+    return isFollowing;
+  }
+
+  async getFollowStats(userId: string): Promise<{ followersCount: number; followingCount: number }> {
+    console.log('[Storage] Getting follow stats for user:', userId);
+    
+    const [followersResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(socialFollows)
+      .where(eq(socialFollows.followingId, userId));
+    
+    const [followingResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(socialFollows)
+      .where(eq(socialFollows.followerId, userId));
+    
+    const stats = {
+      followersCount: followersResult?.count || 0,
+      followingCount: followingResult?.count || 0,
+    };
+    
+    console.log('[Storage] Follow stats:', stats);
+    return stats;
   }
 
   // Story notification operations

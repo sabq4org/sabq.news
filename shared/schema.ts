@@ -234,16 +234,25 @@ export const rssFeeds = pgTable("rss_feeds", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// User reading history for recommendations
+// User reading history for recommendations (ENHANCED for advanced analytics)
 export const readingHistory = pgTable("reading_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
   readAt: timestamp("read_at").defaultNow().notNull(),
-  readDuration: integer("read_duration"),
+  readDuration: integer("read_duration"), // in seconds
+  
+  // NEW ADDITIVE FIELDS for advanced tracking
+  scrollDepth: integer("scroll_depth"), // percentage 0-100
+  completionRate: integer("completion_rate"), // percentage 0-100 (estimated based on scroll + duration)
+  engagementScore: real("engagement_score"), // calculated score 0-1 based on multiple factors
+  deviceType: text("device_type"), // mobile, tablet, desktop
+  platform: text("platform"), // ios, android, web
+  referrer: text("referrer"), // where user came from
 }, (table) => [
   index("idx_reading_history_user").on(table.userId, table.readAt.desc()),
   index("idx_reading_history_article").on(table.articleId),
+  index("idx_reading_history_engagement").on(table.userId, table.engagementScore),
 ]);
 
 // Comments with status management
@@ -359,12 +368,24 @@ export const articleSmartCategories = pgTable("article_smart_categories", {
   index("idx_article_smart_article_id").on(table.articleId),
 ]);
 
-// User preferences for recommendations
+// User preferences for recommendations (ENHANCED with granular controls)
 export const userPreferences = pgTable("user_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull().unique(),
   preferredCategories: jsonb("preferred_categories").$type<string[]>(),
   notificationsEnabled: boolean("notifications_enabled").default(true).notNull(),
+  
+  // NEW ADDITIVE FIELDS for granular notification control
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  weeklyDigest: boolean("weekly_digest").default(false),
+  followingNotifications: boolean("following_notifications").default(true), // notifications from followed users
+  
+  // NEW ADDITIVE FIELDS for content preferences
+  preferredAuthors: jsonb("preferred_authors").$type<string[]>(), // array of user IDs
+  blockedCategories: jsonb("blocked_categories").$type<string[]>(), // array of category IDs to hide
+  recommendationFrequency: text("recommendation_frequency").default("daily"), // daily, weekly, never
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -388,6 +409,25 @@ export const userInterests = pgTable("user_interests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// ============================================
+// SOCIAL FOLLOWING SYSTEM (NEW)
+// ============================================
+
+// Social follows - user-to-user following relationships
+export const socialFollows = pgTable("social_follows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  followerId: varchar("follower_id").references(() => users.id, { onDelete: 'cascade' }).notNull(), // who is following
+  followingId: varchar("following_id").references(() => users.id, { onDelete: 'cascade' }).notNull(), // who is being followed
+  notificationsEnabled: boolean("notifications_enabled").default(true).notNull(), // receive notifications for this user's activity
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // Ensure a user can't follow the same person twice
+  uniqueIndex("idx_social_follows_unique").on(table.followerId, table.followingId),
+  // Quick lookups for followers/following lists
+  index("idx_social_follows_follower").on(table.followerId, table.createdAt.desc()),
+  index("idx_social_follows_following").on(table.followingId, table.createdAt.desc()),
+]);
 
 // Behavior tracking logs
 export const behaviorLogs = pgTable("behavior_logs", {
@@ -1156,6 +1196,48 @@ export const insertCommentSentimentSchema = createInsertSchema(commentSentiments
 });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
+
+// NEW: Reading history insert schema (with enhanced tracking fields)
+export const insertReadingHistorySchema = createInsertSchema(readingHistory).omit({
+  id: true,
+  readAt: true,
+}).extend({
+  scrollDepth: z.number().min(0).max(100).optional(),
+  completionRate: z.number().min(0).max(100).optional(),
+  engagementScore: z.number().min(0).max(1).optional(),
+  deviceType: z.enum(["mobile", "tablet", "desktop"]).optional(),
+  platform: z.enum(["ios", "android", "web"]).optional(),
+  referrer: z.string().optional(),
+});
+
+// NEW: User preferences insert/update schema (with enhanced notification controls)
+export const insertUserPreferenceSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  emailNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
+  weeklyDigest: z.boolean().optional(),
+  followingNotifications: z.boolean().optional(),
+  preferredAuthors: z.array(z.string()).optional(),
+  blockedCategories: z.array(z.string()).optional(),
+  recommendationFrequency: z.enum(["daily", "weekly", "never"]).default("daily"),
+});
+export const updateUserPreferenceSchema = insertUserPreferenceSchema.partial();
+
+// NEW: Social follows insert schema
+export const insertSocialFollowSchema = createInsertSchema(socialFollows).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  // Ensure user can't follow themselves
+  followerId: z.string(),
+  followingId: z.string(),
+}).refine((data) => data.followerId !== data.followingId, {
+  message: "لا يمكنك متابعة نفسك",
+  path: ["followingId"],
+});
+
 export const insertInterestSchema = createInsertSchema(interests).omit({ id: true, createdAt: true });
 export const insertUserInterestSchema = createInsertSchema(userInterests).omit({ 
   id: true, 
@@ -1566,7 +1648,14 @@ export type Bookmark = typeof bookmarks.$inferSelect;
 export type InsertBookmark = z.infer<typeof insertBookmarkSchema>;
 
 export type ReadingHistory = typeof readingHistory.$inferSelect;
+export type InsertReadingHistory = z.infer<typeof insertReadingHistorySchema>;
+
 export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = z.infer<typeof insertUserPreferenceSchema>;
+export type UpdateUserPreference = z.infer<typeof updateUserPreferenceSchema>;
+
+export type SocialFollow = typeof socialFollows.$inferSelect;
+export type InsertSocialFollow = z.infer<typeof insertSocialFollowSchema>;
 
 export type Interest = typeof interests.$inferSelect;
 export type InsertInterest = z.infer<typeof insertInterestSchema>;
@@ -1889,6 +1978,17 @@ export const userFollowedTermsRelations = relations(userFollowedTerms, ({ one })
   tag: one(tags, {
     fields: [userFollowedTerms.tagId],
     references: [tags.id],
+  }),
+}));
+
+export const socialFollowsRelations = relations(socialFollows, ({ one }) => ({
+  follower: one(users, {
+    fields: [socialFollows.followerId],
+    references: [users.id],
+  }),
+  following: one(users, {
+    fields: [socialFollows.followingId],
+    references: [users.id],
   }),
 }));
 
