@@ -40,6 +40,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **Reporter Profile System (Trilingual):** Complete trilingual implementation with language-specific content display and bidirectional fallback logic.
 -   **Smart Advertising System (Arabic):** Enterprise-grade advertising platform with AI-powered optimization.
 -   **SEO and Social Sharing:** Comprehensive Open Graph and Twitter Card meta tags with server-side rendering.
+-   **Apple Wallet Digital Press Cards:** Enterprise-grade digital credential system allowing all registered members to issue official press cards via Apple Wallet. Features include: (1) PassKit integration with passkit-generator library, (2) Database schema with wallet_passes and wallet_devices tables for pass tracking and device registration, (3) PassKit Web Service Protocol endpoints for device registration and pass updates, (4) Profile page UI with issuance status, serial number display, and one-click issue button, (5) Placeholder architecture ready for Apple Developer credentials (Pass Type ID, Team ID, Pass Certificate, APNs Auth Key), (6) Future support for automatic pass updates via APNs push notifications when user profile changes.
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and intelligent media suggestions. A scope-aware theme management system, Content Import System (RSS feeds with AI), and Smart Categories architecture with a junction table are implemented. The Media Library provides centralized asset management with AI-powered keyword extraction.
@@ -76,3 +77,36 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **Development Tools**
 -   `TypeScript`
+
+**Digital Credentials**
+-   `passkit-generator` (Apple Wallet Pass generation)
+
+## Environment Variables
+
+### Apple Wallet Pass Configuration
+To enable Apple Wallet digital press card issuance, configure the following environment variables with your Apple Developer credentials:
+
+**Required Credentials:**
+-   `APPLE_PASS_TYPE_ID`: Pass Type Identifier from Apple Developer (e.g., `pass.life.sabq.presscard`)
+-   `APPLE_TEAM_ID`: 10-character Apple Team Identifier
+-   `APPLE_PASS_CERT`: Path to pass certificate file (PEM format) or base64-encoded certificate
+-   `APPLE_PASS_KEY`: Path to pass private key file (PEM format) or base64-encoded key
+-   `APPLE_PASS_KEY_PASSWORD`: (Optional) Password for encrypted pass private key
+
+**Optional - For Automatic Pass Updates:**
+-   `APNS_KEY_ID`: APNs Key ID for push notifications
+-   `APNS_TEAM_ID`: Team ID for APNs (usually same as APPLE_TEAM_ID)
+-   `APNS_AUTH_KEY`: Path to APNs Auth Key file (.p8 format) or base64-encoded key
+
+**How to Obtain These Credentials:**
+1. Enroll in Apple Developer Program ($99/year): https://developer.apple.com/programs/
+2. Create Pass Type ID in Apple Developer Portal → Certificates, Identifiers & Profiles → Identifiers
+3. Generate Pass Certificate using Certificate Signing Request (CSR)
+4. Download WWDR Certificate from Apple
+5. (Optional) Create APNs Auth Key for push notification support
+
+**Current Status:**
+- Infrastructure is ready with placeholder configuration
+- All API endpoints functional
+- UI displays appropriate messages when credentials not configured
+- Once credentials added, users can download .pkpass files and add to Apple Wallet
