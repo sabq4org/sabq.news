@@ -86,32 +86,31 @@ export class PassKitService {
     }
     
     // Load signing key
-    const signerKey = this.loadCertificate(keyPath);
+    const signerKeyBuffer = this.loadCertificate(keyPath);
     
-    // All certificates are now Buffers - ready for PKPass!
+    // 🔥 CRITICAL FIX: Convert all Buffers to strings for PKPass
     const config: CertificateConfig = {
-      signerCert: signerCert,
-      signerKey: signerKey,
-      wwdr: wwdrCert,
+      signerCert: signerCert.toString('utf-8'),
+      signerKey: signerKeyBuffer.toString('utf-8'),
+      wwdr: wwdrCert.toString('utf-8'),
     };
     
     if (process.env.APPLE_PASS_KEY_PASSWORD) {
       config.signerKeyPassphrase = process.env.APPLE_PASS_KEY_PASSWORD;
     }
     
-    console.log(`✅ [PassKit] Certificate config complete - all Buffers`);
+    console.log(`✅ [PassKit] Certificate config complete - all STRINGS`);
     console.log(`✅ [PassKit] signerCert type: ${typeof config.signerCert}, length: ${config.signerCert.length}`);
     console.log(`✅ [PassKit] signerKey type: ${typeof config.signerKey}, length: ${config.signerKey.length}`);
     console.log(`✅ [PassKit] wwdr type: ${typeof config.wwdr}, length: ${config.wwdr.length}`);
     
     // 🔥 GOLDEN DEBUG LOG - Shows EXACTLY what PKPass will see
     console.log('\n🔥🔥🔥 CRITICAL DEBUG - FIRST 120 CHARS OF WWDR:');
-    const wwdrStr = config.wwdr.toString('utf-8');
-    console.log(wwdrStr.substring(0, 120));
-    console.log('\n🔥🔥🔥 WWDR FULL LENGTH:', wwdrStr.length);
-    console.log('🔥🔥🔥 HAS "BEGIN CERTIFICATE":', wwdrStr.includes('-----BEGIN CERTIFICATE-----'));
-    console.log('🔥🔥🔥 HAS "END CERTIFICATE":', wwdrStr.includes('-----END CERTIFICATE-----'));
-    console.log('🔥🔥🔥 HAS NEWLINES:', wwdrStr.includes('\n'));
+    console.log(config.wwdr.substring(0, 120));
+    console.log('\n🔥🔥🔥 WWDR FULL LENGTH:', config.wwdr.length);
+    console.log('🔥🔥🔥 HAS "BEGIN CERTIFICATE":', config.wwdr.includes('-----BEGIN CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS "END CERTIFICATE":', config.wwdr.includes('-----END CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS NEWLINES:', config.wwdr.includes('\n'));
     
     return config;
   }

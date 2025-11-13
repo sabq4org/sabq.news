@@ -27,9 +27,9 @@ export interface PressPassData extends PassData {
 }
 
 export interface CertificateConfig {
-  signerCert: Buffer;
-  signerKey: Buffer;
-  wwdr: Buffer;
+  signerCert: string;
+  signerKey: string;
+  wwdr: string;
   signerKeyPassphrase?: string;
 }
 
@@ -49,28 +49,22 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
-      console.log('🔐 [PassBuilder] Generating pass - converting Buffers to strings...');
-      
-      // 🔥 CRITICAL FIX: PKPass expects strings, not Buffers!
-      const certificateStrings = {
-        wwdr: certificates.wwdr.toString('utf-8'),
-        signerCert: certificates.signerCert.toString('utf-8'),
-        signerKey: certificates.signerKey.toString('utf-8'),
-        signerKeyPassphrase: certificates.signerKeyPassphrase,
-      };
-      
-      console.log('✅ [PassBuilder] Certificates converted to strings:', {
-        wwdr: typeof certificateStrings.wwdr,
-        signerCert: typeof certificateStrings.signerCert,
-        signerKey: typeof certificateStrings.signerKey,
+      console.log('🔐 [PassBuilder] Generating pass with strings...');
+      console.log('✅ [PassBuilder] Certificate types (should be strings):', {
+        wwdr: typeof certificates.wwdr,
+        signerCert: typeof certificates.signerCert,
+        signerKey: typeof certificates.signerKey,
       });
-      console.log('✅ [PassBuilder] WWDR string length:', certificateStrings.wwdr.length);
-      console.log('✅ [PassBuilder] WWDR starts with:', certificateStrings.wwdr.substring(0, 30));
       
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
-          certificates: certificateStrings,
+          certificates: {
+            wwdr: certificates.wwdr,
+            signerCert: certificates.signerCert,
+            signerKey: certificates.signerKey,
+            signerKeyPassphrase: certificates.signerKeyPassphrase,
+          },
         },
         {
           serialNumber: data.serialNumber,
