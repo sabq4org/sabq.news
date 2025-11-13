@@ -31,6 +31,8 @@ export class PassKitService {
   }
   
   private async loadCertificates(passType: 'press' | 'loyalty'): Promise<CertificateConfig> {
+    console.log(`🔐 [PassKit] Loading certificates for ${passType} pass...`);
+    
     // Load certificates based on pass type
     const certPath = passType === 'press' 
       ? (process.env.APPLE_PRESS_PASS_CERT || process.env.APPLE_PASS_CERT)
@@ -42,6 +44,10 @@ export class PassKitService {
     
     const wwdrPath = process.env.APPLE_WWDR_CERT;
     
+    console.log(`🔐 [PassKit] Cert path length: ${certPath?.length || 0}`);
+    console.log(`🔐 [PassKit] Key path length: ${keyPath?.length || 0}`);
+    console.log(`🔐 [PassKit] WWDR path length: ${wwdrPath?.length || 0}`);
+    
     if (!certPath || !keyPath) {
       throw new Error(
         'تعذر إصدار البطاقة لأن بيانات الاعتماد الخاصة بـ Apple Wallet غير مكتملة. يرجى التواصل مع المسؤول.'
@@ -51,6 +57,9 @@ export class PassKitService {
     // Split certificates if multiple are in the same variable
     const { signerCert, wwdr } = this.splitCertificates(certPath);
     
+    console.log(`🔐 [PassKit] Signer cert type: ${typeof signerCert}, length: ${signerCert.toString().length}`);
+    console.log(`🔐 [PassKit] WWDR from split: ${wwdr ? 'YES' : 'NO'}`);
+    
     const config: CertificateConfig = {
       signerCert: signerCert,
       signerKey: this.loadCertificate(keyPath),
@@ -58,10 +67,19 @@ export class PassKitService {
     
     // Use extracted WWDR or separate WWDR cert
     if (wwdr) {
+      console.log(`✅ [PassKit] Using WWDR from split certificate`);
       config.wwdr = wwdr;
     } else if (wwdrPath) {
+      console.log(`✅ [PassKit] Loading WWDR from separate env var`);
       config.wwdr = this.loadCertificate(wwdrPath);
+    } else {
+      console.error(`❌ [PassKit] NO WWDR CERTIFICATE FOUND!`);
+      throw new Error(
+        'WWDR certificate not found. Please provide APPLE_WWDR_CERT or include it in the pass certificate.'
+      );
     }
+    
+    console.log(`✅ [PassKit] WWDR loaded: ${config.wwdr ? 'YES' : 'NO'}`);
     
     if (process.env.APPLE_PASS_KEY_PASSWORD) {
       config.signerKeyPassphrase = process.env.APPLE_PASS_KEY_PASSWORD;
