@@ -134,21 +134,30 @@ export class PassKitService {
     if (envVar.startsWith('/') || envVar.startsWith('./') || envVar.includes('\\')) {
       const fs = require('fs');
       const content = fs.readFileSync(envVar, 'utf-8');
+      console.log(`✅ [PassKit] Loaded certificate from file: ${envVar.substring(0, 50)}...`);
       return Buffer.from(content, 'utf-8');
     }
+    
+    // Log what we're dealing with
+    console.log(`🔍 [PassKit] Processing certificate (length: ${envVar.length}, first 50 chars: ${envVar.substring(0, 50)})`);
     
     // Clean the input - remove any whitespace/newlines
     const cleaned = envVar.replace(/\s/g, '');
     
     // Check if base64 - decode to PEM string then to Buffer
     if (cleaned.match(/^[A-Za-z0-9+/=]+$/) && !envVar.includes('-----BEGIN')) {
+      console.log('🔍 [PassKit] Detected base64 format, attempting to decode...');
       try {
         const pemString = Buffer.from(cleaned, 'base64').toString('utf-8');
+        console.log(`🔍 [PassKit] Decoded length: ${pemString.length}, first 100 chars: ${pemString.substring(0, 100)}`);
+        
         // Validate PEM format
         if (!pemString.includes('-----BEGIN') || !pemString.includes('-----END')) {
           console.error('❌ [PassKit] Invalid PEM after base64 decode - missing headers');
+          console.error(`First 200 chars of decoded content: ${pemString.substring(0, 200)}`);
           throw new Error('Invalid certificate: base64 decoded but no PEM headers found');
         }
+        console.log('✅ [PassKit] Successfully decoded base64 to valid PEM format');
         return Buffer.from(pemString, 'utf-8');
       } catch (error) {
         console.error('❌ [PassKit] Failed to decode base64 certificate:', error);
@@ -156,8 +165,15 @@ export class PassKitService {
       }
     }
     
-    // Otherwise treat as PEM string already - convert to Buffer
-    return Buffer.from(envVar, 'utf-8');
+    // Otherwise treat as PEM string already - validate it
+    if (envVar.includes('-----BEGIN') && envVar.includes('-----END')) {
+      console.log('✅ [PassKit] Using PEM string directly (already in PEM format)');
+      return Buffer.from(envVar, 'utf-8');
+    }
+    
+    console.error('❌ [PassKit] Certificate format unknown - not base64, not file path, not PEM');
+    console.error(`First 200 chars: ${envVar.substring(0, 200)}`);
+    throw new Error('Invalid certificate format: must be PEM string, base64 encoded PEM, or file path');
   }
   
   generateSerialNumber(userId: string, passType: 'press' | 'loyalty'): string {
