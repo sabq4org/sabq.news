@@ -95,10 +95,17 @@ export class PassKitService {
       certString = fs.readFileSync(certString, 'utf-8');
     }
     
+    // Clean the input - remove any whitespace/newlines from base64
+    const cleaned = certString.replace(/\s/g, '');
+    
     // Check if base64 - decode it to PEM string
-    if (certString.match(/^[A-Za-z0-9+/=]+$/) && !certString.includes('-----BEGIN')) {
-      // Pure base64 without PEM headers - decode to PEM string
-      certString = Buffer.from(certString, 'base64').toString('utf-8');
+    if (cleaned.match(/^[A-Za-z0-9+/=]+$/) && !certString.includes('-----BEGIN')) {
+      try {
+        certString = Buffer.from(cleaned, 'base64').toString('utf-8');
+      } catch (error) {
+        console.error('❌ [PassKit] Failed to decode base64 in splitCertificates:', error);
+        throw new Error('Invalid certificate: failed to decode base64');
+      }
     }
     
     // Now certString should be PEM format text
@@ -106,12 +113,12 @@ export class PassKitService {
     const certMatches = certString.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
     
     if (!certMatches || certMatches.length === 0) {
-      // No PEM headers found - return as Buffer
-      return { signerCert: Buffer.from(certString, 'utf-8') };
+      console.error('❌ [PassKit] No valid PEM certificates found in cert string');
+      console.error('First 100 chars:', certString.substring(0, 100));
+      throw new Error('No valid PEM certificates found');
     }
     
     if (certMatches.length === 1) {
-      // Only one certificate found - return as Buffer
       return { signerCert: Buffer.from(certMatches[0], 'utf-8') };
     }
     
@@ -130,10 +137,23 @@ export class PassKitService {
       return Buffer.from(content, 'utf-8');
     }
     
+    // Clean the input - remove any whitespace/newlines
+    const cleaned = envVar.replace(/\s/g, '');
+    
     // Check if base64 - decode to PEM string then to Buffer
-    if (envVar.match(/^[A-Za-z0-9+/=]+$/) && !envVar.includes('-----BEGIN')) {
-      const pemString = Buffer.from(envVar, 'base64').toString('utf-8');
-      return Buffer.from(pemString, 'utf-8');
+    if (cleaned.match(/^[A-Za-z0-9+/=]+$/) && !envVar.includes('-----BEGIN')) {
+      try {
+        const pemString = Buffer.from(cleaned, 'base64').toString('utf-8');
+        // Validate PEM format
+        if (!pemString.includes('-----BEGIN') || !pemString.includes('-----END')) {
+          console.error('❌ [PassKit] Invalid PEM after base64 decode - missing headers');
+          throw new Error('Invalid certificate: base64 decoded but no PEM headers found');
+        }
+        return Buffer.from(pemString, 'utf-8');
+      } catch (error) {
+        console.error('❌ [PassKit] Failed to decode base64 certificate:', error);
+        throw new Error('Invalid certificate: failed to decode base64');
+      }
     }
     
     // Otherwise treat as PEM string already - convert to Buffer
