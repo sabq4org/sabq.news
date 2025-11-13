@@ -29,7 +29,7 @@ import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddlew
 import { passKitService, type PressPassData, type LoyaltyPassData } from "./lib/passkit/PassKitService";
 import pLimit from 'p-limit';
 import { db } from "./db";
-import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -19103,6 +19103,420 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       res.status(500).json({ message: "Failed to save settings" });
     }
   });
+
+  // ============================================================================
+  // Analytics Dashboard APIs
+  // ============================================================================
+
+  // GET /api/analytics/overview - Get analytics metrics summary with percentage changes
+  app.get("/api/analytics/overview", 
+    requireAuth, 
+    requireAnyPermission("analytics.view", "articles.view"), 
+    cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
+    async (req, res) => {
+      try {
+        const now = new Date();
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+        // Helper function to calculate percentage change
+        const calculateChange = (current: number, previous: number): number => {
+          if (previous === 0) return current > 0 ? 100 : 0;
+          return Math.round(((current - previous) / previous) * 100);
+        };
+
+        // Get total views (current month vs last month)
+        const [currentViews] = await db
+          .select({ total: sql<number>`COALESCE(SUM(${readingHistory.readDuration}), 0)::int` })
+          .from(readingHistory)
+          .where(gte(readingHistory.readAt, thisMonthStart));
+
+        const [previousViews] = await db
+          .select({ total: sql<number>`COALESCE(SUM(${readingHistory.readDuration}), 0)::int` })
+          .from(readingHistory)
+          .where(and(
+            gte(readingHistory.readAt, lastMonthStart),
+            lte(readingHistory.readAt, lastMonthEnd)
+          ));
+
+        const totalViews = currentViews?.total || 0;
+        const viewsChange = calculateChange(totalViews, previousViews?.total || 0);
+
+        // Get total users (current month vs last month)
+        const [currentUsers] = await db
+          .select({ count: sql<number>`COUNT(DISTINCT ${users.id})::int` })
+          .from(users)
+          .where(and(
+            gte(users.createdAt, thisMonthStart),
+            isNull(users.deletedAt)
+          ));
+
+        const [previousUsers] = await db
+          .select({ count: sql<number>`COUNT(DISTINCT ${users.id})::int` })
+          .from(users)
+          .where(and(
+            gte(users.createdAt, lastMonthStart),
+            lte(users.createdAt, lastMonthEnd),
+            isNull(users.deletedAt)
+          ));
+
+        const totalUsers = currentUsers?.count || 0;
+        const usersChange = calculateChange(totalUsers, previousUsers?.count || 0);
+
+        // Get total articles (current month vs last month)
+        const [currentArticles] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(articles)
+          .where(and(
+            eq(articles.status, "published"),
+            gte(articles.publishedAt, thisMonthStart)
+          ));
+
+        const [previousArticles] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(articles)
+          .where(and(
+            eq(articles.status, "published"),
+            gte(articles.publishedAt, lastMonthStart),
+            lte(articles.publishedAt, lastMonthEnd)
+          ));
+
+        const totalArticles = currentArticles?.count || 0;
+        const articlesChange = calculateChange(totalArticles, previousArticles?.count || 0);
+
+        // Get total comments (current month vs last month)
+        const [currentComments] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments)
+          .where(gte(comments.createdAt, thisMonthStart));
+
+        const [previousComments] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments)
+          .where(and(
+            gte(comments.createdAt, lastMonthStart),
+            lte(comments.createdAt, lastMonthEnd)
+          ));
+
+        const totalComments = currentComments?.count || 0;
+        const commentsChange = calculateChange(totalComments, previousComments?.count || 0);
+
+        // Get total likes (reactions) (current month vs last month)
+        const [currentLikes] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(reactions)
+          .where(gte(reactions.createdAt, thisMonthStart));
+
+        const [previousLikes] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(reactions)
+          .where(and(
+            gte(reactions.createdAt, lastMonthStart),
+            lte(reactions.createdAt, lastMonthEnd)
+          ));
+
+        const totalLikes = currentLikes?.count || 0;
+        const likesChange = calculateChange(totalLikes, previousLikes?.count || 0);
+
+        // Get total bookmarks (current month vs last month)
+        const [currentBookmarks] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(bookmarks)
+          .where(gte(bookmarks.createdAt, thisMonthStart));
+
+        const [previousBookmarks] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(bookmarks)
+          .where(and(
+            gte(bookmarks.createdAt, lastMonthStart),
+            lte(bookmarks.createdAt, lastMonthEnd)
+          ));
+
+        const totalBookmarks = currentBookmarks?.count || 0;
+        const bookmarksChange = calculateChange(totalBookmarks, previousBookmarks?.count || 0);
+
+        res.json({
+          totalViews,
+          viewsChange,
+          totalUsers,
+          usersChange,
+          totalArticles,
+          articlesChange,
+          totalComments,
+          commentsChange,
+          totalLikes,
+          likesChange,
+          totalBookmarks,
+          bookmarksChange,
+        });
+      } catch (error) {
+        console.error("Error fetching analytics overview:", error);
+        res.status(500).json({ message: "Failed to fetch analytics overview" });
+      }
+    }
+  );
+
+  // GET /api/analytics/chart - Get time-series data for charts (12 months)
+  app.get("/api/analytics/chart",
+    requireAuth,
+    requireAnyPermission("analytics.view", "articles.view"),
+    cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
+    async (req, res) => {
+      try {
+        const months: string[] = [];
+        const views: number[] = [];
+        const users: number[] = [];
+        const articlesData: number[] = [];
+
+        // Generate last 12 months
+        const now = new Date();
+        for (let i = 11; i >= 0; i--) {
+          const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+          const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59, 999);
+          
+          const monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          months.push(monthName);
+
+          // Get views for this month (count of reading history entries)
+          const [monthViews] = await db
+            .select({ count: sql<number>`COUNT(*)::int` })
+            .from(readingHistory)
+            .where(and(
+              gte(readingHistory.readAt, monthStart),
+              lte(readingHistory.readAt, monthEnd)
+            ));
+          views.push(monthViews?.count || 0);
+
+          // Get new users for this month
+          const [monthUsers] = await db
+            .select({ count: sql<number>`COUNT(*)::int` })
+            .from(users)
+            .where(and(
+              gte(users.createdAt, monthStart),
+              lte(users.createdAt, monthEnd),
+              isNull(users.deletedAt)
+            ));
+          users.push(monthUsers?.count || 0);
+
+          // Get published articles for this month
+          const [monthArticles] = await db
+            .select({ count: sql<number>`COUNT(*)::int` })
+            .from(articles)
+            .where(and(
+              eq(articles.status, "published"),
+              gte(articles.publishedAt, monthStart),
+              lte(articles.publishedAt, monthEnd)
+            ));
+          articlesData.push(monthArticles?.count || 0);
+        }
+
+        res.json({
+          months,
+          views,
+          users,
+          articles: articlesData,
+        });
+      } catch (error) {
+        console.error("Error fetching analytics chart data:", error);
+        res.status(500).json({ message: "Failed to fetch analytics chart data" });
+      }
+    }
+  );
+
+  // GET /api/analytics/top-content - Get top 10 articles by views
+  app.get("/api/analytics/top-content",
+    requireAuth,
+    requireAnyPermission("analytics.view", "articles.view"),
+    cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
+    async (req, res) => {
+      try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+        // Get top 10 articles by views with category info
+        const topArticles = await db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            slug: articles.slug,
+            views: articles.views,
+            publishedAt: articles.publishedAt,
+            categoryId: articles.categoryId,
+            categoryName: categories.nameAr,
+            categorySlug: categories.slug,
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(and(
+            eq(articles.status, "published"),
+            gte(articles.publishedAt, thirtyDaysAgo)
+          ))
+          .orderBy(desc(articles.views))
+          .limit(10);
+
+        // Calculate view changes for each article (compare with previous 30 days)
+        const enrichedArticles = await Promise.all(
+          topArticles.map(async (article) => {
+            // Get views in last 30 days
+            const [currentPeriodViews] = await db
+              .select({ count: sql<number>`COUNT(*)::int` })
+              .from(readingHistory)
+              .where(and(
+                eq(readingHistory.articleId, article.id),
+                gte(readingHistory.readAt, thirtyDaysAgo)
+              ));
+
+            // Get views in previous 30 days (30-60 days ago)
+            const [previousPeriodViews] = await db
+              .select({ count: sql<number>`COUNT(*)::int` })
+              .from(readingHistory)
+              .where(and(
+                eq(readingHistory.articleId, article.id),
+                gte(readingHistory.readAt, sixtyDaysAgo),
+                lte(readingHistory.readAt, thirtyDaysAgo)
+              ));
+
+            const currentViews = currentPeriodViews?.count || 0;
+            const previousViews = previousPeriodViews?.count || 0;
+            
+            let change = 0;
+            if (previousViews === 0) {
+              change = currentViews > 0 ? 100 : 0;
+            } else {
+              change = Math.round(((currentViews - previousViews) / previousViews) * 100);
+            }
+
+            return {
+              id: article.id,
+              title: article.title,
+              slug: article.slug,
+              views: article.views || 0,
+              category: article.categoryName || 'Uncategorized',
+              categorySlug: article.categorySlug || 'uncategorized',
+              publishedAt: article.publishedAt?.toISOString() || '',
+              change,
+            };
+          })
+        );
+
+        res.json(enrichedArticles);
+      } catch (error) {
+        console.error("Error fetching top content:", error);
+        res.status(500).json({ message: "Failed to fetch top content" });
+      }
+    }
+  );
+
+  // GET /api/analytics/recent-activity - Get latest 20 activities
+  app.get("/api/analytics/recent-activity",
+    requireAuth,
+    requireAnyPermission("analytics.view", "articles.view"),
+    cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
+    async (req, res) => {
+      try {
+        // Get latest activities from activityLogs
+        const activities = await db
+          .select({
+            id: activityLogs.id,
+            action: activityLogs.action,
+            entityType: activityLogs.entityType,
+            entityId: activityLogs.entityId,
+            userId: activityLogs.userId,
+            metadata: activityLogs.metadata,
+            createdAt: activityLogs.createdAt,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          })
+          .from(activityLogs)
+          .leftJoin(users, eq(activityLogs.userId, users.id))
+          .orderBy(desc(activityLogs.createdAt))
+          .limit(20);
+
+        // Transform activities to the required format
+        const formattedActivities = await Promise.all(
+          activities.map(async (activity) => {
+            let type: string = 'other';
+            let description: string = '';
+            let metadata: any = {};
+
+            // Determine activity type and description based on action
+            if (activity.action.includes('article')) {
+              type = activity.action.includes('delete') ? 'delete' :
+                     activity.action.includes('edit') || activity.action.includes('update') ? 'edit' :
+                     activity.action.includes('create') || activity.action.includes('publish') ? 'article' :
+                     'other';
+              
+              // Try to get article title
+              if (activity.entityId) {
+                const [article] = await db
+                  .select({ title: articles.title })
+                  .from(articles)
+                  .where(eq(articles.id, activity.entityId))
+                  .limit(1);
+                
+                if (article) {
+                  metadata.articleTitle = article.title;
+                  description = `${activity.action} - ${article.title}`;
+                } else {
+                  description = activity.action;
+                }
+              }
+            } else if (activity.action.includes('comment')) {
+              type = activity.action.includes('delete') ? 'delete' : 'comment';
+              
+              // Try to get comment text
+              if (activity.entityId) {
+                const [comment] = await db
+                  .select({ content: comments.content })
+                  .from(comments)
+                  .where(eq(comments.id, activity.entityId))
+                  .limit(1);
+                
+                if (comment) {
+                  metadata.commentText = comment.content.substring(0, 100) + (comment.content.length > 100 ? '...' : '');
+                  description = `${activity.action} - ${metadata.commentText}`;
+                } else {
+                  description = activity.action;
+                }
+              }
+            } else if (activity.action.includes('reaction') || activity.action.includes('like')) {
+              type = 'like';
+              description = activity.action;
+            } else if (activity.action.includes('follow')) {
+              type = 'follow';
+              description = activity.action;
+            } else {
+              type = 'other';
+              description = activity.action;
+            }
+
+            return {
+              id: activity.id,
+              type,
+              user: {
+                name: `${activity.firstName || ''} ${activity.lastName || ''}`.trim() || 'Unknown User',
+                avatar: activity.profileImageUrl || null,
+              },
+              description,
+              timestamp: activity.createdAt?.toISOString() || new Date().toISOString(),
+              metadata,
+            };
+          })
+        );
+
+        res.json(formattedActivities);
+      } catch (error) {
+        console.error("Error fetching recent activity:", error);
+        res.status(500).json({ message: "Failed to fetch recent activity" });
+      }
+    }
+  );
 
   // ============================================================================
   // Opinion Articles Routes - مقالات الرأي

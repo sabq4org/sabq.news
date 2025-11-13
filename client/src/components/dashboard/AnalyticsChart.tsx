@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import ReactApexChart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface ChartData {
   views?: number[];

@@ -1,21 +1,31 @@
-import { useUser } from "../hooks/use-user";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AnalyticsMetrics from "@/components/dashboard/AnalyticsMetrics";
 import AnalyticsChart from "@/components/dashboard/AnalyticsChart";
 import TopContentTable from "@/components/dashboard/TopContentTable";
 import RecentActivityFeed from "@/components/dashboard/RecentActivityFeed";
-import { Helmet } from "react-helmet-async";
+
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
 
 export default function AnalyticsDashboard() {
-  const { user, isLoading } = useUser();
   const [, setLocation] = useLocation();
+  
+  const { data: user, isLoading } = useQuery<User>({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
 
   // Check authorization - only admin, super_admin, chief_editor, editor
   const authorizedRoles = ['admin', 'super_admin', 'chief_editor', 'editor'];
 
   useEffect(() => {
-    if (!isLoading && (!user || !authorizedRoles.includes(user.role))) {
+    if (!isLoading && (!user || !authorizedRoles.includes(user.role || ''))) {
       setLocation('/');
     }
   }, [user, isLoading, setLocation]);
@@ -31,17 +41,17 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  if (!user || !authorizedRoles.includes(user.role)) {
+  if (!user || !authorizedRoles.includes(user.role || '')) {
     return null;
   }
 
-  return (
-    <>
-      <Helmet>
-        <title>لوحة التحليلات - سبق الذكية</title>
-        <meta name="description" content="لوحة تحكم تحليلات شاملة لمنصة سبق الذكية مع إحصائيات مفصلة ورسوم بيانية تفاعلية" />
-      </Helmet>
+  // Set page title
+  useEffect(() => {
+    document.title = "لوحة التحليلات - سبق الذكية";
+  }, []);
 
+  return (
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6" data-testid="analytics-dashboard">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -68,6 +78,6 @@ export default function AnalyticsDashboard() {
           <RecentActivityFeed />
         </div>
       </div>
-    </>
+    </div>
   );
 }
