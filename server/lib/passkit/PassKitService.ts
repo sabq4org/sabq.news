@@ -96,6 +96,14 @@ export class PassKitService {
     console.log(`✅ [PassKit] signerKey type: ${typeof config.signerKey}, starts with: ${config.signerKey.substring(0, 30)}`);
     console.log(`✅ [PassKit] wwdr type: ${typeof config.wwdr}, starts with: ${config.wwdr.substring(0, 30)}`);
     
+    // 🔥 GOLDEN DEBUG LOG - Shows EXACTLY what PKPass will see
+    console.log('\n🔥🔥🔥 CRITICAL DEBUG - FIRST 120 CHARS OF WWDR:');
+    console.log(config.wwdr.substring(0, 120));
+    console.log('\n🔥🔥🔥 WWDR LENGTH:', config.wwdr.length);
+    console.log('🔥🔥🔥 HAS "BEGIN CERTIFICATE":', config.wwdr.includes('-----BEGIN CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS "END CERTIFICATE":', config.wwdr.includes('-----END CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS NEWLINES:', config.wwdr.includes('\n'));
+    
     return config;
   }
   
