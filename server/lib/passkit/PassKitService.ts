@@ -21,18 +21,25 @@ export class PassKitService {
   }
   
   async generatePressPass(data: PressPassData): Promise<Buffer> {
-    const certificates = await this.loadCertificates();
+    const certificates = await this.loadCertificates('press');
     return this.pressBuilder.generatePass(data, certificates);
   }
   
   async generateLoyaltyPass(data: LoyaltyPassData): Promise<Buffer> {
-    const certificates = await this.loadCertificates();
+    const certificates = await this.loadCertificates('loyalty');
     return this.loyaltyBuilder.generatePass(data, certificates);
   }
   
-  private async loadCertificates(): Promise<CertificateConfig> {
-    const certPath = process.env.APPLE_PASS_CERT;
-    const keyPath = process.env.APPLE_PASS_KEY;
+  private async loadCertificates(passType: 'press' | 'loyalty'): Promise<CertificateConfig> {
+    // Load certificates based on pass type
+    const certPath = passType === 'press' 
+      ? (process.env.APPLE_PRESS_PASS_CERT || process.env.APPLE_PASS_CERT)
+      : (process.env.APPLE_LOYALTY_PASS_CERT || process.env.APPLE_PASS_CERT);
+    
+    const keyPath = passType === 'press'
+      ? (process.env.APPLE_PRESS_PASS_KEY || process.env.APPLE_PASS_KEY)
+      : (process.env.APPLE_LOYALTY_PASS_KEY || process.env.APPLE_PASS_KEY);
+    
     const wwdrPath = process.env.APPLE_WWDR_CERT;
     
     if (!certPath || !keyPath) {
