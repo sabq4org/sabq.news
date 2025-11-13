@@ -1,0 +1,117 @@
+2025-11-13 17:30:10.75
+427f78af
+User
+userId: 'user-1759982552394-c4gkwu2l9',
+2025-11-13 17:30:10.75
+427f78af
+User
+stats: { followersCount: 0, followingCount: 0 }
+2025-11-13 17:30:15.90
+427f78af
+User
+🔸 DeserializeUser called with id: user-1759982552394-c4gkwu2l9
+2025-11-13 17:30:15.92
+427f78af
+User
+✅ DeserializeUser: User found: ali@alhazmi.org
+
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] Loading certificates for press pass...
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] Cert path length: 2186
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] Key path length: 1703
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] WWDR path length: 1561
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] Signer cert type: object, length: 2186
+2025-11-13 17:30:15.94
+427f78af
+User
+🔐 [PassKit] WWDR from split: NO
+2025-11-13 17:30:15.94
+427f78af
+User
+✅ [PassKit] Loading WWDR from separate env var
+2025-11-13 17:30:15.94
+427f78af
+User
+✅ [PassKit] Certificate config complete - wwdr type: object
+2025-11-13 17:30:15.94
+427f78af
+User
+[Error [ValidationError]: "wwdr" is required] {
+2025-11-13 17:30:15.94
+427f78af
+User
+_original: {
+2025-11-13 17:30:15.94
+427f78af
+User
+serialNumber: 'SABQ-PRESS-USER-175',
+2025-11-13 17:30:15.94
+427f78af
+User
+description: 'Sabq Smart Press Card',
+2025-11-13 17:30:15.94
+427f78af
+User
+organizationName: 'سبق الذكية',
+2025-11-13 17:30:15.94
+427f78af
+User
+passTypeIdentifier: 'pass.life.sabq.presscard',
+2025-11-13 17:30:15.94
+427f78af
+User
+teamIdentifier: 'CBU7MJEC5R',
+2025-11-13 17:30:15.94
+427f78af
+User
+authenticationToken: '5938ed254c92000f5e0f43f09b3f2a5870798ac4a3989c8bb7c7192776b6d4b2',
+2025-11-13 17:30:15.94
+427f78af
+User
+webServiceURL: 'https://sabq.life',
+2025-11-13 17:30:15.94
+427f78af
+User
+backgroundColor: 'rgb(0, 122, 255)',
+2025-11-13 17:30:15.94
+427f78af
+User
+foregroundColor: 'rgb(255, 255, 255)',
+2025-11-13 17:30:15.94
+427f78af
+User
+labelColor: 'rgb(255, 255, 255)',
+2025-11-13 17:30:15.94
+427f78af
+User
+barcodes: [ [Object] ]
+2025-11-13 17:30:15.94
+427f78af
+User
+},
+2025-11-13 17:30:15.94
+427f78af
+User
+details: [
+2025-11-13 17:30:15.94
+427f78af
+User
+{
+2025-11-13 17:30:15.94
+427f78af
+User
+message: '"wwdr" is required',
