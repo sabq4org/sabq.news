@@ -13073,7 +13073,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
         console.log(`[API] Successfully fetched ${recommendations.length} personalized recommendations for user ${userId}`);
 
-        res.json(recommendations);
+        res.json({ recommendations });
       } catch (error) {
         console.error("[API] Error getting personalized recommendations:", error);
         res.status(500).json({ message: "فشل في جلب التوصيات الشخصية" });
