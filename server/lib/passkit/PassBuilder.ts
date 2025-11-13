@@ -49,17 +49,41 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
-      console.log('🔐 [PassBuilder] Generating pass with PEM certificates...');
+      console.log('🔐 [PassBuilder] Generating pass...');
       console.log('🔐 [PassBuilder] Certificate types:', {
         signerCert: typeof certificates.signerCert,
         signerKey: typeof certificates.signerKey,
         wwdr: typeof certificates.wwdr,
       });
+      console.log('🔐 [PassBuilder] Certificate keys:', Object.keys(certificates));
+      console.log('🔐 [PassBuilder] Has wwdr:', 'wwdr' in certificates);
+      console.log('🔐 [PassBuilder] wwdr value:', certificates.wwdr ? 'EXISTS' : 'UNDEFINED/NULL');
+      console.log('🔐 [PassBuilder] wwdr length:', certificates.wwdr?.length || 0);
+      
+      // Convert strings to Buffers for PKPass
+      const pkpassCerts = {
+        signerCert: typeof certificates.signerCert === 'string' 
+          ? Buffer.from(certificates.signerCert, 'utf-8') 
+          : certificates.signerCert,
+        signerKey: typeof certificates.signerKey === 'string'
+          ? Buffer.from(certificates.signerKey, 'utf-8')
+          : certificates.signerKey,
+        wwdr: typeof certificates.wwdr === 'string'
+          ? Buffer.from(certificates.wwdr, 'utf-8')
+          : certificates.wwdr,
+        ...(certificates.signerKeyPassphrase && { signerKeyPassphrase: certificates.signerKeyPassphrase }),
+      };
+      
+      console.log('🔐 [PassBuilder] PKPass certs types:', {
+        signerCert: typeof pkpassCerts.signerCert,
+        signerKey: typeof pkpassCerts.signerKey,
+        wwdr: typeof pkpassCerts.wwdr,
+      });
       
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
-          certificates: certificates,
+          certificates: pkpassCerts,
         },
         {
           serialNumber: data.serialNumber,
