@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform designed to revolutionize news consumption. It offers AI-driven article summarization, personalized recommendations, comprehensive content management, and viral social media distribution. Key features include trilingual dashboards, independent content management for each language, smart links, AI-powered SEO, one-click AI content generation, and detailed social sharing analytics. The platform is built with React, Express, and PostgreSQL, supporting dynamic content delivery, user profiling, and advanced theme management. The business vision is to deliver an advanced news experience leveraging AI, content enrichment, and social media virality.
+Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform designed to revolutionize news consumption. It offers AI-driven article summarization, personalized recommendations, comprehensive content management, and viral social media distribution. Key capabilities include trilingual dashboards, independent content management for each language, smart links, AI-powered SEO, one-click AI content generation, and detailed social sharing analytics. The platform's business vision is to deliver an advanced news experience leveraging AI, content enrichment, and social media virality, targeting a broad market with its innovative approach to news consumption.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,50 +9,41 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, AI-summarized article detail pages, and a responsive content creator dashboard with a WYSIWYG editor. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation and mobile responsiveness. A core architectural decision is the trilingual system with separate database schemas (`ar_*`, `en_*`, `ur_*` tables), language-specific dashboards, and an i18n system with LanguageContext and bidirectional routing. The platform utilizes a unified brand color system and a consistent smart blocks architecture across all three languages.
-
-**Modern Profile Page Design (Apple News + LinkedIn Style):**
-- **Clean Header:** Large avatar with upload functionality, name/role/bio display, inline profile editing with smooth animations, press card badge for authorized journalists
-- **Horizontal Stats Row:** 5 clean stat cards (Followers, Likes, Bookmarks, Reads, Points) with consistent iconography and hover effects
-- **Modern Tab System:** 5 primary tabs (Activity, Bookmarks, Followers, Settings, Wallet) with clear visual hierarchy and icon support
-- **Wide Content Area:** Grid layout (2 columns on desktop) for articles with proper spacing, no visual clutter, separate followers/following management interface
-- **Minimal Sidebar:** Clean right sidebar with Smart Interests block, followed keywords (top 5), and loyalty program card with gradient background
-- **Mobile-First Responsive:** Grid adapts to 1 column on mobile, stats row becomes 2x3 grid on small screens, tabs remain accessible with horizontal scroll
-- **No Collapsibles:** Eliminated confusing collapsible cards from mobile view - all content visible and accessible directly
+The platform features an RTL-first design with custom light/dark theming and Arabic-optimized fonts, a multi-section homepage, and AI-summarized article detail pages. A comprehensive publishing template system (21 templates) with Framer Motion animations ensures flexible content presentation and mobile responsiveness. Core architectural decisions include a trilingual system with separate database schemas, language-specific dashboards, and an i18n system with LanguageContext and bidirectional routing. The platform utilizes a unified brand color system and a consistent smart blocks architecture across all three languages. The user profile page is designed in an Apple News + LinkedIn style, featuring a clean header with inline editing, a horizontal stats row, a modern tab system for navigation, and a wide content area with a grid layout, optimized for mobile-first responsiveness. The platform is integrating TailAdmin Dashboard for analytics, calendar, advanced tables, and user management.
 
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) is used for file storage, and Server-Sent Events (SSE) enable real-time features. Performance optimizations include Gzip compression, smart HTTP caching middleware, production-grade `OptimizedImage` components, and asset footprint reduction.
 
 ### Feature Specifications
--   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles, hybrid authentication, and email verification.
--   **Social Following System:** Complete user-to-user following infrastructure with enhanced analytics tracking, robust API endpoints with security and performance considerations, Profile page with followers/following tabs and interactive lists, PublicProfile page for viewing other users' profiles with follow/unfollow functionality, and comprehensive cache invalidation strategy ensuring real-time updates across both users after follow/unfollow actions.
--   **User Discovery System:** Full-featured discovery experience with intelligent user suggestions algorithm (ranking formula: `articles_count * 2 + followers_count` with role prioritization), DiscoverUsers page with responsive grid layout, and distributed follow buttons across 4 strategic locations (ArticleDetail, CommentSection, ReporterProfile, DiscoverUsers page). Navigation integrated in desktop and mobile Header, accessible only to authenticated users.
--   **Smart Recommendations System:** AI-powered personalized article recommendations using SQL-based scoring algorithm with CTEs, user interests integration, reading history analysis, and author following detection. Backend API endpoint (GET /api/recommendations/personalized) with 300-second caching, ready for future frontend integration.
--   **Content Management:** Lifecycle management for articles, news, users, and categories, with comment moderation, an advanced TipTap-based WYSIWYG editor supporting rich media embeds (including Twitter/X with theme detection), and a Smart Media Library System with AI-powered image suggestions.
--   **AI Analytics Dashboard (Trilingual):** Displays engagement metrics with reporter attribution and comprehensive category analytics.
--   **Comments & Engagement:** Nested comment system with real-time moderation and AI-powered comment sentiment analysis (Claude Sonnet 4-5, Gemini Flash).
--   **AI-Powered Article Classification:** Smart Article Classification System for Arabic articles using Claude Sonnet 3.5, providing auto-categorization and multi-category suggestions.
+-   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
+-   **Social Following System:** Complete user-to-user following infrastructure with analytics and real-time updates.
+-   **User Discovery System:** Intelligent user suggestions algorithm and a DiscoverUsers page.
+-   **Smart Recommendations System:** AI-powered personalized article recommendations based on user interests and reading history.
+-   **Content Management:** Lifecycle management for articles, news, users, and categories, with an advanced TipTap-based WYSIWYG editor and a Smart Media Library System.
+-   **AI Analytics Dashboard (Trilingual):** Displays engagement metrics and category analytics.
+-   **Comments & Engagement:** Nested comment system with real-time moderation and AI-powered sentiment analysis.
+-   **AI-Powered Article Classification:** Smart Article Classification System for Arabic articles using Claude Sonnet 3.5.
 -   **Multi-Type Article System:** Supports news, opinion, analysis, and column articles.
 -   **Advanced Internal Announcements System:** Production-grade platform with versioning, scheduling, and audience targeting.
--   **Multilingual SEO Generator:** Enterprise-grade AI-powered SEO optimization system generating meta titles, descriptions, and keywords across all three languages using language-optimized models (Claude Sonnet 3.5, GPT-4o, Gemini 2.5 Flash).
--   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System (OpenAI embeddings), Story/Keyword Following, AI Insights Block, Smart Content Generation System (GPT-5), and a Smart Summary Block.
--   **All-in-One AI Generation (Article Editor):** One-click AI generation for headlines (from 3 models), smart classification, SEO optimization, and smart summaries, with draft-aware architecture and detailed validation.
--   **Smart Journalist Agent:** Professional AI-powered news writing assistant following "Sabq" editorial standards with structured JSON schema output and headline generation from multiple AI models.
--   **Content AI Hub:** Centralized AI tools dashboard for journalists and editors providing 7 integrated tools: Smart Headlines Comparison, Text Summarizer, Social Media Generator, Smart Image Search, Instant Translator, Fact Checker, and Trends Analyzer.
--   **Real-Time Features:** "Moment by Moment" Live News Desk with breaking news ticker, compact live feed, auto-refresh, filters, and Smart Notifications System via SSE.
--   **Smart Links Management System:** Full CRUD for AI-powered entity/term recognition, direct image upload, AI auto-description, and rich metadata.
--   **Social Media Sharing & Distribution System:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics via a `SocialShareBar` component, smart short links with UTM parameter injection, and a robust backend for tracking and analytics.
--   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs, including Schema.org JSON-LD and OpenAPI 3.0 specification.
+-   **Multilingual SEO Generator:** Enterprise-grade AI-powered SEO optimization across three languages.
+-   **AI-Powered Features:** AI ChatBot Assistant, Audio Summary (ElevenLabs), Daily Briefs, Intelligent Recommendation System, Story/Keyword Following, AI Insights Block, Smart Content Generation System, and a Smart Summary Block.
+-   **All-in-One AI Generation (Article Editor):** One-click AI generation for headlines, classification, SEO, and summaries.
+-   **Smart Journalist Agent:** Professional AI-powered news writing assistant adhering to editorial standards.
+-   **Content AI Hub:** Centralized AI tools dashboard for journalists and editors.
+-   **Real-Time Features:** "Moment by Moment" Live News Desk with breaking news ticker and Smart Notifications System via SSE.
+-   **Smart Links Management System:** Full CRUD for AI-powered entity/term recognition.
+-   **Social Media Sharing & Distribution System:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics.
+-   **AI-Ready Publisher APIs:** Machine-readable REST API v1 endpoints optimized for LLMs.
 -   **Mobile App Support:** Native mobile app support via Capacitor 7.4.4 for iOS and Android.
--   **Locale-Isolated User Pages:** Complete English-specific user profile pages querying English-only data.
+-   **Locale-Isolated User Pages:** Complete English-specific user profile pages.
 -   **Related Articles Feature (Trilingual):** Intelligent article recommendations with language-specific formatting.
--   **Reporter Profile System (Trilingual):** Complete trilingual implementation with language-specific content display and bidirectional fallback logic.
+-   **Reporter Profile System (Trilingual):** Complete trilingual implementation.
 -   **Smart Advertising System (Arabic):** Enterprise-grade advertising platform with AI-powered optimization.
 -   **SEO and Social Sharing:** Comprehensive Open Graph and Twitter Card meta tags with server-side rendering.
--   **Apple Wallet Dual Pass System:** Enterprise-grade digital credential system supporting TWO pass types: (1) **Press Card** - Digital press credentials issued to authorized staff (journalists, editors, reporters) with admin-controlled permissions via hasPressCard flag, including job title, department, press ID number, and validity date; (2) **Loyalty Card** - Membership cards for all registered users displaying current points total, rank level (Bronze/Silver/Gold/Platinum), and member-since date, with automatic updates when points change. Architecture features: PassKit integration with passkit-generator library using factory pattern (PressPassBuilder, LoyaltyPassBuilder), unified wallet_passes table with passType column ('press'|'loyalty'), wallet_devices table for device registration, PassKit Web Service Protocol endpoints, separate API routes (/api/wallet/press/*, /api/wallet/loyalty/*), Profile page UI with dual wallet sections (press card visible only if authorized), AdminUsers page with press card management controls, auto-update hooks for loyalty pass with logging (Phase 2: APNs push notifications), and placeholder architecture ready for Apple Developer credentials.
+-   **Apple Wallet Dual Pass System:** Enterprise-grade digital credential system supporting Press Cards and Loyalty Cards with PassKit integration.
 
 ### System Design Choices
-Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for Arabic text summarization, title generation, predictive analysis, and intelligent media suggestions. A scope-aware theme management system, Content Import System (RSS feeds with AI), and Smart Categories architecture with a junction table are implemented. The Media Library provides centralized asset management with AI-powered keyword extraction.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for various tasks. A scope-aware theme management system, Content Import System (RSS feeds with AI), and Smart Categories architecture are implemented. The Media Library provides centralized asset management with AI-powered keyword extraction.
 
 ## External Dependencies
 
@@ -84,44 +75,5 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 -   `@radix-ui/*`
 -   `tailwindcss`, `class-variance-authority`
 
-**Development Tools**
--   `TypeScript`
-
 **Digital Credentials**
 -   `passkit-generator` (Apple Wallet Pass generation)
-
-## Environment Variables
-
-### Apple Wallet Dual Pass System Configuration
-To enable Apple Wallet pass issuance for both Press Cards and Loyalty Cards, configure the following environment variables with your Apple Developer credentials:
-
-**Required Credentials:**
--   `APPLE_PRESS_PASS_TYPE_ID`: Pass Type Identifier for Press Cards from Apple Developer (e.g., `pass.life.sabq.presscard`)
--   `APPLE_LOYALTY_PASS_TYPE_ID`: Pass Type Identifier for Loyalty Cards from Apple Developer (e.g., `pass.life.sabq.loyalty`)
--   `APPLE_TEAM_ID`: 10-character Apple Team Identifier
--   `APPLE_PASS_CERT`: Path to pass certificate file (PEM format) or base64-encoded certificate
--   `APPLE_PASS_KEY`: Path to pass private key file (PEM format) or base64-encoded key
--   `APPLE_PASS_KEY_PASSWORD`: (Optional) Password for encrypted pass private key
-
-**Optional - For Automatic Pass Updates:**
--   `APNS_KEY_ID`: APNs Key ID for push notifications
--   `APNS_TEAM_ID`: Team ID for APNs (usually same as APPLE_TEAM_ID)
--   `APNS_AUTH_KEY`: Path to APNs Auth Key file (.p8 format) or base64-encoded key
-
-**How to Obtain These Credentials:**
-1. Enroll in Apple Developer Program ($99/year): https://developer.apple.com/programs/
-2. Create TWO Pass Type IDs in Apple Developer Portal → Certificates, Identifiers & Profiles → Identifiers
-   - One for Press Cards (e.g., `pass.life.sabq.presscard`)
-   - One for Loyalty Cards (e.g., `pass.life.sabq.loyalty`)
-3. Generate Pass Certificate using Certificate Signing Request (CSR)
-4. Download WWDR Certificate from Apple
-5. (Optional) Create APNs Auth Key for push notification support
-
-**Current Status:**
-- Infrastructure is ready with placeholder configuration for both pass types
-- All API endpoints functional (/api/wallet/press/*, /api/wallet/loyalty/*)
-- Press Card: Admin-controlled via hasPressCard flag in AdminUsers page
-- Loyalty Card: Auto-issued to all registered users with points/rank display
-- Auto-update hooks implemented (Phase 2: APNs push notifications)
-- UI displays appropriate messages when credentials not configured
-- Once credentials added, users can download .pkpass files and add to Apple Wallet
