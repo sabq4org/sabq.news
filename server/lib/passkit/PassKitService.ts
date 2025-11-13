@@ -58,11 +58,11 @@ export class PassKitService {
     const { signerCert, wwdr } = this.splitCertificates(certPath);
     
     console.log(`🔐 [PassKit] Signer cert type: ${typeof signerCert}, length: ${signerCert.length}`);
-    console.log(`🔐 [PassKit] Signer cert starts with: ${signerCert.substring(0, 30)}`);
+    console.log(`🔐 [PassKit] Signer cert starts with: ${signerCert.toString('utf-8').substring(0, 30)}`);
     console.log(`🔐 [PassKit] WWDR from split: ${wwdr ? 'YES' : 'NO'}`);
     
-    // Determine WWDR certificate source - MUST be PEM string
-    let wwdrCert: string;
+    // Determine WWDR certificate source - MUST be Buffer
+    let wwdrCert: Buffer;
     
     if (wwdr) {
       console.log(`✅ [PassKit] Using WWDR from split certificate`);
@@ -80,7 +80,7 @@ export class PassKitService {
     // Load signing key
     const signerKey = this.loadCertificate(keyPath);
     
-    // All certificates are now PEM strings - perfect for PKPass!
+    // All certificates are now Buffers - ready for PKPass!
     const config: CertificateConfig = {
       signerCert: signerCert,
       signerKey: signerKey,
@@ -91,23 +91,24 @@ export class PassKitService {
       config.signerKeyPassphrase = process.env.APPLE_PASS_KEY_PASSWORD;
     }
     
-    console.log(`✅ [PassKit] Certificate config complete - all PEM strings`);
-    console.log(`✅ [PassKit] signerCert type: ${typeof config.signerCert}, starts with: ${config.signerCert.substring(0, 30)}`);
-    console.log(`✅ [PassKit] signerKey type: ${typeof config.signerKey}, starts with: ${config.signerKey.substring(0, 30)}`);
-    console.log(`✅ [PassKit] wwdr type: ${typeof config.wwdr}, starts with: ${config.wwdr.substring(0, 30)}`);
+    console.log(`✅ [PassKit] Certificate config complete - all Buffers`);
+    console.log(`✅ [PassKit] signerCert type: ${typeof config.signerCert}, length: ${config.signerCert.length}`);
+    console.log(`✅ [PassKit] signerKey type: ${typeof config.signerKey}, length: ${config.signerKey.length}`);
+    console.log(`✅ [PassKit] wwdr type: ${typeof config.wwdr}, length: ${config.wwdr.length}`);
     
     // 🔥 GOLDEN DEBUG LOG - Shows EXACTLY what PKPass will see
     console.log('\n🔥🔥🔥 CRITICAL DEBUG - FIRST 120 CHARS OF WWDR:');
-    console.log(config.wwdr.substring(0, 120));
-    console.log('\n🔥🔥🔥 WWDR LENGTH:', config.wwdr.length);
-    console.log('🔥🔥🔥 HAS "BEGIN CERTIFICATE":', config.wwdr.includes('-----BEGIN CERTIFICATE-----'));
-    console.log('🔥🔥🔥 HAS "END CERTIFICATE":', config.wwdr.includes('-----END CERTIFICATE-----'));
-    console.log('🔥🔥🔥 HAS NEWLINES:', config.wwdr.includes('\n'));
+    const wwdrStr = config.wwdr.toString('utf-8');
+    console.log(wwdrStr.substring(0, 120));
+    console.log('\n🔥🔥🔥 WWDR FULL LENGTH:', wwdrStr.length);
+    console.log('🔥🔥🔥 HAS "BEGIN CERTIFICATE":', wwdrStr.includes('-----BEGIN CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS "END CERTIFICATE":', wwdrStr.includes('-----END CERTIFICATE-----'));
+    console.log('🔥🔥🔥 HAS NEWLINES:', wwdrStr.includes('\n'));
     
     return config;
   }
   
-  private splitCertificates(certString: string): { signerCert: string; wwdr?: string } {
+  private splitCertificates(certString: string): { signerCert: Buffer; wwdr?: Buffer } {
     // If it's a file path, read the file content
     if (certString.startsWith('/') || certString.startsWith('./') || certString.includes('\\')) {
       const fs = require('fs');
@@ -125,36 +126,38 @@ export class PassKitService {
     const certMatches = certString.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
     
     if (!certMatches || certMatches.length === 0) {
-      // No PEM headers found - return as is (might be raw PEM)
-      return { signerCert: certString };
+      // No PEM headers found - return as Buffer
+      return { signerCert: Buffer.from(certString, 'utf-8') };
     }
     
     if (certMatches.length === 1) {
-      // Only one certificate found - return as PEM string
-      return { signerCert: certMatches[0] };
+      // Only one certificate found - return as Buffer
+      return { signerCert: Buffer.from(certMatches[0], 'utf-8') };
     }
     
     // Multiple certificates found - first is signer, second is WWDR
     return {
-      signerCert: certMatches[0],
-      wwdr: certMatches[1],
+      signerCert: Buffer.from(certMatches[0], 'utf-8'),
+      wwdr: Buffer.from(certMatches[1], 'utf-8'),
     };
   }
   
-  private loadCertificate(envVar: string): string {
+  private loadCertificate(envVar: string): Buffer {
     // If it's a file path, read the file content
     if (envVar.startsWith('/') || envVar.startsWith('./') || envVar.includes('\\')) {
       const fs = require('fs');
-      return fs.readFileSync(envVar, 'utf-8');
+      const content = fs.readFileSync(envVar, 'utf-8');
+      return Buffer.from(content, 'utf-8');
     }
     
-    // Check if base64 - decode to PEM string
+    // Check if base64 - decode to PEM string then to Buffer
     if (envVar.match(/^[A-Za-z0-9+/=]+$/) && !envVar.includes('-----BEGIN')) {
-      return Buffer.from(envVar, 'base64').toString('utf-8');
+      const pemString = Buffer.from(envVar, 'base64').toString('utf-8');
+      return Buffer.from(pemString, 'utf-8');
     }
     
-    // Otherwise treat as PEM string already
-    return envVar;
+    // Otherwise treat as PEM string already - convert to Buffer
+    return Buffer.from(envVar, 'utf-8');
   }
   
   generateSerialNumber(userId: string, passType: 'press' | 'loyalty'): string {

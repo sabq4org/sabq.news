@@ -1,0 +1,152 @@
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] Certificate types: { signerCert: 'string', signerKey: 'string', wwdr: 'string' }
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] Certificate keys: [ 'signerCert', 'signerKey', 'wwdr' ]
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] Has wwdr: true
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] wwdr value: EXISTS
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] wwdr length: 1561
+2025-11-13 19:23:27.10
+1721d96e
+User
+🔐 [PassBuilder] PKPass certs types: { signerCert: 'object', signerKey: 'object', wwdr: 'object' }
+2025-11-13 19:23:27.10
+1721d96e
+User
+[Error [ValidationError]: "wwdr" is required] {
+2025-11-13 19:23:27.10
+1721d96e
+User
+_original: {
+2025-11-13 19:23:27.10
+1721d96e
+User
+serialNumber: 'SABQ-LOYAL-USER-175',
+2025-11-13 19:23:27.10
+1721d96e
+User
+description: 'Sabq Smart Loyalty Card',
+2025-11-13 19:23:27.10
+1721d96e
+User
+organizationName: 'سبق الذكية',
+2025-11-13 19:23:27.10
+1721d96e
+User
+passTypeIdentifier: 'pass.life.sabq.loyalty',
+2025-11-13 19:23:27.10
+1721d96e
+User
+teamIdentifier: 'CBU7MJEC5R',
+2025-11-13 19:23:27.10
+1721d96e
+User
+authenticationToken: 'dfe10f7933e5bda20ef6971f7d1bff5a9077f924a5c7f0ca0c5984326cd233aa',
+2025-11-13 19:23:27.10
+1721d96e
+User
+webServiceURL: 'https://sabq.life',
+2025-11-13 19:23:27.10
+1721d96e
+User
+backgroundColor: 'rgb(212, 175, 55)',
+2025-11-13 19:23:27.10
+1721d96e
+User
+foregroundColor: 'rgb(255, 255, 255)',
+2025-11-13 19:23:27.10
+1721d96e
+User
+labelColor: 'rgb(255, 255, 255)',
+2025-11-13 19:23:27.10
+1721d96e
+User
+barcodes: [ [Object] ]
+2025-11-13 19:23:27.10
+1721d96e
+User
+},
+2025-11-13 19:23:27.10
+1721d96e
+User
+details: [
+2025-11-13 19:23:27.10
+1721d96e
+User
+{
+2025-11-13 19:23:27.10
+1721d96e
+User
+message: '"wwdr" is required',
+2025-11-13 19:23:27.10
+1721d96e
+User
+path: [Array],
+2025-11-13 19:23:27.10
+1721d96e
+User
+type: 'any.required',
+2025-11-13 19:23:27.10
+1721d96e
+User
+context: [Object]
+2025-11-13 19:23:27.10
+1721d96e
+User
+}
+2025-11-13 19:23:27.10
+1721d96e
+User
+]
+2025-11-13 19:23:27.10
+1721d96e
+User
+}
+2025-11-13 19:23:27.10
+1721d96e
+User
+❌ [Loyalty Card] Generation failed: Error: Failed to generate pass: ValidationError happened. Invalid certificate(s) loaded. "wwdr" is required. Please provide valid WWDR certificates and developer signer certificate and key (with passphrase).
+2025-11-13 19:23:27.10
+1721d96e
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19846:13)
+2025-11-13 19:23:27.10
+1721d96e
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-13 19:23:27.10
+1721d96e
+User
+❌ [PassBuilder] PKPass error: TypeError: ValidationError happened. Invalid certificate(s) loaded. "wwdr" is required. Please provide valid WWDR certificates and developer signer certificate and key (with passphrase).
+2025-11-13 19:23:27.10
+1721d96e
+User
+Refer to docs to obtain them
+2025-11-13 19:23:27.10
+1721d96e
+User
+at Module.assertValidity (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/schemas/index.js:449:19)
+2025-11-13 19:23:27.10
+1721d96e
+User
+at set certificates [as certificates] (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:133:17)
+2025-11-13 19:23:27.10
+1721d96e
+User
+at new PKPass (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:116:31)
+2025-11-13 19:23:27.10
+1721d96e
+User
+at async file:///home/runner/workspace/dist/index.js:38127:28
