@@ -107,7 +107,7 @@ export default function ArticleDetail() {
       const response = await apiRequest("/api/shortlinks", {
         method: "POST",
         body: JSON.stringify({
-          originalUrl: `/article/${slug}`,
+          originalUrl: `https://sabq.life/article/${slug}`,
           articleId: article.id,
           utmMedium: "social",
           utmCampaign: "article_share",
@@ -119,9 +119,12 @@ export default function ArticleDetail() {
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/shortlinks/article", article?.id], data);
     },
+    onError: (error) => {
+      console.error("[ShortLink] Error creating short link:", error);
+    },
   });
 
-  // Trigger creation only if no existing link and not already creating
+  // Trigger creation only if no existing link and not already creating/failed
   useEffect(() => {
     if (
       article?.id && 
@@ -129,12 +132,13 @@ export default function ArticleDetail() {
       !existingShortLink && 
       !createShortLinkMutation.isPending && 
       !createShortLinkMutation.isSuccess &&
-      !createShortLinkMutation.data
+      !createShortLinkMutation.data &&
+      !createShortLinkMutation.isError
     ) {
       console.log("[ShortLink] No existing link found, creating new one...");
       createShortLinkMutation.mutate();
     }
-  }, [article?.id, isLoadingShortLink, existingShortLink, createShortLinkMutation.isPending, createShortLinkMutation.isSuccess, createShortLinkMutation.data]);
+  }, [article?.id, isLoadingShortLink, existingShortLink]);
 
   // Use existing link if found, otherwise use created link, fallback to canonical URL
   const shortLink = existingShortLink || createShortLinkMutation.data;
