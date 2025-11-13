@@ -21,6 +21,7 @@ import CategoriesListPage from "@/pages/CategoriesListPage";
 import OpinionPage from "@/pages/OpinionPage";
 import OpinionDetailPage from "@/pages/OpinionDetailPage";
 import Dashboard from "@/pages/Dashboard";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
@@ -303,6 +304,7 @@ function Router() {
       <Route path="/dashboard/calendar/events/:id/edit" component={CalendarEventForm} />
       
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/analytics" component={AnalyticsDashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/article/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
