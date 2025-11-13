@@ -4393,6 +4393,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phoneVerified: users.phoneVerified,
           isProfileComplete: users.isProfileComplete,
           createdAt: users.createdAt,
+          hasPressCard: users.hasPressCard,
+          jobTitle: users.jobTitle,
+          department: users.department,
+          pressIdNumber: users.pressIdNumber,
+          cardValidUntil: users.cardValidUntil,
         })
         .from(users)
         .where(eq(users.id, userId))

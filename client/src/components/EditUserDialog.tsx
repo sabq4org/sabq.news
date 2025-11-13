@@ -226,7 +226,19 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
   });
 
   const onSubmit = (data: FormData) => {
+    // Log form state for debugging
+    console.log('📝 Form submission data:', data);
+    console.log('📝 Form errors:', form.formState.errors);
     updateUserMutation.mutate(data);
+  };
+  
+  const onError = (errors: any) => {
+    console.error('❌ Form validation errors:', errors);
+    toast({
+      title: "خطأ في التحقق من البيانات",
+      description: "يرجى التحقق من جميع الحقول المطلوبة",
+      variant: "destructive",
+    });
   };
 
   if (!userId) return null;
@@ -247,7 +259,7 @@ export function EditUserDialog({ open, onOpenChange, userId }: EditUserDialogPro
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <form onSubmit={form.handleSubmit(onSubmit, onError)} className="flex flex-col flex-1 min-h-0">
               <div className="space-y-4 overflow-y-auto flex-1 px-1">
               <div className="grid grid-cols-2 gap-4">
                 <FormField
