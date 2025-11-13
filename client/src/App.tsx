@@ -27,6 +27,7 @@ import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
 import RolesManagement from "@/pages/RolesManagement";
 import Profile from "@/pages/Profile";
+import PublicProfile from "@/pages/PublicProfile";
 import CompleteProfile from "@/pages/CompleteProfile";
 import SelectInterests from "@/pages/SelectInterests";
 import EditInterests from "@/pages/EditInterests";
@@ -325,6 +326,7 @@ function Router() {
       <Route path="/dashboard/themes/switcher" component={ThemeSwitcher} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />
+      <Route path="/profile/:userId" component={PublicProfile} />
       <Route path="/profile" component={Profile} />
       <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/select-interests" component={SelectInterests} />

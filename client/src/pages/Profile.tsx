@@ -245,8 +245,13 @@ export default function Profile() {
       profileImageUrl: string | null;
     }>
   >({
-    queryKey: ['/api/social/followers', user?.id, { params: { limit: 50 } }],
-    enabled: !!user && activeTab === 'following',
+    queryKey: ['/api/social/followers', user?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/social/followers/${user?.id}?limit=50`);
+      if (!res.ok) throw new Error('Failed to fetch followers');
+      return res.json();
+    },
+    enabled: !!user && activeTab === 'followers',
   });
 
   const { data: following = [], isLoading: isLoadingFollowing } = useQuery<
@@ -259,7 +264,12 @@ export default function Profile() {
       profileImageUrl: string | null;
     }>
   >({
-    queryKey: ['/api/social/following', user?.id, { params: { limit: 50 } }],
+    queryKey: ['/api/social/following', user?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/social/following/${user?.id}?limit=50`);
+      if (!res.ok) throw new Error('Failed to fetch following');
+      return res.json();
+    },
     enabled: !!user && activeTab === 'following',
   });
 
@@ -269,9 +279,22 @@ export default function Profile() {
         method: "DELETE",
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, unfollowedUserId) => {
+      // Invalidate specific followers query for THIS user
+      queryClient.invalidateQueries({ queryKey: ['/api/social/followers', user?.id] });
+      
+      // Invalidate specific following query for THIS user  
       queryClient.invalidateQueries({ queryKey: ['/api/social/following', user?.id] });
+      
+      // Invalidate stats for THIS user
       queryClient.invalidateQueries({ queryKey: ['/api/social/stats', user?.id] });
+      
+      // Also invalidate the unfollowed user's stats/followers
+      queryClient.invalidateQueries({ queryKey: ['/api/social/stats', unfollowedUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/followers', unfollowedUserId] });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
       toast({
         title: "تم إلغاء المتابعة",
         description: "لم تعد تتابع هذا المستخدم",

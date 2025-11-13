@@ -468,6 +468,7 @@ export interface IStorage {
   getUserPreferences(userId: string): Promise<string[]>;
   getRecommendations(userId: string): Promise<ArticleWithDetails[]>;
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
+  getPersonalizedRecommendations(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   
   // Muqtarib Angles operations
   getSectionBySlug(slug: string): Promise<Section | undefined>;
@@ -2908,6 +2909,344 @@ export class DatabaseStorage implements IStorage {
         failedLoginAttempts: row.author_failed_login_attempts || 0,
         deletedAt: row.author_deleted_at || null,
         createdAt: row.author_created_at,
+      } : undefined,
+    }));
+  }
+
+  async getPersonalizedRecommendations(userId: string, limit: number = 20): Promise<ArticleWithDetails[]> {
+    console.log(`[Smart Recommendations] Fetching personalized recommendations for user: ${userId}, limit: ${limit}`);
+    
+    const sanitizedLimit = Math.min(Math.max(limit, 1), 50);
+    console.log(`[Smart Recommendations] Sanitized limit: ${sanitizedLimit}`);
+
+    const results = await db.execute(sql`
+      WITH user_reading_categories AS (
+        SELECT 
+          a.category_id,
+          COUNT(*) as read_count
+        FROM reading_history rh
+        INNER JOIN articles a ON rh.article_id = a.id
+        WHERE rh.user_id = ${userId}
+          AND a.category_id IS NOT NULL
+        GROUP BY a.category_id
+        ORDER BY read_count DESC
+        LIMIT 3
+      ),
+      user_interest_categories AS (
+        SELECT 
+          category_id,
+          weight
+        FROM user_interests
+        WHERE user_id = ${userId}
+      ),
+      user_followed_authors AS (
+        SELECT following_id as author_id
+        FROM social_follows
+        WHERE follower_id = ${userId}
+      ),
+      user_prefs AS (
+        SELECT 
+          preferred_categories,
+          blocked_categories,
+          preferred_authors
+        FROM user_preferences
+        WHERE user_id = ${userId}
+        LIMIT 1
+      ),
+      already_read_articles AS (
+        SELECT article_id
+        FROM reading_history
+        WHERE user_id = ${userId}
+      ),
+      scored_articles AS (
+        SELECT 
+          a.id,
+          a.title,
+          a.subtitle,
+          a.slug,
+          a.content,
+          a.excerpt,
+          a.image_url,
+          a.image_focal_point,
+          a.category_id,
+          a.author_id,
+          a.reporter_id,
+          a.article_type,
+          a.news_type,
+          a.publish_type,
+          a.scheduled_at,
+          a.status,
+          a.review_status,
+          a.reviewed_by,
+          a.reviewed_at,
+          a.review_notes,
+          a.hide_from_homepage,
+          a.ai_summary,
+          a.ai_generated,
+          a.is_featured,
+          a.display_order,
+          a.views,
+          a.seo,
+          a.seo_metadata,
+          a.published_at,
+          a.created_at,
+          a.updated_at,
+          a.credibility_score,
+          a.credibility_analysis,
+          a.credibility_last_updated,
+          (
+            CASE 
+              WHEN a.category_id IN (SELECT category_id FROM user_reading_categories)
+                OR a.category_id IN (SELECT category_id FROM user_interest_categories)
+                OR (
+                  SELECT preferred_categories @> ARRAY[a.category_id]::jsonb
+                  FROM user_prefs
+                  WHERE preferred_categories IS NOT NULL
+                  LIMIT 1
+                )
+              THEN 10
+              ELSE 0
+            END
+          ) as category_score,
+          (
+            CASE 
+              WHEN a.author_id IN (SELECT author_id FROM user_followed_authors)
+                OR a.reporter_id IN (SELECT author_id FROM user_followed_authors)
+              THEN 15
+              ELSE 0
+            END
+          ) as author_follow_score,
+          (
+            CASE 
+              WHEN a.published_at > NOW() - INTERVAL '7 days'
+              THEN 5
+              ELSE 0
+            END
+          ) as recency_score,
+          (
+            CASE 
+              WHEN a.views > 1000
+              THEN 3
+              ELSE 0
+            END
+          ) as high_views_score,
+          (
+            CASE 
+              WHEN a.category_id IN (SELECT category_id FROM user_reading_categories)
+                OR a.category_id IN (SELECT category_id FROM user_interest_categories)
+                OR (
+                  SELECT preferred_categories @> ARRAY[a.category_id]::jsonb
+                  FROM user_prefs
+                  WHERE preferred_categories IS NOT NULL
+                  LIMIT 1
+                )
+              THEN 10
+              ELSE 0
+            END
+            +
+            CASE 
+              WHEN a.author_id IN (SELECT author_id FROM user_followed_authors)
+                OR a.reporter_id IN (SELECT author_id FROM user_followed_authors)
+              THEN 15
+              ELSE 0
+            END
+            +
+            CASE 
+              WHEN a.published_at > NOW() - INTERVAL '7 days'
+              THEN 5
+              ELSE 0
+            END
+            +
+            CASE 
+              WHEN a.views > 1000
+              THEN 3
+              ELSE 0
+            END
+          ) as total_score
+        FROM articles a
+        WHERE a.status = 'published'
+          AND a.hide_from_homepage = false
+          AND a.id NOT IN (SELECT article_id FROM already_read_articles)
+          AND (
+            a.published_at > NOW() - INTERVAL '30 days'
+            OR a.views > 10000
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM user_prefs up
+            WHERE up.blocked_categories IS NOT NULL
+              AND up.blocked_categories @> ARRAY[a.category_id]::jsonb
+          )
+        ORDER BY total_score DESC, a.published_at DESC
+        LIMIT ${sanitizedLimit}
+      )
+      SELECT 
+        sa.*,
+        c.id as category_id,
+        c.name_ar as category_name_ar,
+        c.name_en as category_name_en,
+        c.slug as category_slug,
+        c.description as category_description,
+        c.color as category_color,
+        c.icon as category_icon,
+        c.hero_image_url as category_hero_image_url,
+        c.display_order as category_display_order,
+        c.status as category_status,
+        c.created_at as category_created_at,
+        u.id as author_id,
+        u.email as author_email,
+        u.first_name as author_first_name,
+        u.last_name as author_last_name,
+        u.bio as author_bio,
+        u.phone_number as author_phone_number,
+        u.profile_image_url as author_profile_image_url,
+        u.role as author_role,
+        u.status as author_status,
+        u.is_profile_complete as author_is_profile_complete,
+        u.email_verified as author_email_verified,
+        u.phone_verified as author_phone_verified,
+        u.verification_badge as author_verification_badge,
+        u.created_at as author_created_at,
+        r.id as reporter_id,
+        r.email as reporter_email,
+        r.first_name as reporter_first_name,
+        r.last_name as reporter_last_name,
+        r.bio as reporter_bio,
+        r.phone_number as reporter_phone_number,
+        r.profile_image_url as reporter_profile_image_url,
+        r.role as reporter_role,
+        r.status as reporter_status,
+        r.is_profile_complete as reporter_is_profile_complete,
+        r.email_verified as reporter_email_verified,
+        r.phone_verified as reporter_phone_verified,
+        r.verification_badge as reporter_verification_badge,
+        r.created_at as reporter_created_at
+      FROM scored_articles sa
+      LEFT JOIN categories c ON sa.category_id = c.id
+      LEFT JOIN users u ON sa.author_id = u.id
+      LEFT JOIN users r ON sa.reporter_id = r.id
+      ORDER BY sa.total_score DESC, sa.published_at DESC
+    `);
+
+    console.log(`[Smart Recommendations] Found ${results.rows.length} recommendations for user ${userId}`);
+
+    return (results.rows as any[]).map((row) => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      slug: row.slug,
+      content: row.content,
+      excerpt: row.excerpt,
+      imageUrl: row.image_url,
+      imageFocalPoint: row.image_focal_point || null,
+      categoryId: row.category_id,
+      authorId: row.author_id,
+      reporterId: row.reporter_id,
+      articleType: row.article_type,
+      newsType: row.news_type,
+      publishType: row.publish_type,
+      scheduledAt: row.scheduled_at,
+      status: row.status,
+      reviewStatus: row.review_status || null,
+      reviewedBy: row.reviewed_by || null,
+      reviewedAt: row.reviewed_at || null,
+      reviewNotes: row.review_notes || null,
+      hideFromHomepage: row.hide_from_homepage,
+      aiSummary: row.ai_summary,
+      aiGenerated: row.ai_generated,
+      isFeatured: row.is_featured,
+      displayOrder: row.display_order || 0,
+      views: row.views,
+      seo: row.seo,
+      seoMetadata: row.seo_metadata,
+      publishedAt: row.published_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      credibilityScore: row.credibility_score,
+      credibilityAnalysis: row.credibility_analysis,
+      credibilityLastUpdated: row.credibility_last_updated,
+      category: row.category_id ? {
+        id: row.category_id,
+        nameAr: row.category_name_ar,
+        nameEn: row.category_name_en,
+        slug: row.category_slug,
+        description: row.category_description,
+        color: row.category_color,
+        icon: row.category_icon,
+        heroImageUrl: row.category_hero_image_url,
+        displayOrder: row.category_display_order,
+        status: row.category_status,
+        createdAt: row.category_created_at,
+      } : undefined,
+      author: row.author_id ? {
+        id: row.author_id,
+        email: row.author_email,
+        passwordHash: null,
+        firstName: row.author_first_name,
+        lastName: row.author_last_name,
+        bio: row.author_bio,
+        phoneNumber: row.author_phone_number,
+        profileImageUrl: row.author_profile_image_url,
+        role: row.author_role,
+        status: row.author_status,
+        isProfileComplete: row.author_is_profile_complete,
+        emailVerified: row.author_email_verified || false,
+        phoneVerified: row.author_phone_verified || false,
+        verificationBadge: row.author_verification_badge || 'none',
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        twoFactorMethod: 'authenticator',
+        lastActivityAt: null,
+        suspendedUntil: null,
+        suspensionReason: null,
+        bannedUntil: null,
+        banReason: null,
+        accountLocked: false,
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+        deletedAt: null,
+        authProvider: 'local',
+        googleId: null,
+        appleId: null,
+        firstNameEn: null,
+        lastNameEn: null,
+        allowedLanguages: ['ar'],
+        createdAt: row.author_created_at,
+      } : row.reporter_id ? {
+        id: row.reporter_id,
+        email: row.reporter_email,
+        passwordHash: null,
+        firstName: row.reporter_first_name,
+        lastName: row.reporter_last_name,
+        bio: row.reporter_bio,
+        phoneNumber: row.reporter_phone_number,
+        profileImageUrl: row.reporter_profile_image_url,
+        role: row.reporter_role,
+        status: row.reporter_status,
+        isProfileComplete: row.reporter_is_profile_complete,
+        emailVerified: row.reporter_email_verified || false,
+        phoneVerified: row.reporter_phone_verified || false,
+        verificationBadge: row.reporter_verification_badge || 'none',
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        twoFactorMethod: 'authenticator',
+        lastActivityAt: null,
+        suspendedUntil: null,
+        suspensionReason: null,
+        bannedUntil: null,
+        banReason: null,
+        accountLocked: false,
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+        deletedAt: null,
+        authProvider: 'local',
+        googleId: null,
+        appleId: null,
+        firstNameEn: null,
+        lastNameEn: null,
+        allowedLanguages: ['ar'],
+        createdAt: row.reporter_created_at,
       } : undefined,
     }));
   }

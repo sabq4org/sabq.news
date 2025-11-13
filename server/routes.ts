@@ -13054,21 +13054,32 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
-  // Get personalized recommendations for user
-  app.get("/api/recommendations/personalized", requireAuth, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const limit = parseInt(req.query.limit as string) || 10;
+  // Get personalized recommendations for user (Smart Recommendations System)
+  app.get(
+    "/api/recommendations/personalized",
+    requireAuth,
+    cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM, public: false }),
+    async (req: any, res) => {
+      try {
+        const userId = req.user.id;
+        console.log(`[API] GET /api/recommendations/personalized - User: ${userId}`);
 
-      const { getPersonalizedRecommendations } = await import('./similarityEngine');
-      const recommendations = await getPersonalizedRecommendations(userId, limit);
+        const rawLimit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+        const limit = Math.min(Math.max(rawLimit, 1), 50);
+        
+        console.log(`[API] Requested limit: ${rawLimit}, Sanitized limit: ${limit}`);
 
-      res.json({ recommendations });
-    } catch (error) {
-      console.error("Error getting recommendations:", error);
-      res.status(500).json({ message: "فشل في جلب التوصيات" });
+        const recommendations = await storage.getPersonalizedRecommendations(userId, limit);
+
+        console.log(`[API] Successfully fetched ${recommendations.length} personalized recommendations for user ${userId}`);
+
+        res.json(recommendations);
+      } catch (error) {
+        console.error("[API] Error getting personalized recommendations:", error);
+        res.status(500).json({ message: "فشل في جلب التوصيات الشخصية" });
+      }
     }
-  });
+  );
 
   // Get recommendations similar to specific article
   app.get("/api/recommendations/similar/:articleId", async (req, res) => {
