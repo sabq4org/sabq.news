@@ -24025,7 +24025,57 @@ Allow: /
       
       redirectUrl = urlObj.toString();
 
-      res.redirect(302, redirectUrl);
+      // If there's an articleId, fetch article data for Open Graph tags
+      let article = null;
+      if (shortLink.articleId) {
+        try {
+          article = await storage.getArticleById(shortLink.articleId);
+        } catch (err) {
+          console.error("Error fetching article for short link:", err);
+        }
+      }
+
+      // Return HTML with Open Graph meta tags for social media crawlers
+      const ogTitle = article?.title || 'سبق الذكية - منصة الأخبار الذكية';
+      const ogDescription = article?.excerpt || 'أخبار محدثة مع تلخيص تلقائي بالذكاء الاصطناعي ونظام توصيات شخصي';
+      const ogImage = article?.imageUrl || 'https://sabq.life/default-og-image.jpg';
+      const ogUrl = `https://sabq.life/s/${code}`;
+
+      const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${ogTitle}</title>
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="${ogUrl}">
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${ogDescription}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:site_name" content="صحيفة سبق الإلكترونية">
+  <meta property="og:locale" content="ar_SA">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${ogUrl}">
+  <meta name="twitter:title" content="${ogTitle}">
+  <meta name="twitter:description" content="${ogDescription}">
+  <meta name="twitter:image" content="${ogImage}">
+  
+  <!-- Instant redirect for browsers -->
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  <script>window.location.href="${redirectUrl}";</script>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; direction: rtl;">
+  <h1>جارٍ التوجيه...</h1>
+  <p>إذا لم يتم التوجيه تلقائياً، <a href="${redirectUrl}">اضغط هنا</a></p>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(html);
     } catch (error) {
       console.error("Error redirecting short link:", error);
       res.status(500).send("حدث خطأ في إعادة التوجيه");
