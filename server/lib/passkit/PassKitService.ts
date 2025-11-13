@@ -48,12 +48,18 @@ export class PassKitService {
       );
     }
     
+    // Split certificates if multiple are in the same variable
+    const { signerCert, wwdr } = this.splitCertificates(certPath);
+    
     const config: CertificateConfig = {
-      signerCert: this.loadCertificate(certPath),
+      signerCert: signerCert,
       signerKey: this.loadCertificate(keyPath),
     };
     
-    if (wwdrPath) {
+    // Use extracted WWDR or separate WWDR cert
+    if (wwdr) {
+      config.wwdr = wwdr;
+    } else if (wwdrPath) {
       config.wwdr = this.loadCertificate(wwdrPath);
     }
     
@@ -62,6 +68,40 @@ export class PassKitService {
     }
     
     return config;
+  }
+  
+  private splitCertificates(certString: string): { signerCert: Buffer | string; wwdr?: Buffer | string } {
+    // Check if it's a file path
+    if (certString.startsWith('/') || certString.startsWith('./') || certString.includes('\\')) {
+      return { signerCert: certString };
+    }
+    
+    // Check if base64
+    if (certString.match(/^[A-Za-z0-9+/=]+$/)) {
+      return { signerCert: Buffer.from(certString, 'base64') };
+    }
+    
+    // Split multiple PEM certificates
+    const certBuffer = Buffer.from(certString, 'utf-8');
+    const certText = certBuffer.toString('utf-8');
+    
+    // Match all certificates in the string
+    const certMatches = certText.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
+    
+    if (!certMatches || certMatches.length === 0) {
+      return { signerCert: certBuffer };
+    }
+    
+    if (certMatches.length === 1) {
+      // Only one certificate found
+      return { signerCert: Buffer.from(certMatches[0], 'utf-8') };
+    }
+    
+    // Multiple certificates found - first is signer, second is WWDR
+    return {
+      signerCert: Buffer.from(certMatches[0], 'utf-8'),
+      wwdr: Buffer.from(certMatches[1], 'utf-8'),
+    };
   }
   
   private loadCertificate(envVar: string): Buffer | string {
