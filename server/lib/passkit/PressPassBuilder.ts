@@ -13,7 +13,8 @@ export class PressPassBuilder extends PassBuilder {
   }
   
   getTemplatePath(): string {
-    return path.resolve(__dirname, './pass-template');
+    // Always use the source template, not the dist version
+    return path.resolve(process.cwd(), 'server/lib/passkit/pass-template');
   }
   
   getPassDescription(): string {

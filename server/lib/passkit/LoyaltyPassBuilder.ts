@@ -13,7 +13,8 @@ export class LoyaltyPassBuilder extends PassBuilder {
   }
   
   getTemplatePath(): string {
-    return path.resolve(__dirname, './loyalty-pass-template');
+    // Always use the source template, not the dist version
+    return path.resolve(process.cwd(), 'server/lib/passkit/loyalty-pass-template');
   }
   
   getPassDescription(): string {
