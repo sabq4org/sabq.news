@@ -24044,11 +24044,23 @@ Allow: /
         }
       }
 
-      // Return HTML with Open Graph meta tags for social media crawlers
-      const ogTitle = article?.title || 'سبق الذكية - منصة الأخبار الذكية';
-      const ogDescription = article?.excerpt || 'أخبار محدثة مع تلخيص تلقائي بالذكاء الاصطناعي ونظام توصيات شخصي';
-      const ogImage = article?.imageUrl || 'https://sabq.life/default-og-image.jpg';
-      const ogUrl = `https://sabq.life/s/${code}`;
+      // HTML escape function to prevent broken meta tags
+      const escapeHtml = (text: string): string => {
+        if (!text) return '';
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      };
+
+      // Prepare Open Graph data with proper escaping
+      const ogTitle = escapeHtml(article?.title || 'سبق الذكية - منصة الأخبار الذكية');
+      const ogDescription = escapeHtml(article?.excerpt || 'أخبار محدثة مع تلخيص تلقائي بالذكاء الاصطناعي ونظام توصيات شخصي');
+      const ogImage = escapeHtml(article?.imageUrl || 'https://sabq.life/default-og-image.jpg');
+      const ogUrl = escapeHtml(`https://sabq.life/s/${code}`);
+      const safeRedirectUrl = escapeHtml(redirectUrl);
 
       const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -24074,12 +24086,12 @@ Allow: /
   <meta name="twitter:image" content="${ogImage}">
   
   <!-- Instant redirect for browsers -->
-  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
-  <script>window.location.href="${redirectUrl}";</script>
+  <meta http-equiv="refresh" content="0;url=${safeRedirectUrl}">
+  <script>window.location.href="${safeRedirectUrl}";</script>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; direction: rtl;">
   <h1>جارٍ التوجيه...</h1>
-  <p>إذا لم يتم التوجيه تلقائياً، <a href="${redirectUrl}">اضغط هنا</a></p>
+  <p>إذا لم يتم التوجيه تلقائياً، <a href="${safeRedirectUrl}">اضغط هنا</a></p>
 </body>
 </html>`;
 
