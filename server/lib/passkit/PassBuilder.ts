@@ -49,13 +49,13 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
-      console.log('🔐 [PassBuilder] Certificates object keys:', Object.keys(certificates));
-      console.log('🔐 [PassBuilder] signerCert:', typeof certificates.signerCert, certificates.signerCert.length);
-      console.log('🔐 [PassBuilder] signerKey:', typeof certificates.signerKey, certificates.signerKey.length);
-      console.log('🔐 [PassBuilder] wwdr:', typeof certificates.wwdr, certificates.wwdr ? certificates.wwdr.length : 'UNDEFINED');
-      console.log('🔐 [PassBuilder] wwdr exists:', 'wwdr' in certificates);
+      console.log('🔐 [PassBuilder] Generating pass with PEM certificates...');
+      console.log('🔐 [PassBuilder] Certificate types:', {
+        signerCert: typeof certificates.signerCert,
+        signerKey: typeof certificates.signerKey,
+        wwdr: typeof certificates.wwdr,
+      });
       
-      // @ts-expect-error - PKPass types don't perfectly match our CertificateConfig, but runtime works
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
