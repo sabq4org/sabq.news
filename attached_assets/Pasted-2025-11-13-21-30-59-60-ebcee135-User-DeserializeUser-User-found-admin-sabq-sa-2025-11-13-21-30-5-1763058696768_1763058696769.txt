@@ -1,0 +1,97 @@
+2025-11-13 21:30:59.60
+ebcee135
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-13 21:30:59.61
+ebcee135
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-13 21:30:59.64
+ebcee135
+User
+6:30:59 PM [express] GET /api/loyalty/points 200 in 319ms :: {"userId":"admin-sabq","totalPoints":44…
+2025-11-13 21:30:59.70
+ebcee135
+User
+6:30:59 PM [express] GET /api/user/followed-keywords 200 in 377ms :: [{"tagId":"db9c0e6e-7033-4599-b…
+2025-11-13 21:30:59.74
+ebcee135
+User
+6:30:59 PM [express] GET /api/profile/bookmarks 200 in 409ms :: [{"id":"6c09aedd-ce4b-4a2f-ae28-ea04…
+2025-11-13 21:31:00.20
+ebcee135
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-13 21:31:06.31
+ebcee135
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-13 21:31:06.34
+ebcee135
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-13 21:31:06.38
+ebcee135
+User
+🔐 [PassBuilder] Generating pass with v3.x API...
+2025-11-13 21:31:06.38
+ebcee135
+User
+✅ [PassBuilder] Certificate types: { wwdr: 'string', signerCert: 'string', signerKey: 'string' }
+2025-11-13 21:31:06.39
+ebcee135
+User
+✅ [PassBuilder] Pass configured successfully
+2025-11-13 21:31:06.40
+ebcee135
+User
+❌ [Loyalty Card] Generation failed: Error: Failed to generate pass: Invalid PEM formatted message.
+2025-11-13 21:31:06.40
+ebcee135
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19837:13)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at async file:///home/runner/workspace/dist/index.js:38112:28
+2025-11-13 21:31:06.40
+ebcee135
+User
+❌ [PassBuilder] PKPass error: Error: Invalid PEM formatted message.
+2025-11-13 21:31:06.40
+ebcee135
+User
+at pem.decode (/home/runner/workspace/node_modules/node-forge/lib/pem.js:192:11)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at pki.certificateFromPem (/home/runner/workspace/node_modules/node-forge/lib/x509.js:803:23)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at parseCertificates (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/Signature.js:84:25)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at Module.create (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/Signature.js:25:45)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at [pass.close] (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:532:43)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at PKPass.getAsBuffer (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:547:34)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19830:27)
+2025-11-13 21:31:06.40
+ebcee135
+User
+at async file:///home/runner/workspace/dist/index.js:38112:28
+2025-11-13 21:31:06.42
+ebcee135
+User
+6:31:06 PM [express] POST /api/wallet/loyalty/issue 400 in 129ms :: {"error":"Failed to generate pas…
