@@ -178,20 +178,46 @@ export class PassKitService {
   }
   
   private normalizePEM(pem: string): string {
-    // Remove all existing whitespace
-    const cleaned = pem.replace(/\s/g, '');
+    // Convert \r\n to \n
+    pem = pem.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     
-    // Extract header, body, and footer using regex
-    // Supports: CERTIFICATE, PRIVATE KEY, RSA PRIVATE KEY, etc.
-    const certMatch = cleaned.match(/^(-----BEGIN[A-Z ]+-----)([A-Za-z0-9+/=]+)(-----END[A-Z ]+-----)$/);
-    
-    if (!certMatch) {
-      console.error('❌ [PassKit] Failed to parse PEM structure');
-      console.error('First 200 chars of cleaned PEM:', cleaned.substring(0, 200));
-      return pem; // Return as-is if we can't parse it
+    // Find the BEGIN header
+    const beginMatch = pem.match(/(-----BEGIN [A-Z ]+-----)/);
+    if (!beginMatch) {
+      console.error('❌ [PassKit] No BEGIN header found');
+      console.error('First 200 chars:', pem.substring(0, 200));
+      throw new Error('Invalid PEM: missing BEGIN header');
     }
     
-    const [, header, body, footer] = certMatch;
+    const beginIndex = pem.indexOf(beginMatch[0]);
+    const header = beginMatch[0];
+    
+    // Find the END footer
+    const endMatch = pem.match(/(-----END [A-Z ]+-----)/);
+    if (!endMatch) {
+      console.error('❌ [PassKit] No END footer found');
+      throw new Error('Invalid PEM: missing END footer');
+    }
+    
+    const endIndex = pem.indexOf(endMatch[0]);
+    const footer = endMatch[0];
+    
+    // Extract only the PEM block (remove Bag Attributes, comments, etc.)
+    const pemBlock = pem.substring(beginIndex, endIndex + footer.length);
+    
+    // Remove all whitespace to get the body
+    const withoutWhitespace = pemBlock.replace(/\s/g, '');
+    
+    // Extract just the base64 body (between headers)
+    const bodyMatch = withoutWhitespace.match(/-----BEGIN[A-Z ]+-----([A-Za-z0-9+/=]+)-----END[A-Z ]+-----/);
+    
+    if (!bodyMatch) {
+      console.error('❌ [PassKit] Failed to extract PEM body');
+      console.error('PEM block:', pemBlock.substring(0, 300));
+      throw new Error('Invalid PEM: failed to extract body');
+    }
+    
+    const body = bodyMatch[1];
     
     // Split body into 64-character lines
     const lines = [];
@@ -202,6 +228,8 @@ export class PassKitService {
     // Reconstruct with proper line breaks
     const normalized = `${header}\n${lines.join('\n')}\n${footer}`;
     console.log('✅ [PassKit] PEM normalized successfully');
+    console.log(`   Header: ${header}`);
+    console.log(`   Body length: ${body.length} chars, ${lines.length} lines`);
     
     return normalized;
   }
