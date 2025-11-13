@@ -23964,6 +23964,28 @@ Allow: /
     }
   });
 
+  // GET /api/shortlinks/article/:articleId - Get existing short link for article
+  app.get("/api/shortlinks/article/:articleId", async (req, res) => {
+    try {
+      const { articleId } = req.params;
+      
+      if (!articleId || typeof articleId !== "string" || articleId.trim() === "") {
+        return res.status(400).json({ message: "معرف المقال مطلوب" });
+      }
+
+      const existingLink = await storage.getShortLinkByArticle(articleId);
+      
+      if (!existingLink) {
+        return res.status(404).json({ message: "لا يوجد رابط قصير لهذا المقال" });
+      }
+
+      res.json(existingLink);
+    } catch (error) {
+      console.error("Error fetching short link by article:", error);
+      res.status(500).json({ message: "فشل جلب الرابط القصير" });
+    }
+  });
+
   // GET /s/:code - Redirect to original URL and log click
   app.get("/s/:code", async (req, res) => {
     try {

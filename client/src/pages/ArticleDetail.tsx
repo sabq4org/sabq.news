@@ -73,11 +73,18 @@ export default function ArticleDetail() {
     queryKey: ["/api/articles", slug, "related"],
   });
 
-  // Fetch or create short link for social sharing
-  const { data: shortLink } = useQuery<{ shortCode: string; originalUrl: string }>({
-    queryKey: ["/api/shortlinks", article?.id],
-    queryFn: async () => {
-      if (!article) return null;
+  // Fetch existing short link for article (idempotent GET first)
+  const { data: existingShortLink, isLoading: isLoadingShortLink, error: shortLinkError } = useQuery<{ shortCode: string; originalUrl: string } | null>({
+    queryKey: ["/api/shortlinks/article", article?.id],
+    enabled: !!article?.id,
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  // Create short link mutation (only called if GET returns 404)
+  const createShortLinkMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) throw new Error("Article not loaded");
       const response = await apiRequest("/api/shortlinks", {
         method: "POST",
         body: JSON.stringify({
@@ -89,9 +96,20 @@ export default function ArticleDetail() {
       });
       return response;
     },
-    enabled: !!article,
-    staleTime: Infinity, // Short link never changes
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/shortlinks/article", article?.id], data);
+    },
   });
+
+  // Trigger creation only if GET returns 404
+  useEffect(() => {
+    if (article?.id && !isLoadingShortLink && !existingShortLink && shortLinkError && !createShortLinkMutation.isPending && !createShortLinkMutation.isSuccess) {
+      createShortLinkMutation.mutate();
+    }
+  }, [article?.id, isLoadingShortLink, existingShortLink, shortLinkError]);
+
+  // Use existing link if found, otherwise use created link, fallback to canonical URL
+  const shortLink = existingShortLink || createShortLinkMutation.data;
 
   const { logArticleView } = useArticleReadTracking({
     articleId: article?.id || "",
@@ -860,15 +878,26 @@ export default function ArticleDetail() {
               {/* Social Share Bar */}
               <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Share2 className="h-4 w-4" />
+                  {isLoadingShortLink ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
                   شارك المقال
                 </h3>
-                <SocialShareBar
-                  title={article.title}
-                  url={shortLink?.shortCode ? `/s/${shortLink.shortCode}` : `/article/${slug}`}
-                  description={article.excerpt || ""}
-                  articleId={article.id}
-                />
+                {isLoadingShortLink ? (
+                  <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                    جاري إنشاء رابط المشاركة...
+                  </div>
+                ) : (
+                  <SocialShareBar
+                    title={article.title}
+                    url={shortLink?.shortCode ? `https://sabq.life/s/${shortLink.shortCode}` : `https://sabq.life/article/${slug}`}
+                    description={article.excerpt || ""}
+                    articleId={article.id}
+                  />
+                )}
               </div>
             </div>
 
