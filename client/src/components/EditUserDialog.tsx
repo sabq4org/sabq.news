@@ -78,10 +78,10 @@ const editUserSchema = z.object({
   emailVerified: z.boolean().default(false),
   phoneVerified: z.boolean().default(false),
   hasPressCard: z.boolean().optional(),
-  jobTitle: z.string().optional(),
-  department: z.string().optional(),
-  pressIdNumber: z.string().optional(),
-  cardValidUntil: z.string().optional(),
+  jobTitle: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  department: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  pressIdNumber: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  cardValidUntil: z.union([z.string(), z.literal(""), z.null()]).optional(),
 });
 
 type FormData = z.infer<typeof editUserSchema>;
