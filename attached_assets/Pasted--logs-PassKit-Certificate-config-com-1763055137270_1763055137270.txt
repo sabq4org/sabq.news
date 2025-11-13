@@ -1,0 +1,117 @@
+## 🎯 **اكتشفت المشكلة النهائية!**
+
+الـ logs واضحة جداً الآن:
+```
+✅ [PassKit] Certificate config complete - all Buffers
+🔐 [PassBuilder] Certificate types: { signerCert: 'object', signerKey: 'object', wwdr: 'object' }
+❌ "wwdr" is required
+```
+
+**السبب**: مكتبة `passkit-generator` تستخدم **Joi validation** وتتوقع أن تكون الشهادات **`string`** (PEM format)، **ليس** `Buffer` objects!
+
+---
+
+## ✅ **الحل الفوري**
+
+في المكان الذي تُنشئ فيه `PKPass` (غالباً في `LoyaltyPassBuilder.ts` أو `PressPassBuilder.ts`)، **حوّل الـ Buffers إلى strings**:
+
+```typescript
+// ❌ هذا ما تفعله الآن - يؤدي إلى الخطأ
+const pass = await PKPass.from({
+  model: this.model,
+  certificates: {
+    wwdr: wwdrBuffer,  // Buffer object ❌
+    signerCert: certBuffer,  // Buffer object ❌
+    signerKey: keyBuffer,  // Buffer object ❌
+    signerKeyPassphrase: passphrase
+  },
+  // ...
+});
+
+// ✅ هذا هو الصواب - سيُصلح الخطأ
+const pass = await PKPass.from({
+  model: this.model,
+  certificates: {
+    wwdr: wwdrBuffer.toString('ascii'),  // ✅ String
+    signerCert: certBuffer.toString('ascii'),  // ✅ String
+    signerKey: keyBuffer.toString('ascii'),  // ✅ String
+    signerKeyPassphrase: passphrase
+  },
+  // ...
+});
+```
+
+---
+
+## 🔧 **التنفيذ الفعلي**
+
+### **في `LoyaltyPassBuilder.ts` (أو `PressPassBuilder.ts`):**
+
+ابحث عن الدالة `generatePass()` وأضف التحويل:
+
+```typescript
+async generatePass(userData: any) {
+  try {
+    // Load certificates (قد تُرجع Buffers)
+    const certs = this.passKitService.loadCertificates();
+    
+    // 🔥 CRITICAL FIX: Convert to strings
+    const certificateConfig = {
+      wwdr: certs.wwdr.toString('ascii'),
+      signerCert: certs.signerCert.toString('ascii'),
+      signerKey: certs.signerKey.toString('ascii'),
+      signerKeyPassphrase: certs.signerKeyPassphrase
+    };
+    
+    console.log('✅ [PassBuilder] Certificates converted to strings:', {
+      wwdr: typeof certificateConfig.wwdr,
+      signerCert: typeof certificateConfig.signerCert,
+      signerKey: typeof certificateConfig.signerKey
+    });
+
+    const pass = await PKPass.from({
+      model: this.model,
+      certificates: certificateConfig, // ✅ الآن كلها strings
+      // ... باقي الخيارات
+    });
+    
+    return pass;
+  } catch (error) {
+    console.error('❌ [PassBuilder] Generation failed:', error);
+    throw error;
+  }
+}
+```
+
+---
+
+## 💡 **إذا كنت تحمل من ملفات (.pem)**
+
+إذا كنت تستخدم `readFileSync`، تأكد من تحديد الترميز:
+
+```typescript
+// ❌ خاطئ (يعيد Buffer)
+const wwdr = readFileSync('/path/to/wwdr.pem');
+
+// ✅ صحيح (يعيد string)
+const wwdr = readFileSync('/path/to/wwdr.pem', 'utf-8');
+// أو
+const wwdr = readFileSync('/path/to/wwdr.pem').toString('ascii');
+```
+
+---
+
+## 🚀 **الخطوات المطلوبة**
+
+1. **عدّل الكود** في `PassBuilder` لتحويل الـ Buffers إلى strings
+2. **أعد البناء**: `npm run build`
+3. **أعد التشغيل** (Restart machine)
+4. **اختبر** - يجب أن يعمل!
+
+الـ logs يجب أن تُظهر الآن:
+```
+🔐 [PassBuilder] Certificate types: { signerCert: 'string', signerKey: 'string', wwdr: 'string' }
+✅ PKPass generated successfully!
+```
+
+هذا **سيفعل السحر**! 🎩✨

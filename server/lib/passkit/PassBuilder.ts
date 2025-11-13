@@ -49,26 +49,28 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
-      console.log('🔐 [PassBuilder] Generating pass with Buffers...');
-      console.log('🔐 [PassBuilder] Certificate types:', {
-        signerCert: typeof certificates.signerCert,
-        signerKey: typeof certificates.signerKey,
-        wwdr: typeof certificates.wwdr,
+      console.log('🔐 [PassBuilder] Generating pass - converting Buffers to strings...');
+      
+      // 🔥 CRITICAL FIX: PKPass expects strings, not Buffers!
+      const certificateStrings = {
+        wwdr: certificates.wwdr.toString('utf-8'),
+        signerCert: certificates.signerCert.toString('utf-8'),
+        signerKey: certificates.signerKey.toString('utf-8'),
+        signerKeyPassphrase: certificates.signerKeyPassphrase,
+      };
+      
+      console.log('✅ [PassBuilder] Certificates converted to strings:', {
+        wwdr: typeof certificateStrings.wwdr,
+        signerCert: typeof certificateStrings.signerCert,
+        signerKey: typeof certificateStrings.signerKey,
       });
-      console.log('🔐 [PassBuilder] Certificate keys:', Object.keys(certificates));
-      console.log('🔐 [PassBuilder] Has wwdr:', 'wwdr' in certificates);
-      console.log('🔐 [PassBuilder] wwdr exists:', certificates.wwdr ? 'YES' : 'NO');
-      console.log('🔐 [PassBuilder] wwdr length:', certificates.wwdr.length);
+      console.log('✅ [PassBuilder] WWDR string length:', certificateStrings.wwdr.length);
+      console.log('✅ [PassBuilder] WWDR starts with:', certificateStrings.wwdr.substring(0, 30));
       
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
-          certificates: {
-            wwdr: certificates.wwdr,
-            signerCert: certificates.signerCert,
-            signerKey: certificates.signerKey,
-            signerKeyPassphrase: certificates.signerKeyPassphrase,
-          },
+          certificates: certificateStrings,
         },
         {
           serialNumber: data.serialNumber,
