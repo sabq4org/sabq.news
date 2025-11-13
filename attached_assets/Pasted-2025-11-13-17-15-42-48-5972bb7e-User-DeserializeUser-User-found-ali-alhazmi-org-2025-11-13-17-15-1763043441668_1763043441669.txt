@@ -1,0 +1,124 @@
+2025-11-13 17:15:42.48
+5972bb7e
+User
+✅ DeserializeUser: User found: ali@alhazmi.org
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] Loading certificates for loyalty pass...
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] Cert path length: 1561
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] Key path length: 1703
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] WWDR path length: 1561
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] Signer cert type: object, length: 1561
+2025-11-13 17:15:42.53
+5972bb7e
+User
+🔐 [PassKit] WWDR from split: NO
+2025-11-13 17:15:42.53
+5972bb7e
+User
+✅ [PassKit] Loading WWDR from separate env var
+2025-11-13 17:15:42.53
+5972bb7e
+User
+✅ [PassKit] WWDR loaded: YES
+2025-11-13 17:15:42.53
+5972bb7e
+User
+[Error [ValidationError]: "wwdr" is required] {
+2025-11-13 17:15:42.53
+5972bb7e
+User
+_original: {
+2025-11-13 17:15:42.53
+5972bb7e
+User
+serialNumber: 'SABQ-LOYAL-USER-175',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+description: 'Sabq Smart Loyalty Card',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+organizationName: 'سبق الذكية',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+passTypeIdentifier: 'pass.life.sabq.loyalty',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+teamIdentifier: 'CBU7MJEC5R',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+authenticationToken: '943105a7417081c3edbfe191d2e2e340b00e46e77e662e7aba0275fba0904f6d',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+webServiceURL: 'https://sabq.life',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+backgroundColor: 'rgb(212, 175, 55)',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+foregroundColor: 'rgb(255, 255, 255)',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+labelColor: 'rgb(255, 255, 255)',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+barcodes: [ [Object] ]
+2025-11-13 17:15:42.53
+5972bb7e
+User
+},
+2025-11-13 17:15:42.53
+5972bb7e
+User
+details: [
+2025-11-13 17:15:42.53
+5972bb7e
+User
+{
+2025-11-13 17:15:42.53
+5972bb7e
+User
+message: '"wwdr" is required',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+path: [Array],
+2025-11-13 17:15:42.53
+5972bb7e
+User
+type: 'any.required',
+2025-11-13 17:15:42.53
+5972bb7e
+User
+context: [Object]
+2025-11-13 17:15:42.53
+5972bb7e
+User
+}
+2025-11-13 17:15:42.53
+5972bb7e
+User
+]

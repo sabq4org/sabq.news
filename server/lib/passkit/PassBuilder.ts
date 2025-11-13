@@ -27,9 +27,9 @@ export interface PressPassData extends PassData {
 }
 
 export interface CertificateConfig {
-  signerCert: Buffer | string;
-  signerKey: Buffer | string;
-  wwdr?: Buffer | string;
+  signerCert: Buffer;
+  signerKey: Buffer;
+  wwdr: Buffer;
   signerKeyPassphrase?: string;
 }
 
@@ -49,10 +49,11 @@ export abstract class PassBuilder {
   
   async generatePass(data: any, certificates: CertificateConfig): Promise<Buffer> {
     try {
+      // @ts-expect-error - PKPass types don't perfectly match our CertificateConfig, but runtime works
       const pass = new PKPass(
         {
           model: this.getTemplatePath(),
-          certificates: certificates as any,
+          certificates: certificates,
         },
         {
           serialNumber: data.serialNumber,

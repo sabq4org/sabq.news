@@ -1,0 +1,152 @@
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] Loading certificates for press pass...
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] Cert path length: 2186
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] Key path length: 1703
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] WWDR path length: 1561
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] Signer cert type: object, length: 2186
+2025-11-13 17:15:07.86
+5972bb7e
+User
+🔐 [PassKit] WWDR from split: NO
+2025-11-13 17:15:07.86
+5972bb7e
+User
+✅ [PassKit] Loading WWDR from separate env var
+2025-11-13 17:15:07.86
+5972bb7e
+User
+✅ [PassKit] WWDR loaded: YES
+2025-11-13 17:15:07.87
+5972bb7e
+User
+[Error [ValidationError]: "wwdr" is required] {
+2025-11-13 17:15:07.87
+5972bb7e
+User
+_original: {
+2025-11-13 17:15:07.87
+5972bb7e
+User
+serialNumber: 'SABQ-PRESS-USER-175',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+description: 'Sabq Smart Press Card',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+organizationName: 'سبق الذكية',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+passTypeIdentifier: 'pass.life.sabq.presscard',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+teamIdentifier: 'CBU7MJEC5R',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+authenticationToken: '752dabe9b834a6805ce78051c5d22f5f2fd95443882364eb8f7fb6a9debbbb56',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+webServiceURL: 'https://sabq.life',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+backgroundColor: 'rgb(0, 122, 255)',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+foregroundColor: 'rgb(255, 255, 255)',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+labelColor: 'rgb(255, 255, 255)',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+barcodes: [ [Object] ]
+2025-11-13 17:15:07.87
+5972bb7e
+User
+},
+2025-11-13 17:15:07.87
+5972bb7e
+User
+details: [
+2025-11-13 17:15:07.87
+5972bb7e
+User
+{
+2025-11-13 17:15:07.87
+5972bb7e
+User
+message: '"wwdr" is required',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+path: [Array],
+2025-11-13 17:15:07.87
+5972bb7e
+User
+type: 'any.required',
+2025-11-13 17:15:07.87
+5972bb7e
+User
+context: [Object]
+2025-11-13 17:15:07.87
+5972bb7e
+User
+}
+2025-11-13 17:15:07.87
+5972bb7e
+User
+]
+2025-11-13 17:15:07.87
+5972bb7e
+User
+}
+2025-11-13 17:15:07.87
+5972bb7e
+User
+❌ [Press Card] Generation failed: Error: Failed to generate pass: ValidationError happened. Invalid certificate(s) loaded. "wwdr" is required. Please provide valid WWDR certificates and developer signer certificate and key (with passphrase).
+2025-11-13 17:15:07.87
+5972bb7e
+User
+Refer to docs to obtain them
+2025-11-13 17:15:07.87
+5972bb7e
+User
+at PressPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19815:13)
+2025-11-13 17:15:07.87
+5972bb7e
+User
+at PassKitService.generatePressPass (file:///home/runner/workspace/dist/index.js:19999:30)
+2025-11-13 17:15:07.87
+5972bb7e
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-13 17:15:07.87
+5972bb7e
+User
+at async file:///home/runner/workspace/dist/index.js:37974:28
+2025-11-13 17:15:07.89
+5972bb7e
+User
+2:15:07 PM [express] POST /api/wallet/press/issue 400 in 223ms :: {"error":"Failed to generate pass:…
