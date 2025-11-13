@@ -26,6 +26,7 @@ import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
 import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
+import { passKitService } from "./lib/passkit/PassKitService";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -24397,6 +24398,134 @@ Allow: /
       console.error("Error fetching short link analytics:", error);
       res.status(500).json({ message: "فشل جلب الإحصائيات" });
     }
+  });
+
+  // ============================================================
+  // APPLE WALLET ROUTES
+  // ============================================================
+
+  // Issue new wallet pass for current user
+  app.post("/api/wallet/issue", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Check if user already has a pass
+      const existingPass = await storage.getWalletPassByUserId(userId);
+      if (existingPass) {
+        return res.json({ 
+          success: true, 
+          serialNumber: existingPass.serialNumber,
+          message: 'Pass already exists'
+        });
+      }
+
+      // Generate serial number and auth token
+      const serialNumber = passKitService.generateSerialNumber(userId);
+      const authToken = passKitService.generateAuthToken();
+      
+      // Create pass record
+      const pass = await storage.createWalletPass({
+        userId,
+        passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.life.sabq.presscard',
+        serialNumber,
+        authenticationToken: authToken,
+      });
+
+      res.json({ 
+        success: true, 
+        serialNumber: pass.serialNumber,
+        message: 'Pass created successfully. Download will be available once Apple credentials are configured.'
+      });
+    } catch (error: any) {
+      console.error('Error issuing wallet pass:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get pass status
+  app.get("/api/wallet/status", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const pass = await storage.getWalletPassByUserId(userId);
+      
+      res.json({ 
+        hasPass: !!pass,
+        serialNumber: pass?.serialNumber,
+        createdAt: pass?.createdAt,
+        lastUpdated: pass?.lastUpdated,
+      });
+    } catch (error: any) {
+      console.error('Error getting wallet pass status:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PassKit Web Service: Register device
+  app.post("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId/:serialNumber", 
+    async (req, res) => {
+      try {
+        const { deviceLibraryId, passTypeId, serialNumber } = req.params;
+        const { pushToken } = req.body;
+
+        const pass = await storage.getWalletPassBySerial(serialNumber);
+        if (!pass) {
+          return res.status(404).json({ error: 'Pass not found' });
+        }
+
+        await storage.registerDevice({
+          passId: pass.id,
+          deviceLibraryIdentifier: deviceLibraryId,
+          pushToken,
+        });
+
+        res.status(201).end();
+      } catch (error: any) {
+        console.error('Error registering device:', error);
+        res.status(500).json({ error: error.message });
+      }
+  });
+
+  // PassKit Web Service: Get updatable passes
+  app.get("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId", 
+    async (req, res) => {
+      try {
+        const { deviceLibraryId, passTypeId } = req.params;
+        const passesUpdatedSince = req.query.passesUpdatedSince as string | undefined;
+        
+        const since = passesUpdatedSince ? new Date(passesUpdatedSince) : undefined;
+        const serialNumbers = await storage.getUpdatedPasses(deviceLibraryId, passTypeId, since);
+
+        if (serialNumbers.length === 0) {
+          return res.status(204).end();
+        }
+
+        res.json({
+          serialNumbers,
+          lastUpdated: new Date().toISOString(),
+        });
+      } catch (error: any) {
+        console.error('Error getting updated passes:', error);
+        res.status(500).json({ error: error.message });
+      }
+  });
+
+  // PassKit Web Service: Unregister device
+  app.delete("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId/:serialNumber",
+    async (req, res) => {
+      try {
+        const { deviceLibraryId, serialNumber } = req.params;
+        
+        const pass = await storage.getWalletPassBySerial(serialNumber);
+        if (!pass) {
+          return res.status(404).json({ error: 'Pass not found' });
+        }
+
+        await storage.unregisterDevice(pass.id, deviceLibraryId);
+        res.status(200).end();
+      } catch (error: any) {
+        console.error('Error unregistering device:', error);
+        res.status(500).json({ error: error.message });
+      }
   });
 
   const httpServer = createServer(app);

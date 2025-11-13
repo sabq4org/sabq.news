@@ -4868,6 +4868,69 @@ export const dataStoryDrafts = pgTable("data_story_drafts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// ============================================
+// APPLE WALLET PASSES MANAGEMENT
+// ============================================
+
+// Apple Wallet Passes - Digital press card for users
+export const walletPasses = pgTable("wallet_passes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  passTypeIdentifier: text("pass_type_identifier").notNull(), // e.g., pass.life.sabq.presscard
+  serialNumber: text("serial_number").notNull().unique(),
+  authenticationToken: text("authentication_token").notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("wallet_passes_user_id_idx").on(table.userId),
+]);
+
+// Apple Wallet Devices - Devices that have the pass installed
+export const walletDevices = pgTable("wallet_devices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  passId: varchar("pass_id").notNull().references(() => walletPasses.id, { onDelete: 'cascade' }),
+  deviceLibraryIdentifier: text("device_library_identifier").notNull(),
+  pushToken: text("push_token").notNull(),
+  registeredAt: timestamp("registered_at").defaultNow().notNull(),
+}, (table) => [
+  index("wallet_devices_pass_id_idx").on(table.passId),
+  uniqueIndex("wallet_devices_unique_idx").on(table.passId, table.deviceLibraryIdentifier),
+]);
+
+// Apple Wallet Relations
+export const walletPassesRelations = relations(walletPasses, ({ one, many }) => ({
+  user: one(users, {
+    fields: [walletPasses.userId],
+    references: [users.id],
+  }),
+  devices: many(walletDevices),
+}));
+
+export const walletDevicesRelations = relations(walletDevices, ({ one }) => ({
+  pass: one(walletPasses, {
+    fields: [walletDevices.passId],
+    references: [walletPasses.id],
+  }),
+}));
+
+// Apple Wallet Types
+export type WalletPass = typeof walletPasses.$inferSelect;
+export type WalletDevice = typeof walletDevices.$inferSelect;
+
+// Apple Wallet Zod Schemas
+export const insertWalletPassSchema = createInsertSchema(walletPasses).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+export type InsertWalletPass = z.infer<typeof insertWalletPassSchema>;
+
+export const insertWalletDeviceSchema = createInsertSchema(walletDevices).omit({
+  id: true,
+  registeredAt: true,
+});
+export type InsertWalletDevice = z.infer<typeof insertWalletDeviceSchema>;
+
 // Data story relations
 export const dataStorySourcesRelations = relations(dataStorySources, ({ one, many }) => ({
   user: one(users, {

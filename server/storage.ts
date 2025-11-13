@@ -76,6 +76,8 @@ import {
   shortLinks,
   shortLinkClicks,
   socialFollows,
+  walletPasses,
+  walletDevices,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -254,6 +256,10 @@ import {
   type InsertShortLinkClick,
   type SocialFollow,
   type InsertSocialFollow,
+  type WalletPass,
+  type InsertWalletPass,
+  type WalletDevice,
+  type InsertWalletDevice,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1168,6 +1174,16 @@ export interface IStorage {
     uniqueUsers: number;
     topSources: Array<{ source: string; count: number }>;
   }>;
+  
+  // Apple Wallet operations
+  getWalletPassByUserId(userId: string): Promise<WalletPass | null>;
+  getWalletPassBySerial(serialNumber: string): Promise<WalletPass | null>;
+  createWalletPass(data: InsertWalletPass): Promise<WalletPass>;
+  updateWalletPassTimestamp(passId: string): Promise<void>;
+  getDevicesForPass(passId: string): Promise<WalletDevice[]>;
+  registerDevice(data: InsertWalletDevice): Promise<WalletDevice>;
+  unregisterDevice(passId: string, deviceLibraryId: string): Promise<void>;
+  getUpdatedPasses(deviceLibraryId: string, passTypeId: string, since?: Date): Promise<string[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -10273,6 +10289,123 @@ export class DatabaseStorage implements IStorage {
       uniqueUsers: uniqueUserIds.size,
       topSources,
     };
+  }
+
+  // ============================================================
+  // APPLE WALLET OPERATIONS
+  // ============================================================
+
+  async getWalletPassByUserId(userId: string): Promise<WalletPass | null> {
+    const [pass] = await db
+      .select()
+      .from(walletPasses)
+      .where(eq(walletPasses.userId, userId))
+      .limit(1);
+    return pass || null;
+  }
+
+  async getWalletPassBySerial(serialNumber: string): Promise<WalletPass | null> {
+    const [pass] = await db
+      .select()
+      .from(walletPasses)
+      .where(eq(walletPasses.serialNumber, serialNumber))
+      .limit(1);
+    return pass || null;
+  }
+
+  async createWalletPass(data: InsertWalletPass): Promise<WalletPass> {
+    const [pass] = await db
+      .insert(walletPasses)
+      .values(data)
+      .returning();
+    
+    console.log(`✅ Wallet pass created for user ${data.userId}: ${pass.serialNumber}`);
+    return pass;
+  }
+
+  async updateWalletPassTimestamp(passId: string): Promise<void> {
+    await db
+      .update(walletPasses)
+      .set({ lastUpdated: new Date() })
+      .where(eq(walletPasses.id, passId));
+    
+    console.log(`🔄 Wallet pass timestamp updated: ${passId}`);
+  }
+
+  async getDevicesForPass(passId: string): Promise<WalletDevice[]> {
+    const devices = await db
+      .select()
+      .from(walletDevices)
+      .where(eq(walletDevices.passId, passId));
+    return devices;
+  }
+
+  async registerDevice(data: InsertWalletDevice): Promise<WalletDevice> {
+    try {
+      const [device] = await db
+        .insert(walletDevices)
+        .values(data)
+        .onConflictDoUpdate({
+          target: [walletDevices.passId, walletDevices.deviceLibraryIdentifier],
+          set: {
+            pushToken: data.pushToken,
+            registeredAt: new Date(),
+          },
+        })
+        .returning();
+      
+      console.log(`📱 Device registered for pass ${data.passId}: ${data.deviceLibraryIdentifier}`);
+      return device;
+    } catch (error: any) {
+      console.error('Error registering device:', error);
+      throw error;
+    }
+  }
+
+  async unregisterDevice(passId: string, deviceLibraryId: string): Promise<void> {
+    await db
+      .delete(walletDevices)
+      .where(
+        and(
+          eq(walletDevices.passId, passId),
+          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId)
+        )
+      );
+    
+    console.log(`🗑️  Device unregistered from pass ${passId}: ${deviceLibraryId}`);
+  }
+
+  async getUpdatedPasses(
+    deviceLibraryId: string,
+    passTypeId: string,
+    since?: Date
+  ): Promise<string[]> {
+    let query = db
+      .select({ serialNumber: walletPasses.serialNumber })
+      .from(walletPasses)
+      .innerJoin(walletDevices, eq(walletDevices.passId, walletPasses.id))
+      .where(
+        and(
+          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId),
+          eq(walletPasses.passTypeIdentifier, passTypeId)
+        )
+      );
+
+    if (since) {
+      query = query.where(
+        and(
+          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId),
+          eq(walletPasses.passTypeIdentifier, passTypeId),
+          gte(walletPasses.lastUpdated, since)
+        )
+      );
+    }
+
+    const results = await query;
+    const serialNumbers = results.map(r => r.serialNumber);
+    
+    console.log(`🔍 Found ${serialNumbers.length} updated passes for device ${deviceLibraryId}`);
+    return serialNumbers;
   }
 }
 
