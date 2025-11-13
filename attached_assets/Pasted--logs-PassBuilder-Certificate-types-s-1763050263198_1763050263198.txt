@@ -1,0 +1,207 @@
+## 🎯 **التحليل النهائي**
+
+الـ logs تُظهر **تقدم كبير**:
+```
+🔐 [PassBuilder] Certificate types: { signerCert: 'string', signerKey: 'string', wwdr: 'string' }
+```
+
+**لكن الخطأ يبقى**: `"wwdr" is required` مع أن الـ property موجود والنوع صحيح!
+
+### **السبب الحقيقي**
+
+مكتبة `passkit-generator` تستخدم **Joi validation** بدقة شديدة. حتى لو القيمة `string`， إذا **المحتوى** لا يطابق **نمط PEM الصحيح** بالضبط، تعامله كأنه `undefined` أو `invalid` وتُطلق `"any.required"` error.
+
+**المشاكل المحتملة في الـ PEM string:**
+1. **إضافات زائدة**: علامات تنصيص (`"`), مسافات زائدة، أسطر فارغة
+2. **BOM character**: الحرف الخفي `0xFEFF` في بداية النص
+3. **Line endings خاطئة**: `\r\n` (Windows) بدلاً من `\n` (Unix)
+4. **Base64 encoding خاطئ**: المحتوى بعد فك التشفير لا يبدأ بـ `-----BEGIN CERTIFICATE-----`
+
+---
+
+## ✅ **الحل الفوري والمضمون**
+
+### **1. تنظيف الشهادة قبل الاستخدام**
+
+في `PassKitService.ts`، أضف دالة تنظيف شاملة:
+
+```typescript
+private cleanPemCertificate(base64Input: string): string {
+  // 1. Decode from base64
+  const decoded = Buffer.from(base64Input.trim(), 'base64').toString('ascii');
+  
+  // 2. Remove BOM if exists
+  const bomless = decoded.charCodeAt(0) === 0xFEFF ? decoded.slice(1) : decoded;
+  
+  // 3. Normalize line endings to Unix format
+  const normalized = bomless.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // 4. Remove extra quotes if present
+  const unquoted = normalized.replace(/^"|"$/g, '');
+  
+  // 5. Trim whitespace
+  const trimmed = unquoted.trim();
+  
+  // 6. Validate PEM format (check for BEGIN/END markers)
+  if (!trimmed.includes('-----BEGIN CERTIFICATE-----')) {
+    throw new Error(`Invalid PEM format: Missing certificate header`);
+  }
+  if (!trimmed.includes('-----END CERTIFICATE-----')) {
+    throw new Error(`Invalid PEM format: Missing certificate footer`);
+  }
+  
+  // 7. Ensure proper line breaks (64 chars per line for content)
+  // This is optional but recommended for strict parsers
+  const header = trimmed.match(/-----BEGIN[^-]+-----/)![0];
+  const footer = trimmed.match(/-----END[^-]+-----/)![0];
+  const content = trimmed
+    .replace(/-----BEGIN[^-]+-----/, '')
+    .replace(/-----END[^-]+-----/, '')
+    .replace(/\s/g, '');
+  
+  const formattedContent = content.match(/.{1,64}/g)?.join('\n') || content;
+  
+  return `${header}\n${formattedContent}\n${footer}\n`;
+}
+
+private loadCertificates(): Certificates {
+  try {
+    const wwdr = this.cleanPemCertificate(process.env.APPLE_WWDR_CERT!);
+    const signerCert = this.cleanPemCertificate(process.env.APPLE_LOYALTY_PASS_CERT!);
+    
+    // For private key, the type might be "PRIVATE KEY" or "RSA PRIVATE KEY"
+    const signerKeyRaw = Buffer.from(process.env.APPLE_LOYALTY_PASS_KEY!.trim(), 'base64').toString('ascii');
+    const signerKey = this.cleanPrivateKey(signerKeyRaw);
+    
+    console.log('✅ [PassKit] Certificates cleaned and validated');
+    
+    // Log preview (first 50 chars) for debugging
+    console.log(`🔐 [PassKit] WWDR preview: ${wwdr.substring(0, 50)}...`);
+    
+    return {
+      wwdr,
+      signerCert,
+      signerKey,
+      signerKeyPassphrase: process.env.APPLE_PASS_KEY_PASSPHRASE
+    };
+  } catch (error) {
+    console.error('❌ [PassKit] Certificate loading failed:', error);
+    throw error;
+  }
+}
+
+private cleanPrivateKey(pem: string): string {
+  const cleaned = pem
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .trim();
+  
+  // Check for either PKCS#8 or PKCS#1 format
+  const hasPkcs8 = cleaned.includes('-----BEGIN PRIVATE KEY-----');
+  const hasPkcs1 = cleaned.includes('-----BEGIN RSA PRIVATE KEY-----');
+  
+  if (!hasPkcs8 && !hasPkcs1) {
+    throw new Error('Invalid private key format: Must be PKCS#1 or PKCS#8');
+  }
+  
+  return cleaned;
+}
+```
+
+### **2. التحقق النهائي في PassBuilder**
+
+قبل إنشاء `PKPass`，أضف logging يُظهر **المحتوى الفعلي** (أول 50 حرف):
+
+```typescript
+async generatePass(userData: any) {
+  try {
+    const certificates = this.passKitService.loadCertificates();
+    
+    // Critical debugging log
+    console.log('🔐 [PassBuilder] WWDR content check:', {
+      startsWith: certificates.wwdr.substring(0, 30),
+      hasNewlines: certificates.wwdr.includes('\n'),
+      length: certificates.wwdr.length,
+      isValidPem: certificates.wwdr.includes('-----BEGIN CERTIFICATE-----')
+    });
+    
+    const pass = await PKPass.from({
+      model: this.model,
+      certificates: certificates,
+      // ... rest of options
+    });
+    
+    return pass;
+  } catch (error) {
+    console.error('❌ [PassBuilder] PKPass creation failed:', error.message);
+    throw error;
+  }
+}
+```
+
+---
+
+## 🔧 **خطوات التنفيذ السريعة**
+
+### **في Replit/Glitch:**
+
+1. **عدّل الـ Secrets**:
+   - تأكد أن كل certificate محفوظ **كـ base64 string واحد سطر** (بدون أسطر جديدة)
+   - لا تضف علامات تنصيص `"` حول القيمة
+
+2. **أعد البناء**:
+```bash
+npm run build
+```
+
+3. **أعد التشغيل** (Restart machine)
+
+4. **تأكد من الـ logs الجديدة**:
+```
+✅ [PassKit] Certificates cleaned and validated
+🔐 [PassKit] WWDR preview: -----BEGIN CERTIFICATE-----
+🔐 [PassBuilder] WWDR content check: {
+  startsWith: '-----BEGIN CERTIFICATE-----',
+  hasNewlines: true,
+  length: 1561,
+  isValidPem: true
+}
+✅ PKPass generated successfully!
+```
+
+---
+
+## ⚠️ **النوعين الشائعين وحلولهم السريعة**
+
+### **المشكلة 1: Base64 يحتوي على `\n` داخل القيمة**
+إذا نسخت الـ certificate يدوياً، ربما أدخلت أسطر جديدة في الـ value.
+
+**الحل**:
+```bash
+# في terminal، حوّل الـ PEM إلى base64 سطر واحد
+cat certificate.pem | base64 | tr -d '\n'
+```
+
+### **المشكلة 2: الـ PEM في الـ Env Var ليس base64**
+ربما تكون حافظ الـ PEM مباشرة (مع `\n`) في الـ env var.
+
+**الحل**:
+- إما تحويل الـ PEM إلى base64 قبل الحفظ
+- أو تعديل الكود ليقرأه مباشرة:
+```typescript
+// إذا الـ env var هو PEM مباشر (multiline)
+const wwdrPem = process.env.APPLE_WWDR_CERT!.replace(/\\n/g, '\n');
+```
+
+---
+
+## 🚀 **الخطوات النهائية المطلوبة منك**
+
+1. **أرسل لي** محتوى `process.env.APPLE_WWDR_CERT?.substring(0, 100)` (أول 100 حرف) لأرى إذا كان صحيح
+2. **أرسل لي** نتيجة هذا التصحيح المؤقت في الكود:
+```typescript
+console.log('DEBUG:', JSON.stringify(certificates.wwdr).substring(0, 100));
+```
+3. **أكد لي** إنك عملت `npm run build` و `restart` بعد آخر تغيير
+
+إذا التنفيذ أعلاه ما زال يفشل، المشكلة قد تكون في **نسخة المكتبة** أو **البنية الداخلية** للـ validation schema. سأحتاج أرى `package.json` لأراجع الإصدار.
