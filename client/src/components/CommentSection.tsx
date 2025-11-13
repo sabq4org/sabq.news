@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MessageCircle, Send, CornerDownLeft, ChevronDown } from "lucide-react";
+import { MessageCircle, Send, CornerDownLeft, ChevronDown, UserPlus, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CommentWithUser } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface CommentSectionProps {
   articleId: string;
@@ -29,10 +32,63 @@ export function CommentSection({
   currentUser, 
   onSubmitComment 
 }: CommentSectionProps) {
+  const { toast } = useToast();
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [followingState, setFollowingState] = useState<Record<string, boolean>>({});
+
+  // Follow mutation
+  const followMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("/api/social/follow", {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      });
+    },
+    onSuccess: (_, userId) => {
+      setFollowingState(prev => ({ ...prev, [userId]: true }));
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", currentUser?.id] });
+      toast({
+        title: "تمت المتابعة",
+        description: "أصبحت تتابع هذا المعلّق",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unfollow mutation
+  const unfollowMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest(`/api/social/unfollow/${userId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: (_, userId) => {
+      setFollowingState(prev => ({ ...prev, [userId]: false }));
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", currentUser?.id] });
+      toast({
+        title: "تم إلغاء المتابعة",
+        description: "لم تعد تتابع هذا المعلّق",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشلت عملية إلغاء المتابعة. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +154,41 @@ export function CommentSection({
                   رد
                 </Badge>
               )}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className={`font-medium ${isReply ? 'text-xs' : 'text-sm'}`} data-testid={`text-comment-author-${comment.id}`}>
                   {comment.user.firstName && comment.user.lastName
                     ? `${comment.user.firstName} ${comment.user.lastName}`
                     : comment.user.email}
                 </span>
+                {currentUser && comment.user.id !== currentUser.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const isFollowing = followingState[comment.user.id];
+                      if (isFollowing) {
+                        unfollowMutation.mutate(comment.user.id);
+                      } else {
+                        followMutation.mutate(comment.user.id);
+                      }
+                    }}
+                    disabled={followMutation.isPending || unfollowMutation.isPending}
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    data-testid={`button-follow-commenter-${comment.id}`}
+                  >
+                    {followingState[comment.user.id] ? (
+                      <>
+                        <UserCheck className="h-3 w-3 ml-1" />
+                        متابَع
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-3 w-3 ml-1" />
+                        متابعة
+                      </>
+                    )}
+                  </Button>
+                )}
                 <span className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(comment.createdAt), {
                     addSuffix: true,
