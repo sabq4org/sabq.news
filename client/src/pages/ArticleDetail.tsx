@@ -75,16 +75,21 @@ export default function ArticleDetail() {
     queryKey: ["/api/articles", slug, "related"],
   });
 
-  // Determine the author ID to follow (use author.id)
-  const authorId = article?.author?.id;
-  const isOwnArticle = user?.id === authorId;
+  // Unified author resolution for both news and opinion articles
+  const resolvedAuthorId = article?.articleType === 'opinion'
+    ? article?.opinionAuthor?.id
+    : article?.author?.id;
+  const resolvedAuthor = article?.articleType === 'opinion'
+    ? article?.opinionAuthor
+    : article?.author;
+  const isOwnArticle = user?.id === resolvedAuthorId;
 
   // Check if current user follows the author
   const { data: isFollowingData } = useQuery<{
     isFollowing: boolean;
   }>({
-    queryKey: ["/api/social/is-following", authorId],
-    enabled: !!authorId && !!user && !isOwnArticle,
+    queryKey: ["/api/social/is-following", resolvedAuthorId],
+    enabled: !!resolvedAuthorId && !!user && !isOwnArticle,
   });
 
   const isFollowing = isFollowingData?.isFollowing || false;
@@ -92,16 +97,16 @@ export default function ArticleDetail() {
   // Follow mutation
   const followMutation = useMutation({
     mutationFn: async () => {
-      if (!authorId) throw new Error("Author ID not found");
+      if (!resolvedAuthorId) throw new Error("Author ID not found");
       return apiRequest("/api/social/follow", {
         method: "POST",
-        body: JSON.stringify({ followingId: authorId }),
+        body: JSON.stringify({ followingId: resolvedAuthorId }),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", authorId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", authorId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", resolvedAuthorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", resolvedAuthorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", resolvedAuthorId] });
       queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
@@ -121,15 +126,15 @@ export default function ArticleDetail() {
   // Unfollow mutation
   const unfollowMutation = useMutation({
     mutationFn: async () => {
-      if (!authorId) throw new Error("Author ID not found");
-      return apiRequest(`/api/social/unfollow/${authorId}`, {
+      if (!resolvedAuthorId) throw new Error("Author ID not found");
+      return apiRequest(`/api/social/unfollow/${resolvedAuthorId}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", authorId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", authorId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", authorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/is-following", resolvedAuthorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/stats", resolvedAuthorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/followers", resolvedAuthorId] });
       queryClient.invalidateQueries({ queryKey: ["/api/social/following", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
@@ -334,9 +339,9 @@ export default function ArticleDetail() {
       "dateModified": article.updatedAt,
       "author": {
         "@type": "Person",
-        "name": article.author?.firstName && article.author?.lastName
-          ? `${article.author.firstName} ${article.author.lastName}`
-          : article.author?.email || "سبق",
+        "name": resolvedAuthor?.firstName && resolvedAuthor?.lastName
+          ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
+          : resolvedAuthor?.email || "سبق",
         "url": article.staff?.slug ? `${window.location.origin}/reporter/${article.staff.slug}` : undefined
       },
       "publisher": {
@@ -779,16 +784,16 @@ export default function ArticleDetail() {
 
               {/* Author & Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                {article.author && (
+                {resolvedAuthor && (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
                       <AvatarImage 
-                        src={article.author?.profileImageUrl || ""} 
-                        alt={`${article.author?.firstName || ""} ${article.author?.lastName || ""}`.trim() || article.author?.email || ""}
+                        src={resolvedAuthor?.profileImageUrl || ""} 
+                        alt={`${resolvedAuthor?.firstName || ""} ${resolvedAuthor?.lastName || ""}`.trim() || resolvedAuthor?.email || ""}
                         className="object-cover"
                       />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(article.author?.firstName, article.author?.lastName, article.author?.email)}
+                        {getInitials(resolvedAuthor?.firstName, resolvedAuthor?.lastName, resolvedAuthor?.email)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex items-center gap-2">
@@ -800,9 +805,9 @@ export default function ArticleDetail() {
                             data-testid="link-reporter-profile"
                           >
                             <span data-testid="text-author-name">
-                              {article.author?.firstName && article.author?.lastName
-                                ? `${article.author.firstName} ${article.author.lastName}`
-                                : article.author?.email}
+                              {resolvedAuthor?.firstName && resolvedAuthor?.lastName
+                                ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
+                                : resolvedAuthor?.email}
                             </span>
                             {article.staff.isVerified && (
                               <CheckCircle2 className="h-4 w-4 text-primary inline" />
@@ -810,9 +815,9 @@ export default function ArticleDetail() {
                           </Link>
                         ) : (
                           <p className="font-medium" data-testid="text-author-name">
-                            {article.author?.firstName && article.author?.lastName
-                              ? `${article.author.firstName} ${article.author.lastName}`
-                              : article.author?.email}
+                            {resolvedAuthor?.firstName && resolvedAuthor?.lastName
+                              ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
+                              : resolvedAuthor?.email}
                           </p>
                         )}
                         {timeAgo && (
@@ -822,7 +827,7 @@ export default function ArticleDetail() {
                           </p>
                         )}
                       </div>
-                      {user && !isOwnArticle && authorId && (
+                      {user && !isOwnArticle && resolvedAuthorId && (
                         isFollowing ? (
                           <Button
                             variant="outline"

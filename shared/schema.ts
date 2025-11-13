@@ -1741,6 +1741,7 @@ export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
 export type ArticleWithDetails = Article & {
   category?: Category;
   author?: User;
+  opinionAuthor?: User;
   staff?: {
     id: string;
     nameAr: string;

@@ -1,0 +1,333 @@
+ايه يا أبو محمد، نقدر نسوي بطاقة صحفية ذكية في Apple Wallet مرتبطة بـ”سبق الذكية” وتحدّث بياناتها لحظيًا عبر API ✌️
+خلني أعطيك خطة تنفيذ عملية + هيكلة تقنية + كود مبدئي كأنك بتسلمها لفريق التطوير الآن.
+
+⸻
+
+1️⃣ الفكرة باختصار (كيف تشتغل البطاقة الذكية؟)
+
+Apple Wallet ما يشتغل بصور فقط، يشتغل بـ:
+	•	ملف .pkpass يحتوي:
+	•	ملف pass.json (البيانات + الحقول)
+	•	الصور (الشعار، الأيقونات، الخلفية)
+	•	manifest + توقيع إلكتروني
+	•	Web Service (API) عندك في Sabq:
+	•	يستقبل تسجيل أجهزة المستخدمين (Device + Push Token)
+	•	يرسل Push لـ Apple لما تتغير بيانات المستخدم (اسم، صورة، منصب، …)
+	•	Apple ترسل نوتيفيكيشن لـ Wallet → الـ Wallet يطلب النسخة المحدثة من البطاقة من API عندك → تتحدث البطاقة عند المستخدم.
+
+⸻
+
+2️⃣ ربطها مع “سبق الذكية” (من جداول المستخدمين للبطاقة)
+
+من التوثيق عندك، عندنا جداول قوية:
+	•	users
+	•	team_members
+	•	reporters  ￼
+
+نربط البطاقة بالآتي:
+	•	المصدر الأساسي: جدول users
+	•	name → الاسم على البطاقة
+	•	role → الصفة التحريرية (رئيس تحرير، مراسل، محرر…)
+	•	avatar_url → الصورة
+	•	بيانات إضافية من:
+	•	team_members (إن وجد) → السيرة المختصرة / ترتيب العرض
+	•	reporters → التخصص، عدد المقالات، إجمالي القراءات…
+
+⸻
+
+3️⃣ المتطلبات المسبقة (Apple Side + Sabq Side)
+
+🧩 من جهة Apple Developer:
+	1.	حساب Apple Developer (مؤسسة سبق).
+	2.	إنشاء:
+	•	Pass Type ID مثل:
+pass.me.sabq.pressid
+	•	إصدار Pass Certificate مرتبط بهذا الـ ID.
+	3.	حفظ:
+	•	passTypeIdentifier
+	•	teamIdentifier (من Apple)
+	•	ملف الشهادة + المفتاح الخاص (Private Key) لاستخدامها في توقيع الـ .pkpass.
+
+🧩 من جهة “سبق الذكية”:
+	1.	إنشاء جدول جديد مثلاً: wallet_passes في PostgreSQL:
+
+CREATE TABLE wallet_passes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id),
+  pass_type_identifier TEXT NOT NULL,
+  serial_number TEXT NOT NULL,
+  device_library_identifier TEXT,
+  push_token TEXT,
+  last_updated TIMESTAMP DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT TRUE,
+  UNIQUE (user_id, pass_type_identifier),
+  UNIQUE (serial_number)
+);
+
+	2.	تخزين إعدادات PassKit في settings (عندك جدول settings جاهز):
+
+{
+  "wallet": {
+    "passTypeIdentifier": "pass.me.sabq.pressid",
+    "teamIdentifier": "ABCDE12345",
+    "orgName": "Sabq Electronic Newspaper",
+    "applePassCertificatePath": "/secure/pass-cert.p12",
+    "applePassCertificatePassword": "********"
+  }
+}
+
+
+⸻
+
+4️⃣ شكل البطاقة (pass.json) – قالب مخصص لسبق
+
+هذا مثال قالب للـ pass.json لبطاقة هوية صحفية:
+
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.me.sabq.pressid",
+  "serialNumber": "SABQ-ID-001",
+  "teamIdentifier": "ABCDE12345",
+  "organizationName": "صحيفة سبق الإلكترونية",
+  "description": "بطاقة هوية صحفية رقمية",
+  "logoText": "SABQ",
+  "foregroundColor": "rgb(255,255,255)",
+  "backgroundColor": "rgb(15, 76, 129)",
+  "labelColor": "rgb(200, 230, 255)",
+  "authenticationToken": "RANDOM_AUTH_TOKEN",
+  "webServiceURL": "https://sabq.me/api/wallet/passkit",
+  "associatedStoreIdentifiers": [],
+  "generic": {
+    "primaryFields": [
+      {
+        "key": "name",
+        "label": "الاسم",
+        "value": "علي الحازمي"
+      }
+    ],
+    "secondaryFields": [
+      {
+        "key": "title",
+        "label": "المسمى الوظيفي",
+        "value": "رئيس تحرير صحيفة سبق الإلكترونية"
+      },
+      {
+        "key": "dept",
+        "label": "القسم",
+        "value": "التحرير"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "id",
+          "label": "الرقم الوظيفي",
+          "value": "SABQ-ID-001"
+      },
+      {
+        "key": "validity",
+        "label": "الصلاحية",
+        "value": "2025 – 2027"
+      }
+    ],
+    "backFields": [
+      {
+        "key": "email",
+        "label": "البريد الإلكتروني",
+        "value": "admin@sabq.ai"
+      },
+      {
+        "key": "emergency",
+        "label": "للطوارئ",
+        "value": "+966XXXXXXXXX"
+      }
+    ]
+  }
+}
+
+لاحقًا تربط القيم ديناميكيًا من الـ DB بدل ما تكون ثابتة.
+
+⸻
+
+5️⃣ هيكلة الـ API (Web Service) حسب معيار PassKit
+
+Apple متوقعة منك Web Service بنمط محدد. نقدر نطبقه عبر Next.js API Routes على مشروعك الحالي.
+
+📍 نقاط أساسية مطلوبة:
+	1.	Register Device for Pass
+POST /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+	•	تحفظ deviceLibraryIdentifier + pushToken في جدول wallet_passes.
+	2.	Get Updated Serial Numbers
+GET /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince=timestamp
+	3.	Get Updated Pass
+GET /v1/passes/{passTypeIdentifier}/{serialNumber}
+	•	ترجع ملف .pkpass محدث.
+	4.	Unregister Device
+DELETE /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+
+⸻
+
+6️⃣ مثال عملي بـ Next.js (TypeScript) – إصدار بطاقة للمستخدم
+
+🔹 خدمة توليد الـ pass (منفصلة):
+
+// lib/passkit/createSabqPass.ts
+import fs from "fs";
+import path from "path";
+import { createSign } from "crypto";
+
+interface SabqPassPayload {
+  userId: string;
+  name: string;
+  title: string;
+  department: string;
+  email: string;
+  avatarUrl?: string;
+  serialNumber: string;
+}
+
+export async function createSabqPressPass(payload: SabqPassPayload): Promise<Buffer> {
+  const passJson = {
+    formatVersion: 1,
+    passTypeIdentifier: process.env.WALLET_PASS_TYPE_ID!,
+    serialNumber: payload.serialNumber,
+    teamIdentifier: process.env.WALLET_TEAM_ID!,
+    organizationName: "صحيفة سبق الإلكترونية",
+    description: "بطاقة هوية صحفية رقمية",
+    logoText: "SABQ",
+    foregroundColor: "rgb(255,255,255)",
+    backgroundColor: "rgb(15,76,129)",
+    webServiceURL: process.env.WALLET_WEBSERVICE_URL!,
+    authenticationToken: "AUTH-" + payload.serialNumber,
+    generic: {
+      primaryFields: [
+        { key: "name", label: "الاسم", value: payload.name }
+      ],
+      secondaryFields: [
+        { key: "title", label: "المسمى الوظيفي", value: payload.title },
+        { key: "dept", label: "القسم", value: payload.department }
+      ],
+      backFields: [
+        { key: "email", label: "البريد الإلكتروني", value: payload.email }
+      ]
+    }
+  };
+
+  // 1) حفظ pass.json في مجلد مؤقت
+  const tmpDir = fs.mkdtempSync("/tmp/sabq-pass-");
+  fs.writeFileSync(path.join(tmpDir, "pass.json"), JSON.stringify(passJson, null, 2));
+
+  // 2) نسخ أصول التصميم (logo.png, icon.png, background.png) من مشروعك إلى نفس المجلد
+  // 3) إنشاء manifest.json (hashes لكل ملف)
+  // 4) توقيع manifest باستخدام شهادة Apple Pass + WWDR
+  // 5) ضغط المجلد .zip وتغيير الامتداد إلى .pkpass
+
+  // ملاحظة: هنا تضع فعليًا كود التوقيع والضغط (ممكن تستخدم مكتبة جاهزة مثل node-passkit-generator)
+
+  const pkpassBuffer = Buffer.from("PLACEHOLDER"); // استبدلها بالناتج الفعلي
+  return pkpassBuffer;
+}
+
+🔹 API لإصدار البطاقة للمستخدم الحالي:
+
+// app/api/wallet/issue/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createSabqPressPass } from "@/lib/passkit/createSabqPass";
+import { prisma } from "@/lib/prisma"; // حسب إعداداتك
+
+export async function POST(req: NextRequest) {
+  const user = await getAuthUser(req); // استخرج المستخدم من الـ JWT / Session
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // جلب مزيد من البيانات من team_members / reporters إن لزم
+  const reporter = await prisma.reporters.findFirst({
+    where: { user_id: user.id }
+  });
+
+  const serialNumber = "SABQ-" + user.id;
+
+  // إنشاء أو تحديث سجل البطاقة في DB
+  await prisma.wallet_passes.upsert({
+    where: { user_id_pass_type_identifier: { user_id: user.id, pass_type_identifier: process.env.WALLET_PASS_TYPE_ID! } },
+    create: {
+      user_id: user.id,
+      pass_type_identifier: process.env.WALLET_PASS_TYPE_ID!,
+      serial_number: serialNumber
+    },
+    update: {
+      serial_number: serialNumber,
+      last_updated: new Date()
+    }
+  });
+
+  const pkpass = await createSabqPressPass({
+    userId: user.id,
+    name: user.name,
+    title: reporter?.title ?? "عضو في صحيفة سبق",
+    department: "التحرير",
+    email: user.email,
+    avatarUrl: user.avatar_url ?? undefined,
+    serialNumber
+  });
+
+  return new NextResponse(pkpass, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/vnd.apple.pkpass",
+      "Content-Disposition": "attachment; filename=\"sabq-press-id.pkpass\""
+    }
+  });
+}
+
+هذه الـ endpoint تقدر تربطها بزر داخل بروفايل المستخدم:
+“إضافة بطاقة الصحفي إلى Apple Wallet”
+
+⸻
+
+7️⃣ كيف تتحدث البطاقة أوتوماتيكياً عند تعديل الملف الشخصي؟
+
+السيناريو:
+	1.	محرر يعدّل بياناتك في Sabq CMS:
+	•	تغيير المسمى الوظيفي
+	•	تغيير الصورة
+	•	ترقية لصلاحية أعلى … إلخ
+	2.	في منطق التحديث (مثلاً في /app/api/users/update/route.ts):
+	•	تبحث عن wallet_passes المرتبطة بهذا المستخدم.
+	•	لو فيه سجلات:
+	•	ترسل Push Notification عبر APNs لـ Wallet بواسطة push_token.
+	•	Apple Wallet يتصل بـ GET /v1/passes/{passTypeIdentifier}/{serialNumber}.
+	•	في هذا الـ endpoint تعيد توليد .pkpass بنفس الدالة createSabqPressPass ولكن بالبيانات المحدثة.
+
+النتيجة: بطاقة الصحفي في Apple Wallet عند المراسل تتحدث أوتوماتيكياً بعد ثواني من حفظ التعديل في “سبق الذكية”.
+
+⸻
+
+8️⃣ الأمان والصلاحيات
+	•	البطاقة ما تُصدر إلا للمستخدمين بصلاحيات معينة:
+	•	EDITOR, REPORTER, ADMIN, SYSTEM_ADMIN مثلاً فقط.
+	•	كل طلب تحديث بطاقة يمر عبر:
+	•	مصادقة JWT
+	•	تحقق من الدور Role قبل إصدار أو تحديث.
+	•	الـ authenticationToken في pass.json يستخدم لمصادقة Wallet عند طلب التحديث من Web Service.
+
+⸻
+
+9️⃣ خلاصة تنفيذية سريعة (TL;DR)
+
+يا أبو محمد، بطاقة ذكية عبر API تعني:
+	1.	Apple Side
+	•	إنشاء Pass Type ID + شهادة PassKit.
+	2.	Sabq Side
+	•	جدول wallet_passes لربط المستخدم بالبطاقة والأجهزة.
+	•	خدمة createSabqPressPass لتوليد .pkpass من بيانات المستخدم.
+	•	API:
+	•	/api/wallet/issue لإصدار البطاقة للمستخدم.
+	•	Endpoints بنمط PassKit (/v1/passes/...) للتحديث.
+	3.	تكامل مع Sabq CMS
+	•	عند تعديل بيانات المستخدم → إرسال Push → Wallet يحدّث البطاقة تلقائيًا.
+
+لو حاب، في الرسالة الجاية أقدر أكتب لك:
+	•	Specification رسمي من صفحة واحدة (متوافقة مع فريق الـ Backend + iOS)
+	•	أو User Story / Feature Doc لهذه الميزة داخل مشروع “سبق الذكية” بصيغة جاهزة للـ Jira / Linear.
