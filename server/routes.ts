@@ -4589,8 +4589,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json(updatedUser);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
+      
+      // Handle duplicate press ID number
+      if (error.code === '23505' && error.constraint === 'users_press_id_number_idx') {
+        return res.status(400).json({ 
+          message: "رقم البطاقة الصحفية موجود مسبقاً. يرجى استخدام رقم آخر." 
+        });
+      }
+      
       res.status(500).json({ message: "Failed to update user" });
     }
   });
