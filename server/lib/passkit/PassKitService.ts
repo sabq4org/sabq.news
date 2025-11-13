@@ -24,33 +24,62 @@ export class PassKitService {
 
   async generatePass(data: PassData): Promise<Buffer> {
     // Check if Apple credentials are configured
-    if (!process.env.APPLE_PASS_CERT || !process.env.APPLE_PASS_KEY) {
+    const certPath = process.env.APPLE_PASS_CERT;
+    const keyPath = process.env.APPLE_PASS_KEY;
+    const wwdrPath = process.env.APPLE_WWDR_CERT;
+
+    if (!certPath || !keyPath) {
       throw new Error(
-        'Apple Wallet Pass generation requires Apple Developer credentials. ' +
-        'Please configure: APPLE_PASS_TYPE_ID, APPLE_TEAM_ID, APPLE_PASS_CERT, APPLE_PASS_KEY'
+        'تعذر إصدار البطاقة لأن بيانات الاعتماد الخاصة بـ Apple Wallet غير مكتملة. يرجى التواصل مع المسؤول.'
       );
     }
 
     try {
+      // Determine if env vars are file paths or base64-encoded content
+      const loadCertificate = (envVar: string): Buffer | string => {
+        // If it looks like a file path, return the path (library will load it)
+        if (envVar.startsWith('/') || envVar.startsWith('./') || envVar.includes('\\')) {
+          return envVar;
+        }
+        
+        // If it looks like base64, decode it
+        if (envVar.match(/^[A-Za-z0-9+/=]+$/)) {
+          return Buffer.from(envVar, 'base64');
+        }
+        
+        // Otherwise, assume it's raw PEM content
+        return Buffer.from(envVar, 'utf-8');
+      };
+
+      const certificates: any = {
+        signerCert: loadCertificate(certPath),
+        signerKey: loadCertificate(keyPath),
+      };
+
+      // Add WWDR cert if provided
+      if (wwdrPath) {
+        certificates.wwdr = loadCertificate(wwdrPath);
+      }
+
+      // Add key password if provided
+      if (process.env.APPLE_PASS_KEY_PASSWORD) {
+        certificates.signerKeyPassphrase = process.env.APPLE_PASS_KEY_PASSWORD;
+      }
+
       // Create pass instance
       const pass = new PKPass(
         {
-          // Model path (we'll create this directory structure)
+          // Model path
           model: path.resolve(__dirname, './pass-template'),
           
           // Certificates
-          certificates: {
-            wwdr: process.env.APPLE_WWDR_CERT || '', // WWDR certificate path
-            signerCert: process.env.APPLE_PASS_CERT || '',
-            signerKey: process.env.APPLE_PASS_KEY || '',
-            signerKeyPassphrase: process.env.APPLE_PASS_KEY_PASSWORD,
-          },
+          certificates,
         },
         {
           // Pass metadata
           serialNumber: data.serialNumber,
           description: 'Sabq Smart Press Card',
-          organizationName: 'Sabq Smart',
+          organizationName: 'سبق الذكية',
           passTypeIdentifier: this.passTypeId,
           teamIdentifier: this.teamId,
           
@@ -121,7 +150,13 @@ export class PassKitService {
       return buffer;
     } catch (error: any) {
       console.error('Error generating pass:', error);
-      throw new Error(`Failed to generate pass: ${error.message}`);
+      
+      // Provide more helpful error messages
+      if (error.message?.includes('PEM')) {
+        throw new Error('خطأ في شهادات Apple. يرجى التحقق من تنسيق ملفات الشهادات.');
+      }
+      
+      throw new Error(`تعذر إنشاء البطاقة: ${error.message}`);
     }
   }
 

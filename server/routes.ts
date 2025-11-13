@@ -26,7 +26,7 @@ import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
 import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
-import { passKitService } from "./lib/passkit/PassKitService";
+import { passKitService, type PassData } from "./lib/passkit/PassKitService";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -24410,51 +24410,80 @@ Allow: /
       const userId = req.user.id;
       
       // Check if user already has a pass
-      let pass = await storage.getWalletPassByUserId(userId);
+      let existingPass = await storage.getWalletPassByUserId(userId);
       
-      if (!pass) {
-        // Generate serial number and auth token
-        const serialNumber = passKitService.generateSerialNumber(userId);
-        const authToken = passKitService.generateAuthToken();
-        
-        // Create pass record
-        pass = await storage.createWalletPass({
+      // If pass exists but generation previously failed, delete it to allow retry
+      if (existingPass) {
+        try {
+          // Try to regenerate the pass
+          const passData: PassData = {
+            userId: req.user.id,
+            serialNumber: existingPass.serialNumber,
+            authToken: existingPass.authenticationToken,
+            userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+            userEmail: req.user.email,
+            userRole: req.user.role || 'reader',
+            profileImageUrl: req.user.profileImageUrl,
+          };
+
+          const passBuffer = await passKitService.generatePass(passData);
+
+          // Success! Return the .pkpass file
+          res.set({
+            'Content-Type': 'application/vnd.apple.pkpass',
+            'Content-Disposition': `attachment; filename="sabq-press-card-${existingPass.serialNumber}.pkpass"`,
+            'Content-Length': passBuffer.length,
+          });
+
+          return res.send(passBuffer);
+        } catch (error: any) {
+          // Generation failed - return error message
+          return res.status(400).json({ 
+            error: error.message,
+            serialNumber: existingPass.serialNumber,
+          });
+        }
+      }
+
+      // No existing pass - create new one
+      const serialNumber = passKitService.generateSerialNumber(userId);
+      const authToken = passKitService.generateAuthToken();
+      
+      const passData: PassData = {
+        userId: req.user.id,
+        serialNumber,
+        authToken,
+        userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+        userEmail: req.user.email,
+        userRole: req.user.role || 'reader',
+        profileImageUrl: req.user.profileImageUrl,
+      };
+
+      // Generate pass FIRST (before saving to DB)
+      try {
+        const passBuffer = await passKitService.generatePass(passData);
+
+        // Generation succeeded - NOW save to database
+        await storage.createWalletPass({
           userId,
           passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.life.sabq.presscard',
           serialNumber,
           authenticationToken: authToken,
         });
-      }
 
-      // Try to generate the .pkpass file
-      try {
-        const passData = {
-          userId: req.user.id,
-          serialNumber: pass.serialNumber,
-          authToken: pass.authenticationToken,
-          userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
-          userEmail: req.user.email,
-          userRole: req.user.role || 'reader',
-          profileImageUrl: req.user.profileImageUrl,
-        };
-
-        const passBuffer = await passKitService.generatePass(passData);
-
-        // Set proper headers for .pkpass download
+        // Return the .pkpass file
         res.set({
           'Content-Type': 'application/vnd.apple.pkpass',
-          'Content-Disposition': `attachment; filename="${pass.serialNumber}.pkpass"`,
+          'Content-Disposition': `attachment; filename="sabq-press-card-${serialNumber}.pkpass"`,
           'Content-Length': passBuffer.length,
         });
 
         res.send(passBuffer);
       } catch (error: any) {
-        // If pass generation fails (credentials not configured), return success but with message
-        res.json({ 
-          success: true, 
-          serialNumber: pass.serialNumber,
-          message: 'Pass created successfully. Download will be available once Apple credentials are configured.',
-          error: error.message,
+        // Generation failed - don't save to DB, return error
+        console.error('Pass generation failed:', error);
+        res.status(400).json({ 
+          error: error.message || 'Failed to generate pass. Please ensure Apple Developer credentials are configured.',
         });
       }
     } catch (error: any) {

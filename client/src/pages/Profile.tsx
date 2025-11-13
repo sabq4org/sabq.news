@@ -322,16 +322,51 @@ export default function Profile() {
 
   const issueWalletPassMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/wallet/issue', {
+      const response = await fetch('/api/wallet/issue', {
         method: 'POST',
+        credentials: 'include',
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to issue pass');
+      }
+
+      // Check if response is .pkpass file or JSON
+      const contentType = response.headers.get('Content-Type');
+      
+      if (contentType === 'application/vnd.apple.pkpass') {
+        // Download .pkpass file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sabq-press-card.pkpass';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        return { success: true, downloaded: true };
+      } else {
+        // JSON response (credentials not configured)
+        return response.json();
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/wallet/status'] });
-      toast({
-        title: "تم إصدار البطاقة",
-        description: "تم إصدار بطاقتك الرقمية بنجاح ويمكنك إضافتها الآن إلى Apple Wallet",
-      });
+      
+      if (data.downloaded) {
+        toast({
+          title: "تم التحميل بنجاح",
+          description: "تم تحميل البطاقة. افتح الملف لإضافتها إلى Apple Wallet.",
+        });
+      } else {
+        toast({
+          title: "تم الإصدار",
+          description: data.message || "تم إصدار البطاقة بنجاح",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
