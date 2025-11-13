@@ -1176,14 +1176,45 @@ export interface IStorage {
   }>;
   
   // Apple Wallet operations
-  getWalletPassByUserId(userId: string): Promise<WalletPass | null>;
+  getWalletPassByUserAndType(userId: string, passType: 'press' | 'loyalty'): Promise<WalletPass | null>;
   getWalletPassBySerial(serialNumber: string): Promise<WalletPass | null>;
-  createWalletPass(data: InsertWalletPass): Promise<WalletPass>;
+  createWalletPass(data: {
+    userId: string;
+    passType: 'press' | 'loyalty';
+    passTypeIdentifier: string;
+    serialNumber: string;
+    authenticationToken: string;
+  }): Promise<WalletPass>;
   updateWalletPassTimestamp(passId: string): Promise<void>;
+  deleteWalletPass(userId: string, passType: 'press' | 'loyalty'): Promise<void>;
+  getWalletPassesByUser(userId: string): Promise<WalletPass[]>;
   getDevicesForPass(passId: string): Promise<WalletDevice[]>;
-  registerDevice(data: InsertWalletDevice): Promise<WalletDevice>;
-  unregisterDevice(passId: string, deviceLibraryId: string): Promise<void>;
-  getUpdatedPasses(deviceLibraryId: string, passTypeId: string, since?: Date): Promise<string[]>;
+  registerDevice(data: {
+    passId: string;
+    deviceLibraryIdentifier: string;
+    pushToken: string;
+  }): Promise<WalletDevice>;
+  unregisterDevice(passId: string, deviceLibraryIdentifier: string): Promise<void>;
+  getUpdatedPasses(deviceLibraryIdentifier: string, passTypeIdentifier: string, tag?: string): Promise<string[]>;
+  
+  // User Points/Loyalty for Loyalty Cards
+  getUserPointsTotal(userId: string): Promise<UserPointsTotal | null>;
+  createUserPointsTotal(userId: string): Promise<UserPointsTotal>;
+  updateUserPointsTotal(userId: string, data: {
+    totalPoints?: number;
+    currentRank?: string;
+    rankLevel?: number;
+    lifetimePoints?: number;
+  }): Promise<UserPointsTotal>;
+  
+  // Press Card Permissions
+  updateUserPressCardPermission(userId: string, data: {
+    hasPressCard?: boolean;
+    jobTitle?: string | null;
+    department?: string | null;
+    pressIdNumber?: string | null;
+    cardValidUntil?: Date | null;
+  }): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -10295,11 +10326,14 @@ export class DatabaseStorage implements IStorage {
   // APPLE WALLET OPERATIONS
   // ============================================================
 
-  async getWalletPassByUserId(userId: string): Promise<WalletPass | null> {
+  async getWalletPassByUserAndType(userId: string, passType: 'press' | 'loyalty'): Promise<WalletPass | null> {
     const [pass] = await db
       .select()
       .from(walletPasses)
-      .where(eq(walletPasses.userId, userId))
+      .where(and(
+        eq(walletPasses.userId, userId),
+        eq(walletPasses.passType, passType)
+      ))
       .limit(1);
     return pass || null;
   }
@@ -10313,13 +10347,19 @@ export class DatabaseStorage implements IStorage {
     return pass || null;
   }
 
-  async createWalletPass(data: InsertWalletPass): Promise<WalletPass> {
+  async createWalletPass(data: {
+    userId: string;
+    passType: 'press' | 'loyalty';
+    passTypeIdentifier: string;
+    serialNumber: string;
+    authenticationToken: string;
+  }): Promise<WalletPass> {
     const [pass] = await db
       .insert(walletPasses)
       .values(data)
       .returning();
     
-    console.log(`✅ Wallet pass created for user ${data.userId}: ${pass.serialNumber}`);
+    console.log(`✅ Wallet pass created for user ${data.userId} (${data.passType}): ${pass.serialNumber}`);
     return pass;
   }
 
@@ -10332,6 +10372,24 @@ export class DatabaseStorage implements IStorage {
     console.log(`🔄 Wallet pass timestamp updated: ${passId}`);
   }
 
+  async deleteWalletPass(userId: string, passType: 'press' | 'loyalty'): Promise<void> {
+    await db
+      .delete(walletPasses)
+      .where(and(
+        eq(walletPasses.userId, userId),
+        eq(walletPasses.passType, passType)
+      ));
+    
+    console.log(`🗑️  Wallet pass deleted for user ${userId} (${passType})`);
+  }
+
+  async getWalletPassesByUser(userId: string): Promise<WalletPass[]> {
+    return db
+      .select()
+      .from(walletPasses)
+      .where(eq(walletPasses.userId, userId));
+  }
+
   async getDevicesForPass(passId: string): Promise<WalletDevice[]> {
     const devices = await db
       .select()
@@ -10340,7 +10398,11 @@ export class DatabaseStorage implements IStorage {
     return devices;
   }
 
-  async registerDevice(data: InsertWalletDevice): Promise<WalletDevice> {
+  async registerDevice(data: {
+    passId: string;
+    deviceLibraryIdentifier: string;
+    pushToken: string;
+  }): Promise<WalletDevice> {
     try {
       const [device] = await db
         .insert(walletDevices)
@@ -10362,50 +10424,109 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async unregisterDevice(passId: string, deviceLibraryId: string): Promise<void> {
+  async unregisterDevice(passId: string, deviceLibraryIdentifier: string): Promise<void> {
     await db
       .delete(walletDevices)
       .where(
         and(
           eq(walletDevices.passId, passId),
-          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId)
+          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryIdentifier)
         )
       );
     
-    console.log(`🗑️  Device unregistered from pass ${passId}: ${deviceLibraryId}`);
+    console.log(`🗑️  Device unregistered from pass ${passId}: ${deviceLibraryIdentifier}`);
   }
 
   async getUpdatedPasses(
-    deviceLibraryId: string,
-    passTypeId: string,
-    since?: Date
+    deviceLibraryIdentifier: string,
+    passTypeIdentifier: string,
+    tag?: string
   ): Promise<string[]> {
-    let query = db
+    const query = db
       .select({ serialNumber: walletPasses.serialNumber })
       .from(walletPasses)
       .innerJoin(walletDevices, eq(walletDevices.passId, walletPasses.id))
       .where(
         and(
-          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId),
-          eq(walletPasses.passTypeIdentifier, passTypeId)
+          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryIdentifier),
+          eq(walletPasses.passTypeIdentifier, passTypeIdentifier)
         )
       );
-
-    if (since) {
-      query = query.where(
-        and(
-          eq(walletDevices.deviceLibraryIdentifier, deviceLibraryId),
-          eq(walletPasses.passTypeIdentifier, passTypeId),
-          gte(walletPasses.lastUpdated, since)
-        )
-      );
-    }
 
     const results = await query;
     const serialNumbers = results.map(r => r.serialNumber);
     
-    console.log(`🔍 Found ${serialNumbers.length} updated passes for device ${deviceLibraryId}`);
+    console.log(`🔍 Found ${serialNumbers.length} updated passes for device ${deviceLibraryIdentifier}`);
     return serialNumbers;
+  }
+
+  // ============================================================
+  // USER POINTS/LOYALTY OPERATIONS
+  // ============================================================
+
+  async getUserPointsTotal(userId: string): Promise<UserPointsTotal | null> {
+    const [points] = await db
+      .select()
+      .from(userPointsTotal)
+      .where(eq(userPointsTotal.userId, userId))
+      .limit(1);
+    return points || null;
+  }
+
+  async createUserPointsTotal(userId: string): Promise<UserPointsTotal> {
+    const [points] = await db
+      .insert(userPointsTotal)
+      .values({
+        userId,
+        totalPoints: 0,
+        currentRank: 'القارئ الجديد',
+        rankLevel: 1,
+        lifetimePoints: 0,
+      })
+      .returning();
+    
+    console.log(`✅ User points total created for user ${userId}`);
+    return points;
+  }
+
+  async updateUserPointsTotal(userId: string, data: {
+    totalPoints?: number;
+    currentRank?: string;
+    rankLevel?: number;
+    lifetimePoints?: number;
+  }): Promise<UserPointsTotal> {
+    const [points] = await db
+      .update(userPointsTotal)
+      .set(data)
+      .where(eq(userPointsTotal.userId, userId))
+      .returning();
+    
+    console.log(`🔄 User points total updated for user ${userId}`);
+    return points;
+  }
+
+  // ============================================================
+  // PRESS CARD PERMISSION OPERATIONS
+  // ============================================================
+
+  async updateUserPressCardPermission(userId: string, data: {
+    hasPressCard?: boolean;
+    jobTitle?: string | null;
+    department?: string | null;
+    pressIdNumber?: string | null;
+    cardValidUntil?: Date | null;
+  }): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...data,
+        ...(data.cardValidUntil && { cardValidUntil: new Date(data.cardValidUntil) }),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    console.log(`🔄 Press card permissions updated for user ${userId}`);
+    return user;
   }
 }
 

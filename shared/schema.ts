@@ -68,8 +68,18 @@ export const users = pgTable("users", {
   // Language permissions (ar, en, or both)
   allowedLanguages: text("allowed_languages").array().default(sql`ARRAY['ar']::text[]`).notNull(),
   
+  // Press Card fields (Apple Wallet Digital Press Card)
+  hasPressCard: boolean("has_press_card").default(false).notNull(),
+  jobTitle: text("job_title"),
+  department: text("department"),
+  pressIdNumber: text("press_id_number"),
+  cardValidUntil: timestamp("card_valid_until"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Unique index on pressIdNumber (only for non-null values)
+  uniqueIndex("users_press_id_number_idx").on(table.pressIdNumber).where(sql`press_id_number IS NOT NULL`),
+]);
 
 // Password reset tokens
 export const passwordResetTokens = pgTable("password_reset_tokens", {
@@ -734,11 +744,15 @@ export const userPointsTotal = pgTable("user_points_total", {
   userId: varchar("user_id").primaryKey().references(() => users.id),
   totalPoints: integer("total_points").default(0).notNull(),
   currentRank: text("current_rank").default("القارئ الجديد").notNull(), // القارئ الجديد, المتفاعل, العضو الذهبي, سفير سبق
+  rankLevel: integer("rank_level").default(1).notNull(), // 1=القارئ الجديد, 2=المتفاعل, 3=العضو الذهبي, 4=سفير سبق
   lifetimePoints: integer("lifetime_points").default(0).notNull(), // لا ينقص أبداً
   lastActivityAt: timestamp("last_activity_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Check constraint for rank level (1-4)
+  sql`CONSTRAINT rank_level_check CHECK (rank_level BETWEEN 1 AND 4)`,
+]);
 
 // Loyalty Rewards (available rewards)
 export const loyaltyRewards = pgTable("loyalty_rewards", {
@@ -1384,6 +1398,8 @@ export const insertUserLoyaltyEventSchema = createInsertSchema(userLoyaltyEvents
 export const insertUserPointsTotalSchema = createInsertSchema(userPointsTotal).omit({ 
   createdAt: true, 
   updatedAt: true 
+}).extend({
+  rankLevel: z.number().int().min(1).max(4).optional(), // Validate rankLevel is between 1-4
 });
 
 export const insertLoyaltyRewardSchema = createInsertSchema(loyaltyRewards).omit({ 
@@ -4872,10 +4888,11 @@ export const dataStoryDrafts = pgTable("data_story_drafts", {
 // APPLE WALLET PASSES MANAGEMENT
 // ============================================
 
-// Apple Wallet Passes - Digital press card for users
+// Apple Wallet Passes - Digital press card and loyalty card for users
 export const walletPasses = pgTable("wallet_passes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  passType: text("pass_type").notNull().default('press'), // 'press' | 'loyalty'
   passTypeIdentifier: text("pass_type_identifier").notNull(), // e.g., pass.life.sabq.presscard
   serialNumber: text("serial_number").notNull().unique(),
   authenticationToken: text("authentication_token").notNull(),
@@ -4883,6 +4900,8 @@ export const walletPasses = pgTable("wallet_passes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("wallet_passes_user_id_idx").on(table.userId),
+  index("wallet_passes_type_idx").on(table.passType),
+  uniqueIndex("wallet_passes_user_type_idx").on(table.userId, table.passType),
 ]);
 
 // Apple Wallet Devices - Devices that have the pass installed
@@ -4922,6 +4941,8 @@ export const insertWalletPassSchema = createInsertSchema(walletPasses).omit({
   id: true,
   createdAt: true,
   lastUpdated: true,
+}).extend({
+  passType: z.enum(['press', 'loyalty']).optional(), // Validate passType is 'press' or 'loyalty'
 });
 export type InsertWalletPass = z.infer<typeof insertWalletPassSchema>;
 
