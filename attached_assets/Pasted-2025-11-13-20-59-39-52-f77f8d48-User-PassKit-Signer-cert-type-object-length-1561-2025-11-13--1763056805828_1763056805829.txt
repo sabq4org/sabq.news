@@ -1,0 +1,112 @@
+2025-11-13 20:59:39.52
+f77f8d48
+User
+🔐 [PassKit] Signer cert type: object, length: 1561
+2025-11-13 20:59:39.52
+f77f8d48
+User
+🔐 [PassKit] Signer cert starts with: -----BEGIN CERTIFICATE----- MI
+2025-11-13 20:59:39.52
+f77f8d48
+User
+🔐 [PassKit] WWDR from split: NO
+2025-11-13 20:59:39.52
+f77f8d48
+User
+✅ [PassKit] Loading WWDR from file: /home/runner/workspace/certs/wwdr.pem
+2025-11-13 20:59:39.53
+f77f8d48
+User
+✅ [PassKit] Certificate config complete - all STRINGS
+2025-11-13 20:59:39.53
+f77f8d48
+User
+✅ [PassKit] signerCert type: string, length: 1561
+2025-11-13 20:59:39.53
+f77f8d48
+User
+✅ [PassKit] signerKey type: string, length: 1703
+2025-11-13 20:59:39.53
+f77f8d48
+User
+✅ [PassKit] wwdr type: string, length: 1563
+
+2025-11-13 20:59:39.53
+f77f8d48
+User
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔥🔥🔥 CRITICAL DEBUG - FIRST 120 CHARS OF WWDR:
+2025-11-13 20:59:39.53
+f77f8d48
+User
+-----BEGIN CERTIFICATE-----
+2025-11-13 20:59:39.53
+f77f8d48
+User
+MIIEVTCCAz2gAwIBAgIUE9x3lVJx5T3GMujM/+Uh88zFztIwDQYJKoZIhvcNAQEL
+2025-11-13 20:59:39.53
+f77f8d48
+User
+BQAwYjELMAkGA1UEBhMCVVMxEzA
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔥🔥🔥 WWDR FULL LENGTH: 1563
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔥🔥🔥 HAS "BEGIN CERTIFICATE": true
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔥🔥🔥 HAS "END CERTIFICATE": true
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔥🔥🔥 HAS NEWLINES: true
+2025-11-13 20:59:39.53
+f77f8d48
+User
+🔐 [PassBuilder] Generating pass with v3.x API...
+2025-11-13 20:59:39.53
+f77f8d48
+User
+✅ [PassBuilder] Certificate types: { wwdr: 'string', signerCert: 'string', signerKey: 'string' }
+2025-11-13 20:59:39.53
+f77f8d48
+User
+❌ [Loyalty Card] Generation failed: Error: Failed to generate pass: Cannot import model: directory /home/runner/workspace/dist/loyalty-pass-template.pass not found.
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19837:13)
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at async file:///home/runner/workspace/dist/index.js:38133:28
+2025-11-13 20:59:39.53
+f77f8d48
+User
+❌ [PassBuilder] PKPass error: Error: Cannot import model: directory /home/runner/workspace/dist/loyalty-pass-template.pass not found.
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at getModelFolderContents (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/getModelFolderContents.js:30:19)
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at async PKPass.from (file:///home/runner/workspace/node_modules/passkit-generator/lib/esm/PKPass.js:63:23)
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at async LoyaltyPassBuilder.generatePass (file:///home/runner/workspace/dist/index.js:19800:20)
+2025-11-13 20:59:39.53
+f77f8d48
+User
+at async file:///home/runner/workspace/dist/index.js:38133:28
+2025-11-13 20:59:39.56
+f77f8d48
+User
+5:59:39 PM [express] POST /api/wallet/loyalty/issue 400 in 123ms :: {"error":"Failed to generate pas…
