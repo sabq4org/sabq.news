@@ -87,6 +87,10 @@ export abstract class PassBuilder {
       const buffer = await pass.getAsBuffer();
       return buffer;
     } catch (error: any) {
+      console.log('❌ [PassBuilder] PKPass error:', error);
+      if (error.details) {
+        console.log('❌ [PassBuilder] Validation details:', JSON.stringify(error.details, null, 2));
+      }
       throw new Error(`Failed to generate pass: ${error.message}`);
     }
   }
