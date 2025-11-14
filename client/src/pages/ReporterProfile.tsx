@@ -1,6 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -154,103 +155,62 @@ export default function ReporterProfile() {
 
       {/* Statistics Cards Section - Moved to top */}
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-articles">
-                  {(kpis.totalArticles ?? 0).toLocaleString('en-US')}
-                </p>
-                <p className="text-sm text-muted-foreground">المقالات</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-blue-500/10">
-                  <Eye className="h-6 w-6 text-blue-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-views">
-                  {(kpis.totalViews ?? 0).toLocaleString('en-US')}
-                </p>
-                <p className="text-sm text-muted-foreground">المشاهدات</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-red-500/10">
-                  <Heart className="h-6 w-6 text-red-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-likes">
-                  {(kpis.totalLikes ?? 0).toLocaleString('en-US')}
-                </p>
-                <p className="text-sm text-muted-foreground">الإعجابات</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-orange-500/10">
-                  <Clock className="h-6 w-6 text-orange-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-readtime">
-                  {(kpis.avgReadTimeMin ?? 0).toLocaleString('en-US')}
-                  <span className="text-base font-normal text-muted-foreground mr-1">د</span>
-                </p>
-                <p className="text-sm text-muted-foreground">وقت القراءة</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-green-500/10">
-                  <Target className="h-6 w-6 text-green-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-completion">
-                  {(kpis.avgCompletionRate ?? 0).toLocaleString('en-US')}%
-                </p>
-                <p className="text-sm text-muted-foreground">نسبة الإكمال</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-elevate">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-full bg-purple-500/10">
-                  <Users className="h-6 w-6 text-purple-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-followers">
-                  {(kpis.followers ?? 0).toLocaleString('en-US')}
-                </p>
-                <p className="text-sm text-muted-foreground">المتابعون</p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+          <MobileOptimizedKpiCard
+            label="المقالات"
+            value={(kpis.totalArticles ?? 0).toLocaleString('en-US')}
+            icon={FileText}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            testId="text-kpi-articles"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="المشاهدات"
+            value={(kpis.totalViews ?? 0).toLocaleString('en-US')}
+            icon={Eye}
+            iconColor="text-blue-500"
+            iconBgColor="bg-blue-500/10"
+            testId="text-kpi-views"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="الإعجابات"
+            value={(kpis.totalLikes ?? 0).toLocaleString('en-US')}
+            icon={Heart}
+            iconColor="text-red-500"
+            iconBgColor="bg-red-500/10"
+            testId="text-kpi-likes"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="وقت القراءة"
+            value={(kpis.avgReadTimeMin ?? 0).toLocaleString('en-US')}
+            suffix="د"
+            icon={Clock}
+            iconColor="text-orange-500"
+            iconBgColor="bg-orange-500/10"
+            testId="text-kpi-readtime"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="نسبة الإكمال"
+            value={(kpis.avgCompletionRate ?? 0).toLocaleString('en-US')}
+            suffix="%"
+            icon={Target}
+            iconColor="text-green-500"
+            iconBgColor="bg-green-500/10"
+            testId="text-kpi-completion"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="المتابعون"
+            value={(kpis.followers ?? 0).toLocaleString('en-US')}
+            icon={Users}
+            iconColor="text-purple-500"
+            iconBgColor="bg-purple-500/10"
+            testId="text-kpi-followers"
+          />
         </div>
       </div>
 
