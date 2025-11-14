@@ -49,6 +49,12 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5 for various tasks. A scope-aware theme management system, Content Import System (RSS feeds with AI), and Smart Categories architecture are implemented. The Media Library provides centralized asset management with AI-powered keyword extraction.
 
+### Database Migration Strategy
+The platform uses Drizzle ORM with a versioned migration approach. Production-ready migrations are stored in `migrations/` directory:
+-   **Migration 0001 (2025-11-14):** Added unique constraints for `short_links.short_code` and `users.apple_id`, removed obsolete `trend_cache` table. All constraints are idempotent with pre-validation checks.
+-   **Migration Process:** Use `npm run db:push` for development schema sync. All production changes must be captured as versioned SQL migrations with pre/post-validation queries.
+-   **Constraint Management:** All unique constraints verified via SQL queries before application. No data-loss operations without dependency audits.
+
 ## External Dependencies
 
 **Authentication & Identity**
