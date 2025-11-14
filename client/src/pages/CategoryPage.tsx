@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,6 +164,11 @@ export default function CategoryPage() {
       latestArticle,
     };
   }, [allArticles]);
+
+  // Reset displayCount when filters change
+  useEffect(() => {
+    setDisplayCount(12);
+  }, [sortMode, timeRange, articleType]);
 
   // Filter and sort articles
   const filteredArticles = useMemo(() => {
@@ -1193,12 +1198,18 @@ export default function CategoryPage() {
               <div className="mt-8 text-center" data-testid="load-more-section">
                 <p className="text-sm text-muted-foreground mb-4">
                   عرض {displayedArticles.length} من {filteredArticles.length} مقالة
+                  {filteredArticles.length - displayedArticles.length > 0 && (
+                    <span className="font-semibold">
+                      {" "}• متبقي {filteredArticles.length - displayedArticles.length} مقالة
+                    </span>
+                  )}
                 </p>
                 <Button
                   onClick={handleLoadMore}
                   size="lg"
                   className="gap-2"
                   data-testid="button-load-more"
+                  disabled={articlesLoading}
                 >
                   {articlesLoading ? (
                     <>
@@ -1208,7 +1219,7 @@ export default function CategoryPage() {
                   ) : (
                     <>
                       <RefreshCw className="h-4 w-4" />
-                      تحميل المزيد
+                      تحميل المزيد ({Math.min(12, filteredArticles.length - displayedArticles.length)})
                     </>
                   )}
                 </Button>
