@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,9 @@ import {
   ArrowRight,
   Home,
   FolderOpen,
+  UserCircle2,
+  CheckCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
@@ -41,7 +45,6 @@ import type { Category, ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { CategoryAnalytics } from "@/components/CategoryAnalytics";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -110,11 +113,6 @@ export default function CategoryPage() {
     enabled: !!category,
   });
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery<any>({
-    queryKey: ["/api/categories", slug, "analytics"],
-    enabled: !!category,
-  });
-
   // Calculate statistics from articles data
   const statistics = useMemo(() => {
     if (allArticles.length === 0) {
@@ -163,6 +161,46 @@ export default function CategoryPage() {
       mostViewed,
       latestArticle,
     };
+  }, [allArticles]);
+
+  // Calculate most active reporter
+  const mostActiveReporter = useMemo(() => {
+    if (allArticles.length === 0) return null;
+    
+    // Count articles per author
+    const authorCounts = new Map<string, { author: any, count: number }>();
+    
+    allArticles.forEach(article => {
+      const author = article.author;
+      if (!author) return;
+      
+      const current = authorCounts.get(author.id);
+      if (current) {
+        current.count++;
+      } else {
+        authorCounts.set(author.id, { author, count: 1 });
+      }
+    });
+    
+    // Find author with most articles
+    let maxCount = 0;
+    let topAuthor = null;
+    
+    authorCounts.forEach(({ author, count }) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topAuthor = { author, count };
+      }
+    });
+    
+    return topAuthor;
+  }, [allArticles]);
+
+  // Calculate reporter total views in this category
+  const calculateReporterViews = useCallback((authorId: string) => {
+    return allArticles
+      .filter(a => a.author?.id === authorId)
+      .reduce((sum, a) => sum + (a.views || 0), 0);
   }, [allArticles]);
 
   // Reset displayCount when filters change
@@ -296,7 +334,7 @@ export default function CategoryPage() {
     <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} />
 
-      {/* Enhanced Hero Section - Fixed Height */}
+      {/* Clean Hero Section - Image Only */}
       {category.heroImageUrl ? (
         <div className="relative h-72 overflow-hidden">
           <img
@@ -304,297 +342,227 @@ export default function CategoryPage() {
             alt={category.nameAr}
             className="w-full h-full object-cover"
           />
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 dark:from-black/80 dark:via-black/40 dark:to-transparent" />
-          {/* AI Gradient Overlay for Smart Categories */}
-          {isSmartCategory && (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/20 mix-blend-overlay" />
-          )}
-          <div className="absolute inset-0 flex flex-col justify-between">
-            {/* Breadcrumb Navigation */}
-            <div className="container mx-auto px-3 sm:px-6 lg:px-8 pt-4">
-              <nav className="flex items-center gap-2 text-sm text-white/90" data-testid="breadcrumb-navigation">
-                <Link href="/">
-                  <span className="flex items-center gap-1 hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
-                    <Home className="h-3.5 w-3.5" />
-                    الرئيسية
-                  </span>
-                </Link>
-                <ArrowRight className="h-3.5 w-3.5" />
-                <Link href="/categories">
-                  <span className="hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
-                    التصنيفات
-                  </span>
-                </Link>
-                <ArrowRight className="h-3.5 w-3.5" />
-                <span className="font-semibold">{category.nameAr}</span>
-              </nav>
-            </div>
-
-            {/* Hero Content */}
-            <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                {isSmartCategory && (
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatDelay: 3,
-                    }}
-                  >
-                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-                  </motion.div>
-                )}
-                {category.icon && (
-                  <span className="text-3xl sm:text-4xl">{category.icon}</span>
-                )}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-                  {category.nameAr}
-                </h1>
-                {isSmartCategory ? (
-                  <motion.div
-                    animate={{ opacity: [1, 0.7, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Badge
-                      className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
-                      data-testid="badge-category-type"
-                    >
-                      <Brain className="h-3.5 w-3.5" />
-                      اختيار ذكي
-                    </Badge>
-                  </motion.div>
-                ) : (
-                  getCategoryTypeBadge(category.type) && (
-                    <Badge
-                      variant={getCategoryTypeBadge(category.type)!.variant}
-                      className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
-                      data-testid="badge-category-type"
-                    >
-                      {getCategoryTypeBadge(category.type)!.icon}
-                      {getCategoryTypeBadge(category.type)!.label}
-                    </Badge>
-                  )
-                )}
-              </div>
-              {category.description && (
-                <p className="text-sm sm:text-base md:text-lg text-white/95 max-w-3xl mb-2 sm:mb-3 leading-relaxed">
-                  {category.description}
-                </p>
-              )}
-              {/* Smart Category Features */}
-              {isSmartCategory && (
-                <div className="flex flex-wrap gap-2">
-                  {category.features?.realtime && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-realtime"
-                    >
-                      <Flame className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">مباشر</span>
-                    </Badge>
-                  )}
-                  {category.features?.trending && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-trending"
-                    >
-                      <TrendingUp className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">رائج</span>
-                    </Badge>
-                  )}
-                  {category.features?.ai_powered && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-ai"
-                    >
-                      <Bot className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">ذكاء اصطناعي</span>
-                    </Badge>
-                  )}
-                  {category.features?.breaking_news && (
-                    <Badge
-                      variant="default"
-                      className="bg-red-500/95 text-white backdrop-blur-sm min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-breaking"
-                    >
-                      <Zap className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">عاجل</span>
-                    </Badge>
-                  )}
-                  {category.type === "dynamic" && category.updateInterval && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/30 dark:bg-white/20 text-white backdrop-blur-sm min-h-8 px-3 py-1.5"
-                      data-testid="badge-update-interval"
-                    >
-                      <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">يتحدث كل {formatUpdateInterval(category.updateInterval)}</span>
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Dark overlay for visual effect */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         </div>
-      ) : (
-        <div
-          className={`${
-            isSmartCategory
-              ? "bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 dark:from-primary/8 dark:via-accent/5 dark:to-primary/3"
-              : "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5"
-          } border-b relative overflow-hidden h-72`}
-        >
-          {/* Animated AI Grid Pattern for Smart Categories */}
+      ) : null}
+
+      {/* Category Header Section - Below Hero */}
+      <div className={`${
+        !category.heroImageUrl 
+          ? isSmartCategory
+            ? "bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 dark:from-primary/8 dark:via-accent/5 dark:to-primary/3 border-b"
+            : "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5 border-b"
+          : ""
+      } relative overflow-hidden`}>
+        {/* Animated AI Grid Pattern for Smart Categories (no hero image) */}
+        {!category.heroImageUrl && isSmartCategory && (
+          <div className="absolute inset-0 opacity-20 dark:opacity-10">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          </div>
+        )}
+        
+        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 relative z-10">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6" data-testid="breadcrumb-navigation">
+            <Link href="/">
+              <span className="flex items-center gap-1 hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
+                <Home className="h-3.5 w-3.5" />
+                الرئيسية
+              </span>
+            </Link>
+            <ArrowRight className="h-3.5 w-3.5" />
+            <Link href="/categories">
+              <span className="hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
+                التصنيفات
+              </span>
+            </Link>
+            <ArrowRight className="h-3.5 w-3.5" />
+            <span className="font-semibold text-foreground">{category.nameAr}</span>
+          </nav>
+
+          {/* Category Title and Info */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            {isSmartCategory && (
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                }}
+              >
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+              </motion.div>
+            )}
+            {category.icon && (
+              <span className="text-3xl sm:text-4xl">{category.icon}</span>
+            )}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+              {category.nameAr}
+            </h1>
+            {isSmartCategory ? (
+              <motion.div
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Badge
+                  className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                  data-testid="badge-category-type"
+                >
+                  <Brain className="h-3.5 w-3.5" />
+                  اختيار ذكي
+                </Badge>
+              </motion.div>
+            ) : (
+              getCategoryTypeBadge(category.type) && (
+                <Badge
+                  variant={getCategoryTypeBadge(category.type)!.variant}
+                  className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
+                  data-testid="badge-category-type"
+                >
+                  {getCategoryTypeBadge(category.type)!.icon}
+                  {getCategoryTypeBadge(category.type)!.label}
+                </Badge>
+              )
+            )}
+          </div>
+          {category.description && (
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mb-2 sm:mb-3 leading-relaxed">
+              {category.description}
+            </p>
+          )}
+          {/* Smart Category Features */}
           {isSmartCategory && (
-            <div className="absolute inset-0 opacity-20 dark:opacity-10">
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div className="flex flex-wrap gap-2">
+              {category.features?.realtime && (
+                <Badge
+                  variant="secondary"
+                  className="min-h-8 px-3 py-1.5"
+                  data-testid="badge-feature-realtime"
+                >
+                  <Flame className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                  <span className="text-sm">مباشر</span>
+                </Badge>
+              )}
+              {category.features?.trending && (
+                <Badge
+                  variant="secondary"
+                  className="min-h-8 px-3 py-1.5"
+                  data-testid="badge-feature-trending"
+                >
+                  <TrendingUp className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                  <span className="text-sm">رائج</span>
+                </Badge>
+              )}
+              {category.features?.ai_powered && (
+                <Badge
+                  variant="secondary"
+                  className="min-h-8 px-3 py-1.5"
+                  data-testid="badge-feature-ai"
+                >
+                  <Bot className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                  <span className="text-sm">ذكاء اصطناعي</span>
+                </Badge>
+              )}
+              {category.features?.breaking_news && (
+                <Badge
+                  variant="default"
+                  className="bg-red-600 dark:bg-red-500 text-white min-h-8 px-3 py-1.5"
+                  data-testid="badge-feature-breaking"
+                >
+                  <Zap className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                  <span className="text-sm">عاجل</span>
+                </Badge>
+              )}
+              {category.type === "dynamic" && category.updateInterval && (
+                <Badge
+                  variant="secondary"
+                  className="min-h-8 px-3 py-1.5"
+                  data-testid="badge-update-interval"
+                >
+                  <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+                  <span className="text-sm">يتحدث كل {formatUpdateInterval(category.updateInterval)}</span>
+                </Badge>
+              )}
             </div>
           )}
-          <div className="container mx-auto px-3 sm:px-6 lg:px-8 h-full flex flex-col justify-between relative z-10">
-            {/* Breadcrumb Navigation */}
-            <div className="pt-4">
-              <nav className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="breadcrumb-navigation">
-                <Link href="/">
-                  <span className="flex items-center gap-1 hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
-                    <Home className="h-3.5 w-3.5" />
-                    الرئيسية
-                  </span>
-                </Link>
-                <ArrowRight className="h-3.5 w-3.5" />
-                <Link href="/categories">
-                  <span className="hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
-                    التصنيفات
-                  </span>
-                </Link>
-                <ArrowRight className="h-3.5 w-3.5" />
-                <span className="font-semibold text-foreground">{category.nameAr}</span>
-              </nav>
-            </div>
+        </div>
+      </div>
 
-            {/* Hero Content */}
-            <div className="pb-6 sm:pb-8">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                {isSmartCategory && (
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatDelay: 3,
-                    }}
-                  >
-                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-                  </motion.div>
-                )}
-                {category.icon && (
-                  <span className="text-3xl sm:text-4xl">{category.icon}</span>
-                )}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-                  {category.nameAr}
-                </h1>
-                {isSmartCategory ? (
-                  <motion.div
-                    animate={{ opacity: [1, 0.7, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Badge
-                      className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
-                      data-testid="badge-category-type"
-                    >
-                      <Brain className="h-3.5 w-3.5" />
-                      اختيار ذكي
-                    </Badge>
-                  </motion.div>
-                ) : (
-                  getCategoryTypeBadge(category.type) && (
-                    <Badge
-                      variant={getCategoryTypeBadge(category.type)!.variant}
-                      className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
-                      data-testid="badge-category-type"
-                    >
-                      {getCategoryTypeBadge(category.type)!.icon}
-                      {getCategoryTypeBadge(category.type)!.label}
-                    </Badge>
-                  )
-                )}
+      {/* Most Active Reporter Section - AFTER Category Header, BEFORE Statistics */}
+      {mostActiveReporter && (
+        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6">
+          <Card 
+            className="overflow-hidden border-r-4 hover-elevate transition-all"
+            style={{ borderRightColor: category?.color || 'var(--primary)' }}
+            data-testid="card-most-active-reporter"
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <UserCircle2 className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold">المراسل الأكثر نشاطاً في التصنيف</h3>
               </div>
-              {category.description && (
-                <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mb-2 sm:mb-3 leading-relaxed">
-                  {category.description}
-                </p>
-              )}
-              {/* Smart Category Features */}
-              {isSmartCategory && (
-                <div className="flex flex-wrap gap-2">
-                  {category.features?.realtime && (
-                    <Badge
-                      variant="secondary"
-                      className="min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-realtime"
-                    >
-                      <Flame className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">مباشر</span>
-                    </Badge>
-                  )}
-                  {category.features?.trending && (
-                    <Badge
-                      variant="secondary"
-                      className="min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-trending"
-                    >
-                      <TrendingUp className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">رائج</span>
-                    </Badge>
-                  )}
-                  {category.features?.ai_powered && (
-                    <Badge
-                      variant="secondary"
-                      className="min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-ai"
-                    >
-                      <Bot className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">ذكاء اصطناعي</span>
-                    </Badge>
-                  )}
-                  {category.features?.breaking_news && (
-                    <Badge
-                      variant="default"
-                      className="bg-red-600 dark:bg-red-500 text-white min-h-8 px-3 py-1.5"
-                      data-testid="badge-feature-breaking"
-                    >
-                      <Zap className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">عاجل</span>
-                    </Badge>
-                  )}
-                  {category.type === "dynamic" && category.updateInterval && (
-                    <Badge
-                      variant="secondary"
-                      className="min-h-8 px-3 py-1.5"
-                      data-testid="badge-update-interval"
-                    >
-                      <Clock className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
-                      <span className="text-sm">يتحدث كل {formatUpdateInterval(category.updateInterval)}</span>
-                    </Badge>
-                  )}
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {/* Profile Image */}
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={mostActiveReporter.author.profileImageUrl || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {mostActiveReporter.author.firstName?.[0] || 'م'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Reporter Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="text-xl font-bold">
+                      {mostActiveReporter.author.firstName} {mostActiveReporter.author.lastName}
+                    </h4>
+                    {mostActiveReporter.author.verificationBadge !== 'none' && (
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {mostActiveReporter.author.role === 'reporter' ? 'مراسل' : 
+                     mostActiveReporter.author.role === 'editor' ? 'محرر' : 
+                     mostActiveReporter.author.role === 'chief_editor' ? 'رئيس تحرير' : 'كاتب'}
+                  </p>
+                  
+                  {/* Statistics */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm mb-4">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Newspaper className="h-4 w-4" />
+                      <span className="font-semibold text-foreground">{mostActiveReporter.count}</span>
+                      مقالة في هذا التصنيف
+                    </span>
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Eye className="h-4 w-4" />
+                      <span className="font-semibold text-foreground">
+                        {calculateReporterViews(mostActiveReporter.author.id).toLocaleString('ar-SA')}
+                      </span>
+                      مشاهدة
+                    </span>
+                  </div>
+                  
+                  {/* View Profile Button */}
+                  <Link href={`/reporter/${mostActiveReporter.author.id}`}>
+                    <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-reporter-profile">
+                      عرض الملف الشخصي
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      {/* Enhanced Statistics Summary Section - ABOVE CategoryAnalytics */}
+      {/* Enhanced Statistics Summary Section */}
       {articlesLoading ? (
         <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -728,25 +696,6 @@ export default function CategoryPage() {
           </div>
         </div>
       )}
-
-      {/* Category Analytics (Preserved) */}
-      {analyticsLoading ? (
-        <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="shadow-sm border border-border/40 dark:border-card-border">
-                <CardContent className="p-4 sm:p-6">
-                  <Skeleton className="h-24 sm:h-32 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ) : analytics ? (
-        <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
-          <CategoryAnalytics analytics={analytics} language="ar" />
-        </div>
-      ) : null}
 
       {/* Advanced Filters Bar */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-8 pb-6">
@@ -1056,15 +1005,13 @@ export default function CategoryPage() {
                 const readingTime = estimateReadingTime(article.content);
                 const isBreaking = article.newsType === "breaking";
                 const isNew = isNewArticle(article.publishedAt);
-                const categoryColor = category.color || "hsl(var(--primary))";
 
                 return (
                   <Link key={article.id} href={`/article/${article.slug}`}>
                     <Card
-                      className={`cursor-pointer h-full overflow-hidden shadow-sm border border-border/40 dark:border-card-border hover-elevate active-elevate-2 transition-all border-r-4 ${
+                      className={`cursor-pointer h-full overflow-hidden shadow-sm border border-border/40 dark:border-card-border hover-elevate active-elevate-2 transition-all ${
                         isBreaking ? "bg-destructive/5" : ""
                       }`}
-                      style={{ borderRightColor: categoryColor }}
                       data-testid={`card-article-${article.id}`}
                     >
                       {/* Enhanced Image Section */}
