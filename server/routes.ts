@@ -29,7 +29,7 @@ import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddlew
 import { passKitService, type PressPassData, type LoyaltyPassData } from "./lib/passkit/PassKitService";
 import pLimit from 'p-limit';
 import { db } from "./db";
-import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lt, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import multer from "multer";
@@ -19117,43 +19117,68 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       try {
         const now = new Date();
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1); // Upper bound for "this month" queries
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
         // Helper function to calculate percentage change
         const calculateChange = (current: number, previous: number): number => {
-          if (previous === 0) return current > 0 ? 100 : 0;
+          if (previous === 0) {
+            // If no previous data but we have current data, show 100% growth
+            return current > 0 ? 100 : 0;
+          }
           return Math.round(((current - previous) / previous) * 100);
         };
 
-        // Get total views (current month vs last month)
-        const [currentViews] = await db
-          .select({ total: sql<number>`COALESCE(SUM(${readingHistory.readDuration}), 0)::int` })
-          .from(readingHistory)
-          .where(gte(readingHistory.readAt, thisMonthStart));
+        // LIFETIME TOTALS (all-time counts)
+        
+        // Get LIFETIME total views (count of all reading history entries)
+        const [lifetimeViews] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(readingHistory);
 
-        const [previousViews] = await db
-          .select({ total: sql<number>`COALESCE(SUM(${readingHistory.readDuration}), 0)::int` })
+        // Get views for this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthViews] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(readingHistory)
+          .where(and(
+            gte(readingHistory.readAt, thisMonthStart),
+            lt(readingHistory.readAt, nextMonthStart)
+          ));
+
+        // Get views for last month (for month-over-month comparison)
+        const [lastMonthViews] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
           .from(readingHistory)
           .where(and(
             gte(readingHistory.readAt, lastMonthStart),
             lte(readingHistory.readAt, lastMonthEnd)
           ));
 
-        const totalViews = currentViews?.total || 0;
-        const viewsChange = calculateChange(totalViews, previousViews?.total || 0);
+        const totalViews = lifetimeViews?.count || 0;
+        const viewsChange = calculateChange(thisMonthViews?.count || 0, lastMonthViews?.count || 0);
 
-        // Get total users (current month vs last month)
-        const [currentUsers] = await db
-          .select({ count: sql<number>`COUNT(DISTINCT ${users.id})::int` })
+        // Get LIFETIME total users (all users ever created, excluding deleted)
+        const [lifetimeUsers] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(users)
+          .where(isNull(users.deletedAt));
+
+        // Get new users this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthUsers] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
           .from(users)
           .where(and(
             gte(users.createdAt, thisMonthStart),
+            lt(users.createdAt, nextMonthStart),
             isNull(users.deletedAt)
           ));
 
-        const [previousUsers] = await db
-          .select({ count: sql<number>`COUNT(DISTINCT ${users.id})::int` })
+        // Get new users last month (for month-over-month comparison)
+        const [lastMonthUsers] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
           .from(users)
           .where(and(
             gte(users.createdAt, lastMonthStart),
@@ -19161,19 +19186,28 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             isNull(users.deletedAt)
           ));
 
-        const totalUsers = currentUsers?.count || 0;
-        const usersChange = calculateChange(totalUsers, previousUsers?.count || 0);
+        const totalUsers = lifetimeUsers?.count || 0;
+        const usersChange = calculateChange(thisMonthUsers?.count || 0, lastMonthUsers?.count || 0);
 
-        // Get total articles (current month vs last month)
-        const [currentArticles] = await db
+        // Get LIFETIME total articles (all published articles)
+        const [lifetimeArticles] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(articles)
+          .where(eq(articles.status, "published"));
+
+        // Get articles published this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthArticles] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(articles)
           .where(and(
             eq(articles.status, "published"),
-            gte(articles.publishedAt, thisMonthStart)
+            gte(articles.publishedAt, thisMonthStart),
+            lt(articles.publishedAt, nextMonthStart)
           ));
 
-        const [previousArticles] = await db
+        // Get articles published last month (for month-over-month comparison)
+        const [lastMonthArticles] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(articles)
           .where(and(
@@ -19182,16 +19216,26 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             lte(articles.publishedAt, lastMonthEnd)
           ));
 
-        const totalArticles = currentArticles?.count || 0;
-        const articlesChange = calculateChange(totalArticles, previousArticles?.count || 0);
+        const totalArticles = lifetimeArticles?.count || 0;
+        const articlesChange = calculateChange(thisMonthArticles?.count || 0, lastMonthArticles?.count || 0);
 
-        // Get total comments (current month vs last month)
-        const [currentComments] = await db
+        // Get LIFETIME total comments
+        const [lifetimeComments] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments);
+
+        // Get comments this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthComments] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(comments)
-          .where(gte(comments.createdAt, thisMonthStart));
+          .where(and(
+            gte(comments.createdAt, thisMonthStart),
+            lt(comments.createdAt, nextMonthStart)
+          ));
 
-        const [previousComments] = await db
+        // Get comments last month (for month-over-month comparison)
+        const [lastMonthComments] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(comments)
           .where(and(
@@ -19199,16 +19243,26 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             lte(comments.createdAt, lastMonthEnd)
           ));
 
-        const totalComments = currentComments?.count || 0;
-        const commentsChange = calculateChange(totalComments, previousComments?.count || 0);
+        const totalComments = lifetimeComments?.count || 0;
+        const commentsChange = calculateChange(thisMonthComments?.count || 0, lastMonthComments?.count || 0);
 
-        // Get total likes (reactions) (current month vs last month)
-        const [currentLikes] = await db
+        // Get LIFETIME total likes (reactions)
+        const [lifetimeLikes] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(reactions);
+
+        // Get likes this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthLikes] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(reactions)
-          .where(gte(reactions.createdAt, thisMonthStart));
+          .where(and(
+            gte(reactions.createdAt, thisMonthStart),
+            lt(reactions.createdAt, nextMonthStart)
+          ));
 
-        const [previousLikes] = await db
+        // Get likes last month (for month-over-month comparison)
+        const [lastMonthLikes] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(reactions)
           .where(and(
@@ -19216,16 +19270,26 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             lte(reactions.createdAt, lastMonthEnd)
           ));
 
-        const totalLikes = currentLikes?.count || 0;
-        const likesChange = calculateChange(totalLikes, previousLikes?.count || 0);
+        const totalLikes = lifetimeLikes?.count || 0;
+        const likesChange = calculateChange(thisMonthLikes?.count || 0, lastMonthLikes?.count || 0);
 
-        // Get total bookmarks (current month vs last month)
-        const [currentBookmarks] = await db
+        // Get LIFETIME total bookmarks
+        const [lifetimeBookmarks] = await db
+          .select({ count: sql<number>`COUNT(*)::int` })
+          .from(bookmarks);
+
+        // Get bookmarks this month (for month-over-month comparison)
+        // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
+        const [thisMonthBookmarks] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(bookmarks)
-          .where(gte(bookmarks.createdAt, thisMonthStart));
+          .where(and(
+            gte(bookmarks.createdAt, thisMonthStart),
+            lt(bookmarks.createdAt, nextMonthStart)
+          ));
 
-        const [previousBookmarks] = await db
+        // Get bookmarks last month (for month-over-month comparison)
+        const [lastMonthBookmarks] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
           .from(bookmarks)
           .where(and(
@@ -19233,8 +19297,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             lte(bookmarks.createdAt, lastMonthEnd)
           ));
 
-        const totalBookmarks = currentBookmarks?.count || 0;
-        const bookmarksChange = calculateChange(totalBookmarks, previousBookmarks?.count || 0);
+        const totalBookmarks = lifetimeBookmarks?.count || 0;
+        const bookmarksChange = calculateChange(thisMonthBookmarks?.count || 0, lastMonthBookmarks?.count || 0);
 
         res.json({
           totalViews,
@@ -19264,59 +19328,77 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
     async (req, res) => {
       try {
+        const now = new Date();
+        const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+        // Use SQL GROUP BY to aggregate data by month (OPTIMIZED)
+        
+        // Get views per month using GROUP BY
+        const viewsData = await db
+          .select({
+            month: sql<string>`TO_CHAR(${readingHistory.readAt}, 'YYYY-MM')`,
+            count: sql<number>`COUNT(*)::int`,
+          })
+          .from(readingHistory)
+          .where(gte(readingHistory.readAt, twelveMonthsAgo))
+          .groupBy(sql`TO_CHAR(${readingHistory.readAt}, 'YYYY-MM')`)
+          .orderBy(sql`TO_CHAR(${readingHistory.readAt}, 'YYYY-MM')`);
+
+        // Get new users per month using GROUP BY
+        const usersData = await db
+          .select({
+            month: sql<string>`TO_CHAR(${users.createdAt}, 'YYYY-MM')`,
+            count: sql<number>`COUNT(*)::int`,
+          })
+          .from(users)
+          .where(and(
+            gte(users.createdAt, twelveMonthsAgo),
+            isNull(users.deletedAt)
+          ))
+          .groupBy(sql`TO_CHAR(${users.createdAt}, 'YYYY-MM')`)
+          .orderBy(sql`TO_CHAR(${users.createdAt}, 'YYYY-MM')`);
+
+        // Get published articles per month using GROUP BY
+        const articlesData = await db
+          .select({
+            month: sql<string>`TO_CHAR(${articles.publishedAt}, 'YYYY-MM')`,
+            count: sql<number>`COUNT(*)::int`,
+          })
+          .from(articles)
+          .where(and(
+            eq(articles.status, "published"),
+            gte(articles.publishedAt, twelveMonthsAgo)
+          ))
+          .groupBy(sql`TO_CHAR(${articles.publishedAt}, 'YYYY-MM')`)
+          .orderBy(sql`TO_CHAR(${articles.publishedAt}, 'YYYY-MM')`);
+
+        // Create maps for quick lookup
+        const viewsMap = new Map(viewsData.map(item => [item.month, item.count]));
+        const usersMap = new Map(usersData.map(item => [item.month, item.count]));
+        const articlesMap = new Map(articlesData.map(item => [item.month, item.count]));
+
+        // Ensure EXACTLY 12 data points (fill missing months with 0)
         const months: string[] = [];
         const views: number[] = [];
         const users: number[] = [];
-        const articlesData: number[] = [];
+        const articles: number[] = [];
 
-        // Generate last 12 months
-        const now = new Date();
         for (let i = 11; i >= 0; i--) {
           const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-          const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59, 999);
-          
+          const yearMonth = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
           const monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          
           months.push(monthName);
-
-          // Get views for this month (count of reading history entries)
-          const [monthViews] = await db
-            .select({ count: sql<number>`COUNT(*)::int` })
-            .from(readingHistory)
-            .where(and(
-              gte(readingHistory.readAt, monthStart),
-              lte(readingHistory.readAt, monthEnd)
-            ));
-          views.push(monthViews?.count || 0);
-
-          // Get new users for this month
-          const [monthUsers] = await db
-            .select({ count: sql<number>`COUNT(*)::int` })
-            .from(users)
-            .where(and(
-              gte(users.createdAt, monthStart),
-              lte(users.createdAt, monthEnd),
-              isNull(users.deletedAt)
-            ));
-          users.push(monthUsers?.count || 0);
-
-          // Get published articles for this month
-          const [monthArticles] = await db
-            .select({ count: sql<number>`COUNT(*)::int` })
-            .from(articles)
-            .where(and(
-              eq(articles.status, "published"),
-              gte(articles.publishedAt, monthStart),
-              lte(articles.publishedAt, monthEnd)
-            ));
-          articlesData.push(monthArticles?.count || 0);
+          views.push(viewsMap.get(yearMonth) || 0);
+          users.push(usersMap.get(yearMonth) || 0);
+          articles.push(articlesMap.get(yearMonth) || 0);
         }
 
         res.json({
           months,
           views,
           users,
-          articles: articlesData,
+          articles,
         });
       } catch (error) {
         console.error("Error fetching analytics chart data:", error);
@@ -19384,12 +19466,12 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             const currentViews = currentPeriodViews?.count || 0;
             const previousViews = previousPeriodViews?.count || 0;
             
+            // Calculate percentage change (fixed: returns 0 instead of 100 when previousViews = 0)
             let change = 0;
-            if (previousViews === 0) {
-              change = currentViews > 0 ? 100 : 0;
-            } else {
+            if (previousViews > 0) {
               change = Math.round(((currentViews - previousViews) / previousViews) * 100);
             }
+            // If previousViews === 0, change remains 0 (not 100)
 
             return {
               id: article.id,
@@ -19420,6 +19502,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     async (req, res) => {
       try {
         // Get latest activities from activityLogs
+        // Using INNER JOIN to filter out activities with null/undefined users
         const activities = await db
           .select({
             id: activityLogs.id,
@@ -19434,7 +19517,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             profileImageUrl: users.profileImageUrl,
           })
           .from(activityLogs)
-          .leftJoin(users, eq(activityLogs.userId, users.id))
+          .innerJoin(users, eq(activityLogs.userId, users.id))
           .orderBy(desc(activityLogs.createdAt))
           .limit(20);
 
