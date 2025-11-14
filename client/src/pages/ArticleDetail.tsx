@@ -36,6 +36,8 @@ import {
   Loader2,
   UserPlus,
   UserCheck,
+  Eye,
+  MessageSquare,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -733,12 +735,22 @@ export default function ArticleDetail() {
     return 'م';
   };
 
+  // Calculate reading time
+  const estimateReadingTime = (content: string): number => {
+    const wordsPerMinute = 200;
+    const words = content.split(/\s+/).length;
+    const minutes = Math.ceil(words / wordsPerMinute);
+    return minutes || 1;
+  };
+
+  const readingTime = article.content ? estimateReadingTime(article.content) : 1;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} />
 
       {/* Breadcrumbs */}
-      <div className="border-b bg-muted/30">
+      <div className="border-b bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-home">
@@ -747,7 +759,7 @@ export default function ArticleDetail() {
             <ChevronRight className="h-4 w-4" />
             {article.category && (
               <>
-                <Link href={`/?category=${article.category.id}`} className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-category">
+                <Link href={`/category/${article.category.slug}`} className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-category">
                   {article.category.nameAr}
                 </Link>
                 <ChevronRight className="h-4 w-4" />
@@ -759,11 +771,92 @@ export default function ArticleDetail() {
       </div>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+        {/* Statistics Cards Section - TailAdmin Style */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {/* Views Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-views">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Eye className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {(article.views ?? 0).toLocaleString('ar-SA')}
+            </div>
+            <div className="text-sm text-muted-foreground">المشاهدات</div>
+          </div>
+
+          {/* Reactions Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-reactions">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <Heart className="h-5 w-5 text-red-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {(article.reactionsCount ?? 0).toLocaleString('ar-SA')}
+            </div>
+            <div className="text-sm text-muted-foreground">الإعجابات</div>
+          </div>
+
+          {/* Comments Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-comments">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {(article.commentsCount ?? 0).toLocaleString('ar-SA')}
+            </div>
+            <div className="text-sm text-muted-foreground">التعليقات</div>
+          </div>
+
+          {/* Reading Time Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-reading-time">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-orange-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {readingTime}
+            </div>
+            <div className="text-sm text-muted-foreground">دقائق قراءة</div>
+          </div>
+
+          {/* Shares Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-shares">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                <Share2 className="h-5 w-5 text-green-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {(article.shareCount ?? 0).toLocaleString('ar-SA')}
+            </div>
+            <div className="text-sm text-muted-foreground">المشاركات</div>
+          </div>
+
+          {/* Bookmarks Card */}
+          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-bookmarks">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Bookmark className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">
+              {(article.bookmarkCount ?? 0).toLocaleString('ar-SA')}
+            </div>
+            <div className="text-sm text-muted-foreground">الحفظ</div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <article className="lg:col-span-2 space-y-8">
-            {/* Article Header */}
-            <header className="space-y-4">
+          <article className="lg:col-span-2 space-y-6">
+            {/* Article Header Card - TailAdmin Style */}
+            <div className="bg-card border rounded-lg p-6 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 {article.category && (
                   <Badge variant="default" data-testid="badge-article-category">
@@ -782,26 +875,27 @@ export default function ArticleDetail() {
                 {article.title}
               </h1>
 
-              {/* Author & Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                {resolvedAuthor && (
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-10 w-10">
+              {/* Author Card */}
+              {resolvedAuthor && (
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-primary/20">
                       <AvatarImage 
                         src={resolvedAuthor?.profileImageUrl || ""} 
                         alt={`${resolvedAuthor?.firstName || ""} ${resolvedAuthor?.lastName || ""}`.trim() || resolvedAuthor?.email || ""}
                         className="object-cover"
                       />
-                      <AvatarFallback className="bg-primary/10 text-primary">
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
                         {getInitials(resolvedAuthor?.firstName, resolvedAuthor?.lastName, resolvedAuthor?.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex items-center gap-2">
-                      <div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
                         {article.staff ? (
                           <Link 
                             href={`/reporter/${article.staff.slug}`} 
-                            className="font-medium hover:text-primary transition-colors flex items-center gap-1" 
+                            className="text-lg font-bold hover:text-primary transition-colors flex items-center gap-1" 
                             data-testid="link-reporter-profile"
                           >
                             <span data-testid="text-author-name">
@@ -810,106 +904,85 @@ export default function ArticleDetail() {
                                 : resolvedAuthor?.email}
                             </span>
                             {article.staff.isVerified && (
-                              <CheckCircle2 className="h-4 w-4 text-primary inline" />
+                              <CheckCircle2 className="h-5 w-5 text-primary" />
                             )}
                           </Link>
                         ) : (
-                          <p className="font-medium" data-testid="text-author-name">
+                          <p className="text-lg font-bold" data-testid="text-author-name">
                             {resolvedAuthor?.firstName && resolvedAuthor?.lastName
                               ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
                               : resolvedAuthor?.email}
                           </p>
                         )}
-                        {timeAgo && (
-                          <p className="text-muted-foreground text-xs flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {timeAgo}
-                          </p>
-                        )}
                       </div>
-                      {user && !isOwnArticle && resolvedAuthorId && (
-                        isFollowing ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => unfollowMutation.mutate()}
-                            disabled={unfollowMutation.isPending}
-                            className="gap-1 shrink-0"
-                            data-testid="button-unfollow-author"
-                          >
-                            <UserCheck className="h-3 w-3" />
-                            متابع
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => followMutation.mutate()}
-                            disabled={followMutation.isPending}
-                            className="gap-1 shrink-0"
-                            data-testid="button-follow-author"
-                          >
-                            <UserPlus className="h-3 w-3" />
-                            متابعة
-                          </Button>
-                        )
-                      )}
+                      
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                        {timeAgo && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {timeAgo}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          {readingTime} دقائق قراءة
+                        </span>
+                      </div>
                     </div>
+
+                    {user && !isOwnArticle && resolvedAuthorId && (
+                      isFollowing ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => unfollowMutation.mutate()}
+                          disabled={unfollowMutation.isPending}
+                          className="gap-1 shrink-0"
+                          data-testid="button-unfollow-author"
+                        >
+                          <UserCheck className="h-4 w-4" />
+                          متابع
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => followMutation.mutate()}
+                          disabled={followMutation.isPending}
+                          className="gap-1 shrink-0"
+                          data-testid="button-follow-author"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          متابعة
+                        </Button>
+                      )
+                    )}
                   </div>
-                )}
-
-                <Separator orientation="vertical" className="h-10" />
-
-                <div className="flex items-center gap-4 text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <ViewsCount 
-                      views={article.views}
-                      iconClassName="h-4 w-4"
-                    />
-                    <span>مشاهدة</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Heart className="h-4 w-4" />
-                    {article.reactionsCount || 0}
-                  </span>
                 </div>
-              </div>
-            </header>
+              )}
+            </div>
 
-            <Separator />
-
-            {/* Featured Image */}
+            {/* Featured Image - Clean TailAdmin Style */}
             {article.imageUrl && (
-              <div className="relative overflow-hidden rounded-lg bg-muted md:aspect-[16/9]">
-                {/* Blurred background image - Desktop only */}
-                <div 
-                  className="hidden md:block absolute inset-0 w-full h-full"
-                  style={{
-                    backgroundImage: `url(${article.imageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: 'blur(40px)',
-                    transform: 'scale(1.1)',
-                  }}
-                />
-                {/* Main image */}
+              <div className="bg-card border rounded-lg overflow-hidden">
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="relative w-full object-cover md:h-full md:object-contain z-10"
+                  className="w-full h-auto object-cover"
                   data-testid="img-article-featured"
                 />
               </div>
             )}
 
-            {/* Smart Summary */}
+            {/* Smart Summary - TailAdmin Style */}
             {(article.aiSummary || article.excerpt) && (
               <Collapsible open={isSummaryExpanded} onOpenChange={setIsSummaryExpanded}>
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 space-y-4">
+                <div className="bg-card border rounded-lg p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      <h3 className="font-bold text-base text-primary">الموجز الذكي</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-bold">الموجز الذكي</h3>
                     </div>
                     <div className="flex items-center gap-2">
                       <CollapsibleTrigger asChild>
@@ -945,7 +1018,7 @@ export default function ArticleDetail() {
                     </div>
                   </div>
                   <p 
-                    className={`text-foreground/90 leading-relaxed text-sm ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}
+                    className={`text-muted-foreground leading-relaxed ${!isSummaryExpanded ? 'line-clamp-3' : ''}`}
                     data-testid="text-smart-summary"
                   >
                     {article.aiSummary || article.excerpt}
@@ -975,72 +1048,72 @@ export default function ArticleDetail() {
             )}
 
             {/* Article Content */}
-            <div 
-              className="prose prose-lg dark:prose-invert max-w-none leading-loose"
-              dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(article.content, {
-                  ADD_TAGS: ['iframe', 'blockquote'],
-                  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'data-lang', 'data-theme', 'data-video-embed', 'data-url', 'data-embed-url', 'class'],
-                  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-                })
-              }}
-              data-testid="content-article-body"
-            />
+            <div className="bg-card border rounded-lg p-6">
+              <div 
+                className="prose prose-lg dark:prose-invert max-w-none leading-loose"
+                dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(article.content, {
+                    ADD_TAGS: ['iframe', 'blockquote'],
+                    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'data-lang', 'data-theme', 'data-video-embed', 'data-url', 'data-embed-url', 'class'],
+                    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                  })
+                }}
+                data-testid="content-article-body"
+              />
+            </div>
 
-            <Separator />
-
-            {/* Engagement Actions & Social Share */}
-            <div className="space-y-6">
-              {/* Primary Actions */}
-              <div className="flex flex-wrap items-center gap-3">
+            {/* Engagement Actions - TailAdmin Style */}
+            <div className="bg-card border rounded-lg p-6">
+              <h3 className="text-lg font-bold mb-4">تفاعل مع المقال</h3>
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant={article.hasReacted ? "default" : "outline"}
-                  className="gap-2"
+                  className="gap-2 h-12"
                   onClick={handleReact}
                   data-testid="button-article-react"
                 >
                   <Heart className={article.hasReacted ? 'fill-current' : ''} />
-                  <span className="hidden sm:inline">إعجاب</span> ({article.reactionsCount || 0})
+                  <span>إعجاب ({article.reactionsCount || 0})</span>
                 </Button>
 
                 <Button
                   variant={article.isBookmarked ? "default" : "outline"}
-                  className="gap-2"
+                  className="gap-2 h-12"
                   onClick={handleBookmark}
                   data-testid="button-article-bookmark"
                 >
                   <Bookmark className={article.isBookmarked ? 'fill-current' : ''} />
-                  <span className="hidden sm:inline">حفظ</span>
+                  <span>حفظ</span>
                 </Button>
-              </div>
-
-              {/* Social Share Bar */}
-              <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  {isLoadingShortLink ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Share2 className="h-4 w-4" />
-                  )}
-                  شارك المقال
-                </h3>
-                {isLoadingShortLink ? (
-                  <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
-                    جاري إنشاء رابط المشاركة...
-                  </div>
-                ) : (
-                  <SocialShareBar
-                    title={article.title}
-                    url={shortLink?.shortCode ? `https://sabq.life/s/${shortLink.shortCode}` : `https://sabq.life/article/${slug}`}
-                    description={article.excerpt || ""}
-                    articleId={article.id}
-                  />
-                )}
               </div>
             </div>
 
-            <Separator />
+            {/* Social Share Bar - TailAdmin Style */}
+            <div className="bg-card border rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                  {isLoadingShortLink ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-green-500" />
+                  ) : (
+                    <Share2 className="h-5 w-5 text-green-500" />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold">شارك المقال</h3>
+              </div>
+              {isLoadingShortLink ? (
+                <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  جاري إنشاء رابط المشاركة...
+                </div>
+              ) : (
+                <SocialShareBar
+                  title={article.title}
+                  url={shortLink?.shortCode ? `https://sabq.life/s/${shortLink.shortCode}` : `https://sabq.life/article/${slug}`}
+                  description={article.excerpt || ""}
+                  articleId={article.id}
+                />
+              )}
+            </div>
 
             {/* Story Timeline */}
             {article.storyId && (
