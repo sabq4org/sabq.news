@@ -43,7 +43,7 @@ const MobileOptimizedKpiCardComponent = ({
               {label}
             </p>
             <h3 
-              className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold truncate" 
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold break-words" 
               data-testid={testId ? `${testId}-value` : undefined}
               role={ariaLive ? "status" : undefined}
               aria-live={ariaLive ? "polite" : undefined}
