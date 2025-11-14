@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
@@ -34,6 +34,7 @@ import {
   Gauge,
   TargetIcon,
   ChevronDown,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -51,7 +52,7 @@ import {
 } from "recharts";
 
 interface DailySummary {
-  personalizedGreeting: {
+  personalizedGreeting?: {
     userName: string;
     articlesReadToday: number;
     readingTimeMinutes: number;
@@ -83,7 +84,7 @@ interface DailySummary {
     lowActivityPeriod: number;
     aiSuggestion: string;
   };
-  aiInsights: {
+  aiInsights?: {
     readingMood: string;
     dailyGoal: string;
     focusScore: number;
@@ -115,6 +116,27 @@ export default function DailyBrief() {
   };
 
   const todayInArabic = format(new Date(), 'EEEE، d MMMM yyyy', { locale: ar });
+
+  // Memoized formatter for engagement score and numerals
+  const formattedMetrics = useMemo(() => {
+    if (!summary) return null;
+    
+    const engagementScore = (summary.metrics.articlesLiked || 0) + 
+                           (summary.metrics.commentsPosted || 0) + 
+                           (summary.metrics.articlesBookmarked || 0);
+    
+    return {
+      articlesRead: (summary.metrics.articlesRead ?? 0).toLocaleString('en-US'),
+      readingTime: (summary.metrics.readingTimeMinutes ?? 0).toLocaleString('en-US'),
+      completionRate: (Math.round(summary.metrics.completionRate ?? 0)).toLocaleString('en-US'),
+      engagementScore: engagementScore.toLocaleString('en-US'),
+      engagementScoreRaw: engagementScore,
+      articlesBookmarked: (summary.metrics.articlesBookmarked ?? 0).toLocaleString('en-US'),
+      articlesLiked: (summary.metrics.articlesLiked ?? 0).toLocaleString('en-US'),
+      commentsPosted: (summary.metrics.commentsPosted ?? 0).toLocaleString('en-US'),
+      focusScore: (summary.aiInsights?.focusScore ?? 0).toLocaleString('en-US'),
+    };
+  }, [summary]);
 
   // Get greeting based on local time
   const getGreeting = () => {
@@ -191,7 +213,7 @@ export default function DailyBrief() {
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3" data-testid="text-daily-brief-title">
                   <Sun className="h-8 w-8 text-yellow-500" />
-                  {isLoading ? "جاري التحميل..." : `${getGreeting()} ${summary?.personalizedGreeting.userName || ""}!`}
+                  {isLoading ? "جاري التحميل..." : `${getGreeting()}${summary?.personalizedGreeting?.userName ? ` ${summary.personalizedGreeting.userName}` : ""}!`}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2" data-testid="text-current-date">
@@ -238,18 +260,110 @@ export default function DailyBrief() {
 
           {/* Summary Content */}
           {!isLoading && summary && (
-            <div className="space-y-8" dir="rtl">
+            <div className="space-y-10" dir="rtl">
+              {/* Statistics KPIs Section */}
+              {formattedMetrics && (
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                {/* Articles Read Today */}
+                <Card className="hover-elevate transition-all" data-testid="kpi-articles-read">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-articles">
+                          المقالات المقروءة اليوم
+                        </p>
+                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-articles">
+                          {formattedMetrics.articlesRead}
+                        </h3>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <BookOpen className="h-6 w-6 text-primary" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Reading Time */}
+                <Card className="hover-elevate transition-all" data-testid="kpi-reading-time">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-time">
+                          وقت القراءة (دقيقة)
+                        </p>
+                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-time">
+                          {formattedMetrics.readingTime}
+                        </h3>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <Clock className="h-6 w-6 text-blue-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Completion Rate */}
+                <Card className="hover-elevate transition-all" data-testid="kpi-completion-rate">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-completion">
+                          معدل الإكمال (%)
+                        </p>
+                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-completion">
+                          {formattedMetrics.completionRate}
+                        </h3>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <Target className="h-6 w-6 text-green-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Engagement Score */}
+                <Card className="hover-elevate transition-all" data-testid="kpi-engagement">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-engagement">
+                          نقاط التفاعل
+                        </p>
+                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-engagement">
+                          {formattedMetrics.engagementScore}
+                        </h3>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                          <Activity className="h-6 w-6 text-red-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              )}
+
               {/* Personalized Greeting Card */}
-              <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20" data-testid="card-greeting">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div data-testid="icon-reading-mood">
-                      {getMoodIcon(summary.personalizedGreeting.readingMood)}
+              {summary.personalizedGreeting && (
+              <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20" data-testid="card-greeting">
+                <CardContent className="p-8">
+                  <div className="flex items-start gap-6">
+                    <div className="flex-shrink-0" data-testid="icon-reading-mood">
+                      <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                        {getMoodIcon(summary.personalizedGreeting.readingMood)}
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-lg leading-relaxed" data-testid="text-greeting-summary">
-                        قرأت خلال آخر 24 ساعة <strong data-testid="value-articles-today">{summary.personalizedGreeting.articlesReadToday}</strong> مقال خلال{' '}
-                        <strong data-testid="value-reading-minutes">{summary.personalizedGreeting.readingTimeMinutes}</strong> دقيقة
+                      <p className="text-lg md:text-xl leading-relaxed mb-3" data-testid="text-greeting-summary">
+                        قرأت خلال آخر 24 ساعة <strong data-testid="value-articles-today">{(summary.personalizedGreeting.articlesReadToday ?? 0).toLocaleString('en-US')}</strong> مقال خلال{' '}
+                        <strong data-testid="value-reading-minutes">{(summary.personalizedGreeting.readingTimeMinutes ?? 0).toLocaleString('en-US')}</strong> دقيقة
                         {summary.personalizedGreeting.topCategories.length > 0 && (
                           <>
                             {' '}— منها عن{' '}
@@ -262,13 +376,14 @@ export default function DailyBrief() {
                           </>
                         )}
                       </p>
-                      <p className="text-muted-foreground mt-2" data-testid="text-mood-description">
+                      <p className="text-sm md:text-base text-muted-foreground" data-testid="text-mood-description">
                         مزاجك القرائي اليوم <strong data-testid="value-reading-mood">"{summary.personalizedGreeting.readingMood}"</strong> حسب تفاعلك مع المقالات.
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+              )}
 
               {/* Performance Metrics */}
               <Collapsible open={isMetricsExpanded} onOpenChange={setIsMetricsExpanded}>
@@ -297,77 +412,113 @@ export default function DailyBrief() {
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <Card data-testid="metric-articles-read">
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground" data-testid="label-articles-read">المقالات المقروءة</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-articles-read">المقالات المقروءة</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-articles-read">{formattedMetrics.articlesRead}</div>
+                          {summary.metrics.percentChangeFromYesterday !== 0 && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <span data-testid="icon-change-articles">{getChangeIcon(summary.metrics.percentChangeFromYesterday)}</span>
+                              <p className="text-xs text-muted-foreground" data-testid="text-change-articles">
+                                {summary.metrics.percentChangeFromYesterday > 0 ? 'بزيادة' : 'بانخفاض'}{' '}
+                                {Math.abs(summary.metrics.percentChangeFromYesterday)}% عن أمس
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <span data-testid="icon-change-articles">{getChangeIcon(summary.metrics.percentChangeFromYesterday)}</span>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <BookOpen className="h-6 w-6 text-primary" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-articles-read">{summary.metrics.articlesRead}</div>
-                      {summary.metrics.percentChangeFromYesterday !== 0 && (
-                        <p className="text-xs text-muted-foreground mt-1" data-testid="text-change-articles">
-                          {summary.metrics.percentChangeFromYesterday > 0 ? 'بزيادة' : 'بانخفاض'}{' '}
-                          {Math.abs(summary.metrics.percentChangeFromYesterday)}% عن أمس
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
 
                   <Card data-testid="metric-reading-time">
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground" data-testid="label-reading-time">وقت القراءة الإجمالي</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-reading-time">وقت القراءة الإجمالي</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-reading-time">{formattedMetrics.readingTime} دقيقة</div>
+                          <p className="text-xs text-muted-foreground mt-1" data-testid="text-focus-feedback">تركيز ممتاز</p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                            <Clock className="h-6 w-6 text-blue-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-reading-time">{summary.metrics.readingTimeMinutes} دقيقة</div>
-                      <p className="text-xs text-muted-foreground mt-1" data-testid="text-focus-feedback">تركيز ممتاز</p>
                     </CardContent>
                   </Card>
 
                   <Card data-testid="metric-completion-rate">
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground" data-testid="label-completion-rate">معدل إكمال القراءة</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-completion-rate">معدل إكمال القراءة</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-completion-rate">{formattedMetrics.completionRate}%</div>
+                          <Progress value={summary.metrics.completionRate} className="mt-2" data-testid="progress-completion-rate" />
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                            <Target className="h-6 w-6 text-green-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-completion-rate">{Math.round(summary.metrics.completionRate)}%</div>
-                      <Progress value={summary.metrics.completionRate} className="mt-2" data-testid="progress-completion-rate" />
                     </CardContent>
                   </Card>
 
                   <Card data-testid="metric-bookmarks">
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Bookmark className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground" data-testid="label-bookmarks">المقالات المحفوظة</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-bookmarks">المقالات المحفوظة</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-bookmarks">{formattedMetrics.articlesBookmarked}</div>
+                          {summary.interestAnalysis.topCategories[0] && (
+                            <p className="text-xs text-muted-foreground mt-1" data-testid="text-bookmark-category">
+                              أغلبها عن {summary.interestAnalysis.topCategories[0].name}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center">
+                            <Bookmark className="h-6 w-6 text-orange-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-bookmarks">{summary.metrics.articlesBookmarked}</div>
-                      {summary.interestAnalysis.topCategories[0] && (
-                        <p className="text-xs text-muted-foreground mt-1" data-testid="text-bookmark-category">
-                          أغلبها عن {summary.interestAnalysis.topCategories[0].name}
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
 
                   <Card data-testid="metric-likes">
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Heart className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground" data-testid="label-likes">الإعجابات</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-likes">الإعجابات</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-likes">{formattedMetrics.articlesLiked}</div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <Heart className="h-6 w-6 text-red-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-likes">{summary.metrics.articlesLiked}</div>
                     </CardContent>
                   </Card>
 
                   <Card data-testid="metric-comments">
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="h-5 w-5 text-primary" />
-                        <span className="text-sm text-muted-foreground" data-testid="label-comments">التعليقات</span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-2" data-testid="label-comments">التعليقات</p>
+                          <div className="text-2xl md:text-3xl font-bold" data-testid="value-comments">{formattedMetrics.commentsPosted}</div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                            <MessageSquare className="h-6 w-6 text-purple-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold" data-testid="value-comments">{summary.metrics.commentsPosted}</div>
                     </CardContent>
                   </Card>
                   </div>
@@ -379,10 +530,15 @@ export default function DailyBrief() {
                 <Card data-testid="card-interest-analysis">
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="flex items-center gap-2" data-testid="heading-interest-analysis">
-                        <Sparkles className="h-6 w-6 text-primary" />
-                        تحليل الاهتمامات (AI Insights)
-                      </CardTitle>
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2 text-2xl" data-testid="heading-interest-analysis">
+                          <Sparkles className="h-7 w-7 text-primary" />
+                          تحليل الاهتمامات (AI Insights)
+                        </CardTitle>
+                        <CardDescription className="mt-1 text-sm">
+                          اكتشف ما يثير اهتمامك من مواضيع وفئات
+                        </CardDescription>
+                      </div>
                       <CollapsibleTrigger asChild>
                         <Button
                           size="sm"
@@ -413,7 +569,7 @@ export default function DailyBrief() {
                           data-testid={`badge-category-${idx}`}
                         >
                           <span data-testid={`text-category-name-${idx}`}>{cat.name}</span>
-                          {' '}(<span data-testid={`value-category-count-${idx}`}>{cat.count}</span>)
+                          {' '}(<span data-testid={`value-category-count-${idx}`}>{(cat.count ?? 0).toLocaleString('en-US')}</span>)
                         </Badge>
                       ))}
                     </div>
@@ -447,16 +603,16 @@ export default function DailyBrief() {
                             data-testid={`link-suggested-article-${idx}`}
                           >
                             <Card className="hover-elevate transition-all cursor-pointer h-full">
-                              <CardContent className="p-4">
+                              <CardContent className="p-6">
                                 <Badge 
                                   variant="secondary" 
-                                  className="mb-2"
+                                  className="mb-3"
                                   data-testid={`badge-suggestion-category-${idx}`}
                                 >
                                   {article.categoryName}
                                 </Badge>
                                 <h4 
-                                  className="font-semibold text-sm line-clamp-2"
+                                  className="font-semibold text-base line-clamp-2"
                                   data-testid={`text-suggestion-title-${idx}`}
                                 >
                                   {article.title}
@@ -479,11 +635,11 @@ export default function DailyBrief() {
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex-1">
-                        <CardTitle className="flex items-center gap-2" data-testid="heading-time-activity">
-                          <Zap className="h-6 w-6 text-primary" />
+                        <CardTitle className="flex items-center gap-2 text-2xl" data-testid="heading-time-activity">
+                          <Zap className="h-7 w-7 text-primary" />
                           نشاطك الزمني
                         </CardTitle>
-                        <CardDescription data-testid="text-activity-summary">
+                        <CardDescription className="mt-1 text-sm" data-testid="text-activity-summary">
                           أكثر أوقات قراءتك: <strong data-testid="value-peak-time">{formatHour(summary.timeActivity.peakReadingTime)}</strong>
                           {' '}• أقل فترات التفاعل: <strong data-testid="value-low-time">{formatHour(summary.timeActivity.lowActivityPeriod)}</strong>
                         </CardDescription>
@@ -507,7 +663,7 @@ export default function DailyBrief() {
                   
                   <CollapsibleContent>
                     <CardContent>
-                  <div className="h-64 w-full" data-testid="chart-hourly-activity">
+                  <div className="h-80 w-full" data-testid="chart-hourly-activity">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart 
                         data={summary.timeActivity.hourlyBreakdown}
@@ -535,11 +691,11 @@ export default function DailyBrief() {
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="mt-4 p-4 bg-primary/5 rounded-lg" data-testid="box-ai-suggestion">
-                    <div className="flex items-start gap-2">
-                      <Lightbulb className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <p className="text-sm">
-                        <strong>اقتراح AI:</strong>{' '}
+                  <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20" data-testid="box-ai-suggestion">
+                    <div className="flex items-start gap-3">
+                      <Lightbulb className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
+                      <p className="text-sm leading-relaxed">
+                        <strong className="text-base">اقتراح AI:</strong>{' '}
                         <span data-testid="text-ai-suggestion">{summary.timeActivity.aiSuggestion}</span>
                       </p>
                     </div>
@@ -550,14 +706,20 @@ export default function DailyBrief() {
               </Collapsible>
 
               {/* AI Insights */}
+              {summary.aiInsights && (
               <Collapsible open={isAIInsightsExpanded} onOpenChange={setIsAIInsightsExpanded}>
-                <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20" data-testid="card-ai-insights">
+                <Card className="bg-gradient-to-br from-purple-500/15 via-purple-500/10 to-pink-500/10 border-purple-500/30" data-testid="card-ai-insights">
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="flex items-center gap-2" data-testid="heading-ai-touches">
-                        <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                        لمسات الذكاء الاصطناعي
-                      </CardTitle>
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2 text-2xl" data-testid="heading-ai-touches">
+                          <Sparkles className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+                          لمسات الذكاء الاصطناعي
+                        </CardTitle>
+                        <CardDescription className="mt-1 text-sm text-purple-600/80 dark:text-purple-400/80">
+                          تحليل ذكي لأدائك القرائي اليومي
+                        </CardDescription>
+                      </div>
                       <CollapsibleTrigger asChild>
                         <Button
                           size="sm"
@@ -576,11 +738,11 @@ export default function DailyBrief() {
                   </CardHeader>
                   
                   <CollapsibleContent>
-                    <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div data-testid="box-reading-mood-report">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <Brain className="h-5 w-5" />
+                    <CardContent className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="p-4 bg-purple-500/10 rounded-lg" data-testid="box-reading-mood-report">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2 text-base">
+                        <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                         تقرير مزاجك القرائي
                       </h3>
                       <p 
@@ -591,9 +753,9 @@ export default function DailyBrief() {
                       </p>
                     </div>
 
-                    <div data-testid="box-focus-score">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <Gauge className="h-5 w-5" />
+                    <div className="p-4 bg-purple-500/10 rounded-lg" data-testid="box-focus-score">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2 text-base">
+                        <Gauge className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                         نسبة تركيزك اليوم
                       </h3>
                       <div className="flex items-center gap-3">
@@ -606,23 +768,24 @@ export default function DailyBrief() {
                           className="text-2xl font-bold text-purple-600 dark:text-purple-400"
                           data-testid="value-focus-score"
                         >
-                          {summary.aiInsights.focusScore}%
+                          {formattedMetrics.focusScore}%
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-purple-500/10 rounded-lg" data-testid="box-daily-goal">
-                    <h3 className="font-semibold mb-2 flex items-center gap-2">
-                      <TargetIcon className="h-5 w-5" />
+                  <div className="p-6 bg-purple-500/15 rounded-lg border border-purple-500/30" data-testid="box-daily-goal">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-base">
+                      <TargetIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       اقتراح هدف اليوم
                     </h3>
-                    <p data-testid="text-daily-goal">{summary.aiInsights.dailyGoal}</p>
+                    <p className="text-sm leading-relaxed text-foreground/90" data-testid="text-daily-goal">{summary.aiInsights.dailyGoal}</p>
                   </div>
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
               </Collapsible>
+              )}
             </div>
           )}
         </div>
