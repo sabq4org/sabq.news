@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -263,90 +264,46 @@ export default function DailyBrief() {
             <div className="space-y-10" dir="rtl">
               {/* Statistics KPIs Section */}
               {formattedMetrics && (
-              <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-                {/* Articles Read Today */}
-                <Card className="hover-elevate transition-all" data-testid="kpi-articles-read">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-articles">
-                          المقالات المقروءة اليوم
-                        </p>
-                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-articles">
-                          {formattedMetrics.articlesRead}
-                        </h3>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <BookOpen className="h-6 w-6 text-primary" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Reading Time */}
-                <Card className="hover-elevate transition-all" data-testid="kpi-reading-time">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-time">
-                          وقت القراءة (دقيقة)
-                        </p>
-                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-time">
-                          {formattedMetrics.readingTime}
-                        </h3>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                          <Clock className="h-6 w-6 text-blue-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Completion Rate */}
-                <Card className="hover-elevate transition-all" data-testid="kpi-completion-rate">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-completion">
-                          معدل الإكمال (%)
-                        </p>
-                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-completion">
-                          {formattedMetrics.completionRate}
-                        </h3>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <Target className="h-6 w-6 text-green-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Engagement Score */}
-                <Card className="hover-elevate transition-all" data-testid="kpi-engagement">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-2" data-testid="label-kpi-engagement">
-                          نقاط التفاعل
-                        </p>
-                        <h3 className="text-2xl md:text-3xl font-bold" data-testid="value-kpi-engagement">
-                          {formattedMetrics.engagementScore}
-                        </h3>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                          <Activity className="h-6 w-6 text-red-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
+                <MobileOptimizedKpiCard
+                  label="المقالات المقروءة اليوم"
+                  value={formattedMetrics.articlesRead}
+                  icon={BookOpen}
+                  iconColor="text-primary"
+                  iconBgColor="bg-primary/10"
+                  testId="kpi-articles-read"
+                  ariaLive={true}
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="وقت القراءة (دقيقة)"
+                  value={formattedMetrics.readingTime}
+                  icon={Clock}
+                  iconColor="text-blue-500"
+                  iconBgColor="bg-blue-500/10"
+                  testId="kpi-reading-time"
+                  ariaLive={true}
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="معدل الإكمال (%)"
+                  value={formattedMetrics.completionRate}
+                  icon={Target}
+                  iconColor="text-green-500"
+                  iconBgColor="bg-green-500/10"
+                  testId="kpi-completion-rate"
+                  ariaLive={true}
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="نقاط التفاعل"
+                  value={formattedMetrics.engagementScore}
+                  icon={Activity}
+                  iconColor="text-red-500"
+                  iconBgColor="bg-red-500/10"
+                  testId="kpi-engagement"
+                  ariaLive={true}
+                />
               </div>
               )}
 
