@@ -45,6 +45,7 @@ import type { Category, ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -625,117 +626,73 @@ export default function CategoryPage() {
         </div>
       ) : (
         <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* Row 1: Category Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-8">
             {/* Total Articles */}
-            <Card className="hover-elevate" data-testid="stat-total-articles">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  إجمالي المقالات
-                </CardTitle>
-                <Newspaper className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalArticles.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">مقالة</p>
-              </CardContent>
-            </Card>
+            <MobileOptimizedKpiCard
+              label="إجمالي المقالات"
+              value={statistics.totalArticles.toLocaleString('en-US')}
+              icon={Newspaper}
+              iconColor="text-primary"
+              iconBgColor="bg-primary/10"
+              testId="stat-total-articles"
+            />
 
             {/* Recent Articles (24h) */}
-            <Card className="hover-elevate" data-testid="stat-recent-articles">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  المقالات الحديثة
-                </CardTitle>
-                <Clock className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.recentArticles.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">خلال 24 ساعة</p>
-              </CardContent>
-            </Card>
+            <MobileOptimizedKpiCard
+              label="المقالات الحديثة"
+              value={statistics.recentArticles.toLocaleString('en-US')}
+              icon={Clock}
+              iconColor="text-blue-600"
+              iconBgColor="bg-blue-600/10"
+              testId="stat-recent-articles"
+            />
 
             {/* Total Views */}
-            <Card className="hover-elevate" data-testid="stat-total-views">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  المشاهدات الكلية
-                </CardTitle>
-                <Eye className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalViews.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">مشاهدة</p>
-              </CardContent>
-            </Card>
-          </div>
+            <MobileOptimizedKpiCard
+              label="المشاهدات الكلية"
+              value={statistics.totalViews.toLocaleString('en-US')}
+              icon={Eye}
+              iconColor="text-purple-600"
+              iconBgColor="bg-purple-600/10"
+              testId="stat-total-views"
+            />
 
-          {/* Row 2: Engagement Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {/* Average Engagement */}
-            <Card className="hover-elevate" data-testid="stat-avg-engagement">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  معدل التفاعل
-                </CardTitle>
-                <Heart className="h-4 w-4 text-red-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.avgEngagement.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">لكل مقالة</p>
-              </CardContent>
-            </Card>
+            <MobileOptimizedKpiCard
+              label="معدل التفاعل"
+              value={statistics.avgEngagement.toLocaleString('en-US')}
+              icon={Heart}
+              iconColor="text-red-600"
+              iconBgColor="bg-red-600/10"
+              testId="stat-avg-engagement"
+            />
 
             {/* Most Viewed Article */}
-            <Card className="hover-elevate" data-testid="stat-most-viewed">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  أكثر المقالات مشاهدة
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                {statistics.mostViewed ? (
-                  <>
-                    <Link href={`/article/${statistics.mostViewed.slug}`}>
-                      <div className="text-sm font-semibold line-clamp-1 hover:text-primary cursor-pointer mb-1">
-                        {statistics.mostViewed.title}
-                      </div>
-                    </Link>
-                    <p className="text-xs text-muted-foreground">
-                      {(statistics.mostViewed.views || 0).toLocaleString()} مشاهدة
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">لا توجد بيانات</p>
-                )}
-              </CardContent>
-            </Card>
+            <MobileOptimizedKpiCard
+              label="أكثر المقالات مشاهدة"
+              value={statistics.mostViewed ? statistics.mostViewed.title : "لا توجد بيانات"}
+              icon={TrendingUp}
+              iconColor="text-green-600"
+              iconBgColor="bg-green-600/10"
+              testId="stat-most-viewed"
+            />
 
             {/* Last Update */}
-            <Card className="hover-elevate" data-testid="stat-last-update">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  آخر تحديث
-                </CardTitle>
-                <RefreshCw className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                {statistics.latestArticle?.publishedAt ? (
-                  <>
-                    <div className="text-lg font-bold">
-                      {formatDistanceToNow(new Date(statistics.latestArticle.publishedAt), {
-                        addSuffix: true,
-                        locale: arSA,
-                      })}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">آخر مقالة</p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">لا توجد بيانات</p>
-                )}
-              </CardContent>
-            </Card>
+            <MobileOptimizedKpiCard
+              label="آخر تحديث"
+              value={
+                statistics.latestArticle?.publishedAt
+                  ? formatDistanceToNow(new Date(statistics.latestArticle.publishedAt), {
+                      addSuffix: true,
+                      locale: arSA,
+                    })
+                  : "لا توجد بيانات"
+              }
+              icon={RefreshCw}
+              iconColor="text-orange-600"
+              iconBgColor="bg-orange-600/10"
+              testId="stat-last-update"
+            />
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { NavigationBar } from "@/components/NavigationBar";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -237,58 +238,42 @@ export default function Home() {
         {stats && (
           <div className="bg-muted/30 border-b">
             <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Total Articles Card */}
-                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-total-articles">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Newspaper className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
-                    {(stats.totalArticles ?? 0).toLocaleString('en-US')}
-                  </div>
-                  <div className="text-sm text-muted-foreground">إجمالي المقالات</div>
-                </div>
-
-                {/* Today's Articles Card */}
-                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-today-articles">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
-                    {(stats.todayArticles ?? 0).toLocaleString('en-US')}
-                  </div>
-                  <div className="text-sm text-muted-foreground">مقالات اليوم</div>
-                </div>
-
-                {/* Total Views Card */}
-                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-total-views">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Eye className="h-5 w-5 text-blue-500" />
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
-                    {(stats.totalViews ?? 0).toLocaleString('en-US')}
-                  </div>
-                  <div className="text-sm text-muted-foreground">إجمالي المشاهدات</div>
-                </div>
-
-                {/* Active Users Card */}
-                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-active-users">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <MessageSquare className="h-5 w-5 text-orange-500" />
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">
-                    {(stats.activeUsers ?? 0).toLocaleString('en-US')}
-                  </div>
-                  <div className="text-sm text-muted-foreground">المستخدمون النشطون</div>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+                <MobileOptimizedKpiCard
+                  label="إجمالي المقالات"
+                  value={(stats.totalArticles ?? 0).toLocaleString('en-US')}
+                  icon={Newspaper}
+                  iconColor="text-primary"
+                  iconBgColor="bg-primary/10"
+                  testId="card-stat-total-articles"
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="مقالات اليوم"
+                  value={(stats.todayArticles ?? 0).toLocaleString('en-US')}
+                  icon={TrendingUp}
+                  iconColor="text-green-500"
+                  iconBgColor="bg-green-500/10"
+                  testId="card-stat-today-articles"
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="إجمالي المشاهدات"
+                  value={(stats.totalViews ?? 0).toLocaleString('en-US')}
+                  icon={Eye}
+                  iconColor="text-blue-500"
+                  iconBgColor="bg-blue-500/10"
+                  testId="card-stat-total-views"
+                />
+                
+                <MobileOptimizedKpiCard
+                  label="المستخدمون النشطون"
+                  value={(stats.activeUsers ?? 0).toLocaleString('en-US')}
+                  icon={MessageSquare}
+                  iconColor="text-orange-500"
+                  iconBgColor="bg-orange-500/10"
+                  testId="card-stat-active-users"
+                />
               </div>
             </div>
           </div>

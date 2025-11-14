@@ -1,6 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
@@ -772,84 +773,42 @@ export default function ArticleDetail() {
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         {/* Statistics Cards Section - TailAdmin Style */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          {/* Views Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-views">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Eye className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {(article.views ?? 0).toLocaleString('en-US')}
-            </div>
-            <div className="text-sm text-muted-foreground">المشاهدات</div>
-          </div>
-
-          {/* Reactions Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-reactions">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                <Heart className="h-5 w-5 text-red-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {(article.reactionsCount ?? 0).toLocaleString('en-US')}
-            </div>
-            <div className="text-sm text-muted-foreground">الإعجابات</div>
-          </div>
-
-          {/* Comments Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-comments">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {(article.commentsCount ?? 0).toLocaleString('en-US')}
-            </div>
-            <div className="text-sm text-muted-foreground">التعليقات</div>
-          </div>
-
-          {/* Reading Time Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-reading-time">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-orange-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {readingTime}
-            </div>
-            <div className="text-sm text-muted-foreground">دقائق قراءة</div>
-          </div>
-
-          {/* Shares Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-shares">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <Share2 className="h-5 w-5 text-green-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {(article.shareCount ?? 0).toLocaleString('en-US')}
-            </div>
-            <div className="text-sm text-muted-foreground">المشاركات</div>
-          </div>
-
-          {/* Bookmarks Card */}
-          <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-bookmarks">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Bookmark className="h-5 w-5 text-purple-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {(article.bookmarkCount ?? 0).toLocaleString('en-US')}
-            </div>
-            <div className="text-sm text-muted-foreground">الحفظ</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-8">
+          <MobileOptimizedKpiCard
+            label="المشاهدات"
+            value={(article.views ?? 0).toLocaleString('en-US')}
+            icon={Eye}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            testId="card-stat-views"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="الإعجابات"
+            value={(article.reactionsCount ?? 0).toLocaleString('en-US')}
+            icon={Heart}
+            iconColor="text-red-500"
+            iconBgColor="bg-red-500/10"
+            testId="card-stat-reactions"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="التعليقات"
+            value={(article.commentsCount ?? 0).toLocaleString('en-US')}
+            icon={MessageSquare}
+            iconColor="text-blue-500"
+            iconBgColor="bg-blue-500/10"
+            testId="card-stat-comments"
+          />
+          
+          <MobileOptimizedKpiCard
+            label="دقائق قراءة"
+            value={readingTime}
+            icon={Clock}
+            iconColor="text-orange-500"
+            iconBgColor="bg-orange-500/10"
+            testId="card-stat-reading-time"
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

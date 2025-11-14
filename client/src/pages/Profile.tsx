@@ -62,6 +62,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import type { ArticleWithDetails, User as UserType, UserPointsTotal } from "@shared/schema";
 import { hasRole } from "@/hooks/useAuth";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 
 const updateUserSchema = z.object({
   firstName: z.string().min(2, "الاسم الأول يجب أن يكون حرفين على الأقل").optional(),
@@ -728,76 +729,51 @@ export default function Profile() {
         </Card>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-          <Card className="hover-elevate transition-all">
-            <CardContent className="p-6">
-              <div className="text-center space-y-2">
-                <Users className="h-6 w-6 mx-auto text-primary" />
-                <div>
-                  <p className="text-2xl font-bold" data-testid="text-stat-followers">
-                    {followStats?.followersCount || 0}
-                  </p>
-                  <p className="text-sm text-muted-foreground">متابع</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mb-6">
+          <MobileOptimizedKpiCard
+            label="متابع"
+            value={(followStats?.followersCount || 0).toLocaleString('en-US')}
+            icon={Users}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            testId="text-stat-followers"
+          />
 
-          <Card className="hover-elevate transition-all">
-            <CardContent className="p-6">
-              <div className="text-center space-y-2">
-                <Heart className="h-6 w-6 mx-auto text-red-500" />
-                <div>
-                  <p className="text-2xl font-bold" data-testid="text-stat-likes">
-                    {likedArticles.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">إعجاب</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MobileOptimizedKpiCard
+            label="إعجاب"
+            value={likedArticles.length.toLocaleString('en-US')}
+            icon={Heart}
+            iconColor="text-red-500"
+            iconBgColor="bg-red-500/10"
+            testId="text-stat-likes"
+          />
 
-          <Card className="hover-elevate transition-all">
-            <CardContent className="p-6">
-              <div className="text-center space-y-2">
-                <Bookmark className="h-6 w-6 mx-auto text-blue-500" />
-                <div>
-                  <p className="text-2xl font-bold" data-testid="text-stat-bookmarks">
-                    {bookmarkedArticles.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">محفوظ</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MobileOptimizedKpiCard
+            label="محفوظ"
+            value={bookmarkedArticles.length.toLocaleString('en-US')}
+            icon={Bookmark}
+            iconColor="text-blue-500"
+            iconBgColor="bg-blue-500/10"
+            testId="text-stat-bookmarks"
+          />
 
-          <Card className="hover-elevate transition-all">
-            <CardContent className="p-6">
-              <div className="text-center space-y-2">
-                <Eye className="h-6 w-6 mx-auto text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold" data-testid="text-stat-reads">
-                    {readingHistory.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">قراءة</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MobileOptimizedKpiCard
+            label="قراءة"
+            value={readingHistory.length.toLocaleString('en-US')}
+            icon={Eye}
+            iconColor="text-green-500"
+            iconBgColor="bg-green-500/10"
+            testId="text-stat-reads"
+          />
 
-          <Card className="hover-elevate transition-all">
-            <CardContent className="p-6">
-              <div className="text-center space-y-2">
-                <Coins className="h-6 w-6 mx-auto text-amber-500" />
-                <div>
-                  <p className="text-2xl font-bold" data-testid="text-stat-points">
-                    {loyaltyPoints?.totalPoints || 0}
-                  </p>
-                  <p className="text-sm text-muted-foreground">نقطة</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MobileOptimizedKpiCard
+            label="نقطة"
+            value={(loyaltyPoints?.totalPoints || 0).toLocaleString('en-US')}
+            icon={Coins}
+            iconColor="text-amber-500"
+            iconBgColor="bg-amber-500/10"
+            testId="text-stat-points"
+          />
         </div>
 
         {/* Main Content with Tabs */}

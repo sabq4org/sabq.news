@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { User as UserType } from "@shared/schema";
 import NotFound from "@/pages/not-found";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 
 export default function PublicProfile() {
   const { toast } = useToast();
@@ -304,70 +305,42 @@ export default function PublicProfile() {
             </div>
 
             {/* Quick Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="hover-elevate transition-all">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">المتابعون</p>
-                      <p className="text-2xl font-bold" data-testid="text-stat-followers">
-                        {profileUser.followersCount || 0}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+              <MobileOptimizedKpiCard
+                label="المتابعون"
+                value={(profileUser.followersCount || 0).toLocaleString('en-US')}
+                icon={Users}
+                iconColor="text-primary"
+                iconBgColor="bg-primary/10"
+                testId="text-stat-followers"
+              />
 
-              <Card className="hover-elevate transition-all">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-accent/30 flex items-center justify-center">
-                      <Users className="h-6 w-6 text-accent-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">المتابَعون</p>
-                      <p className="text-2xl font-bold" data-testid="text-stat-following">
-                        {profileUser.followingCount || 0}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <MobileOptimizedKpiCard
+                label="المتابَعون"
+                value={(profileUser.followingCount || 0).toLocaleString('en-US')}
+                icon={Users}
+                iconColor="text-accent-foreground"
+                iconBgColor="bg-accent/30"
+                testId="text-stat-following"
+              />
 
-              <Card className="hover-elevate transition-all">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                      <FileText className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">مقالات منشورة</p>
-                      <p className="text-2xl font-bold" data-testid="text-stat-articles-published">
-                        {profileUser.articlesPublished || 0}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <MobileOptimizedKpiCard
+                label="مقالات منشورة"
+                value={(profileUser.articlesPublished || 0).toLocaleString('en-US')}
+                icon={FileText}
+                iconColor="text-muted-foreground"
+                iconBgColor="bg-muted"
+                testId="text-stat-articles-published"
+              />
 
-              <Card className="hover-elevate transition-all">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-blue-500" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">مقالات مقروءة</p>
-                      <p className="text-2xl font-bold" data-testid="text-stat-articles-read">
-                        {profileUser.articlesRead || 0}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <MobileOptimizedKpiCard
+                label="مقالات مقروءة"
+                value={(profileUser.articlesRead || 0).toLocaleString('en-US')}
+                icon={TrendingUp}
+                iconColor="text-blue-500"
+                iconBgColor="bg-blue-500/10"
+                testId="text-stat-articles-read"
+              />
             </div>
           </div>
         </div>
