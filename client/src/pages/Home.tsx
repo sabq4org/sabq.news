@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AudioPlayer } from "@/components/AudioPlayer";
-import { Play, Headphones } from "lucide-react";
+import { Play, Headphones, Newspaper, Eye, TrendingUp, MessageSquare } from "lucide-react";
 import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
 
 function AudioBriefsSection() {
@@ -116,6 +116,16 @@ export default function Home() {
 
   const { data: homepage, isLoading, error } = useQuery<HomepageData>({
     queryKey: ["/api/homepage"],
+  });
+
+  // Fetch homepage statistics
+  const { data: stats } = useQuery<{
+    totalArticles: number;
+    todayArticles: number;
+    totalViews: number;
+    activeUsers: number;
+  }>({
+    queryKey: ["/api/homepage/stats"],
   });
 
   // Fetch smart blocks for each placement
@@ -223,6 +233,67 @@ export default function Home() {
       <NavigationBar />
 
       <main className="flex-1">
+        {/* Statistics Cards Section - TailAdmin Style */}
+        {stats && (
+          <div className="bg-muted/30 border-b">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Total Articles Card */}
+                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-total-articles">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Newspaper className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(stats.totalArticles ?? 0).toLocaleString('ar-SA')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">إجمالي المقالات</div>
+                </div>
+
+                {/* Today's Articles Card */}
+                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-today-articles">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(stats.todayArticles ?? 0).toLocaleString('ar-SA')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">مقالات اليوم</div>
+                </div>
+
+                {/* Total Views Card */}
+                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-total-views">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Eye className="h-5 w-5 text-blue-500" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(stats.totalViews ?? 0).toLocaleString('ar-SA')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">إجمالي المشاهدات</div>
+                </div>
+
+                {/* Active Users Card */}
+                <div className="bg-card border rounded-lg p-4 hover-elevate transition-all" data-testid="card-stat-active-users">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5 text-orange-500" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(stats.activeUsers ?? 0).toLocaleString('ar-SA')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">المستخدمون النشطون</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
           {/* Hero Section */}
           {homepage.hero && homepage.hero.length > 0 && (

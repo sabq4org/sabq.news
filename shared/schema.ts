@@ -5387,3 +5387,14 @@ export type ShortLink = typeof shortLinks.$inferSelect;
 export type InsertShortLink = z.infer<typeof insertShortLinkSchema>;
 export type ShortLinkClick = typeof shortLinkClicks.$inferSelect;
 export type InsertShortLinkClick = z.infer<typeof insertShortLinkClickSchema>;
+
+// ============================================
+// HOMEPAGE STATISTICS
+// ============================================
+
+export interface HomepageStats {
+  totalArticles: number;        // Count of all published articles
+  todayArticles: number;         // Articles published in last 24h
+  totalViews: number;            // Sum of all article views (lifetime)
+  activeUsers: number;           // Users logged in last 7 days
+}

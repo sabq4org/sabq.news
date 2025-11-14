@@ -7971,6 +7971,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Homepage statistics (cached for 5 min)
+  app.get("/api/homepage/stats", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
+    try {
+      const stats = await storage.getHomepageStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('[Homepage Stats] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch homepage stats' });
+    }
+  });
+
   // ============================================================
   // ARTICLE ROUTES
   // ============================================================

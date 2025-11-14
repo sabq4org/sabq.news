@@ -260,6 +260,7 @@ import {
   type InsertWalletPass,
   type WalletDevice,
   type InsertWalletDevice,
+  type HomepageStats,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1216,6 +1217,9 @@ export interface IStorage {
     pressIdNumber?: string | null;
     cardValidUntil?: Date | null;
   }): Promise<User>;
+  
+  // Homepage Statistics
+  getHomepageStats(): Promise<HomepageStats>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -10546,6 +10550,60 @@ export class DatabaseStorage implements IStorage {
       updateReason: reason,
       timestamp: new Date(),
     });
+  }
+
+  // ============================================================
+  // HOMEPAGE STATISTICS
+  // ============================================================
+
+  async getHomepageStats(): Promise<HomepageStats> {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Total published articles
+    const [totalArticlesResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(articles)
+      .where(eq(articles.status, 'published'));
+    
+    const totalArticles = totalArticlesResult?.count || 0;
+
+    // Articles published in last 24 hours
+    const [todayArticlesResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, 'published'),
+          gte(articles.publishedAt, oneDayAgo)
+        )
+      );
+    
+    const todayArticles = todayArticlesResult?.count || 0;
+
+    // Total views (sum of all article views for published articles)
+    const [totalViewsResult] = await db
+      .select({ total: sql<number>`SUM(COALESCE(${articles.views}, 0))::int` })
+      .from(articles)
+      .where(eq(articles.status, 'published'));
+    
+    const totalViews = totalViewsResult?.total || 0;
+
+    // Active users (users with activity in last 7 days)
+    const [activeUsersResult] = await db
+      .select({ count: sql<number>`COUNT(DISTINCT ${users.id})::int` })
+      .from(users)
+      .where(gte(users.lastActivityAt, sevenDaysAgo));
+    
+    const activeUsers = activeUsersResult?.count || 0;
+
+    return {
+      totalArticles,
+      todayArticles,
+      totalViews,
+      activeUsers,
+    };
   }
 }
 
