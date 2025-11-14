@@ -334,26 +334,65 @@ export default function CategoryPage() {
     <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} />
 
-      {/* Clean Hero Section - Image Only */}
+      {/* Hero Section with Text Overlay */}
       {category.heroImageUrl ? (
-        <div className="relative h-72 overflow-hidden">
+        <div className="relative h-96 overflow-hidden">
           <img
             src={category.heroImageUrl}
             alt={category.nameAr}
             className="w-full h-full object-cover"
           />
-          {/* Dark overlay for visual effect */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+          {/* Dark gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+          
+          {/* Text Overlay Content */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="container mx-auto px-3 sm:px-6 lg:px-8 text-center">
+              {/* Icon */}
+              {category.icon && (
+                <span className="text-5xl sm:text-6xl mb-4 block">{category.icon}</span>
+              )}
+              
+              {/* Title */}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+                {category.nameAr}
+              </h1>
+              
+              {/* Description */}
+              {category.description && (
+                <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+                  {category.description}
+                </p>
+              )}
+              
+              {/* Smart Category Badge */}
+              {isSmartCategory && (
+                <motion.div
+                  animate={{ opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="mt-4 inline-block"
+                >
+                  <Badge
+                    className="flex items-center gap-1.5 min-h-8 px-4 py-2 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                    data-testid="badge-category-type"
+                  >
+                    <Brain className="h-4 w-4" />
+                    اختيار ذكي
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
 
-      {/* Category Header Section - Below Hero */}
+      {/* Breadcrumb Navigation Section - Below Hero */}
       <div className={`${
         !category.heroImageUrl 
           ? isSmartCategory
             ? "bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 dark:from-primary/8 dark:via-accent/5 dark:to-primary/3 border-b"
             : "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 dark:from-primary/10 dark:to-primary/5 border-b"
-          : ""
+          : "border-b bg-background/95 backdrop-blur-sm"
       } relative overflow-hidden`}>
         {/* Animated AI Grid Pattern for Smart Categories (no hero image) */}
         {!category.heroImageUrl && isSmartCategory && (
@@ -362,9 +401,9 @@ export default function CategoryPage() {
           </div>
         )}
         
-        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 relative z-10">
+        <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 relative z-10">
           {/* Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6" data-testid="breadcrumb-navigation">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="breadcrumb-navigation">
             <Link href="/">
               <span className="flex items-center gap-1 hover-elevate px-2 py-1 rounded transition-colors cursor-pointer">
                 <Home className="h-3.5 w-3.5" />
@@ -381,59 +420,63 @@ export default function CategoryPage() {
             <span className="font-semibold text-foreground">{category.nameAr}</span>
           </nav>
 
-          {/* Category Title and Info */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            {isSmartCategory && (
-              <motion.div
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatDelay: 3,
-                }}
-              >
-                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-              </motion.div>
-            )}
-            {category.icon && (
-              <span className="text-3xl sm:text-4xl">{category.icon}</span>
-            )}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              {category.nameAr}
-            </h1>
-            {isSmartCategory ? (
-              <motion.div
-                animate={{ opacity: [1, 0.7, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Badge
-                  className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
-                  data-testid="badge-category-type"
-                >
-                  <Brain className="h-3.5 w-3.5" />
-                  اختيار ذكي
-                </Badge>
-              </motion.div>
-            ) : (
-              getCategoryTypeBadge(category.type) && (
-                <Badge
-                  variant={getCategoryTypeBadge(category.type)!.variant}
-                  className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
-                  data-testid="badge-category-type"
-                >
-                  {getCategoryTypeBadge(category.type)!.icon}
-                  {getCategoryTypeBadge(category.type)!.label}
-                </Badge>
-              )
-            )}
-          </div>
-          {category.description && (
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mb-2 sm:mb-3 leading-relaxed">
-              {category.description}
-            </p>
+          {/* Category Header for NO HERO IMAGE cases */}
+          {!category.heroImageUrl && (
+            <div className="mt-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                {isSmartCategory && (
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                    }}
+                  >
+                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </motion.div>
+                )}
+                {category.icon && (
+                  <span className="text-3xl sm:text-4xl">{category.icon}</span>
+                )}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+                  {category.nameAr}
+                </h1>
+                {isSmartCategory ? (
+                  <motion.div
+                    animate={{ opacity: [1, 0.7, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Badge
+                      className="flex items-center gap-1.5 min-h-8 px-3 py-1.5 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                      data-testid="badge-category-type"
+                    >
+                      <Brain className="h-3.5 w-3.5" />
+                      اختيار ذكي
+                    </Badge>
+                  </motion.div>
+                ) : (
+                  getCategoryTypeBadge(category.type) && (
+                    <Badge
+                      variant={getCategoryTypeBadge(category.type)!.variant}
+                      className="flex items-center gap-1 min-h-8 px-3 py-1.5 text-sm"
+                      data-testid="badge-category-type"
+                    >
+                      {getCategoryTypeBadge(category.type)!.icon}
+                      {getCategoryTypeBadge(category.type)!.label}
+                    </Badge>
+                  )
+                )}
+              </div>
+              {category.description && (
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mb-2 sm:mb-3 leading-relaxed">
+                  {category.description}
+                </p>
+              )}
+            </div>
           )}
           {/* Smart Category Features */}
           {isSmartCategory && (
