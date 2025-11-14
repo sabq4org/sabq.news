@@ -65,13 +65,13 @@ export default function NewsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset pagination when filters change
+  // Reset pagination when filters or items per page change
   useEffect(() => {
     setCurrentPage(1);
     if (infiniteScrollEnabled) {
       setDisplayedCount(20);
     }
-  }, [debouncedSearch, sortOption, timeRange, selectedCategory, mood, infiniteScrollEnabled]);
+  }, [debouncedSearch, sortOption, timeRange, selectedCategory, mood, infiniteScrollEnabled, itemsPerPage]);
 
   // Filter articles based on selected filters
   const filteredArticles = useMemo(() => {
@@ -163,6 +163,13 @@ export default function NewsPage() {
   const currentArticles = infiniteScrollEnabled
     ? sortedArticles.slice(0, displayedCount)
     : sortedArticles.slice(startIndex, endIndex);
+
+  // Clamp currentPage to valid range when totalPages changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // Infinite Scroll Hook (after sortedArticles is defined)
   useEffect(() => {
