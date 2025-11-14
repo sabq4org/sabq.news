@@ -8182,6 +8182,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // News Statistics Endpoint - Statistics cards data
+  app.get("/api/news/stats", async (req, res) => {
+    try {
+      const stats = await storage.getNewsStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching news stats:", error);
+      res.status(500).json({ message: "Failed to fetch news statistics" });
+    }
+  });
+
   app.get("/api/articles/featured", async (req: any, res) => {
     try {
       const userId = req.user?.id;

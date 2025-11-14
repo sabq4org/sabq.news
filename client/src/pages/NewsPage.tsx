@@ -1,40 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { NewsAnalyticsHero } from "@/components/NewsAnalyticsHero";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
-import { SmartFilterBar } from "@/components/SmartFilterBar";
+import { NewsEnhancedFilterBar } from "@/components/NewsEnhancedFilterBar";
+import { NewsStatsCards } from "@/components/NewsStatsCards";
+import { NewsArticleCard } from "@/components/NewsArticleCard";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ChevronLeft, Clock, MessageSquare, Flame, Zap, Sparkles } from "lucide-react";
-import { ViewsCount } from "@/components/ViewsCount";
-import { Link } from "wouter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import type { ArticleWithDetails, Category } from "@shared/schema";
-import { formatDistanceToNow } from "date-fns";
-import { arSA } from "date-fns/locale";
-
-const ARTICLES_PER_PAGE = 20;
 
 type TimeRange = 'today' | 'week' | 'month' | 'all';
 type Mood = 'all' | 'trending' | 'calm' | 'hot';
-
-// Helper function to check if article is new (published within last 3 hours)
-const isNewArticle = (publishedAt: Date | string | null | undefined) => {
-  if (!publishedAt) return false;
-  const published = typeof publishedAt === 'string' ? new Date(publishedAt) : publishedAt;
-  const now = new Date();
-  const diffInHours = (now.getTime() - published.getTime()) / (1000 * 60 * 60);
-  return diffInHours <= 3;
-};
 
 export default function NewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [mood, setMood] = useState<Mood>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'most-viewed' | 'most-commented'>('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [infiniteScrollEnabled, setInfiniteScrollEnabled] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [displayedCount, setDisplayedCount] = useState(20);
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
@@ -56,58 +57,130 @@ export default function NewsPage() {
     queryKey: ["/api/articles"],
   });
 
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    if (infiniteScrollEnabled) {
+      setDisplayedCount(20);
+    }
+  }, [debouncedSearch, sortOption, timeRange, selectedCategory, mood, infiniteScrollEnabled]);
+
   // Filter articles based on selected filters
-  const filteredArticles = articles.filter((article) => {
-    // Exclude opinion articles
-    if (article.articleType === 'opinion') return false;
+  const filteredArticles = useMemo(() => {
+    return articles.filter((article) => {
+      // Exclude opinion articles
+      if (article.articleType === 'opinion') return false;
 
-    // Filter by time range
-    if (timeRange !== 'all' && article.publishedAt) {
-      const now = new Date();
-      const publishedDate = new Date(article.publishedAt);
-      const daysDiff = Math.floor((now.getTime() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      switch (timeRange) {
-        case 'today':
-          if (daysDiff > 0) return false;
-          break;
-        case 'week':
-          if (daysDiff > 7) return false;
-          break;
-        case 'month':
-          if (daysDiff > 30) return false;
-          break;
+      // Search filter
+      if (debouncedSearch) {
+        const searchLower = debouncedSearch.toLowerCase();
+        const titleMatch = article.title.toLowerCase().includes(searchLower);
+        const excerptMatch = article.excerpt?.toLowerCase().includes(searchLower);
+        if (!titleMatch && !excerptMatch) return false;
       }
-    }
 
-    // Filter by mood (simplified - can be enhanced with AI)
-    if (mood !== 'all') {
-      switch (mood) {
-        case 'trending':
-          if ((article.views || 0) < 100) return false;
-          break;
-        case 'hot':
-          if (!article.isFeatured) return false;
-          break;
-        case 'calm':
-          if (article.isFeatured) return false;
-          break;
+      // Filter by time range
+      if (timeRange !== 'all' && article.publishedAt) {
+        const now = new Date();
+        const publishedDate = new Date(article.publishedAt);
+        const daysDiff = Math.floor((now.getTime() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        switch (timeRange) {
+          case 'today':
+            if (daysDiff > 0) return false;
+            break;
+          case 'week':
+            if (daysDiff > 7) return false;
+            break;
+          case 'month':
+            if (daysDiff > 30) return false;
+            break;
+        }
       }
-    }
 
-    // Filter by category
-    if (selectedCategory !== 'all' && article.categoryId !== selectedCategory) {
-      return false;
-    }
+      // Filter by mood (simplified - can be enhanced with AI)
+      if (mood !== 'all') {
+        switch (mood) {
+          case 'trending':
+            if ((article.views || 0) < 100) return false;
+            break;
+          case 'hot':
+            if (!article.isFeatured) return false;
+            break;
+          case 'calm':
+            if (article.isFeatured) return false;
+            break;
+        }
+      }
 
-    return true;
-  });
+      // Filter by category
+      if (selectedCategory !== 'all' && article.categoryId !== selectedCategory) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [articles, debouncedSearch, timeRange, mood, selectedCategory]);
+
+  // Sort articles
+  const sortedArticles = useMemo(() => {
+    const sorted = [...filteredArticles];
+    
+    switch (sortOption) {
+      case 'newest':
+        return sorted.sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateB - dateA;
+        });
+      case 'oldest':
+        return sorted.sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateA - dateB;
+        });
+      case 'most-viewed':
+        return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+      case 'most-commented':
+        return sorted.sort((a, b) => (b.commentsCount || 0) - (a.commentsCount || 0));
+      default:
+        return sorted;
+    }
+  }, [filteredArticles, sortOption]);
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredArticles.length / ARTICLES_PER_PAGE);
-  const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
-  const endIndex = startIndex + ARTICLES_PER_PAGE;
-  const currentArticles = filteredArticles.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(sortedArticles.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentArticles = infiniteScrollEnabled
+    ? sortedArticles.slice(0, displayedCount)
+    : sortedArticles.slice(startIndex, endIndex);
+
+  // Infinite Scroll Hook (after sortedArticles is defined)
+  useEffect(() => {
+    if (!infiniteScrollEnabled) return;
+
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+
+      if (scrollTop + windowHeight >= docHeight - 300) {
+        setDisplayedCount(prev => Math.min(prev + 20, sortedArticles.length));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [infiniteScrollEnabled, sortedArticles.length]);
 
   // Generate page numbers to display
   const getPageNumbers = () => {
@@ -164,6 +237,9 @@ export default function NewsPage() {
           </p>
         </div>
 
+        {/* Statistics Cards */}
+        <NewsStatsCards />
+
         {/* Analytics Hero Section */}
         {analyticsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -184,36 +260,42 @@ export default function NewsPage() {
           <AIInsightsPanel insights={analytics.aiInsights} />
         )}
 
-        {/* Smart Filter Bar */}
-        <SmartFilterBar
+        {/* Enhanced Filter Bar */}
+        <NewsEnhancedFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          timeRange={timeRange}
           onTimeRangeChange={(range) => {
             setTimeRange(range);
             handleFilterChange();
           }}
-          onMoodChange={(newMood) => {
-            setMood(newMood);
-            handleFilterChange();
-          }}
+          selectedCategory={selectedCategory}
           onCategoryChange={(categoryId) => {
             setSelectedCategory(categoryId);
             handleFilterChange();
           }}
-          categories={categories.map(c => ({ id: c.id, nameAr: c.nameAr, icon: c.icon || undefined }))}
+          categories={categories}
         />
 
         {/* Results Summary */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            عرض {currentArticles.length} من {filteredArticles.length} خبر
+            عرض {currentArticles.length} من {sortedArticles.length} خبر
           </p>
-          {(timeRange !== 'all' || mood !== 'all' || selectedCategory !== 'all') && (
+          {(searchQuery || timeRange !== 'all' || mood !== 'all' || selectedCategory !== 'all') && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
+                setSearchQuery('');
                 setTimeRange('all');
                 setMood('all');
                 setSelectedCategory('all');
+                setSortOption('newest');
                 handleFilterChange();
               }}
               data-testid="button-clear-filters"
@@ -221,6 +303,59 @@ export default function NewsPage() {
               مسح الفلاتر
             </Button>
           )}
+        </div>
+
+        {/* Advanced Pagination Controls */}
+        <div className="mt-8 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg">
+          {/* Items per page selector */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">عرض:</span>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[100px]" data-testid="select-items-per-page">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">خبر</span>
+          </div>
+
+          {/* Infinite Scroll Toggle */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">التمرير التلقائي:</span>
+            <Button
+              variant={infiniteScrollEnabled ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setInfiniteScrollEnabled(!infiniteScrollEnabled);
+                if (!infiniteScrollEnabled) {
+                  setDisplayedCount(20);
+                } else {
+                  setCurrentPage(1);
+                }
+              }}
+              data-testid="button-toggle-infinite-scroll"
+            >
+              {infiniteScrollEnabled ? "مفعّل" : "معطّل"}
+            </Button>
+          </div>
+
+          {/* Total count */}
+          <div className="text-sm text-muted-foreground">
+            {infiniteScrollEnabled
+              ? `عرض ${currentArticles.length} من ${sortedArticles.length} خبر`
+              : `الصفحة ${currentPage} من ${totalPages}`}
+          </div>
         </div>
 
         {/* Articles - Matching PersonalizedFeed Design */}
@@ -249,220 +384,60 @@ export default function NewsPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Vertical List */}
-            <Card className="overflow-hidden lg:hidden shadow-sm border border-border/40 dark:border-card-border">
-              <CardContent className="p-0">
-                <div className="divide-y divide-border/50 dark:divide-border">
-                  {currentArticles.map((article) => {
-                    const timeAgo = article.publishedAt
-                      ? formatDistanceToNow(new Date(article.publishedAt), {
-                          addSuffix: true,
-                          locale: arSA,
-                        })
-                      : null;
+            {/* Articles Display - Using NewsArticleCard */}
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentArticles.map((article) => (
+                  <NewsArticleCard
+                    key={article.id}
+                    article={article}
+                    viewMode="grid"
+                  />
+                ))}
+              </div>
+            ) : viewMode === 'list' ? (
+              <div className="space-y-4">
+                {currentArticles.map((article) => (
+                  <NewsArticleCard
+                    key={article.id}
+                    article={article}
+                    viewMode="list"
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="overflow-hidden">
+                <CardContent className="p-0 divide-y">
+                  {currentArticles.map((article) => (
+                    <NewsArticleCard
+                      key={article.id}
+                      article={article}
+                      viewMode="compact"
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-                    return (
-                      <div key={article.id}>
-                        <Link href={`/article/${article.slug}`}>
-                          <div 
-                            className="block group cursor-pointer"
-                            data-testid={`link-article-mobile-${article.id}`}
-                          >
-                            <div className={`p-4 hover-elevate active-elevate-2 transition-all ${
-                              article.newsType === "breaking" ? "bg-destructive/5" : ""
-                            }`}>
-                              <div className="flex gap-3">
-                                {/* Image */}
-                                <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
-                                  {article.imageUrl ? (
-                                    <img
-                                      src={article.imageUrl}
-                                      alt={article.title}
-                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                      loading="lazy"
-                                      style={{
-                                        objectPosition: (article as any).imageFocalPoint
-                                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                          : 'center'
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
-                                  )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0 space-y-2">
-                                  {/* Breaking/Featured/Category Badge */}
-                                  {article.newsType === "breaking" ? (
-                                    <Badge 
-                                      variant="destructive" 
-                                      className="text-xs h-5 gap-1"
-                                      data-testid={`badge-breaking-${article.id}`}
-                                    >
-                                      <Zap className="h-3 w-3" />
-                                      عاجل
-                                    </Badge>
-                                  ) : isNewArticle(article.publishedAt) ? (
-                                    <Badge 
-                                      className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
-                                      data-testid={`badge-new-${article.id}`}
-                                    >
-                                      <Flame className="h-3 w-3" />
-                                      جديد
-                                    </Badge>
-                                  ) : article.category ? (
-                                    <Badge 
-                                      className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
-                                      data-testid={`badge-article-category-${article.id}`}
-                                    >
-                                      {article.category.nameAr}
-                                    </Badge>
-                                  ) : null}
-
-                                  {/* Title */}
-                                  <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
-                                    article.newsType === "breaking"
-                                      ? "text-destructive"
-                                      : "group-hover:text-primary"
-                                  }`} data-testid={`text-article-title-${article.id}`}>
-                                    {article.title}
-                                  </h4>
-
-                                  {/* Meta Info */}
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                                    {timeAgo && (
-                                      <span className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {timeAgo}
-                                      </span>
-                                    )}
-                                    <ViewsCount 
-                                      views={article.views || 0}
-                                      iconClassName="h-3 w-3"
-                                    />
-                                    {(article.commentsCount ?? 0) > 0 && (
-                                      <span className="flex items-center gap-1">
-                                        <MessageSquare className="h-3 w-3" />
-                                        {article.commentsCount}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      </div>
-                    );
-                  })}
+            {/* Loading indicator for infinite scroll */}
+            {infiniteScrollEnabled && displayedCount < sortedArticles.length && (
+              <div className="mt-8 flex justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span>جاري التحميل...</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Desktop View: Grid with 4 columns */}
-            <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {currentArticles.map((article) => (
-                <Link key={article.id} href={`/article/${article.slug}`}>
-                  <Card 
-                    className={`cursor-pointer h-full overflow-hidden shadow-sm border border-border/40 dark:border-card-border ${
-                      article.newsType === "breaking" ? "bg-destructive/5" : ""
-                    }`}
-                    data-testid={`card-article-${article.id}`}
-                  >
-                    {article.imageUrl && (
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          style={{
-                            objectPosition: (article as any).imageFocalPoint
-                              ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                              : 'center'
-                          }}
-                        />
-                        {article.newsType === "breaking" ? (
-                          <Badge 
-                            variant="destructive" 
-                            className="absolute top-3 right-3 gap-1" 
-                            data-testid={`badge-breaking-${article.id}`}
-                          >
-                            <Zap className="h-3 w-3" />
-                            عاجل
-                          </Badge>
-                        ) : isNewArticle(article.publishedAt) ? (
-                          <Badge 
-                            className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
-                            data-testid={`badge-new-${article.id}`}
-                          >
-                            <Flame className="h-3 w-3" />
-                            جديد
-                          </Badge>
-                        ) : article.category ? (
-                          <Badge 
-                            className="absolute top-3 right-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0" 
-                            data-testid={`badge-category-${article.id}`}
-                          >
-                            {article.category.nameAr}
-                          </Badge>
-                        ) : null}
-                        {article.aiSummary && (
-                          <div className="absolute top-3 left-3">
-                            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                              <Sparkles className="h-3 w-3 ml-1" />
-                              ذكاء اصطناعي
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <CardContent className="p-4 space-y-3">
-                      <h3 
-                        className={`font-bold text-lg line-clamp-2 ${
-                          article.newsType === "breaking"
-                            ? "text-destructive"
-                            : "text-foreground"
-                        }`}
-                        data-testid={`text-article-title-${article.id}`}
-                      >
-                        {article.title}
-                      </h3>
-                      
-                      {article.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+            {/* End of results message */}
+            {infiniteScrollEnabled && displayedCount >= sortedArticles.length && sortedArticles.length > 20 && (
+              <div className="mt-8 text-center text-sm text-muted-foreground">
+                تم عرض جميع الأخبار ({sortedArticles.length} خبر)
+              </div>
+            )}
 
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                        {article.publishedAt && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {formatDistanceToNow(new Date(article.publishedAt), {
-                                addSuffix: true,
-                                locale: arSA,
-                              })}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <ViewsCount 
-                          views={article.views || 0}
-                          iconClassName="h-3 w-3"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
+            {/* Pagination - Only show when infinite scroll is disabled */}
+            {!infiniteScrollEnabled && totalPages > 1 && (
               <div className="mt-12 flex justify-center items-center gap-2" dir="ltr">
                 <Button
                   variant="outline"
@@ -508,6 +483,9 @@ export default function NewsPage() {
             )}
           </>
         )}
+
+        {/* Scroll to Top Button */}
+        <ScrollToTopButton />
       </main>
 
       <Footer />

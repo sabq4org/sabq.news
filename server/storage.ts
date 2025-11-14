@@ -382,6 +382,15 @@ export interface IStorage {
   archiveArticle(id: string, userId: string): Promise<Article>;
   restoreArticle(id: string, userId: string): Promise<Article>;
   toggleArticleBreaking(id: string, userId: string): Promise<Article>;
+  getNewsStatistics(): Promise<{
+    totalNews: number;
+    todayNews: number;
+    topViewedThisWeek: {
+      article: ArticleWithDetails | null;
+      views: number;
+    };
+    averageViews: number;
+  }>;
   
   // SEO operations
   getArticleForSeo(id: string, language: "ar" | "en" | "ur"): Promise<{
@@ -2311,6 +2320,80 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  async getNewsStatistics() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Total news (exclude opinion articles)
+    const totalNews = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, "published"),
+          ne(articles.articleType, "opinion")
+        )
+      );
+
+    // Today's news
+    const todayNews = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, "published"),
+          ne(articles.articleType, "opinion"),
+          gte(articles.publishedAt, todayStart)
+        )
+      );
+
+    // Average views
+    const avgViews = await db
+      .select({ avg: sql<number>`COALESCE(AVG(views), 0)::int` })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, "published"),
+          ne(articles.articleType, "opinion")
+        )
+      );
+
+    // Top viewed this week
+    const topArticle = await db
+      .select()
+      .from(articles)
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(
+        and(
+          eq(articles.status, "published"),
+          ne(articles.articleType, "opinion"),
+          gte(articles.publishedAt, weekStart)
+        )
+      )
+      .orderBy(desc(articles.views))
+      .limit(1);
+
+    const topArticleDetails = topArticle[0]
+      ? {
+          ...topArticle[0].articles,
+          author: topArticle[0].users,
+          category: topArticle[0].categories,
+        }
+      : null;
+
+    return {
+      totalNews: totalNews[0]?.count ?? 0,
+      todayNews: todayNews[0]?.count ?? 0,
+      topViewedThisWeek: {
+        article: topArticleDetails,
+        views: topArticleDetails?.views ?? 0,
+      },
+      averageViews: Math.round(avgViews[0]?.avg ?? 0),
+    };
   }
 
   // SEO operations
