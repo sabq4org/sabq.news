@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown, Globe } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -293,6 +293,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="flex h-16 items-center gap-4 border-b px-4 md:px-6">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="icon"
+              asChild
+              data-testid="button-view-site"
+            >
+              <Link href="/" target="_blank">
+                <Globe className="h-5 w-5" />
+                <span className="sr-only">عرض الموقع</span>
+              </Link>
+            </Button>
             <ThemeToggle />
           </header>
           
