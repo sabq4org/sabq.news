@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { KeyRound, ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import AuthLayout from "@/components/AuthLayout";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -60,28 +60,39 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-              <KeyRound className="w-8 h-8 text-primary-foreground" />
-            </div>
+    <AuthLayout>
+      <div className="flex flex-col flex-1">
+        <div className="w-full max-w-md pt-10 mx-auto">
+          <Link 
+            to="/login" 
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="link-back-to-login"
+          >
+            <ChevronLeft className="h-5 w-5 ml-1" />
+            العودة لتسجيل الدخول
+          </Link>
+        </div>
+        
+        <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+          <div className="mb-5 sm:mb-8">
+            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm sm:text-title-md dark:text-white/90 text-right">
+              نسيت كلمة المرور؟
+            </h1>
+            <p className="text-sm text-muted-foreground text-right">
+              أدخل عنوان بريدك الإلكتروني المرتبط بحسابك، وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.
+            </p>
           </div>
-          <CardTitle className="text-3xl font-bold">نسيت كلمة المرور؟</CardTitle>
-          <CardDescription>
-            أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>البريد الإلكتروني</FormLabel>
+                    <FormLabel>
+                      البريد الإلكتروني<span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -123,20 +134,8 @@ export default function ForgotPassword() {
               </AlertDescription>
             </Alert>
           )}
-
-          <div className="text-center text-sm">
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2"
-              data-testid="link-back-to-login"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              العودة لتسجيل الدخول
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </AuthLayout>
   );
 }

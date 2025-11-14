@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -12,7 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ShieldCheck, Loader2, Key, AlertTriangle, Smartphone, MessageSquare } from "lucide-react";
+import { ShieldCheck, Loader2, Key, AlertTriangle, Smartphone, MessageSquare, ChevronLeft } from "lucide-react";
+import AuthLayout from "@/components/AuthLayout";
 
 const verifySchema = z.object({
   token: z.string().min(1, "الرمز مطلوب"),
@@ -161,27 +161,41 @@ export default function TwoFactorVerify() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-              {useBackupCode ? (
-                <Key className="w-8 h-8 text-primary-foreground" />
-              ) : (
-                <ShieldCheck className="w-8 h-8 text-primary-foreground" />
-              )}
+    <AuthLayout>
+      <div className="flex flex-col flex-1">
+        <div className="w-full max-w-md pt-10 mx-auto">
+          <Link 
+            href="/login" 
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="link-back-login"
+          >
+            <ChevronLeft className="h-5 w-5 ml-1" />
+            العودة لتسجيل الدخول
+          </Link>
+        </div>
+        
+        <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+          <div className="mb-5 sm:mb-8 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+                {useBackupCode ? (
+                  <Key className="w-8 h-8 text-primary-foreground" />
+                ) : (
+                  <ShieldCheck className="w-8 h-8 text-primary-foreground" />
+                )}
+              </div>
             </div>
+            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm sm:text-title-md dark:text-white/90">
+              التحقق بخطوتين
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {useBackupCode 
+                ? "أدخل أحد رموزك الاحتياطية للمتابعة"
+                : "اختر طريقة التحقق المناسبة لك"
+              }
+            </p>
           </div>
-          <CardTitle className="text-3xl font-bold">التحقق بخطوتين</CardTitle>
-          <CardDescription>
-            {useBackupCode 
-              ? "أدخل أحد رموزك الاحتياطية للمتابعة"
-              : "اختر طريقة التحقق المناسبة لك"
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
           {!useBackupCode ? (
             <Tabs value={verificationMethod} onValueChange={handleMethodChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -454,23 +468,24 @@ export default function TwoFactorVerify() {
               </form>
             </Form>
           )}
-        </CardContent>
-        <div className="p-6 pt-0">
-          <div className="text-center text-sm text-muted-foreground">
-            <button
-              type="button"
-              onClick={() => {
-                // Logout and return to login page
-                window.location.href = "/login";
-              }}
-              className="text-primary hover:underline"
-              data-testid="link-back-to-login"
-            >
-              العودة إلى تسجيل الدخول
-            </button>
+          
+          <div className="mt-5">
+            <div className="text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  // Logout and return to login page
+                  window.location.href = "/login";
+                }}
+                className="text-primary hover:underline"
+                data-testid="link-back-to-login"
+              >
+                العودة إلى تسجيل الدخول
+              </button>
+            </div>
           </div>
         </div>
-      </Card>
-    </div>
+      </div>
+    </AuthLayout>
   );
 }
