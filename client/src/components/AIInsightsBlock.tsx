@@ -117,7 +117,7 @@ export function AIInsightsBlock() {
       bgColor: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/10",
       chartColor: "#3b82f6",
       title: "الأكثر تعليقاً",
-      subtitle: `${insights.mostCommented.count} تعليق`,
+      subtitle: `${(insights.mostCommented.count ?? 0).toLocaleString('en-US')} تعليق`,
       trend: insights.mostCommented.trend,
       article: insights.mostCommented.article,
       testId: "most-commented",
