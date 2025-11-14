@@ -312,7 +312,7 @@ export default function UrduNewsPage() {
                                     {article.views !== undefined && (
                                       <span className="flex items-center gap-1">
                                         <Eye className="h-3 w-3" />
-                                        {article.views.toLocaleString('ar-SA')}
+                                        {article.views.toLocaleString('en-US')}
                                       </span>
                                     )}
                                   </div>
@@ -406,7 +406,7 @@ export default function UrduNewsPage() {
                         {article.views !== undefined && (
                           <div className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
-                            <span>{article.views.toLocaleString('ar-SA')}</span>
+                            <span>{article.views.toLocaleString('en-US')}</span>
                           </div>
                         )}
                       </div>

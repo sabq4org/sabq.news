@@ -134,7 +134,7 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
               <span className="text-sm text-gray-600">المشاهدات</span>
             </div>
             <p className="text-2xl font-bold">
-              {(article.views || 0).toLocaleString('ar-SA')}
+              {(article.views || 0).toLocaleString('en-US')}
             </p>
           </div>
 
@@ -145,7 +145,7 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
               <span className="text-sm text-gray-600">التفاعلات</span>
             </div>
             <p className="text-2xl font-bold">
-              {(article.reactionsCount || 0).toLocaleString('ar-SA')}
+              {(article.reactionsCount || 0).toLocaleString('en-US')}
             </p>
           </div>
 
@@ -156,7 +156,7 @@ export function ArticlePdfView({ article, articleUrl }: ArticlePdfViewProps) {
               <span className="text-sm text-gray-600">التعليقات</span>
             </div>
             <p className="text-2xl font-bold">
-              {(article.commentsCount || 0).toLocaleString('ar-SA')}
+              {(article.commentsCount || 0).toLocaleString('en-US')}
             </p>
           </div>
         </div>

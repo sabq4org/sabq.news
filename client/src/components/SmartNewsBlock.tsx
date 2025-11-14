@@ -211,7 +211,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                             )}
                             <span className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
-                              {(article.views || 0).toLocaleString('ar-SA')}
+                              {(article.views || 0).toLocaleString('en-US')}
                             </span>
                           </div>
                         </div>
@@ -302,7 +302,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       )}
                       <div className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
-                        <span>{(article.views || 0).toLocaleString('ar-SA')}</span>
+                        <span>{(article.views || 0).toLocaleString('en-US')}</span>
                       </div>
                     </div>
                   </div>

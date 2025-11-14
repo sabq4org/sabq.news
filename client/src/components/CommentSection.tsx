@@ -287,7 +287,7 @@ export function CommentSection({
                   <p className="text-sm text-muted-foreground">✍️ لا توجد تعليقات بعد. كن أول من يعلق!</p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    يوجد {commentsCount.toLocaleString('ar-SA')} {commentsCount === 1 ? 'تعليق' : commentsCount === 2 ? 'تعليقان' : 'تعليقات'} .. للقراءة والمشاركة
+                    يوجد {commentsCount.toLocaleString('en-US')} {commentsCount === 1 ? 'تعليق' : commentsCount === 2 ? 'تعليقان' : 'تعليقات'} .. للقراءة والمشاركة
                   </p>
                 )}
                 <ChevronDown 

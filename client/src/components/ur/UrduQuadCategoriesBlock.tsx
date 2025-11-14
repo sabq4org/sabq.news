@@ -94,7 +94,7 @@ function FeaturedCard({ data }: { data: CategoryColumnData["featured"] }) {
         {/* Meta */}
         <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground justify-end">
           <div className="flex items-center gap-1" data-testid="featured-views">
-            <span>{data.meta.views.toLocaleString('ar-SA')}</span>
+            <span>{data.meta.views.toLocaleString('en-US')}</span>
             <Eye className="w-3 h-3" />
           </div>
           <div className="flex items-center gap-1" data-testid="featured-time">
@@ -123,7 +123,7 @@ function TitleList({ items }: { items: CategoryColumnData["list"] }) {
             <div className="flex items-center gap-3 text-xs text-muted-foreground justify-end">
               <span>{item.meta.age}</span>
               <div className="flex items-center gap-1">
-                <span>{item.meta.views.toLocaleString('ar-SA')}</span>
+                <span>{item.meta.views.toLocaleString('en-US')}</span>
                 <Eye className="w-2.5 h-2.5" />
               </div>
             </div>
@@ -142,7 +142,7 @@ function ColumnHeader({ category, stats, teaser }: Pick<CategoryColumnData, 'cat
     <div className="mb-4" data-testid="column-header" dir="rtl">
       <div className="flex items-center justify-between mb-2">
         <Badge variant="secondary" className="text-xs" data-testid="category-stats">
-          {stats.value.toLocaleString('ar-SA')} {stats.label}
+          {stats.value.toLocaleString('en-US')} {stats.label}
         </Badge>
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-bold" data-testid="category-name">
@@ -206,7 +206,7 @@ function MobileCompactList({ items }: { items: CategoryColumnData[] }) {
             {/* Compact Header - Single Row */}
             <div className="flex items-center justify-between mb-2">
               <Badge variant="secondary" className="text-xs px-1.5 py-0.5 whitespace-nowrap">
-                {item.stats.value.toLocaleString('ar-SA')} {item.stats.label}
+                {item.stats.value.toLocaleString('en-US')} {item.stats.label}
               </Badge>
               <div className="flex items-center gap-1.5">
                 <h3 className="text-sm font-bold">{item.category.name}</h3>
@@ -224,7 +224,7 @@ function MobileCompactList({ items }: { items: CategoryColumnData[] }) {
                   </h4>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground justify-end">
                     <span className="flex items-center gap-0.5">
-                      <span>{item.featured.meta.views.toLocaleString('ar-SA')}</span>
+                      <span>{item.featured.meta.views.toLocaleString('en-US')}</span>
                       <Eye className="w-2.5 h-2.5" />
                     </span>
                     <span className="flex items-center gap-0.5">

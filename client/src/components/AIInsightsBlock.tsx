@@ -106,7 +106,7 @@ export function AIInsightsBlock() {
       bgColor: "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10",
       chartColor: "#f97316",
       title: "الأكثر تداولاً",
-      subtitle: `${insights.mostViewed.count.toLocaleString('ar-SA')} قراءة`,
+      subtitle: `${insights.mostViewed.count.toLocaleString('en-US')} قراءة`,
       trend: insights.mostViewed.trend,
       article: insights.mostViewed.article,
       testId: "most-viewed",

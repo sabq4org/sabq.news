@@ -585,7 +585,7 @@ export default function CategoryPage() {
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Eye className="h-4 w-4" />
                       <span className="font-semibold text-foreground">
-                        {calculateReporterViews(mostActiveReporter.author.id).toLocaleString('ar-SA')}
+                        {calculateReporterViews(mostActiveReporter.author.id).toLocaleString('en-US')}
                       </span>
                       مشاهدة
                     </span>

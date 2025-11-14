@@ -182,7 +182,7 @@ export default function SentimentAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="text-total-analyzed">
-                {analytics.statistics.totalAnalyzed.toLocaleString('ar-EG')}
+                {analytics.statistics.totalAnalyzed.toLocaleString('en-US')}
               </div>
               <p className="text-xs text-muted-foreground">
                 إجمالي التعليقات المحللة
@@ -284,7 +284,7 @@ export default function SentimentAnalytics() {
                       <Cell fill={COLORS.negative} />
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => value.toLocaleString('ar-EG')}
+                      formatter={(value: number) => value.toLocaleString('en-US')}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -306,7 +306,7 @@ export default function SentimentAnalytics() {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{item.percent}%</Badge>
                         <span className="text-sm text-muted-foreground">
-                          {item.value.toLocaleString('ar-EG')}
+                          {item.value.toLocaleString('en-US')}
                         </span>
                       </div>
                     </div>
@@ -314,7 +314,7 @@ export default function SentimentAnalytics() {
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted">
                     <span className="text-sm font-bold">الإجمالي</span>
                     <span className="text-sm font-bold">
-                      {analytics.distribution.total.toLocaleString('ar-EG')}
+                      {analytics.distribution.total.toLocaleString('en-US')}
                     </span>
                   </div>
                 </div>
@@ -354,7 +354,7 @@ export default function SentimentAnalytics() {
                         neutral: 'محايد',
                         negative: 'سلبي',
                       };
-                      return [value.toLocaleString('ar-EG'), labels[name] || name];
+                      return [value.toLocaleString('en-US'), labels[name] || name];
                     }}
                   />
                   <Legend 
@@ -427,7 +427,7 @@ export default function SentimentAnalytics() {
                               {article.title}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {article.totalComments.toLocaleString('ar-EG')} تعليق
+                              {article.totalComments.toLocaleString('en-US')} تعليق
                             </p>
                           </div>
                         </div>

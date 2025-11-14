@@ -120,7 +120,7 @@ export default function UrduCategoriesListPage() {
                           <div>
                             <p className="text-xs text-muted-foreground">مضامین</p>
                             <p className="text-lg font-bold" data-testid={`stat-articles-${category.id}`}>
-                              {(category.articleCount || 0).toLocaleString('ar-SA')}
+                              {(category.articleCount || 0).toLocaleString('en-US')}
                             </p>
                           </div>
                         </div>
@@ -133,7 +133,7 @@ export default function UrduCategoriesListPage() {
                           <div>
                             <p className="text-xs text-muted-foreground">ملاحظات</p>
                             <p className="text-lg font-bold" data-testid={`stat-views-${category.id}`}>
-                              {(category.totalViews || 0).toLocaleString('ar-SA')}
+                              {(category.totalViews || 0).toLocaleString('en-US')}
                             </p>
                           </div>
                         </div>
@@ -146,7 +146,7 @@ export default function UrduCategoriesListPage() {
                           <div>
                             <p className="text-xs text-muted-foreground">پسند</p>
                             <p className="text-lg font-bold" data-testid={`stat-likes-${category.id}`}>
-                              {(category.totalLikes || 0).toLocaleString('ar-SA')}
+                              {(category.totalLikes || 0).toLocaleString('en-US')}
                             </p>
                           </div>
                         </div>
@@ -159,7 +159,7 @@ export default function UrduCategoriesListPage() {
                           <div>
                             <p className="text-xs text-muted-foreground">نشانات</p>
                             <p className="text-lg font-bold" data-testid={`stat-bookmarks-${category.id}`}>
-                              {(category.totalBookmarks || 0).toLocaleString('ar-SA')}
+                              {(category.totalBookmarks || 0).toLocaleString('en-US')}
                             </p>
                           </div>
                         </div>

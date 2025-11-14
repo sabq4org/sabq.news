@@ -85,7 +85,7 @@ export function MomentAIInsights() {
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">المستخدمون النشطون</p>
                 <p className="text-2xl font-bold text-blue-600" data-testid="stat-active-users">
-                  {data.userEngagement.activeUsers.toLocaleString('ar-SA')}
+                  {data.userEngagement.activeUsers.toLocaleString('en-US')}
                 </p>
               </div>
             </div>
@@ -99,7 +99,7 @@ export function MomentAIInsights() {
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">التعليقات اليوم</p>
                 <p className="text-2xl font-bold text-green-600" data-testid="stat-comments">
-                  {data.userEngagement.totalComments.toLocaleString('ar-SA')}
+                  {data.userEngagement.totalComments.toLocaleString('en-US')}
                 </p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export function MomentAIInsights() {
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">التفاعلات</p>
                 <p className="text-2xl font-bold text-orange-600" data-testid="stat-reactions">
-                  {data.userEngagement.totalReactions.toLocaleString('ar-SA')}
+                  {data.userEngagement.totalReactions.toLocaleString('en-US')}
                 </p>
               </div>
             </div>

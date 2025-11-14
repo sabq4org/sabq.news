@@ -274,7 +274,7 @@ export default function AnnouncementDetail() {
                   <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-lg md:text-2xl font-bold">{analytics.totalImpressions.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.totalImpressions.toLocaleString('en-US')}</div>
                 </CardContent>
               </Card>
 
@@ -284,7 +284,7 @@ export default function AnnouncementDetail() {
                   <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-lg md:text-2xl font-bold">{analytics.uniqueViews.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.uniqueViews.toLocaleString('en-US')}</div>
                 </CardContent>
               </Card>
 
@@ -294,7 +294,7 @@ export default function AnnouncementDetail() {
                   <MousePointer className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-lg md:text-2xl font-bold">{analytics.clicks.toLocaleString('ar-SA')}</div>
+                  <div className="text-lg md:text-2xl font-bold">{analytics.clicks.toLocaleString('en-US')}</div>
                 </CardContent>
               </Card>
 

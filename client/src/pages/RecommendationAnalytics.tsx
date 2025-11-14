@@ -148,7 +148,7 @@ export default function RecommendationAnalytics() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold" data-testid="text-total-recommendations">
-                    {data.overview.totalRecommendations.toLocaleString('ar-EG')}
+                    {data.overview.totalRecommendations.toLocaleString('en-US')}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     تم إرسالها خلال الفترة المحددة
@@ -165,7 +165,7 @@ export default function RecommendationAnalytics() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold" data-testid="text-unique-users">
-                    {data.overview.uniqueUsers.toLocaleString('ar-EG')}
+                    {data.overview.uniqueUsers.toLocaleString('en-US')}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     تلقوا توصيات خلال الفترة
@@ -185,7 +185,7 @@ export default function RecommendationAnalytics() {
                     {data.overview.viewRate.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {data.overview.totalViewed.toLocaleString('ar-EG')} مشاهدة
+                    {data.overview.totalViewed.toLocaleString('en-US')} مشاهدة
                   </p>
                 </CardContent>
               </Card>
@@ -202,7 +202,7 @@ export default function RecommendationAnalytics() {
                     {data.overview.clickThroughRate.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {data.overview.totalClicked.toLocaleString('ar-EG')} نقرة
+                    {data.overview.totalClicked.toLocaleString('en-US')} نقرة
                   </p>
                 </CardContent>
               </Card>
@@ -231,7 +231,7 @@ export default function RecommendationAnalytics() {
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip 
                       labelFormatter={(value) => new Date(value).toLocaleDateString('ar-EG')}
-                      formatter={(value: number) => [value.toLocaleString('ar-EG'), 'التوصيات']}
+                      formatter={(value: number) => [value.toLocaleString('en-US'), 'التوصيات']}
                     />
                     <Legend />
                     <Line 
@@ -272,7 +272,7 @@ export default function RecommendationAnalytics() {
                       <Tooltip 
                         labelFormatter={getReasonLabel}
                         formatter={(value: number, name: string) => {
-                          if (name === 'count') return [value.toLocaleString('ar-EG'), 'العدد'];
+                          if (name === 'count') return [value.toLocaleString('en-US'), 'العدد'];
                           if (name === 'avgScore') return [value.toFixed(2), 'متوسط النقاط'];
                           return value;
                         }}
@@ -360,7 +360,7 @@ export default function RecommendationAnalytics() {
                         </div>
                       </div>
                       <Badge variant="secondary" data-testid={`badge-count-${article.articleId}`}>
-                        {article.count.toLocaleString('ar-EG')} توصية
+                        {article.count.toLocaleString('en-US')} توصية
                       </Badge>
                     </div>
                   ))}

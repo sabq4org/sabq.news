@@ -100,7 +100,7 @@ export default function ActivityLogsInsights({ analytics, isLoading }: ActivityL
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.successFailureRate.totalCount.toLocaleString('ar-SA')}</div>
+              <div className="text-2xl font-bold">{analytics.successFailureRate.totalCount.toLocaleString('en-US')}</div>
               <p className="text-xs text-muted-foreground mt-1">جميع النشاطات المسجلة</p>
             </CardContent>
           </Card>
@@ -118,7 +118,7 @@ export default function ActivityLogsInsights({ analytics, isLoading }: ActivityL
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: COLORS.success }}>{successRate}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.successCount.toLocaleString('ar-SA')} عملية</p>
+              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.successCount.toLocaleString('en-US')} عملية</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -135,7 +135,7 @@ export default function ActivityLogsInsights({ analytics, isLoading }: ActivityL
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: COLORS.failure }}>{failureRate}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.failureCount.toLocaleString('ar-SA')} عملية</p>
+              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.failureCount.toLocaleString('en-US')} عملية</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -152,7 +152,7 @@ export default function ActivityLogsInsights({ analytics, isLoading }: ActivityL
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: COLORS.warning }}>{warningRate}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.warningCount.toLocaleString('ar-SA')} عملية</p>
+              <p className="text-xs text-muted-foreground mt-1">{analytics.successFailureRate.warningCount.toLocaleString('en-US')} عملية</p>
             </CardContent>
           </Card>
         </motion.div>

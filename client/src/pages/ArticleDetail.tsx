@@ -781,7 +781,7 @@ export default function ArticleDetail() {
               </div>
             </div>
             <div className="text-2xl font-bold text-foreground">
-              {(article.views ?? 0).toLocaleString('ar-SA')}
+              {(article.views ?? 0).toLocaleString('en-US')}
             </div>
             <div className="text-sm text-muted-foreground">المشاهدات</div>
           </div>
@@ -794,7 +794,7 @@ export default function ArticleDetail() {
               </div>
             </div>
             <div className="text-2xl font-bold text-foreground">
-              {(article.reactionsCount ?? 0).toLocaleString('ar-SA')}
+              {(article.reactionsCount ?? 0).toLocaleString('en-US')}
             </div>
             <div className="text-sm text-muted-foreground">الإعجابات</div>
           </div>
@@ -807,7 +807,7 @@ export default function ArticleDetail() {
               </div>
             </div>
             <div className="text-2xl font-bold text-foreground">
-              {(article.commentsCount ?? 0).toLocaleString('ar-SA')}
+              {(article.commentsCount ?? 0).toLocaleString('en-US')}
             </div>
             <div className="text-sm text-muted-foreground">التعليقات</div>
           </div>
@@ -833,7 +833,7 @@ export default function ArticleDetail() {
               </div>
             </div>
             <div className="text-2xl font-bold text-foreground">
-              {(article.shareCount ?? 0).toLocaleString('ar-SA')}
+              {(article.shareCount ?? 0).toLocaleString('en-US')}
             </div>
             <div className="text-sm text-muted-foreground">المشاركات</div>
           </div>
@@ -846,7 +846,7 @@ export default function ArticleDetail() {
               </div>
             </div>
             <div className="text-2xl font-bold text-foreground">
-              {(article.bookmarkCount ?? 0).toLocaleString('ar-SA')}
+              {(article.bookmarkCount ?? 0).toLocaleString('en-US')}
             </div>
             <div className="text-sm text-muted-foreground">الحفظ</div>
           </div>

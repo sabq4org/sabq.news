@@ -161,7 +161,7 @@ export default function TermDetail() {
                 <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
                   <TrendingUp className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">
-                    {term.usageCount.toLocaleString('ar-SA')} استخدام
+                    {term.usageCount.toLocaleString('en-US')} استخدام
                   </span>
                 </div>
 
@@ -225,7 +225,7 @@ export default function TermDetail() {
                     </span>
                     {relatedArticles && relatedArticles.total > 0 && (
                       <Badge variant="secondary">
-                        {relatedArticles.total.toLocaleString('ar-SA')} مقال
+                        {relatedArticles.total.toLocaleString('en-US')} مقال
                       </Badge>
                     )}
                   </CardTitle>
@@ -369,14 +369,14 @@ export default function TermDetail() {
                 <CardContent className="space-y-3">
                   <div className="bg-primary/5 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-primary mb-1">
-                      {term.usageCount.toLocaleString('ar-SA')}
+                      {term.usageCount.toLocaleString('en-US')}
                     </div>
                     <div className="text-sm text-muted-foreground">إجمالي الاستخدامات</div>
                   </div>
                   
                   <div className="bg-accent/5 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-accent-foreground mb-1">
-                      {relatedArticles?.total.toLocaleString('ar-SA') || 0}
+                      {relatedArticles?.total.toLocaleString('en-US') || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">مقالات مرتبطة</div>
                   </div>

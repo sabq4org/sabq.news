@@ -246,7 +246,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-foreground">
-                    {(stats.totalArticles ?? 0).toLocaleString('ar-SA')}
+                    {(stats.totalArticles ?? 0).toLocaleString('en-US')}
                   </div>
                   <div className="text-sm text-muted-foreground">إجمالي المقالات</div>
                 </div>
@@ -259,7 +259,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-foreground">
-                    {(stats.todayArticles ?? 0).toLocaleString('ar-SA')}
+                    {(stats.todayArticles ?? 0).toLocaleString('en-US')}
                   </div>
                   <div className="text-sm text-muted-foreground">مقالات اليوم</div>
                 </div>
@@ -272,7 +272,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-foreground">
-                    {(stats.totalViews ?? 0).toLocaleString('ar-SA')}
+                    {(stats.totalViews ?? 0).toLocaleString('en-US')}
                   </div>
                   <div className="text-sm text-muted-foreground">إجمالي المشاهدات</div>
                 </div>
@@ -285,7 +285,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-foreground">
-                    {(stats.activeUsers ?? 0).toLocaleString('ar-SA')}
+                    {(stats.activeUsers ?? 0).toLocaleString('en-US')}
                   </div>
                   <div className="text-sm text-muted-foreground">المستخدمون النشطون</div>
                 </div>
