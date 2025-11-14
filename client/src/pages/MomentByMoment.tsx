@@ -458,17 +458,77 @@ export default function MomentByMoment() {
   const filteredItems = useMemo(() => {
     let filtered = allItems;
 
-    // Filter by time range
-    if (timeRange !== "today") {
-      const rangeDate = getTimeRangeDate(timeRange);
-      filtered = filtered.filter((item) => {
-        try {
-          const publishedDate = parseISO(item.publishedAt);
-          return publishedDate >= rangeDate;
-        } catch {
-          return false;
-        }
-      });
+    // Filter by time range with proper upper and lower bounds
+    const now = new Date();
+    
+    switch (timeRange) {
+      case "1h":
+        const hourAgo = subHours(now, 1);
+        filtered = filtered.filter((item) => {
+          try {
+            const publishedDate = parseISO(item.publishedAt);
+            return publishedDate >= hourAgo && publishedDate <= now;
+          } catch {
+            return false;
+          }
+        });
+        break;
+        
+      case "3h":
+        const threeHoursAgo = subHours(now, 3);
+        filtered = filtered.filter((item) => {
+          try {
+            const publishedDate = parseISO(item.publishedAt);
+            return publishedDate >= threeHoursAgo && publishedDate <= now;
+          } catch {
+            return false;
+          }
+        });
+        break;
+        
+      case "today":
+        const todayStart = startOfDay(now);
+        const tomorrowStart = new Date(now);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+        const tomorrowStartOfDay = startOfDay(tomorrowStart);
+        
+        filtered = filtered.filter((item) => {
+          try {
+            const publishedDate = parseISO(item.publishedAt);
+            return publishedDate >= todayStart && publishedDate < tomorrowStartOfDay;
+          } catch {
+            return false;
+          }
+        });
+        break;
+        
+      case "yesterday":
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStart = startOfDay(yesterday);
+        const todayStartForYesterday = startOfDay(now);
+        
+        filtered = filtered.filter((item) => {
+          try {
+            const publishedDate = parseISO(item.publishedAt);
+            return publishedDate >= yesterdayStart && publishedDate < todayStartForYesterday;
+          } catch {
+            return false;
+          }
+        });
+        break;
+        
+      case "7d":
+        const weekAgo = subDays(now, 7);
+        filtered = filtered.filter((item) => {
+          try {
+            const publishedDate = parseISO(item.publishedAt);
+            return publishedDate >= weekAgo && publishedDate <= now;
+          } catch {
+            return false;
+          }
+        });
+        break;
     }
 
     // Filter by category
