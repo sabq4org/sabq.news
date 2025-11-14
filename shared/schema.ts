@@ -1844,6 +1844,7 @@ export type ReporterProfile = {
     totalLikes: number;
     avgReadTimeMin: number;
     avgCompletionRate: number;
+    followers: number;
   };
   lastArticles: ReporterArticle[];
   topCategories: ReporterTopCategory[];

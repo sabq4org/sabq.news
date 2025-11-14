@@ -6995,6 +6995,17 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    // Get followers count
+    const followersResult = await db
+      .select({
+        followersCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(socialFollows)
+      .where(eq(socialFollows.followingId, reporter.userId!))
+      .execute();
+    
+    const followersCount = followersResult[0]?.followersCount || 0;
+
     return {
       id: reporter.id,
       slug: reporter.slug,
@@ -7010,6 +7021,7 @@ export class DatabaseStorage implements IStorage {
         totalLikes,
         avgReadTimeMin,
         avgCompletionRate,
+        followers: followersCount,
       },
       lastArticles,
       topCategories,

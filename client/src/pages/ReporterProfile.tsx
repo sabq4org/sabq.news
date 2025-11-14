@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, FileText, Target, UserPlus, UserCheck } from "lucide-react";
+import { Eye, ThumbsUp, Clock, TrendingUp, Calendar, CheckCircle2, FileText, Target, UserPlus, UserCheck, Users, Heart, Zap, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import type { ReporterProfile as ReporterProfileType } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -152,16 +152,118 @@ export default function ReporterProfile() {
     <div className="min-h-screen bg-background" dir="rtl">
       <Header user={user} />
 
+      {/* Statistics Cards Section - Moved to top */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-articles">
+                  {(kpis.totalArticles ?? 0).toLocaleString('en-US')}
+                </p>
+                <p className="text-sm text-muted-foreground">المقالات</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-blue-500/10">
+                  <Eye className="h-6 w-6 text-blue-500" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-views">
+                  {(kpis.totalViews ?? 0).toLocaleString('en-US')}
+                </p>
+                <p className="text-sm text-muted-foreground">المشاهدات</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-red-500/10">
+                  <Heart className="h-6 w-6 text-red-500" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-likes">
+                  {(kpis.totalLikes ?? 0).toLocaleString('en-US')}
+                </p>
+                <p className="text-sm text-muted-foreground">الإعجابات</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-orange-500/10">
+                  <Clock className="h-6 w-6 text-orange-500" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-readtime">
+                  {(kpis.avgReadTimeMin ?? 0).toLocaleString('en-US')}
+                  <span className="text-base font-normal text-muted-foreground mr-1">د</span>
+                </p>
+                <p className="text-sm text-muted-foreground">وقت القراءة</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-green-500/10">
+                  <Target className="h-6 w-6 text-green-500" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-completion">
+                  {(kpis.avgCompletionRate ?? 0).toLocaleString('en-US')}%
+                </p>
+                <p className="text-sm text-muted-foreground">نسبة الإكمال</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-elevate">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-full bg-purple-500/10">
+                  <Users className="h-6 w-6 text-purple-500" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl md:text-3xl font-bold" data-testid="text-kpi-followers">
+                  {(kpis.followers ?? 0).toLocaleString('en-US')}
+                </p>
+                <p className="text-sm text-muted-foreground">المتابعون</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section 
         className="relative overflow-hidden py-12"
         style={{
-          background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 100%)'
+          background: 'linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, hsl(var(--primary) / 0.02) 100%)'
         }}
       >
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <Avatar className="h-32 w-32 border-4 border-background shadow-lg" data-testid="avatar-reporter">
+            <Avatar className="h-36 w-36 md:h-40 md:w-40 border-2 border-background shadow-xl" data-testid="avatar-reporter">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
               <AvatarFallback className="text-2xl">
                 {fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -169,11 +271,11 @@ export default function ReporterProfile() {
             </Avatar>
             <div className="flex-1 text-center md:text-right space-y-3">
               <div className="flex items-center gap-2 justify-center md:justify-start">
-                <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-reporter-name">{fullName}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold" data-testid="text-reporter-name">{fullName}</h1>
                 {isVerified && <CheckCircle2 className="h-6 w-6 text-primary" data-testid="icon-verified" />}
               </div>
-              {title && <p className="text-xl text-muted-foreground" data-testid="text-reporter-title">{title}</p>}
-              {bio && <p className="text-base max-w-2xl" data-testid="text-reporter-bio">{bio}</p>}
+              {title && <p className="text-lg md:text-xl text-muted-foreground" data-testid="text-reporter-title">{title}</p>}
+              {bio && <p className="text-base max-w-3xl" data-testid="text-reporter-bio">{bio}</p>}
               {tags && tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   {tags.map((tag, idx) => <Badge key={idx} variant="secondary" data-testid={`badge-tag-${idx}`}>{tag}</Badge>)}
@@ -191,10 +293,10 @@ export default function ReporterProfile() {
                   {isFollowing ? (
                     <Button
                       variant="outline"
-                      size="default"
+                      size="lg"
                       onClick={() => unfollowMutation.mutate()}
                       disabled={unfollowMutation.isPending || isLoadingIsFollowing}
-                      className="gap-2"
+                      className="gap-3"
                       data-testid="button-unfollow-reporter"
                     >
                       <UserCheck className="h-5 w-5" />
@@ -203,10 +305,10 @@ export default function ReporterProfile() {
                   ) : (
                     <Button
                       variant="default"
-                      size="default"
+                      size="lg"
                       onClick={() => followMutation.mutate()}
                       disabled={followMutation.isPending || isLoadingIsFollowing}
-                      className="gap-2"
+                      className="gap-3"
                       data-testid="button-follow-reporter"
                     >
                       <UserPlus className="h-5 w-5" />
@@ -222,126 +324,73 @@ export default function ReporterProfile() {
 
       <div className="container mx-auto px-4 py-8 space-y-8">
 
-        {/* KPIs Section */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Card className="shadow-sm border border-border dark:border-card-border">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">المقالات</span>
-              </div>
-              <p className="text-3xl font-bold" data-testid="text-kpi-articles">{kpis.totalArticles}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border border-border dark:border-card-border">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Eye className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">المشاهدات</span>
-              </div>
-              <p className="text-3xl font-bold" data-testid="text-kpi-views">{kpis.totalViews}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border border-border dark:border-card-border">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <ThumbsUp className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">الإعجابات</span>
-              </div>
-              <p className="text-3xl font-bold" data-testid="text-kpi-likes">{kpis.totalLikes}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border border-border dark:border-card-border">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Clock className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">وقت القراءة</span>
-              </div>
-              <p className="text-3xl font-bold" data-testid="text-kpi-readtime">
-                {kpis.avgReadTimeMin}
-                <span className="text-base font-normal text-muted-foreground mr-1">د</span>
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border border-border dark:border-card-border">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Target className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">نسبة الإكمال</span>
-              </div>
-              <p className="text-3xl font-bold" data-testid="text-kpi-completion">{kpis.avgCompletionRate}%</p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Latest Articles */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-bold">أحدث المقالات</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">أحدث المقالات</h2>
+              <Badge variant="secondary" className="text-sm">
+                {lastArticles?.length ?? 0} مقال
+              </Badge>
+            </div>
             
             {lastArticles && lastArticles.length > 0 ? (
               <div className="space-y-3">
                 {lastArticles.map((article) => (
-                  <Card key={article.id} className="hover-elevate">
-                    <CardContent className="p-4">
+                  <Card key={article.id} className="hover-elevate transition-all">
+                    <CardContent className="p-6">
                       <Link 
                         href={`/article/${article.slug}`}
                         data-testid={`link-article-${article.id}`}
                       >
-                        <div className="space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-bold text-base leading-snug flex-1">
+                        <div className="space-y-4">
+                          {/* Header with title and breaking badge */}
+                          <div className="flex items-start gap-3">
+                            <h3 className="font-bold text-lg leading-snug flex-1">
                               {article.title}
                             </h3>
                             {article.isBreaking && (
-                              <Badge variant="destructive" className="shrink-0">
+                              <Badge variant="destructive" className="shrink-0 gap-1">
+                                <Zap className="h-3 w-3" />
                                 عاجل
                               </Badge>
                             )}
                           </div>
 
+                          {/* Category badge */}
                           {article.category && (
-                            <Badge 
-                              variant="secondary"
-                              style={{ 
-                                backgroundColor: article.category.color || undefined,
-                                color: '#fff'
-                              }}
-                              data-testid={`badge-category-${article.id}`}
-                            >
-                              {article.category.name}
-                            </Badge>
+                            <div>
+                              <Badge 
+                                variant="secondary"
+                                className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
+                                data-testid={`badge-category-${article.id}`}
+                              >
+                                {article.category.name}
+                              </Badge>
+                            </div>
                           )}
 
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {article.publishedAt && formatDistanceToNow(new Date(article.publishedAt), {
-                                addSuffix: true,
-                                locale: ar,
-                              })}
+                          {/* Meta info */}
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
+                            {article.publishedAt && (
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="h-4 w-4" />
+                                {formatDistanceToNow(new Date(article.publishedAt), {
+                                  addSuffix: true,
+                                  locale: ar,
+                                })}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                              <Eye className="h-4 w-4" />
+                              {(article.views ?? 0).toLocaleString('en-US')} مشاهدة
                             </span>
-                            <span className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {article.views}
-                            </span>
-                            {article.comments > 0 && (
-                              <span>{article.comments} تعليق</span>
+                            {(article.comments ?? 0) > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                <MessageSquare className="h-4 w-4" />
+                                {(article.comments ?? 0).toLocaleString('en-US')} تعليق
+                              </span>
                             )}
                           </div>
                         </div>
@@ -361,36 +410,41 @@ export default function ReporterProfile() {
 
           {/* Top Categories */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">التصنيفات الأكثر كتابة</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">التصنيفات الأكثر كتابة</h2>
+              <Badge variant="secondary" className="text-sm">
+                أعلى {topCategories?.length ?? 0}
+              </Badge>
+            </div>
             
             {topCategories && topCategories.length > 0 ? (
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  {topCategories.map((cat, idx) => (
-                    <div key={idx} className="space-y-2" data-testid={`category-${idx}`}>
-                      {idx > 0 && <Separator />}
-                      <div className="flex items-center justify-between">
-                        <Badge 
-                          variant="secondary"
-                          style={{ 
-                            backgroundColor: cat.color || undefined,
-                            color: '#fff'
-                          }}
-                        >
-                          {cat.name}
-                        </Badge>
-                        <span className="text-sm font-medium">
-                          {cat.sharePct}%
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{cat.articles} مقال</span>
-                        <span>{cat.views} مشاهدة</span>
-                      </div>
+              <div className="space-y-3">
+                {topCategories.map((cat, idx) => (
+                  <div key={idx} className="space-y-3 p-4 rounded-lg hover-elevate transition-all" data-testid={`category-${idx}`}>
+                    <div className="flex items-center justify-between">
+                      <Badge 
+                        variant="secondary"
+                        className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        {cat.name}
+                      </Badge>
+                      <span className="text-lg font-bold text-primary">
+                        {cat.sharePct}%
+                      </span>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <FileText className="h-4 w-4" />
+                        {(cat.articles ?? 0).toLocaleString('en-US')} مقال
+                      </span>
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <Eye className="h-4 w-4" />
+                        {(cat.views ?? 0).toLocaleString('en-US')} مشاهدة
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <Card>
                 <CardContent className="p-8 text-center text-muted-foreground">
@@ -404,11 +458,14 @@ export default function ReporterProfile() {
         {/* Timeline Chart */}
         {timeseries && timeseries.daily && timeseries.daily.length > 0 && (
           <Card>
-            <CardHeader className="gap-1">
-              <CardTitle>المشاهدات خلال {timeseries.windowDays} يوماً الماضية</CardTitle>
+            <CardHeader className="gap-2 pb-4">
+              <CardTitle className="text-2xl">المشاهدات خلال {timeseries.windowDays} يوماً الماضية</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                إجمالي المشاهدات في الفترة المحددة
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="h-80 w-full">
+              <div className="h-96 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={timeseries.daily}>
                     <CartesianGrid strokeDasharray="3 3" />
