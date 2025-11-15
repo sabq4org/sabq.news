@@ -18,6 +18,7 @@ export function Footer() {
     { label: "لحظة بلحظة", href: "/moment-by-moment" },
     { label: "المرقاب", href: "/mirqab" },
     { label: "مقالات", href: "/articles" },
+    { label: "عن سبق", href: "/about" },
   ];
 
   const servicesLinks = [
