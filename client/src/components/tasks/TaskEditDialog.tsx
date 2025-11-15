@@ -314,8 +314,8 @@ export function TaskEditDialog({ taskId, onClose, onSuccess }: TaskEditDialogPro
                   <FormItem>
                     <FormLabel>المسؤول</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
+                      onValueChange={(value) => field.onChange(value === "unassigned" ? undefined : value)}
+                      value={field.value || "unassigned"}
                       disabled={updateMutation.isPending}
                     >
                       <FormControl>
@@ -324,7 +324,7 @@ export function TaskEditDialog({ taskId, onClose, onSuccess }: TaskEditDialogPro
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">غير مسند</SelectItem>
+                        <SelectItem value="unassigned">غير مسند</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {getUserName(user.id)}

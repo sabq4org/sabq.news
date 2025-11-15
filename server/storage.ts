@@ -11301,7 +11301,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(taskComments.taskId, id))
       .orderBy(desc(taskComments.createdAt));
 
-    const taskAttachments = await db
+    const attachmentsData = await db
       .select()
       .from(taskAttachments)
       .where(eq(taskAttachments.taskId, id))
@@ -11316,7 +11316,7 @@ export class DatabaseStorage implements IStorage {
         ...row.comment,
         user: row.user!,
       })),
-      attachments: taskAttachments,
+      attachments: attachmentsData,
     };
   }
 
