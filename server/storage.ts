@@ -78,6 +78,9 @@ import {
   socialFollows,
   walletPasses,
   walletDevices,
+  deepAnalyses,
+  type DeepAnalysis,
+  type InsertDeepAnalysis,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -1226,6 +1229,19 @@ export interface IStorage {
     pressIdNumber?: string | null;
     cardValidUntil?: Date | null;
   }): Promise<User>;
+  
+  // Deep Analysis Operations
+  createDeepAnalysis(data: InsertDeepAnalysis): Promise<DeepAnalysis>;
+  getDeepAnalysis(id: string): Promise<DeepAnalysis | undefined>;
+  updateDeepAnalysis(id: string, data: Partial<DeepAnalysis>): Promise<DeepAnalysis>;
+  listDeepAnalyses(params: {
+    createdBy?: string;
+    status?: string;
+    categoryId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ analyses: DeepAnalysis[]; total: number }>;
+  deleteDeepAnalysis(id: string): Promise<void>;
   
   // Homepage Statistics
   getHomepageStats(): Promise<HomepageStats>;
@@ -10648,6 +10664,79 @@ export class DatabaseStorage implements IStorage {
       updateReason: reason,
       timestamp: new Date(),
     });
+  }
+
+  // ============================================================
+  // DEEP ANALYSIS OPERATIONS
+  // ============================================================
+
+  async createDeepAnalysis(data: InsertDeepAnalysis): Promise<DeepAnalysis> {
+    const [analysis] = await db
+      .insert(deepAnalyses)
+      .values(data)
+      .returning();
+    return analysis;
+  }
+
+  async getDeepAnalysis(id: string): Promise<DeepAnalysis | undefined> {
+    const [analysis] = await db
+      .select()
+      .from(deepAnalyses)
+      .where(eq(deepAnalyses.id, id));
+    return analysis;
+  }
+
+  async updateDeepAnalysis(id: string, data: Partial<DeepAnalysis>): Promise<DeepAnalysis> {
+    const [analysis] = await db
+      .update(deepAnalyses)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(deepAnalyses.id, id))
+      .returning();
+    return analysis;
+  }
+
+  async listDeepAnalyses(params: {
+    createdBy?: string;
+    status?: string;
+    categoryId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ analyses: DeepAnalysis[]; total: number }> {
+    const { createdBy, status, categoryId, limit = 20, offset = 0 } = params;
+
+    let conditions = [];
+    if (createdBy) conditions.push(eq(deepAnalyses.createdBy, createdBy));
+    if (status) conditions.push(eq(deepAnalyses.status, status));
+    if (categoryId) conditions.push(eq(deepAnalyses.categoryId, categoryId));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const analyses = await db
+      .select()
+      .from(deepAnalyses)
+      .where(whereClause)
+      .orderBy(desc(deepAnalyses.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(deepAnalyses)
+      .where(whereClause);
+
+    return {
+      analyses,
+      total: count || 0,
+    };
+  }
+
+  async deleteDeepAnalysis(id: string): Promise<void> {
+    await db
+      .delete(deepAnalyses)
+      .where(eq(deepAnalyses.id, id));
   }
 
   // ============================================================

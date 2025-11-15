@@ -5390,6 +5390,100 @@ export type ShortLinkClick = typeof shortLinkClicks.$inferSelect;
 export type InsertShortLinkClick = z.infer<typeof insertShortLinkClickSchema>;
 
 // ============================================
+// DEEP ANALYSIS SYSTEM
+// ============================================
+
+export const deepAnalyses = pgTable("deep_analyses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Core fields
+  title: text("title").notNull(),
+  topic: text("topic").notNull(),
+  description: text("description"),
+  
+  // Context & Configuration
+  categoryId: varchar("category_id").references(() => categories.id),
+  reporterId: varchar("reporter_id").references(() => users.id),
+  keywords: text("keywords").array().default(sql`ARRAY[]::text[]`).notNull(),
+  analysisDepth: text("analysis_depth").default("deep").notNull(), // short, deep, expert
+  analysisType: text("analysis_type").default("comprehensive").notNull(), // economic, political, technical, social, comprehensive
+  
+  // AI Configuration
+  useMultiModel: boolean("use_multi_model").default(true).notNull(),
+  modelsUsed: text("models_used").array().default(sql`ARRAY['openai', 'gemini']::text[]`).notNull(), // openai, anthropic, gemini
+  
+  // Analysis Outputs
+  gptAnalysis: text("gpt_analysis"),
+  geminiAnalysis: text("gemini_analysis"),
+  claudeAnalysis: text("claude_analysis"),
+  mergedAnalysis: text("merged_analysis"),
+  executiveSummary: text("executive_summary"),
+  recommendations: text("recommendations"),
+  
+  // Metadata
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  status: text("status").default("draft").notNull(), // draft, completed, published, archived
+  generationTime: integer("generation_time"), // milliseconds
+  
+  // SEO & Keywords (AI-generated)
+  aiKeywords: text("ai_keywords").array().default(sql`ARRAY[]::text[]`).notNull(),
+  smartEntities: jsonb("smart_entities").$type<{
+    persons?: string[];
+    organizations?: string[];
+    locations?: string[];
+  }>(),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_deep_analyses_created_by").on(table.createdBy),
+  index("idx_deep_analyses_status").on(table.status),
+  index("idx_deep_analyses_category").on(table.categoryId),
+  index("idx_deep_analyses_created_at").on(table.createdAt.desc()),
+]);
+
+// Deep analyses relations
+export const deepAnalysesRelations = relations(deepAnalyses, ({ one }) => ({
+  category: one(categories, {
+    fields: [deepAnalyses.categoryId],
+    references: [categories.id],
+  }),
+  reporter: one(users, {
+    fields: [deepAnalyses.reporterId],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [deepAnalyses.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Deep analyses insert schema
+export const insertDeepAnalysisSchema = createInsertSchema(deepAnalyses).omit({
+  id: true,
+  gptAnalysis: true,
+  geminiAnalysis: true,
+  claudeAnalysis: true,
+  mergedAnalysis: true,
+  executiveSummary: true,
+  recommendations: true,
+  aiKeywords: true,
+  generationTime: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(3, "يجب أن يكون العنوان 3 أحرف على الأقل"),
+  topic: z.string().min(10, "يجب أن يكون الموضوع 10 أحرف على الأقل"),
+  analysisDepth: z.enum(["short", "deep", "expert"]).default("deep"),
+  analysisType: z.enum(["economic", "political", "technical", "social", "comprehensive"]).default("comprehensive"),
+});
+
+// Deep analyses select types
+export type DeepAnalysis = typeof deepAnalyses.$inferSelect;
+export type InsertDeepAnalysis = z.infer<typeof insertDeepAnalysisSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
