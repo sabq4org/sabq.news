@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Task } from "@shared/schema";
-import { Clock, User, Calendar, Tag, FileText, Folder } from "lucide-react";
+import { Clock, User, Calendar, Tag, FileText, Folder, Share2, CheckCircle2, Edit, Trash2, Check } from "lucide-react";
 
 interface TaskViewDialogProps {
   taskId: string;
@@ -47,8 +49,28 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl" dir="rtl" data-testid="dialog-task-view">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0">
           <DialogTitle data-testid="heading-dialog-title">تفاصيل المهمة</DialogTitle>
+          {task && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" data-testid="button-edit-task">
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant={task.status === 'completed' ? 'default' : 'outline'}
+                data-testid="button-complete-task"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="destructive" data-testid="button-delete-task">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="ghost" data-testid="button-share-task">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </DialogHeader>
 
         {isLoading ? (
@@ -64,26 +86,36 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
               )}
             </div>
 
+            <Separator className="my-4" />
+
             <div className="grid grid-cols-2 gap-4">
+              {task.id && (
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">رقم المهمة:</span>
+                  <span className="text-sm text-muted-foreground" data-testid="text-task-id">
+                    {task.id.substring(0, 8)}
+                  </span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">الحالة:</span>
-                <Badge data-testid="badge-task-status">{getStatusLabel(task.status)}</Badge>
+                {getStatusBadge(task.status)}
               </div>
 
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">الأولوية:</span>
-                <span className={getPriorityColor(task.priority)} data-testid="text-task-priority">
-                  {getPriorityLabel(task.priority)}
-                </span>
+                {getPriorityBadge(task.priority)}
               </div>
 
               {task.dueDate && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">تاريخ الاستحقاق:</span>
-                  <span data-testid="text-task-due-date">
+                  <span className="text-sm" data-testid="text-task-due-date">
                     {format(new Date(task.dueDate), 'PPP', { locale: ar })}
                   </span>
                 </div>
@@ -93,7 +125,7 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">المسؤول:</span>
-                  <span data-testid="text-task-assignee">{getUserName(task.assignedToId)}</span>
+                  <span className="text-sm" data-testid="text-task-assignee">{getUserName(task.assignedToId)}</span>
                 </div>
               )}
 
@@ -101,7 +133,10 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
                 <div className="flex items-center gap-2">
                   <Folder className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">القسم:</span>
-                  <span data-testid="text-task-department">{task.department}</span>
+                  <Badge variant="outline" data-testid="text-task-department">
+                    <Folder className="h-3 w-3 ml-1" />
+                    {task.department}
+                  </Badge>
                 </div>
               )}
 
@@ -109,7 +144,30 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">الفئة:</span>
-                  <span data-testid="text-task-category">{task.category}</span>
+                  <Badge variant="outline" data-testid="text-task-category">
+                    <FileText className="h-3 w-3 ml-1" />
+                    {task.category}
+                  </Badge>
+                </div>
+              )}
+
+              {task.createdAt && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">تاريخ الإنشاء:</span>
+                  <span className="text-sm" data-testid="text-task-created-at">
+                    {format(new Date(task.createdAt), 'PPP', { locale: ar })}
+                  </span>
+                </div>
+              )}
+
+              {task.completedAt && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">تاريخ الإكمال:</span>
+                  <span className="text-sm" data-testid="text-task-completed-at">
+                    {format(new Date(task.completedAt), 'PPP', { locale: ar })}
+                  </span>
                 </div>
               )}
             </div>
@@ -137,33 +195,60 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
   );
 }
 
-function getStatusLabel(status: string) {
-  const labels: Record<string, string> = {
-    todo: 'قيد الانتظار',
-    in_progress: 'قيد العمل',
-    review: 'مراجعة',
-    completed: 'مكتملة',
-    archived: 'مؤرشفة',
+function getStatusBadge(status: string) {
+  const badges: Record<string, JSX.Element> = {
+    completed: (
+      <Badge variant="default" data-testid="badge-task-status">
+        <Check className="h-3 w-3 ml-1" />
+        مكتملة
+      </Badge>
+    ),
+    in_progress: (
+      <Badge variant="secondary" data-testid="badge-task-status">
+        ⏳ قيد العمل
+      </Badge>
+    ),
+    review: (
+      <Badge variant="outline" data-testid="badge-task-status">
+        مراجعة
+      </Badge>
+    ),
+    todo: (
+      <Badge variant="outline" data-testid="badge-task-status">
+        قيد الانتظار
+      </Badge>
+    ),
+    archived: (
+      <Badge variant="outline" data-testid="badge-task-status">
+        مؤرشفة
+      </Badge>
+    ),
   };
-  return labels[status] || status;
+  return badges[status] || <Badge data-testid="badge-task-status">{status}</Badge>;
 }
 
-function getPriorityLabel(priority: string) {
-  const labels: Record<string, string> = {
-    low: 'منخفضة',
-    medium: 'متوسطة',
-    high: 'عالية',
-    critical: 'عاجلة',
+function getPriorityBadge(priority: string) {
+  const badges: Record<string, JSX.Element> = {
+    critical: (
+      <Badge variant="destructive" data-testid="text-task-priority">
+        عاجلة
+      </Badge>
+    ),
+    high: (
+      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" data-testid="text-task-priority">
+        عالية
+      </Badge>
+    ),
+    medium: (
+      <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300" data-testid="text-task-priority">
+        متوسطة
+      </Badge>
+    ),
+    low: (
+      <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" data-testid="text-task-priority">
+        منخفضة
+      </Badge>
+    ),
   };
-  return labels[priority] || priority;
-}
-
-function getPriorityColor(priority: string) {
-  const colors: Record<string, string> = {
-    low: 'text-gray-600 dark:text-gray-400',
-    medium: 'text-blue-600 dark:text-blue-400',
-    high: 'text-orange-600 dark:text-orange-400',
-    critical: 'text-red-600 dark:text-red-400',
-  };
-  return colors[priority] || 'text-gray-600';
+  return badges[priority] || <Badge data-testid="text-task-priority">{priority}</Badge>;
 }
