@@ -41,3 +41,73 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 -   **Content Processing:** `rss-parser`
 -   **Frontend Libraries:** `@tanstack/react-query`, `wouter`, `@radix-ui/*`, `tailwindcss`, `class-variance-authority`
 -   **Digital Credentials:** `passkit-generator` (Apple Wallet Pass generation)
+
+## Recent Changes (November 15, 2025)
+
+### Deep Analysis Dashboard - Critical Bug Fixes & UX Improvements
+
+**User-Reported Issues Fixed:**
+1. ❌ **Edit functionality broken** - Clicking "Edit" opened empty form instead of loading analysis
+2. ❌ **Non-responsive design** - Table unusable on mobile devices
+3. ❌ **Poor data display** - Long titles/topics cluttered and unreadable
+4. ❌ **Confusing status labels** - "مكتمل" (completed) unclear, users couldn't find "منشور" (published)
+
+**Solutions Implemented:**
+
+**1. Edit Functionality Fix (DeepAnalysis.tsx):**
+- ✅ Added URL parameter support via `useLocation` hook
+- ✅ Auto-load analysis when `?id=xxx` or `?edit=xxx` in URL
+- ✅ Auto-populate form fields (topic, keywords) from loaded analysis
+- ✅ DeepAnalysisList.tsx now uses `?id=${analysis.id}` navigation
+- **Result:** Edit button now correctly loads and displays analysis for editing
+
+**2. Mobile-Responsive Design (DeepAnalysisList.tsx):**
+- ✅ **Mobile View (< md):** Card-based layout with:
+  - Status badge + date header
+  - Title (line-clamp-2)
+  - Topic (line-clamp-1)
+  - Category display
+  - Action buttons (View, Edit, Delete)
+- ✅ **Desktop View (≥ md):** Traditional table layout
+- ✅ Clean breakpoint separation using Tailwind's `hidden md:block` / `md:hidden`
+- **Result:** Excellent UX on both mobile and desktop devices
+
+**3. Data Display Improvements:**
+- ✅ **Titles:** Applied `line-clamp-2` (max 2 lines before truncation)
+- ✅ **Topics:** Applied `line-clamp-1` (max 1 line before truncation)
+- ✅ **Desktop Table:** Added interactive tooltips for full text on hover
+- ✅ **TooltipProvider:** Wrapped component for tooltip functionality
+- **Result:** Clean, readable presentation without UI clutter
+
+**4. Status Terminology Standardization:**
+- ✅ Changed "completed" label from "مكتمل" → **"جاهز للنشر"** (Ready to Publish)
+- ✅ Updated icon from `Save` → `CheckCircle` for better visual recognition
+- ✅ **Unified across both files:**
+  - `DeepAnalysis.tsx` (detail view + history sidebar)
+  - `DeepAnalysisList.tsx` (list view + filters)
+- ✅ Status flow now clear:
+  - **مسودة** (Draft) - Initial state
+  - **جاهز للنشر** (Ready to Publish) - AI generation complete
+  - **منشور** (Published) - Public on /omq
+  - **مؤرشف** (Archived) - Hidden from public
+
+**Technical Implementation:**
+- Added `CheckCircle` import from lucide-react
+- Updated `getStatusConfig` helper in both components
+- Updated status filter options in DeepAnalysisList
+- Removed unused Save button from DeepAnalysis toolbar
+- Maintained all data-testid attributes for testing
+- Added mobile-specific test IDs
+
+**Testing & Validation:**
+- ✅ All LSP errors resolved
+- ✅ HMR updates successful
+- ✅ Architect review passed
+- ✅ No runtime errors
+- ✅ Status labels consistent across all views
+
+**Files Modified:**
+- `client/src/pages/dashboard/DeepAnalysis.tsx`: +25 lines (URL params, form population, status updates)
+- `client/src/pages/dashboard/DeepAnalysisList.tsx`: +150 lines (mobile cards, tooltips, line-clamp)
+
+---
