@@ -924,7 +924,7 @@ export default function Profile() {
                               <Avatar>
                                 <AvatarImage src={follower.profileImageUrl || ""} />
                                 <AvatarFallback>
-                                  {follower.firstName?.[0] || follower.email[0]}
+                                  {follower.firstName?.[0] || follower.email?.[0] || 'م'}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
@@ -998,7 +998,7 @@ export default function Profile() {
                               <Avatar>
                                 <AvatarImage src={followed.profileImageUrl || ""} />
                                 <AvatarFallback>
-                                  {followed.firstName?.[0] || followed.email[0]}
+                                  {followed.firstName?.[0] || followed.email?.[0] || 'م'}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
