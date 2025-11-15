@@ -1314,17 +1314,20 @@ export interface IStorage {
   
   // Subtask Operations
   createSubtask(subtask: InsertSubtask): Promise<Subtask>;
+  getSubtaskById(id: string): Promise<Subtask | null>;
   updateSubtask(id: string, updates: Partial<Subtask>): Promise<Subtask>;
   deleteSubtask(id: string): Promise<void>;
   toggleSubtaskComplete(id: string, completedById: string): Promise<Subtask>;
   
   // Task Comment Operations
   createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+  getTaskCommentById(id: string): Promise<TaskComment | null>;
   getTaskComments(taskId: string): Promise<(TaskComment & { user: User })[]>;
   deleteTaskComment(id: string): Promise<void>;
   
   // Task Attachment Operations
   createTaskAttachment(attachment: InsertTaskAttachment): Promise<TaskAttachment>;
+  getTaskAttachmentById(id: string): Promise<TaskAttachment | null>;
   deleteTaskAttachment(id: string): Promise<void>;
   getTaskAttachments(taskId: string): Promise<TaskAttachment[]>;
   
@@ -11412,6 +11415,15 @@ export class DatabaseStorage implements IStorage {
     return newSubtask;
   }
 
+  async getSubtaskById(id: string): Promise<Subtask | null> {
+    const [subtask] = await db
+      .select()
+      .from(subtasks)
+      .where(eq(subtasks.id, id));
+    
+    return subtask || null;
+  }
+
   async updateSubtask(id: string, updates: Partial<Subtask>): Promise<Subtask> {
     const [subtask] = await db
       .update(subtasks)
@@ -11534,6 +11546,15 @@ export class DatabaseStorage implements IStorage {
     return newComment;
   }
 
+  async getTaskCommentById(id: string): Promise<TaskComment | null> {
+    const [comment] = await db
+      .select()
+      .from(taskComments)
+      .where(eq(taskComments.id, id));
+    
+    return comment || null;
+  }
+
   async getTaskComments(taskId: string): Promise<(TaskComment & { user: User })[]> {
     const commentsData = await db
       .select({
@@ -11609,6 +11630,15 @@ export class DatabaseStorage implements IStorage {
     });
 
     return newAttachment;
+  }
+
+  async getTaskAttachmentById(id: string): Promise<TaskAttachment | null> {
+    const [attachment] = await db
+      .select()
+      .from(taskAttachments)
+      .where(eq(taskAttachments.id, id));
+    
+    return attachment || null;
   }
 
   async deleteTaskAttachment(id: string): Promise<void> {

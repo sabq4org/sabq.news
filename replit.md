@@ -66,6 +66,65 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 ## Recent Changes (November 15, 2025)
 
+### Task Management System (Task Center) - Backend Complete
+
+**تم بناء نظام إدارة مهام متكامل مع AI و RBAC:**
+
+**1. Database Schema (shared/schema.ts):**
+- `tasks` table: title, description, status, priority, dueDate, assignedTo, department, tags, aiSuggestions, estimatedDuration, progress
+- `subtasks` table: مهام فرعية مع displayOrder و completion tracking
+- `taskComments` table: نظام تعليقات كامل
+- `taskAttachments` table: رفع ملفات مع metadata
+- `taskActivityLog` table: audit trail كامل مع before/after snapshots
+- Relations شاملة و Zod validation schemas
+
+**2. Storage Layer (server/storage.ts):**
+- 19 method تم تنفيذها بالكامل
+- `getTasks` مع filters متقدمة (status, priority, assignedTo, createdBy, department, search)
+- `getTaskWithDetails` مع جميع الـ relations
+- `getTaskStatistics` للإحصائيات (total, todo, in_progress, review, completed, overdue)
+- Counter updates تلقائية للـ subtasks/comments/attachments
+
+**3. RBAC Permissions (server/seedRBAC.ts):**
+- 9 task permissions جديدة:
+  - tasks.view_all, tasks.view_own
+  - tasks.create
+  - tasks.edit_own, tasks.edit_any
+  - tasks.delete_own, tasks.delete_any
+  - tasks.assign, tasks.view_analytics
+- Permissions مسندة لجميع الأدوار (admin, editor, reporter, etc.)
+
+**4. Backend API Endpoints (server/routes.ts):**
+17 endpoints مع security كاملة:
+- Tasks CRUD: GET/POST /api/tasks, GET/PATCH/DELETE /api/tasks/:id
+- Status management: PATCH /api/tasks/:id/status
+- Statistics: GET /api/tasks/statistics
+- Subtasks: POST /api/tasks/:id/subtasks, PATCH/DELETE /api/subtasks/:id, PATCH /api/subtasks/:id/toggle
+- Comments: GET/POST /api/tasks/:id/comments, DELETE /api/task-comments/:id
+- Attachments: GET/POST /api/tasks/:id/attachments, DELETE /api/task-attachments/:id
+- Activity: GET /api/tasks/:id/activity
+
+**5. Security Features:**
+- ✅ IDOR Protection: ownership checks في جميع الـ endpoints
+- ✅ RBAC Authorization: requirePermission middleware
+- ✅ Rate Limiting: taskLimiter (30 req/min) على جميع الـ endpoints
+- ✅ Full Audit Trail: activity logging مع before/after full snapshots
+- ✅ Input Validation: Zod schemas لجميع الـ requests
+
+**6. Next Phase:**
+- Frontend implementation: قائمة المهام، Kanban Board، تفاصيل المهمة
+- AI Integration: Smart Assignment، Task Breakdown، Time Prediction
+- Smart Notifications: إشعارات ذكية للمواعيد والتحديثات
+- Analytics Dashboard: تقارير أداء وإحصائيات
+
+**الملفات المعدلة:**
+- `shared/schema.ts`: +250 lines (Task tables + schemas)
+- `server/storage.ts`: +600 lines (Storage methods)
+- `server/seedRBAC.ts`: +30 lines (Task permissions)
+- `server/routes.ts`: +500 lines (17 API endpoints)
+
+---
+
 ### Deep Analysis (Omq) Editorial Publishing Workflow - Phase 4
 
 **تم إضافة نظام نشر تحريري كامل لقسم العمق مع RBAC:**

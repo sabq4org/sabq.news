@@ -71,6 +71,14 @@ const followLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+const taskLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // 30 requests per minute
+  message: { error: "تم تجاوز حد طلبات المهام. يرجى المحاولة بعد دقيقة" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 import { 
   users, 
   roles, 
@@ -250,10 +258,6 @@ import {
   type InsertTaskComment,
   type TaskAttachment,
   type InsertTaskAttachment,
-  insertTaskSchema,
-  insertSubtaskSchema,
-  insertTaskCommentSchema,
-  insertTaskAttachmentSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -25883,7 +25887,7 @@ Allow: /
   // ============================================
 
   // GET /api/tasks - Get tasks list with filters
-  app.get("/api/tasks", requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
+  app.get("/api/tasks", taskLimiter, requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const userPermissions = await storage.getUserPermissions(userId);
@@ -25936,7 +25940,7 @@ Allow: /
   });
 
   // POST /api/tasks - Create new task
-  app.post("/api/tasks", requireAuth, requirePermission('tasks.create'), async (req, res) => {
+  app.post("/api/tasks", taskLimiter, requireAuth, requirePermission('tasks.create'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
       
@@ -25967,7 +25971,7 @@ Allow: /
   });
 
   // GET /api/tasks/statistics - Get task statistics
-  app.get("/api/tasks/statistics", requireAuth, async (req, res) => {
+  app.get("/api/tasks/statistics", taskLimiter, requireAuth, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const userPermissions = await storage.getUserPermissions(userId);
@@ -25985,7 +25989,7 @@ Allow: /
   });
 
   // GET /api/tasks/:id - Get task details
-  app.get("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
+  app.get("/api/tasks/:id", taskLimiter, requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
@@ -26011,7 +26015,7 @@ Allow: /
   });
 
   // PATCH /api/tasks/:id - Update task
-  app.patch("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.patch("/api/tasks/:id", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
@@ -26029,14 +26033,22 @@ Allow: /
         }
       }
       
+      // Store old task snapshot before update
+      const oldTask = { ...task };
+      
       const updatedTask = await storage.updateTask(id, req.body);
       
-      // Log activity
+      // Log activity with before/after values
       await storage.logTaskActivity({
         taskId: id,
         userId,
         action: 'task_updated',
-        changes: { description: 'تم تحديث المهمة' },
+        changes: {
+          field: 'multiple',
+          oldValue: { ...oldTask },
+          newValue: { ...updatedTask },
+          description: 'تم تحديث المهمة',
+        },
       });
       
       res.json(updatedTask);
@@ -26047,7 +26059,7 @@ Allow: /
   });
 
   // PATCH /api/tasks/:id/status - Update task status
-  app.patch("/api/tasks/:id/status", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.patch("/api/tasks/:id/status", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
@@ -26072,6 +26084,9 @@ Allow: /
         }
       }
       
+      // Store old task snapshot before update
+      const oldTask = { ...task };
+      
       const updates: any = { status };
       if (status === 'completed') {
         updates.completedAt = new Date();
@@ -26080,15 +26095,16 @@ Allow: /
       
       const updatedTask = await storage.updateTask(id, updates);
       
-      // Log activity
+      // Log activity with full before/after values
       await storage.logTaskActivity({
         taskId: id,
         userId,
         action: 'status_changed',
         changes: {
-          field: 'status',
-          oldValue: task.status,
-          newValue: status,
+          field: 'multiple',
+          oldValue: { ...oldTask },
+          newValue: { ...updatedTask },
+          description: `تم تغيير الحالة من ${task.status} إلى ${status}`,
         },
       });
       
@@ -26103,7 +26119,7 @@ Allow: /
   });
 
   // DELETE /api/tasks/:id - Delete task
-  app.delete("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.delete_any', 'tasks.delete_own'), async (req, res) => {
+  app.delete("/api/tasks/:id", taskLimiter, requireAuth, requireAnyPermission('tasks.delete_any', 'tasks.delete_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
@@ -26131,7 +26147,7 @@ Allow: /
   });
 
   // POST /api/tasks/:id/subtasks - Create subtask
-  app.post("/api/tasks/:id/subtasks", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.post("/api/tasks/:id/subtasks", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
@@ -26175,14 +26191,50 @@ Allow: /
   });
 
   // PATCH /api/subtasks/:id - Update subtask
-  app.patch("/api/subtasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.patch("/api/subtasks/:id", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
       
-      const subtask = await storage.updateSubtask(id, req.body);
+      // Get subtask to find parent task
+      const subtask = await storage.getSubtaskById(id);
+      if (!subtask) {
+        return res.status(404).json({ error: 'المهمة الفرعية غير موجودة' });
+      }
       
-      res.json(subtask);
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(subtask.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
+      
+      // Store old subtask snapshot before update
+      const oldSubtask = { ...subtask };
+      
+      const updatedSubtask = await storage.updateSubtask(id, req.body);
+      
+      // Log activity with before/after values
+      await storage.logTaskActivity({
+        taskId: parentTask.id,
+        userId,
+        action: 'subtask_updated',
+        changes: {
+          field: 'multiple',
+          oldValue: { ...oldSubtask },
+          newValue: { ...updatedSubtask },
+          description: `تم تحديث المهمة الفرعية: ${subtask.title}`,
+        },
+      });
+      
+      res.json(updatedSubtask);
     } catch (error: any) {
       console.error('Error updating subtask:', error);
       res.status(500).json({ error: 'فشل في تحديث المهمة الفرعية' });
@@ -26190,12 +26242,45 @@ Allow: /
   });
 
   // PATCH /api/subtasks/:id/toggle - Toggle subtask completion
-  app.patch("/api/subtasks/:id/toggle", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.patch("/api/subtasks/:id/toggle", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get subtask to find parent task
+      const oldSubtask = await storage.getSubtaskById(id);
+      if (!oldSubtask) {
+        return res.status(404).json({ error: 'المهمة الفرعية غير موجودة' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(oldSubtask.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
       
       const subtask = await storage.toggleSubtaskComplete(id, userId);
+      
+      // Log activity with before/after values
+      await storage.logTaskActivity({
+        taskId: parentTask.id,
+        userId,
+        action: 'subtask_toggled',
+        changes: {
+          field: 'completed',
+          oldValue: { ...oldSubtask },
+          newValue: { ...subtask },
+          description: `تم ${subtask.completed ? 'إكمال' : 'إلغاء إكمال'} المهمة الفرعية: ${subtask.title}`,
+        },
+      });
       
       res.json(subtask);
     } catch (error: any) {
@@ -26205,9 +26290,30 @@ Allow: /
   });
 
   // DELETE /api/subtasks/:id - Delete subtask
-  app.delete("/api/subtasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+  app.delete("/api/subtasks/:id", taskLimiter, requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get subtask to find parent task
+      const subtask = await storage.getSubtaskById(id);
+      if (!subtask) {
+        return res.status(404).json({ error: 'المهمة الفرعية غير موجودة' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(subtask.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
       
       await storage.deleteSubtask(id);
       
@@ -26219,7 +26325,7 @@ Allow: /
   });
 
   // GET /api/tasks/:id/comments - Get task comments
-  app.get("/api/tasks/:id/comments", requireAuth, async (req, res) => {
+  app.get("/api/tasks/:id/comments", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -26233,10 +26339,24 @@ Allow: /
   });
 
   // POST /api/tasks/:id/comments - Create comment
-  app.post("/api/tasks/:id/comments", requireAuth, async (req, res) => {
+  app.post("/api/tasks/:id/comments", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(id);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.view_all')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بالتعليق على هذه المهمة' });
+        }
+      }
       
       const validatedData = insertTaskCommentSchema.parse({
         ...req.body,
@@ -26265,9 +26385,30 @@ Allow: /
   });
 
   // DELETE /api/task-comments/:id - Delete comment
-  app.delete("/api/task-comments/:id", requireAuth, async (req, res) => {
+  app.delete("/api/task-comments/:id", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get comment to find parent task
+      const comment = await storage.getTaskCommentById(id);
+      if (!comment) {
+        return res.status(404).json({ error: 'التعليق غير موجود' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(comment.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId && comment.userId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بحذف هذا التعليق' });
+        }
+      }
       
       await storage.deleteTaskComment(id);
       
@@ -26279,7 +26420,7 @@ Allow: /
   });
 
   // GET /api/tasks/:id/attachments - Get task attachments
-  app.get("/api/tasks/:id/attachments", requireAuth, async (req, res) => {
+  app.get("/api/tasks/:id/attachments", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -26293,14 +26434,28 @@ Allow: /
   });
 
   // POST /api/tasks/:id/attachments - Upload attachment
-  app.post("/api/tasks/:id/attachments", requireAuth, upload.single('file'), async (req, res) => {
+  app.post("/api/tasks/:id/attachments", taskLimiter, requireAuth, upload.single('file'), async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
       const file = req.file;
       
       if (!file) {
         return res.status(400).json({ error: 'لم يتم رفع ملف' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(id);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بإضافة مرفقات لهذه المهمة' });
+        }
       }
       
       // TODO: Upload to object storage and get URL
@@ -26333,9 +26488,30 @@ Allow: /
   });
 
   // DELETE /api/task-attachments/:id - Delete attachment
-  app.delete("/api/task-attachments/:id", requireAuth, async (req, res) => {
+  app.delete("/api/task-attachments/:id", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get attachment to find parent task
+      const attachment = await storage.getTaskAttachmentById(id);
+      if (!attachment) {
+        return res.status(404).json({ error: 'المرفق غير موجود' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(attachment.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId && attachment.userId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بحذف هذا المرفق' });
+        }
+      }
       
       await storage.deleteTaskAttachment(id);
       
@@ -26347,7 +26523,7 @@ Allow: /
   });
 
   // GET /api/tasks/:id/activity - Get task activity log
-  app.get("/api/tasks/:id/activity", requireAuth, async (req, res) => {
+  app.get("/api/tasks/:id/activity", taskLimiter, requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       
