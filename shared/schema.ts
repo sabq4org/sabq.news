@@ -5433,6 +5433,14 @@ export const deepAnalyses = pgTable("deep_analyses", {
     locations?: string[];
   }>(),
   
+  // Model comparison insights
+  modelInsights: jsonb("model_insights").$type<{
+    gptScore?: number;
+    geminiScore?: number;
+    claudeScore?: number;
+    comparisonNotes?: string;
+  }>(),
+  
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -5443,8 +5451,46 @@ export const deepAnalyses = pgTable("deep_analyses", {
   index("idx_deep_analyses_created_at").on(table.createdAt.desc()),
 ]);
 
+// Deep analysis metrics (one-to-one with deep_analyses)
+export const deepAnalysisMetrics = pgTable("deep_analysis_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").references(() => deepAnalyses.id, { onDelete: "cascade" }).notNull().unique(),
+  views: integer("views").default(0).notNull(),
+  shares: integer("shares").default(0).notNull(),
+  downloads: integer("downloads").default(0).notNull(),
+  exportsPdf: integer("exports_pdf").default(0).notNull(),
+  exportsDocx: integer("exports_docx").default(0).notNull(),
+  lastViewedAt: timestamp("last_viewed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_deep_analysis_metrics_analysis_id").on(table.analysisId),
+]);
+
+// Deep analysis events (append-only log)
+export const deepAnalysisEvents = pgTable("deep_analysis_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").references(() => deepAnalyses.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id), // nullable for anonymous visitors
+  eventType: text("event_type").notNull(), // 'view', 'share', 'download', 'export_pdf', 'export_docx'
+  metadata: jsonb("metadata").$type<{
+    userAgent?: string;
+    ipAddress?: string;
+    referrer?: string;
+    shareTarget?: string; // twitter, facebook, whatsapp, etc.
+    downloadFormat?: string;
+    [key: string]: any;
+  }>(),
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_deep_analysis_events_analysis_id").on(table.analysisId),
+  index("idx_deep_analysis_events_user_id").on(table.userId),
+  index("idx_deep_analysis_events_event_type").on(table.eventType),
+  index("idx_deep_analysis_events_occurred_at").on(table.occurredAt.desc()),
+]);
+
 // Deep analyses relations
-export const deepAnalysesRelations = relations(deepAnalyses, ({ one }) => ({
+export const deepAnalysesRelations = relations(deepAnalyses, ({ one, many }) => ({
   category: one(categories, {
     fields: [deepAnalyses.categoryId],
     references: [categories.id],
@@ -5455,6 +5501,31 @@ export const deepAnalysesRelations = relations(deepAnalyses, ({ one }) => ({
   }),
   createdBy: one(users, {
     fields: [deepAnalyses.createdBy],
+    references: [users.id],
+  }),
+  metrics: one(deepAnalysisMetrics, {
+    fields: [deepAnalyses.id],
+    references: [deepAnalysisMetrics.analysisId],
+  }),
+  events: many(deepAnalysisEvents),
+}));
+
+// Deep analysis metrics relations
+export const deepAnalysisMetricsRelations = relations(deepAnalysisMetrics, ({ one }) => ({
+  analysis: one(deepAnalyses, {
+    fields: [deepAnalysisMetrics.analysisId],
+    references: [deepAnalyses.id],
+  }),
+}));
+
+// Deep analysis events relations
+export const deepAnalysisEventsRelations = relations(deepAnalysisEvents, ({ one }) => ({
+  analysis: one(deepAnalyses, {
+    fields: [deepAnalysisEvents.analysisId],
+    references: [deepAnalyses.id],
+  }),
+  user: one(users, {
+    fields: [deepAnalysisEvents.userId],
     references: [users.id],
   }),
 }));
@@ -5482,6 +5553,35 @@ export const insertDeepAnalysisSchema = createInsertSchema(deepAnalyses).omit({
 // Deep analyses select types
 export type DeepAnalysis = typeof deepAnalyses.$inferSelect;
 export type InsertDeepAnalysis = z.infer<typeof insertDeepAnalysisSchema>;
+
+// Deep analysis metrics insert schema
+export const insertDeepAnalysisMetricsSchema = createInsertSchema(deepAnalysisMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  analysisId: z.string().uuid("يجب أن يكون معرف التحليل صالح"),
+});
+
+// Deep analysis metrics select types
+export type DeepAnalysisMetrics = typeof deepAnalysisMetrics.$inferSelect;
+export type InsertDeepAnalysisMetrics = z.infer<typeof insertDeepAnalysisMetricsSchema>;
+
+// Deep analysis events insert schema
+export const insertDeepAnalysisEventSchema = createInsertSchema(deepAnalysisEvents).omit({
+  id: true,
+  occurredAt: true,
+}).extend({
+  analysisId: z.string().uuid("يجب أن يكون معرف التحليل صالح"),
+  userId: z.string().uuid("يجب أن يكون معرف المستخدم صالح").optional(),
+  eventType: z.enum(["view", "share", "download", "export_pdf", "export_docx"], {
+    errorMap: () => ({ message: "نوع الحدث غير صالح" }),
+  }),
+});
+
+// Deep analysis events select types
+export type DeepAnalysisEvent = typeof deepAnalysisEvents.$inferSelect;
+export type InsertDeepAnalysisEvent = z.infer<typeof insertDeepAnalysisEventSchema>;
 
 // ============================================
 // HOMEPAGE STATISTICS
