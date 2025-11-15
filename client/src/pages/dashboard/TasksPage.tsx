@@ -378,6 +378,7 @@ export default function TasksPage() {
       ...data,
       tags: data.tags || [],
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
+      assignedToId: data.assignedToId === 'unassigned' ? undefined : data.assignedToId,
     };
     createMutation.mutate(processedData);
   };
@@ -917,7 +918,7 @@ export default function TasksPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">غير محدد</SelectItem>
+                            <SelectItem value="unassigned">غير محدد</SelectItem>
                             {users.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
