@@ -25516,6 +25516,282 @@ Allow: /
     }
   });
 
+  // ============================================================
+  // OMQ (DEEP ANALYSIS PUBLIC) ROUTES - PHASE 2
+  // ============================================================
+
+  // GET /api/omq - قائمة التحليلات المنشورة (public)
+  app.get("/api/omq", async (req, res) => {
+    try {
+      const { status, keyword, category, dateFrom, dateTo, page, limit } = req.query;
+      
+      // Parse filters
+      const filters: any = {
+        status: status as string | undefined,
+        keyword: keyword as string | undefined,
+        category: category as string | undefined,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 20,
+      };
+      
+      // Parse date range if provided
+      if (dateFrom && dateTo) {
+        filters.dateRange = {
+          from: new Date(dateFrom as string),
+          to: new Date(dateTo as string),
+        };
+      }
+      
+      const result = await storage.getPublishedDeepAnalyses(filters);
+      
+      res.json({
+        success: true,
+        data: result.analyses,
+        pagination: {
+          page: filters.page,
+          limit: filters.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / filters.limit),
+        },
+      });
+    } catch (error: any) {
+      console.error('Error fetching published analyses:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'فشل في جلب التحليلات',
+        message: error.message 
+      });
+    }
+  });
+
+  // GET /api/omq/:id - تفاصيل تحليل محدد (public)
+  app.get("/api/omq/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Validation
+      if (!id) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'معرف التحليل مطلوب' 
+        });
+      }
+      
+      // Get analysis
+      const analysis = await storage.getDeepAnalysis(id);
+      
+      if (!analysis) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'التحليل غير موجود' 
+        });
+      }
+      
+      // Only return published analyses to public
+      if (analysis.status !== 'published') {
+        return res.status(404).json({ 
+          success: false,
+          error: 'التحليل غير موجود' 
+        });
+      }
+      
+      // Get metrics
+      const metrics = await storage.getDeepAnalysisMetrics(id);
+      
+      // Record view event automatically
+      const userId = req.user ? (req.user as any).id : undefined;
+      await storage.recordDeepAnalysisEvent({
+        analysisId: id,
+        userId,
+        eventType: 'view',
+        metadata: {
+          userAgent: req.headers['user-agent'],
+          ipAddress: req.ip,
+          referrer: req.headers.referer,
+        },
+      });
+      
+      res.json({
+        success: true,
+        data: {
+          ...analysis,
+          metrics: metrics || {
+            views: 0,
+            shares: 0,
+            downloads: 0,
+            exportsPdf: 0,
+            exportsDocx: 0,
+          },
+        },
+      });
+    } catch (error: any) {
+      console.error('Error fetching analysis details:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'فشل في جلب تفاصيل التحليل',
+        message: error.message 
+      });
+    }
+  });
+
+  // POST /api/omq/:id/events - تسجيل حدث (share, download, etc)
+  app.post("/api/omq/:id/events", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { eventType, metadata } = req.body;
+      
+      // Validation
+      const eventSchema = z.object({
+        eventType: z.enum(['view', 'share', 'download', 'export_pdf', 'export_docx'], {
+          errorMap: () => ({ message: 'نوع الحدث غير صالح' }),
+        }),
+        metadata: z.any().optional(),
+      });
+      
+      const validation = eventSchema.safeParse({ eventType, metadata });
+      if (!validation.success) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'بيانات غير صالحة',
+          details: validation.error.errors 
+        });
+      }
+      
+      // Check if analysis exists and is published
+      const analysis = await storage.getDeepAnalysis(id);
+      if (!analysis || analysis.status !== 'published') {
+        return res.status(404).json({ 
+          success: false,
+          error: 'التحليل غير موجود' 
+        });
+      }
+      
+      // Record event
+      const userId = req.user ? (req.user as any).id : undefined;
+      await storage.recordDeepAnalysisEvent({
+        analysisId: id,
+        userId,
+        eventType: validation.data.eventType,
+        metadata: {
+          ...metadata,
+          userAgent: req.headers['user-agent'],
+          ipAddress: req.ip,
+        },
+      });
+      
+      // Get updated metrics
+      const updatedMetrics = await storage.getDeepAnalysisMetrics(id);
+      
+      res.json({
+        success: true,
+        message: 'تم تسجيل الحدث بنجاح',
+        data: {
+          metrics: updatedMetrics,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error recording event:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'فشل في تسجيل الحدث',
+        message: error.message 
+      });
+    }
+  });
+
+  // GET /api/omq/stats/summary - إحصائيات عامة (protected)
+  app.get("/api/omq/stats/summary", requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getDeepAnalysisStats();
+      
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error: any) {
+      console.error('Error fetching stats:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'فشل في جلب الإحصائيات',
+        message: error.message 
+      });
+    }
+  });
+
+  // PATCH /api/omq/:id - تحديث تحليل (admin/editor/owner only)
+  app.patch("/api/omq/:id", requireAuth, requireAnyPermission('articles.edit_any', 'articles.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Get current analysis
+      const analysis = await storage.getDeepAnalysis(id);
+      if (!analysis) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'التحليل غير موجود' 
+        });
+      }
+      
+      // Check permissions
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // If user only has edit_own permission, check ownership
+      if (!userPermissions.includes('articles.edit_any') && analysis.createdBy !== userId) {
+        return res.status(403).json({ 
+          success: false,
+          error: 'غير مصرح لك بتعديل هذا التحليل' 
+        });
+      }
+      
+      // Validate update data (only allow certain fields)
+      const updateSchema = z.object({
+        title: z.string().min(3).optional(),
+        topic: z.string().min(10).optional(),
+        description: z.string().optional(),
+        status: z.enum(['draft', 'completed', 'published', 'archived']).optional(),
+        categoryId: z.string().uuid().optional(),
+        keywords: z.array(z.string()).optional(),
+      });
+      
+      const validation = updateSchema.safeParse(updates);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'بيانات غير صالحة',
+          details: validation.error.errors 
+        });
+      }
+      
+      // Update analysis
+      const updated = await storage.updateDeepAnalysis(id, validation.data);
+      
+      // Log activity
+      await storage.logActivity({
+        userId,
+        action: 'update',
+        entityType: 'deep_analysis',
+        entityId: id,
+        oldValue: analysis,
+        newValue: updated,
+      });
+      
+      res.json({
+        success: true,
+        message: 'تم تحديث التحليل بنجاح',
+        data: updated,
+      });
+    } catch (error: any) {
+      console.error('Error updating analysis:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'فشل في تحديث التحليل',
+        message: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

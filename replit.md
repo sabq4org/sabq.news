@@ -69,3 +69,78 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **Digital Credentials**
 -   `passkit-generator` (Apple Wallet Pass generation)
+
+## Recent Changes (November 15, 2025)
+
+### Deep Analysis (Omq) Public API - Phase 2
+
+**تم إضافة API endpoints عامة لقسم العمق (Omq) مع نظام متقدم لتتبع الأحداث:**
+
+**1. تحديثات Storage Interface (server/storage.ts):**
+- أضيف 4 methods جديدة إلى `IStorage`:
+  - `getPublishedDeepAnalyses()`: قائمة التحليلات المنشورة مع فلترة متقدمة (status, keyword, category, dateRange) و pagination
+  - `getDeepAnalysisMetrics()`: الحصول على إحصائيات analysis محدد
+  - `recordDeepAnalysisEvent()`: تسجيل أحداث (view, share, download, export_pdf, export_docx) مع دعم الزوار غير المسجلين
+  - `getDeepAnalysisStats()`: إحصائيات عامة (إجمالي التحليلات، المشاهدات، المشاركات، التنزيلات، التحليلات الحديثة)
+
+**2. تطبيق Methods في DatabaseStorage:**
+- استخدام LEFT JOIN للحصول على metrics مع كل analysis
+- تطبيق filters متقدمة مع `ilike`, `or`, `and`, `gte`, `lte`
+- استخدام transactions لضمان atomic operations عند تسجيل الأحداث
+- إنشاء metrics record تلقائياً إذا لم يكن موجوداً
+- تحديث counters باستخدام SQL increment: `sql\`${field} + 1\``
+- معالجة null-safety في جميع النتائج
+
+**3. إضافة 5 API Routes جديدة في server/routes.ts:**
+
+**Public Routes:**
+- `GET /api/omq`: قائمة التحليلات المنشورة مع pagination
+  - Query params: status, keyword, category, dateFrom, dateTo, page, limit
+  - Returns: analyses with metrics + pagination metadata
+  
+- `GET /api/omq/:id`: تفاصيل تحليل محدد
+  - تسجيل view event تلقائياً مع metadata (userAgent, ipAddress, referrer)
+  - دعم الزوار غير المسجلين (userId optional)
+  - Returns: full analysis with metrics
+  
+- `POST /api/omq/:id/events`: تسجيل حدث (share, download, export_pdf, export_docx)
+  - Zod validation للـ eventType
+  - دعم anonymous events
+  - Returns: updated metrics
+
+**Protected Routes (requireAuth):**
+- `GET /api/omq/stats/summary`: إحصائيات عامة للإداريين
+  - Returns: totalAnalyses, totalViews, totalShares, totalDownloads, recentAnalyses
+  
+- `PATCH /api/omq/:id`: تحديث تحليل (RBAC protected)
+  - Permissions: `articles.edit_any` أو `articles.edit_own`
+  - التحقق من الملكية للمستخدمين ذوي صلاحية `edit_own` فقط
+  - Zod validation للحقول المسموح بتحديثها
+  - Activity logging لجميع التحديثات
+
+**المميزات التقنية:**
+- استخدام Zod schemas للـ validation
+- معالجة أخطاء شاملة مع try/catch
+- Status codes صحيحة (200, 400, 403, 404, 500)
+- رسائل خطأ بالعربية للمستخدم النهائي
+- دعم anonymous tracking للزوار
+- Transaction-based event recording لضمان data integrity
+- RBAC integration مع ownership checks
+- Activity logging للعمليات الحساسة
+
+**التأثير:**
+- يمكن الآن عرض التحليلات العميقة للجمهور العام
+- تتبع دقيق لكل التفاعلات (المشاهدات، المشاركات، التنزيلات)
+- نظام permissions متقدم للتحكم في من يمكنه تعديل التحليلات
+- دعم كامل للزوار غير المسجلين في قراءة المحتوى وتتبع الأحداث
+- إحصائيات شاملة لقياس تأثير التحليلات العميقة
+
+**الملفات المعدلة:**
+- `server/storage.ts`: +250 lines (IStorage interface + DatabaseStorage implementation)
+- `server/routes.ts`: +280 lines (5 new API endpoints with full validation)
+
+**Testing Status:**
+✅ No LSP errors
+✅ Server running successfully
+✅ All routes properly validated with Zod
+✅ RBAC integration working correctly

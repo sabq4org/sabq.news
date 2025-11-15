@@ -1243,6 +1243,33 @@ export interface IStorage {
   }): Promise<{ analyses: DeepAnalysis[]; total: number }>;
   deleteDeepAnalysis(id: string): Promise<void>;
   
+  // Deep Analysis (Omq) Methods - Phase 2
+  getPublishedDeepAnalyses(filters: {
+    status?: string;
+    keyword?: string;
+    category?: string;
+    dateRange?: { from: Date; to: Date };
+    page?: number;
+    limit?: number;
+  }): Promise<{ analyses: (DeepAnalysis & { metrics?: any })[]; total: number }>;
+  
+  getDeepAnalysisMetrics(analysisId: string): Promise<any | null>;
+  
+  recordDeepAnalysisEvent(event: {
+    analysisId: string;
+    userId?: string;
+    eventType: 'view' | 'share' | 'download' | 'export_pdf' | 'export_docx';
+    metadata?: any;
+  }): Promise<void>;
+  
+  getDeepAnalysisStats(): Promise<{
+    totalAnalyses: number;
+    totalViews: number;
+    totalShares: number;
+    totalDownloads: number;
+    recentAnalyses: any[];
+  }>;
+  
   // Homepage Statistics
   getHomepageStats(): Promise<HomepageStats>;
 }
@@ -10737,6 +10764,226 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(deepAnalyses)
       .where(eq(deepAnalyses.id, id));
+  }
+
+  // Deep Analysis (Omq) Methods - Phase 2
+  async getPublishedDeepAnalyses(filters: {
+    status?: string;
+    keyword?: string;
+    category?: string;
+    dateRange?: { from: Date; to: Date };
+    page?: number;
+    limit?: number;
+  }): Promise<{ analyses: (DeepAnalysis & { metrics?: any })[]; total: number }> {
+    const { status, keyword, category, dateRange, page = 1, limit = 20 } = filters;
+    const offset = (page - 1) * limit;
+
+    let conditions = [];
+    
+    // Status filter (default to published if not specified)
+    if (status) {
+      conditions.push(eq(deepAnalyses.status, status));
+    } else {
+      conditions.push(eq(deepAnalyses.status, 'published'));
+    }
+    
+    // Keyword search in title or topic
+    if (keyword) {
+      conditions.push(
+        or(
+          ilike(deepAnalyses.title, `%${keyword}%`),
+          ilike(deepAnalyses.topic, `%${keyword}%`)
+        )
+      );
+    }
+    
+    // Category filter
+    if (category) {
+      conditions.push(eq(deepAnalyses.categoryId, category));
+    }
+    
+    // Date range filter
+    if (dateRange?.from && dateRange?.to) {
+      conditions.push(
+        and(
+          gte(deepAnalyses.createdAt, dateRange.from),
+          lte(deepAnalyses.createdAt, dateRange.to)
+        )
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Fetch analyses with metrics using left join
+    const analysesWithMetrics = await db
+      .select({
+        analysis: deepAnalyses,
+        metrics: deepAnalysisMetrics,
+      })
+      .from(deepAnalyses)
+      .leftJoin(deepAnalysisMetrics, eq(deepAnalyses.id, deepAnalysisMetrics.analysisId))
+      .where(whereClause)
+      .orderBy(desc(deepAnalyses.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(deepAnalyses)
+      .where(whereClause);
+
+    // Format results
+    const analyses = analysesWithMetrics.map(row => ({
+      ...row.analysis,
+      metrics: row.metrics || {
+        views: 0,
+        shares: 0,
+        downloads: 0,
+        exportsPdf: 0,
+        exportsDocx: 0,
+      },
+    }));
+
+    return {
+      analyses,
+      total: count || 0,
+    };
+  }
+
+  async getDeepAnalysisMetrics(analysisId: string): Promise<any | null> {
+    const [metrics] = await db
+      .select()
+      .from(deepAnalysisMetrics)
+      .where(eq(deepAnalysisMetrics.analysisId, analysisId));
+    
+    return metrics || null;
+  }
+
+  async recordDeepAnalysisEvent(event: {
+    analysisId: string;
+    userId?: string;
+    eventType: 'view' | 'share' | 'download' | 'export_pdf' | 'export_docx';
+    metadata?: any;
+  }): Promise<void> {
+    const { analysisId, userId, eventType, metadata } = event;
+
+    // Use transaction to ensure atomicity
+    await db.transaction(async (tx) => {
+      // 1. Insert event record
+      await tx
+        .insert(deepAnalysisEvents)
+        .values({
+          analysisId,
+          userId: userId || null,
+          eventType,
+          metadata: metadata || {},
+        });
+
+      // 2. Ensure metrics record exists
+      const [existingMetrics] = await tx
+        .select()
+        .from(deepAnalysisMetrics)
+        .where(eq(deepAnalysisMetrics.analysisId, analysisId));
+
+      if (!existingMetrics) {
+        // Create metrics if doesn't exist
+        await tx
+          .insert(deepAnalysisMetrics)
+          .values({
+            analysisId,
+            views: eventType === 'view' ? 1 : 0,
+            shares: eventType === 'share' ? 1 : 0,
+            downloads: eventType === 'download' ? 1 : 0,
+            exportsPdf: eventType === 'export_pdf' ? 1 : 0,
+            exportsDocx: eventType === 'export_docx' ? 1 : 0,
+            lastViewedAt: eventType === 'view' ? new Date() : null,
+          });
+      } else {
+        // Update existing metrics
+        const updates: any = {
+          updatedAt: new Date(),
+        };
+
+        if (eventType === 'view') {
+          updates.views = sql`${deepAnalysisMetrics.views} + 1`;
+          updates.lastViewedAt = new Date();
+        } else if (eventType === 'share') {
+          updates.shares = sql`${deepAnalysisMetrics.shares} + 1`;
+        } else if (eventType === 'download') {
+          updates.downloads = sql`${deepAnalysisMetrics.downloads} + 1`;
+        } else if (eventType === 'export_pdf') {
+          updates.exportsPdf = sql`${deepAnalysisMetrics.exportsPdf} + 1`;
+        } else if (eventType === 'export_docx') {
+          updates.exportsDocx = sql`${deepAnalysisMetrics.exportsDocx} + 1`;
+        }
+
+        await tx
+          .update(deepAnalysisMetrics)
+          .set(updates)
+          .where(eq(deepAnalysisMetrics.analysisId, analysisId));
+      }
+    });
+  }
+
+  async getDeepAnalysisStats(): Promise<{
+    totalAnalyses: number;
+    totalViews: number;
+    totalShares: number;
+    totalDownloads: number;
+    recentAnalyses: any[];
+  }> {
+    // Get total analyses count
+    const [totalResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(deepAnalyses)
+      .where(eq(deepAnalyses.status, 'published'));
+
+    const totalAnalyses = totalResult?.count || 0;
+
+    // Get total metrics (sum of all metrics)
+    const [metricsResult] = await db
+      .select({
+        totalViews: sql<number>`COALESCE(SUM(${deepAnalysisMetrics.views}), 0)::int`,
+        totalShares: sql<number>`COALESCE(SUM(${deepAnalysisMetrics.shares}), 0)::int`,
+        totalDownloads: sql<number>`COALESCE(SUM(${deepAnalysisMetrics.downloads} + ${deepAnalysisMetrics.exportsPdf} + ${deepAnalysisMetrics.exportsDocx}), 0)::int`,
+      })
+      .from(deepAnalysisMetrics);
+
+    const totalViews = metricsResult?.totalViews || 0;
+    const totalShares = metricsResult?.totalShares || 0;
+    const totalDownloads = metricsResult?.totalDownloads || 0;
+
+    // Get recent analyses (last 5 published)
+    const recentAnalysesData = await db
+      .select({
+        analysis: deepAnalyses,
+        metrics: deepAnalysisMetrics,
+      })
+      .from(deepAnalyses)
+      .leftJoin(deepAnalysisMetrics, eq(deepAnalyses.id, deepAnalysisMetrics.analysisId))
+      .where(eq(deepAnalyses.status, 'published'))
+      .orderBy(desc(deepAnalyses.createdAt))
+      .limit(5);
+
+    const recentAnalyses = recentAnalysesData.map(row => ({
+      ...row.analysis,
+      metrics: row.metrics || {
+        views: 0,
+        shares: 0,
+        downloads: 0,
+        exportsPdf: 0,
+        exportsDocx: 0,
+      },
+    }));
+
+    return {
+      totalAnalyses,
+      totalViews,
+      totalShares,
+      totalDownloads,
+      recentAnalyses,
+    };
   }
 
   // ============================================================

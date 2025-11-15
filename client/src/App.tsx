@@ -111,6 +111,8 @@ import AITools from "@/pages/dashboard/AITools";
 import DataStoryGenerator from "@/pages/DataStoryGenerator";
 import AdminLogin from "@/pages/AdminLogin";
 import DeepAnalysis from "@/pages/dashboard/DeepAnalysis";
+import Omq from "@/pages/Omq";
+import OmqDetail from "@/pages/OmqDetail";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
@@ -230,6 +232,10 @@ function Router() {
       <Route path="/keyword/:keyword" component={KeywordPage} />
       <Route path="/muqtarib/:slug" component={MuqtaribDetail} />
       <Route path="/muqtarib" component={Muqtarib} />
+      
+      {/* Omq (Deep Analysis) public pages */}
+      <Route path="/omq/:id" component={OmqDetail} />
+      <Route path="/omq" component={Omq} />
       
       {/* Mirqab public pages */}
       <Route path="/mirqab" component={MirqabPage} />
