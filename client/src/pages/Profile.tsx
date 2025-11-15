@@ -461,6 +461,32 @@ export default function Profile() {
     }
   };
 
+  const getFollowerDisplayName = (follower: { firstName: string | null; lastName: string | null; email: string }) => {
+    if (follower.firstName && follower.lastName) {
+      return `${follower.firstName} ${follower.lastName}`;
+    }
+    if (follower.firstName) {
+      return follower.firstName;
+    }
+    if (follower.lastName) {
+      return follower.lastName;
+    }
+    return follower.email;
+  };
+
+  const getFollowerInitials = (follower: { firstName: string | null; lastName: string | null; email: string }) => {
+    if (follower.firstName && follower.lastName) {
+      return `${follower.firstName[0]}${follower.lastName[0]}`.toUpperCase();
+    }
+    if (follower.firstName) {
+      return follower.firstName[0].toUpperCase();
+    }
+    if (follower.lastName) {
+      return follower.lastName[0].toUpperCase();
+    }
+    return follower.email[0].toUpperCase();
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -527,7 +553,7 @@ export default function Profile() {
       )}
 
       {/* Modern Profile Header */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" dir="rtl">
         <Card className="mb-6">
           <CardContent className="p-8">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
@@ -809,7 +835,7 @@ export default function Profile() {
                 </TabsList>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="space-y-6">
+                <TabsContent value="activity" className="space-y-6" dir="rtl">
                   <div>
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <Heart className="h-5 w-5 text-red-500" />
@@ -864,7 +890,7 @@ export default function Profile() {
                 </TabsContent>
 
                 {/* Bookmarks Tab */}
-                <TabsContent value="bookmarks">
+                <TabsContent value="bookmarks" dir="rtl">
                   {isLoadingBookmarks ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[1, 2, 3, 4].map((i) => (
@@ -889,7 +915,7 @@ export default function Profile() {
                 </TabsContent>
 
                 {/* Followers Tab */}
-                <TabsContent value="followers" className="space-y-4">
+                <TabsContent value="followers" className="space-y-4" dir="rtl">
                   <div className="flex gap-4 border-b">
                     <Button
                       variant="ghost"
@@ -924,14 +950,12 @@ export default function Profile() {
                               <Avatar>
                                 <AvatarImage src={follower.profileImageUrl || ""} />
                                 <AvatarFallback>
-                                  {follower.firstName?.[0] || follower.email?.[0] || 'م'}
+                                  {getFollowerInitials(follower)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
                                 <p className="font-medium">
-                                  {follower.firstName || follower.lastName
-                                    ? `${follower.firstName || ''} ${follower.lastName || ''}`
-                                    : follower.email}
+                                  {getFollowerDisplayName(follower)}
                                 </p>
                                 {follower.bio && (
                                   <p className="text-sm text-muted-foreground line-clamp-1">
@@ -963,7 +987,7 @@ export default function Profile() {
                 </TabsContent>
 
                 {/* Following Tab */}
-                <TabsContent value="following" className="space-y-4">
+                <TabsContent value="following" className="space-y-4" dir="rtl">
                   <div className="flex gap-4 border-b">
                     <Button
                       variant="ghost"
@@ -998,14 +1022,12 @@ export default function Profile() {
                               <Avatar>
                                 <AvatarImage src={followed.profileImageUrl || ""} />
                                 <AvatarFallback>
-                                  {followed.firstName?.[0] || followed.email?.[0] || 'م'}
+                                  {getFollowerInitials(followed)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
                                 <p className="font-medium">
-                                  {followed.firstName || followed.lastName
-                                    ? `${followed.firstName || ''} ${followed.lastName || ''}`
-                                    : followed.email}
+                                  {getFollowerDisplayName(followed)}
                                 </p>
                                 {followed.bio && (
                                   <p className="text-sm text-muted-foreground line-clamp-1">
@@ -1048,7 +1070,7 @@ export default function Profile() {
                 </TabsContent>
 
                 {/* Settings Tab */}
-                <TabsContent value="settings" className="space-y-6">
+                <TabsContent value="settings" className="space-y-6" dir="rtl">
                   <div>
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <Bell className="h-5 w-5" />
@@ -1077,7 +1099,7 @@ export default function Profile() {
                 </TabsContent>
 
                 {/* Wallet Tab */}
-                <TabsContent value="wallet" className="space-y-6">
+                <TabsContent value="wallet" className="space-y-6" dir="rtl">
                   <div>
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <Wallet className="h-5 w-5" />
