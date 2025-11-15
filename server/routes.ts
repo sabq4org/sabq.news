@@ -25898,6 +25898,7 @@ Allow: /
         assignedToId,
         createdById,
         department,
+        parentTaskId,
         search,
         page = "1",
         limit = "20"
@@ -25914,6 +25915,7 @@ Allow: /
         assignedToId: assignedToId as string,
         createdById: createdById as string,
         department: department as string,
+        parentTaskId: parentTaskId === 'null' ? null : (parentTaskId as string | undefined),
         search: search as string,
         limit: limitNum,
         offset,
@@ -26278,7 +26280,7 @@ Allow: /
           field: 'completed',
           oldValue: { ...oldSubtask },
           newValue: { ...subtask },
-          description: `تم ${subtask.completed ? 'إكمال' : 'إلغاء إكمال'} المهمة الفرعية: ${subtask.title}`,
+          description: `تم ${subtask.isCompleted ? 'إكمال' : 'إلغاء إكمال'} المهمة الفرعية: ${subtask.title}`,
         },
       });
       

@@ -1298,6 +1298,7 @@ export interface IStorage {
     assignedToId?: string;
     createdById?: string;
     department?: string;
+    parentTaskId?: string | null;
     search?: string;
     limit?: number;
     offset?: number;
@@ -11159,6 +11160,7 @@ export class DatabaseStorage implements IStorage {
     assignedToId?: string;
     createdById?: string;
     department?: string;
+    parentTaskId?: string | null;
     search?: string;
     limit?: number;
     offset?: number;
@@ -11169,6 +11171,7 @@ export class DatabaseStorage implements IStorage {
       assignedToId,
       createdById,
       department,
+      parentTaskId,
       search,
       limit = 20,
       offset = 0,
@@ -11181,6 +11184,10 @@ export class DatabaseStorage implements IStorage {
     if (assignedToId) conditions.push(eq(tasks.assignedToId, assignedToId));
     if (createdById) conditions.push(eq(tasks.createdById, createdById));
     if (department) conditions.push(eq(tasks.department, department));
+    
+    if (parentTaskId !== undefined) {
+      conditions.push(eq(tasks.parentTaskId, parentTaskId || null));
+    }
     
     if (search) {
       conditions.push(
