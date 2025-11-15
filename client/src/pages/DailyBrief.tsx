@@ -366,9 +366,9 @@ export default function DailyBrief() {
                 </div>
                 
                 <CollapsibleContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 md:grid-cols-3">
                   <Card data-testid="metric-articles-read">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-articles-read">المقالات المقروءة</p>
@@ -393,7 +393,7 @@ export default function DailyBrief() {
                   </Card>
 
                   <Card data-testid="metric-reading-time">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-reading-time">وقت القراءة الإجمالي</p>
@@ -410,7 +410,7 @@ export default function DailyBrief() {
                   </Card>
 
                   <Card data-testid="metric-completion-rate">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-completion-rate">معدل إكمال القراءة</p>
@@ -427,7 +427,7 @@ export default function DailyBrief() {
                   </Card>
 
                   <Card data-testid="metric-bookmarks">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-bookmarks">المقالات المحفوظة</p>
@@ -448,7 +448,7 @@ export default function DailyBrief() {
                   </Card>
 
                   <Card data-testid="metric-likes">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-likes">الإعجابات</p>
@@ -464,7 +464,7 @@ export default function DailyBrief() {
                   </Card>
 
                   <Card data-testid="metric-comments">
-                    <CardContent className="p-6">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <p className="text-sm text-muted-foreground mb-2" data-testid="label-comments">التعليقات</p>
@@ -518,17 +518,26 @@ export default function DailyBrief() {
                   <div>
                     <h3 className="font-semibold mb-2" data-testid="label-today-interest">اهتمامك اليوم:</h3>
                     <div className="flex flex-wrap gap-2">
-                      {summary.interestAnalysis.topCategories.map((cat, idx) => (
-                        <Badge 
-                          key={idx} 
-                          variant="secondary" 
-                          className="text-base px-3 py-1"
-                          data-testid={`badge-category-${idx}`}
-                        >
-                          <span data-testid={`text-category-name-${idx}`}>{cat.name}</span>
-                          {' '}(<span data-testid={`value-category-count-${idx}`}>{(cat.count ?? 0).toLocaleString('en-US')}</span>)
-                        </Badge>
-                      ))}
+                      {summary.interestAnalysis.topCategories.map((cat, idx) => {
+                        const colors = [
+                          "bg-primary/10 text-primary border-primary/20",
+                          "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                          "bg-green-500/10 text-green-600 border-green-500/20",
+                          "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                          "bg-purple-500/10 text-purple-600 border-purple-500/20",
+                        ];
+                        return (
+                          <Badge 
+                            key={idx} 
+                            variant="outline" 
+                            className={`text-base px-3 py-1 ${colors[idx % colors.length]}`}
+                            data-testid={`badge-category-${idx}`}
+                          >
+                            <span data-testid={`text-category-name-${idx}`}>{cat.name}</span>
+                            {' '}(<span data-testid={`value-category-count-${idx}`}>{(cat.count ?? 0).toLocaleString('en-US')}</span>)
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
 

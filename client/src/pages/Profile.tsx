@@ -781,28 +781,28 @@ export default function Profile() {
           <Card>
             <CardContent className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6">
-                  <TabsTrigger value="activity" className="gap-2" data-testid="tab-activity">
+                <TabsList className="rounded-lg bg-muted p-1 flex flex-wrap w-full mb-6">
+                  <TabsTrigger value="activity" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-activity">
                     <TrendingUp className="h-4 w-4 hidden sm:block" />
                     <span>نشاطي</span>
                   </TabsTrigger>
                   
-                  <TabsTrigger value="bookmarks" className="gap-2" data-testid="tab-bookmarks">
+                  <TabsTrigger value="bookmarks" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-bookmarks">
                     <Bookmark className="h-4 w-4 hidden sm:block" />
                     <span>المحفوظات</span>
                   </TabsTrigger>
                   
-                  <TabsTrigger value="followers" className="gap-2" data-testid="tab-followers">
+                  <TabsTrigger value="followers" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-followers">
                     <Users className="h-4 w-4 hidden sm:block" />
                     <span>المتابعون</span>
                   </TabsTrigger>
                   
-                  <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
+                  <TabsTrigger value="settings" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-settings">
                     <Settings className="h-4 w-4 hidden sm:block" />
                     <span>الإعدادات</span>
                   </TabsTrigger>
                   
-                  <TabsTrigger value="wallet" className="gap-2" data-testid="tab-wallet">
+                  <TabsTrigger value="wallet" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-wallet">
                     <Wallet className="h-4 w-4 hidden sm:block" />
                     <span>المحفظة</span>
                   </TabsTrigger>
@@ -816,13 +816,13 @@ export default function Profile() {
                       المقالات المفضلة
                     </h3>
                     {isLoadingLiked ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[1, 2, 3, 4].map((i) => (
                           <Skeleton key={i} className="h-64" />
                         ))}
                       </div>
                     ) : likedArticles.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {likedArticles.map((article) => (
                           <ArticleCard key={article.id} article={article} />
                         ))}
@@ -843,13 +843,13 @@ export default function Profile() {
                       سجل القراءة
                     </h3>
                     {isLoadingHistory ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[1, 2, 3, 4].map((i) => (
                           <Skeleton key={i} className="h-64" />
                         ))}
                       </div>
                     ) : readingHistory.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {readingHistory.slice(0, 6).map((article) => (
                           <ArticleCard key={article.id} article={article} />
                         ))}
@@ -866,13 +866,13 @@ export default function Profile() {
                 {/* Bookmarks Tab */}
                 <TabsContent value="bookmarks">
                   {isLoadingBookmarks ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[1, 2, 3, 4].map((i) => (
                         <Skeleton key={i} className="h-64" />
                       ))}
                     </div>
                   ) : bookmarkedArticles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {bookmarkedArticles.map((article) => (
                         <ArticleCard key={article.id} article={article} />
                       ))}
