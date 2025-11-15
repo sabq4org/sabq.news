@@ -72,6 +72,68 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 ## Recent Changes (November 15, 2025)
 
+### Deep Analysis (Omq) Complete Public Section - Phase 3
+
+**تم إكمال قسم العمق بالكامل مع واجهات المستخدم وتحديثات Navigation:**
+
+**1. صفحات Frontend الجديدة:**
+
+**صفحة Omq الرئيسية (client/src/pages/Omq.tsx):**
+- Header section مع Brain icon ووصف القسم
+- 4 KPI cards (إجمالي التحليلات، المشاهدات، المشاركات، التنزيلات)
+- Filters & Search bar (بحث، حالة، تصنيف، نطاق تاريخ)
+- Analysis grid responsive (1-2-3 columns) مع بطاقات شاملة
+- Pagination كامل (Previous/Next، أرقام صفحات، عرض نتائج)
+- Empty state مع رسالة وزر توجيه
+- RTL support + Hindu-Arabic numerals + data-testid لكل عنصر
+- Loading skeletons + error handling مع toast
+
+**صفحة OmqDetail (client/src/pages/OmqDetail.tsx):**
+- Header مع زر العودة، العنوان، الموضوع، والحالة
+- أزرار المشاركة والتنزيل مع event tracking
+- Metadata bar (تاريخ، وقت توليد، تصنيف، مراسل)
+- Metrics dashboard (5 بطاقات: مشاهدات، مشاركات، تنزيلات، PDF، Word)
+- Keywords section لعرض الكلمات المفتاحية
+- Main content مع 3 tabs:
+  - التحليل الموحد
+  - نماذج AI (nested tabs: GPT-5, Gemini, Claude)
+  - الملخص التنفيذي
+- Auto-record view event عند تحميل الصفحة (مرة واحدة)
+- whitespace-pre-wrap للحفاظ على تنسيق النصوص
+
+**صفحة OmqStats (client/src/pages/OmqStats.tsx):**
+- TailAdmin dashboard design
+- 4 KPI cards (إجمالي التحليلات، المشاهدات، المشاركات، التنزيلات)
+- Top 10 performing chart باستخدام Recharts
+- Recent analyses table مع روابط للتحليلات
+- RTL support + responsive design
+
+**2. تحديثات Navigation:**
+- إضافة قسم "قسم العُمق" إلى dashboard sidebar (client/src/nav/nav.config.ts)
+- 3 عناصر فرعية: جميع التحليلات (/omq)، الإحصائيات (/omq/stats)، إنشاء جديد
+- Routes كاملة في App.tsx (/omq, /omq/:id, /omq/stats)
+
+**3. Bug Fixes:**
+- إصلاح infinite loop في Omq.tsx (نقل toast من render إلى useEffect)
+- إصلاح missing imports في storage.ts (إضافة deepAnalysisMetrics, deepAnalysisEvents)
+
+**4. Architect Review:**
+✅ Pass - يعمل end-to-end بدون blockers
+✅ Security: none observed
+✅ Data layer, API layer, و UI layer متكاملة بشكل صحيح
+✅ RBAC integration working correctly
+✅ Ready for production
+
+**الملفات المضافة/المعدلة:**
+- client/src/pages/Omq.tsx: +537 lines (صفحة رئيسية)
+- client/src/pages/OmqDetail.tsx: ~400 lines (صفحة تفاصيل)
+- client/src/pages/OmqStats.tsx: ~300 lines (صفحة إحصائيات)
+- client/src/App.tsx: +3 routes
+- client/src/nav/nav.config.ts: +1 section
+- server/storage.ts: +2 imports (deepAnalysisMetrics, deepAnalysisEvents)
+
+---
+
 ### Deep Analysis (Omq) Public API - Phase 2
 
 **تم إضافة API endpoints عامة لقسم العمق (Omq) مع نظام متقدم لتتبع الأحداث:**
