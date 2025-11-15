@@ -110,6 +110,7 @@ import MediaLibrary from "@/pages/dashboard/MediaLibrary";
 import AITools from "@/pages/dashboard/AITools";
 import DataStoryGenerator from "@/pages/DataStoryGenerator";
 import AdminLogin from "@/pages/AdminLogin";
+import DeepAnalysis from "@/pages/dashboard/DeepAnalysis";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
@@ -357,7 +358,7 @@ function Router() {
       <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
       <Route path="/dashboard/smart-journalist" component={SmartJournalist} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
-      <Route path="/dashboard/ai/deep" component={ComingSoon} />
+      <Route path="/dashboard/ai/deep" component={DeepAnalysis} />
       <Route path="/dashboard/ai/headlines" component={ComingSoon} />
       <Route path="/dashboard/permissions" component={ComingSoon} />
       <Route path="/dashboard/templates" component={ComingSoon} />
