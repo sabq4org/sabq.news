@@ -87,9 +87,9 @@ export default function DeepAnalysis() {
         method: 'DELETE',
       });
     },
-    onSuccess: () => {
+    onSuccess: (_data, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/deep-analysis'] });
-      if (selectedAnalysisId === selectedAnalysisId) {
+      if (selectedAnalysisId === deletedId) {
         setSelectedAnalysisId(null);
       }
       toast({
@@ -255,7 +255,7 @@ export default function DeepAnalysis() {
                             {analysis.title}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(analysis.createdAt).toLocaleDateString('ar-SA')}
+                            {new Date(analysis.createdAt).toLocaleDateString('en-US')}
                           </p>
                         </div>
                         <Button
@@ -292,7 +292,7 @@ export default function DeepAnalysis() {
                       {selectedAnalysis.title}
                     </CardTitle>
                     <CardDescription className="mt-2">
-                      تم الإنشاء: {new Date(selectedAnalysis.createdAt).toLocaleString('ar-SA')}
+                      تم الإنشاء: {new Date(selectedAnalysis.createdAt).toLocaleString('en-US')}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -423,7 +423,7 @@ export default function DeepAnalysis() {
                               <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                   <span className="text-sm font-bold text-primary">
-                                    {(idx + 1).toLocaleString('en-US')}
+                                    {idx + 1}
                                   </span>
                                 </div>
                                 <p className="flex-1 pt-1">{rec}</p>
