@@ -79,7 +79,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "المساعد الذكي", href: "/chatbot" },
     { name: "عمق", href: "/omq" },
     { name: "المرقاب", href: "/mirqab" },
-    { name: "مقالات", href: "/articles" },
+    { name: "مقالات", href: "/opinion" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
   ];
 
