@@ -5600,7 +5600,7 @@ export const tasks = pgTable("tasks", {
   // Assignment
   createdById: varchar("created_by_id").references(() => users.id).notNull(),
   assignedToId: varchar("assigned_to_id").references(() => users.id),
-  parentTaskId: varchar("parent_task_id").references(() => tasks.id, { onDelete: "cascade" }),
+  parentTaskId: varchar("parent_task_id"),
   
   // Categorization
   department: text("department"), // تحرير، تقنية، سوشيال، فيديو
