@@ -25912,8 +25912,6 @@ Allow: /
       const filters: any = {
         status: status as string,
         priority: priority as string,
-        assignedToId: assignedToId as string,
-        createdById: createdById as string,
         department: department as string,
         parentTaskId: parentTaskId === 'null' ? null : (parentTaskId as string | undefined),
         search: search as string,
@@ -25921,9 +25919,22 @@ Allow: /
         offset,
       };
       
+      // Handle assignedToId filter
+      if (assignedToId) {
+        filters.assignedToId = assignedToId as string;
+      }
+      
+      // Handle createdById filter
+      if (createdById) {
+        filters.createdById = createdById as string;
+      }
+      
+      // If user only has view_own, filter by created OR assigned
       if (!userPermissions.includes('tasks.view_all')) {
-        // View own tasks only
-        filters.userId = userId;
+        // Don't override if explicit filter provided
+        if (!assignedToId && !createdById) {
+          filters.createdById = userId;
+        }
       }
       
       const result = await storage.getTasks(filters);
