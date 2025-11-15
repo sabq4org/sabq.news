@@ -242,7 +242,7 @@ export default function Profile() {
       id: string;
       firstName: string | null;
       lastName: string | null;
-      email: string;
+      email: string | null;
       bio: string | null;
       profileImageUrl: string | null;
     }>
@@ -261,7 +261,7 @@ export default function Profile() {
       id: string;
       firstName: string | null;
       lastName: string | null;
-      email: string;
+      email: string | null;
       bio: string | null;
       profileImageUrl: string | null;
     }>
@@ -461,30 +461,17 @@ export default function Profile() {
     }
   };
 
-  const getFollowerDisplayName = (follower: { firstName: string | null; lastName: string | null; email: string }) => {
-    if (follower.firstName && follower.lastName) {
-      return `${follower.firstName} ${follower.lastName}`;
+  const getFollowerDisplayName = (follower: { firstName: string | null; lastName: string | null; email: string | null }) => {
+    if (follower.firstName || follower.lastName) {
+      return `${follower.firstName || ''} ${follower.lastName || ''}`.trim();
     }
-    if (follower.firstName) {
-      return follower.firstName;
-    }
-    if (follower.lastName) {
-      return follower.lastName;
-    }
-    return follower.email;
+    return follower.email || 'مستخدم';
   };
 
-  const getFollowerInitials = (follower: { firstName: string | null; lastName: string | null; email: string }) => {
-    if (follower.firstName && follower.lastName) {
-      return `${follower.firstName[0]}${follower.lastName[0]}`.toUpperCase();
-    }
-    if (follower.firstName) {
-      return follower.firstName[0].toUpperCase();
-    }
-    if (follower.lastName) {
-      return follower.lastName[0].toUpperCase();
-    }
-    return follower.email[0].toUpperCase();
+  const getFollowerInitials = (follower: { firstName: string | null; lastName: string | null; email: string | null }) => {
+    if (follower.firstName) return follower.firstName[0].toUpperCase();
+    if (follower.email) return follower.email[0].toUpperCase();
+    return 'م';
   };
 
   if (!user) {
@@ -807,7 +794,7 @@ export default function Profile() {
           <Card>
             <CardContent className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="rounded-lg bg-muted p-1 flex flex-wrap w-full mb-6">
+                <TabsList dir="rtl" className="rounded-lg bg-muted p-1 flex flex-wrap w-full mb-6">
                   <TabsTrigger value="activity" className="gap-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md" data-testid="tab-activity">
                     <TrendingUp className="h-4 w-4 hidden sm:block" />
                     <span>نشاطي</span>
