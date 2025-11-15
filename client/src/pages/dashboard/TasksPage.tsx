@@ -61,9 +61,11 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Clock,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  ListPlus
 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -141,6 +143,117 @@ function getPriorityColor(priority: string): string {
   }
 }
 
+// Component for rendering subtasks
+interface SubtaskRowProps {
+  parentTask: Task;
+  users: User[];
+  onDelete: (id: string) => void;
+  onCreateSubtask: (parentId: string) => void;
+}
+
+function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRowProps) {
+  const { data: subtasks } = useQuery<Task[]>({
+    queryKey: ['/api/tasks', 'subtasks', parentTask.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/tasks?parentTaskId=${parentTask.id}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch subtasks');
+      const data = await res.json();
+      return data.tasks || [];
+    },
+  });
+
+  const getUserName = (userId: string | null) => {
+    if (!userId) return 'غير مسند';
+    const user = users.find(u => u.id === userId);
+    if (!user) return 'غير معروف';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+  };
+
+  if (!subtasks || subtasks.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {subtasks.map((subtask) => {
+        const dueDateValue = subtask.dueDate ? new Date(subtask.dueDate) : null;
+        const taskIsOverdue = dueDateValue && dueDateValue < new Date() && subtask.status !== 'completed';
+        
+        return (
+          <TableRow key={subtask.id} data-testid={`row-subtask-${subtask.id}`} className="bg-muted/30">
+            <TableCell className="font-medium pr-12" data-testid={`text-title-${subtask.id}`}>
+              <div className="flex items-center gap-2">
+                <div className="h-px w-6 bg-border" />
+                <div>
+                  <div>{subtask.title}</div>
+                  {subtask.description && (
+                    <div className="text-sm text-muted-foreground line-clamp-1">
+                      {subtask.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TableCell>
+            <TableCell data-testid={`badge-status-${subtask.id}`}>
+              <Badge variant={getStatusVariant(subtask.status)}>
+                {statusLabels[subtask.status]}
+              </Badge>
+            </TableCell>
+            <TableCell data-testid={`badge-priority-${subtask.id}`}>
+              <span className={getPriorityColor(subtask.priority)}>
+                {priorityLabels[subtask.priority]}
+              </span>
+            </TableCell>
+            <TableCell data-testid={`text-assignee-${subtask.id}`}>
+              {getUserName(subtask.assignedToId)}
+            </TableCell>
+            <TableCell data-testid={`text-due-date-${subtask.id}`}>
+              {dueDateValue ? (
+                <div className="flex items-center gap-2">
+                  <span className={taskIsOverdue ? 'text-red-600' : ''}>
+                    {format(dueDateValue, 'PPP', { locale: ar })}
+                  </span>
+                  {taskIsOverdue && (
+                    <AlertCircle className="h-4 w-4 text-red-600" data-testid={`icon-overdue-${subtask.id}`} />
+                  )}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">غير محدد</span>
+              )}
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid={`button-view-${subtask.id}`}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid={`button-edit-${subtask.id}`}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(subtask.id)}
+                  data-testid={`button-delete-${subtask.id}`}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </>
+  );
+}
+
 export default function TasksPage() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -150,6 +263,8 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const [creatingSubtaskFor, setCreatingSubtaskFor] = useState<string | null>(null);
   
   const limit = 20;
 
@@ -177,13 +292,14 @@ export default function TasksPage() {
     },
   });
 
-  // Fetch tasks list
+  // Fetch parent tasks only (tasks without a parent)
   const { data: tasksData, isLoading, isError, refetch } = useQuery<{ tasks: Task[]; total: number; totalPages: number }>({
-    queryKey: ['/api/tasks', page, searchQuery, statusFilter, priorityFilter, assigneeFilter],
+    queryKey: ['/api/tasks', 'parent', page, searchQuery, statusFilter, priorityFilter, assigneeFilter],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
+        parentTaskId: 'null', // Fetch only parent tasks
       });
       if (searchQuery) params.append('search', searchQuery);
       if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
@@ -258,12 +374,14 @@ export default function TasksPage() {
     const processedData = {
       ...data,
       tags: data.tags || [],
+      parentTaskId: creatingSubtaskFor || data.parentTaskId,
     };
     createMutation.mutate(processedData);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    setCreatingSubtaskFor(null);
     form.reset({
       title: '',
       description: '',
@@ -273,7 +391,31 @@ export default function TasksPage() {
       dueDate: undefined,
       department: '',
       tags: [],
+      parentTaskId: undefined,
     });
+  };
+
+  const toggleExpand = (taskId: string) => {
+    setExpandedTasks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCreateSubtask = (parentId: string) => {
+    setCreatingSubtaskFor(parentId);
+    setIsDialogOpen(true);
+  };
+
+  const getParentTaskName = (parentId: string | null) => {
+    if (!parentId) return null;
+    const parentTask = tasksData?.tasks.find(t => t.id === parentId);
+    return parentTask?.title || null;
   };
 
   const getUserName = (userId: string | null) => {
@@ -510,73 +652,107 @@ export default function TasksPage() {
                       {tasksData.tasks.map((task) => {
                       const dueDateValue = task.dueDate ? new Date(task.dueDate) : null;
                       const taskIsOverdue = dueDateValue && dueDateValue < new Date() && task.status !== 'completed';
+                      const isExpanded = expandedTasks.has(task.id);
                       
                       return (
-                        <TableRow key={task.id} data-testid={`row-task-${task.id}`}>
-                          <TableCell className="font-medium" data-testid={`text-title-${task.id}`}>
-                            <div>
-                              <div>{task.title}</div>
-                              {task.description && (
-                                <div className="text-sm text-muted-foreground line-clamp-1">
-                                  {task.description}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell data-testid={`badge-status-${task.id}`}>
-                            <Badge variant={getStatusVariant(task.status)}>
-                              {statusLabels[task.status]}
-                            </Badge>
-                          </TableCell>
-                          <TableCell data-testid={`badge-priority-${task.id}`}>
-                            <span className={getPriorityColor(task.priority)}>
-                              {priorityLabels[task.priority]}
-                            </span>
-                          </TableCell>
-                          <TableCell data-testid={`text-assignee-${task.id}`}>
-                            {getUserName(task.assignedToId)}
-                          </TableCell>
-                          <TableCell data-testid={`text-due-date-${task.id}`}>
-                            {dueDateValue ? (
+                        <>
+                          <TableRow key={task.id} data-testid={`row-task-${task.id}`}>
+                            <TableCell className="font-medium" data-testid={`text-title-${task.id}`}>
                               <div className="flex items-center gap-2">
-                                <span className={taskIsOverdue ? 'text-red-600' : ''}>
-                                  {format(dueDateValue, 'PPP', { locale: ar })}
-                                </span>
-                                {taskIsOverdue && (
-                                  <AlertCircle className="h-4 w-4 text-red-600" data-testid={`icon-overdue-${task.id}`} />
-                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => toggleExpand(task.id)}
+                                  className="h-6 w-6"
+                                  data-testid={`button-expand-task-${task.id}`}
+                                >
+                                  <ChevronDown 
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} 
+                                  />
+                                </Button>
+                                <div>
+                                  <div>{task.title}</div>
+                                  {task.description && (
+                                    <div className="text-sm text-muted-foreground line-clamp-1">
+                                      {task.description}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground">غير محدد</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                data-testid={`button-view-${task.id}`}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                data-testid={`button-edit-${task.id}`}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteId(task.id)}
-                                data-testid={`button-delete-${task.id}`}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                            </TableCell>
+                            <TableCell data-testid={`badge-status-${task.id}`}>
+                              <Badge variant={getStatusVariant(task.status)}>
+                                {statusLabels[task.status]}
+                              </Badge>
+                            </TableCell>
+                            <TableCell data-testid={`badge-priority-${task.id}`}>
+                              <span className={getPriorityColor(task.priority)}>
+                                {priorityLabels[task.priority]}
+                              </span>
+                            </TableCell>
+                            <TableCell data-testid={`text-assignee-${task.id}`}>
+                              {getUserName(task.assignedToId)}
+                            </TableCell>
+                            <TableCell data-testid={`text-due-date-${task.id}`}>
+                              {dueDateValue ? (
+                                <div className="flex items-center gap-2">
+                                  <span className={taskIsOverdue ? 'text-red-600' : ''}>
+                                    {format(dueDateValue, 'PPP', { locale: ar })}
+                                  </span>
+                                  {taskIsOverdue && (
+                                    <AlertCircle className="h-4 w-4 text-red-600" data-testid={`icon-overdue-${task.id}`} />
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">غير محدد</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleCreateSubtask(task.id)}
+                                  title="إنشاء مهمة فرعية"
+                                  data-testid={`button-create-subtask-${task.id}`}
+                                >
+                                  <ListPlus className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  data-testid={`button-view-${task.id}`}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  data-testid={`button-edit-${task.id}`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteId(task.id)}
+                                  data-testid={`button-delete-${task.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && (
+                            <SubtaskRow 
+                              key={`subtask-${task.id}`}
+                              parentTask={task} 
+                              users={users} 
+                              onDelete={setDeleteId}
+                              onCreateSubtask={handleCreateSubtask}
+                            />
+                          )}
+                        </>
                       );
                     })}
                   </TableBody>
@@ -622,9 +798,17 @@ export default function TasksPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl" dir="rtl">
             <DialogHeader>
-              <DialogTitle data-testid="dialog-title-create-task">إنشاء مهمة جديدة</DialogTitle>
+              <DialogTitle data-testid="dialog-title-create-task">
+                {creatingSubtaskFor ? 'إنشاء مهمة فرعية' : 'إنشاء مهمة جديدة'}
+              </DialogTitle>
               <DialogDescription>
-                أضف مهمة جديدة إلى النظام
+                {creatingSubtaskFor ? (
+                  <span>
+                    إضافة مهمة فرعية للمهمة: <strong>{getParentTaskName(creatingSubtaskFor)}</strong>
+                  </span>
+                ) : (
+                  'أضف مهمة جديدة إلى النظام'
+                )}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
