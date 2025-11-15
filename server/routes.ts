@@ -25973,7 +25973,6 @@ Allow: /
       const processedData: any = {
         ...validatedData,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate as string) : null,
-        completedAt: validatedData.completedAt ? new Date(validatedData.completedAt as string) : null,
       };
       
       const task = await storage.createTask(processedData);
@@ -26076,14 +26075,6 @@ Allow: /
           return res.status(400).json({ error: 'تاريخ الاستحقاق غير صالح' });
         }
         processedBody.dueDate = parsedDate;
-      }
-      
-      if (validatedData.completedAt) {
-        const parsedDate = new Date(validatedData.completedAt as string);
-        if (isNaN(parsedDate.getTime())) {
-          return res.status(400).json({ error: 'تاريخ الإنجاز غير صالح' });
-        }
-        processedBody.completedAt = parsedDate;
       }
       
       const updatedTask = await storage.updateTask(id, processedBody);

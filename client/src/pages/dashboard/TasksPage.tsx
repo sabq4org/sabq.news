@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -16,14 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
   Table,
   TableBody,
   TableCell,
@@ -31,14 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,11 +30,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AddTaskQuickPane } from "@/components/tasks";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   ListTodo, 
-  Plus, 
   Edit, 
   Trash2, 
   Eye, 
@@ -70,7 +51,6 @@ import {
 import { format, isPast } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Task, InsertTask } from "@shared/schema";
-import { insertTaskSchema } from "@shared/schema";
 
 interface TaskStatistics {
   total: number;
@@ -256,7 +236,6 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRow
 
 export default function TasksPage() {
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -267,23 +246,6 @@ export default function TasksPage() {
   const [creatingSubtaskFor, setCreatingSubtaskFor] = useState<string | null>(null);
   
   const limit = 20;
-
-  const form = useForm({
-    resolver: zodResolver(insertTaskSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      status: 'todo',
-      priority: 'medium',
-      assignedToId: undefined,
-      dueDate: undefined,
-      department: '',
-      category: '',
-      tags: '',
-      parentTaskId: undefined,
-      estimatedDuration: undefined,
-    },
-  });
 
   // Fetch tasks statistics
   const { data: statistics } = useQuery<TaskStatistics>({
@@ -326,7 +288,7 @@ export default function TasksPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: InsertTask) => {
+    mutationFn: async (data: Partial<InsertTask>) => {
       return await apiRequest('/api/tasks', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -339,7 +301,7 @@ export default function TasksPage() {
         title: "تم الإنشاء",
         description: "تم إنشاء المهمة بنجاح",
       });
-      handleCloseDialog();
+      setCreatingSubtaskFor(null);
     },
     onError: () => {
       toast({
@@ -372,40 +334,6 @@ export default function TasksPage() {
     },
   });
 
-  const handleSubmit = (data: any) => {
-    console.log('📝 Form submitted with data:', data);
-    console.log('📝 Form errors:', form.formState.errors);
-    
-    const processedData: InsertTask = {
-      ...data,
-      tags: typeof data.tags === 'string' && data.tags.trim()
-        ? data.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-        : [],
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-      parentTaskId: creatingSubtaskFor || data.parentTaskId,
-    };
-    console.log('📝 Processed data to send:', processedData);
-    createMutation.mutate(processedData);
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setCreatingSubtaskFor(null);
-    form.reset({
-      title: '',
-      description: '',
-      status: 'todo',
-      priority: 'medium',
-      assignedToId: undefined,
-      dueDate: undefined,
-      department: '',
-      category: '',
-      tags: '',
-      parentTaskId: undefined,
-      estimatedDuration: undefined,
-    });
-  };
-
   const toggleExpand = (taskId: string) => {
     setExpandedTasks(prev => {
       const newSet = new Set(prev);
@@ -420,7 +348,10 @@ export default function TasksPage() {
 
   const handleCreateSubtask = (parentId: string) => {
     setCreatingSubtaskFor(parentId);
-    setIsDialogOpen(true);
+    // Scroll to top to show AddTaskQuickPane
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const getParentTaskName = (parentId: string | null) => {
@@ -457,13 +388,6 @@ export default function TasksPage() {
               إدارة المهام والمتابعة
             </p>
           </div>
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            data-testid="button-create-task"
-          >
-            <Plus className="h-4 w-4 ml-2" />
-            مهمة جديدة
-          </Button>
         </div>
 
         {/* Statistics Cards */}
@@ -524,6 +448,14 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Add Task Quick Pane */}
+        <AddTaskQuickPane
+          onSubmit={createMutation.mutateAsync}
+          isPending={createMutation.isPending}
+          creatingSubtaskFor={creatingSubtaskFor}
+          onCancel={() => setCreatingSubtaskFor(null)}
+        />
 
         {/* Filters Section */}
         <Card data-testid="card-filters">
@@ -804,237 +736,6 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Create Task Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog();
-          }
-        }}>
-          <DialogContent className="max-w-2xl" dir="rtl">
-            <DialogHeader>
-              <DialogTitle data-testid="dialog-title-create-task">
-                {creatingSubtaskFor ? 'إنشاء مهمة فرعية' : 'إنشاء مهمة جديدة'}
-              </DialogTitle>
-              <DialogDescription>
-                {creatingSubtaskFor ? (
-                  <span>
-                    إضافة مهمة فرعية للمهمة: <strong>{getParentTaskName(creatingSubtaskFor)}</strong>
-                  </span>
-                ) : (
-                  'أضف مهمة جديدة إلى النظام'
-                )}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>العنوان *</FormLabel>
-                      <FormControl>
-                        <Input {...field} data-testid="input-title" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الوصف</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-description" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الحالة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-status">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="todo">قيد الانتظار</SelectItem>
-                            <SelectItem value="in_progress">قيد العمل</SelectItem>
-                            <SelectItem value="review">مراجعة</SelectItem>
-                            <SelectItem value="completed">مكتملة</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الأولوية</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-priority">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">منخفضة</SelectItem>
-                            <SelectItem value="medium">متوسطة</SelectItem>
-                            <SelectItem value="high">عالية</SelectItem>
-                            <SelectItem value="critical">عاجلة</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="assignedToId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>المسؤول (اختياري)</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-assignee">
-                              <SelectValue placeholder="اختر المسؤول أو اتركه فارغاً" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {users.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => {
-                      // Convert ISO string to local datetime-local format
-                      const formatForInput = (isoString: string | undefined) => {
-                        if (!isoString) return '';
-                        const date = new Date(isoString);
-                        // Format as YYYY-MM-DDTHH:mm in local timezone
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const hours = String(date.getHours()).padStart(2, '0');
-                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                        return `${year}-${month}-${day}T${hours}:${minutes}`;
-                      };
-
-                      return (
-                        <FormItem>
-                          <FormLabel>تاريخ الاستحقاق</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              value={formatForInput(field.value)}
-                              onChange={(e) => {
-                                // Convert local datetime to ISO string
-                                if (e.target.value) {
-                                  const date = new Date(e.target.value);
-                                  field.onChange(date.toISOString());
-                                } else {
-                                  field.onChange(undefined);
-                                }
-                              }}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              data-testid="input-due-date"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>القسم</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="مثال: التحرير، التقنية، التسويق" data-testid="input-department" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الوسوم</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || ''}
-                          placeholder="افصل بين الوسوم بفاصلة"
-                          data-testid="input-tags"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCloseDialog}
-                    data-testid="button-cancel"
-                  >
-                    إلغاء
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                    data-testid="button-submit"
-                  >
-                    {createMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
