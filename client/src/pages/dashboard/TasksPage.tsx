@@ -279,7 +279,7 @@ export default function TasksPage() {
       dueDate: undefined,
       department: '',
       category: '',
-      tags: [],
+      tags: '',
       parentTaskId: undefined,
       estimatedDuration: undefined,
     },
@@ -373,10 +373,11 @@ export default function TasksPage() {
   });
 
   const handleSubmit = (data: any) => {
-    // Parse tags if provided as comma-separated string
     const processedData: InsertTask = {
       ...data,
-      tags: data.tags || [],
+      tags: typeof data.tags === 'string' && data.tags.trim()
+        ? data.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : [],
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
     };
     createMutation.mutate(processedData);
@@ -394,7 +395,7 @@ export default function TasksPage() {
       dueDate: undefined,
       department: '',
       category: '',
-      tags: [],
+      tags: '',
       parentTaskId: undefined,
       estimatedDuration: undefined,
     });
@@ -998,8 +999,7 @@ export default function TasksPage() {
                       <FormControl>
                         <Input
                           {...field}
-                          value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value)}
+                          value={field.value || ''}
                           placeholder="افصل بين الوسوم بفاصلة"
                           data-testid="input-tags"
                         />

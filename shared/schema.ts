@@ -5788,7 +5788,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   parentTaskId: z.string().uuid().optional(),
   department: z.string().optional(),
   category: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
   estimatedDuration: z.number().int().positive().optional(),
 });
 
