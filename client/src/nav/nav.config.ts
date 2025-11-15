@@ -45,6 +45,7 @@ import {
   Wand2,
   BarChart,
   ListTodo,
+  Globe,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -223,36 +224,44 @@ export const navConfig: NavItem[] = [
     ],
   },
 
-  // ===== قسم العُمق / Omq Section =====
+  // ===== التحليل العميق / Deep Analysis =====
   {
-    id: "omq",
-    labelKey: "nav.omq",
-    labelAr: "قسم العُمق",
+    id: "deep_analysis",
+    labelKey: "nav.deep_analysis",
+    labelAr: "التحليل العميق",
     icon: Brain,
     roles: ["admin", "editor", "analyst"],
     children: [
       {
-        id: "omq_list",
-        labelKey: "nav.omq_list",
-        labelAr: "جميع التحليلات",
-        path: "/omq",
-        icon: FileText,
+        id: "deep_analysis_manage",
+        labelKey: "nav.deep_analysis_manage",
+        labelAr: "إدارة التحليلات",
+        path: "/dashboard/ai/deep-analysis-list",
+        icon: LayoutGrid,
         roles: ["admin", "editor", "analyst"],
       },
       {
-        id: "omq_stats",
-        labelKey: "nav.omq_stats",
-        labelAr: "إحصائيات قسم العُمق",
-        path: "/omq/stats",
-        icon: BarChart,
-        roles: ["admin", "analyst"],
-      },
-      {
-        id: "omq_create",
-        labelKey: "nav.omq_create",
+        id: "deep_analysis_create",
+        labelKey: "nav.deep_analysis_create",
         labelAr: "إنشاء تحليل جديد",
         path: "/dashboard/ai/deep",
         icon: Brain,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "deep_analysis_public",
+        labelKey: "nav.deep_analysis_public",
+        labelAr: "التحليلات المنشورة",
+        path: "/omq",
+        icon: Globe,
+        roles: ["admin", "editor", "analyst"],
+      },
+      {
+        id: "deep_analysis_stats",
+        labelKey: "nav.deep_analysis_stats",
+        labelAr: "الإحصائيات والتقارير",
+        path: "/omq/stats",
+        icon: BarChart,
         roles: ["admin", "analyst"],
       },
     ],
@@ -274,14 +283,6 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai/summaries",
         icon: AudioLines,
         roles: ["admin", "editor"],
-      },
-      {
-        id: "ai_deep",
-        labelKey: "nav.ai_deep_analysis",
-        labelAr: "التحليل العميق",
-        path: "/dashboard/ai/deep",
-        icon: Brain,
-        roles: ["admin", "analyst"],
       },
       {
         id: "ai_headlines",
