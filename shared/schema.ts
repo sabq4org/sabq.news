@@ -5600,6 +5600,7 @@ export const tasks = pgTable("tasks", {
   // Assignment
   createdById: varchar("created_by_id").references(() => users.id).notNull(),
   assignedToId: varchar("assigned_to_id").references(() => users.id),
+  parentTaskId: varchar("parent_task_id").references(() => tasks.id, { onDelete: "cascade" }),
   
   // Categorization
   department: text("department"), // تحرير، تقنية، سوشيال، فيديو
@@ -5632,6 +5633,7 @@ export const tasks = pgTable("tasks", {
   index("tasks_assigned_to_idx").on(table.assignedToId),
   index("tasks_created_by_idx").on(table.createdById),
   index("tasks_due_date_idx").on(table.dueDate),
+  index("tasks_parent_task_idx").on(table.parentTaskId),
 ]);
 
 // Subtasks table
@@ -5707,6 +5709,14 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     references: [users.id],
     relationName: "tasksAssigned",
   }),
+  parentTask: one(tasks, {
+    fields: [tasks.parentTaskId],
+    references: [tasks.id],
+    relationName: "taskHierarchy",
+  }),
+  childTasks: many(tasks, {
+    relationName: "taskHierarchy",
+  }),
   subtasks: many(subtasks),
   comments: many(taskComments),
   attachments: many(taskAttachments),
@@ -5775,6 +5785,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
   dueDate: z.string().datetime().optional(),
   assignedToId: z.string().uuid().optional(),
+  parentTaskId: z.string().uuid().optional(),
   department: z.string().optional(),
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
