@@ -294,14 +294,20 @@ export default function TasksPage() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/statistics'] });
+      
+      const isSubtask = !!variables.parentTaskId;
+      
       toast({
         title: "تم الإنشاء",
-        description: "تم إنشاء المهمة بنجاح",
+        description: isSubtask ? "تم إنشاء المهمة الفرعية بنجاح" : "تم إنشاء المهمة بنجاح",
       });
-      setCreatingSubtaskFor(null);
+      
+      // Hybrid mode: Don't clear creatingSubtaskFor here
+      // Let "إنهاء" button handle exit from subtask mode
+      // This allows creating multiple subtasks in sequence
     },
     onError: () => {
       toast({
