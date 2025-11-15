@@ -19401,9 +19401,9 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
         // Ensure EXACTLY 12 data points (fill missing months with 0)
         const months: string[] = [];
-        const views: number[] = [];
-        const users: number[] = [];
-        const articles: number[] = [];
+        const viewsArray: number[] = [];
+        const usersArray: number[] = [];
+        const articlesArray: number[] = [];
 
         for (let i = 11; i >= 0; i--) {
           const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -19411,16 +19411,16 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           const monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
           
           months.push(monthName);
-          views.push(viewsMap.get(yearMonth) || 0);
-          users.push(usersMap.get(yearMonth) || 0);
-          articles.push(articlesMap.get(yearMonth) || 0);
+          viewsArray.push(viewsMap.get(yearMonth) || 0);
+          usersArray.push(usersMap.get(yearMonth) || 0);
+          articlesArray.push(articlesMap.get(yearMonth) || 0);
         }
 
         res.json({
           months,
-          views,
-          users,
-          articles,
+          views: viewsArray,
+          users: usersArray,
+          articles: articlesArray,
         });
       } catch (error) {
         console.error("Error fetching analytics chart data:", error);
@@ -25474,7 +25474,75 @@ Allow: /
     }
   });
 
-  // Update Deep Analysis
+  // Update Deep Analysis Status (publish/unpublish/archive)
+  app.patch("/api/deep-analysis/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      
+      // Validate status
+      const validStatuses = ['draft', 'completed', 'published', 'archived'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          error: 'Invalid status. Must be one of: draft, completed, published, archived' 
+        });
+      }
+
+      const analysis = await storage.getDeepAnalysis(req.params.id);
+      
+      if (!analysis) {
+        return res.status(404).json({ error: 'التحليل غير موجود' });
+      }
+
+      // Check permissions using RBAC
+      const userPermissions = await getUserPermissions((req.user as any).id);
+      const canEditAny = userPermissions.includes('articles.edit_any');
+      const canPublish = userPermissions.includes('articles.publish');
+      const canEditOwn = userPermissions.includes('articles.edit_own');
+      const isOwner = analysis.createdBy === (req.user as any).id;
+
+      // Authorization logic:
+      // - articles.edit_any or articles.publish: can update any analysis
+      // - articles.edit_own: can only update own analyses
+      if (!canEditAny && !canPublish && !(canEditOwn && isOwner)) {
+        return res.status(403).json({ error: 'غير مصرح لك بتحديث حالة هذا التحليل' });
+      }
+
+      // Update status
+      const updated = await storage.updateDeepAnalysis(req.params.id, { status });
+      
+      // Log activity
+      const statusArabic = {
+        draft: 'مسودة',
+        completed: 'مكتمل',
+        published: 'منشور',
+        archived: 'مؤرشف'
+      };
+      
+      await storage.logActivity({
+        userId: (req.user as any).id,
+        action: 'update_analysis_status',
+        entityType: 'deep_analysis',
+        entityId: req.params.id,
+        metadata: { 
+          oldStatus: analysis.status, 
+          newStatus: status,
+          title: analysis.title,
+          isOwner 
+        },
+      });
+
+      res.json({ 
+        success: true, 
+        analysis: updated,
+        message: `تم تحديث حالة التحليل إلى "${statusArabic[status as keyof typeof statusArabic]}"` 
+      });
+    } catch (error: any) {
+      console.error('Error updating deep analysis status:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update Deep Analysis (full update)
   app.put("/api/deep-analysis/:id", requireAuth, async (req, res) => {
     try {
       const analysis = await storage.getDeepAnalysis(req.params.id);

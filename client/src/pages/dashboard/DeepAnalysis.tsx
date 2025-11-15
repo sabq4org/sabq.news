@@ -19,7 +19,11 @@ import {
   Clock,
   Trash2,
   Download,
-  Save
+  Save,
+  Edit,
+  Eye,
+  EyeOff,
+  Globe
 } from "lucide-react";
 // Markdown content will be displayed in pre-formatted text
 
@@ -37,6 +41,22 @@ interface DeepAnalysis {
   executiveSummary: string | null;
   recommendations: string | null;
 }
+
+// Helper function to get status badge variant and text
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case 'draft':
+      return { variant: 'secondary' as const, text: 'مسودة', icon: Edit };
+    case 'completed':
+      return { variant: 'default' as const, text: 'مكتمل', icon: Save };
+    case 'published':
+      return { variant: 'default' as const, text: 'منشور', icon: Globe };
+    case 'archived':
+      return { variant: 'outline' as const, text: 'مؤرشف', icon: EyeOff };
+    default:
+      return { variant: 'secondary' as const, text: status, icon: FileText };
+  }
+};
 
 export default function DeepAnalysis() {
   const { toast } = useToast();
@@ -155,6 +175,31 @@ export default function DeepAnalysis() {
       toast({
         title: "تم الحذف",
         description: "تم حذف التحليل بنجاح",
+      });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return apiRequest(`/api/deep-analysis/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/deep-analysis'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deep-analysis', selectedAnalysisId] });
+      toast({
+        title: "تم التحديث",
+        description: data.message || "تم تحديث حالة التحليل بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: error.message || "فشل تحديث الحالة",
       });
     },
   });
@@ -309,38 +354,49 @@ export default function DeepAnalysis() {
                 </div>
               ) : analyses && analyses.analyses.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {analyses.analyses.map((analysis) => (
-                    <div
-                      key={analysis.id}
-                      data-testid={`card-history-${analysis.id}`}
-                      className={`p-3 rounded-md border cursor-pointer transition-colors hover-elevate ${
-                        selectedAnalysisId === analysis.id ? 'bg-primary/10 border-primary' : 'bg-card'
-                      }`}
-                      onClick={() => setSelectedAnalysisId(analysis.id)}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate" data-testid={`text-title-${analysis.id}`}>
-                            {analysis.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(analysis.createdAt).toLocaleDateString('en-US')}
-                          </p>
+                  {analyses.analyses.map((analysis) => {
+                    const statusConfig = getStatusConfig(analysis.status);
+                    const StatusIcon = statusConfig.icon;
+                    
+                    return (
+                      <div
+                        key={analysis.id}
+                        data-testid={`card-history-${analysis.id}`}
+                        className={`p-3 rounded-md border cursor-pointer transition-colors hover-elevate ${
+                          selectedAnalysisId === analysis.id ? 'bg-primary/10 border-primary' : 'bg-card'
+                        }`}
+                        onClick={() => setSelectedAnalysisId(analysis.id)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <p className="font-medium text-sm truncate" data-testid={`text-title-${analysis.id}`}>
+                              {analysis.title}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={statusConfig.variant} className="text-xs" data-testid={`badge-status-${analysis.id}`}>
+                                <StatusIcon className="w-3 h-3 ml-1" />
+                                {statusConfig.text}
+                              </Badge>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(analysis.createdAt).toLocaleDateString('en-US')}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            data-testid={`button-delete-${analysis.id}`}
+                            size="icon"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteMutation.mutate(analysis.id);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button
-                          data-testid={`button-delete-${analysis.id}`}
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteMutation.mutate(analysis.id);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8 text-sm">
@@ -355,16 +411,48 @@ export default function DeepAnalysis() {
           {selectedAnalysis ? (
             <Card data-testid="card-analysis-results">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl" data-testid="text-selected-title">
-                      {selectedAnalysis.title}
-                    </CardTitle>
-                    <CardDescription className="mt-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CardTitle className="text-2xl" data-testid="text-selected-title">
+                        {selectedAnalysis.title}
+                      </CardTitle>
+                      <Badge variant={getStatusConfig(selectedAnalysis.status).variant} data-testid="badge-selected-status">
+                        {(() => {
+                          const StatusIcon = getStatusConfig(selectedAnalysis.status).icon;
+                          return <StatusIcon className="w-3 h-3 ml-1" />;
+                        })()}
+                        {getStatusConfig(selectedAnalysis.status).text}
+                      </Badge>
+                    </div>
+                    <CardDescription>
                       تم الإنشاء: {new Date(selectedAnalysis.createdAt).toLocaleString('en-US')}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    {/* Publish/Unpublish buttons */}
+                    {selectedAnalysis.status === 'completed' && (
+                      <Button
+                        data-testid="button-publish"
+                        variant="default"
+                        onClick={() => updateStatusMutation.mutate({ id: selectedAnalysis.id, status: 'published' })}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <Eye className="w-4 h-4 ml-2" />
+                        نشر
+                      </Button>
+                    )}
+                    {selectedAnalysis.status === 'published' && (
+                      <Button
+                        data-testid="button-unpublish"
+                        variant="outline"
+                        onClick={() => updateStatusMutation.mutate({ id: selectedAnalysis.id, status: 'completed' })}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <EyeOff className="w-4 h-4 ml-2" />
+                        إلغاء النشر
+                      </Button>
+                    )}
                     <Button size="icon" variant="outline" data-testid="button-download">
                       <Download className="w-4 h-4" />
                     </Button>
