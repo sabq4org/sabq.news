@@ -515,33 +515,31 @@ ${analysis.recommendations || 'غير متوفر'}
 
         {/* Main Content - Tabbed Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl" data-testid="tabs-analysis">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="unified" data-testid="tab-trigger-unified">
               التحليل الموحد
             </TabsTrigger>
-            <TabsTrigger value="gpt" data-testid="tab-trigger-gpt">
-              GPT-5
-            </TabsTrigger>
-            <TabsTrigger value="gemini" data-testid="tab-trigger-gemini">
-              Gemini
-            </TabsTrigger>
-            <TabsTrigger value="claude" data-testid="tab-trigger-claude">
-              Claude
+            <TabsTrigger value="models" data-testid="tab-trigger-models">
+              نماذج AI
             </TabsTrigger>
             <TabsTrigger value="summary" data-testid="tab-trigger-summary">
-              الملخص التنفيذي
-            </TabsTrigger>
-            <TabsTrigger value="recommendations" data-testid="tab-trigger-recommendations">
-              التوصيات
+              الملخص
             </TabsTrigger>
           </TabsList>
 
+          {/* Unified Analysis Tab */}
           <TabsContent value="unified" data-testid="tab-content-unified">
             <Card>
-              <CardContent className="p-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  التحليل الموحد العميق
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-slate dark:prose-invert max-w-none">
                 {analysis.mergedAnalysis ? (
                   <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
+                    className="whitespace-pre-wrap text-base leading-relaxed"
                     data-testid="content-unified"
                   >
                     {analysis.mergedAnalysis}
@@ -556,72 +554,21 @@ ${analysis.recommendations || 'غير متوفر'}
             </Card>
           </TabsContent>
 
-          <TabsContent value="gpt" data-testid="tab-content-gpt">
-            <Card>
-              <CardContent className="p-6">
-                {analysis.gptAnalysis ? (
-                  <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
-                    data-testid="content-gpt"
-                  >
-                    {analysis.gptAnalysis}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 text-muted-foreground" data-testid="empty-gpt">
-                    <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>لا يتوفر تحليل من GPT-5</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* AI Models Tab with Nested Tabs */}
+          <TabsContent value="models" data-testid="tab-content-models">
+            <ModelTabs analysis={analysis} />
           </TabsContent>
 
-          <TabsContent value="gemini" data-testid="tab-content-gemini">
-            <Card>
-              <CardContent className="p-6">
-                {analysis.geminiAnalysis ? (
-                  <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
-                    data-testid="content-gemini"
-                  >
-                    {analysis.geminiAnalysis}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 text-muted-foreground" data-testid="empty-gemini">
-                    <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>لا يتوفر تحليل من Gemini</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="claude" data-testid="tab-content-claude">
-            <Card>
-              <CardContent className="p-6">
-                {analysis.claudeAnalysis ? (
-                  <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
-                    data-testid="content-claude"
-                  >
-                    {analysis.claudeAnalysis}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 text-muted-foreground" data-testid="empty-claude">
-                    <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>لا يتوفر تحليل من Claude</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
+          {/* Summary Tab */}
           <TabsContent value="summary" data-testid="tab-content-summary">
             <Card>
-              <CardContent className="p-6">
+              <CardHeader>
+                <CardTitle>الملخص التنفيذي</CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-slate dark:prose-invert max-w-none">
                 {analysis.executiveSummary ? (
                   <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
+                    className="whitespace-pre-wrap text-base leading-relaxed"
                     data-testid="content-summary"
                   >
                     {analysis.executiveSummary}
@@ -634,128 +581,116 @@ ${analysis.recommendations || 'غير متوفر'}
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="recommendations" data-testid="tab-content-recommendations">
-            <Card>
-              <CardContent className="p-6">
-                {analysis.recommendations ? (
+            {/* Recommendations */}
+            {analysis.recommendations && (
+              <Card className="mt-6" data-testid="card-recommendations">
+                <CardHeader>
+                  <CardTitle>التوصيات</CardTitle>
+                </CardHeader>
+                <CardContent className="prose prose-slate dark:prose-invert max-w-none">
                   <div 
-                    className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-base leading-relaxed"
+                    className="whitespace-pre-wrap text-base leading-relaxed"
                     data-testid="content-recommendations"
                   >
                     {analysis.recommendations}
                   </div>
-                ) : (
-                  <div className="text-center py-16 text-muted-foreground" data-testid="empty-recommendations">
-                    <ChevronRight className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>لا تتوفر توصيات</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
-
-        {/* Model Comparison Section (Optional) */}
-        {(analysis.gptAnalysis || analysis.geminiAnalysis || analysis.claudeAnalysis) && (
-          <Card className="mt-6" data-testid="card-model-comparison">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5" />
-                مقارنة النماذج
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* GPT-5 */}
-                <div className="p-4 rounded-md border" data-testid="comparison-gpt">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    GPT-5
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الكلمات</span>
-                      <span className="font-medium" data-testid="comparison-gpt-words">
-                        {analysis.gptAnalysis ? analysis.gptAnalysis.split(/\s+/).length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الأحرف</span>
-                      <span className="font-medium" data-testid="comparison-gpt-chars">
-                        {analysis.gptAnalysis ? analysis.gptAnalysis.length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">الحالة</span>
-                      <span className="font-medium">
-                        {analysis.gptAnalysis ? '✓ متوفر' : '✗ غير متوفر'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gemini */}
-                <div className="p-4 rounded-md border" data-testid="comparison-gemini">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                    Gemini
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الكلمات</span>
-                      <span className="font-medium" data-testid="comparison-gemini-words">
-                        {analysis.geminiAnalysis ? analysis.geminiAnalysis.split(/\s+/).length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الأحرف</span>
-                      <span className="font-medium" data-testid="comparison-gemini-chars">
-                        {analysis.geminiAnalysis ? analysis.geminiAnalysis.length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">الحالة</span>
-                      <span className="font-medium">
-                        {analysis.geminiAnalysis ? '✓ متوفر' : '✗ غير متوفر'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Claude */}
-                <div className="p-4 rounded-md border" data-testid="comparison-claude">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                    Claude
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الكلمات</span>
-                      <span className="font-medium" data-testid="comparison-claude-words">
-                        {analysis.claudeAnalysis ? analysis.claudeAnalysis.split(/\s+/).length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">عدد الأحرف</span>
-                      <span className="font-medium" data-testid="comparison-claude-chars">
-                        {analysis.claudeAnalysis ? analysis.claudeAnalysis.length.toLocaleString('en-US') : 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">الحالة</span>
-                      <span className="font-medium">
-                        {analysis.claudeAnalysis ? '✓ متوفر' : '✗ غير متوفر'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
+  );
+}
+
+// ModelTabs component with nested tabs for AI models
+function ModelTabs({ analysis }: { analysis: DeepAnalysis }) {
+  const [modelTab, setModelTab] = useState("gpt");
+
+  return (
+    <Tabs value={modelTab} onValueChange={setModelTab} dir="rtl" className="w-full" data-testid="tabs-models">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="gpt" data-testid="tab-model-gpt">
+          GPT-5
+        </TabsTrigger>
+        <TabsTrigger value="gemini" data-testid="tab-model-gemini">
+          Gemini
+        </TabsTrigger>
+        <TabsTrigger value="claude" data-testid="tab-model-claude">
+          Claude
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="gpt" data-testid="tab-content-model-gpt">
+        <Card>
+          <CardHeader>
+            <CardTitle>تحليل GPT-5</CardTitle>
+          </CardHeader>
+          <CardContent className="prose prose-slate dark:prose-invert max-w-none">
+            {analysis.gptAnalysis ? (
+              <div 
+                className="whitespace-pre-wrap text-base leading-relaxed"
+                data-testid="content-gpt"
+              >
+                {analysis.gptAnalysis}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-muted-foreground" data-testid="empty-gpt">
+                <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>لا يتوفر تحليل من GPT-5</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="gemini" data-testid="tab-content-model-gemini">
+        <Card>
+          <CardHeader>
+            <CardTitle>تحليل Gemini</CardTitle>
+          </CardHeader>
+          <CardContent className="prose prose-slate dark:prose-invert max-w-none">
+            {analysis.geminiAnalysis ? (
+              <div 
+                className="whitespace-pre-wrap text-base leading-relaxed"
+                data-testid="content-gemini"
+              >
+                {analysis.geminiAnalysis}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-muted-foreground" data-testid="empty-gemini">
+                <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>لا يتوفر تحليل من Gemini</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="claude" data-testid="tab-content-model-claude">
+        <Card>
+          <CardHeader>
+            <CardTitle>تحليل Claude</CardTitle>
+          </CardHeader>
+          <CardContent className="prose prose-slate dark:prose-invert max-w-none">
+            {analysis.claudeAnalysis ? (
+              <div 
+                className="whitespace-pre-wrap text-base leading-relaxed"
+                data-testid="content-claude"
+              >
+                {analysis.claudeAnalysis}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-muted-foreground" data-testid="empty-claude">
+                <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>لا يتوفر تحليل من Claude</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }

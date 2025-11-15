@@ -113,6 +113,7 @@ import AdminLogin from "@/pages/AdminLogin";
 import DeepAnalysis from "@/pages/dashboard/DeepAnalysis";
 import Omq from "@/pages/Omq";
 import OmqDetail from "@/pages/OmqDetail";
+import OmqStats from "@/pages/OmqStats";
 import CalendarPage from "@/pages/CalendarPage";
 import CalendarEventDetail from "@/pages/CalendarEventDetail";
 import CalendarEventForm from "@/pages/CalendarEventForm";
@@ -234,6 +235,7 @@ function Router() {
       <Route path="/muqtarib" component={Muqtarib} />
       
       {/* Omq (Deep Analysis) public pages */}
+      <Route path="/omq/stats" component={OmqStats} />
       <Route path="/omq/:id" component={OmqDetail} />
       <Route path="/omq" component={Omq} />
       

@@ -79,6 +79,8 @@ import {
   walletPasses,
   walletDevices,
   deepAnalyses,
+  deepAnalysisMetrics,
+  deepAnalysisEvents,
   type DeepAnalysis,
   type InsertDeepAnalysis,
   type User,

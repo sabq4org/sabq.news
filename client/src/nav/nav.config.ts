@@ -212,6 +212,41 @@ export const navConfig: NavItem[] = [
     ],
   },
 
+  // ===== قسم العُمق / Omq Section =====
+  {
+    id: "omq",
+    labelKey: "nav.omq",
+    labelAr: "قسم العُمق",
+    icon: Brain,
+    roles: ["admin", "editor", "analyst"],
+    children: [
+      {
+        id: "omq_list",
+        labelKey: "nav.omq_list",
+        labelAr: "جميع التحليلات",
+        path: "/omq",
+        icon: FileText,
+        roles: ["admin", "editor", "analyst"],
+      },
+      {
+        id: "omq_stats",
+        labelKey: "nav.omq_stats",
+        labelAr: "إحصائيات قسم العُمق",
+        path: "/omq/stats",
+        icon: BarChart,
+        roles: ["admin", "analyst"],
+      },
+      {
+        id: "omq_create",
+        labelKey: "nav.omq_create",
+        labelAr: "إنشاء تحليل جديد",
+        path: "/dashboard/ai/deep",
+        icon: Brain,
+        roles: ["admin", "analyst"],
+      },
+    ],
+  },
+
   // ===== الذكاء الاصطناعي / AI =====
   {
     id: "ai",
