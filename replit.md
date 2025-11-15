@@ -111,8 +111,31 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 - ✅ Full Audit Trail: activity logging مع before/after full snapshots
 - ✅ Input Validation: Zod schemas لجميع الـ requests
 
-**6. Next Phase:**
-- Frontend implementation: قائمة المهام، Kanban Board، تفاصيل المهمة
+**6. Frontend List View (TasksPage.tsx) - ✅ Complete:**
+- Header: "مركز المهام" مع description و "مهمة جديدة" button
+- Statistics Cards: إجمالي، قيد العمل (أزرق)، متأخرة (أحمر)، مكتملة (أخضر)
+- Advanced Filters: Status, Priority, Assignee (من API), Search (title/description)
+- Tasks Table: 7 columns (العنوان، الحالة، الأولوية، المسؤول، القسم، تاريخ الاستحقاق، الإجراءات)
+- Status & Priority Badges مع icons من lucide-react
+- Overdue Indicator: AlertCircle icon أحمر للمهام المتأخرة
+- Create Task Dialog: 8 fields مع validation (title*, description, status, priority, assignedToId, dueDate, department, tags)
+- Delete Confirmation Dialog مع cache invalidation
+- Pagination: صفحات + عدد النتائج
+- Loading States: Skeleton cards أثناء loading
+- Error Handling: Error fallback مع retry button
+- Empty State: رسالة عند عدم وجود مهام
+- Navigation: أضفت Tasks menu item في sidebar (ListTodo icon) + route في App.tsx
+- Design Compliance: RTL, Hindu-Arabic numerals (.toLocaleString('en-US')), data-testid attributes
+
+**7. Bug Fixes & Runtime Safety:**
+- ✅ Fixed statistics?.total.toLocaleString() crashes → `(statistics?.total ?? 0).toLocaleString('en-US')`
+- ✅ Fixed dueDate format() crashes → Date conversion: `const dueDateValue = task.dueDate ? new Date(task.dueDate) : null`
+- ✅ Fixed error state crashes → Optional chaining: `tasksData?.tasks?.length` + error fallback
+- ✅ All architect reviews passed
+
+**8. Next Phase:**
+- Kanban Board مع Drag & Drop (@dnd-kit)
+- Task Details Page (Subtasks + Comments + Attachments + Activity)
 - AI Integration: Smart Assignment، Task Breakdown، Time Prediction
 - Smart Notifications: إشعارات ذكية للمواعيد والتحديثات
 - Analytics Dashboard: تقارير أداء وإحصائيات
@@ -122,6 +145,9 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 - `server/storage.ts`: +600 lines (Storage methods)
 - `server/seedRBAC.ts`: +30 lines (Task permissions)
 - `server/routes.ts`: +500 lines (17 API endpoints)
+- `client/src/pages/dashboard/TasksPage.tsx`: +800 lines (List view + filters + dialogs)
+- `client/src/nav/nav.config.ts`: +5 lines (Tasks menu item)
+- `client/src/App.tsx`: +2 lines (Tasks route)
 
 ---
 
