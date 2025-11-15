@@ -1,0 +1,96 @@
+2025-11-15 17:02:42.42
+ff84cfda
+User
+}
+2025-11-15 17:02:42.42
+ff84cfda
+User
+🔍 /api/auth/user check: {
+2025-11-15 17:02:42.49
+ff84cfda
+User
+3:02:42 PM [express] GET /api/tasks 200 in 271ms :: {"tasks":[],"total":0,"page":1,"limit":20,"total…
+2025-11-15 17:02:42.49
+ff84cfda
+User
+3:02:42 PM [express] GET /api/auth/user 304 in 269ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-15 17:02:42.58
+ff84cfda
+User
+3:02:42 PM [express] GET /api/tasks/statistics 200 in 376ms :: {"total":0,"todo":0,"inProgress":0,"r…
+2025-11-15 17:02:42.96
+ff84cfda
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 17:02:42.99
+ff84cfda
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 17:02:43.07
+ff84cfda
+User
+3:02:43 PM [express] GET /api/announcements/active 304 in 131ms :: []
+2025-11-15 17:03:10.67
+ff84cfda
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 17:03:10.77
+ff84cfda
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 17:03:10.80
+ff84cfda
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-15 17:03:10.80
+ff84cfda
+User
+Error creating task: TypeError: value.toISOString is not a function
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at Array.map ()
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at Array.map ()
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at Array.map ()
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-11-15 17:03:10.80
+ff84cfda
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 17:03:10.83
+ff84cfda
+User
+3:03:10 PM [express] POST /api/tasks 500 in 327ms :: {"error":"فشل في إنشاء المهمة"}
+2025-11-15 17:03:10.83
+ff84cfda
+User
+3:03:10 PM [express] POST /api/tasks 500 in 327ms :: {"error":"فشل في إنشاء المهمة"}
