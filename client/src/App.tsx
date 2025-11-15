@@ -111,6 +111,7 @@ import AITools from "@/pages/dashboard/AITools";
 import DataStoryGenerator from "@/pages/DataStoryGenerator";
 import AdminLogin from "@/pages/AdminLogin";
 import DeepAnalysis from "@/pages/dashboard/DeepAnalysis";
+import TasksPage from "@/pages/dashboard/TasksPage";
 import Omq from "@/pages/Omq";
 import OmqDetail from "@/pages/OmqDetail";
 import OmqStats from "@/pages/OmqStats";
@@ -365,6 +366,7 @@ function Router() {
       <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
       <Route path="/dashboard/smart-journalist" component={SmartJournalist} />
+      <Route path="/dashboard/tasks" component={TasksPage} />
       <Route path="/dashboard/ai/summaries" component={ComingSoon} />
       <Route path="/dashboard/ai/deep" component={DeepAnalysis} />
       <Route path="/dashboard/ai/headlines" component={ComingSoon} />

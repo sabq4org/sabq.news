@@ -44,6 +44,7 @@ import {
   MapPin,
   Wand2,
   BarChart,
+  ListTodo,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -60,6 +61,16 @@ export const navConfig: NavItem[] = [
     icon: LayoutDashboard,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
     meta: { exact: true },
+  },
+
+  // ===== مركز المهام / Tasks Center =====
+  {
+    id: "tasks",
+    labelKey: "nav.tasks",
+    labelAr: "مركز المهام",
+    path: "/dashboard/tasks",
+    icon: ListTodo,
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
   },
 
   // ===== المحتوى / Content =====
