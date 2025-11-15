@@ -133,7 +133,7 @@ export default function NotFound() {
         >
           <Button
             size="lg"
-            className="flex items-center gap-2 text-base px-8 py-6 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
+            className="flex items-center gap-2 bg-primary shadow-lg shadow-primary/30"
             data-testid="button-home-404"
             aria-label="العودة إلى الصفحة الرئيسية"
             asChild
@@ -147,7 +147,7 @@ export default function NotFound() {
           <Button
             size="lg"
             variant="outline"
-            className="flex items-center gap-2 text-base px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+            className="flex items-center gap-2 bg-white/10 border-white/30 text-white backdrop-blur-sm"
             data-testid="button-chatbot-404"
             aria-label="اسأل المساعد الذكي للحصول على المساعدة"
             asChild
@@ -161,7 +161,7 @@ export default function NotFound() {
           <Button
             size="lg"
             variant="outline"
-            className="flex items-center gap-2 text-base px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+            className="flex items-center gap-2 bg-white/10 border-white/30 text-white backdrop-blur-sm"
             data-testid="button-search-404"
             aria-label="البحث في الموقع عن المحتوى"
             asChild
@@ -216,7 +216,7 @@ export default function NotFound() {
                   >
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-right h-auto py-3 px-4 text-white hover:bg-white/10 rounded-lg"
+                      className="w-full justify-start text-right text-white"
                       data-testid={`link-trending-${article.articleId}`}
                       aria-label={`اقرأ المقال: ${article.title}`}
                       asChild
@@ -248,7 +248,7 @@ export default function NotFound() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-sm px-5 py-2 text-white hover:bg-white/10 rounded-lg"
+                      className="text-white"
                       data-testid={link.testId}
                       aria-label={`انتقل إلى ${link.label}`}
                       asChild
