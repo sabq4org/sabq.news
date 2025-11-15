@@ -268,7 +268,7 @@ export default function TasksPage() {
   
   const limit = 20;
 
-  const form = useForm<InsertTask>({
+  const form = useForm({
     resolver: zodResolver(insertTaskSchema),
     defaultValues: {
       title: '',
@@ -278,7 +278,10 @@ export default function TasksPage() {
       assignedToId: undefined,
       dueDate: undefined,
       department: '',
+      category: '',
       tags: [],
+      parentTaskId: undefined,
+      estimatedDuration: undefined,
     },
   });
 
@@ -369,9 +372,9 @@ export default function TasksPage() {
     },
   });
 
-  const handleSubmit = (data: InsertTask) => {
+  const handleSubmit = (data: any) => {
     // Parse tags if provided as comma-separated string
-    const processedData = {
+    const processedData: InsertTask = {
       ...data,
       tags: data.tags || [],
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
@@ -390,8 +393,10 @@ export default function TasksPage() {
       assignedToId: undefined,
       dueDate: undefined,
       department: '',
+      category: '',
       tags: [],
       parentTaskId: undefined,
+      estimatedDuration: undefined,
     });
   };
 
@@ -795,7 +800,11 @@ export default function TasksPage() {
         )}
 
         {/* Create Task Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDialog();
+          }
+        }}>
           <DialogContent className="max-w-2xl" dir="rtl">
             <DialogHeader>
               <DialogTitle data-testid="dialog-title-create-task">
