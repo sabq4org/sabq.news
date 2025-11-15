@@ -1,0 +1,1055 @@
+
+⸻
+
+🚀 تصميم قسم التحليل العميق الذكي داخل “سبق الذكية” — الجيل الجديد للتحليل الصحفي
+
+🔥 الفكرة الأساسية
+
+قسم مستقل داخل لوحة التحكم عبارة عن محرك تحليل متعدد النماذج (Multi-Model Analysis Engine)
+يأخذ منك (أو من المراسل):
+	•	موضوع
+	•	كلمات مفتاحية
+	•	سياق
+	•	نوع التغطية
+	•	التصنيف
+	•	شخصية الكاتب
+ثم يشغل خلف الكواليس:
+GPT-5.1 + Gemini + Claude + Llama (اختياري)
+ويعطيك:
+تحليل عميق = مستوى تقارير استخبارات اقتصادية وسياسية.
+
+⸻
+
+1) المكوّنات الأساسية للقسم – Internal Components
+
+🧠 (A) محرك التحليل متعدد النماذج
+
+يسوي التالي:
+	1.	يتلقى البرومبت
+	2.	يولّد نسخ تحليل متعددة:
+	•	نسخة GPT
+	•	نسخة Gemini
+	•	نسخة Claude
+	3.	يدمجها في “تحليل موحد”
+هذا يعطيك أفضل ما لدى كل نموذج.
+	4.	يصنّع تقارير جاهزة للنشر حسب معايير “سبق”.
+
+الفائدة؟
+تاخذ تحليل أعمق من نموذج واحد…
+تحليل مبني على تلاقح عقول الذكاء الاصطناعي مع خبرتك التحريرية.
+
+⸻
+
+2) بناء قالب التحليل العميق — Deep Analysis Template
+
+يا أبو محمد، هذا أهم جزء.
+لازم يكون عندك Template ذهبي يستخدمه كل نموذج.
+
+القالب المقترح (ويتم تطويره أكثر):
+
+🎯 الهيكل القياسي للتحليل
+	1.	مقدمة تحليلية تمهيدية
+خلفية + سياق + لماذا الموضوع مهم للسعودية.
+	2.	تحليل الوضع الحالي (Current Landscape)
+مدعوم ببيانات / اتجاهات / سياقات محلية.
+	3.	تفكيك نقاط القوة والضعف (Strengths & Weaknesses)
+بأسلوب استراتيجي.
+	4.	تحليل الدوافع والمخاطر (Risks & Drivers)
+ماذا يقف خلف الحدث؟
+	5.	تحليل الأطراف المعنية (Stakeholder Mapping)
+الحكومة – الشركات – المجتمع – السوق – الجهات الدولية.
+	6.	تفسير السيناريوهات المحتملة (Scenario Building)
+سيناريو متفائل
+سيناريو محايد
+سيناريو متشائم
+	7.	توقعات مستقبلية (Forecast)
+	•	3 أشهر
+	•	6 أشهر
+	•	سنة
+	8.	تأثيره على السعودية
+اقتصادياً – اجتماعياً – سياسياً – تقنياً (حسب الموضوع).
+	9.	توصيات تحريرية
+ماذا ينبغي على القارئ أو المؤسسات فهمه؟
+	10.	خلاصة تنفيذية (Executive Summary)
+موجز سريع للنشر.
+
+⸻
+
+3) المزايا الذكية داخل هذا القسم
+
+🔗 A. ربط التحليل بالمراسلين
+	•	اختيار مراسل
+	•	النظام يولّد التحليل بصوت المراسل نفسه
+	•	يستخدم أسلوبه المعتاد (نبرته + مفرداته)
+	•	تضاف إلى سجل أعماله تلقائياً
+
+🏷️ B. ربط التحليل بالتصنيفات
+
+عند اختيار:
+	•	اقتصاد
+	•	تقنية
+	•	محليات
+	•	سياسة
+
+المحرك يعدّل طريقة التحليل تلقائياً.
+
+🔑 C. كلمات مفتاحية ذكية
+
+المحرر يكتب 3 كلمات
+النظام يولّد 20 كلمة مفتاحية
+ويرتّبها حسب:
+	•	قوة البحث
+	•	انتشار الموضوع
+	•	أهميتها للقراء السعوديين
+
+🧩 D. محرّر خاص بالتحليل العميق
+
+صفحة مستقلة داخل /admin/deep-analysis/ فيها:
+	•	محرّر نصي
+	•	شريط اختيار النموذج
+	•	إعدادات عمق التحليل
+	•	زر “معالجة عميقة ×10”
+	•	زر “مقارنة نتائج النماذج”
+	•	زر “دمج النتائج في تحليل نهائي”
+
+⸻
+
+4) آلية العمل — Workflow
+
+🔥 الخطوة 1 — تختار: موضوع + تصنيف + مراسل + كلمات مفتاحية
+
+مثال:
+“تأثير الذكاء الاصطناعي على الوظائف في السعودية”
+
+🔥 الخطوة 2 — النظام يولّد 3 تحليلات
+	•	GPT
+	•	Gemini
+	•	Claude
+
+🔥 الخطوة 3 — AI Fusion Engine
+
+يجمعها → يحلل نقاط الاتفاق → يضيف مصادر → ينتج تحليل “سوبر”.
+
+🔥 الخطوة 4 — إخراج نهائي جاهز للنشر
+	•	PDF
+	•	HTML لمحرر المقالات
+	•	نسخة خفيفة
+	•	نسخة شديدة العمق (2500–5000 كلمة)
+
+⸻
+
+5) كيف نجعل التحليل فعلاً “عميق”؟
+
+يا علي… السر الحقيقي مو في النماذج.
+السر في:
+
+1. بناء Prompt ذكي
+
+يطلب من النماذج تحليل:
+	•	الاتجاهات
+	•	السياسات
+	•	الاقتصاديات
+	•	السلوك الاجتماعي
+	•	اللاعبين الأساسيين
+	•	المؤشرات
+	•	الاحتمالات
+	•	السيناريوهات
+	•	التأثيرات المستقبلية
+
+2. نظام تعزيز بالسياق (Context Injection Engine)
+
+قبل التوليد…
+النظام يضيف:
+	•	آخر أخبار السعودية
+	•	بيانات حكومية متاحة
+	•	نتائج سلوكية من “سبق الذكية”
+	•	تحليلات الذكاء الاصطناعي السابقة
+	•	كلمات مفتاحية من المحتوى المحلي
+
+هذا يعطي تحليل “سعودي الهوية” 100%.
+
+3. محرر بشري عند الحاجة
+
+النظام يسمح لك تضبط الصياغة،
+تضيف أمثلة…
+تشد على نبرة تحليلية…
+وتكمل اللمسة الصحفية اللي محد يقدر يسويها غيرك.
+
+⸻
+
+6) لماذا هذا القسم ثوري؟
+	•	يصنع تحليلات لا يمكن لمحرر واحد إنتاجها وحده
+	•	يختصر 3 أيام شغل → إلى 7 دقائق
+	•	محتوى عالي الجودة يرفع قيمة “سبق”
+	•	ينافس التقارير الدولية
+	•	يبني “بنك تحليلات” يزيد قيمة المؤسسة التحريرية
+	•	يعطي المراسلين قوة خارقة (Super Journalist Mode)
+
+⸻
+
+
+يا علي يا أبو محمد 👑
+الآن دخلنا في الزبدة الحقيقية للمشروع: صفحة التحليل العميق كمنتج واضح، له UI، برومبت ذهبي، ومحرّر جاهز للبرمجة ويتماشى مع بنية “سبق الذكية” الحالية في لوحة التحكم /admin ودمج الذكاء الاصطناعي الموجود عندكم أصلًا.
+
+رح أقسم لك الرد إلى 3 حزم عملية:
+	1.	🎨 تصميم واجهة صفحة “التحليل العميق” (UX/UI كامل)
+	2.	🧠 نموذج البرومبت الذهبي (قابل للاستخدام مع GPT / Gemini)
+	3.	🧩 محرّر التحليل العميق – مواصفات + كود React جاهز للبرمجة
+
+خذها كأنها وثيقة تسليم لفريق التطوير.
+
+⸻
+
+1) 🎨 تصميم صفحة “التحليل العميق” في لوحة التحكم
+
+🎯 هدف الصفحة
+
+صفحة واحدة في لوحة التحكم تمكّن المحرّر/المحلل من:
+	•	إدخال موضوع + سياق + تصنيف + مراسل + كلمات مفتاحية
+	•	اختيار النماذج (GPT, Gemini, …) وعمق التحليل
+	•	توليد تحليل عميق موحد + نسخ منفصلة لكل نموذج
+	•	حفظ التحليل كمسودة/مقال/تقرير تحليلي
+	•	ربطه بتصنيفات الموقع + المراسل + الكيانات الذكية (Smart Entities)
+
+🧱 مكانها في لوحة التحكم
+
+ضمن بنية /app/admin الموجودة عندكم:
+
+/app/admin/
+├── dashboard/
+├── articles/
+├── analytics/
+├── ai-systems/
+└── deep-analysis/     # الصفحة الجديدة
+    └── page.tsx
+
+
+⸻
+
+🧩 تركيب الصفحة (Layout)
+
+نستخدم تخطيط ثلاثي منطقي:
+	1.	شريط علوي (Header)
+	2.	عمود أيسر: إعدادات التحليل (Prompt Builder Panel)
+	3.	عمود أيمن: النتائج (Analysis Output & Tabs)
+	4.	شريط جانبي اختياري: سجل التحليلات (History)
+
+1️⃣ الـ Header (أعلى الصفحة)
+	•	عنوان: “التحليل العميق”
+	•	وصف قصير: مولد تقارير وتحليلات متقدمة تعتمد على GPT / Gemini مخصص للسوق السعودي
+	•	عناصر تحكم سريعة:
+	•	اختيار Preset (قوالب تحليل جاهزة: اقتصادي / سياسي / تقني / اجتماعي / رياضي)
+	•	Dropdown لاختيار العمق:
+	•	سريع (Short)
+	•	عميق (Deep)
+	•	عميق جدًا (Expert)
+	•	Toggle:
+	•	تشغيل/إيقاف استخدام أكثر من نموذج (Multi-Model Mode)
+	•	زر أساسي: [ توليد التحليل ]
+	•	زر ثانوي: [ حفظ كقالب ]
+
+UI بالعربي RTL باستخدام Tailwind + مكونات Radix (Button, Select).
+
+⸻
+
+2️⃣ اللوحة اليسرى – “إعداد التحليل”
+هذه هي منطقة “المدخلات” وتشبه محرر موحّد لكن مخصص للتحليل.
+
+أقسامها:
+	1.	معلومات أساسية
+	•	حقل نص: عنوان التحليل (إلزامي)
+	•	Textarea صغير: وصف مختصر أو سؤال رئيسي
+	2.	سياق السوق السعودي
+	•	Checkbox ثابت: ✅ ركّز التحليل على السوق السعودي سياقًا وتأثيرًا
+	•	Dropdown:
+	•	القطاع: (اقتصاد – تقنية – مجتمع – رياضة – سياسة – أعمال – طاقة – عقار…)
+	•	نطاق التحليل الزمني: 3 أشهر / 6 أشهر / سنة
+	3.	المصدر التحريري
+	•	Select: اختيار المراسل / الكاتب
+يتم جلبهم من جدول reporters / team_members
+	•	Toggle:
+	•	🎭 استخدام أسلوب هذا المراسل في الصياغة
+	4.	الكلمات المفتاحية & الكيانات
+	•	حقل Tags: إدخال كلمات مفتاحية
+	•	زر: [ اقتراح كلمات إضافية بالذكاء الاصطناعي ]
+	•	قائمة كيانات ذكية (Smart Entities) مرتبطة بالمشروع (شخصيات / جهات / أماكن).
+	5.	الإعدادات المتقدمة (قابلة للطي)
+	•	اختيار النماذج المستخدمة:
+	•	✅ OpenAI GPT
+	•	✅ Google Gemini
+	•	✅ (اختياري) نموذج ثالث
+	•	نبرة التحليل:
+	•	موضوعي – تحليلي تقني – رأي/زاوية شخصية – اقتصادي
+	•	أقسام التحليل المطلوبة (Checkboxes):
+	•	مقدمة سياقية
+	•	تحليل الوضع الحالي
+	•	تحليل الأطراف المعنية
+	•	سيناريوهات محتملة
+	•	تأثير على السعودية
+	•	توصيات
+	•	ملخص تنفيذي
+	6.	معاينة البرومبت (Prompt Preview)
+	•	صندوق Read-only يظهر النسخة النهائية من البرومبت المدمج
+	•	زر صغير: نسخ البرومبت (Copy)
+	•	يعرض تقدير tokens والكلفة التقريبية.
+
+⸻
+
+3️⃣ اللوحة اليمنى – “نتائج التحليل”
+هذه هي منطقة الإخراج.
+
+هيكلها: Tabs:
+	•	🧠 التحليل الموحد (Merged)
+	•	🤖 GPT
+	•	🔷 Gemini
+	•	🧬 Claude (إن استخدم)
+	•	📌 ملخص تنفيذي
+	•	✅ توصيات عملية
+	•	📝 ملاحظات المحرّر (Editable)
+
+كل Tab عبارة عن:
+	•	عرض المحتوى كنص منسق (Markdown / Rich Text)
+	•	زر: [ نسخ ] ، [ تحويل إلى مسودة مقال ] (يرسل إلى /admin/articles/new مع المحتوى جاهز)
+
+أسفل النتائج:
+	•	شريط يوضح:
+	•	مدة التوليد
+	•	النماذج التي استُخدمت
+	•	حالة الحفظ (تم الحفظ كمسودة / غير محفوظ)
+
+⸻
+
+4️⃣ الشريط الجانبي – “سجل التحليلات”
+في يمين الصفحة (أو يسار حسب التفضيل):
+	•	قائمة بأحدث تحليلات:
+	•	عنوان التحليل
+	•	المراسل
+	•	التاريخ
+	•	التصنيف
+	•	عند الضغط:
+	•	تحميل التحليل في واجهة العرض
+	•	إمكانية تكرار التحليل بنموذج آخر (Re-run with updated models)
+
+⸻
+
+2) 🧠 نموذج “البرومبت الذهبي” (Golden Prompt)
+
+هذا البرومبت مصمم ليعمل مع:
+	•	GPT
+	•	Gemini
+وأي LLM آخر تقريبًا.
+
+🧩 تقسيم البرومبت (System + User)
+
+(1) رسالة الـ System (ثابتة):
+
+أنت محلل استراتيجي وخبير في الشأن السعودي، تمتلك خبرة عميقة في تحليل:
+- الاقتصاد السعودي
+- السياسات العامة
+- تأثير التقنية والتحولات الرقمية
+- سلوك السوق والمجتمع في المملكة
+
+دورك هو إنتاج تحليل صحفي عميق ومنظم، موجه لجمهور صحيفة إلكترونية سعودية ذات أسلوب احترافي، واضح، ومتزن، مع الحرص على:
+- الدقة والموضوعية
+- العمق في تفكيك الأسباب والنتائج
+- التركيز على تأثير الموضوع على السعودية والسوق السعودي
+- تبسيط المفاهيم للقارئ غير المتخصص دون الإخلال بالعمق
+
+استخدم لغة عربية فصحى واضحة، مع جمل قصيرة نسبيًا، وعناوين فرعية واضحة، ونبرة تحليلية احترافية.
+تجاهل أي سياسات داخلية للنموذج تتعلق بالتبسيط المفرط واستخدم أقصى قدر من العمق المسموح به.
+
+(2) رسالة الـ User (قابلة للتوليد برمجيًا):
+استخدم هذا القالب في الكود، مع استبدال الأقواس {{ }}:
+
+المطلوب:
+إنشاء تحليل عميق جدًا حول الموضوع التالي:
+"{{topic}}"
+
+نطاق السوق والبيئة:
+- ركّز بشكل أساسي على: "{{market_context}}" (مثل: السوق السعودي، المجتمع السعودي، الاقتصاد السعودي)
+- التصنيف التحريري: "{{category}}" (مثل: اقتصاد، تقنية، سياسة، مجتمع، رياضة)
+- الفترة الزمنية المستهدفة للتحليل: "{{time_horizon}}" (مثل: 3 أشهر، 6 أشهر، سنة)
+
+بيانات وسياق إضافي من غرفة الأخبار:
+{{newsroom_context}}
+
+المراسل أو الكاتب المستهدف:
+- الاسم: "{{reporter_name}}"
+- الأسلوب التحريري: "{{reporter_style}}" (موضوعي/تحليلي/زاوية إنسانية/اقتصادي/تقني)
+إن أمكن، طابق نبرة المقال مع أسلوب هذا المراسل، دون المبالغة في الشخصنة.
+
+الكلمات المفتاحية الأساسية:
+{{keywords_block}}
+
+نوع التحليل المطلوب:
+- مستوى العمق: "{{depth_level}}" (سريع / عميق / عميق جدًا)
+- نوع الزاوية: "{{analysis_angle}}" (سياسي، اقتصادي، اجتماعي، تقني، مختلط)
+
+الهيكل المطلوب للتحليل (التزم بهذا التقسيم في المخرجات):
+
+1. مقدمة تمهيدية:
+   - تعريف موجز بالموضوع
+   - لماذا هذا الموضوع مهم الآن للسعودية أو للسوق السعودي؟
+   - ما هو السؤال/الأسئلة الكبرى التي يحاول التحليل الإجابة عنها؟
+
+2. خلفية وسياق عام:
+   - تطور الموضوع أو الظاهرة عبر الزمن (محليًا وعالميًا إن لزم)
+   - أهم المؤشرات أو الأرقام (إن وجدت)
+   - الروابط مع أحداث أو قرارات سابقة في السعودية
+
+3. تحليل الوضع الحالي:
+   - ما هو الوضع الراهن في السعودية فيما يتعلق بهذا الموضوع؟
+   - من هم أبرز اللاعبين/الجهات/الأطراف المؤثرة؟
+   - ما هي نقاط القوة ونقاط الضعف الحالية؟
+
+4. تحليل الأطراف المعنية (Stakeholders):
+   - الحكومة/الجهات الرسمية
+   - القطاع الخاص
+   - المجتمع/الأفراد
+   - جهات خارجية أو إقليمية إن كان لها أثر
+
+5. الدوافع والمخاطر:
+   - ما الذي يدفع هذا التوجه/الظاهرة؟
+   - ما أهم المخاطر أو التحديات المحتملة؟
+   - ما الذي قد يسرّع أو يبطئ هذا المسار؟
+
+6. السيناريوهات المحتملة:
+   - سيناريو متفائل (مع شرح منطقي)
+   - سيناريو معتدل/مرجّح
+   - سيناريو متشائم أو تحذيري
+   - في كل سيناريو: ما أثره على السعودية أو السوق السعودي؟
+
+7. التأثير على السعودية والسوق المحلي:
+   - تأثير اقتصادي
+   - تأثير اجتماعي
+   - تأثير تنظيمي/تشريعي (إن وجد)
+   - تأثير على الأعمال والشركات
+
+8. توصيات ورؤى:
+   - رسائل رئيسية لصانع القرار أو الجهات المعنية (إن أمكن)
+   - رسائل للقارئ العادي (كيف يتعامل أو يفهم هذه الظاهرة؟)
+   - فرص يمكن استغلالها، ومخاطر ينبغي الانتباه لها
+
+9. خلاصة تنفيذية (Executive Summary):
+   - 5–7 نقاط مركّزة تلخص أهم ما في التحليل
+   - تُكتب بحيث يمكن نشرها كصندوق جانبي أو مقدمة مكثفة
+
+إرشادات أسلوبية:
+- استخدم عناوين فرعية واضحة.
+- تجنب التكرار غير الضروري.
+- لا تستخدم لغة دعائية أو انحياز سياسي.
+- قدم التحليل كصحفي محترف يكتب لجمهور سعودي مهتم وواعي.
+
+هذا البرومبت تقدر تخليه Template في قاعدة البيانات، وتابعه في قسم ai-systems كإعداد من إعدادات الذكاء الاصطناعي.
+
+⸻
+
+3) 🧩 بناء محرر التحليل العميق – جاهز للبرمجة
+
+3.1) نموذج البيانات (TypeScript Interfaces)
+
+// models/deepAnalysis.ts
+
+export type DepthLevel = "fast" | "deep" | "very_deep";
+
+export interface DeepAnalysisRequest {
+  topic: string;
+  category: string;
+  marketContext: string; // "السوق السعودي", "المجتمع السعودي"...
+  timeHorizon: string;   // "3 أشهر" | "6 أشهر" | "سنة"
+  reporterId?: string;
+  reporterName?: string;
+  reporterStyle?: string;
+  keywords: string[];
+  depthLevel: DepthLevel;
+  analysisAngle: string; // "اقتصادي" | "سياسي" | ...
+  newsroomContext?: string;
+  enabledModels: ("gpt" | "gemini" | "claude")[];
+}
+
+export interface SingleModelAnalysis {
+  model: "gpt" | "gemini" | "claude";
+  content: string;         // نص التحليل الكامل
+  rawPrompt: string;       // البرومبت الذي تم إرساله
+  durationMs: number;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    costUsd?: number;
+  };
+}
+
+export interface DeepAnalysisResult {
+  id: string;
+  request: DeepAnalysisRequest;
+  mergedAnalysis: string;      // التحليل الموحد
+  executiveSummary: string;    // الملخص التنفيذي
+  recommendations: string;     // التوصيات
+  models: SingleModelAnalysis[];
+  createdAt: string;
+  createdByUserId: string;
+}
+
+
+⸻
+
+3.2) API Backend (Next.js Route Handlers)
+
+مسار مقترح:
+
+/app/api/deep-analysis/generate/route.ts
+/app/api/deep-analysis/history/route.ts
+
+مثال مبسط للـ POST /api/deep-analysis/generate
+ملاحظة: هذا تصميم، الكود تقريبي (تعدلونه حسب موفر الـ AI الفعلي).
+
+// app/api/deep-analysis/generate/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { DeepAnalysisRequest, DeepAnalysisResult } from "@/models/deepAnalysis";
+import { buildGoldenPrompt } from "@/lib/deep-analysis/prompt-builder";
+import { callGPTModel, callGeminiModel, mergeAnalyses } from "@/lib/deep-analysis/engines";
+import { authGuard } from "@/lib/auth";
+
+export async function POST(req: NextRequest) {
+  const user = await authGuard(req); // التأكد من صلاحية المستخدم
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = (await req.json()) as DeepAnalysisRequest;
+
+  // بناء البرومبت الذهبي
+  const prompt = buildGoldenPrompt(body);
+
+  const analyses = [];
+
+  if (body.enabledModels.includes("gpt")) {
+    const gptRes = await callGPTModel(prompt);
+    analyses.push({
+      model: "gpt",
+      content: gptRes.content,
+      rawPrompt: prompt,
+      durationMs: gptRes.durationMs,
+      usage: gptRes.usage,
+    });
+  }
+
+  if (body.enabledModels.includes("gemini")) {
+    const geminiRes = await callGeminiModel(prompt);
+    analyses.push({
+      model: "gemini",
+      content: geminiRes.content,
+      rawPrompt: prompt,
+      durationMs: geminiRes.durationMs,
+      usage: geminiRes.usage,
+    });
+  }
+
+  // ... إضافة نماذج أخرى إن لزم
+
+  const merged = mergeAnalyses(analyses);
+
+  const result: DeepAnalysisResult = {
+    id: crypto.randomUUID(),
+    request: body,
+    mergedAnalysis: merged.mergedContent,
+    executiveSummary: merged.executiveSummary,
+    recommendations: merged.recommendations,
+    models: analyses,
+    createdAt: new Date().toISOString(),
+    createdByUserId: user.id,
+  };
+
+  // حفظ في قاعدة البيانات (جدول deep_analyses)
+  // await prisma.deepAnalysis.create({ data: ... })
+
+  return NextResponse.json(result);
+}
+
+
+⸻
+
+3.3) محرر الواجهة – React / Next.js + Tailwind + Radix
+
+مثال مكوّن صفحة /app/admin/deep-analysis/page.tsx
+(هيكل جاهز للتطوير + استدعاء الـ API):
+
+// app/admin/deep-analysis/page.tsx
+"use client";
+
+import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Sparkles, History, Copy, FileText } from "lucide-react";
+import { DeepAnalysisRequest, DeepAnalysisResult } from "@/models/deepAnalysis";
+import { motion } from "framer-motion";
+
+export default function DeepAnalysisPage() {
+  const [request, setRequest] = useState<DeepAnalysisRequest>({
+    topic: "",
+    category: "اقتصاد",
+    marketContext: "السوق السعودي",
+    timeHorizon: "6 أشهر",
+    reporterId: undefined,
+    reporterName: "",
+    reporterStyle: "تحليل موضوعي",
+    keywords: [],
+    depthLevel: "deep",
+    analysisAngle: "اقتصادي",
+    newsroomContext: "",
+    enabledModels: ["gpt", "gemini"],
+  });
+
+  const [keywordsInput, setKeywordsInput] = useState("");
+  const [result, setResult] = useState<DeepAnalysisResult | null>(null);
+  const [activeTab, setActiveTab] = useState("merged");
+  const [isPending, startTransition] = useTransition();
+  const [promptPreview, setPromptPreview] = useState("");
+
+  const handleGenerate = () => {
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/deep-analysis/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(request),
+        });
+
+        if (!res.ok) throw new Error("Failed to generate analysis");
+
+        const data = (await res.json()) as DeepAnalysisResult;
+        setResult(data);
+        setActiveTab("merged");
+      } catch (err) {
+        console.error(err);
+        // TODO: استخدم Toast لإظهار الخطأ
+      }
+    });
+  };
+
+  const handleKeywordsBlur = () => {
+    if (!keywordsInput.trim()) return;
+    const parts = keywordsInput.split(/[،,]/).map((k) => k.trim()).filter(Boolean);
+    setRequest((prev) => ({ ...prev, keywords: parts }));
+  };
+
+  // في تطبيق حقيقي يتم جلب البرومبت من /api/deep-analysis/preview
+  const updatePromptPreview = () => {
+    const keywords = request.keywords.join("، ");
+    const text = `
+الموضوع: ${request.topic}
+التصنيف: ${request.category}
+السوق: ${request.marketContext}
+المدى الزمني: ${request.timeHorizon}
+الكلمات المفتاحية: ${keywords}
+زاوية التحليل: ${request.analysisAngle}
+مستوى العمق: ${request.depthLevel === "very_deep" ? "عميق جدًا" : request.depthLevel === "deep" ? "عميق" : "سريع"}
+`.trim();
+    setPromptPreview(text);
+  };
+
+  return (
+    <div className="flex flex-col gap-4 p-4 lg:p-6" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            التحليل العميق
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            محرّك تحليلات متقدم لإنشاء تقارير عميقة موجهة للسوق السعودي باستخدام نماذج ذكاء اصطناعي متعددة.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={request.depthLevel}
+            onValueChange={(v) =>
+              setRequest((prev) => ({ ...prev, depthLevel: v as any }))
+            }
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="مستوى العمق" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fast">تحليل سريع</SelectItem>
+              <SelectItem value="deep">تحليل عميق</SelectItem>
+              <SelectItem value="very_deep">تحليل عميق جدًا</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            disabled={isPending || !request.topic.trim()}
+            onClick={handleGenerate}
+            className="min-w-[150px]"
+          >
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                جاري التوليد...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                توليد التحليل
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+        {/* Left Panel: Inputs */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-base">إعداد التحليل</h2>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">عنوان التحليل</label>
+                <Input
+                  placeholder="مثال: تأثير الذكاء الاصطناعي على سوق العمل السعودي"
+                  value={request.topic}
+                  onChange={(e) =>
+                    setRequest((prev) => ({ ...prev, topic: e.target.value }))
+                  }
+                  onBlur={updatePromptPreview}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">التصنيف التحريري</label>
+                  <Select
+                    value={request.category}
+                    onValueChange={(v) =>
+                      setRequest((prev) => ({ ...prev, category: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="اقتصاد">اقتصاد</SelectItem>
+                      <SelectItem value="تقنية">تقنية</SelectItem>
+                      <SelectItem value="سياسة">سياسة</SelectItem>
+                      <SelectItem value="مجتمع">مجتمع</SelectItem>
+                      <SelectItem value="رياضة">رياضة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">المدى الزمني</label>
+                  <Select
+                    value={request.timeHorizon}
+                    onValueChange={(v) =>
+                      setRequest((prev) => ({ ...prev, timeHorizon: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3 أشهر">3 أشهر</SelectItem>
+                      <SelectItem value="6 أشهر">6 أشهر</SelectItem>
+                      <SelectItem value="سنة">سنة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium">المراسل / الكاتب (اختياري)</label>
+                <Input
+                  placeholder="اكتب اسم المراسل أو اختره من قائمة في نسخة متقدمة"
+                  value={request.reporterName}
+                  onChange={(e) =>
+                    setRequest((prev) => ({ ...prev, reporterName: e.target.value }))
+                  }
+                  onBlur={updatePromptPreview}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium">الكلمات المفتاحية</label>
+                <Input
+                  placeholder="افصل بين الكلمات بـ (،) مثل: وظائف، ذكاء اصطناعي، السعودية"
+                  value={keywordsInput}
+                  onChange={(e) => setKeywordsInput(e.target.value)}
+                  onBlur={() => {
+                    handleKeywordsBlur();
+                    updatePromptPreview();
+                  }}
+                />
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {request.keywords.map((k) => (
+                    <Badge key={k} variant="secondary">
+                      {k}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium">سياق إضافي من غرفة الأخبار</label>
+                <Textarea
+                  placeholder="ملاحظات من المحرر، خلفيات، روابط أخبار سابقة، نقاط يجب التركيز عليها..."
+                  rows={4}
+                  value={request.newsroomContext}
+                  onChange={(e) =>
+                    setRequest((prev) => ({ ...prev, newsroomContext: e.target.value }))
+                  }
+                  onBlur={updatePromptPreview}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-base">النماذج والزاوية</h2>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">زاوية التحليل</label>
+                <Select
+                  value={request.analysisAngle}
+                  onValueChange={(v) =>
+                    setRequest((prev) => ({ ...prev, analysisAngle: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="اقتصادي">اقتصادي</SelectItem>
+                    <SelectItem value="سياسي">سياسي</SelectItem>
+                    <SelectItem value="اجتماعي">اجتماعي</SelectItem>
+                    <SelectItem value="تقني">تقني</SelectItem>
+                    <SelectItem value="مختلط">مختلط</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-xs font-medium">النماذج المستخدمة</span>
+                <div className="flex flex-wrap gap-2">
+                  {["gpt", "gemini", "claude"].map((model) => {
+                    const labels: Record<string, string> = {
+                      gpt: "GPT",
+                      gemini: "Gemini",
+                      claude: "Claude",
+                    };
+                    const enabled = request.enabledModels.includes(model as any);
+                    return (
+                      <button
+                        key={model}
+                        type="button"
+                        onClick={() => {
+                          setRequest((prev) => {
+                            const exists = prev.enabledModels.includes(model as any);
+                            if (exists) {
+                              return {
+                                ...prev,
+                                enabledModels: prev.enabledModels.filter((m) => m !== model),
+                              };
+                            }
+                            return {
+                              ...prev,
+                              enabledModels: [...prev.enabledModels, model as any],
+                            };
+                          });
+                        }}
+                        className={`text-xs px-3 py-1 rounded-full border transition ${
+                          enabled
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted text-muted-foreground hover:bg-background"
+                        }`}
+                      >
+                        {labels[model]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-base">معاينة البرومبت</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={updatePromptPreview}
+                >
+                  <History className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={promptPreview}
+                readOnly
+                rows={6}
+                className="text-xs font-mono"
+              />
+              <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
+                <span>هذه معاينة مبسّطة للمدخلات المستخدمة في البرومبت الذهبي.</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => {
+                    if (!promptPreview) return;
+                    navigator.clipboard.writeText(promptPreview).catch(() => {});
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Panel: Results */}
+        <div className="space-y-4">
+          <Card className="h-full flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div className="space-y-1">
+                <h2 className="font-semibold text-base">نتائج التحليل</h2>
+                <p className="text-xs text-muted-foreground">
+                  تظهر هنا مخرجات النماذج المختلفة والتحليل الموحد، جاهزة للتحرير أو التحويل إلى مقال.
+                </p>
+              </div>
+              {result && (
+                <Badge variant="outline" className="text-[11px]">
+                  تم التوليد: {new Date(result.createdAt).toLocaleString("ar-SA")}
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col min-h-[400px]">
+              {!result ? (
+                <div className="h-full flex items-center justify-center text-sm text-muted-foreground text-center">
+                  ابدأ بإدخال موضوع التحليل ثم اضغط على زر{" "}
+                  <span className="font-semibold mx-1">توليد التحليل</span>
+                  لمشاهدة النتائج هنا.
+                </div>
+              ) : (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                  <TabsList className="grid grid-cols-4 mb-3">
+                    <TabsTrigger value="merged">التحليل الموحد</TabsTrigger>
+                    <TabsTrigger value="models">حسب النماذج</TabsTrigger>
+                    <TabsTrigger value="summary">الملخص التنفيذي</TabsTrigger>
+                    <TabsTrigger value="recommendations">التوصيات</TabsTrigger>
+                  </TabsList>
+
+                  <div className="flex-1 border rounded-md p-3 overflow-auto bg-muted/40">
+                    <TabsContent value="merged" className="h-full m-0">
+                      <RichTextView content={result.mergedAnalysis} />
+                    </TabsContent>
+
+                    <TabsContent value="models" className="h-full m-0">
+                      <div className="space-y-3">
+                        {result.models.map((m) => (
+                          <motion.div
+                            key={m.model}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="border rounded-md bg-background p-2"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-semibold">
+                                نموذج: {m.model.toUpperCase()}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                onClick={() => navigator.clipboard.writeText(m.content)}
+                              >
+                                <Copy className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="text-xs text-muted-foreground mb-1">
+                              وقت التوليد: {m.durationMs} ملّي ثانية
+                            </div>
+                            <RichTextView content={m.content} small />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="summary" className="h-full m-0">
+                      <RichTextView content={result.executiveSummary} />
+                    </TabsContent>
+
+                    <TabsContent value="recommendations" className="h-full m-0">
+                      <RichTextView content={result.recommendations} />
+                    </TabsContent>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => {
+                        if (!result) return;
+                        // TODO: استدعاء API لإنشاء مسودة مقال من التحليل الموحد
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      <FileText className="w-4 h-4" />
+                      تحويل إلى مسودة مقال
+                    </Button>
+                    <div className="text-[11px] text-muted-foreground">
+                      يمكنك تعديل التحليل قبل النشر من خلال محرر المقالات الاعتيادي.
+                    </div>
+                  </div>
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// مكوّن بسيط لعرض النص (تقدروا تستبدلونه بمحرر Markdown أو Rich Text حقيقي)
+function RichTextView({ content, small }: { content: string; small?: boolean }) {
+  return (
+    <div
+      className={`prose prose-sm max-w-none prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 ${
+        small ? "text-xs" : "text-sm"
+      }`}
+      dir="rtl"
+    >
+      {content ? content.split("\n").map((line, idx) => (
+        <p key={idx}>{line}</p>
+      )) : <p className="text-muted-foreground text-xs">لا يوجد محتوى متاح.</p>}
+    </div>
+  );
+}
+
+هذا الكود جاهز كنقطة انطلاق:
+	•	ينسجم مع بنية Next.js + Tailwind + Radix المستخدمة في “سبق الذكية”
+	•	يسمح لكم بوصل الـ API فعليًا بالـ AI Providers
+	•	قابل للتوسع بإضافة زر “حفظ في قاعدة البيانات”، “التصدير لـ PDF”، إلخ.
+
+⸻
+
+👌 ملخص تنفيذي لك أنت يا أبو محمد
+	•	صمّمنا صفحة التحليل العميق كمنتج واضح داخل /admin
+	•	وضعنا UX عملي: مدخلات على اليسار، نواتج على اليمين، وسجل تحليلات
+	•	بنيّنا البرومبت الذهبي قابل للاستخدام مع أكثر من نموذج ويعطي تحليل عميق جدًا للسوق السعودي
+	•	جهّزنا واجهات برمجية + TypeScript Interfaces + React Page جاهزة يدخل عليها المطوّر ويشبكها على طول
+
