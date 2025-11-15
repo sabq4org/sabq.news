@@ -714,14 +714,17 @@ export default function TasksPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>المسؤول</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select 
+                          onValueChange={(value) => field.onChange(value === "" ? undefined : value)}
+                          value={field.value || ""}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-assignee">
                               <SelectValue placeholder="اختر المسؤول" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="unassigned">غير مسند</SelectItem>
+                            <SelectItem value="">غير محدد</SelectItem>
                             {users.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
@@ -737,20 +740,46 @@ export default function TasksPage() {
                   <FormField
                     control={form.control}
                     name="dueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>تاريخ الاستحقاق</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="datetime-local"
-                            {...field}
-                            value={field.value || ''}
-                            data-testid="input-due-date"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      // Convert ISO string to local datetime-local format
+                      const formatForInput = (isoString: string | undefined) => {
+                        if (!isoString) return '';
+                        const date = new Date(isoString);
+                        // Format as YYYY-MM-DDTHH:mm in local timezone
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        return `${year}-${month}-${day}T${hours}:${minutes}`;
+                      };
+
+                      return (
+                        <FormItem>
+                          <FormLabel>تاريخ الاستحقاق</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              value={formatForInput(field.value)}
+                              onChange={(e) => {
+                                // Convert local datetime to ISO string
+                                if (e.target.value) {
+                                  const date = new Date(e.target.value);
+                                  field.onChange(date.toISOString());
+                                } else {
+                                  field.onChange(undefined);
+                                }
+                              }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                              data-testid="input-due-date"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
