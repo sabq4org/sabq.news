@@ -11118,6 +11118,575 @@ export class DatabaseStorage implements IStorage {
       activeUsers,
     };
   }
+
+  // ============================================================
+  // TASK MANAGEMENT OPERATIONS
+  // ============================================================
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const [newTask] = await db
+      .insert(tasks)
+      .values(task)
+      .returning();
+    
+    await this.logTaskActivity({
+      taskId: newTask.id,
+      userId: task.createdById,
+      action: 'created',
+      changes: {
+        description: 'Task created',
+      },
+    });
+
+    return newTask;
+  }
+
+  async getTaskById(id: string): Promise<Task | null> {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, id));
+    
+    return task || null;
+  }
+
+  async getTasks(filters: {
+    status?: string;
+    priority?: string;
+    assignedToId?: string;
+    createdById?: string;
+    department?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ tasks: Task[]; total: number }> {
+    const {
+      status,
+      priority,
+      assignedToId,
+      createdById,
+      department,
+      search,
+      limit = 20,
+      offset = 0,
+    } = filters;
+
+    let conditions = [];
+
+    if (status) conditions.push(eq(tasks.status, status));
+    if (priority) conditions.push(eq(tasks.priority, priority));
+    if (assignedToId) conditions.push(eq(tasks.assignedToId, assignedToId));
+    if (createdById) conditions.push(eq(tasks.createdById, createdById));
+    if (department) conditions.push(eq(tasks.department, department));
+    
+    if (search) {
+      conditions.push(
+        or(
+          ilike(tasks.title, `%${search}%`),
+          ilike(tasks.description, `%${search}%`)
+        )
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const tasksList = await db
+      .select()
+      .from(tasks)
+      .where(whereClause)
+      .orderBy(desc(tasks.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [countResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(whereClause);
+
+    return {
+      tasks: tasksList,
+      total: countResult?.count || 0,
+    };
+  }
+
+  async updateTask(id: string, updates: Partial<Task>): Promise<Task> {
+    const [task] = await db
+      .update(tasks)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, id))
+      .returning();
+
+    return task;
+  }
+
+  async deleteTask(id: string): Promise<void> {
+    await db
+      .delete(tasks)
+      .where(eq(tasks.id, id));
+  }
+
+  async getTaskWithDetails(id: string): Promise<Task & {
+    createdBy: User;
+    assignedTo: User | null;
+    subtasks: Subtask[];
+    comments: (TaskComment & { user: User })[];
+    attachments: TaskAttachment[];
+  } | null> {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, id));
+
+    if (!task) return null;
+
+    const createdByUser = aliasedTable(users, 'createdByUser');
+    const assignedToUser = aliasedTable(users, 'assignedToUser');
+
+    const [taskWithUsers] = await db
+      .select({
+        task: tasks,
+        createdBy: createdByUser,
+        assignedTo: assignedToUser,
+      })
+      .from(tasks)
+      .leftJoin(createdByUser, eq(tasks.createdById, createdByUser.id))
+      .leftJoin(assignedToUser, eq(tasks.assignedToId, assignedToUser.id))
+      .where(eq(tasks.id, id));
+
+    const taskSubtasks = await db
+      .select()
+      .from(subtasks)
+      .where(eq(subtasks.taskId, id))
+      .orderBy(subtasks.displayOrder);
+
+    const commentsData = await db
+      .select({
+        comment: taskComments,
+        user: users,
+      })
+      .from(taskComments)
+      .leftJoin(users, eq(taskComments.userId, users.id))
+      .where(eq(taskComments.taskId, id))
+      .orderBy(desc(taskComments.createdAt));
+
+    const taskAttachments = await db
+      .select()
+      .from(taskAttachments)
+      .where(eq(taskAttachments.taskId, id))
+      .orderBy(desc(taskAttachments.createdAt));
+
+    return {
+      ...task,
+      createdBy: taskWithUsers.createdBy!,
+      assignedTo: taskWithUsers.assignedTo || null,
+      subtasks: taskSubtasks,
+      comments: commentsData.map(row => ({
+        ...row.comment,
+        user: row.user!,
+      })),
+      attachments: taskAttachments,
+    };
+  }
+
+  async getTaskStatistics(userId?: string): Promise<{
+    total: number;
+    todo: number;
+    inProgress: number;
+    review: number;
+    completed: number;
+    overdue: number;
+  }> {
+    const now = new Date();
+    let baseConditions = [];
+    
+    if (userId) {
+      baseConditions.push(
+        or(
+          eq(tasks.createdById, userId),
+          eq(tasks.assignedToId, userId)
+        )
+      );
+    }
+
+    const baseWhere = baseConditions.length > 0 ? and(...baseConditions) : undefined;
+
+    const [totalResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(baseWhere);
+
+    const [todoResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(
+        baseWhere
+          ? and(baseWhere, eq(tasks.status, 'todo'))
+          : eq(tasks.status, 'todo')
+      );
+
+    const [inProgressResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(
+        baseWhere
+          ? and(baseWhere, eq(tasks.status, 'in_progress'))
+          : eq(tasks.status, 'in_progress')
+      );
+
+    const [reviewResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(
+        baseWhere
+          ? and(baseWhere, eq(tasks.status, 'review'))
+          : eq(tasks.status, 'review')
+      );
+
+    const [completedResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(
+        baseWhere
+          ? and(baseWhere, eq(tasks.status, 'completed'))
+          : eq(tasks.status, 'completed')
+      );
+
+    const [overdueResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(tasks)
+      .where(
+        baseWhere
+          ? and(
+              baseWhere,
+              ne(tasks.status, 'completed'),
+              ne(tasks.status, 'archived'),
+              lte(tasks.dueDate, now)
+            )
+          : and(
+              ne(tasks.status, 'completed'),
+              ne(tasks.status, 'archived'),
+              lte(tasks.dueDate, now)
+            )
+      );
+
+    return {
+      total: totalResult?.count || 0,
+      todo: todoResult?.count || 0,
+      inProgress: inProgressResult?.count || 0,
+      review: reviewResult?.count || 0,
+      completed: completedResult?.count || 0,
+      overdue: overdueResult?.count || 0,
+    };
+  }
+
+  // ============================================================
+  // SUBTASK OPERATIONS
+  // ============================================================
+
+  async createSubtask(subtask: InsertSubtask): Promise<Subtask> {
+    const [newSubtask] = await db
+      .insert(subtasks)
+      .values(subtask)
+      .returning();
+
+    await db
+      .update(tasks)
+      .set({
+        subtasksCount: sql`${tasks.subtasksCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, subtask.taskId));
+
+    await this.logTaskActivity({
+      taskId: subtask.taskId,
+      userId: subtask.taskId,
+      action: 'subtask_created',
+      changes: {
+        description: `Subtask created: ${newSubtask.title}`,
+      },
+    });
+
+    return newSubtask;
+  }
+
+  async updateSubtask(id: string, updates: Partial<Subtask>): Promise<Subtask> {
+    const [subtask] = await db
+      .update(subtasks)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(subtasks.id, id))
+      .returning();
+
+    await db
+      .update(tasks)
+      .set({
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, subtask.taskId));
+
+    return subtask;
+  }
+
+  async deleteSubtask(id: string): Promise<void> {
+    const [subtask] = await db
+      .select()
+      .from(subtasks)
+      .where(eq(subtasks.id, id));
+
+    if (subtask) {
+      await db
+        .delete(subtasks)
+        .where(eq(subtasks.id, id));
+
+      await db
+        .update(tasks)
+        .set({
+          subtasksCount: sql`${tasks.subtasksCount} - 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tasks.id, subtask.taskId));
+
+      await this.logTaskActivity({
+        taskId: subtask.taskId,
+        userId: subtask.taskId,
+        action: 'subtask_deleted',
+        changes: {
+          description: `Subtask deleted: ${subtask.title}`,
+        },
+      });
+    }
+  }
+
+  async toggleSubtaskComplete(id: string, completedById: string): Promise<Subtask> {
+    const [currentSubtask] = await db
+      .select()
+      .from(subtasks)
+      .where(eq(subtasks.id, id));
+
+    if (!currentSubtask) {
+      throw new Error('Subtask not found');
+    }
+
+    const newCompletedState = !currentSubtask.isCompleted;
+
+    const [subtask] = await db
+      .update(subtasks)
+      .set({
+        isCompleted: newCompletedState,
+        completedAt: newCompletedState ? new Date() : null,
+        completedById: newCompletedState ? completedById : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(subtasks.id, id))
+      .returning();
+
+    await db
+      .update(tasks)
+      .set({
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, subtask.taskId));
+
+    await this.logTaskActivity({
+      taskId: subtask.taskId,
+      userId: completedById,
+      action: newCompletedState ? 'subtask_completed' : 'subtask_uncompleted',
+      changes: {
+        description: `Subtask ${newCompletedState ? 'completed' : 'uncompleted'}: ${subtask.title}`,
+      },
+    });
+
+    return subtask;
+  }
+
+  // ============================================================
+  // TASK COMMENT OPERATIONS
+  // ============================================================
+
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const [newComment] = await db
+      .insert(taskComments)
+      .values(comment)
+      .returning();
+
+    await db
+      .update(tasks)
+      .set({
+        commentsCount: sql`${tasks.commentsCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, comment.taskId));
+
+    await this.logTaskActivity({
+      taskId: comment.taskId,
+      userId: comment.userId,
+      action: 'comment_added',
+      changes: {
+        description: 'Comment added',
+      },
+    });
+
+    return newComment;
+  }
+
+  async getTaskComments(taskId: string): Promise<(TaskComment & { user: User })[]> {
+    const commentsData = await db
+      .select({
+        comment: taskComments,
+        user: users,
+      })
+      .from(taskComments)
+      .leftJoin(users, eq(taskComments.userId, users.id))
+      .where(eq(taskComments.taskId, taskId))
+      .orderBy(desc(taskComments.createdAt));
+
+    return commentsData.map(row => ({
+      ...row.comment,
+      user: row.user!,
+    }));
+  }
+
+  async deleteTaskComment(id: string): Promise<void> {
+    const [comment] = await db
+      .select()
+      .from(taskComments)
+      .where(eq(taskComments.id, id));
+
+    if (comment) {
+      await db
+        .delete(taskComments)
+        .where(eq(taskComments.id, id));
+
+      await db
+        .update(tasks)
+        .set({
+          commentsCount: sql`${tasks.commentsCount} - 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tasks.id, comment.taskId));
+
+      await this.logTaskActivity({
+        taskId: comment.taskId,
+        userId: comment.userId,
+        action: 'comment_deleted',
+        changes: {
+          description: 'Comment deleted',
+        },
+      });
+    }
+  }
+
+  // ============================================================
+  // TASK ATTACHMENT OPERATIONS
+  // ============================================================
+
+  async createTaskAttachment(attachment: InsertTaskAttachment): Promise<TaskAttachment> {
+    const [newAttachment] = await db
+      .insert(taskAttachments)
+      .values(attachment)
+      .returning();
+
+    await db
+      .update(tasks)
+      .set({
+        attachmentsCount: sql`${tasks.attachmentsCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, attachment.taskId));
+
+    await this.logTaskActivity({
+      taskId: attachment.taskId,
+      userId: attachment.userId,
+      action: 'attachment_added',
+      changes: {
+        description: `Attachment added: ${newAttachment.fileName}`,
+      },
+    });
+
+    return newAttachment;
+  }
+
+  async deleteTaskAttachment(id: string): Promise<void> {
+    const [attachment] = await db
+      .select()
+      .from(taskAttachments)
+      .where(eq(taskAttachments.id, id));
+
+    if (attachment) {
+      await db
+        .delete(taskAttachments)
+        .where(eq(taskAttachments.id, id));
+
+      await db
+        .update(tasks)
+        .set({
+          attachmentsCount: sql`${tasks.attachmentsCount} - 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tasks.id, attachment.taskId));
+
+      await this.logTaskActivity({
+        taskId: attachment.taskId,
+        userId: attachment.userId,
+        action: 'attachment_deleted',
+        changes: {
+          description: `Attachment deleted: ${attachment.fileName}`,
+        },
+      });
+    }
+  }
+
+  async getTaskAttachments(taskId: string): Promise<TaskAttachment[]> {
+    const attachments = await db
+      .select()
+      .from(taskAttachments)
+      .where(eq(taskAttachments.taskId, taskId))
+      .orderBy(desc(taskAttachments.createdAt));
+
+    return attachments;
+  }
+
+  // ============================================================
+  // TASK ACTIVITY LOG OPERATIONS
+  // ============================================================
+
+  async logTaskActivity(entry: {
+    taskId: string;
+    userId: string;
+    action: string;
+    changes?: {
+      field?: string;
+      oldValue?: any;
+      newValue?: any;
+      description?: string;
+    };
+  }): Promise<void> {
+    await db
+      .insert(taskActivityLog)
+      .values(entry);
+  }
+
+  async getTaskActivity(taskId: string): Promise<(TaskActivityLogEntry & { user: User })[]> {
+    const activityData = await db
+      .select({
+        activity: taskActivityLog,
+        user: users,
+      })
+      .from(taskActivityLog)
+      .leftJoin(users, eq(taskActivityLog.userId, users.id))
+      .where(eq(taskActivityLog.taskId, taskId))
+      .orderBy(desc(taskActivityLog.createdAt));
+
+    return activityData.map(row => ({
+      ...row.activity,
+      user: row.user!,
+    }));
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -147,6 +147,11 @@ import {
   mediaUsageLog,
   shortLinks,
   shortLinkClicks,
+  tasks,
+  subtasks,
+  taskComments,
+  taskAttachments,
+  taskActivityLog,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -177,6 +182,10 @@ import {
   insertExperimentSchema,
   insertExperimentVariantSchema,
   insertExperimentExposureSchema,
+  insertTaskSchema,
+  insertSubtaskSchema,
+  insertTaskCommentSchema,
+  insertTaskAttachmentSchema,
   insertExperimentConversionSchema,
   insertMirqabEntrySchema,
   updateMirqabEntrySchema,
@@ -233,6 +242,18 @@ import {
   type UrArticleWithDetails,
   type User,
   type InsertShortLinkClick,
+  type Task,
+  type InsertTask,
+  type Subtask,
+  type InsertSubtask,
+  type TaskComment,
+  type InsertTaskComment,
+  type TaskAttachment,
+  type InsertTaskAttachment,
+  insertTaskSchema,
+  insertSubtaskSchema,
+  insertTaskCommentSchema,
+  insertTaskAttachmentSchema,
 } from "@shared/schema";
 import { bootstrapAdmin } from "./utils/bootstrapAdmin";
 import { setupProductionDatabase } from "./utils/setupProduction";
@@ -25854,6 +25875,488 @@ Allow: /
         error: 'فشل في تحديث التحليل',
         message: error.message 
       });
+    }
+  });
+
+  // ============================================
+  // TASK MANAGEMENT SYSTEM API ENDPOINTS
+  // ============================================
+
+  // GET /api/tasks - Get tasks list with filters
+  app.get("/api/tasks", requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      const {
+        status,
+        priority,
+        assignedToId,
+        createdById,
+        department,
+        search,
+        page = "1",
+        limit = "20"
+      } = req.query;
+      
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const offset = (pageNum - 1) * limitNum;
+      
+      // If user only has view_own, filter by created or assigned
+      const filters: any = {
+        status: status as string,
+        priority: priority as string,
+        assignedToId: assignedToId as string,
+        createdById: createdById as string,
+        department: department as string,
+        search: search as string,
+        limit: limitNum,
+        offset,
+      };
+      
+      if (!userPermissions.includes('tasks.view_all')) {
+        // View own tasks only
+        filters.userId = userId;
+      }
+      
+      const result = await storage.getTasks(filters);
+      
+      res.json({
+        tasks: result.tasks,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(result.total / limitNum),
+      });
+    } catch (error: any) {
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({ error: 'فشل في جلب المهام' });
+    }
+  });
+
+  // POST /api/tasks - Create new task
+  app.post("/api/tasks", requireAuth, requirePermission('tasks.create'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Validate request body
+      const validatedData = insertTaskSchema.parse({
+        ...req.body,
+        createdById: userId,
+      });
+      
+      const task = await storage.createTask(validatedData);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: task.id,
+        userId,
+        action: 'task_created',
+        changes: { description: 'تم إنشاء المهمة' },
+      });
+      
+      res.status(201).json(task);
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'بيانات غير صالحة', details: error.errors });
+      }
+      res.status(500).json({ error: 'فشل في إنشاء المهمة' });
+    }
+  });
+
+  // GET /api/tasks/statistics - Get task statistics
+  app.get("/api/tasks/statistics", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // If user has view_all, get all stats; otherwise get personal stats
+      const stats = await storage.getTaskStatistics(
+        userPermissions.includes('tasks.view_all') ? undefined : userId
+      );
+      
+      res.json(stats);
+    } catch (error: any) {
+      console.error('Error fetching task statistics:', error);
+      res.status(500).json({ error: 'فشل في جلب الإحصائيات' });
+    }
+  });
+
+  // GET /api/tasks/:id - Get task details
+  app.get("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.view_all', 'tasks.view_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      const task = await storage.getTaskWithDetails(id);
+      if (!task) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.view_all')) {
+        if (task.createdById !== userId && task.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بعرض هذه المهمة' });
+        }
+      }
+      
+      res.json(task);
+    } catch (error: any) {
+      console.error('Error fetching task:', error);
+      res.status(500).json({ error: 'فشل في جلب المهمة' });
+    }
+  });
+
+  // PATCH /api/tasks/:id - Update task
+  app.patch("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      const task = await storage.getTaskById(id);
+      if (!task) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (task.createdById !== userId && task.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
+      
+      const updatedTask = await storage.updateTask(id, req.body);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'task_updated',
+        changes: { description: 'تم تحديث المهمة' },
+      });
+      
+      res.json(updatedTask);
+    } catch (error: any) {
+      console.error('Error updating task:', error);
+      res.status(500).json({ error: 'فشل في تحديث المهمة' });
+    }
+  });
+
+  // PATCH /api/tasks/:id/status - Update task status
+  app.patch("/api/tasks/:id/status", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Validate status
+      const statusSchema = z.object({
+        status: z.enum(['todo', 'in_progress', 'review', 'completed', 'archived']),
+      });
+      statusSchema.parse({ status });
+      
+      const task = await storage.getTaskById(id);
+      if (!task) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (task.createdById !== userId && task.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
+      
+      const updates: any = { status };
+      if (status === 'completed') {
+        updates.completedAt = new Date();
+        updates.progress = 100;
+      }
+      
+      const updatedTask = await storage.updateTask(id, updates);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'status_changed',
+        changes: {
+          field: 'status',
+          oldValue: task.status,
+          newValue: status,
+        },
+      });
+      
+      res.json(updatedTask);
+    } catch (error: any) {
+      console.error('Error updating task status:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'حالة غير صالحة' });
+      }
+      res.status(500).json({ error: 'فشل في تحديث حالة المهمة' });
+    }
+  });
+
+  // DELETE /api/tasks/:id - Delete task
+  app.delete("/api/tasks/:id", requireAuth, requireAnyPermission('tasks.delete_any', 'tasks.delete_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      const task = await storage.getTaskById(id);
+      if (!task) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.delete_any')) {
+        if (task.createdById !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بحذف هذه المهمة' });
+        }
+      }
+      
+      await storage.deleteTask(id);
+      
+      res.json({ success: true, message: 'تم حذف المهمة بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting task:', error);
+      res.status(500).json({ error: 'فشل في حذف المهمة' });
+    }
+  });
+
+  // POST /api/tasks/:id/subtasks - Create subtask
+  app.post("/api/tasks/:id/subtasks", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      const task = await storage.getTaskById(id);
+      if (!task) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (task.createdById !== userId && task.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه المهمة' });
+        }
+      }
+      
+      const validatedData = insertSubtaskSchema.parse({
+        ...req.body,
+        taskId: id,
+      });
+      
+      const subtask = await storage.createSubtask(validatedData);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'subtask_created',
+        changes: { description: `تم إضافة مهمة فرعية: ${subtask.title}` },
+      });
+      
+      res.status(201).json(subtask);
+    } catch (error: any) {
+      console.error('Error creating subtask:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'بيانات غير صالحة' });
+      }
+      res.status(500).json({ error: 'فشل في إضافة المهمة الفرعية' });
+    }
+  });
+
+  // PATCH /api/subtasks/:id - Update subtask
+  app.patch("/api/subtasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      
+      const subtask = await storage.updateSubtask(id, req.body);
+      
+      res.json(subtask);
+    } catch (error: any) {
+      console.error('Error updating subtask:', error);
+      res.status(500).json({ error: 'فشل في تحديث المهمة الفرعية' });
+    }
+  });
+
+  // PATCH /api/subtasks/:id/toggle - Toggle subtask completion
+  app.patch("/api/subtasks/:id/toggle", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      
+      const subtask = await storage.toggleSubtaskComplete(id, userId);
+      
+      res.json(subtask);
+    } catch (error: any) {
+      console.error('Error toggling subtask:', error);
+      res.status(500).json({ error: 'فشل في تحديث حالة المهمة الفرعية' });
+    }
+  });
+
+  // DELETE /api/subtasks/:id - Delete subtask
+  app.delete("/api/subtasks/:id", requireAuth, requireAnyPermission('tasks.edit_any', 'tasks.edit_own'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await storage.deleteSubtask(id);
+      
+      res.json({ success: true, message: 'تم حذف المهمة الفرعية بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting subtask:', error);
+      res.status(500).json({ error: 'فشل في حذف المهمة الفرعية' });
+    }
+  });
+
+  // GET /api/tasks/:id/comments - Get task comments
+  app.get("/api/tasks/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const comments = await storage.getTaskComments(id);
+      
+      res.json(comments);
+    } catch (error: any) {
+      console.error('Error fetching comments:', error);
+      res.status(500).json({ error: 'فشل في جلب التعليقات' });
+    }
+  });
+
+  // POST /api/tasks/:id/comments - Create comment
+  app.post("/api/tasks/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      
+      const validatedData = insertTaskCommentSchema.parse({
+        ...req.body,
+        taskId: id,
+        userId,
+      });
+      
+      const comment = await storage.createTaskComment(validatedData);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'comment_added',
+        changes: { description: 'تم إضافة تعليق' },
+      });
+      
+      res.status(201).json(comment);
+    } catch (error: any) {
+      console.error('Error creating comment:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'بيانات غير صالحة' });
+      }
+      res.status(500).json({ error: 'فشل في إضافة التعليق' });
+    }
+  });
+
+  // DELETE /api/task-comments/:id - Delete comment
+  app.delete("/api/task-comments/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await storage.deleteTaskComment(id);
+      
+      res.json({ success: true, message: 'تم حذف التعليق بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting comment:', error);
+      res.status(500).json({ error: 'فشل في حذف التعليق' });
+    }
+  });
+
+  // GET /api/tasks/:id/attachments - Get task attachments
+  app.get("/api/tasks/:id/attachments", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const attachments = await storage.getTaskAttachments(id);
+      
+      res.json(attachments);
+    } catch (error: any) {
+      console.error('Error fetching attachments:', error);
+      res.status(500).json({ error: 'فشل في جلب المرفقات' });
+    }
+  });
+
+  // POST /api/tasks/:id/attachments - Upload attachment
+  app.post("/api/tasks/:id/attachments", requireAuth, upload.single('file'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ error: 'لم يتم رفع ملف' });
+      }
+      
+      // TODO: Upload to object storage and get URL
+      const fileUrl = `https://placeholder.com/${file.originalname}`;
+      
+      const validatedData = insertTaskAttachmentSchema.parse({
+        taskId: id,
+        userId,
+        fileName: file.originalname,
+        fileUrl,
+        fileSize: file.size,
+        fileType: file.mimetype,
+      });
+      
+      const attachment = await storage.createTaskAttachment(validatedData);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'attachment_added',
+        changes: { description: `تم رفع ملف: ${file.originalname}` },
+      });
+      
+      res.status(201).json(attachment);
+    } catch (error: any) {
+      console.error('Error uploading attachment:', error);
+      res.status(500).json({ error: 'فشل في رفع الملف' });
+    }
+  });
+
+  // DELETE /api/task-attachments/:id - Delete attachment
+  app.delete("/api/task-attachments/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await storage.deleteTaskAttachment(id);
+      
+      res.json({ success: true, message: 'تم حذف المرفق بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting attachment:', error);
+      res.status(500).json({ error: 'فشل في حذف المرفق' });
+    }
+  });
+
+  // GET /api/tasks/:id/activity - Get task activity log
+  app.get("/api/tasks/:id/activity", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const activity = await storage.getTaskActivity(id);
+      
+      res.json(activity);
+    } catch (error: any) {
+      console.error('Error fetching activity:', error);
+      res.status(500).json({ error: 'فشل في جلب سجل النشاط' });
     }
   });
 
