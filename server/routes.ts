@@ -25963,13 +25963,20 @@ Allow: /
     try {
       const userId = (req.user as any).id;
       
-      // Validate request body
+      // Validate request body FIRST (before date conversion)
       const validatedData = insertTaskSchema.parse({
         ...req.body,
         createdById: userId,
       });
       
-      const task = await storage.createTask(validatedData);
+      // THEN convert date strings to Date objects for Drizzle timestamp columns
+      const processedData: any = {
+        ...validatedData,
+        dueDate: validatedData.dueDate ? new Date(validatedData.dueDate as string) : null,
+        completedAt: validatedData.completedAt ? new Date(validatedData.completedAt as string) : null,
+      };
+      
+      const task = await storage.createTask(processedData);
       
       // Log activity
       await storage.logTaskActivity({
@@ -26056,7 +26063,30 @@ Allow: /
       // Store old task snapshot before update
       const oldTask = { ...task };
       
-      const updatedTask = await storage.updateTask(id, req.body);
+      // Validate PATCH body with partial schema
+      const updateSchema = insertTaskSchema.partial();
+      const validatedData = updateSchema.parse(req.body);
+      
+      // Convert validated date strings to Date objects
+      const processedBody: any = { ...validatedData };
+      
+      if (validatedData.dueDate) {
+        const parsedDate = new Date(validatedData.dueDate as string);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ error: 'تاريخ الاستحقاق غير صالح' });
+        }
+        processedBody.dueDate = parsedDate;
+      }
+      
+      if (validatedData.completedAt) {
+        const parsedDate = new Date(validatedData.completedAt as string);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ error: 'تاريخ الإنجاز غير صالح' });
+        }
+        processedBody.completedAt = parsedDate;
+      }
+      
+      const updatedTask = await storage.updateTask(id, processedBody);
       
       // Log activity with before/after values
       await storage.logTaskActivity({

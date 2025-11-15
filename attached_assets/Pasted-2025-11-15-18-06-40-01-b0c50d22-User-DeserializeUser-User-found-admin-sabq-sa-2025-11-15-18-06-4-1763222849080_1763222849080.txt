@@ -1,0 +1,120 @@
+2025-11-15 18:06:40.01
+b0c50d22
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 18:06:40.09
+b0c50d22
+User
+4:06:40 PM [express] GET /api/announcements/active 304 in 129ms :: []
+2025-11-15 18:06:55.44
+b0c50d22
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 18:06:55.46
+b0c50d22
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 18:06:55.48
+b0c50d22
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-15 18:06:55.49
+b0c50d22
+User
+Error creating task: TypeError: value.toISOString is not a function
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at Array.map ()
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at Array.map ()
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at Array.map ()
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:06:55.49
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:06:55.51
+b0c50d22
+User
+4:06:55 PM [express] POST /api/tasks 500 in 228ms :: {"error":"فشل في إنشاء المهمة"}
+2025-11-15 18:07:10.23
+b0c50d22
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 18:07:10.25
+b0c50d22
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 18:07:10.27
+b0c50d22
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2025-11-15 18:07:10.28
+b0c50d22
+User
+Error creating task: TypeError: value.toISOString is not a function
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at Array.map ()
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at Array.map ()
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-15 18:07:10.28
+b0c50d22
+User
+at Array.map ()
