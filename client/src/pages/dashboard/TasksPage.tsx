@@ -381,6 +381,7 @@ export default function TasksPage() {
       tags: typeof data.tags === 'string' && data.tags.trim()
         ? data.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
         : [],
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
     };
     console.log('📝 Processed data to send:', processedData);
