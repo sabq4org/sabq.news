@@ -1,0 +1,121 @@
+2025-11-15 09:56:52.16
+8c59447f
+User
+> NODE_ENV=production node dist/index.js
+2025-11-15 09:56:52.16
+8c59447f
+User
+> rest-express@1.0.0 start
+2025-11-15 09:56:56.62
+8c59447f
+User
+🔗 Initializing database connection...
+2025-11-15 09:56:56.64
+8c59447f
+User
+✅ Database connection initialized successfully
+
+2025-11-15 09:56:56.65
+8c59447f
+User
+🔗 Frontend URL for email links: https://sabq.life
+2025-11-15 09:56:56.65
+8c59447f
+User
+✅ SendGrid email service initialized
+2025-11-15 09:56:56.66
+8c59447f
+User
+[Server] ✅ All required environment variables are present
+2025-11-15 09:56:56.66
+8c59447f
+User
+[Server] Starting server initialization...
+2025-11-15 09:56:56.66
+8c59447f
+User
+[Server] Port: 5000
+2025-11-15 09:56:56.66
+8c59447f
+User
+[Server] Environment: production
+2025-11-15 09:56:56.80
+8c59447f
+User
+✅ Google OAuth Strategy initialized
+2025-11-15 09:56:56.80
+8c59447f
+User
+🔑 Apple private key formatted (length: 255 )
+2025-11-15 09:56:56.80
+8c59447f
+User
+✅ Apple OAuth Strategy initialized
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] ✅ Routes registered successfully
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] ✅ Social crawler middleware registered
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] ✅ Static files setup completed
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] ✅ Successfully started on port 5000
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] Health check available at http://0.0.0.0:5000/health
+2025-11-15 09:56:56.81
+8c59447f
+User
+[Server] Ready check available at http://0.0.0.0:5000/ready
+2025-11-15 09:56:57.00
+8c59447f
+User
+7:56:56 AM [express] serving on port 5000
+2025-11-15 09:56:57.00
+8c59447f
+User
+[Server] ℹ️ Background workers disabled (ENABLE_BACKGROUND_WORKERS not set to 'true')
+2025-11-15 09:56:57.00
+8c59447f
+User
+[Server] To enable background workers, set ENABLE_BACKGROUND_WORKERS=true in a Reserved VM deployment
+2025-11-15 09:56:57.00
+8c59447f
+User
+[Server] This is recommended for Autoscale deployments
+2025-11-15 09:57:10.45
+8c59447f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 09:57:10.57
+8c59447f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 09:57:10.89
+8c59447f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 09:57:10.92
+8c59447f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 09:57:11.03
+8c59447f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-15 09:57:11.06
+8c59447f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-15 09:57:12.67
+8c59447f
+User
+🔸 DeserializeUser called with id: admin-sabq

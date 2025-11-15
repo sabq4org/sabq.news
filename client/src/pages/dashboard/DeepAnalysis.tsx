@@ -46,6 +46,8 @@ export default function DeepAnalysis() {
   const [saudiContext, setSaudiContext] = useState("");
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("unified");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState({ percent: 0, message: '' });
 
   const { data: analyses, isLoading: isLoadingList } = useQuery<{ analyses: DeepAnalysis[]; total: number }>({
     queryKey: ['/api/deep-analysis'],
@@ -56,30 +58,88 @@ export default function DeepAnalysis() {
     enabled: !!selectedAnalysisId,
   });
 
-  const generateMutation = useMutation({
-    mutationFn: async (data: { topic: string; keywords: string[]; category?: string; saudiContext?: string }) => {
-      return apiRequest('/api/deep-analysis/generate', {
+  const handleGenerateWithSSE = async (data: { topic: string; keywords: string[]; category?: string; saudiContext?: string }) => {
+    setIsGenerating(true);
+    setProgress({ percent: 0, message: 'جاري الاتصال...' });
+
+    try {
+      const response = await fetch('/api/deep-analysis/generate', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important: include cookies for authentication
         body: JSON.stringify(data),
       });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/deep-analysis'] });
-      setSelectedAnalysisId(data.id);
-      setActiveTab("unified");
-      toast({
-        title: "تم التوليد بنجاح",
-        description: "تم إنشاء التحليل العميق بنجاح",
-      });
-    },
-    onError: (error: any) => {
+
+      if (!response.ok) {
+        throw new Error('فشل في بدء التوليد');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('لا يمكن قراءة الاستجابة');
+      }
+
+      let buffer = '';
+      let currentEvent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          // Stream ended - ensure cleanup
+          if (isGenerating) {
+            setIsGenerating(false);
+            setProgress({ percent: 0, message: '' });
+          }
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.substring(7).trim();
+          } else if (line.startsWith('data: ')) {
+            try {
+              const eventData = JSON.parse(line.substring(6));
+
+              if (currentEvent === 'progress') {
+                setProgress({ percent: eventData.percent, message: eventData.message });
+              } else if (currentEvent === 'complete') {
+                setProgress({ percent: 100, message: eventData.message });
+                queryClient.invalidateQueries({ queryKey: ['/api/deep-analysis'] });
+                setSelectedAnalysisId(eventData.analysis.id);
+                setActiveTab("unified");
+                toast({
+                  title: "تم التوليد بنجاح",
+                  description: "تم إنشاء التحليل العميق بنجاح",
+                });
+                setIsGenerating(false);
+              } else if (currentEvent === 'error') {
+                throw new Error(eventData.message);
+              }
+            } catch (e) {
+              // Ignore JSON parse errors for incomplete chunks
+            }
+          }
+        }
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "خطأ",
         description: error.message || "حدث خطأ أثناء توليد التحليل",
       });
-    },
-  });
+      setIsGenerating(false);
+      setProgress({ percent: 0, message: '' });
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -114,7 +174,7 @@ export default function DeepAnalysis() {
       .map(k => k.trim())
       .filter(k => k.length > 0);
 
-    generateMutation.mutate({
+    handleGenerateWithSSE({
       topic: topic.trim(),
       keywords: keywordArray,
       category: category || undefined,
@@ -199,11 +259,11 @@ export default function DeepAnalysis() {
               <Button
                 data-testid="button-generate-analysis"
                 onClick={handleGenerate}
-                disabled={generateMutation.isPending || !topic.trim()}
+                disabled={isGenerating || !topic.trim()}
                 className="w-full"
                 size="lg"
               >
-                {generateMutation.isPending ? (
+                {isGenerating ? (
                   <>
                     <Loader2 className="w-4 h-4 ml-2 animate-spin" />
                     جاري التوليد...
@@ -216,10 +276,19 @@ export default function DeepAnalysis() {
                 )}
               </Button>
 
-              {generateMutation.isPending && (
-                <div className="p-3 bg-muted rounded-md">
+              {isGenerating && (
+                <div className="p-3 bg-muted rounded-md space-y-2">
                   <p className="text-sm text-center text-muted-foreground">
-                    يتم الآن استدعاء 3 نماذج AI بالتوازي...
+                    {progress.message || 'يتم الآن استدعاء 3 نماذج AI بالتوازي...'}
+                  </p>
+                  <div className="w-full bg-background rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-primary h-full transition-all duration-500"
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    {progress.percent}%
                   </p>
                 </div>
               )}

@@ -25369,7 +25369,7 @@ Allow: /
   // DEEP ANALYSIS ROUTES
   // ============================================================
 
-  // Generate Deep Analysis (requires authentication)
+  // Generate Deep Analysis with SSE (requires authentication)
   app.post("/api/deep-analysis/generate", requireAuth, async (req, res) => {
     try {
       const { topic, keywords, category, saudiContext } = req.body;
@@ -25378,37 +25378,62 @@ Allow: /
         return res.status(400).json({ error: 'Topic is required' });
       }
 
-      const { deepAnalysisEngine } = await import('./deepAnalysisEngine');
-      
-      const result = await deepAnalysisEngine.generateAnalysis({
-        topic,
-        keywords: keywords || [],
-        category,
-        saudiContext,
-      });
+      // Set up SSE
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
 
-      const analysisData = {
-        title: topic.substring(0, 200),
-        topic,
-        keywords: keywords || [],
-        categoryId: category || null,
-        saudiContext,
-        createdBy: req.user!.id,
-        reporterId: req.user!.id,
-        status: 'completed',
-        gptAnalysis: result.gpt5Result?.content || null,
-        geminiAnalysis: result.geminiResult?.content || null,
-        claudeAnalysis: result.claudeResult?.content || null,
-        mergedAnalysis: result.unifiedAnalysis,
-        executiveSummary: result.executiveSummary,
-        recommendations: result.recommendations.join('\n'),
+      const sendEvent = (event: string, data: any) => {
+        res.write(`event: ${event}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
       };
 
-      const analysis = await storage.createDeepAnalysis(analysisData);
-      
-      res.json(analysis);
+      try {
+        sendEvent('progress', { stage: 'initializing', message: 'جاري تهيئة التحليل...', percent: 10 });
+
+        const { deepAnalysisEngine } = await import('./deepAnalysisEngine');
+        
+        sendEvent('progress', { stage: 'generating', message: 'جاري توليد التحليل من 3 نماذج AI...', percent: 30 });
+
+        const result = await deepAnalysisEngine.generateAnalysis({
+          topic,
+          keywords: keywords || [],
+          category,
+          saudiContext,
+        });
+
+        sendEvent('progress', { stage: 'saving', message: 'جاري حفظ النتائج...', percent: 90 });
+
+        const analysisData = {
+          title: topic.substring(0, 200),
+          topic,
+          keywords: keywords || [],
+          categoryId: category || null,
+          saudiContext,
+          createdBy: (req.user as any).id,
+          reporterId: (req.user as any).id,
+          analysisType: 'comprehensive' as const,
+          analysisDepth: 'deep' as const,
+          status: 'completed',
+          gptAnalysis: result.gpt5Result?.content || null,
+          geminiAnalysis: result.geminiResult?.content || null,
+          claudeAnalysis: result.claudeResult?.content || null,
+          mergedAnalysis: result.unifiedAnalysis,
+          executiveSummary: result.executiveSummary,
+          recommendations: result.recommendations.join('\n'),
+        };
+
+        const analysis = await storage.createDeepAnalysis(analysisData);
+        
+        sendEvent('complete', { analysis, message: 'تم إنشاء التحليل بنجاح!', percent: 100 });
+        res.end();
+      } catch (error: any) {
+        console.error('Error generating deep analysis:', error);
+        sendEvent('error', { message: error.message || 'فشل في توليد التحليل' });
+        res.end();
+      }
     } catch (error: any) {
-      console.error('Error generating deep analysis:', error);
+      console.error('Error setting up SSE:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -25458,7 +25483,7 @@ Allow: /
         return res.status(404).json({ error: 'Analysis not found' });
       }
 
-      if (analysis.createdBy !== req.user!.id) {
+      if (analysis.createdBy !== (req.user as any).id) {
         return res.status(403).json({ error: 'Not authorized to update this analysis' });
       }
 
@@ -25479,7 +25504,7 @@ Allow: /
         return res.status(404).json({ error: 'Analysis not found' });
       }
 
-      if (analysis.createdBy !== req.user!.id) {
+      if (analysis.createdBy !== (req.user as any).id) {
         return res.status(403).json({ error: 'Not authorized to delete this analysis' });
       }
 
