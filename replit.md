@@ -111,3 +111,59 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 - `client/src/pages/dashboard/DeepAnalysisList.tsx`: +150 lines (mobile cards, tooltips, line-clamp)
 
 ---
+
+### Task Management System - Critical Bug Fixes
+
+**User-Reported Issues Fixed:**
+1. ❌ **Empty assignee dropdown** - No users displayed when creating a task
+2. ❌ **Missing "Unassigned" option** - Cannot create tasks without assignee
+3. ❌ **Date picker timezone bug** - Selected date displays incorrectly (offset by timezone)
+
+**Solutions Implemented:**
+
+**1. Assignee Dropdown Fix (TasksPage.tsx, Lines 720-737):**
+- ✅ Fixed undefined handling: `value={field.value || ""}` (Select requires string, not undefined)
+- ✅ Added bidirectional conversion: `onValueChange={(value) => field.onChange(value === "" ? undefined : value)}`
+- ✅ Added "غير محدد" option: `<SelectItem value="">غير محدد</SelectItem>`
+- ✅ Users list properly mapped from API data
+- **Result:** Dropdown displays "غير محدد" + all users, stores undefined for unassigned tasks
+
+**2. Date Picker Timezone Fix (TasksPage.tsx, Lines 743-786):**
+- ✅ Created `formatForInput` helper function:
+  - Converts ISO string → local datetime format `YYYY-MM-DDTHH:mm`
+  - Uses `getFullYear()`, `getMonth()`, `getDate()`, `getHours()`, `getMinutes()` for local timezone
+  - Avoids UTC offset issues from `.toISOString().slice(0,16)`
+- ✅ Updated `onChange` handler:
+  - Converts local datetime → ISO string for storage
+  - `new Date(e.target.value).toISOString()`
+- ✅ Preserved all RHF props: `onBlur`, `name`, `ref`, `data-testid`
+- **Result:** Selected date/time displays correctly without timezone offset (e.g., 10:00 stays 10:00, not 07:00)
+
+**Technical Implementation:**
+```typescript
+// Date formatting helper
+const formatForInput = (isoString: string | undefined) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+```
+
+**Testing & Validation:**
+- ✅ All LSP errors resolved
+- ✅ HMR updates successful (x3)
+- ✅ Architect review passed - "Pass"
+- ✅ No runtime errors
+- ✅ Form controlled properly with RHF validation
+- ✅ Assignee select normalizes to undefined
+- ✅ Date persists correctly across form reopens
+
+**Files Modified:**
+- `client/src/pages/dashboard/TasksPage.tsx`: +60 lines (assignee handling, timezone-safe date formatting)
+
+---
