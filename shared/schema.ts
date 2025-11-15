@@ -5783,6 +5783,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "review", "completed", "archived"]).default("todo"),
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  createdById: z.string().uuid().optional(),
   dueDate: z.string().datetime().optional(),
   assignedToId: z.string().uuid().optional(),
   parentTaskId: z.string().uuid().optional(),

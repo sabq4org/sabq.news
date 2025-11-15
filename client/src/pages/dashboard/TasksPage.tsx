@@ -373,6 +373,9 @@ export default function TasksPage() {
   });
 
   const handleSubmit = (data: any) => {
+    console.log('📝 Form submitted with data:', data);
+    console.log('📝 Form errors:', form.formState.errors);
+    
     const processedData: InsertTask = {
       ...data,
       tags: typeof data.tags === 'string' && data.tags.trim()
@@ -380,6 +383,7 @@ export default function TasksPage() {
         : [],
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
     };
+    console.log('📝 Processed data to send:', processedData);
     createMutation.mutate(processedData);
   };
 
