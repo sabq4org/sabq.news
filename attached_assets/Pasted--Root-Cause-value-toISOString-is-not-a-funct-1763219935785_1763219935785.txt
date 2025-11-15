@@ -1,0 +1,86 @@
+## 🔍 **تحليل السبب والحل**
+
+### **السبب الجذري (Root Cause)**
+خطأ `value.toISOString is not a function` يحدث لأن **قاعدة البيانات تتوقع كائن Date لكنها تلقّت نص string**.
+
+الخطأ يأتي من:
+- **Drizzle ORM** في `PgTimestamp.mapToDriverValue`
+- أنت تمرّر قيمة تاريخ كنص string (مثلاً "2025-11-15") لكن Drizzle يحاول استدعاء `.toISOString()` عليها
+- هذا يعني أن **Zod schema يسمح بـ string لكن Drizzle يتوقع Date object**
+
+---
+
+### **🔧 الحلول الفورية**
+
+#### **1. تعديل Zod Schema (الأهم)**
+```typescript
+// ❌ خاطئ - يسمح بـ string فقط
+const taskSchema = z.object({
+  dueDate: z.string(), // هذا يعطّل Drizzle
+});
+
+// ✅ صحيح - حوّل إلى Date
+const taskSchema = z.object({
+  dueDate: z.string().transform((str) => new Date(str)), // أو .datetime()
+  // أو استخدم هذا للتأكد من الصلاحية:
+  dueDate: z.string().datetime().transform((str) => new Date(str)),
+});
+```
+
+#### **2. التحقق من البيانات قبل الإدخال**
+```typescript
+// في /api/tasks POST handler
+console.log("📅 Raw task data:", JSON.stringify(req.body, null, 2));
+
+// تأكد من تحويل جميع التواريخ
+const taskData = {
+  ...req.body,
+  dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+  createdAt: new Date(), // تأكد من هذا أيضاً
+};
+```
+
+#### **3. إضافة معالج أخطاء محسّن**
+```typescript
+try {
+  const newTask = await db.insert(tasks).values(taskData).returning();
+  res.status(201).json(newTask);
+} catch (error) {
+  console.error("❌ Task creation error:", error.message);
+  console.error("📦 Payload causing error:", JSON.stringify(taskData, null, 2));
+  res.status(400).json({ 
+    error: "فشل في إنشاء المهمة: تنسيق تاريخ غير صالح",
+    details: error.message 
+  });
+}
+```
+
+---
+
+### **⚡ خطوات التصحيح السريع**
+
+1. **أضف هذا السطر قبل إنشاء المهمة**:
+   ```typescript
+   console.log("🔍 dueDate type:", typeof req.body.dueDate, "value:", req.body.dueDate);
+   ```
+
+2. **تحقق من قاعدة Drizzle schema**:
+   ```typescript
+   // في تعريف الجدول
+   dueDate: timestamp("due_date", { mode: "date" }), // تأكد من mode
+   ```
+
+3. **في الواجهة الأمامية (Frontend)**:
+   ```javascript
+   // تأكد من إرسال ISO string أو Date object
+   const taskData = {
+     dueDate: new Date(dueDateInput).toISOString(), // أو new Date()
+   };
+   ```
+
+---
+
+### **🎯 السبب المباشر**
+المستخدم `admin-sabq` لديه صلاحيات كاملة، والتحقق يمر بنجاح. لكن عند إرسال بيانات المهمة، **حقل التاريخ يأتي كنص ناقص أو بتنسيق خاطئ**، مما يجعل Drizzle يفشل في تحويله لتواريخ Postgres.
+
+**الحل الفوري**: أضف التحقق والتحويل في الـ middleware أو مباشرة في الـ handler قبل الـ `.insert()`.

@@ -11164,6 +11164,7 @@ export class DatabaseStorage implements IStorage {
     search?: string;
     limit?: number;
     offset?: number;
+    userIdForOwn?: string; // For view_own permission: created OR assigned
   }): Promise<{ tasks: Task[]; total: number }> {
     const {
       status,
@@ -11175,6 +11176,7 @@ export class DatabaseStorage implements IStorage {
       search,
       limit = 20,
       offset = 0,
+      userIdForOwn,
     } = filters;
 
     let conditions = [];
@@ -11185,8 +11187,25 @@ export class DatabaseStorage implements IStorage {
     if (createdById) conditions.push(eq(tasks.createdById, createdById));
     if (department) conditions.push(eq(tasks.department, department));
     
+    // For view_own permission: show tasks created by OR assigned to user
+    if (userIdForOwn) {
+      conditions.push(
+        or(
+          eq(tasks.createdById, userIdForOwn),
+          eq(tasks.assignedToId, userIdForOwn)
+        )
+      );
+    }
+    
+    // Filter by parentTaskId
     if (parentTaskId !== undefined) {
-      conditions.push(eq(tasks.parentTaskId, parentTaskId || null));
+      if (parentTaskId === null) {
+        // Fetch root tasks (parentTaskId IS NULL)
+        conditions.push(isNull(tasks.parentTaskId));
+      } else {
+        // Fetch subtasks of specific parent
+        conditions.push(eq(tasks.parentTaskId, parentTaskId));
+      }
     }
     
     if (search) {
@@ -11301,7 +11320,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getTaskStatistics(userId?: string): Promise<{
+  async getTaskStatistics(userIdForOwn?: string): Promise<{
     total: number;
     todo: number;
     inProgress: number;
@@ -11312,11 +11331,12 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     let baseConditions = [];
     
-    if (userId) {
+    // For view_own permission: show tasks created by OR assigned to user
+    if (userIdForOwn) {
       baseConditions.push(
         or(
-          eq(tasks.createdById, userId),
-          eq(tasks.assignedToId, userId)
+          eq(tasks.createdById, userIdForOwn),
+          eq(tasks.assignedToId, userIdForOwn)
         )
       );
     }

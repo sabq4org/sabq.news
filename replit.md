@@ -27,7 +27,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **Multilingual Support:** Locale-isolated user pages, trilingual related articles, and trilingual reporter profiles.
 -   **Digital Credentials:** Apple Wallet Dual Pass System for Press Cards and Loyalty Cards with PassKit integration.
 -   **Deep Analysis (Omq):** Public section with UI, navigation, and API endpoints for published analyses, event tracking (view, share, download), and RBAC-protected updates.
--   **Hierarchical Task Management:** Tasks can have parent-child relationships with unlimited nesting depth, supported by database schema, backend API updates, and a tree-view UI component with on-demand subtask fetching.
+-   **Hierarchical Task Management:** Tasks can have parent-child relationships with unlimited nesting depth, supported by database schema, backend API updates, and a tree-view UI component with on-demand subtask fetching. Implements secure permission-based filtering with `userIdForOwn` parameter that applies OR logic (created OR assigned) for users with view_own permission, preventing privilege escalation vulnerabilities.
 
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes a scope-aware theme management system, Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with a versioned migration approach handles database schema changes.

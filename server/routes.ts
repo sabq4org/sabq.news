@@ -25908,32 +25908,38 @@ Allow: /
       const limitNum = parseInt(limit as string);
       const offset = (pageNum - 1) * limitNum;
       
-      // If user only has view_own, filter by created or assigned
+      // Build base filters
+      // Normalize parentTaskId: 'null', '', undefined → null
+      let normalizedParentTaskId: string | null | undefined;
+      if (parentTaskId === 'null' || parentTaskId === '' || parentTaskId === undefined) {
+        normalizedParentTaskId = null;
+      } else {
+        normalizedParentTaskId = parentTaskId as string;
+      }
+      
       const filters: any = {
         status: status as string,
         priority: priority as string,
         department: department as string,
-        parentTaskId: parentTaskId === 'null' ? null : (parentTaskId as string | undefined),
+        parentTaskId: normalizedParentTaskId,
         search: search as string,
         limit: limitNum,
         offset,
       };
       
-      // Handle assignedToId filter
-      if (assignedToId) {
-        filters.assignedToId = assignedToId as string;
-      }
-      
-      // Handle createdById filter
-      if (createdById) {
-        filters.createdById = createdById as string;
-      }
-      
-      // If user only has view_own, filter by created OR assigned
+      // SECURITY: Handle permission-based filtering
       if (!userPermissions.includes('tasks.view_all')) {
-        // Don't override if explicit filter provided
-        if (!assignedToId && !createdById) {
-          filters.createdById = userId;
+        // User has view_own: ALWAYS filter by their ID, ignore query params
+        filters.userIdForOwn = userId;
+        // Ignore createdById/assignedToId from query to prevent privilege escalation
+      } else {
+        // User has view_all: Allow explicit filters
+        if (assignedToId) {
+          filters.assignedToId = assignedToId as string;
+        }
+        
+        if (createdById) {
+          filters.createdById = createdById as string;
         }
       }
       
@@ -25989,7 +25995,8 @@ Allow: /
       const userId = (req.user as any).id;
       const userPermissions = await storage.getUserPermissions(userId);
       
-      // If user has view_all, get all stats; otherwise get personal stats
+      // SECURITY: Apply same filter as getTasks
+      // If user has view_all, get all stats; otherwise get stats for tasks created OR assigned to user
       const stats = await storage.getTaskStatistics(
         userPermissions.includes('tasks.view_all') ? undefined : userId
       );
