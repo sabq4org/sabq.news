@@ -266,6 +266,20 @@ import {
   type WalletDevice,
   type InsertWalletDevice,
   type HomepageStats,
+  tasks,
+  subtasks,
+  taskComments,
+  taskAttachments,
+  taskActivityLog,
+  type Task,
+  type InsertTask,
+  type Subtask,
+  type InsertSubtask,
+  type TaskComment,
+  type InsertTaskComment,
+  type TaskAttachment,
+  type InsertTaskAttachment,
+  type TaskActivityLogEntry,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1274,6 +1288,69 @@ export interface IStorage {
   
   // Homepage Statistics
   getHomepageStats(): Promise<HomepageStats>;
+  
+  // Task Management Operations
+  createTask(task: InsertTask): Promise<Task>;
+  getTaskById(id: string): Promise<Task | null>;
+  getTasks(filters: {
+    status?: string;
+    priority?: string;
+    assignedToId?: string;
+    createdById?: string;
+    department?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ tasks: Task[]; total: number }>;
+  updateTask(id: string, updates: Partial<Task>): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
+  getTaskWithDetails(id: string): Promise<Task & {
+    createdBy: User;
+    assignedTo: User | null;
+    subtasks: Subtask[];
+    comments: (TaskComment & { user: User })[];
+    attachments: TaskAttachment[];
+  } | null>;
+  
+  // Subtask Operations
+  createSubtask(subtask: InsertSubtask): Promise<Subtask>;
+  updateSubtask(id: string, updates: Partial<Subtask>): Promise<Subtask>;
+  deleteSubtask(id: string): Promise<void>;
+  toggleSubtaskComplete(id: string, completedById: string): Promise<Subtask>;
+  
+  // Task Comment Operations
+  createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+  getTaskComments(taskId: string): Promise<(TaskComment & { user: User })[]>;
+  deleteTaskComment(id: string): Promise<void>;
+  
+  // Task Attachment Operations
+  createTaskAttachment(attachment: InsertTaskAttachment): Promise<TaskAttachment>;
+  deleteTaskAttachment(id: string): Promise<void>;
+  getTaskAttachments(taskId: string): Promise<TaskAttachment[]>;
+  
+  // Task Activity Log
+  logTaskActivity(entry: {
+    taskId: string;
+    userId: string;
+    action: string;
+    changes?: {
+      field?: string;
+      oldValue?: any;
+      newValue?: any;
+      description?: string;
+    };
+  }): Promise<void>;
+  getTaskActivity(taskId: string): Promise<(TaskActivityLogEntry & { user: User })[]>;
+  
+  // Task Statistics
+  getTaskStatistics(userId?: string): Promise<{
+    total: number;
+    todo: number;
+    inProgress: number;
+    review: number;
+    completed: number;
+    overdue: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {

@@ -78,6 +78,17 @@ export async function seedRBAC() {
     { code: "calendar:delete", label: "Delete Calendar Events", labelAr: "حذف أحداث التقويم", module: "calendar" },
     { code: "calendar:assign_tasks", label: "Assign Calendar Tasks", labelAr: "تعيين مهام التقويم", module: "calendar" },
     { code: "calendar:generate_ai", label: "Generate AI Content", labelAr: "توليد محتوى ذكي", module: "calendar" },
+
+    // Task Management permissions (مركز المهام - Task Center)
+    { code: "tasks.view_all", label: "View All Tasks", labelAr: "عرض جميع المهام", module: "tasks" },
+    { code: "tasks.view_own", label: "View Own Tasks", labelAr: "عرض المهام الخاصة فقط", module: "tasks" },
+    { code: "tasks.create", label: "Create Tasks", labelAr: "إنشاء مهام جديدة", module: "tasks" },
+    { code: "tasks.edit_own", label: "Edit Own Tasks", labelAr: "تعديل المهام الخاصة", module: "tasks" },
+    { code: "tasks.edit_any", label: "Edit Any Task", labelAr: "تعديل أي مهمة", module: "tasks" },
+    { code: "tasks.delete_own", label: "Delete Own Tasks", labelAr: "حذف المهام الخاصة", module: "tasks" },
+    { code: "tasks.delete_any", label: "Delete Any Task", labelAr: "حذف أي مهمة", module: "tasks" },
+    { code: "tasks.assign", label: "Assign Tasks", labelAr: "تعيين مهام للآخرين", module: "tasks" },
+    { code: "tasks.view_analytics", label: "View Task Analytics", labelAr: "عرض تحليلات المهام", module: "tasks" },
   ];
 
   const insertedPermissions = await db
@@ -164,6 +175,7 @@ export async function seedRBAC() {
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.delete", "mirqab.publish", "mirqab.manage_settings",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:delete", "shorts:manage",
       "calendar:view", "calendar:create", "calendar:edit", "calendar:delete", "calendar:assign_tasks", "calendar:generate_ai",
+      "tasks.view_all", "tasks.create", "tasks.edit_any", "tasks.delete_any", "tasks.assign", "tasks.view_analytics",
     ],
     
     editor: [
@@ -177,6 +189,7 @@ export async function seedRBAC() {
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:manage",
       "calendar:view", "calendar:create", "calendar:edit", "calendar:assign_tasks", "calendar:generate_ai",
+      "tasks.view_all", "tasks.create", "tasks.edit_any", "tasks.assign", "tasks.view_analytics",
     ],
     
     reporter: [
@@ -185,6 +198,7 @@ export async function seedRBAC() {
       "comments.view",
       "shorts:view", "shorts:create", "shorts:edit",
       "calendar:view", "calendar:create",
+      "tasks.view_own", "tasks.create", "tasks.edit_own",
     ],
     
     comments_moderator: [
@@ -195,6 +209,7 @@ export async function seedRBAC() {
     opinion_author: [
       "articles.view", "articles.create", "articles.edit_own",
       "categories.view",
+      "tasks.view_own", "tasks.create", "tasks.edit_own",
     ],
     
     reader: [
