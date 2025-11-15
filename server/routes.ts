@@ -25365,6 +25365,132 @@ Allow: /
       }
   });
 
+  // ============================================================
+  // DEEP ANALYSIS ROUTES
+  // ============================================================
+
+  // Generate Deep Analysis (requires authentication)
+  app.post("/api/deep-analysis/generate", requireAuth, async (req, res) => {
+    try {
+      const { topic, keywords, category, saudiContext } = req.body;
+      
+      if (!topic || topic.trim().length === 0) {
+        return res.status(400).json({ error: 'Topic is required' });
+      }
+
+      const { deepAnalysisEngine } = await import('./deepAnalysisEngine');
+      
+      const result = await deepAnalysisEngine.generateAnalysis({
+        topic,
+        keywords: keywords || [],
+        category,
+        saudiContext,
+      });
+
+      const analysisData = {
+        title: topic.substring(0, 200),
+        topic,
+        keywords: keywords || [],
+        categoryId: category || null,
+        saudiContext,
+        createdBy: req.user!.id,
+        reporterId: req.user!.id,
+        status: 'completed',
+        gptAnalysis: result.gpt5Result?.content || null,
+        geminiAnalysis: result.geminiResult?.content || null,
+        claudeAnalysis: result.claudeResult?.content || null,
+        mergedAnalysis: result.unifiedAnalysis,
+        executiveSummary: result.executiveSummary,
+        recommendations: result.recommendations.join('\n'),
+      };
+
+      const analysis = await storage.createDeepAnalysis(analysisData);
+      
+      res.json(analysis);
+    } catch (error: any) {
+      console.error('Error generating deep analysis:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get Deep Analysis by ID
+  app.get("/api/deep-analysis/:id", requireAuth, async (req, res) => {
+    try {
+      const analysis = await storage.getDeepAnalysis(req.params.id);
+      
+      if (!analysis) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+
+      res.json(analysis);
+    } catch (error: any) {
+      console.error('Error fetching deep analysis:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // List Deep Analyses
+  app.get("/api/deep-analysis", requireAuth, async (req, res) => {
+    try {
+      const { createdBy, status, categoryId, limit, offset } = req.query;
+      
+      const result = await storage.listDeepAnalyses({
+        createdBy: createdBy as string | undefined,
+        status: status as string | undefined,
+        categoryId: categoryId as string | undefined,
+        limit: limit ? parseInt(limit as string) : 20,
+        offset: offset ? parseInt(offset as string) : 0,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error listing deep analyses:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update Deep Analysis
+  app.put("/api/deep-analysis/:id", requireAuth, async (req, res) => {
+    try {
+      const analysis = await storage.getDeepAnalysis(req.params.id);
+      
+      if (!analysis) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+
+      if (analysis.createdBy !== req.user!.id) {
+        return res.status(403).json({ error: 'Not authorized to update this analysis' });
+      }
+
+      const updated = await storage.updateDeepAnalysis(req.params.id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error updating deep analysis:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete Deep Analysis
+  app.delete("/api/deep-analysis/:id", requireAuth, async (req, res) => {
+    try {
+      const analysis = await storage.getDeepAnalysis(req.params.id);
+      
+      if (!analysis) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+
+      if (analysis.createdBy !== req.user!.id) {
+        return res.status(403).json({ error: 'Not authorized to delete this analysis' });
+      }
+
+      await storage.deleteDeepAnalysis(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting deep analysis:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
