@@ -100,9 +100,9 @@ export class DeepAnalysisEngine {
     const fullPrompt = `${DEEP_ANALYSIS_GOLDEN_TEMPLATE}\n\n${userPrompt}`;
     
     const configs = [
-      { ...AI_MODELS.GPT5, temperature: 0.7, maxTokens: 4000 },
-      { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.7, maxTokens: 4000 },
-      { ...AI_MODELS.GEMINI_FLASH, temperature: 0.7, maxTokens: 4000 },
+      { ...AI_MODELS.GPT5, temperature: 0.7, maxTokens: 16000 },
+      { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.7, maxTokens: 16000 },
+      { ...AI_MODELS.GEMINI_FLASH, temperature: 0.7, maxTokens: 16000 },
     ];
 
     const results = await aiManager.generateMultiple(fullPrompt, configs);
@@ -205,7 +205,7 @@ ${a.content}
 
     const result = await aiManager.generate(
       synthesisPrompt,
-      { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.5, maxTokens: 4000 }
+      { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.5, maxTokens: 16000 }
     );
 
     return result.content;
@@ -281,7 +281,7 @@ ${analysis}
 
     const result = await aiManager.generate(
       fullPrompt,
-      { ...modelConfig, temperature: 0.7, maxTokens: 4000 }
+      { ...modelConfig, temperature: 0.7, maxTokens: 16000 }
     );
 
     return {
