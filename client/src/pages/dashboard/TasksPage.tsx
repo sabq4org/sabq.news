@@ -46,7 +46,15 @@ import {
   Clock,
   AlertCircle,
   CheckCircle2,
-  ListPlus
+  ListPlus,
+  Newspaper,
+  Wrench,
+  Users,
+  Video,
+  FileText,
+  Rocket,
+  Palette,
+  LucideIcon
 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -121,6 +129,47 @@ function getPriorityColor(priority: string): string {
     default:
       return 'text-gray-600';
   }
+}
+
+function getPriorityBackground(priority: string): string {
+  switch (priority) {
+    case 'critical':
+      return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30';
+    case 'high':
+      return 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30';
+    case 'medium':
+      return 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900/30';
+    case 'low':
+      return 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/30';
+    default:
+      return 'bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-900/30';
+  }
+}
+
+function getCategoryIcon(department: string | null, category: string | null): LucideIcon {
+  const dept = (department || '').toLowerCase();
+  const cat = (category || '').toLowerCase();
+  
+  if (dept.includes('تحرير') || cat.includes('editorial') || cat.includes('تحرير')) {
+    return Newspaper;
+  }
+  if (dept.includes('تقنية') || dept.includes('تطوير') || cat.includes('technical') || cat.includes('تقنية')) {
+    return Wrench;
+  }
+  if (dept.includes('سوشيال') || dept.includes('اجتماعي') || cat.includes('social') || cat.includes('سوشيال')) {
+    return Users;
+  }
+  if (dept.includes('فيديو') || cat.includes('video') || cat.includes('فيديو')) {
+    return Video;
+  }
+  if (cat.includes('design') || cat.includes('تصميم')) {
+    return Palette;
+  }
+  if (cat.includes('improvement') || cat.includes('تحسين')) {
+    return Rocket;
+  }
+  
+  return FileText;
 }
 
 // Component for rendering subtasks
@@ -244,6 +293,190 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask, onView, onEd
           </TableRow>
         );
       })}
+    </>
+  );
+}
+
+// Component for rendering main task row with improved design
+interface TaskRowWithSubtasksProps {
+  task: Task;
+  dueDateValue: Date | null;
+  taskIsOverdue: boolean;
+  isExpanded: boolean;
+  CategoryIcon: LucideIcon;
+  users: User[];
+  completeMutation: any;
+  toggleExpand: (taskId: string) => void;
+  setViewTaskId: (id: string) => void;
+  setEditTaskId: (id: string) => void;
+  setDeleteId: (id: string) => void;
+  handleCreateSubtask: (parentId: string) => void;
+}
+
+function TaskRowWithSubtasks({
+  task,
+  dueDateValue,
+  taskIsOverdue,
+  isExpanded,
+  CategoryIcon,
+  users,
+  completeMutation,
+  toggleExpand,
+  setViewTaskId,
+  setEditTaskId,
+  setDeleteId,
+  handleCreateSubtask,
+}: TaskRowWithSubtasksProps) {
+  const { data: subtasksCount } = useQuery({
+    queryKey: ['/api/tasks/count', task.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/tasks?parentTaskId=${task.id}`, { credentials: 'include' });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.tasks?.length || 0;
+    },
+  });
+
+  const getUserName = (userId: string | null) => {
+    if (!userId) return 'غير مسند';
+    const user = users.find(u => u.id === userId);
+    if (!user) return 'غير معروف';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+  };
+
+  const hasSubtasks = (subtasksCount ?? 0) > 0;
+
+  return (
+    <>
+      <TableRow 
+        key={task.id} 
+        data-testid={`row-task-${task.id}`}
+        className={`group border rounded-lg p-3 ${getPriorityBackground(task.priority)}`}
+      >
+        <TableCell>
+          <input
+            type="checkbox"
+            checked={task.status === 'completed'}
+            onChange={(e) => completeMutation.mutate({ 
+              taskId: task.id, 
+              completed: e.target.checked 
+            })}
+            disabled={completeMutation.isPending}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            data-testid={`checkbox-complete-${task.id}`}
+          />
+        </TableCell>
+        <TableCell data-testid={`text-title-${task.id}`}>
+          <div className="flex items-center gap-2">
+            {hasSubtasks && (
+              <button
+                onClick={() => toggleExpand(task.id)}
+                className="flex-shrink-0"
+                data-testid={`button-expand-task-${task.id}`}
+              >
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} 
+                />
+              </button>
+            )}
+            <CategoryIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base font-semibold">{task.title}</span>
+                {hasSubtasks && (
+                  <Badge variant="outline" className="text-xs">
+                    {subtasksCount}
+                  </Badge>
+                )}
+              </div>
+              {task.description && (
+                <div className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                  {task.description}
+                </div>
+              )}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell data-testid={`badge-status-${task.id}`}>
+          <Badge variant={getStatusVariant(task.status)}>
+            {statusLabels[task.status]}
+          </Badge>
+        </TableCell>
+        <TableCell data-testid={`badge-priority-${task.id}`}>
+          <span className={getPriorityColor(task.priority)}>
+            {priorityLabels[task.priority]}
+          </span>
+        </TableCell>
+        <TableCell data-testid={`text-assignee-${task.id}`}>
+          {getUserName(task.assignedToId)}
+        </TableCell>
+        <TableCell data-testid={`text-due-date-${task.id}`}>
+          {dueDateValue ? (
+            <div className="flex items-center gap-2">
+              <span className={taskIsOverdue ? 'text-red-600' : ''}>
+                {format(dueDateValue, 'PPP', { locale: ar })}
+              </span>
+              {taskIsOverdue && (
+                <AlertCircle className="h-4 w-4 text-red-600" data-testid={`icon-overdue-${task.id}`} />
+              )}
+            </div>
+          ) : (
+            <span className="text-muted-foreground">غير محدد</span>
+          )}
+        </TableCell>
+        <TableCell>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setViewTaskId(task.id)}
+              data-testid={`button-view-${task.id}`}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditTaskId(task.id)}
+              data-testid={`button-edit-${task.id}`}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => completeMutation.mutate({ 
+                taskId: task.id, 
+                completed: task.status !== 'completed'
+              })}
+              disabled={completeMutation.isPending}
+              data-testid={`button-complete-${task.id}`}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDeleteId(task.id)}
+              data-testid={`button-delete-${task.id}`}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+      {isExpanded && (
+        <SubtaskRow 
+          key={`subtask-${task.id}`}
+          parentTask={task} 
+          users={users} 
+          onDelete={setDeleteId}
+          onCreateSubtask={handleCreateSubtask}
+          onView={setViewTaskId}
+          onEdit={setEditTaskId}
+          onComplete={(taskId, completed) => completeMutation.mutate({ taskId, completed })}
+        />
+      )}
     </>
   );
 }
@@ -639,126 +872,26 @@ export default function TasksPage() {
                     <TableBody>
                       {tasksData.tasks.map((task) => {
                       const dueDateValue = task.dueDate ? new Date(task.dueDate) : null;
-                      const taskIsOverdue = dueDateValue && dueDateValue < new Date() && task.status !== 'completed';
+                      const taskIsOverdue = !!(dueDateValue && dueDateValue < new Date() && task.status !== 'completed');
                       const isExpanded = expandedTasks.has(task.id);
+                      const CategoryIcon = getCategoryIcon(task.department, task.category);
                       
                       return (
-                        <>
-                          <TableRow key={task.id} data-testid={`row-task-${task.id}`}>
-                            <TableCell>
-                              <input
-                                type="checkbox"
-                                checked={task.status === 'completed'}
-                                onChange={(e) => completeMutation.mutate({ 
-                                  taskId: task.id, 
-                                  completed: e.target.checked 
-                                })}
-                                disabled={completeMutation.isPending}
-                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                                data-testid={`checkbox-complete-${task.id}`}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium" data-testid={`text-title-${task.id}`}>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => toggleExpand(task.id)}
-                                  className="h-6 w-6"
-                                  data-testid={`button-expand-task-${task.id}`}
-                                >
-                                  <ChevronDown 
-                                    className={`h-4 w-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} 
-                                  />
-                                </Button>
-                                <div>
-                                  <div>{task.title}</div>
-                                  {task.description && (
-                                    <div className="text-sm text-muted-foreground line-clamp-1">
-                                      {task.description}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell data-testid={`badge-status-${task.id}`}>
-                              <Badge variant={getStatusVariant(task.status)}>
-                                {statusLabels[task.status]}
-                              </Badge>
-                            </TableCell>
-                            <TableCell data-testid={`badge-priority-${task.id}`}>
-                              <span className={getPriorityColor(task.priority)}>
-                                {priorityLabels[task.priority]}
-                              </span>
-                            </TableCell>
-                            <TableCell data-testid={`text-assignee-${task.id}`}>
-                              {getUserName(task.assignedToId)}
-                            </TableCell>
-                            <TableCell data-testid={`text-due-date-${task.id}`}>
-                              {dueDateValue ? (
-                                <div className="flex items-center gap-2">
-                                  <span className={taskIsOverdue ? 'text-red-600' : ''}>
-                                    {format(dueDateValue, 'PPP', { locale: ar })}
-                                  </span>
-                                  {taskIsOverdue && (
-                                    <AlertCircle className="h-4 w-4 text-red-600" data-testid={`icon-overdue-${task.id}`} />
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">غير محدد</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleCreateSubtask(task.id)}
-                                  title="إنشاء مهمة فرعية"
-                                  data-testid={`button-create-subtask-${task.id}`}
-                                >
-                                  <ListPlus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setViewTaskId(task.id)}
-                                  data-testid={`button-view-${task.id}`}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setEditTaskId(task.id)}
-                                  data-testid={`button-edit-${task.id}`}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setDeleteId(task.id)}
-                                  data-testid={`button-delete-${task.id}`}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          {isExpanded && (
-                            <SubtaskRow 
-                              key={`subtask-${task.id}`}
-                              parentTask={task} 
-                              users={users} 
-                              onDelete={setDeleteId}
-                              onCreateSubtask={handleCreateSubtask}
-                              onView={setViewTaskId}
-                              onEdit={setEditTaskId}
-                              onComplete={(taskId, completed) => completeMutation.mutate({ taskId, completed })}
-                            />
-                          )}
-                        </>
+                        <TaskRowWithSubtasks
+                          key={task.id}
+                          task={task}
+                          dueDateValue={dueDateValue}
+                          taskIsOverdue={taskIsOverdue}
+                          isExpanded={isExpanded}
+                          CategoryIcon={CategoryIcon}
+                          users={users}
+                          completeMutation={completeMutation}
+                          toggleExpand={toggleExpand}
+                          setViewTaskId={setViewTaskId}
+                          setEditTaskId={setEditTaskId}
+                          setDeleteId={setDeleteId}
+                          handleCreateSubtask={handleCreateSubtask}
+                        />
                       );
                     })}
                     </TableBody>
