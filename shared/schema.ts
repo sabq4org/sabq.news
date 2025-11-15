@@ -5584,6 +5584,250 @@ export type DeepAnalysisEvent = typeof deepAnalysisEvents.$inferSelect;
 export type InsertDeepAnalysisEvent = z.infer<typeof insertDeepAnalysisEventSchema>;
 
 // ============================================
+// TASK MANAGEMENT SYSTEM
+// ============================================
+
+// Tasks table
+export const tasks = pgTable("tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").default("todo").notNull(), // todo, in_progress, review, completed, archived
+  priority: text("priority").default("medium").notNull(), // low, medium, high, critical
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  
+  // Assignment
+  createdById: varchar("created_by_id").references(() => users.id).notNull(),
+  assignedToId: varchar("assigned_to_id").references(() => users.id),
+  
+  // Categorization
+  department: text("department"), // تحرير، تقنية، سوشيال، فيديو
+  category: text("category"), // Custom tags/categories
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`),
+  
+  // AI-powered fields
+  aiSuggestions: jsonb("ai_suggestions").$type<{
+    suggestedAssignee?: string;
+    suggestedDuration?: number; // in minutes
+    suggestedSubtasks?: string[];
+    confidenceScore?: number;
+  }>(),
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  actualDuration: integer("actual_duration"), // in minutes
+  
+  // Progress tracking
+  progress: integer("progress").default(0).notNull(), // 0-100
+  
+  // Metadata
+  attachmentsCount: integer("attachments_count").default(0).notNull(),
+  subtasksCount: integer("subtasks_count").default(0).notNull(),
+  commentsCount: integer("comments_count").default(0).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("tasks_status_idx").on(table.status),
+  index("tasks_priority_idx").on(table.priority),
+  index("tasks_assigned_to_idx").on(table.assignedToId),
+  index("tasks_created_by_idx").on(table.createdById),
+  index("tasks_due_date_idx").on(table.dueDate),
+]);
+
+// Subtasks table
+export const subtasks = pgTable("subtasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  isCompleted: boolean("is_completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+  completedById: varchar("completed_by_id").references(() => users.id),
+  displayOrder: integer("display_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("subtasks_task_idx").on(table.taskId),
+]);
+
+// Task comments table
+export const taskComments = pgTable("task_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("task_comments_task_idx").on(table.taskId),
+  index("task_comments_user_idx").on(table.userId),
+]);
+
+// Task attachments table
+export const taskAttachments = pgTable("task_attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileSize: integer("file_size"), // in bytes
+  fileType: text("file_type"), // image, document, video, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("task_attachments_task_idx").on(table.taskId),
+]);
+
+// Task activity log table
+export const taskActivityLog = pgTable("task_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // created, updated, status_changed, assigned, commented, etc.
+  changes: jsonb("changes").$type<{
+    field?: string;
+    oldValue?: any;
+    newValue?: any;
+    description?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("task_activity_task_idx").on(table.taskId),
+  index("task_activity_user_idx").on(table.userId),
+]);
+
+// Task relations
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [tasks.createdById],
+    references: [users.id],
+    relationName: "tasksCreated",
+  }),
+  assignedTo: one(users, {
+    fields: [tasks.assignedToId],
+    references: [users.id],
+    relationName: "tasksAssigned",
+  }),
+  subtasks: many(subtasks),
+  comments: many(taskComments),
+  attachments: many(taskAttachments),
+  activityLog: many(taskActivityLog),
+}));
+
+export const subtasksRelations = relations(subtasks, ({ one }) => ({
+  task: one(tasks, {
+    fields: [subtasks.taskId],
+    references: [tasks.id],
+  }),
+  completedBy: one(users, {
+    fields: [subtasks.completedById],
+    references: [users.id],
+  }),
+}));
+
+export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskComments.taskId],
+    references: [tasks.id],
+  }),
+  user: one(users, {
+    fields: [taskComments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskAttachments.taskId],
+    references: [tasks.id],
+  }),
+  user: one(users, {
+    fields: [taskAttachments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const taskActivityLogRelations = relations(taskActivityLog, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskActivityLog.taskId],
+    references: [tasks.id],
+  }),
+  user: one(users, {
+    fields: [taskActivityLog.userId],
+    references: [users.id],
+  }),
+}));
+
+// Task insert schemas
+export const insertTaskSchema = createInsertSchema(tasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  attachmentsCount: true,
+  subtasksCount: true,
+  commentsCount: true,
+  completedAt: true,
+  actualDuration: true,
+  progress: true,
+}).extend({
+  title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
+  description: z.string().optional(),
+  status: z.enum(["todo", "in_progress", "review", "completed", "archived"]).default("todo"),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  dueDate: z.string().datetime().optional(),
+  assignedToId: z.string().uuid().optional(),
+  department: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  estimatedDuration: z.number().int().positive().optional(),
+});
+
+export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+  completedById: true,
+  displayOrder: true,
+}).extend({
+  taskId: z.string().uuid("معرف المهمة غير صالح"),
+  title: z.string().min(1, "العنوان مطلوب"),
+  description: z.string().optional(),
+});
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  taskId: z.string().uuid("معرف المهمة غير صالح"),
+  userId: z.string().uuid("معرف المستخدم غير صالح"),
+  content: z.string().min(1, "التعليق مطلوب"),
+});
+
+export const insertTaskAttachmentSchema = createInsertSchema(taskAttachments).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  taskId: z.string().uuid("معرف المهمة غير صالح"),
+  userId: z.string().uuid("معرف المستخدم غير صالح"),
+  fileName: z.string().min(1, "اسم الملف مطلوب"),
+  fileUrl: z.string().url("رابط الملف غير صالح"),
+  fileSize: z.number().int().positive().optional(),
+  fileType: z.string().optional(),
+});
+
+// Task select types
+export type Task = typeof tasks.$inferSelect;
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Subtask = typeof subtasks.$inferSelect;
+export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;
+export type TaskComment = typeof taskComments.$inferSelect;
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
+export type TaskAttachment = typeof taskAttachments.$inferSelect;
+export type InsertTaskAttachment = z.infer<typeof insertTaskAttachmentSchema>;
+export type TaskActivityLogEntry = typeof taskActivityLog.$inferSelect;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
