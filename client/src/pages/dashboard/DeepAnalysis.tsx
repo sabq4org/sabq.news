@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import {
   Clock,
   Trash2,
   Download,
-  Save,
+  CheckCircle,
   Edit,
   Eye,
   EyeOff,
@@ -48,7 +49,7 @@ const getStatusConfig = (status: string) => {
     case 'draft':
       return { variant: 'secondary' as const, text: 'مسودة', icon: Edit };
     case 'completed':
-      return { variant: 'default' as const, text: 'مكتمل', icon: Save };
+      return { variant: 'default' as const, text: 'جاهز للنشر', icon: CheckCircle };
     case 'published':
       return { variant: 'default' as const, text: 'منشور', icon: Globe };
     case 'archived':
@@ -60,6 +61,7 @@ const getStatusConfig = (status: string) => {
 
 export default function DeepAnalysis() {
   const { toast } = useToast();
+  const [location] = useLocation();
   const [topic, setTopic] = useState("");
   const [keywords, setKeywords] = useState("");
   const [category, setCategory] = useState("");
@@ -69,6 +71,9 @@ export default function DeepAnalysis() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ percent: 0, message: '' });
 
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const editId = urlParams.get('id') || urlParams.get('edit');
+
   const { data: analyses, isLoading: isLoadingList } = useQuery<{ analyses: DeepAnalysis[]; total: number }>({
     queryKey: ['/api/deep-analysis'],
   });
@@ -77,6 +82,22 @@ export default function DeepAnalysis() {
     queryKey: ['/api/deep-analysis', selectedAnalysisId],
     enabled: !!selectedAnalysisId,
   });
+
+  useEffect(() => {
+    if (editId && !selectedAnalysisId) {
+      setSelectedAnalysisId(editId);
+      setActiveTab("unified");
+    }
+  }, [editId, selectedAnalysisId]);
+
+  useEffect(() => {
+    if (selectedAnalysis) {
+      setTopic(selectedAnalysis.topic || "");
+      setKeywords(selectedAnalysis.keywords?.join(', ') || "");
+      setCategory("");
+      setSaudiContext("");
+    }
+  }, [selectedAnalysis]);
 
   const handleGenerateWithSSE = async (data: { topic: string; keywords: string[]; category?: string; saudiContext?: string }) => {
     setIsGenerating(true);
@@ -455,9 +476,6 @@ export default function DeepAnalysis() {
                     )}
                     <Button size="icon" variant="outline" data-testid="button-download">
                       <Download className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="outline" data-testid="button-save">
-                      <Save className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

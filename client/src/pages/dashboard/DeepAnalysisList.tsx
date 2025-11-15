@@ -48,8 +48,15 @@ import {
   FileText,
   Save,
   EyeOff,
-  Globe
+  Globe,
+  CheckCircle
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -90,7 +97,7 @@ const getStatusConfig = (status: string) => {
     case 'draft':
       return { variant: 'secondary' as const, text: 'مسودة', icon: Edit };
     case 'completed':
-      return { variant: 'default' as const, text: 'مكتمل', icon: Save };
+      return { variant: 'default' as const, text: 'جاهز للنشر', icon: CheckCircle };
     case 'published':
       return { variant: 'default' as const, text: 'منشور', icon: Globe };
     case 'archived':
@@ -103,7 +110,7 @@ const getStatusConfig = (status: string) => {
 const statusOptions = [
   { value: 'all', label: 'الكل' },
   { value: 'draft', label: 'مسودة' },
-  { value: 'completed', label: 'مكتمل' },
+  { value: 'completed', label: 'جاهز للنشر' },
   { value: 'published', label: 'منشور' },
   { value: 'archived', label: 'مؤرشف' },
 ] as const;
@@ -344,7 +351,7 @@ export default function DeepAnalysisList() {
           </CardContent>
         </Card>
 
-        {/* Table */}
+        {/* Table and Cards */}
         <Card data-testid="card-analyses-table">
           <CardContent className="p-0">
             {isLoading ? (
@@ -372,81 +379,174 @@ export default function DeepAnalysisList() {
                 </Button>
               </div>
             ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-right">العنوان</TableHead>
-                      <TableHead className="text-right">الموضوع</TableHead>
-                      <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">التصنيف</TableHead>
-                      <TableHead className="text-right">تاريخ الإنشاء</TableHead>
-                      <TableHead className="text-right">الإجراءات</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysesData.analyses.map((analysis) => {
-                      const statusConfig = getStatusConfig(analysis.status);
-                      const StatusIcon = statusConfig.icon;
-                      
-                      return (
-                        <TableRow key={analysis.id} data-testid={`row-analysis-${analysis.id}`}>
-                          <TableCell className="font-medium" data-testid={`text-title-${analysis.id}`}>
-                            {analysis.title}
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate" data-testid={`text-topic-${analysis.id}`}>
-                            {analysis.topic}
-                          </TableCell>
-                          <TableCell data-testid={`badge-status-${analysis.id}`}>
-                            <Badge variant={statusConfig.variant} className="flex items-center gap-1 w-fit">
+              <TooltipProvider>
+                {/* Mobile Cards View */}
+                <div className="md:hidden space-y-4 p-4">
+                  {analysesData.analyses.map((analysis) => {
+                    const statusConfig = getStatusConfig(analysis.status);
+                    const StatusIcon = statusConfig.icon;
+                    
+                    return (
+                      <Card key={analysis.id} className="p-4" data-testid={`card-analysis-${analysis.id}`}>
+                        <div className="space-y-3">
+                          {/* Status Badge and Date */}
+                          <div className="flex items-center justify-between gap-2">
+                            <Badge variant={statusConfig.variant} className="flex items-center gap-1" data-testid={`badge-status-mobile-${analysis.id}`}>
                               <StatusIcon className="h-3 w-3" />
                               {statusConfig.text}
                             </Badge>
-                          </TableCell>
-                          <TableCell data-testid={`text-category-${analysis.id}`}>
-                            {getCategoryName(analysis.categoryId)}
-                          </TableCell>
-                          <TableCell data-testid={`text-date-${analysis.id}`}>
-                            {format(new Date(analysis.createdAt), 'dd MMM yyyy', { locale: ar })}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {analysis.slug && (
+                            <span className="text-sm text-muted-foreground" data-testid={`text-date-mobile-${analysis.id}`}>
+                              {format(new Date(analysis.createdAt), 'dd MMM yyyy', { locale: ar })}
+                            </span>
+                          </div>
+                          
+                          {/* Title */}
+                          <h3 className="font-semibold line-clamp-2" data-testid={`text-title-mobile-${analysis.id}`}>
+                            {analysis.title}
+                          </h3>
+                          
+                          {/* Topic */}
+                          <p className="text-sm text-muted-foreground line-clamp-1" data-testid={`text-topic-mobile-${analysis.id}`}>
+                            {analysis.topic}
+                          </p>
+                          
+                          {/* Category */}
+                          <div className="text-sm">
+                            <span className="font-medium">التصنيف: </span>
+                            <span data-testid={`text-category-mobile-${analysis.id}`}>{getCategoryName(analysis.categoryId)}</span>
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2 border-t">
+                            {analysis.slug && (
+                              <Button
+                                size="sm"
+                                onClick={() => navigate(`/omq/${analysis.slug}`)}
+                                data-testid={`button-view-mobile-${analysis.id}`}
+                              >
+                                <Eye className="h-4 w-4 ml-1" />
+                                عرض
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/dashboard/ai/deep?id=${analysis.id}`)}
+                              data-testid={`button-edit-mobile-${analysis.id}`}
+                            >
+                              <Edit className="h-4 w-4 ml-1" />
+                              تعديل
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setDeleteId(analysis.id)}
+                              data-testid={`button-delete-mobile-${analysis.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">العنوان</TableHead>
+                        <TableHead className="text-right">الموضوع</TableHead>
+                        <TableHead className="text-right">الحالة</TableHead>
+                        <TableHead className="text-right">التصنيف</TableHead>
+                        <TableHead className="text-right">تاريخ الإنشاء</TableHead>
+                        <TableHead className="text-right">الإجراءات</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analysesData.analyses.map((analysis) => {
+                        const statusConfig = getStatusConfig(analysis.status);
+                        const StatusIcon = statusConfig.icon;
+                        
+                        return (
+                          <TableRow key={analysis.id} data-testid={`row-analysis-${analysis.id}`}>
+                            <TableCell className="font-medium max-w-xs" data-testid={`text-title-${analysis.id}`}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="line-clamp-2 cursor-help">
+                                    {analysis.title}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <p>{analysis.title}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell className="max-w-xs" data-testid={`text-topic-${analysis.id}`}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="line-clamp-1 cursor-help">
+                                    {analysis.topic}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <p>{analysis.topic}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell data-testid={`badge-status-${analysis.id}`}>
+                              <Badge variant={statusConfig.variant} className="flex items-center gap-1 w-fit">
+                                <StatusIcon className="h-3 w-3" />
+                                {statusConfig.text}
+                              </Badge>
+                            </TableCell>
+                            <TableCell data-testid={`text-category-${analysis.id}`}>
+                              {getCategoryName(analysis.categoryId)}
+                            </TableCell>
+                            <TableCell data-testid={`text-date-${analysis.id}`}>
+                              {format(new Date(analysis.createdAt), 'dd MMM yyyy', { locale: ar })}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {analysis.slug && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate(`/omq/${analysis.slug}`)}
+                                    title="عرض"
+                                    data-testid={`button-view-${analysis.id}`}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => navigate(`/omq/${analysis.slug}`)}
-                                  title="عرض"
-                                  data-testid={`button-view-${analysis.id}`}
+                                  onClick={() => navigate(`/dashboard/ai/deep?id=${analysis.id}`)}
+                                  title="تعديل"
+                                  data-testid={`button-edit-${analysis.id}`}
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  <Edit className="h-4 w-4" />
                                 </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/dashboard/ai/deep?edit=${analysis.id}`)}
-                                title="تعديل"
-                                data-testid={`button-edit-${analysis.id}`}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteId(analysis.id)}
-                                title="حذف"
-                                data-testid={`button-delete-${analysis.id}`}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteId(analysis.id)}
+                                  title="حذف"
+                                  data-testid={`button-delete-${analysis.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
@@ -478,7 +578,7 @@ export default function DeepAnalysisList() {
                     </div>
                   </div>
                 )}
-              </>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
