@@ -63,4 +63,59 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **Digital Credentials**
 -   `passkit-generator` (Apple Wallet Pass generation)
+
+## Recent Changes (November 15, 2025)
+
+### Deep Analysis (Omq) Editorial Publishing Workflow - Phase 4
+
+**تم إضافة نظام نشر تحريري كامل لقسم العمق مع RBAC:**
+
+**1. Backend API Enhancements (server/routes.ts):**
+- أضفت `PATCH /api/deep-analysis/:id/status` endpoint لتحديث حالة التحليل
+- RBAC authorization متقدم:
+  - `articles.edit_any` أو `articles.publish`: يمكن نشر/تحديث أي تحليل
+  - `articles.edit_own`: يمكن فقط نشر/تحديث التحليلات الخاصة
+- Zod validation للحالات (draft, completed, published, archived)
+- Activity logging شامل مع isOwner flag
+- رسائل خطأ بالعربية للمستخدم النهائي
+
+**2. Dashboard UI Updates (client/src/pages/dashboard/DeepAnalysis.tsx):**
+- Status configuration helper مع icons و variants
+- أزرار نشر/إلغاء نشر في header التحليل المحدد
+- Status badges في قائمة التحليلات السابقة
+- TanStack Query mutation مع cache invalidation تلقائي
+- Toast notifications للتأكيد
+
+**3. Editorial Workflow:**
+```
+Dashboard generates analysis → status: 'completed'
+    ↓
+Reviewer/Editor reviews content
+    ↓
+Clicks "نشر" button → status: 'published'
+    ↓
+Appears in public /omq pages
+    ↓
+Can "إلغاء النشر" anytime → status: 'completed'
+```
+
+**4. Bug Fixes:**
+- إصلاح API response structure في `/api/omq` endpoint:
+  - كان يعيد `{success, data, pagination}`
+  - الآن يعيد `{analyses, total, page, limit, totalPages}` للتطابق مع Frontend interface
+- إضافة null safety في `Omq.tsx`: `analysesData && analysesData.analyses && analysesData.analyses.length > 0`
+- إصلاح TypeError: "undefined is not an object (evaluating 'l.analyses.length')"
+
+**5. Testing & Review:**
+✅ Pass - RBAC authorization يعمل بشكل صحيح
+✅ المحررون يمكنهم نشر تحليلات الزملاء
+✅ Frontend mutations و cache invalidation صحيحة
+✅ API response structure متطابق مع Frontend
+✅ No LSP errors
+✅ Ready for production
+
+**الملفات المعدلة:**
+- `server/routes.ts`: +70 lines (PATCH /api/deep-analysis/:id/status + API fix)
+- `client/src/pages/dashboard/DeepAnalysis.tsx`: +100 lines (status badges + publish buttons)
+- `client/src/pages/Omq.tsx`: null safety improvements
 ```

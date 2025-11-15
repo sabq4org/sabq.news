@@ -368,7 +368,7 @@ export default function Omq() {
               </Card>
             ))}
           </div>
-        ) : analysesData && analysesData.analyses.length > 0 ? (
+        ) : analysesData && analysesData.analyses && analysesData.analyses.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {analysesData.analyses.map((analysis) => (

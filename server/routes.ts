@@ -25613,14 +25613,11 @@ Allow: /
       const result = await storage.getPublishedDeepAnalyses(filters);
       
       res.json({
-        success: true,
-        data: result.analyses,
-        pagination: {
-          page: filters.page,
-          limit: filters.limit,
-          total: result.total,
-          totalPages: Math.ceil(result.total / filters.limit),
-        },
+        analyses: result.analyses,
+        total: result.total,
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(result.total / filters.limit),
       });
     } catch (error: any) {
       console.error('Error fetching published analyses:', error);
