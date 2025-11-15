@@ -378,7 +378,6 @@ export default function TasksPage() {
       ...data,
       tags: data.tags || [],
       parentTaskId: creatingSubtaskFor || data.parentTaskId,
-      assignedToId: data.assignedToId === 'unassigned' ? undefined : data.assignedToId,
     };
     createMutation.mutate(processedData);
   };
@@ -907,18 +906,17 @@ export default function TasksPage() {
                     name="assignedToId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>المسؤول</FormLabel>
+                        <FormLabel>المسؤول (اختياري)</FormLabel>
                         <Select 
-                          onValueChange={(value) => field.onChange(value === "" ? undefined : value)}
-                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-assignee">
-                              <SelectValue placeholder="اختر المسؤول" />
+                              <SelectValue placeholder="اختر المسؤول أو اتركه فارغاً" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="unassigned">غير محدد</SelectItem>
                             {users.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
