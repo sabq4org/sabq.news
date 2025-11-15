@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AddTaskQuickPane } from "@/components/tasks";
+import { AddTaskQuickPane, TaskViewDialog, TaskEditDialog } from "@/components/tasks";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -129,9 +129,12 @@ interface SubtaskRowProps {
   users: User[];
   onDelete: (id: string) => void;
   onCreateSubtask: (parentId: string) => void;
+  onView: (taskId: string) => void;
+  onEdit: (taskId: string) => void;
+  onComplete: (taskId: string, completed: boolean) => void;
 }
 
-function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRowProps) {
+function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask, onView, onEdit, onComplete }: SubtaskRowProps) {
   const { data: subtasks } = useQuery<Task[]>({
     queryKey: ['/api/tasks', 'subtasks', parentTask.id],
     queryFn: async () => {
@@ -161,6 +164,15 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRow
         
         return (
           <TableRow key={subtask.id} data-testid={`row-subtask-${subtask.id}`} className="bg-muted/30">
+            <TableCell>
+              <input
+                type="checkbox"
+                checked={subtask.status === 'completed'}
+                onChange={(e) => onComplete(subtask.id, e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                data-testid={`checkbox-complete-${subtask.id}`}
+              />
+            </TableCell>
             <TableCell className="font-medium pr-12" data-testid={`text-title-${subtask.id}`}>
               <div className="flex items-center gap-2">
                 <div className="h-px w-6 bg-border" />
@@ -206,6 +218,7 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRow
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => onView(subtask.id)}
                   data-testid={`button-view-${subtask.id}`}
                 >
                   <Eye className="h-4 w-4" />
@@ -213,6 +226,7 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRow
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => onEdit(subtask.id)}
                   data-testid={`button-edit-${subtask.id}`}
                 >
                   <Edit className="h-4 w-4" />
@@ -237,6 +251,8 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask }: SubtaskRow
 export default function TasksPage() {
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewTaskId, setViewTaskId] = useState<string | null>(null);
+  const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -340,6 +356,26 @@ export default function TasksPage() {
     },
   });
 
+  const completeMutation = useMutation({
+    mutationFn: async ({ taskId, completed }: { taskId: string; completed: boolean }) => {
+      return await apiRequest(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: completed ? 'completed' : 'todo',
+          completedAt: completed ? new Date().toISOString() : null,
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/statistics'] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث حالة المهمة بنجاح",
+      });
+    },
+  });
+
   const toggleExpand = (taskId: string) => {
     setExpandedTasks(prev => {
       const newSet = new Set(prev);
@@ -397,58 +433,58 @@ export default function TasksPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card data-testid="card-stat-total">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <ListTodo className="h-4 w-4" />
                 إجمالي المهام
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="text-stat-total">
+              <div className="text-xl font-bold" data-testid="text-stat-total">
                 {(statistics?.total ?? 0).toLocaleString('en-US')}
               </div>
             </CardContent>
           </Card>
           
           <Card data-testid="card-stat-in-progress">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 قيد العمل
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600" data-testid="text-stat-in-progress">
+              <div className="text-xl font-bold text-blue-600" data-testid="text-stat-in-progress">
                 {(statistics?.in_progress ?? 0).toLocaleString('en-US')}
               </div>
             </CardContent>
           </Card>
           
           <Card data-testid="card-stat-overdue">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
                 متأخرة
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600" data-testid="text-stat-overdue">
+              <div className="text-xl font-bold text-red-600" data-testid="text-stat-overdue">
                 {(statistics?.overdue ?? 0).toLocaleString('en-US')}
               </div>
             </CardContent>
           </Card>
           
           <Card data-testid="card-stat-completed">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
                 مكتملة
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600" data-testid="text-stat-completed">
+              <div className="text-xl font-bold text-green-600" data-testid="text-stat-completed">
                 {(statistics?.completed ?? 0).toLocaleString('en-US')}
               </div>
             </CardContent>
@@ -585,18 +621,21 @@ export default function TasksPage() {
                   <p className="text-sm">انقر على "مهمة جديدة" للبدء</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">العنوان</TableHead>
-                        <TableHead className="text-right">الحالة</TableHead>
-                        <TableHead className="text-right">الأولوية</TableHead>
-                        <TableHead className="text-right">المسؤول</TableHead>
-                        <TableHead className="text-right">تاريخ الاستحقاق</TableHead>
-                        <TableHead className="text-right">الإجراءات</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                <>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="inline-block min-w-full align-middle">
+                      <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right w-12">إكمال</TableHead>
+                          <TableHead className="text-right">العنوان</TableHead>
+                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">الأولوية</TableHead>
+                          <TableHead className="text-right">المسؤول</TableHead>
+                          <TableHead className="text-right">تاريخ الاستحقاق</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
                     <TableBody>
                       {tasksData.tasks.map((task) => {
                       const dueDateValue = task.dueDate ? new Date(task.dueDate) : null;
@@ -606,6 +645,19 @@ export default function TasksPage() {
                       return (
                         <>
                           <TableRow key={task.id} data-testid={`row-task-${task.id}`}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={task.status === 'completed'}
+                                onChange={(e) => completeMutation.mutate({ 
+                                  taskId: task.id, 
+                                  completed: e.target.checked 
+                                })}
+                                disabled={completeMutation.isPending}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                                data-testid={`checkbox-complete-${task.id}`}
+                              />
+                            </TableCell>
                             <TableCell className="font-medium" data-testid={`text-title-${task.id}`}>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -670,6 +722,7 @@ export default function TasksPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  onClick={() => setViewTaskId(task.id)}
                                   data-testid={`button-view-${task.id}`}
                                 >
                                   <Eye className="h-4 w-4" />
@@ -677,6 +730,7 @@ export default function TasksPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  onClick={() => setEditTaskId(task.id)}
                                   data-testid={`button-edit-${task.id}`}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -699,13 +753,18 @@ export default function TasksPage() {
                               users={users} 
                               onDelete={setDeleteId}
                               onCreateSubtask={handleCreateSubtask}
+                              onView={setViewTaskId}
+                              onEdit={setEditTaskId}
+                              onComplete={(taskId, completed) => completeMutation.mutate({ taskId, completed })}
                             />
                           )}
                         </>
                       );
                     })}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                      </Table>
+                    </div>
+                  </div>
 
                   {/* Pagination */}
                   {tasksData && tasksData.totalPages > 1 && (
@@ -737,10 +796,29 @@ export default function TasksPage() {
                       </div>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* View Task Dialog */}
+        {viewTaskId && (
+          <TaskViewDialog
+            taskId={viewTaskId}
+            onClose={() => setViewTaskId(null)}
+          />
+        )}
+
+        {/* Edit Task Dialog */}
+        {editTaskId && (
+          <TaskEditDialog
+            taskId={editTaskId}
+            onClose={() => setEditTaskId(null)}
+            onSuccess={() => {
+              refetch();
+            }}
+          />
         )}
 
         {/* Delete Confirmation Dialog */}
