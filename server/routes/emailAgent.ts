@@ -401,4 +401,92 @@ router.get("/stats", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/email-agent/senders - Get all trusted senders
+router.get("/senders", async (req: Request, res: Response) => {
+  try {
+    const senders = await storage.getTrustedSenders();
+    return res.json(senders);
+  } catch (error: any) {
+    console.error("[Email Agent] Error fetching senders:", error);
+    return res.status(500).json({
+      message: "Failed to fetch trusted senders",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/email-agent/senders/:id - Get a specific trusted sender
+router.get("/senders/:id", async (req: Request, res: Response) => {
+  try {
+    const sender = await storage.getTrustedSenderById(req.params.id);
+    if (!sender) {
+      return res.status(404).json({ message: "Sender not found" });
+    }
+    return res.json(sender);
+  } catch (error: any) {
+    console.error("[Email Agent] Error fetching sender:", error);
+    return res.status(500).json({
+      message: "Failed to fetch sender",
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/email-agent/senders - Create a new trusted sender
+router.post("/senders", async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const sender = await storage.createTrustedSender(req.body, userId);
+    return res.status(201).json(sender);
+  } catch (error: any) {
+    console.error("[Email Agent] Error creating sender:", error);
+    return res.status(500).json({
+      message: "Failed to create trusted sender",
+      error: error.message,
+    });
+  }
+});
+
+// PUT /api/email-agent/senders/:id - Update a trusted sender
+router.put("/senders/:id", async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const sender = await storage.updateTrustedSender(req.params.id, req.body);
+    return res.json(sender);
+  } catch (error: any) {
+    console.error("[Email Agent] Error updating sender:", error);
+    return res.status(500).json({
+      message: "Failed to update trusted sender",
+      error: error.message,
+    });
+  }
+});
+
+// DELETE /api/email-agent/senders/:id - Delete a trusted sender
+router.delete("/senders/:id", async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    await storage.deleteTrustedSender(req.params.id);
+    return res.json({ message: "Trusted sender deleted successfully" });
+  } catch (error: any) {
+    console.error("[Email Agent] Error deleting sender:", error);
+    return res.status(500).json({
+      message: "Failed to delete trusted sender",
+      error: error.message,
+    });
+  }
+});
+
 export default router;
