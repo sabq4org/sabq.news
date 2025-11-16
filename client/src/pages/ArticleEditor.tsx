@@ -1444,7 +1444,7 @@ const generateSlug = (text: string) => {
                         id="hideFromHomepage"
                         checked={hideFromHomepage}
                         onCheckedChange={(checked) => setHideFromHomepage(checked as boolean)}
-                        className="h-3.5 w-3.5 md:h-4 md:w-4"
+                        className="h-11 w-11 md:h-5 md:w-5"
                         data-testid="checkbox-hide-from-homepage"
                       />
                       <Label htmlFor="hideFromHomepage" className="flex items-center gap-2 cursor-pointer text-sm">

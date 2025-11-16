@@ -319,7 +319,7 @@ export default function AnnouncementEditor() {
                                   checked={form.watch('channels').includes(channel)}
                                   onCheckedChange={() => toggleChannel(channel)}
                                   data-testid={`checkbox-channel-${channel}`}
-                                  className="h-3.5 w-3.5 md:h-4 md:w-4"
+                                  className="h-11 w-11 md:h-5 md:w-5"
                                 />
                                 <label htmlFor={`channel-${channel}`} className="text-sm cursor-pointer">
                                   {channel === 'dashboardBanner' && 'بانر لوحة التحكم'}
@@ -348,7 +348,7 @@ export default function AnnouncementEditor() {
                                   checked={(form.watch('audienceRoles') || []).includes(role)}
                                   onCheckedChange={() => toggleRole(role)}
                                   data-testid={`checkbox-role-${role}`}
-                                  className="h-3.5 w-3.5 md:h-4 md:w-4"
+                                  className="h-11 w-11 md:h-5 md:w-5"
                                 />
                                 <label htmlFor={`role-${role}`} className="text-sm cursor-pointer">
                                   {role === 'admin' && 'مدير النظام'}
@@ -401,7 +401,7 @@ export default function AnnouncementEditor() {
                               checked={field.value}
                               onCheckedChange={field.onChange}
                               data-testid="checkbox-publish-now"
-                              className="h-3.5 w-3.5 md:h-4 md:w-4"
+                              className="h-11 w-11 md:h-5 md:w-5"
                             />
                           </FormControl>
                           <FormLabel className="!mt-0 cursor-pointer">نشر الآن</FormLabel>

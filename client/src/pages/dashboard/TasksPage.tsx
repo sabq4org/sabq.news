@@ -229,7 +229,7 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask, onView, onEd
               <Checkbox
                 checked={subtask.status === 'completed'}
                 onCheckedChange={(checked) => onComplete(subtask.id, checked as boolean)}
-                className="h-3.5 w-3.5 md:h-4 md:w-4"
+                className="h-11 w-11 md:h-5 md:w-5"
                 data-testid={`checkbox-complete-${subtask.id}`}
               />
             </TableCell>
@@ -364,7 +364,7 @@ function TaskRowWithSubtasks({
               completed: checked as boolean
             })}
             disabled={completeMutation.isPending}
-            className="h-3.5 w-3.5 md:h-4 md:w-4"
+            className="h-11 w-11 md:h-5 md:w-5"
             data-testid={`checkbox-complete-${task.id}`}
           />
         </TableCell>
@@ -569,7 +569,7 @@ function MobileTaskCard({ task, users, onView, onEdit, onDelete, onComplete }: M
         <Checkbox
           checked={task.status === 'completed'}
           onCheckedChange={(checked) => onComplete(task.id, checked as boolean)}
-          className="h-5 w-5 md:h-4 md:w-4"
+          className="h-11 w-11 md:h-5 md:w-5"
           data-testid={`checkbox-complete-${task.id}`}
         />
       </div>
