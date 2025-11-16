@@ -5906,7 +5906,7 @@ export const emailWebhookLogs = pgTable("email_webhook_logs", {
   // Security verification
   senderVerified: boolean("sender_verified").default(false).notNull(),
   tokenVerified: boolean("token_verified").default(false).notNull(),
-  trustedSenderId: varchar("trusted_sender_id").references(() => trustedEmailSenders.id),
+  trustedSenderId: varchar("trusted_sender_id").references(() => trustedEmailSenders.id, { onDelete: "set null" }),
   
   // AI Analysis results
   aiAnalysis: jsonb("ai_analysis").$type<{
