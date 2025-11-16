@@ -68,7 +68,7 @@ function parseObjectPath(path: string): { bucketName: string; objectPath: string
 }
 
 function extractTokenFromText(text: string): string | null {
-  const tokenMatch = text.match(/\[TOKEN:([A-Z0-9]{32})\]/i);
+  const tokenMatch = text.match(/\[TOKEN:([A-F0-9]{64})\]/i);
   return tokenMatch ? tokenMatch[1] : null;
 }
 
@@ -181,7 +181,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     });
 
     let emailContent = text || html.replace(/<[^>]*>/g, '');
-    emailContent = emailContent.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim();
+    emailContent = emailContent.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
 
     // Detect language and normalize to ensure valid code
     const detectedLang = await detectLanguage(emailContent);
@@ -289,7 +289,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     const articleData: any = {
       id: nanoid(),
-      title: editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim(),
+      title: editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim(),
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
       authorId: trustedSender.createdBy || "system",
