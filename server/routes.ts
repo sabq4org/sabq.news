@@ -6402,8 +6402,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/homepage", async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const offset = parseInt(req.query.offset as string) || 0;
+      // ✅ Validate and clamp limit/offset
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 50);
+      const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
 
       const [
         heroArticles,

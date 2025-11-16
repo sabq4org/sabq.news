@@ -29,9 +29,11 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(20);
+  const [error, setError] = useState<string | null>(null);
 
   const loadMore = async () => {
     setIsLoading(true);
+    setError(null); // مسح الخطأ السابق
     
     try {
       const response = await fetch(
@@ -40,14 +42,14 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
       );
       
       if (!response.ok) {
-        throw new Error('Failed to fetch more articles');
+        throw new Error('فشل تحميل المزيد من الأخبار');
       }
       
       const data = await response.json();
       const newArticles = data.forYou || [];
       
       if (newArticles.length === 0) {
-        setHasMore(false);
+        setHasMore(false); // فقط هنا نخفي الزر (لا توجد أخبار متبقية)
       } else {
         setArticles([...articles, ...newArticles]);
         setOffset(offset + 4);
@@ -58,7 +60,8 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
       }
     } catch (error) {
       console.error('Error loading more articles:', error);
-      setHasMore(false);
+      setError(error instanceof Error ? error.message : 'حدث خطأ أثناء التحميل');
+      // ✅ لا نضع hasMore = false هنا! نبقيه true لإمكانية retry
     } finally {
       setIsLoading(false);
     }
@@ -294,7 +297,18 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
 
       {/* زر "المزيد من الأخبار" */}
       {hasMore && (
-        <div className="flex justify-center pt-6">
+        <div className="flex flex-col items-center gap-3 pt-6">
+          {/* Error Message */}
+          {error && (
+            <div 
+              className="text-destructive text-sm text-center bg-destructive/10 px-4 py-2 rounded-md"
+              data-testid="error-load-more"
+            >
+              {error}
+            </div>
+          )}
+          
+          {/* Load More Button */}
           <Button
             onClick={loadMore}
             disabled={isLoading}
@@ -306,6 +320,11 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
                 جاري التحميل...
+              </>
+            ) : error ? (
+              <>
+                <ChevronDown className="h-5 w-5" />
+                إعادة المحاولة
               </>
             ) : (
               <>
