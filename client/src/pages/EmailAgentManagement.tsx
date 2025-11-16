@@ -27,7 +27,7 @@ interface SenderFormValues {
 
 export default function EmailAgentManagement() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingSender, setEditingSender] = useState<TrustedEmailSender | null>(null);
   const [selectedLog, setSelectedLog] = useState<EmailWebhookLog | null>(null);
@@ -196,6 +196,19 @@ export default function EmailAgentManagement() {
     setLogsStatusFilter(status);
     setLogsPage(1); // Reset to first page when filtering
   };
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-4 py-8" dir="rtl">
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">جاري التحميل...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Check permissions (requires admin.manage_settings)
   // For simplicity, we'll check if user has admin or system_admin role
