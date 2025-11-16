@@ -174,7 +174,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-        <Header user={user} />
+        <Header user={user || undefined} />
         <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-1">
           <Skeleton className="w-full h-[400px] md:h-[500px] rounded-lg" />
@@ -195,7 +195,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-        <Header user={user} />
+        <Header user={user || undefined} />
         <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
@@ -215,7 +215,7 @@ export default function Home() {
   if (!homepage) {
     return (
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-        <Header user={user} />
+        <Header user={user || undefined} />
         <NavigationBar />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
           <div className="text-center py-20">
@@ -231,7 +231,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-      <Header user={user} />
+      <Header user={user || undefined} />
       <NavigationBar />
 
       <main className="flex-1">
