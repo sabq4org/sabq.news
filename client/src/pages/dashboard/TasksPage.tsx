@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -225,11 +226,10 @@ function SubtaskRow({ parentTask, users, onDelete, onCreateSubtask, onView, onEd
         return (
           <TableRow key={subtask.id} data-testid={`row-subtask-${subtask.id}`} className="bg-muted/30">
             <TableCell>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={subtask.status === 'completed'}
-                onChange={(e) => onComplete(subtask.id, e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                onCheckedChange={(checked) => onComplete(subtask.id, checked as boolean)}
+                className="h-3.5 w-3.5 md:h-4 md:w-4"
                 data-testid={`checkbox-complete-${subtask.id}`}
               />
             </TableCell>
@@ -357,15 +357,14 @@ function TaskRowWithSubtasks({
         className={`group border rounded-lg p-3 ${getPriorityBackground(task.priority)}`}
       >
         <TableCell>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={task.status === 'completed'}
-            onChange={(e) => completeMutation.mutate({ 
+            onCheckedChange={(checked) => completeMutation.mutate({ 
               taskId: task.id, 
-              completed: e.target.checked 
+              completed: checked as boolean
             })}
             disabled={completeMutation.isPending}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            className="h-3.5 w-3.5 md:h-4 md:w-4"
             data-testid={`checkbox-complete-${task.id}`}
           />
         </TableCell>
@@ -567,11 +566,10 @@ function MobileTaskCard({ task, users, onView, onEdit, onDelete, onComplete }: M
           <Trash2 className="h-4 w-4" />
         </Button>
         <div className="flex-1"></div>
-        <input
-          type="checkbox"
+        <Checkbox
           checked={task.status === 'completed'}
-          onChange={(e) => onComplete(task.id, e.target.checked)}
-          className="h-5 w-5"
+          onCheckedChange={(checked) => onComplete(task.id, checked as boolean)}
+          className="h-5 w-5 md:h-4 md:w-4"
           data-testid={`checkbox-complete-${task.id}`}
         />
       </div>
