@@ -34,27 +34,35 @@ export default function EmailAgentManagement() {
   const [logsPage, setLogsPage] = useState(1);
   const [logsStatusFilter, setLogsStatusFilter] = useState<string>("all");
 
-  // Fetch statistics
-  const { data: stats, isLoading: statsLoading } = useQuery<EmailAgentStatsData>({
+  // Fetch statistics with error handling
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<EmailAgentStatsData>({
     queryKey: ['/api/email-agent/stats'],
+    retry: 1,
+    staleTime: 30000,
   });
 
-  // Fetch trusted senders
+  // Fetch trusted senders with error handling
   const {
     data: senders,
     isLoading: sendersLoading,
+    error: sendersError,
     refetch: refetchSenders,
   } = useQuery<TrustedEmailSender[]>({
     queryKey: ['/api/email-agent/senders'],
+    retry: 1,
+    staleTime: 30000,
   });
 
-  // Fetch webhook logs
+  // Fetch webhook logs with error handling
   const {
     data: logsData,
     isLoading: logsLoading,
+    error: logsError,
     refetch: refetchLogs,
   } = useQuery<{ logs: EmailWebhookLog[]; total: number }>({
     queryKey: ['/api/email-agent/logs', logsPage, logsStatusFilter],
+    retry: 1,
+    staleTime: 30000,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(logsPage),
@@ -66,7 +74,11 @@ export default function EmailAgentManagement() {
       const res = await fetch(`/api/email-agent/logs?${params}`, {
         credentials: 'include',
       });
-      if (!res.ok) throw new Error('فشل في تحميل سجلات البريد');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Logs API error:', res.status, errorText);
+        throw new Error(`فشل في تحميل سجلات البريد: ${res.status}`);
+      }
       return await res.json();
     },
   });
@@ -223,10 +235,19 @@ export default function EmailAgentManagement() {
             <p className="text-muted-foreground text-sm mt-2">
               يتطلب الوصول إلى هذه الصفحة صلاحيات إدارية
             </p>
+            <div className="mt-4 text-xs text-muted-foreground">
+              الدور الحالي: {user?.role || 'غير معروف'}
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
+  }
+
+  // Show API errors if any
+  const hasErrors = statsError || sendersError || logsError;
+  if (hasErrors) {
+    console.error('Email Agent Errors:', { statsError, sendersError, logsError });
   }
 
   return (
@@ -242,6 +263,20 @@ export default function EmailAgentManagement() {
           </div>
         </div>
 
+        {/* Error Display */}
+        {hasErrors && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">حدثت أخطاء في تحميل البيانات</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {statsError && <p>• خطأ في الإحصائيات: {statsError.message}</p>}
+              {sendersError && <p>• خطأ في المرسلين: {sendersError.message}</p>}
+              {logsError && <p>• خطأ في السجلات: {logsError.message}</p>}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Statistics Dashboard */}
         <Card>
           <CardHeader>
@@ -254,7 +289,13 @@ export default function EmailAgentManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <EmailAgentStats data={stats} isLoading={statsLoading} />
+            {statsError ? (
+              <div className="text-destructive text-sm p-4 bg-destructive/10 rounded">
+                فشل في تحميل الإحصائيات. الرجاء إعادة تحميل الصفحة.
+              </div>
+            ) : (
+              <EmailAgentStats data={stats} isLoading={statsLoading} />
+            )}
           </CardContent>
         </Card>
 
@@ -276,6 +317,7 @@ export default function EmailAgentManagement() {
               <Button
                 onClick={handleAddSender}
                 data-testid="button-add-sender"
+                disabled={!!sendersError}
               >
                 <Plus className="h-4 w-4 ml-2" />
                 إضافة مرسل
@@ -283,13 +325,19 @@ export default function EmailAgentManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            <TrustedSendersTable
-              senders={senders}
-              isLoading={sendersLoading}
-              onEdit={handleEditSender}
-              onDelete={handleDeleteSender}
-              onToggleStatus={handleToggleSenderStatus}
-            />
+            {sendersError ? (
+              <div className="text-destructive text-sm p-4 bg-destructive/10 rounded">
+                فشل في تحميل المرسلين الموثوقين. الرجاء إعادة تحميل الصفحة.
+              </div>
+            ) : (
+              <TrustedSendersTable
+                senders={senders}
+                isLoading={sendersLoading}
+                onEdit={handleEditSender}
+                onDelete={handleDeleteSender}
+                onToggleStatus={handleToggleSenderStatus}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -307,16 +355,22 @@ export default function EmailAgentManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <WebhookLogsTable
-              logs={logsData?.logs}
-              isLoading={logsLoading}
-              totalCount={logsData?.total || 0}
-              currentPage={logsPage}
-              pageSize={50}
-              onPageChange={setLogsPage}
-              onStatusFilter={handleStatusFilter}
-              onRowClick={handleLogClick}
-            />
+            {logsError ? (
+              <div className="text-destructive text-sm p-4 bg-destructive/10 rounded">
+                فشل في تحميل سجلات البريد. الرجاء إعادة تحميل الصفحة.
+              </div>
+            ) : (
+              <WebhookLogsTable
+                logs={logsData?.logs}
+                isLoading={logsLoading}
+                totalCount={logsData?.total || 0}
+                currentPage={logsPage}
+                pageSize={50}
+                onPageChange={setLogsPage}
+                onStatusFilter={handleStatusFilter}
+                onRowClick={handleLogClick}
+              />
+            )}
           </CardContent>
         </Card>
 
