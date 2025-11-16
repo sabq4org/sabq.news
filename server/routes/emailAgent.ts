@@ -10,7 +10,8 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 25 * 1024 * 1024, // Increased to 25MB for larger email attachments
+    fileSize: 25 * 1024 * 1024, // 25MB for file attachments
+    fieldSize: 10 * 1024 * 1024, // 10MB for text/html email fields (SendGrid)
   },
 });
 
