@@ -5901,6 +5901,7 @@ export const emailWebhookLogs = pgTable("email_webhook_logs", {
   // Processing status
   status: text("status").default("received").notNull(), // received, processing, published, drafted, rejected, failed
   processingError: text("processing_error"),
+  rejectionReason: text("rejection_reason"), // Why email was rejected
   
   // Security verification
   senderVerified: boolean("sender_verified").default(false).notNull(),

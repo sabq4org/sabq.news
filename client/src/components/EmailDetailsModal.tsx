@@ -315,6 +315,28 @@ export function EmailDetailsModal({
               </div>
             </div>
 
+            {/* Rejection Reason */}
+            {log.status === "rejected" && log.rejectionReason && (
+              <div className="p-4 border border-red-500 rounded-lg bg-red-50 dark:bg-red-950">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-red-700 dark:text-red-300 font-medium mb-1">
+                      سبب الرفض
+                    </p>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      {log.rejectionReason === "sender_not_trusted" && "المرسل غير مسجل في قائمة المرسلين الموثوقين"}
+                      {log.rejectionReason === "sender_inactive" && "حساب المرسل معطّل أو غير نشط"}
+                      {log.rejectionReason === "invalid_token" && "رمز التوثيق (Token) غير صحيح أو مفقود"}
+                      {log.rejectionReason === "quality_too_low" && "جودة المحتوى أقل من الحد الأدنى (30/100) - لا يتوافق مع معايير صبق الصحفية"}
+                      {log.rejectionReason === "no_news_value" && "المحتوى ليس له قيمة إخبارية كافية"}
+                      {!["sender_not_trusted", "sender_inactive", "invalid_token", "quality_too_low", "no_news_value"].includes(log.rejectionReason) && log.rejectionReason}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Article Link */}
             {log.articleId && (
               <div className="p-4 border border-emerald-500 rounded-lg bg-emerald-50 dark:bg-emerald-950">

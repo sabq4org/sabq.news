@@ -105,6 +105,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
+        rejectionReason: "sender_not_trusted",
+        senderVerified: false,
+        tokenVerified: false,
       });
 
       const today = new Date();
@@ -124,6 +127,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
+        rejectionReason: "sender_inactive",
+        senderVerified: true,
+        tokenVerified: false,
         trustedSenderId: trustedSender.id,
       });
 
@@ -148,6 +154,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
+        rejectionReason: "invalid_token",
+        senderVerified: true,
+        tokenVerified: false,
         trustedSenderId: trustedSender.id,
       });
 
@@ -164,6 +173,12 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     }
 
     console.log("[Email Agent] Sender verified successfully");
+    
+    await storage.updateEmailWebhookLog(webhookLog.id, {
+      senderVerified: true,
+      tokenVerified: true,
+      trustedSenderId: trustedSender.id,
+    });
 
     let emailContent = text || html.replace(/<[^>]*>/g, '');
     emailContent = emailContent.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim();
@@ -192,7 +207,16 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
+        rejectionReason: "quality_too_low",
         trustedSenderId: trustedSender.id,
+        aiAnalysis: {
+          contentQuality: editorialResult.qualityScore,
+          languageDetected: editorialResult.language,
+          categoryPredicted: editorialResult.detectedCategory,
+          isNewsWorthy: editorialResult.hasNewsValue,
+          errors: editorialResult.issues,
+          warnings: editorialResult.suggestions,
+        },
       });
 
       const today = new Date();
@@ -215,7 +239,16 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
+        rejectionReason: "no_news_value",
         trustedSenderId: trustedSender.id,
+        aiAnalysis: {
+          contentQuality: editorialResult.qualityScore,
+          languageDetected: editorialResult.language,
+          categoryPredicted: editorialResult.detectedCategory,
+          isNewsWorthy: false,
+          errors: editorialResult.issues,
+          warnings: editorialResult.suggestions,
+        },
       });
 
       const today = new Date();
