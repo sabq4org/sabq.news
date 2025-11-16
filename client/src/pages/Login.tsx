@@ -36,8 +36,9 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
       const response = await apiRequest("/api/login", {
         method: "POST",
         body: JSON.stringify(data),
@@ -45,6 +46,7 @@ export default function Login() {
       
       // Check if 2FA is required
       if (response.requires2FA) {
+        setIsLoading(false);
         toast({
           title: "التحقق بخطوتين مطلوب",
           description: "يرجى استخدام صفحة تسجيل دخول الإدارة",
@@ -67,13 +69,13 @@ export default function Login() {
       const redirectPath = getDefaultRedirectPath(userData);
       window.location.href = redirectPath;
     } catch (error: any) {
+      setIsLoading(false);
+      console.error("[Login] Error:", error);
       toast({
         title: "فشل تسجيل الدخول",
         description: error.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

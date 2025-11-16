@@ -47,8 +47,9 @@ export default function Register() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
       await apiRequest("/api/register", {
         method: "POST",
         body: JSON.stringify({
@@ -67,13 +68,13 @@ export default function Register() {
       // Redirect to onboarding welcome page
       navigate("/onboarding/welcome");
     } catch (error: any) {
+      setIsLoading(false);
+      console.error("[Register] Error:", error);
       toast({
         title: "فشل إنشاء الحساب",
         description: error.message || "حدث خطأ ما. يرجى المحاولة مرة أخرى",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
