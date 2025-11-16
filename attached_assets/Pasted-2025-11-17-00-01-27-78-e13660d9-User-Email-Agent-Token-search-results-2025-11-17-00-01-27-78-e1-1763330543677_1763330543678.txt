@@ -1,0 +1,140 @@
+2025-11-17 00:01:27.78
+e13660d9
+User
+[Email Agent] Token search results: {
+2025-11-17 00:01:27.78
+e13660d9
+User
+providedToken: 'null',
+2025-11-17 00:01:30.93
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.02
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.32
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.33
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.35
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.35
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.76
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.76
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.77
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:31.78
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.79
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.79
+e13660d9
+User
+sessionID: 'tFKEBHNb_IUcAX5R_DAjUpe9YJ1PfRZU'
+2025-11-17 00:01:31.79
+e13660d9
+User
+isAuthenticated: true,
+2025-11-17 00:01:31.79
+e13660d9
+User
+hasUser: true,
+2025-11-17 00:01:31.79
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:31.79
+e13660d9
+User
+}
+2025-11-17 00:01:31.79
+e13660d9
+User
+🔍 /api/auth/user check: {
+2025-11-17 00:01:31.79
+e13660d9
+User
+userId: 'admin-sabq',
+2025-11-17 00:01:31.87
+e13660d9
+User
+10:01:31 PM [express] GET /api/auth/user 304 in 123ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-17 00:01:32.15
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:32.15
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:32.15
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:32.15
+e13660d9
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 00:01:32.17
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:32.17
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:32.18
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:32.20
+e13660d9
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-17 00:01:32.23
+e13660d9
+User
+10:01:32 PM [express] GET /api/email-agent/senders 304 in 99ms :: [{"id":"f7b67fd4-4fe7-4eb5-b3e3-e0b…
+2025-11-17 00:01:32.25
+e13660d9
+User
+10:01:32 PM [express] GET /api/announcements/active 304 in 117ms :: []
+2025-11-17 00:01:32.25
+e13660d9
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 00:01:32.29
+e13660d9
+User
+10:01:32 PM [express] GET /api/email-agent/logs 200 in 165ms :: {"logs":[{"id":"32cd0ff3-fe7f-4740-a4…
+2025-11-17 00:01:32.37
+e13660d9
+User
+10:01:32 PM [express] GET /api/email-agent/stats 304 in 241ms :: {"emailsReceived":1,"emailsPublished…
+2025-11-17 00:01:32.37
+e13660d9
+User
+10:01:32 PM [express] GET /api/email-agent/stats 304 in 241ms :: {"emailsReceived":1,"emailsPublished…
