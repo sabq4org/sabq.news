@@ -69,8 +69,25 @@ function parseObjectPath(path: string): { bucketName: string; objectPath: string
 }
 
 function extractTokenFromText(text: string): string | null {
-  const tokenMatch = text.match(/\[TOKEN:([A-F0-9]{64})\]/i);
-  return tokenMatch ? tokenMatch[1] : null;
+  if (!text || typeof text !== 'string') return null;
+  
+  const cleanText = text.replace(/<[^>]*>/g, ' ').trim();
+  
+  const patterns = [
+    /\[TOKEN:\s*([A-F0-9]{64})\s*\]/i,
+    /TOKEN:\s*([A-F0-9]{64})/i,
+    /\b([A-F0-9]{64})\b/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = cleanText.match(pattern);
+    if (match && match[1]) {
+      console.log(`[Email Agent] Token extracted using pattern: ${pattern.source}`);
+      return match[1].toLowerCase();
+    }
+  }
+  
+  return null;
 }
 
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
@@ -159,10 +176,25 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     const tokenInSubject = extractTokenFromText(subject);
     const tokenInBody = extractTokenFromText(text);
-    const providedToken = tokenInSubject || tokenInBody;
+    const tokenInHtml = extractTokenFromText(html);
+    const providedToken = tokenInSubject || tokenInBody || tokenInHtml;
 
-    if (!providedToken || providedToken !== trustedSender.token) {
-      console.log("[Email Agent] Invalid token");
+    console.log("[Email Agent] Token search results:", {
+      subject: tokenInSubject ? "✓ Found" : "✗ Not found",
+      text: tokenInBody ? "✓ Found" : "✗ Not found",
+      html: tokenInHtml ? "✓ Found" : "✗ Not found",
+      providedToken: providedToken ? "✓ Present" : "✗ Missing",
+    });
+
+    const storedToken = trustedSender.token?.toLowerCase();
+    const isTokenValid = providedToken && storedToken && providedToken === storedToken;
+
+    if (!isTokenValid) {
+      console.log("[Email Agent] Token validation failed:", {
+        provided: providedToken ? `${providedToken.substring(0, 8)}...` : "null",
+        stored: storedToken ? `${storedToken.substring(0, 8)}...` : "null",
+        match: providedToken === storedToken,
+      });
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",

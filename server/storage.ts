@@ -11810,6 +11810,7 @@ export class DatabaseStorage implements IStorage {
       .insert(trustedEmailSenders)
       .values({
         ...sender,
+        token: sender.token?.toLowerCase(),
         createdBy,
       })
       .returning();
@@ -11843,12 +11844,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrustedSender(id: string, updates: Partial<InsertTrustedEmailSender>): Promise<TrustedEmailSender> {
+    const updateData: any = {
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    if (updates.token) {
+      updateData.token = updates.token.toLowerCase();
+    }
+    
     const [updated] = await db
       .update(trustedEmailSenders)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(trustedEmailSenders.id, id))
       .returning();
     
