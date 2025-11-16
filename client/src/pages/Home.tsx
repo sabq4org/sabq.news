@@ -17,6 +17,7 @@ import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
+import { QuickActionsSection } from "@/components/QuickActionsSection";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -275,6 +276,9 @@ export default function Home() {
                   testId="card-stat-active-users"
                 />
               </div>
+
+              {/* Quick Actions Section */}
+              <QuickActionsSection />
             </div>
           </div>
         )}
