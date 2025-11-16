@@ -237,6 +237,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       trustedSenderId: trustedSender.id,
     });
 
+    const systemUser = await storage.getOrCreateSystemUser();
+    console.log("[Email Agent] Using system user ID:", systemUser.id);
+
     let emailContent = text || html.replace(/<[^>]*>/g, '');
     emailContent = emailContent.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
 
@@ -353,7 +356,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       slug: articleSlug,
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
-      authorId: trustedSender.createdBy || "system",
+      authorId: systemUser.id,
       status: trustedSender.autoPublish ? "published" : "draft",
       language: editorialResult.language,
       featuredImage: featuredImage,

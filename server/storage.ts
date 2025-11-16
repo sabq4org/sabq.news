@@ -301,6 +301,7 @@ export interface IStorage {
     profileImageUrl?: string;
   }): Promise<User>;
   updateUser(id: string, userData: UpdateUser): Promise<User>;
+  getOrCreateSystemUser(): Promise<User>;
   
   // Admin user management operations
   getUsersWithStats(params: {
@@ -1444,6 +1445,41 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return user;
+  }
+
+  async getOrCreateSystemUser(): Promise<User> {
+    const SYSTEM_EMAIL = "system@sabq.sa";
+    const SYSTEM_ID = "email-agent-system";
+    
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, SYSTEM_EMAIL));
+    
+    if (existingUser) {
+      return existingUser;
+    }
+    
+    console.log("[Storage] Creating Email Agent System User...");
+    
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        id: SYSTEM_ID,
+        email: SYSTEM_EMAIL,
+        firstName: "Email Agent",
+        lastName: "System",
+        role: "reporter",
+        status: "active",
+        emailVerified: true,
+        isProfileComplete: true,
+        allowedLanguages: ["ar", "en", "ur"],
+        authProvider: "local",
+      })
+      .returning();
+    
+    console.log("[Storage] Email Agent System User created:", newUser.id);
+    return newUser;
   }
 
   // Admin user management operations
