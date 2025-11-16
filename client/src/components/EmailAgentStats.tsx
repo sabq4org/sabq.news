@@ -36,9 +36,17 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
     );
   }
 
-  if (!data) {
-    return null;
-  }
+  // Default values if data is not available
+  const stats: EmailAgentStatsData = data || {
+    emailsReceived: 0,
+    emailsPublished: 0,
+    emailsDrafted: 0,
+    emailsRejected: 0,
+    emailsFailed: 0,
+    arabicCount: 0,
+    englishCount: 0,
+    urduCount: 0,
+  };
 
   const getTrendIndicator = (value?: number) => {
     if (!value || value === 0) return null;
@@ -53,7 +61,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         <MobileOptimizedKpiCard
           label="رسائل مستلمة"
-          value={data.emailsReceived.toLocaleString('ar-SA')}
+          value={stats.emailsReceived.toLocaleString('ar-SA')}
           icon={Mail}
           iconColor="text-indigo-600 dark:text-indigo-400"
           iconBgColor="bg-indigo-50 dark:bg-indigo-950"
@@ -63,7 +71,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="منشورة"
-          value={data.emailsPublished.toLocaleString('ar-SA')}
+          value={stats.emailsPublished.toLocaleString('ar-SA')}
           icon={FileCheck}
           iconColor="text-emerald-600 dark:text-emerald-400"
           iconBgColor="bg-emerald-50 dark:bg-emerald-950"
@@ -73,7 +81,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="مسودات"
-          value={data.emailsDrafted.toLocaleString('ar-SA')}
+          value={stats.emailsDrafted.toLocaleString('ar-SA')}
           icon={FileEdit}
           iconColor="text-amber-600 dark:text-amber-400"
           iconBgColor="bg-amber-50 dark:bg-amber-950"
@@ -82,7 +90,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="مرفوضة"
-          value={data.emailsRejected.toLocaleString('ar-SA')}
+          value={stats.emailsRejected.toLocaleString('ar-SA')}
           icon={XCircle}
           iconColor="text-red-600 dark:text-red-400"
           iconBgColor="bg-red-50 dark:bg-red-950"
@@ -91,7 +99,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="فاشلة"
-          value={data.emailsFailed.toLocaleString('ar-SA')}
+          value={stats.emailsFailed.toLocaleString('ar-SA')}
           icon={AlertCircle}
           iconColor="text-slate-600 dark:text-slate-400"
           iconBgColor="bg-slate-50 dark:bg-slate-950"
@@ -103,7 +111,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         <MobileOptimizedKpiCard
           label="عربية"
-          value={data.arabicCount.toLocaleString('ar-SA')}
+          value={stats.arabicCount.toLocaleString('ar-SA')}
           icon={Mail}
           iconColor="text-primary"
           iconBgColor="bg-primary/10"
@@ -112,7 +120,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="إنجليزية"
-          value={data.englishCount.toLocaleString('ar-SA')}
+          value={stats.englishCount.toLocaleString('ar-SA')}
           icon={Mail}
           iconColor="text-primary"
           iconBgColor="bg-primary/10"
@@ -121,7 +129,7 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
 
         <MobileOptimizedKpiCard
           label="أردية"
-          value={data.urduCount.toLocaleString('ar-SA')}
+          value={stats.urduCount.toLocaleString('ar-SA')}
           icon={Mail}
           iconColor="text-primary"
           iconBgColor="bg-primary/10"
