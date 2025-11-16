@@ -586,7 +586,6 @@ export default function ArticlesManagement() {
                 placeholder="البحث عن مقال..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-11 md:h-9"
                 data-testid="input-search-articles"
               />
             </div>
@@ -594,7 +593,7 @@ export default function ArticlesManagement() {
             {/* Filters Row */}
             <div className="grid grid-cols-3 md:flex gap-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger data-testid="select-type-filter" className="h-11 md:h-9 md:w-[150px]">
+                <SelectTrigger data-testid="select-type-filter" className="md:w-[150px]">
                   <SelectValue placeholder="النوع" />
                 </SelectTrigger>
                 <SelectContent>
@@ -607,7 +606,7 @@ export default function ArticlesManagement() {
               </Select>
               
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger data-testid="select-category-filter" className="h-11 md:h-9 md:w-[150px]">
+                <SelectTrigger data-testid="select-category-filter" className="md:w-[150px]">
                   <SelectValue placeholder="التصنيف" />
                 </SelectTrigger>
                 <SelectContent>
@@ -627,7 +626,6 @@ export default function ArticlesManagement() {
                   setTypeFilter("all");
                   setCategoryFilter("all");
                 }}
-                className="h-11 md:h-9"
                 data-testid="button-clear-filters"
               >
                 مسح
@@ -800,7 +798,7 @@ export default function ArticlesManagement() {
           </div>
 
           {/* Articles Cards - Mobile View */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden space-y-2">
             {articlesLoading ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
                 جاري التحميل...
@@ -813,13 +811,13 @@ export default function ArticlesManagement() {
               articles.map((article) => (
                 <div 
                   key={article.id} 
-                  className="bg-card border rounded-lg p-4 space-y-3 hover-elevate"
+                  className="bg-card border rounded-lg p-3 space-y-2 hover-elevate"
                   data-testid={`card-article-${article.id}`}
                 >
                   {/* Header: Checkbox + Title + Status */}
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2">
                     <Checkbox 
-                      className="h-11 w-11 md:h-5 md:w-5 mt-0.5"
+                      className="mt-0.5"
                       checked={selectedArticles.has(article.id)}
                       onCheckedChange={() => toggleArticleSelection(article.id)}
                       data-testid={`checkbox-article-mobile-${article.id}`}
@@ -838,9 +836,9 @@ export default function ArticlesManagement() {
                   </div>
                   
                   {/* Meta Info: Author + Category */}
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
+                      <Avatar className="h-5 w-5">
                         <AvatarImage src={article.author?.profileImageUrl || ""} />
                         <AvatarFallback className="text-xs">
                           {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
@@ -876,30 +874,30 @@ export default function ArticlesManagement() {
                   </div>
                   
                   {/* Action Buttons - Always Visible */}
-                  <div className="flex gap-2 pt-3 border-t">
+                  <div className="flex gap-2 pt-2 border-t">
                     <Button
-                      size="default"
+                      size="sm"
                       variant="outline"
                       onClick={() => handleEdit(article)}
-                      className="flex-1 h-11"
+                      className="flex-1"
                       data-testid={`button-edit-mobile-${article.id}`}
                     >
-                      <Edit className="ml-2 h-4 w-4" />
+                      <Edit className="ml-2 h-3.5 w-3.5" />
                       تعديل
                     </Button>
                     
                     <Button
-                      size="default"
+                      size="sm"
                       variant={article.newsType === "breaking" ? "destructive" : "outline"}
                       onClick={() => toggleBreakingMutation.mutate({ 
                         id: article.id, 
                         currentState: article.newsType === "breaking"
                       })}
                       disabled={toggleBreakingMutation.isPending}
-                      className="flex-1 h-11"
+                      className="flex-1"
                       data-testid={`button-breaking-mobile-${article.id}`}
                     >
-                      <Bell className="ml-2 h-4 w-4" />
+                      <Bell className="ml-2 h-3.5 w-3.5" />
                       {article.newsType === "breaking" ? "إلغاء العاجل" : "عاجل"}
                     </Button>
                     
@@ -908,20 +906,18 @@ export default function ArticlesManagement() {
                       variant="ghost"
                       onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
                       disabled={featureMutation.isPending}
-                      className="h-11 w-11"
                       data-testid={`button-feature-mobile-${article.id}`}
                     >
-                      <Star className={`h-5 w-5 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                      <Star className={`h-4 w-4 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
                     </Button>
                     
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => setDeletingArticle(article)}
-                      className="h-11 w-11"
                       data-testid={`button-delete-mobile-${article.id}`}
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -953,7 +949,7 @@ export default function ArticlesManagement() {
                 variant="outline"
                 onClick={() => bulkArchiveMutation.mutate(Array.from(selectedArticles))}
                 disabled={bulkArchiveMutation.isPending}
-                className="flex-1 h-11"
+                className="flex-1"
                 data-testid="button-bulk-archive-mobile"
               >
                 <Archive className="ml-2 h-4 w-4" />
@@ -965,7 +961,7 @@ export default function ArticlesManagement() {
                 size="default"
                 variant="destructive"
                 onClick={() => setShowBulkDeleteDialog(true)}
-                className="flex-1 h-11"
+                className="flex-1"
                 data-testid="button-bulk-delete-mobile"
               >
                 <Trash className="ml-2 h-4 w-4" />
