@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import { storage } from "../storage";
-import { analyzeEmailContent, improveContent, detectLanguage } from "../ai/contentAnalyzer";
+import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
 
@@ -168,20 +168,27 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     let emailContent = text || html.replace(/<[^>]*>/g, '');
     emailContent = emailContent.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim();
 
+    // Detect language and normalize to ensure valid code
     const detectedLang = await detectLanguage(emailContent);
+    const senderLang = normalizeLanguageCode(trustedSender.language || "ar");
     const language = (trustedSender.language === "ar" || trustedSender.language === "en" || trustedSender.language === "ur") 
-      ? trustedSender.language 
+      ? senderLang
       : detectedLang;
     
-    console.log("[Email Agent] Analyzing content...");
-    const analysis = await analyzeEmailContent(emailContent);
+    console.log("[Email Agent] Using language:", language);
     
-    console.log("[Email Agent] Content quality score:", analysis.qualityScore);
-    console.log("[Email Agent] Detected language:", analysis.language);
-    console.log("[Email Agent] Detected category:", analysis.detectedCategory);
+    console.log("[Email Agent] Analyzing and editing with Sabq editorial style...");
+    const editorialResult = await analyzeAndEditWithSabqStyle(emailContent, language);
+    
+    console.log("[Email Agent] Quality score:", editorialResult.qualityScore);
+    console.log("[Email Agent] Language:", editorialResult.language);
+    console.log("[Email Agent] Category:", editorialResult.detectedCategory);
+    console.log("[Email Agent] Has news value:", editorialResult.hasNewsValue);
+    console.log("[Email Agent] Issues found:", editorialResult.issues.length);
 
-    if (analysis.qualityScore < 30) {
-      console.log("[Email Agent] Content quality too low");
+    if (editorialResult.qualityScore < 30) {
+      console.log("[Email Agent] Content quality too low - rejected");
+      console.log("[Email Agent] Rejection reasons:", editorialResult.issues);
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
@@ -196,13 +203,33 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
       return res.status(200).json({
         success: false,
-        message: "Content quality below threshold",
-        analysis,
+        message: "Content quality below threshold (Sabq standards)",
+        qualityScore: editorialResult.qualityScore,
+        issues: editorialResult.issues,
+        suggestions: editorialResult.suggestions,
       });
     }
 
-    console.log("[Email Agent] Improving content...");
-    const improvement = await improveContent(emailContent, language);
+    if (!editorialResult.hasNewsValue) {
+      console.log("[Email Agent] Content has no news value - rejected");
+      
+      await storage.updateEmailWebhookLog(webhookLog.id, {
+        status: "rejected",
+        trustedSenderId: trustedSender.id,
+      });
+
+      const today = new Date();
+      await storage.updateEmailAgentStats(today, {
+        emailsReceived: 1,
+        emailsRejected: 1,
+      });
+
+      return res.status(200).json({
+        success: false,
+        message: "Content has no news value",
+        issues: editorialResult.issues,
+      });
+    }
 
     const uploadedAttachments: string[] = [];
     
@@ -229,19 +256,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     const articleData: any = {
       id: nanoid(),
-      title: improvement.suggestedTitle || subject.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim(),
-      content: improvement.correctedText,
-      excerpt: improvement.suggestedExcerpt || "",
+      title: editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-Z0-9]{32}\]/gi, '').trim(),
+      content: editorialResult.optimized.content,
+      excerpt: editorialResult.optimized.lead || "",
       authorId: trustedSender.createdBy || "system",
       status: trustedSender.autoPublish ? "published" : "draft",
-      language: language,
+      language: editorialResult.language,
       featuredImage: featuredImage,
-      seoKeywords: improvement.seoKeywords,
+      seoKeywords: editorialResult.optimized.seoKeywords,
       createdAt: new Date(),
       publishedAt: trustedSender.autoPublish ? new Date() : null,
     };
 
-    if (improvement.suggestedCategory && trustedSender.defaultCategory) {
+    if (editorialResult.detectedCategory && trustedSender.defaultCategory) {
       articleData.categoryId = trustedSender.defaultCategory;
     }
 
@@ -265,13 +292,22 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: trustedSender.autoPublish ? "Article published successfully" : "Article saved as draft",
+      message: trustedSender.autoPublish 
+        ? "Article published successfully (edited with Sabq style)" 
+        : "Article saved as draft (edited with Sabq style)",
       article: {
         id: article?.id,
         title: articleData.title,
         status: articleData.status,
+        qualityScore: editorialResult.qualityScore,
+        language: editorialResult.language,
+        category: editorialResult.detectedCategory,
       },
-      analysis,
+      editorial: {
+        qualityScore: editorialResult.qualityScore,
+        issues: editorialResult.issues,
+        suggestions: editorialResult.suggestions,
+      },
     });
 
   } catch (error: any) {
