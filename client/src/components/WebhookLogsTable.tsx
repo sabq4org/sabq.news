@@ -1,0 +1,254 @@
+import { useState } from "react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
+import type { EmailWebhookLog } from "@shared/schema";
+
+interface WebhookLogsTableProps {
+  logs?: EmailWebhookLog[];
+  isLoading?: boolean;
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onStatusFilter?: (status: string) => void;
+  onRowClick?: (log: EmailWebhookLog) => void;
+}
+
+export function WebhookLogsTable({
+  logs,
+  isLoading,
+  totalCount = 0,
+  currentPage = 1,
+  pageSize = 50,
+  onPageChange,
+  onStatusFilter,
+  onRowClick,
+}: WebhookLogsTableProps) {
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    onStatusFilter?.(value);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "published":
+        return (
+          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+            منشور
+          </Badge>
+        );
+      case "drafted":
+        return (
+          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+            مسودة
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+            مرفوض
+          </Badge>
+        );
+      case "failed":
+        return (
+          <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            فشل
+          </Badge>
+        );
+      case "processing":
+        return (
+          <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+            جاري المعالجة
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getLanguageName = (lang?: string) => {
+    if (!lang) return "-";
+    switch (lang) {
+      case "ar":
+        return "عربية";
+      case "en":
+        return "إنجليزية";
+      case "ur":
+        return "أردية";
+      default:
+        return lang;
+    }
+  };
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">الحالة:</label>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-40" data-testid="select-status-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="published">منشور</SelectItem>
+              <SelectItem value="drafted">مسودة</SelectItem>
+              <SelectItem value="rejected">مرفوض</SelectItem>
+              <SelectItem value="failed">فشل</SelectItem>
+              <SelectItem value="processing">جاري المعالجة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Table */}
+      {!logs || logs.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg">
+          <p className="text-muted-foreground">لا توجد سجلات متاحة</p>
+        </div>
+      ) : (
+        <>
+          <div className="rounded-lg border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">التاريخ/الوقت</TableHead>
+                    <TableHead className="text-right">البريد</TableHead>
+                    <TableHead className="text-right">الاسم</TableHead>
+                    <TableHead className="text-right">الموضوع</TableHead>
+                    <TableHead className="text-right">الحالة</TableHead>
+                    <TableHead className="text-right">معرف المقال</TableHead>
+                    <TableHead className="text-right">جودة AI</TableHead>
+                    <TableHead className="text-right">اللغة</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => (
+                    <TableRow
+                      key={log.id}
+                      onClick={() => onRowClick?.(log)}
+                      className="cursor-pointer hover-elevate"
+                      data-testid={`row-log-${log.id}`}
+                    >
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(log.receivedAt), "dd MMM yyyy HH:mm", {
+                          locale: ar,
+                        })}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {log.fromEmail}
+                      </TableCell>
+                      <TableCell>{log.fromName || "-"}</TableCell>
+                      <TableCell className="max-w-[300px] truncate">
+                        {log.subject}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(log.status)}</TableCell>
+                      <TableCell>
+                        {log.articleId ? (
+                          <code className="text-xs px-1.5 py-0.5 bg-muted rounded">
+                            {log.articleId.slice(0, 8)}
+                          </code>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {log.aiAnalysis?.contentQuality ? (
+                          <Badge
+                            variant="outline"
+                            className={
+                              log.aiAnalysis.contentQuality >= 70
+                                ? "border-emerald-500 text-emerald-700"
+                                : log.aiAnalysis.contentQuality >= 50
+                                ? "border-amber-500 text-amber-700"
+                                : "border-red-500 text-red-700"
+                            }
+                          >
+                            {log.aiAnalysis.contentQuality}%
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {getLanguageName(log.aiAnalysis?.languageDetected)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                عرض {(currentPage - 1) * pageSize + 1} -{" "}
+                {Math.min(currentPage * pageSize, totalCount)} من {totalCount}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange?.(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  data-testid="button-prev-page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <span className="text-sm">
+                  صفحة {currentPage} من {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange?.(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

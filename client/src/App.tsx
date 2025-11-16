@@ -124,6 +124,7 @@ import EnglishArticleDetail from "@/pages/en/EnglishArticleDetail";
 import EnglishKeywordPage from "@/pages/en/EnglishKeywordPage";
 import EnglishArticleEditor from "@/pages/en/EnglishArticleEditor";
 import EnglishDashboard from "@/pages/en/EnglishDashboard";
+import EmailAgentManagement from "@/pages/EmailAgentManagement";
 import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
 import EnglishCategoriesPage from "@/pages/en/EnglishCategoriesPage";
 import EnglishCategoriesListPage from "@/pages/en/EnglishCategoriesListPage";
@@ -394,6 +395,7 @@ function Router() {
       <Route path="/my-keywords" component={MyKeywords} />
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
       <Route path="/dashboard/system-settings" component={SystemSettings} />
+      <Route path="/dashboard/email-agent" component={EmailAgentManagement} />
       
       <Route component={NotFound} />
     </Switch>

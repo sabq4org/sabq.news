@@ -46,6 +46,7 @@ import {
   BarChart,
   ListTodo,
   Globe,
+  Mail,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -533,6 +534,14 @@ export const navConfig: NavItem[] = [
         labelAr: "إعدادات النظام",
         path: "/dashboard/system-settings",
         icon: Settings,
+        roles: ["admin"],
+      },
+      {
+        id: "email_agent",
+        labelKey: "nav.email_agent",
+        labelAr: "نظام البريد الذكي",
+        path: "/dashboard/email-agent",
+        icon: Mail,
         roles: ["admin"],
       },
     ],
