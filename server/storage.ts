@@ -11219,8 +11219,34 @@ export class DatabaseStorage implements IStorage {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const tasksList = await db
-      .select()
+    // Fetch tasks with subtasksCount using SQL subquery for performance
+    const tasksListRaw = await db
+      .select({
+        id: tasks.id,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        priority: tasks.priority,
+        dueDate: tasks.dueDate,
+        completedAt: tasks.completedAt,
+        createdById: tasks.createdById,
+        assignedToId: tasks.assignedToId,
+        parentTaskId: tasks.parentTaskId,
+        department: tasks.department,
+        category: tasks.category,
+        tags: tasks.tags,
+        aiSuggestions: tasks.aiSuggestions,
+        estimatedDuration: tasks.estimatedDuration,
+        actualDuration: tasks.actualDuration,
+        progress: tasks.progress,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        subtasksCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM ${tasks} subtask 
+          WHERE subtask.parent_task_id = ${tasks.id}
+        )`.as('subtasks_count'),
+      })
       .from(tasks)
       .where(whereClause)
       .orderBy(desc(tasks.createdAt))
@@ -11233,7 +11259,7 @@ export class DatabaseStorage implements IStorage {
       .where(whereClause);
 
     return {
-      tasks: tasksList,
+      tasks: tasksListRaw as Task[],
       total: countResult?.count || 0,
     };
   }

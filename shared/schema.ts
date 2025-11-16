@@ -5829,7 +5829,9 @@ export const insertTaskAttachmentSchema = createInsertSchema(taskAttachments).om
 });
 
 // Task select types
-export type Task = typeof tasks.$inferSelect;
+export type Task = typeof tasks.$inferSelect & {
+  subtasksCount?: number;
+};
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Subtask = typeof subtasks.$inferSelect;
 export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;

@@ -338,15 +338,7 @@ function TaskRowWithSubtasks({
   setDeleteId,
   handleCreateSubtask,
 }: TaskRowWithSubtasksProps) {
-  const { data: subtasksCount } = useQuery({
-    queryKey: ['/api/tasks/count', task.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/tasks?parentTaskId=${task.id}`, { credentials: 'include' });
-      if (!res.ok) return 0;
-      const data = await res.json();
-      return data.tasks?.length || 0;
-    },
-  });
+  const subtasksCount = task.subtasksCount || 0;
 
   const getUserName = (userId: string | null) => {
     if (!userId) return 'غير مسند';
@@ -355,7 +347,7 @@ function TaskRowWithSubtasks({
     return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
   };
 
-  const hasSubtasks = (subtasksCount ?? 0) > 0;
+  const hasSubtasks = subtasksCount > 0;
 
   return (
     <>
@@ -533,11 +525,16 @@ function MobileTaskCard({ task, users, onView, onEdit, onDelete, onComplete }: M
         </Badge>
       </div>
 
-      {/* Meta Info: Status + Due Date + Assignee */}
+      {/* Meta Info: Status + Due Date + Assignee + Subtasks Count */}
       <div className="flex flex-wrap gap-2 mb-3 text-sm">
         <Badge variant={getStatusVariant(task.status)} data-testid={`badge-status-${task.id}`}>
           {statusLabels[task.status]}
         </Badge>
+        {task.subtasksCount && task.subtasksCount > 0 && (
+          <Badge variant="secondary" className="text-xs" data-testid={`badge-subtasks-${task.id}`}>
+            {task.subtasksCount} مهام فرعية
+          </Badge>
+        )}
         {task.dueDate && (
           <span className="text-muted-foreground" data-testid={`text-due-date-${task.id}`}>
             {format(new Date(task.dueDate), 'PPP', { locale: ar })}
