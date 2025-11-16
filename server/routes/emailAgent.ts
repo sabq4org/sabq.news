@@ -105,20 +105,36 @@ function generateSlug(text: string): string {
 
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
   try {
+    console.log("[Email Agent] ============ WEBHOOK START ============");
     console.log("[Email Agent] Received webhook from SendGrid");
     console.log("[Email Agent] Raw req.body keys:", Object.keys(req.body));
-    console.log("[Email Agent] Full req.body:", JSON.stringify(req.body, null, 2));
     
-    const from = req.body.from || "";
-    const to = req.body.to || "";
+    // Log each field individually for debugging
+    for (const [key, value] of Object.entries(req.body)) {
+      if (typeof value === 'string') {
+        console.log(`[Email Agent] req.body.${key} (length: ${value.length}): ${value.substring(0, 100)}...`);
+      } else {
+        console.log(`[Email Agent] req.body.${key}:`, value);
+      }
+    }
+    
+    // Try different field names SendGrid might use
+    const from = req.body.from || req.body.sender || "";
+    const to = req.body.to || req.body.recipient || "";
     const subject = req.body.subject || "";
-    const text = req.body.text || "";
-    const html = req.body.html || "";
+    
+    // SendGrid might send text as 'text', 'plain', or 'body'
+    const text = req.body.text || req.body.plain || req.body.body || "";
+    
+    // SendGrid might send html as 'html' or 'html_body'  
+    const html = req.body.html || req.body.html_body || "";
+    
     const attachments = (req.files as Express.Multer.File[]) || [];
 
     console.log("[Email Agent] Extracted values:");
     console.log("[Email Agent] - From:", from);
     console.log("[Email Agent] - Subject:", subject);
+    console.log("[Email Agent] - Text:", text ? `${text.substring(0, 100)}...` : "(empty)");
     console.log("[Email Agent] - Text length:", text?.length || 0);
     console.log("[Email Agent] - HTML length:", html?.length || 0);
     console.log("[Email Agent] - Attachments:", attachments.length);
