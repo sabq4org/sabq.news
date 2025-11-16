@@ -244,7 +244,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -257,6 +257,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 3000,
+      temperature: 0.7,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");

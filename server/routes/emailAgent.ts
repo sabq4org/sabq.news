@@ -90,6 +90,19 @@ function extractTokenFromText(text: string): string | null {
   return null;
 }
 
+function generateSlug(text: string): string {
+  const baseSlug = text
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^\u0600-\u06FFa-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  
+  // Add timestamp to ensure uniqueness
+  return `${baseSlug}-${Date.now()}`;
+}
+
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
   try {
     console.log("[Email Agent] Received webhook from SendGrid");
@@ -331,9 +344,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       /\.(jpg|jpeg|png|gif|webp)$/i.test(path)
     ) || null;
 
+    const articleTitle = editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
+    const articleSlug = generateSlug(articleTitle);
+
     const articleData: any = {
       id: nanoid(),
-      title: editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim(),
+      title: articleTitle,
+      slug: articleSlug,
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
       authorId: trustedSender.createdBy || "system",
@@ -350,7 +367,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     }
 
     let article;
-    article = await storage.createArticle(articleData);
+    
+    // Use the correct table based on language
+    if (editorialResult.language === "en") {
+      // For English articles, use the articles table with language set to "en"
+      // Note: The system currently stores all articles in the main articles table
+      article = await storage.createArticle(articleData);
+    } else if (editorialResult.language === "ur") {
+      // For Urdu articles, use createUrArticle method
+      article = await storage.createUrArticle(articleData);
+    } else {
+      // For Arabic (default) and any other language, use the main articles table
+      article = await storage.createArticle(articleData);
+    }
 
     console.log("[Email Agent] Article created:", article?.id);
     console.log("[Email Agent] Status:", articleData.status);
@@ -469,8 +498,19 @@ router.get("/senders/:id", async (req: Request, res: Response) => {
 router.post("/senders", async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id;
+    
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      const existingSenders = await storage.getTrustedSenders();
+      if (existingSenders.length > 0) {
+        return res.status(401).json({ 
+          message: "Unauthorized - Authentication required to add additional senders" 
+        });
+      }
+      
+      console.log("[Email Agent] Bootstrap mode: Creating first trusted sender without authentication");
+      const sender = await storage.createTrustedSender(req.body, null as any);
+      console.log("[Email Agent] First trusted sender created successfully:", sender.email);
+      return res.status(201).json(sender);
     }
 
     const sender = await storage.createTrustedSender(req.body, userId);
