@@ -181,35 +181,39 @@ export function TrustedSendersTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs font-mono px-2 py-1 bg-muted rounded max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {visibleTokens.has(sender.id)
-                          ? sender.token
-                          : "•".repeat(Math.min(sender.token.length, 32))}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => toggleTokenVisibility(sender.id)}
-                        data-testid={`button-toggle-token-${sender.id}`}
-                      >
-                        {visibleTokens.has(sender.id) ? (
-                          <EyeOff className="h-3 w-3" />
-                        ) : (
-                          <Eye className="h-3 w-3" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => copyToken(sender.token)}
-                        data-testid={`button-copy-token-${sender.id}`}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    {sender.token ? (
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs font-mono px-2 py-1 bg-muted rounded max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {visibleTokens.has(sender.id)
+                            ? sender.token
+                            : "•".repeat(Math.min(sender.token.length, 32))}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => toggleTokenVisibility(sender.id)}
+                          data-testid={`button-toggle-token-${sender.id}`}
+                        >
+                          {visibleTokens.has(sender.id) ? (
+                            <EyeOff className="h-3 w-3" />
+                          ) : (
+                            <Eye className="h-3 w-3" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => copyToken(sender.token)}
+                          data-testid={`button-copy-token-${sender.id}`}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {format(new Date(sender.createdAt), "dd MMM yyyy", {

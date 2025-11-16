@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { EmailAgentStats, type EmailAgentStatsData } from "@/components/EmailAgentStats";
 import { TrustedSendersTable } from "@/components/TrustedSendersTable";
 import { AddSenderDialog } from "@/components/AddSenderDialog";
@@ -39,6 +40,7 @@ export default function EmailAgentManagement() {
     queryKey: ['/api/email-agent/stats'],
     retry: 1,
     staleTime: 30000,
+    enabled: !!user && (user.role === 'admin' || user.role === 'system_admin'),
   });
 
   // Fetch trusted senders with error handling
@@ -51,6 +53,7 @@ export default function EmailAgentManagement() {
     queryKey: ['/api/email-agent/senders'],
     retry: 1,
     staleTime: 30000,
+    enabled: !!user && (user.role === 'admin' || user.role === 'system_admin'),
   });
 
   // Fetch webhook logs with error handling
@@ -63,6 +66,7 @@ export default function EmailAgentManagement() {
     queryKey: ['/api/email-agent/logs', logsPage, logsStatusFilter],
     retry: 1,
     staleTime: 30000,
+    enabled: !!user && (user.role === 'admin' || user.role === 'system_admin'),
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(logsPage),
@@ -252,7 +256,8 @@ export default function EmailAgentManagement() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" dir="rtl">
+      <ErrorBoundary>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -390,7 +395,8 @@ export default function EmailAgentManagement() {
           onOpenChange={(open) => !open && setSelectedLog(null)}
           log={selectedLog}
         />
-      </div>
+        </div>
+      </ErrorBoundary>
     </DashboardLayout>
   );
 }
