@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, ilike } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, isNotNull, ilike, count } from "drizzle-orm";
 import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
@@ -11956,25 +11956,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmailLanguageCounts(): Promise<{ ar: number; en: number; ur: number }> {
-    // Count articles created via email agent (where emailSourceId is not null)
-    // grouped by language
-    const results = await db
-      .select({
-        language: articles.language,
-        count: sql<number>`count(*)`,
-      })
+    // Count articles created via email agent (articles that exist in emailWebhookLogs)
+    // The database has separate tables for each language: articles (ar), enArticles (en), urArticles (ur)
+    // Using three separate queries, one for each language table
+    const arResults = await db
+      .select({ id: articles.id })
       .from(articles)
-      .where(isNotNull(articles.emailSourceId))
-      .groupBy(articles.language);
+      .innerJoin(emailWebhookLogs, eq(emailWebhookLogs.articleId, articles.id));
     
-    const counts = { ar: 0, en: 0, ur: 0 };
+    const enResults = await db
+      .select({ id: enArticles.id })
+      .from(enArticles)
+      .innerJoin(emailWebhookLogs, eq(emailWebhookLogs.articleId, enArticles.id));
     
-    for (const row of results) {
-      const lang = row.language as 'ar' | 'en' | 'ur';
-      counts[lang] = Number(row.count);
-    }
+    const urResults = await db
+      .select({ id: urArticles.id })
+      .from(urArticles)
+      .innerJoin(emailWebhookLogs, eq(emailWebhookLogs.articleId, urArticles.id));
     
-    return counts;
+    return {
+      ar: arResults.length,
+      en: enResults.length,
+      ur: urResults.length,
+    };
   }
 }
 
