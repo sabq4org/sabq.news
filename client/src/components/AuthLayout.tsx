@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="relative min-h-screen bg-background" dir="rtl">
       <div className="flex flex-col lg:flex-row min-h-screen">
         {/* Right Side - Form Content */}
-        <div className="flex flex-col w-full lg:w-1/2 overflow-y-auto">
+        <div className="flex flex-col w-full lg:w-1/2 overflow-y-auto px-4 sm:px-6 md:px-8">
           {children}
         </div>
         
@@ -15,11 +15,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <img 
               src={sabqLogo} 
               alt="سبق" 
-              className="w-64 mx-auto brightness-0 invert"
+              className="w-48 lg:w-56 xl:w-64 mx-auto brightness-0 invert"
               style={{ filter: 'brightness(0) invert(1)' }}
+              loading="lazy"
             />
-            <h2 className="text-2xl font-semibold">حيث تلتقي الثقة بالمصداقية</h2>
-            <p className="text-lg opacity-90">صحافة ذكية. مستقبل مشرق.</p>
+            <h2 className="text-xl lg:text-2xl font-semibold">حيث تلتقي الثقة بالمصداقية</h2>
+            <p className="text-base lg:text-lg opacity-90">صحافة ذكية. مستقبل مشرق.</p>
           </div>
         </div>
       </div>
