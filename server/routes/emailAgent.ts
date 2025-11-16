@@ -299,6 +299,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     const systemUser = await storage.getOrCreateSystemUser();
     console.log("[Email Agent] Using system user ID:", systemUser.id);
+    
+    // 👤 Create or get reporter user for the trusted sender
+    console.log("[Email Agent] 👤 Creating/getting reporter user for sender:", trustedSender.name);
+    const reporterUser = await storage.getOrCreateReporterUser(
+      trustedSender.email,
+      trustedSender.name
+    );
+    console.log("[Email Agent] ✅ Reporter user ready:", reporterUser.id, `-`, reporterUser.firstName, reporterUser.lastName);
 
     // Extract content from text or HTML
     let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
@@ -441,24 +449,89 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const articleTitle = editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
     const articleSlug = generateSlug(articleTitle);
 
+    // 🎯 Smart Category Matching System
+    console.log("[Email Agent] 🎯 Starting smart category matching...");
+    console.log("[Email Agent] AI detected category:", editorialResult.detectedCategory);
+    
+    // Fetch all active categories from database
+    const allCategories = await storage.getAllCategories();
+    const activeCategories = allCategories.filter(c => c.status === 'active');
+    
+    console.log("[Email Agent] Available categories:", activeCategories.length);
+    
+    // Smart category matching function
+    const findMatchingCategory = (detectedName: string) => {
+      if (!detectedName) return null;
+      
+      // Exact match (case-insensitive)
+      let match = activeCategories.find(cat => 
+        cat.nameAr === detectedName ||
+        cat.nameEn.toLowerCase() === detectedName.toLowerCase()
+      );
+      
+      if (match) {
+        console.log("[Email Agent] ✅ Exact category match found:", match.nameAr, `(ID: ${match.id})`);
+        return match;
+      }
+      
+      // Partial match (fuzzy search)
+      match = activeCategories.find(cat => 
+        cat.nameAr.includes(detectedName) ||
+        cat.nameEn.toLowerCase().includes(detectedName.toLowerCase()) ||
+        detectedName.includes(cat.nameAr) ||
+        detectedName.toLowerCase().includes(cat.nameEn.toLowerCase())
+      );
+      
+      if (match) {
+        console.log("[Email Agent] ⚡ Partial category match found:", match.nameAr, `(ID: ${match.id})`);
+        return match;
+      }
+      
+      console.log("[Email Agent] ⚠️ No category match found for:", detectedName);
+      return null;
+    };
+    
+    const aiMatchedCategory = findMatchingCategory(editorialResult.detectedCategory);
+    
+    // Fallback chain: AI match → Trusted sender default → First active → First overall
+    let finalCategoryId = aiMatchedCategory?.id;
+    
+    if (!finalCategoryId && trustedSender.defaultCategory) {
+      console.log("[Email Agent] 🔄 Using trusted sender default category:", trustedSender.defaultCategory);
+      finalCategoryId = trustedSender.defaultCategory;
+    }
+    
+    if (!finalCategoryId && activeCategories.length > 0) {
+      console.log("[Email Agent] 🔄 Using first active category:", activeCategories[0].nameAr);
+      finalCategoryId = activeCategories[0].id;
+    }
+    
+    if (!finalCategoryId && allCategories.length > 0) {
+      console.log("[Email Agent] ⚠️ Using first available category (inactive):", allCategories[0].nameAr);
+      finalCategoryId = allCategories[0].id;
+    }
+    
+    if (!finalCategoryId) {
+      console.error("[Email Agent] ❌ CRITICAL: No categories available in database!");
+    } else {
+      console.log("[Email Agent] ✅ Final category ID selected:", finalCategoryId);
+    }
+
     const articleData: any = {
       id: nanoid(),
       title: articleTitle,
       slug: articleSlug,
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
-      authorId: systemUser.id,
+      authorId: reporterUser.id, // 👤 Article attributed to the reporter, not system!
       status: trustedSender.autoPublish ? "published" : "draft",
       language: editorialResult.language,
       featuredImage: featuredImage,
       seoKeywords: editorialResult.optimized.seoKeywords,
+      categoryId: finalCategoryId, // 🎯 Always has a valid category!
       createdAt: new Date(),
       publishedAt: trustedSender.autoPublish ? new Date() : null,
     };
-
-    if (editorialResult.detectedCategory && trustedSender.defaultCategory) {
-      articleData.categoryId = trustedSender.defaultCategory;
-    }
 
     let article;
     

@@ -302,6 +302,7 @@ export interface IStorage {
   }): Promise<User>;
   updateUser(id: string, userData: UpdateUser): Promise<User>;
   getOrCreateSystemUser(): Promise<User>;
+  getOrCreateReporterUser(email: string, name: string): Promise<User>;
   
   // Admin user management operations
   getUsersWithStats(params: {
@@ -1479,6 +1480,50 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     console.log("[Storage] Email Agent System User created:", newUser.id);
+    return newUser;
+  }
+
+  async getOrCreateReporterUser(email: string, name: string): Promise<User> {
+    console.log("[Storage] 👤 Getting or creating reporter user:", email);
+    
+    // Try to find existing user by email
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (existingUser) {
+      console.log("[Storage] ✅ Reporter user already exists:", existingUser.id);
+      return existingUser;
+    }
+    
+    console.log("[Storage] 📝 Creating new reporter user:", email);
+    
+    // Parse name into first and last name (with safe fallback)
+    const safeName = (name || "Reporter").trim() || "Reporter";
+    const nameParts = safeName.split(/\s+/);
+    const firstName = nameParts[0] || "Reporter";
+    const lastName = nameParts.slice(1).join(' ') || firstName;
+    
+    // Create new user as reporter
+    const userId = nanoid();
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        role: "reporter",
+        status: "active",
+        emailVerified: true,
+        isProfileComplete: true,
+        allowedLanguages: ["ar", "en", "ur"],
+        authProvider: "local",
+      })
+      .returning();
+    
+    console.log("[Storage] ✅ Reporter user created successfully:", newUser.id);
     return newUser;
   }
 
