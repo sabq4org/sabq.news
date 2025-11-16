@@ -113,7 +113,7 @@ function SortableRow({ article, children }: { article: Article; children: React.
       className="border-b border-border hover:bg-muted/30"
       data-testid={`row-article-${article.id}`}
     >
-      <td className="py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+      <td className="hidden md:table-cell py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
         <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-${article.id}`} />
       </td>
       {children}
@@ -144,9 +144,25 @@ export default function ArticlesManagement() {
   const [classificationResult, setClassificationResult] = useState<any>(null);
   const [showClassificationDialog, setShowClassificationDialog] = useState(false);
 
+  // State for mobile detection
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  // Mobile detection effect
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // DnD sensors
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -561,51 +577,64 @@ export default function ArticlesManagement() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Filters - Mobile Optimized */}
         <div className="bg-card rounded-lg border border-border p-3 md:p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <div>
-                <Input
-                  placeholder="بحث بالعنوان..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9 md:h-10 text-sm"
-                  data-testid="input-search"
-                />
-              </div>
-
-              <div>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger data-testid="select-type-filter" className="h-9 md:h-10 text-sm">
-                    <SelectValue placeholder="النوع" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">كل الأنواع</SelectItem>
-                    <SelectItem value="news">خبر</SelectItem>
-                    <SelectItem value="opinion">رأي</SelectItem>
-                    <SelectItem value="analysis">تحليل</SelectItem>
-                    <SelectItem value="column">عمود</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger data-testid="select-category-filter" className="h-9 md:h-10 text-sm">
-                    <SelectValue placeholder="التصنيف" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">كل التصنيفات</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.nameAr}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="flex flex-col gap-3">
+            {/* Search */}
+            <div>
+              <Input
+                placeholder="البحث عن مقال..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-11 md:h-9"
+                data-testid="input-search-articles"
+              />
+            </div>
+            
+            {/* Filters Row */}
+            <div className="grid grid-cols-3 md:flex gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger data-testid="select-type-filter" className="h-11 md:h-9 md:w-[150px]">
+                  <SelectValue placeholder="النوع" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الأنواع</SelectItem>
+                  <SelectItem value="news">خبر</SelectItem>
+                  <SelectItem value="opinion">رأي</SelectItem>
+                  <SelectItem value="analysis">تحليل</SelectItem>
+                  <SelectItem value="column">عمود</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger data-testid="select-category-filter" className="h-11 md:h-9 md:w-[150px]">
+                  <SelectValue placeholder="التصنيف" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل التصنيفات</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.nameAr}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setTypeFilter("all");
+                  setCategoryFilter("all");
+                }}
+                className="h-11 md:h-9"
+                data-testid="button-clear-filters"
+              >
+                مسح
+              </Button>
             </div>
           </div>
+        </div>
 
           {/* Bulk Actions Toolbar */}
           {selectedArticles.size > 0 && (
@@ -667,7 +696,7 @@ export default function ArticlesManagement() {
             ) : (
               <div className="overflow-x-auto">
                 <DndContext
-                  sensors={sensors}
+                  sensors={isMobile ? [] : sensors}
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
@@ -784,130 +813,115 @@ export default function ArticlesManagement() {
               articles.map((article) => (
                 <div 
                   key={article.id} 
-                  className="bg-card border rounded-lg p-3 space-y-3 hover-elevate"
+                  className="bg-card border rounded-lg p-4 space-y-3 hover-elevate"
                   data-testid={`card-article-${article.id}`}
                 >
-                  {/* Checkbox and Title */}
-                  <div className="flex items-start gap-2">
-                    <Checkbox
+                  {/* Header: Checkbox + Title + Status */}
+                  <div className="flex items-start gap-3">
+                    <Checkbox 
+                      className="h-11 w-11 md:h-5 md:w-5 mt-0.5"
                       checked={selectedArticles.has(article.id)}
                       onCheckedChange={() => toggleArticleSelection(article.id)}
                       data-testid={`checkbox-article-mobile-${article.id}`}
-                      className="mt-0.5"
                     />
-                    <div className="flex-1 flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-sm flex-1 break-words leading-snug">
-                        {article.title}
-                      </h3>
-                      {getStatusBadge(article.status)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-base flex-1 break-words leading-snug">
+                          {article.title}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {getStatusBadge(article.status)}
+                        {getTypeBadge(article.articleType || "news")}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Author and Category */}
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-5 w-5">
+                  
+                  {/* Meta Info: Author + Category */}
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
                         <AvatarImage src={article.author?.profileImageUrl || ""} />
                         <AvatarFallback className="text-xs">
                           {article.author?.firstName?.[0] || article.author?.email?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-muted-foreground">
-                        {article.author?.firstName || article.author?.email}
-                      </span>
+                      <span>{article.author?.firstName || article.author?.email}</span>
                     </div>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">
-                      {article.category?.nameAr || "-"}
-                    </span>
+                    <span>•</span>
+                    <span>{article.category?.nameAr || "-"}</span>
                   </div>
-
-                  {/* Article Type */}
-                  <div>
-                    {getTypeBadge(article.articleType || "news")}
-                  </div>
-
-                  {/* Badges and Views */}
-                  <div className="flex items-center justify-between">
+                  
+                  {/* Stats Row */}
+                  <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       {article.newsType === "breaking" && (
-                        <Badge variant="destructive" className="text-xs">عاجل</Badge>
+                        <Badge variant="destructive" className="text-xs">
+                          <Bell className="h-3 w-3 ml-1" />
+                          عاجل
+                        </Badge>
                       )}
                       {article.isFeatured && (
-                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-current" />
+                        <Badge variant="secondary" className="text-xs">
+                          <Star className="h-3 w-3 ml-1 fill-current" />
                           مميز
                         </Badge>
                       )}
                     </div>
                     <ViewsCount 
                       views={article.views}
-                      iconClassName="h-3.5 w-3.5"
-                      className="text-xs text-muted-foreground"
+                      iconClassName="h-4 w-4"
+                      className="text-sm text-muted-foreground"
                     />
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2 border-t">
+                  
+                  {/* Action Buttons - Always Visible */}
+                  <div className="flex gap-2 pt-3 border-t">
                     <Button
-                      size="sm"
+                      size="default"
                       variant="outline"
                       onClick={() => handleEdit(article)}
-                      className="flex-1"
+                      className="flex-1 h-11"
                       data-testid={`button-edit-mobile-${article.id}`}
                     >
-                      <Edit className="ml-1.5 h-3.5 w-3.5" />
+                      <Edit className="ml-2 h-4 w-4" />
                       تعديل
                     </Button>
                     
-                    {article.newsType !== "breaking" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => toggleBreakingMutation.mutate({ 
-                          id: article.id, 
-                          currentState: false 
-                        })}
-                        disabled={toggleBreakingMutation.isPending}
-                        className="flex-1"
-                        data-testid={`button-breaking-mobile-${article.id}`}
-                      >
-                        <Bell className="ml-1.5 h-3.5 w-3.5" />
-                        عاجل
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => toggleBreakingMutation.mutate({ 
-                          id: article.id, 
-                          currentState: true 
-                        })}
-                        disabled={toggleBreakingMutation.isPending}
-                        className="flex-1"
-                        data-testid={`button-unbreaking-mobile-${article.id}`}
-                      >
-                        إلغاء العاجل
-                      </Button>
-                    )}
-
                     <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
-                      disabled={featureMutation.isPending}
-                      data-testid={`button-feature-mobile-${article.id}`}
+                      size="default"
+                      variant={article.newsType === "breaking" ? "destructive" : "outline"}
+                      onClick={() => toggleBreakingMutation.mutate({ 
+                        id: article.id, 
+                        currentState: article.newsType === "breaking"
+                      })}
+                      disabled={toggleBreakingMutation.isPending}
+                      className="flex-1 h-11"
+                      data-testid={`button-breaking-mobile-${article.id}`}
                     >
-                      <Star className={`h-3.5 w-3.5 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                      <Bell className="ml-2 h-4 w-4" />
+                      {article.newsType === "breaking" ? "إلغاء العاجل" : "عاجل"}
                     </Button>
                     
                     <Button
-                      size="sm"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
+                      disabled={featureMutation.isPending}
+                      className="h-11 w-11"
+                      data-testid={`button-feature-mobile-${article.id}`}
+                    >
+                      <Star className={`h-5 w-5 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                    </Button>
+                    
+                    <Button
+                      size="icon"
                       variant="ghost"
                       onClick={() => setDeletingArticle(article)}
+                      className="h-11 w-11"
                       data-testid={`button-delete-mobile-${article.id}`}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
@@ -915,6 +929,52 @@ export default function ArticlesManagement() {
             )}
           </div>
         </div>
+
+      {/* Bulk Action Bar - Mobile Only */}
+      {selectedArticles.size > 0 && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg p-3 z-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">
+              {selectedArticles.size} مقال محدد
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedArticles(new Set())}
+              data-testid="button-clear-selection-mobile"
+            >
+              إلغاء التحديد
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            {activeStatus !== "archived" && (
+              <Button
+                size="default"
+                variant="outline"
+                onClick={() => bulkArchiveMutation.mutate(Array.from(selectedArticles))}
+                disabled={bulkArchiveMutation.isPending}
+                className="flex-1 h-11"
+                data-testid="button-bulk-archive-mobile"
+              >
+                <Archive className="ml-2 h-4 w-4" />
+                أرشفة ({selectedArticles.size})
+              </Button>
+            )}
+            {activeStatus === "archived" && (
+              <Button
+                size="default"
+                variant="destructive"
+                onClick={() => setShowBulkDeleteDialog(true)}
+                className="flex-1 h-11"
+                data-testid="button-bulk-delete-mobile"
+              >
+                <Trash className="ml-2 h-4 w-4" />
+                حذف ({selectedArticles.size})
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingArticle} onOpenChange={() => setDeletingArticle(null)}>
