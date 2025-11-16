@@ -25,6 +25,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { Play, Headphones, Newspaper, Eye, TrendingUp, MessageSquare } from "lucide-react";
 import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
+import { isStaff, type User } from "@/hooks/useAuth";
 
 function AudioBriefsSection() {
   const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
@@ -111,7 +112,7 @@ interface HomepageData {
 }
 
 export default function Home() {
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
+  const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
@@ -277,8 +278,8 @@ export default function Home() {
                 />
               </div>
 
-              {/* Quick Actions Section */}
-              <QuickActionsSection />
+              {/* Quick Actions Section - Staff Only */}
+              {isStaff(user) && <QuickActionsSection />}
             </div>
           </div>
         )}

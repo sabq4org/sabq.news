@@ -24,6 +24,15 @@ The platform implements professional, standard-sized UI components optimized for
 
 -   **TailAdmin Design Pattern**: Consistent use of MobileOptimizedKpiCard across all dashboard pages (ArticlesManagement, Home, ArticleDetail) with TailAdmin color scheme: emerald (published/success), indigo (scheduled/upcoming), amber (draft/in-progress), slate (archived/inactive).
 
+-   **Quick Actions System**: Staff-only rapid content creation interface featuring QuickActionCard component with responsive sizing and QuickActionsSection grid. Provides one-click access to create articles, tasks, deep analyses, internal ads, and smart blocks. Implements RBAC gating using `isStaff()` to restrict display to authorized personnel (super_admin, admin, editor, reporter, opinion_author, moderator, content_creator). Features include:
+    -   Mobile (default): Icon 48×48px, padding 16px
+    -   Tablet (sm:): Icon 56×56px, padding 20px
+    -   Desktop (md:+): Icon 64×64px, padding 24px
+    -   Grid layout: 1 col mobile → 2 cols tablet → 3 cols desktop → 5 cols XL
+    -   TailAdmin color coding: Emerald (articles), Indigo (tasks), Purple (analysis), Amber (ads), Cyan (blocks)
+    -   Full keyboard accessibility with Enter/Space handlers and focus-visible rings
+    -   Wouter navigation integration
+
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Authentication is managed by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) serves as the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) handles file storage, and Server-Sent Events (SSE) provide real-time features.
 
