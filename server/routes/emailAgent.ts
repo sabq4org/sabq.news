@@ -192,11 +192,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const tokenInHtml = extractTokenFromText(html);
     const providedToken = tokenInSubject || tokenInBody || tokenInHtml;
 
+    console.log("[Email Agent] Token extraction debug:", {
+      subjectLength: subject?.length || 0,
+      textLength: text?.length || 0,
+      htmlLength: html?.length || 0,
+      subjectPreview: subject?.substring(0, 100),
+      textPreview: text?.substring(0, 100),
+    });
+
     console.log("[Email Agent] Token search results:", {
-      subject: tokenInSubject ? "✓ Found" : "✗ Not found",
-      text: tokenInBody ? "✓ Found" : "✗ Not found",
-      html: tokenInHtml ? "✓ Found" : "✗ Not found",
-      providedToken: providedToken ? "✓ Present" : "✗ Missing",
+      subject: tokenInSubject ? `✓ Found: ${tokenInSubject.substring(0, 8)}...` : "✗ Not found",
+      text: tokenInBody ? `✓ Found: ${tokenInBody.substring(0, 8)}...` : "✗ Not found",
+      html: tokenInHtml ? `✓ Found: ${tokenInHtml.substring(0, 8)}...` : "✗ Not found",
+      providedToken: providedToken ? `✓ Present: ${providedToken.substring(0, 8)}...` : "✗ Missing",
     });
 
     const storedToken = trustedSender.token?.toLowerCase();
@@ -204,8 +212,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     if (!isTokenValid) {
       console.log("[Email Agent] Token validation failed:", {
-        provided: providedToken ? `${providedToken.substring(0, 8)}...` : "null",
-        stored: storedToken ? `${storedToken.substring(0, 8)}...` : "null",
+        providedToken: providedToken || "null",
+        storedToken: storedToken || "null",
+        providedLength: providedToken?.length || 0,
+        storedLength: storedToken?.length || 0,
         match: providedToken === storedToken,
       });
       
@@ -240,8 +250,39 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const systemUser = await storage.getOrCreateSystemUser();
     console.log("[Email Agent] Using system user ID:", systemUser.id);
 
-    let emailContent = text || html.replace(/<[^>]*>/g, '');
-    emailContent = emailContent.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
+    // Extract content from text or HTML
+    let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
+    
+    // Remove token from content (support all formats)
+    emailContent = emailContent
+      .replace(/\[TOKEN:\s*[A-F0-9]{64}\s*\]/gi, '')  // [TOKEN:xxx]
+      .replace(/TOKEN:\s*[A-F0-9]{64}/gi, '')          // TOKEN:xxx or TOKEN: xxx
+      .replace(/\b[A-F0-9]{64}\b/g, '')                // bare 64-hex
+      .trim();
+    
+    console.log("[Email Agent] Content length after token removal:", emailContent.length);
+    
+    // Check if content is empty
+    if (!emailContent || emailContent.length < 10) {
+      console.log("[Email Agent] No content found after token removal");
+      
+      await storage.updateEmailWebhookLog(webhookLog.id, {
+        status: "rejected",
+        rejectionReason: "no_content",
+        trustedSenderId: trustedSender.id,
+      });
+
+      const today = new Date();
+      await storage.updateEmailAgentStats(today, {
+        emailsReceived: 1,
+        emailsRejected: 1,
+      });
+
+      return res.status(200).json({
+        success: false,
+        message: "No content found in email",
+      });
+    }
 
     // Detect language and normalize to ensure valid code
     const detectedLang = await detectLanguage(emailContent);
