@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
+import { simpleParser } from "mailparser";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
@@ -109,32 +110,60 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] Received webhook from SendGrid");
     console.log("[Email Agent] Raw req.body keys:", Object.keys(req.body));
     
-    // Log each field individually for debugging
-    for (const [key, value] of Object.entries(req.body)) {
-      if (typeof value === 'string') {
-        console.log(`[Email Agent] req.body.${key} (length: ${value.length}): ${value.substring(0, 100)}...`);
-      } else {
-        console.log(`[Email Agent] req.body.${key}:`, value);
+    let from = "";
+    let to = "";
+    let subject = "";
+    let text = "";
+    let html = "";
+    
+    // Check if SendGrid sent raw email (Inbound Parse Raw mode)
+    if (req.body.email) {
+      console.log("[Email Agent] Detected RAW email format - parsing with mailparser");
+      console.log("[Email Agent] Raw email length:", req.body.email.length);
+      
+      try {
+        // Parse the raw email using mailparser
+        const parsed = await simpleParser(req.body.email);
+        
+        // Use SendGrid's parsed from/to if available, otherwise extract from parsed email
+        from = req.body.from || "";
+        to = req.body.to || "";
+        subject = parsed.subject || req.body.subject || "";
+        text = parsed.text || "";
+        html = typeof parsed.html === 'string' ? parsed.html : (parsed.html ? String(parsed.html) : "");
+        
+        console.log("[Email Agent] Parsed email successfully:");
+        console.log("[Email Agent] - From:", from);
+        console.log("[Email Agent] - To:", to);
+        console.log("[Email Agent] - Subject:", subject);
+        console.log("[Email Agent] - Text length:", text?.length || 0);
+        console.log("[Email Agent] - HTML length:", html?.length || 0);
+        
+        if (text) {
+          console.log("[Email Agent] - Text preview:", text.substring(0, 200));
+        }
+      } catch (parseError) {
+        console.error("[Email Agent] Error parsing raw email:", parseError);
+        // Fallback to direct fields
+        from = req.body.from || "";
+        to = req.body.to || "";
+        subject = req.body.subject || "";
       }
+    } else {
+      // SendGrid sent parsed fields (Inbound Parse Parsed mode)
+      console.log("[Email Agent] Using parsed fields from SendGrid");
+      from = req.body.from || req.body.sender || "";
+      to = req.body.to || req.body.recipient || "";
+      subject = req.body.subject || "";
+      text = req.body.text || req.body.plain || req.body.body || "";
+      html = req.body.html || req.body.html_body || "";
     }
-    
-    // Try different field names SendGrid might use
-    const from = req.body.from || req.body.sender || "";
-    const to = req.body.to || req.body.recipient || "";
-    const subject = req.body.subject || "";
-    
-    // SendGrid might send text as 'text', 'plain', or 'body'
-    const text = req.body.text || req.body.plain || req.body.body || "";
-    
-    // SendGrid might send html as 'html' or 'html_body'  
-    const html = req.body.html || req.body.html_body || "";
     
     const attachments = (req.files as Express.Multer.File[]) || [];
 
-    console.log("[Email Agent] Extracted values:");
+    console.log("[Email Agent] Final extracted values:");
     console.log("[Email Agent] - From:", from);
     console.log("[Email Agent] - Subject:", subject);
-    console.log("[Email Agent] - Text:", text ? `${text.substring(0, 100)}...` : "(empty)");
     console.log("[Email Agent] - Text length:", text?.length || 0);
     console.log("[Email Agent] - HTML length:", html?.length || 0);
     console.log("[Email Agent] - Attachments:", attachments.length);
