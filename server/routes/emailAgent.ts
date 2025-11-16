@@ -106,6 +106,8 @@ function generateSlug(text: string): string {
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
   try {
     console.log("[Email Agent] Received webhook from SendGrid");
+    console.log("[Email Agent] Raw req.body keys:", Object.keys(req.body));
+    console.log("[Email Agent] Full req.body:", JSON.stringify(req.body, null, 2));
     
     const from = req.body.from || "";
     const to = req.body.to || "";
@@ -114,9 +116,12 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const html = req.body.html || "";
     const attachments = (req.files as Express.Multer.File[]) || [];
 
-    console.log("[Email Agent] From:", from);
-    console.log("[Email Agent] Subject:", subject);
-    console.log("[Email Agent] Attachments:", attachments.length);
+    console.log("[Email Agent] Extracted values:");
+    console.log("[Email Agent] - From:", from);
+    console.log("[Email Agent] - Subject:", subject);
+    console.log("[Email Agent] - Text length:", text?.length || 0);
+    console.log("[Email Agent] - HTML length:", html?.length || 0);
+    console.log("[Email Agent] - Attachments:", attachments.length);
     
     // Enhanced attachment logging
     if (attachments.length > 0) {

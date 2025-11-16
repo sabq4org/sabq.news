@@ -1,0 +1,129 @@
+2025-11-16 23:41:16.15
+e1d1e584
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 23:41:16.15
+e1d1e584
+User
+🔍 /api/auth/user check: {
+2025-11-16 23:41:16.15
+e1d1e584
+User
+hasUser: true,
+2025-11-16 23:41:16.15
+e1d1e584
+User
+}
+2025-11-16 23:41:16.21
+e1d1e584
+User
+9:41:16 PM [express] GET /api/auth/user 304 in 109ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+
+2025-11-16 23:41:16.53
+e1d1e584
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 23:41:16.54
+e1d1e584
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 23:41:16.54
+e1d1e584
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 23:41:16.55
+e1d1e584
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 23:41:16.55
+e1d1e584
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 23:41:16.56
+e1d1e584
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 23:41:16.56
+e1d1e584
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 23:41:16.58
+e1d1e584
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 23:41:16.60
+e1d1e584
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 23:41:16.60
+e1d1e584
+User
+9:41:16 PM [express] GET /api/email-agent/senders 304 in 84ms :: [{"id":"f7b67fd4-4fe7-4eb5-b3e3-e0b…
+2025-11-16 23:41:16.62
+e1d1e584
+User
+9:41:16 PM [express] GET /api/announcements/active 304 in 111ms :: []
+2025-11-16 23:41:16.67
+e1d1e584
+User
+9:41:16 PM [express] GET /api/email-agent/stats 304 in 150ms :: {"emailsReceived":1,"emailsPublished…
+2025-11-16 23:41:16.69
+e1d1e584
+User
+9:41:16 PM [express] GET /api/email-agent/logs 200 in 152ms :: {"logs":[{"id":"cf32296f-5594-403b-90…
+2025-11-16 23:45:11.25
+e1d1e584
+User
+[Email Agent] Attachments: 0
+2025-11-16 23:45:11.25
+e1d1e584
+User
+[Email Agent] Received webhook from SendGrid
+2025-11-16 23:45:11.25
+e1d1e584
+User
+[Email Agent] Subject: أثبتت دراسةٌ دوليةٌ بارزةٌ أجراها المركز الطبي لجامعة لايبزيغ ا
+2025-11-16 23:45:11.25
+e1d1e584
+User
+[Email Agent] From: Ali Alhazmi <aalhazmi@sabq.org>
+2025-11-16 23:45:11.87
+e1d1e584
+User
+text: '✗ Not found',
+2025-11-16 23:45:11.87
+e1d1e584
+User
+storedLength: 64,
+2025-11-16 23:45:11.87
+e1d1e584
+User
+htmlLength: 0,
+2025-11-16 23:45:11.87
+e1d1e584
+User
+[Email Agent] Token search results: {
+2025-11-16 23:45:11.87
+e1d1e584
+User
+}
+2025-11-16 23:45:11.87
+e1d1e584
+User
+subjectPreview: 'أثبتت دراسةٌ دوليةٌ بارزةٌ أجراها المركز الطبي لجامعة لايبزيغ ا',
+2025-11-16 23:45:11.87
+e1d1e584
+User
+subject: '✗ Not found',
+2025-11-16 23:45:11.87
+e1d1e584
+User
+textLength: 0,
+2025-11-16 23:45:11.87
+e1d1e584
+User
+}
+2025-11-16 23:45:11.87
+e1d1e584
+User
+html: '✗ Not found',
