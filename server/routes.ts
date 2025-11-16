@@ -6,6 +6,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import adsRoutes from "./ads-routes";
 import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
+import emailAgentRoutes from './routes/emailAgent';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
@@ -26569,7 +26570,7 @@ Allow: /
   // GET /api/tasks/:id/activity - Get task activity log
   app.get("/api/tasks/:id/activity", taskLimiter, requireAuth, async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id} = req.params;
       
       const activity = await storage.getTaskActivity(id);
       
@@ -26577,6 +26578,173 @@ Allow: /
     } catch (error: any) {
       console.error('Error fetching activity:', error);
       res.status(500).json({ error: 'فشل في جلب سجل النشاط' });
+    }
+  });
+
+  // ============================================================
+  // EMAIL AGENT ROUTES
+  // ============================================================
+
+  // Mount the email agent webhook routes
+  app.use("/api/email-agent", emailAgentRoutes);
+
+  // GET /api/email-agent/senders - List trusted senders (admin only)
+  app.get("/api/email-agent/senders", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const senders = await storage.getTrustedSenders();
+      res.json(senders);
+    } catch (error: any) {
+      console.error('Error fetching trusted senders:', error);
+      res.status(500).json({ error: 'فشل في جلب المرسلين الموثوقين' });
+    }
+  });
+
+  // POST /api/email-agent/senders - Add trusted sender (admin only)
+  app.post("/api/email-agent/senders", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { email, name, language, autoPublish, authorId } = req.body;
+
+      if (!email || !name) {
+        return res.status(400).json({ error: 'البريد الإلكتروني والاسم مطلوبان' });
+      }
+
+      const existingSender = await storage.getTrustedSenderByEmail(email);
+      if (existingSender) {
+        return res.status(400).json({ error: 'البريد الإلكتروني مسجل بالفعل' });
+      }
+
+      const token = Array.from({ length: 32 }, () =>
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
+      ).join('');
+
+      const sender = await storage.createTrustedSender({
+        email,
+        name,
+        token,
+        status: 'active',
+        language: language || 'ar',
+        autoPublish: autoPublish !== false,
+      }, userId);
+
+      await logActivity({
+        userId,
+        action: 'email_sender_created',
+        entityType: 'trusted_email_sender',
+        entityId: sender.id,
+      });
+
+      res.status(201).json(sender);
+    } catch (error: any) {
+      console.error('Error creating trusted sender:', error);
+      res.status(500).json({ error: 'فشل في إضافة المرسل الموثوق' });
+    }
+  });
+
+  // PATCH /api/email-agent/senders/:id - Update sender (admin only)
+  app.patch("/api/email-agent/senders/:id", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const updates = req.body;
+
+      const sender = await storage.getTrustedSenderById(id);
+      if (!sender) {
+        return res.status(404).json({ error: 'المرسل غير موجود' });
+      }
+
+      const updated = await storage.updateTrustedSender(id, updates);
+
+      await logActivity({
+        userId,
+        action: 'email_sender_updated',
+        entityType: 'trusted_email_sender',
+        entityId: id,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error updating trusted sender:', error);
+      res.status(500).json({ error: 'فشل في تحديث المرسل الموثوق' });
+    }
+  });
+
+  // DELETE /api/email-agent/senders/:id - Delete sender (admin only)
+  app.delete("/api/email-agent/senders/:id", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+
+      const sender = await storage.getTrustedSenderById(id);
+      if (!sender) {
+        return res.status(404).json({ error: 'المرسل غير موجود' });
+      }
+
+      await storage.deleteTrustedSender(id);
+
+      await logActivity({
+        userId,
+        action: 'email_sender_deleted',
+        entityType: 'trusted_email_sender',
+        entityId: id,
+      });
+
+      res.json({ success: true, message: 'تم حذف المرسل الموثوق بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting trusted sender:', error);
+      res.status(500).json({ error: 'فشل في حذف المرسل الموثوق' });
+    }
+  });
+
+  // GET /api/email-agent/logs - List webhook logs (admin only)
+  app.get("/api/email-agent/logs", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { status, trustedSenderId, page = "1", limit = "50" } = req.query;
+
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const offset = (pageNum - 1) * limitNum;
+
+      const result = await storage.getEmailWebhookLogs({
+        status: status as string,
+        trustedSenderId: trustedSenderId as string,
+        limit: limitNum,
+        offset,
+      });
+
+      res.json({
+        logs: result.logs,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(result.total / limitNum),
+      });
+    } catch (error: any) {
+      console.error('Error fetching email webhook logs:', error);
+      res.status(500).json({ error: 'فشل في جلب سجلات البريد الإلكتروني' });
+    }
+  });
+
+  // GET /api/email-agent/stats - Get daily statistics (admin only)
+  app.get("/api/email-agent/stats", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { date } = req.query;
+      const targetDate = date ? new Date(date as string) : new Date();
+
+      const stats = await storage.getEmailAgentStats(targetDate);
+
+      res.json(stats || {
+        date: targetDate,
+        totalReceived: 0,
+        processed: 0,
+        published: 0,
+        drafts: 0,
+        rejected: 0,
+        failed: 0,
+      });
+    } catch (error: any) {
+      console.error('Error fetching email agent stats:', error);
+      res.status(500).json({ error: 'فشل في جلب إحصائيات البريد الإلكتروني' });
     }
   });
 

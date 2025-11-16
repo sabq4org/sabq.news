@@ -5842,6 +5842,176 @@ export type InsertTaskAttachment = z.infer<typeof insertTaskAttachmentSchema>;
 export type TaskActivityLogEntry = typeof taskActivityLog.$inferSelect;
 
 // ============================================
+// EMAIL AGENT SYSTEM
+// ============================================
+
+// Trusted senders for email-to-publish automation
+export const trustedEmailSenders = pgTable("trusted_email_senders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  token: text("token").notNull().unique(), // Secret token for additional verification
+  status: text("status").default("active").notNull(), // active, suspended, revoked
+  
+  // Auto-publish settings
+  autoPublish: boolean("auto_publish").default(true).notNull(), // true = auto-publish, false = save as draft
+  defaultCategory: varchar("default_category").references(() => categories.id),
+  
+  // Language support
+  language: text("language").default("ar").notNull(), // ar, en, ur
+  
+  // Security settings
+  requireTokenInSubject: boolean("require_token_in_subject").default(true).notNull(),
+  requireTokenInBody: boolean("require_token_in_body").default(false).notNull(),
+  ipWhitelist: text("ip_whitelist").array(), // Optional IP restrictions
+  
+  // Stats
+  totalEmailsReceived: integer("total_emails_received").default(0).notNull(),
+  totalArticlesPublished: integer("total_articles_published").default(0).notNull(),
+  totalArticlesDrafted: integer("total_articles_drafted").default(0).notNull(),
+  totalEmailsRejected: integer("total_emails_rejected").default(0).notNull(),
+  lastEmailAt: timestamp("last_email_at"),
+  
+  // Metadata
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Email webhook logs (all incoming emails)
+export const emailWebhookLogs = pgTable("email_webhook_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Email details
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name"),
+  subject: text("subject").notNull(),
+  bodyText: text("body_text"),
+  bodyHtml: text("body_html"),
+  
+  // Attachments info
+  attachmentsCount: integer("attachments_count").default(0).notNull(),
+  attachmentsData: jsonb("attachments_data").$type<Array<{
+    filename: string;
+    contentType: string;
+    size: number;
+    url?: string; // Uploaded to storage
+  }>>(),
+  
+  // Processing status
+  status: text("status").default("received").notNull(), // received, processing, published, drafted, rejected, failed
+  processingError: text("processing_error"),
+  
+  // Security verification
+  senderVerified: boolean("sender_verified").default(false).notNull(),
+  tokenVerified: boolean("token_verified").default(false).notNull(),
+  trustedSenderId: varchar("trusted_sender_id").references(() => trustedEmailSenders.id),
+  
+  // AI Analysis results
+  aiAnalysis: jsonb("ai_analysis").$type<{
+    contentQuality?: number; // 0-100
+    languageDetected?: string;
+    categoryPredicted?: string;
+    isNewsWorthy?: boolean;
+    suggestedTitle?: string;
+    suggestedSummary?: string;
+    errors?: string[];
+    warnings?: string[];
+  }>(),
+  
+  // Result
+  articleId: varchar("article_id").references(() => articles.id),
+  publishedAt: timestamp("published_at"),
+  
+  // Metadata
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+});
+
+// Email agent statistics and reports
+export const emailAgentStats = pgTable("email_agent_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(), // Daily stats
+  
+  // Counts
+  emailsReceived: integer("emails_received").default(0).notNull(),
+  emailsPublished: integer("emails_published").default(0).notNull(),
+  emailsDrafted: integer("emails_drafted").default(0).notNull(),
+  emailsRejected: integer("emails_rejected").default(0).notNull(),
+  emailsFailed: integer("emails_failed").default(0).notNull(),
+  
+  // Processing metrics
+  avgProcessingTime: integer("avg_processing_time"), // milliseconds
+  avgContentQuality: real("avg_content_quality"), // 0-100
+  
+  // By language
+  arabicCount: integer("arabic_count").default(0).notNull(),
+  englishCount: integer("english_count").default(0).notNull(),
+  urduCount: integer("urdu_count").default(0).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("email_agent_stats_date_idx").on(table.date),
+]);
+
+// Relations
+export const trustedEmailSendersRelations = relations(trustedEmailSenders, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [trustedEmailSenders.createdBy],
+    references: [users.id],
+  }),
+  webhookLogs: many(emailWebhookLogs),
+  category: one(categories, {
+    fields: [trustedEmailSenders.defaultCategory],
+    references: [categories.id],
+  }),
+}));
+
+export const emailWebhookLogsRelations = relations(emailWebhookLogs, ({ one }) => ({
+  trustedSender: one(trustedEmailSenders, {
+    fields: [emailWebhookLogs.trustedSenderId],
+    references: [trustedEmailSenders.id],
+  }),
+  article: one(articles, {
+    fields: [emailWebhookLogs.articleId],
+    references: [articles.id],
+  }),
+}));
+
+// Insert schemas
+export const insertTrustedEmailSenderSchema = createInsertSchema(trustedEmailSenders).omit({
+  id: true,
+  totalEmailsReceived: true,
+  totalArticlesPublished: true,
+  totalArticlesDrafted: true,
+  totalEmailsRejected: true,
+  lastEmailAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  email: z.string().email("البريد الإلكتروني غير صالح"),
+  name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
+  token: z.string().min(16, "الرمز السري يجب أن يكون 16 حرف على الأقل"),
+  language: z.enum(["ar", "en", "ur"]).default("ar"),
+  status: z.enum(["active", "suspended", "revoked"]).default("active"),
+});
+
+export const insertEmailWebhookLogSchema = createInsertSchema(emailWebhookLogs).omit({
+  id: true,
+  receivedAt: true,
+  processedAt: true,
+});
+
+// Select types
+export type TrustedEmailSender = typeof trustedEmailSenders.$inferSelect;
+export type InsertTrustedEmailSender = z.infer<typeof insertTrustedEmailSenderSchema>;
+export type EmailWebhookLog = typeof emailWebhookLogs.$inferSelect;
+export type InsertEmailWebhookLog = z.infer<typeof insertEmailWebhookLogSchema>;
+export type EmailAgentStats = typeof emailAgentStats.$inferSelect;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 

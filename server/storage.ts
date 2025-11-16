@@ -280,6 +280,14 @@ import {
   type TaskAttachment,
   type InsertTaskAttachment,
   type TaskActivityLogEntry,
+  trustedEmailSenders,
+  emailWebhookLogs,
+  emailAgentStats,
+  type TrustedEmailSender,
+  type InsertTrustedEmailSender,
+  type EmailWebhookLog,
+  type InsertEmailWebhookLog,
+  type EmailAgentStats,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1355,6 +1363,26 @@ export interface IStorage {
     completed: number;
     overdue: number;
   }>;
+  
+  // Email Agent Operations
+  createTrustedSender(sender: InsertTrustedEmailSender, createdBy: string): Promise<TrustedEmailSender>;
+  getTrustedSenders(): Promise<TrustedEmailSender[]>;
+  getTrustedSenderById(id: string): Promise<TrustedEmailSender | null>;
+  getTrustedSenderByEmail(email: string): Promise<TrustedEmailSender | null>;
+  updateTrustedSender(id: string, updates: Partial<InsertTrustedEmailSender>): Promise<TrustedEmailSender>;
+  deleteTrustedSender(id: string): Promise<void>;
+  
+  createEmailWebhookLog(log: InsertEmailWebhookLog): Promise<EmailWebhookLog>;
+  getEmailWebhookLogs(filters?: {
+    status?: string;
+    trustedSenderId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ logs: EmailWebhookLog[]; total: number }>;
+  updateEmailWebhookLog(id: string, updates: Partial<EmailWebhookLog>): Promise<EmailWebhookLog>;
+  
+  getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null>;
+  updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -11770,6 +11798,160 @@ export class DatabaseStorage implements IStorage {
       ...row.activity,
       user: row.user!,
     }));
+  }
+
+  // ============================================================
+  // EMAIL AGENT OPERATIONS
+  // ============================================================
+
+  async createTrustedSender(sender: InsertTrustedEmailSender, createdBy: string): Promise<TrustedEmailSender> {
+    const [newSender] = await db
+      .insert(trustedEmailSenders)
+      .values({
+        ...sender,
+        createdBy,
+      })
+      .returning();
+    
+    return newSender;
+  }
+
+  async getTrustedSenders(): Promise<TrustedEmailSender[]> {
+    return await db
+      .select()
+      .from(trustedEmailSenders)
+      .orderBy(desc(trustedEmailSenders.createdAt));
+  }
+
+  async getTrustedSenderById(id: string): Promise<TrustedEmailSender | null> {
+    const [sender] = await db
+      .select()
+      .from(trustedEmailSenders)
+      .where(eq(trustedEmailSenders.id, id));
+    
+    return sender || null;
+  }
+
+  async getTrustedSenderByEmail(email: string): Promise<TrustedEmailSender | null> {
+    const [sender] = await db
+      .select()
+      .from(trustedEmailSenders)
+      .where(eq(trustedEmailSenders.email, email));
+    
+    return sender || null;
+  }
+
+  async updateTrustedSender(id: string, updates: Partial<InsertTrustedEmailSender>): Promise<TrustedEmailSender> {
+    const [updated] = await db
+      .update(trustedEmailSenders)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(trustedEmailSenders.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async deleteTrustedSender(id: string): Promise<void> {
+    await db
+      .delete(trustedEmailSenders)
+      .where(eq(trustedEmailSenders.id, id));
+  }
+
+  async createEmailWebhookLog(log: InsertEmailWebhookLog): Promise<EmailWebhookLog> {
+    const [newLog] = await db
+      .insert(emailWebhookLogs)
+      .values(log)
+      .returning();
+    
+    return newLog;
+  }
+
+  async getEmailWebhookLogs(filters?: {
+    status?: string;
+    trustedSenderId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ logs: EmailWebhookLog[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(emailWebhookLogs.status, filters.status));
+    }
+    
+    if (filters?.trustedSenderId) {
+      conditions.push(eq(emailWebhookLogs.trustedSenderId, filters.trustedSenderId));
+    }
+    
+    const query = db
+      .select()
+      .from(emailWebhookLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(emailWebhookLogs.receivedAt));
+    
+    if (filters?.limit) {
+      query.limit(filters.limit);
+    }
+    
+    if (filters?.offset) {
+      query.offset(filters.offset);
+    }
+    
+    const logs = await query;
+    
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(emailWebhookLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    return { logs, total: Number(count) };
+  }
+
+  async updateEmailWebhookLog(id: string, updates: Partial<EmailWebhookLog>): Promise<EmailWebhookLog> {
+    const [updated] = await db
+      .update(emailWebhookLogs)
+      .set({
+        ...updates,
+        processedAt: updates.status && updates.status !== 'received' ? new Date() : undefined,
+      })
+      .where(eq(emailWebhookLogs.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null> {
+    const targetDate = date || new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const [stats] = await db
+      .select()
+      .from(emailAgentStats)
+      .where(eq(emailAgentStats.date, targetDate));
+    
+    return stats || null;
+  }
+
+  async updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats> {
+    date.setHours(0, 0, 0, 0);
+    
+    const [stats] = await db
+      .insert(emailAgentStats)
+      .values({
+        date,
+        ...updates,
+      })
+      .onConflictDoUpdate({
+        target: emailAgentStats.date,
+        set: {
+          ...updates,
+        },
+      })
+      .returning();
+    
+    return stats;
   }
 }
 
