@@ -3,10 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Task } from "@shared/schema";
-import { Clock, User, Calendar, Tag, FileText, Folder, Share2, CheckCircle2, Edit, Trash2, Check } from "lucide-react";
+import { Clock, User, Calendar, Tag, FileText, Folder, Share2, CheckCircle2, Edit, Trash2, Check, X, ChevronDown } from "lucide-react";
 
 interface TaskViewDialogProps {
   taskId: string;
@@ -48,47 +49,156 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl" dir="rtl" data-testid="dialog-task-view">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0">
+      <DialogContent className="max-w-2xl md:max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl" data-testid="dialog-task-view">
+        <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle data-testid="heading-dialog-title">تفاصيل المهمة</DialogTitle>
-          {task && (
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" data-testid="button-edit-task">
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant={task.status === 'completed' ? 'default' : 'outline'}
-                data-testid="button-complete-task"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="destructive" data-testid="button-delete-task">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="ghost" data-testid="button-share-task">
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="h-8 w-8"
+            data-testid="button-close-dialog"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
+
+        {task && (
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2">
+            <Button size="sm" variant="outline" className="flex-1 sm:flex-none" data-testid="button-edit-task">
+              <Edit className="h-4 w-4 sm:ml-2" />
+              <span className="hidden sm:inline">تعديل</span>
+            </Button>
+            <Button 
+              size="sm" 
+              variant={task.status === 'completed' ? 'default' : 'outline'}
+              className="flex-1 sm:flex-none"
+              data-testid="button-complete-task"
+            >
+              <CheckCircle2 className="h-4 w-4 sm:ml-2" />
+              <span className="hidden sm:inline">إكمال</span>
+            </Button>
+            <Button size="sm" variant="destructive" className="flex-1 sm:flex-none" data-testid="button-delete-task">
+              <Trash2 className="h-4 w-4 sm:ml-2" />
+              <span className="hidden sm:inline">حذف</span>
+            </Button>
+            <Button size="sm" variant="ghost" className="flex-1 sm:flex-none" data-testid="button-share-task">
+              <Share2 className="h-4 w-4 sm:ml-2" />
+              <span className="hidden sm:inline">مشاركة</span>
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="text-center py-8" data-testid="text-loading">جاري التحميل...</div>
         ) : task ? (
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <div>
-              <h3 className="font-bold text-lg mb-2" data-testid="text-task-title">{task.title}</h3>
+              <h3 className="font-bold text-base sm:text-lg mb-2" data-testid="text-task-title">{task.title}</h3>
               {task.description && (
-                <p className="text-muted-foreground whitespace-pre-wrap" data-testid="text-task-description">
+                <p className="text-muted-foreground whitespace-pre-wrap text-sm sm:text-base" data-testid="text-task-description">
                   {task.description}
                 </p>
               )}
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-2 sm:my-4" />
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Mobile - Collapsible */}
+            <div className="md:hidden space-y-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">الحالة:</span>
+                {getStatusBadge(task.status)}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">الأولوية:</span>
+                {getPriorityBadge(task.priority)}
+              </div>
+
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm py-2">
+                  <ChevronDown className="h-4 w-4" />
+                  معلومات إضافية
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2 pt-2">
+                  {task.id && (
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">رقم المهمة:</span>
+                      <span className="text-sm text-muted-foreground" data-testid="text-task-id">
+                        {task.id.substring(0, 8)}
+                      </span>
+                    </div>
+                  )}
+
+                  {task.dueDate && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">تاريخ الاستحقاق:</span>
+                      <span className="text-sm" data-testid="text-task-due-date">
+                        {format(new Date(task.dueDate), 'PPP', { locale: ar })}
+                      </span>
+                    </div>
+                  )}
+
+                  {task.assignedToId && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">المسؤول:</span>
+                      <span className="text-sm" data-testid="text-task-assignee">{getUserName(task.assignedToId)}</span>
+                    </div>
+                  )}
+
+                  {task.department && (
+                    <div className="flex items-center gap-2">
+                      <Folder className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">القسم:</span>
+                      <Badge variant="outline" data-testid="text-task-department">
+                        <Folder className="h-3 w-3 ml-1" />
+                        {task.department}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {task.category && (
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">الفئة:</span>
+                      <Badge variant="outline" data-testid="text-task-category">
+                        <FileText className="h-3 w-3 ml-1" />
+                        {task.category}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {task.createdAt && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">تاريخ الإنشاء:</span>
+                      <span className="text-sm" data-testid="text-task-created-at">
+                        {format(new Date(task.createdAt), 'PPP', { locale: ar })}
+                      </span>
+                    </div>
+                  )}
+
+                  {task.completedAt && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">تاريخ الإكمال:</span>
+                      <span className="text-sm" data-testid="text-task-completed-at">
+                        {format(new Date(task.completedAt), 'PPP', { locale: ar })}
+                      </span>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+
+            {/* Desktop - Grid Layout */}
+            <div className="hidden md:grid grid-cols-2 gap-2 sm:gap-4">
               {task.id && (
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-muted-foreground" />
@@ -175,7 +285,7 @@ export function TaskViewDialog({ taskId, onClose }: TaskViewDialogProps) {
             {task.tags && task.tags.length > 0 && (
               <div>
                 <span className="text-sm font-medium">الوسوم:</span>
-                <div className="flex flex-wrap gap-2 mt-2" data-testid="container-task-tags">
+                <div className="flex flex-wrap gap-2 sm:gap-2 mt-2" data-testid="container-task-tags">
                   {task.tags.map((tag, i) => (
                     <Badge key={i} variant="outline" data-testid={`badge-tag-${i}`}>
                       {tag}

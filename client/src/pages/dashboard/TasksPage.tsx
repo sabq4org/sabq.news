@@ -172,6 +172,17 @@ function getCategoryIcon(department: string | null, category: string | null): Lu
   return FileText;
 }
 
+function getPriorityBadgeVariant(priority: string): "default" | "destructive" | "outline" {
+  switch (priority) {
+    case 'critical':
+      return 'destructive';
+    case 'high':
+      return 'default';
+    default:
+      return 'outline';
+  }
+}
+
 // Component for rendering subtasks
 interface SubtaskRowProps {
   parentTask: Task;
@@ -478,6 +489,96 @@ function TaskRowWithSubtasks({
         />
       )}
     </>
+  );
+}
+
+// Mobile Task Card Component
+interface MobileTaskCardProps {
+  task: Task;
+  users: User[];
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onComplete: (id: string, completed: boolean) => void;
+}
+
+function MobileTaskCard({ task, users, onView, onEdit, onDelete, onComplete }: MobileTaskCardProps) {
+  const Icon = getCategoryIcon(task.department, task.category);
+  const bgClass = getPriorityBackground(task.priority);
+  
+  const getUserName = (userId: string | null) => {
+    if (!userId) return 'غير مسند';
+    const user = users.find(u => u.id === userId);
+    if (!user) return 'غير معروف';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+  };
+  
+  return (
+    <Card className={`${bgClass} border rounded-lg p-4 mb-3`} data-testid={`card-mobile-task-${task.id}`}>
+      {/* Header: Icon + Title + Priority Badge */}
+      <div className="flex items-start gap-3 mb-2">
+        <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-base line-clamp-2" data-testid={`text-title-${task.id}`}>
+            {task.title}
+          </h3>
+          {task.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {task.description}
+            </p>
+          )}
+        </div>
+        <Badge variant={getPriorityBadgeVariant(task.priority)} className="flex-shrink-0" data-testid={`badge-priority-${task.id}`}>
+          {priorityLabels[task.priority]}
+        </Badge>
+      </div>
+
+      {/* Meta Info: Status + Due Date + Assignee */}
+      <div className="flex flex-wrap gap-2 mb-3 text-sm">
+        <Badge variant={getStatusVariant(task.status)} data-testid={`badge-status-${task.id}`}>
+          {statusLabels[task.status]}
+        </Badge>
+        {task.dueDate && (
+          <span className="text-muted-foreground" data-testid={`text-due-date-${task.id}`}>
+            {format(new Date(task.dueDate), 'PPP', { locale: ar })}
+          </span>
+        )}
+        {task.assignedToId && (
+          <span className="text-muted-foreground" data-testid={`text-assignee-${task.id}`}>
+            👤 {getUserName(task.assignedToId)}
+          </span>
+        )}
+      </div>
+
+      {/* Action Buttons - ALWAYS VISIBLE */}
+      <div className="flex items-center gap-2 pt-2 border-t">
+        <Button size="sm" variant="ghost" onClick={() => onView(task.id)} data-testid={`button-view-${task.id}`}>
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onEdit(task.id)} data-testid={`button-edit-${task.id}`}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          onClick={() => onComplete(task.id, task.status !== 'completed')}
+          data-testid={`button-complete-${task.id}`}
+        >
+          <CheckCircle2 className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onDelete(task.id)} data-testid={`button-delete-${task.id}`}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+        <div className="flex-1"></div>
+        <input
+          type="checkbox"
+          checked={task.status === 'completed'}
+          onChange={(e) => onComplete(task.id, e.target.checked)}
+          className="h-5 w-5"
+          data-testid={`checkbox-complete-${task.id}`}
+        />
+      </div>
+    </Card>
   );
 }
 
@@ -855,7 +956,25 @@ export default function TasksPage() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  {/* Mobile View - Cards */}
+                  <div className="md:hidden space-y-3">
+                    {tasksData.tasks.map((task) => (
+                      <MobileTaskCard
+                        key={task.id}
+                        task={task}
+                        users={users}
+                        onView={setViewTaskId}
+                        onEdit={setEditTaskId}
+                        onDelete={(id) => { setDeleteId(id); }}
+                        onComplete={(id, completed) => {
+                          completeMutation.mutate({ taskId: id, completed });
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Desktop View - Table (hidden on mobile) */}
+                  <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
                     <div className="inline-block min-w-full align-middle">
                       <Table>
                       <TableHeader>
