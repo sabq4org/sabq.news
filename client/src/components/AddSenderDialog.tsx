@@ -270,17 +270,20 @@ export function AddSenderDialog({
                 <FormItem>
                   <FormLabel>التصنيف الافتراضي</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    value={field.value}
+                    onValueChange={(value) => {
+                      // Allow clearing selection
+                      field.onChange(value === "none" ? undefined : value);
+                    }}
+                    defaultValue={field.value || "none"}
+                    value={field.value || "none"}
                   >
                     <FormControl>
                       <SelectTrigger data-testid="select-category">
-                        <SelectValue placeholder="اختر تصنيف (اختياري)" />
+                        <SelectValue placeholder="بدون تصنيف (اختياري)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">بدون تصنيف</SelectItem>
+                      <SelectItem value="none">بدون تصنيف</SelectItem>
                       {activeCategories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.nameAr}
