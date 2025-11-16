@@ -16,7 +16,7 @@ export function QuickActionsSection() {
       icon: Newspaper,
       iconColor: "text-emerald-600 dark:text-emerald-400",
       iconBgColor: "bg-emerald-50 dark:bg-emerald-950",
-      href: "/admin/article/new",
+      href: "/dashboard/article/new",
       testId: "quick-action-add-article",
     },
     {
@@ -26,7 +26,7 @@ export function QuickActionsSection() {
       icon: CheckSquare,
       iconColor: "text-indigo-600 dark:text-indigo-400",
       iconBgColor: "bg-indigo-50 dark:bg-indigo-950",
-      href: "/admin/tasks",
+      href: "/dashboard/tasks",
       testId: "quick-action-add-task",
     },
     {
@@ -36,7 +36,7 @@ export function QuickActionsSection() {
       icon: TrendingUp,
       iconColor: "text-purple-600 dark:text-purple-400",
       iconBgColor: "bg-purple-50 dark:bg-purple-950",
-      href: "/admin/omq/new",
+      href: "/dashboard/omq/new",
       testId: "quick-action-add-analysis",
     },
     {
@@ -46,7 +46,7 @@ export function QuickActionsSection() {
       icon: Megaphone,
       iconColor: "text-amber-600 dark:text-amber-400",
       iconBgColor: "bg-amber-50 dark:bg-amber-950",
-      href: "/admin/ads/new",
+      href: "/dashboard/ads/new",
       testId: "quick-action-add-ad",
     },
     {
@@ -56,7 +56,7 @@ export function QuickActionsSection() {
       icon: Blocks,
       iconColor: "text-cyan-600 dark:text-cyan-400",
       iconBgColor: "bg-cyan-50 dark:bg-cyan-950",
-      href: "/admin/smart-blocks/new",
+      href: "/dashboard/smart-blocks/new",
       testId: "quick-action-add-block",
     },
   ];
