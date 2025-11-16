@@ -31,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { QuickActionsSection } from "@/components/QuickActionsSection";
 import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -249,6 +250,11 @@ function Dashboard() {
 
         {/* Urgent Reminder Banner */}
         <UrgentReminderBanner />
+
+        {/* Quick Actions Section - Staff Only */}
+        <div className="mb-6">
+          <QuickActionsSection />
+        </div>
 
         {/* Main Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

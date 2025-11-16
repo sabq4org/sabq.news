@@ -17,7 +17,6 @@ import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
-import { QuickActionsSection } from "@/components/QuickActionsSection";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { Play, Headphones, Newspaper, Eye, TrendingUp, MessageSquare } from "lucide-react";
 import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
-import { isStaff, type User } from "@/hooks/useAuth";
+import type { User } from "@/hooks/useAuth";
 
 function AudioBriefsSection() {
   const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
@@ -277,15 +276,6 @@ export default function Home() {
                   testId="card-stat-active-users"
                 />
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions Section - Staff Only */}
-        {isStaff(user) && (
-          <div className="bg-muted/20 border-b">
-            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <QuickActionsSection />
             </div>
           </div>
         )}
