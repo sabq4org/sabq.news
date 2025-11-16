@@ -299,10 +299,7 @@ export default function EmailAgentManagement() {
                 فشل في تحميل الإحصائيات. الرجاء إعادة تحميل الصفحة.
               </div>
             ) : (
-              <EmailAgentStats 
-                data={stats} 
-                isLoading={statsLoading} 
-              />
+              <EmailAgentStats data={stats} isLoading={statsLoading} />
             )}
           </CardContent>
         </Card>

@@ -36,8 +36,8 @@ export function EmailAgentStats({ data, isLoading }: EmailAgentStatsProps) {
     );
   }
 
-  // Default values if data is not available - use explicit check for safety
-  const stats: EmailAgentStatsData = data ?? {
+  // Default values if data is not available
+  const stats: EmailAgentStatsData = data || {
     emailsReceived: 0,
     emailsPublished: 0,
     emailsDrafted: 0,
