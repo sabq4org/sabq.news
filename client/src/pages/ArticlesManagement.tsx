@@ -33,10 +33,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { StatusCards } from "@/components/admin/StatusCards";
+import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { BreakingSwitch } from "@/components/admin/BreakingSwitch";
 import { RowActions } from "@/components/admin/RowActions";
 import {
@@ -560,17 +560,57 @@ export default function ArticlesManagement() {
 
         {/* Status Cards */}
         {metricsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : metrics ? (
-          <StatusCards
-            metrics={metrics}
-            activeStatus={activeStatus}
-            onSelect={setActiveStatus}
-          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+            <MobileOptimizedKpiCard
+              label="منشورة"
+              value={metrics.published}
+              icon={Newspaper}
+              iconColor="text-emerald-600 dark:text-emerald-400"
+              iconBgColor="bg-emerald-50 dark:bg-emerald-950"
+              testId="card-stat-published"
+              className={activeStatus === 'published' ? 'ring-2 ring-primary' : 'cursor-pointer hover-elevate'}
+              onClick={() => setActiveStatus('published')}
+            />
+            
+            <MobileOptimizedKpiCard
+              label="مجدولة"
+              value={metrics.scheduled}
+              icon={Clock}
+              iconColor="text-indigo-600 dark:text-indigo-400"
+              iconBgColor="bg-indigo-50 dark:bg-indigo-950"
+              testId="card-stat-scheduled"
+              className={activeStatus === 'scheduled' ? 'ring-2 ring-primary' : 'cursor-pointer hover-elevate'}
+              onClick={() => setActiveStatus('scheduled')}
+            />
+            
+            <MobileOptimizedKpiCard
+              label="مسودة"
+              value={metrics.draft}
+              icon={FilePenLine}
+              iconColor="text-amber-600 dark:text-amber-400"
+              iconBgColor="bg-amber-50 dark:bg-amber-950"
+              testId="card-stat-draft"
+              className={activeStatus === 'draft' ? 'ring-2 ring-primary' : 'cursor-pointer hover-elevate'}
+              onClick={() => setActiveStatus('draft')}
+            />
+            
+            <MobileOptimizedKpiCard
+              label="مؤرشفة"
+              value={metrics.archived}
+              icon={Archive}
+              iconColor="text-slate-600 dark:text-slate-400"
+              iconBgColor="bg-slate-50 dark:bg-slate-900"
+              testId="card-stat-archived"
+              className={activeStatus === 'archived' ? 'ring-2 ring-primary' : 'cursor-pointer hover-elevate'}
+              onClick={() => setActiveStatus('archived')}
+            />
+          </div>
         ) : (
           <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
             خطأ في تحميل الإحصائيات: {metricsError?.message || "غير معروف"}
