@@ -10,7 +10,7 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: 25 * 1024 * 1024, // Increased to 25MB for larger email attachments
   },
 });
 
@@ -86,6 +86,17 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] From:", from);
     console.log("[Email Agent] Subject:", subject);
     console.log("[Email Agent] Attachments:", attachments.length);
+    
+    // Enhanced attachment logging
+    if (attachments.length > 0) {
+      attachments.forEach((att, idx) => {
+        console.log(`[Email Agent] Attachment ${idx + 1}:`, {
+          filename: att.originalname,
+          size: `${(att.size / 1024).toFixed(2)} KB`,
+          type: att.mimetype,
+        });
+      });
+    }
 
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
     
@@ -355,6 +366,36 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     return res.status(200).json({
       success: false,
       message: "Internal processing error",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/email-agent/stats - Get email agent statistics
+router.get("/stats", async (req: Request, res: Response) => {
+  try {
+    // Get stats for today
+    const today = new Date();
+    const stats = await storage.getEmailAgentStats(today);
+    
+    // Get language counts from articles created via email agent
+    const languageCounts = await storage.getEmailLanguageCounts();
+    
+    // Return combined stats
+    return res.json({
+      emailsReceived: stats?.emailsReceived || 0,
+      emailsPublished: stats?.emailsPublished || 0,
+      emailsDrafted: stats?.emailsDrafted || 0,
+      emailsRejected: stats?.emailsRejected || 0,
+      emailsFailed: stats?.emailsFailed || 0,
+      arabicCount: languageCounts.ar || 0,
+      englishCount: languageCounts.en || 0,
+      urduCount: languageCounts.ur || 0,
+    });
+  } catch (error: any) {
+    console.error("[Email Agent] Error fetching stats:", error);
+    return res.status(500).json({
+      message: "Failed to fetch statistics",
       error: error.message,
     });
   }

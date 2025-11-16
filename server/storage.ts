@@ -1383,6 +1383,7 @@ export interface IStorage {
   
   getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null>;
   updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats>;
+  getEmailLanguageCounts(): Promise<{ ar: number; en: number; ur: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -11952,6 +11953,28 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return stats;
+  }
+
+  async getEmailLanguageCounts(): Promise<{ ar: number; en: number; ur: number }> {
+    // Count articles created via email agent (where emailSourceId is not null)
+    // grouped by language
+    const results = await db
+      .select({
+        language: articles.language,
+        count: sql<number>`count(*)`,
+      })
+      .from(articles)
+      .where(isNotNull(articles.emailSourceId))
+      .groupBy(articles.language);
+    
+    const counts = { ar: 0, en: 0, ur: 0 };
+    
+    for (const row of results) {
+      const lang = row.language as 'ar' | 'en' | 'ur';
+      counts[lang] = Number(row.count);
+    }
+    
+    return counts;
   }
 }
 
