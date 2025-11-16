@@ -1,0 +1,71 @@
+
+> rest-express@1.0.0 dev
+🔗 Initializing database connection...x.ts
+✅ Database connection initialized successfully
+✅ SendGrid email service initialized
+🔗 Frontend URL for email links: https://sabq.life
+[Server] Starting server initialization...
+[Server] Environment: development
+[Server] Port: 5000
+✅ Google OAuth Strategy initialized
+🔑 Apple private key formatted (length: 257 )
+✅ Apple OAuth Strategy initialized
+[Server] ✅ Routes registered successfully
+[Server] ✅ Social crawler middleware registered
+[Server] ✅ Vite setup completed
+[Server] ✅ Successfully started on port 5000
+[Server] Health check available at http://0.0.0.0:5000/health
+[Server] Ready check available at http://0.0.0.0:5000/ready
+9:34:30 PM [express] serving on port 5000
+[Server] ℹ️  Background workers disabled (ENABLE_BACKGROUND_WORKERS not set to 'true')
+[Server] This is recommended for Autoscale deployments
+[Server] To enable background workers, set ENABLE_BACKGROUND_WORKERS=true in a Reserved VM deployment
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+🔍 /api/auth/user check: {
+  isAuthenticated: false,
+  hasUser: false,
+  userId: undefined,
+  sessionID: 'QbZbcNCMYdtMuUWp3X3QYW1G5rn1Xzzk'
+}
+9:34:56 PM [express] GET /api/auth/user 401 in 3ms :: {"message":"Unauthorized"}
+9:34:56 PM [express] GET /api/smart-blocks 304 in 146ms :: [{"id":"8e87b447-a9ad-45eb-959c-9cd53708d…
+9:34:56 PM [express] GET /api/smart-blocks 304 in 152ms :: [{"id":"43965d81-b1e3-49ea-b66d-4e439ce20…
+9:34:56 PM [express] GET /api/smart-blocks 304 in 152ms :: [{"id":"f4098336-493e-4940-9da3-f0b7ff89e…
+9:34:57 PM [express] GET /api/homepage 304 in 207ms :: {"hero":[{"id":"fc3b04c3-aad7-483e-bae6-5b3b7…
+9:34:57 PM [express] GET /api/categories/smart 304 in 312ms :: [{"id":"c022afd0-92c7-4af5-8329-ca1e8…
+🔍 [Smart Block] Searching for keyword: "العربي", limit: 8
+🔎 [Storage] Searching articles with keyword: "العربي"
+   - Limit: 8
+🔍 [Smart Block] Searching for keyword: "الذكاء", limit: 4
+🔎 [Storage] Searching articles with keyword: "الذكاء"
+   - Limit: 4
+✓ [Storage] Query returned 0 results
+✅ [Smart Block] Found 0 articles for "العربي"
+9:34:57 PM [express] GET /api/smart-blocks/query/articles 304 in 29ms :: {"items":[],"total":0}
+9:34:57 PM [express] GET /api/blocks/quad-categories 304 in 24ms :: {"items":[]}
+9:34:57 PM [express] GET /api/shorts/featured 304 in 28ms :: {"shorts":[],"total":0}
+✓ [Storage] Query returned 0 results
+✅ [Smart Block] Found 0 articles for "الذكاء"
+9:34:57 PM [express] GET /api/smart-blocks/query/articles 304 in 29ms :: {"items":[],"total":0}
+9:34:57 PM [express] GET /api/ads/slot/header-banner 204 in 52ms
+9:34:57 PM [express] GET /api/ai-insights 304 in 117ms :: {"mostViewed":{"article":{"id":"LId1Muyr12…
+🔍 [Smart Block] Searching for keyword: "تحليل", limit: 5
+🔎 [Storage] Searching articles with keyword: "تحليل"
+   - Limit: 5
+✓ [Storage] Query returned 0 results
+✅ [Smart Block] Found 0 articles for "تحليل"
+9:34:57 PM [express] GET /api/smart-blocks/query/articles 304 in 24ms :: {"items":[],"total":0}
+9:34:57 PM [express] GET /api/mirqab/next-stories 304 in 26ms :: [{"id":"b5b30ff7-fa33-40af-8682-031…
+9:34:57 PM [express] GET /api/mirqab/sabq-index 304 in 26ms :: [{"id":"57883555-2811-4e1b-a3e8-0788e…
+9:34:57 PM [express] GET /api/opinion 304 in 62ms :: {"articles":[{"id":"7a7239eb-e131-47c7-864c-f9b…
+9:34:57 PM [express] GET /api/mirqab/algorithm-writes 304 in 26ms :: {"entries":[{"id":"ac60d045-2bb…
+9:35:58 PM [express] GET /api/ads/slot/header-banner 204 in 399ms
+9:36:59 PM [express] GET /api/ads/slot/header-banner 204 in 135ms
+9:38:00 PM [express] GET /api/ads/slot/header-banner 204 in 150ms
+9:39:01 PM [express] GET /api/ads/slot/header-banner 204 in 145ms
+9:40:02 PM [express] GET /api/ads/slot/header-banner 204 in 142ms
+9:42:03 PM [express] GET /api/ads/slot/header-banner 204 in 144ms
+9:43:04 PM [express] GET /api/ads/slot/header-banner 204 in 146ms
+9:44:05 PM [express] GET /api/ads/slot/header-banner 204 in 143ms
+9:45:06 PM [express] GET /api/ads/slot/header-banner 204 in 146ms
