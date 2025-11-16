@@ -9,7 +9,20 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features an RTL-first design with custom light/dark theming, Arabic-optimized fonts, and a multi-section homepage. It includes a comprehensive publishing template system with Framer Motion animations for flexible content presentation and mobile responsiveness. Key architectural decisions include a trilingual system with separate database schemas, language-specific dashboards, and an i18n system with `LanguageContext` and bidirectional routing. A unified brand color system and a consistent smart blocks architecture are applied across all languages, adhering to WCAG 2.1 AA/AAA accessibility standards. The platform enforces a standardized Hindu-Arabic numeral format using `toLocaleString('ar-SA')` across all statistical displays.
+The platform features an RTL-first design with custom light/dark theming, Arabic-optimized fonts, and a multi-section homepage. It includes a comprehensive publishing template system with Framer Motion animations for flexible content presentation and mobile responsiveness. Key architectural decisions include a trilingual system with separate database schemas, language-specific dashboards, and an i18n system with `LanguageContext` and bidirectional routing. A unified brand color system and a consistent smart blocks architecture are applied across all languages, adhering to WCAG 2.1 AA accessibility standards (not AAA). The platform enforces a standardized Hindu-Arabic numeral format using `toLocaleString('ar-SA')` across all statistical displays.
+
+#### Mobile-First Component Sizing
+The platform implements professional, standard-sized UI components optimized for mobile devices following WCAG AA compliance (24px minimum touch targets on mobile). Key sizing decisions:
+
+-   **MobileOptimizedKpiCard Component**: Mobile-first responsive sizing with progressive enhancement
+    -   Mobile (default): Padding `p-2` (8px), label `text-[10px]`, value `text-base` (16px), icon container `h-6 w-6` (24×24px), icon `h-3 w-3` (12×12px)
+    -   Tablet (sm:): Padding `p-3` (12px), label `text-xs`, value `text-lg` (18px), icon container `h-8 w-8` (32×32px), icon `h-4 w-4` (16×16px)
+    -   Desktop (md:): Padding `p-4` (16px), value `text-xl` (20px), icon container `h-10 w-10` (40×40px), icon `h-5 w-5` (20×20px)
+    -   Large Desktop (lg:): Value `text-2xl` (24px)
+
+-   **Keyboard Accessibility**: All interactive KPI cards support full keyboard navigation with `role="button"`, `tabIndex={0}`, Enter/Space key handlers, `aria-pressed` for active states, and visible focus rings (`focus-visible:ring-2`) for WCAG compliance.
+
+-   **TailAdmin Design Pattern**: Consistent use of MobileOptimizedKpiCard across all dashboard pages (ArticlesManagement, Home, ArticleDetail) with TailAdmin color scheme: emerald (published/success), indigo (scheduled/upcoming), amber (draft/in-progress), slate (archived/inactive).
 
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Authentication is managed by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) serves as the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) handles file storage, and Server-Sent Events (SSE) provide real-time features.
