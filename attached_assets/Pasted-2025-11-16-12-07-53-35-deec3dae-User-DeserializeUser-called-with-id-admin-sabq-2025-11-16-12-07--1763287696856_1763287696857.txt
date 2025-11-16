@@ -1,0 +1,128 @@
+2025-11-16 12:07:53.35
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:53.35
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:53.37
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:53.38
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:53.38
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:53.40
+deec3dae
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 12:07:53.40
+deec3dae
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 12:07:53.40
+deec3dae
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 12:07:53.45
+deec3dae
+User
+10:07:53 AM [express] GET /api/email-agent/stats 304 in 120ms :: {"date":"2025-11-16T00:00:00.000Z","…
+2025-11-16 12:07:53.45
+deec3dae
+User
+10:07:53 AM [express] GET /api/email-agent/senders 304 in 119ms :: []
+2025-11-16 12:07:53.47
+deec3dae
+User
+10:07:53 AM [express] GET /api/email-agent/logs 304 in 137ms :: {"logs":[],"total":0,"page":1,"limit"…
+2025-11-16 12:07:53.47
+deec3dae
+User
+10:07:53 AM [express] GET /api/email-agent/logs 304 in 137ms :: {"logs":[],"total":0,"page":1,"limit"…
+2025-11-16 12:07:55.03
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:55.05
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:55.38
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:55.88
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:55.88
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:55.88
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:55.90
+deec3dae
+User
+}
+2025-11-16 12:07:55.90
+deec3dae
+User
+hasUser: true,
+2025-11-16 12:07:55.90
+deec3dae
+User
+userId: 'admin-sabq',
+2025-11-16 12:07:55.90
+deec3dae
+User
+🔍 /api/auth/user check: {
+2025-11-16 12:07:55.90
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:55.90
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-16 12:07:56.02
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:56.03
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:56.06
+deec3dae
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 12:07:56.07
+deec3dae
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-16 12:07:56.10
+deec3dae
+User
+10:07:56 AM [express] GET /api/email-agent/senders 304 in 243ms :: []
+2025-11-16 12:07:56.13
+deec3dae
+User
+10:07:56 AM [express] GET /api/email-agent/stats 304 in 264ms :: {"date":"2025-11-16T00:00:00.000Z","…
+2025-11-16 12:07:56.40
+deec3dae
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-16 12:07:56.42
+deec3dae
+User
+✅ DeserializeUser: User found: admin@sabq.sa
