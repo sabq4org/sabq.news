@@ -277,9 +277,15 @@ export default function Home() {
                   testId="card-stat-active-users"
                 />
               </div>
+            </div>
+          </div>
+        )}
 
-              {/* Quick Actions Section - Staff Only */}
-              {isStaff(user) && <QuickActionsSection />}
+        {/* Quick Actions Section - Staff Only */}
+        {isStaff(user) && (
+          <div className="bg-muted/20 border-b">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <QuickActionsSection />
             </div>
           </div>
         )}
