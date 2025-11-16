@@ -6402,6 +6402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/homepage", async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
 
       const [
         heroArticles,
@@ -6412,7 +6414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trendingTopics,
       ] = await Promise.all([
         storage.getHeroArticles(),
-        storage.getAllPublishedArticles(16),
+        storage.getAllPublishedArticles(limit, offset),
         storage.getBreakingNews(5),
         storage.getEditorPicks(6),
         storage.getDeepDiveArticles(6),

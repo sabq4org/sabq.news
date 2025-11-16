@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame, Loader2, ChevronDown } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -22,7 +24,46 @@ interface PersonalizedFeedProps {
   showReason?: boolean;
 }
 
-export function PersonalizedFeed({ articles, title = "جميع الأخبار", showReason = false }: PersonalizedFeedProps) {
+export function PersonalizedFeed({ articles: initialArticles, title = "جميع الأخبار", showReason = false }: PersonalizedFeedProps) {
+  const [articles, setArticles] = useState(initialArticles);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(20);
+
+  const loadMore = async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(
+        `/api/homepage?limit=4&offset=${offset}`,
+        { credentials: 'include' }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch more articles');
+      }
+      
+      const data = await response.json();
+      const newArticles = data.forYou || [];
+      
+      if (newArticles.length === 0) {
+        setHasMore(false);
+      } else {
+        setArticles([...articles, ...newArticles]);
+        setOffset(offset + 4);
+        
+        if (newArticles.length < 4) {
+          setHasMore(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!articles || articles.length === 0) return null;
 
   return (
@@ -250,6 +291,31 @@ export function PersonalizedFeed({ articles, title = "جميع الأخبار", 
           </Link>
         ))}
       </div>
+
+      {/* زر "المزيد من الأخبار" */}
+      {hasMore && (
+        <div className="flex justify-center pt-6">
+          <Button
+            onClick={loadMore}
+            disabled={isLoading}
+            size="lg"
+            className="gap-2 min-w-[200px]"
+            data-testid="button-load-more-news"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                جاري التحميل...
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-5 w-5" />
+                المزيد من الأخبار
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

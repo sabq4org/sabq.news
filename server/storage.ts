@@ -524,7 +524,7 @@ export interface IStorage {
   getEditorPicks(limit?: number): Promise<ArticleWithDetails[]>;
   getDeepDiveArticles(limit?: number): Promise<ArticleWithDetails[]>;
   getTrendingTopics(): Promise<Array<{ topic: string; count: number; views: number; articles: number; comments: number }>>;
-  getAllPublishedArticles(limit?: number): Promise<ArticleWithDetails[]>;
+  getAllPublishedArticles(limit?: number, offset?: number): Promise<ArticleWithDetails[]>;
   
   // Dashboard stats
   getDashboardStats(userId: string): Promise<{
@@ -3698,7 +3698,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getAllPublishedArticles(limit: number = 16): Promise<ArticleWithDetails[]> {
+  async getAllPublishedArticles(limit: number = 20, offset: number = 0): Promise<ArticleWithDetails[]> {
     const reporterAlias = aliasedTable(users, 'reporter');
     
     const results = await db
@@ -3745,7 +3745,8 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
 
     return results.map((r) => ({
       id: r.id,
