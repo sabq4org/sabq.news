@@ -26735,12 +26735,14 @@ Allow: /
 
       res.json(stats || {
         date: targetDate,
-        totalReceived: 0,
-        processed: 0,
-        published: 0,
-        drafts: 0,
-        rejected: 0,
-        failed: 0,
+        emailsReceived: 0,
+        emailsPublished: 0,
+        emailsDrafted: 0,
+        emailsRejected: 0,
+        emailsFailed: 0,
+        arabicCount: 0,
+        englishCount: 0,
+        urduCount: 0,
       });
     } catch (error: any) {
       console.error('Error fetching email agent stats:', error);
