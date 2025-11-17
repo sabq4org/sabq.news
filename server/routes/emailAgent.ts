@@ -60,7 +60,15 @@ async function uploadAttachmentToGCS(
 
     console.log(`[Email Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} attachment: ${fullPath}`);
     
-    // Return the full path that can be used in the frontend
+    // 🎯 Return full Google Cloud Storage URL for public images
+    // This ensures images are accessible from the frontend without proxy
+    if (isPublic) {
+      const publicUrl = `https://storage.googleapis.com/${bucketName}/${fullPath}`;
+      console.log(`[Email Agent] 🌐 Public URL generated: ${publicUrl}`);
+      return publicUrl;
+    }
+    
+    // For private files, return the relative path (requires proxy/download endpoint)
     return `${objectDir}/${storedFilename}`;
   } catch (error) {
     console.error("[Email Agent] Error uploading attachment:", error);
