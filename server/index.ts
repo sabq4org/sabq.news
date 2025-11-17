@@ -10,6 +10,8 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
+import fs from "fs";
+import path from "path";
 
 const app = express();
 
@@ -255,10 +257,19 @@ app.use((req, res, next) => {
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
+    
+    // Detect environment more reliably
+    // In production: NODE_ENV should be 'production' OR built files should exist
+    const isProduction = process.env.NODE_ENV === "production" || 
+                        process.env.REPLIT_DEPLOYMENT === "1" ||
+                        fs.existsSync(path.resolve(import.meta.dirname, "public"));
+    
+    if (!isProduction && app.get("env") === "development") {
+      console.log("[Server] Starting in DEVELOPMENT mode with Vite");
       await setupVite(app, server);
       console.log("[Server] ✅ Vite setup completed");
     } else {
+      console.log("[Server] Starting in PRODUCTION mode with static files");
       serveStatic(app);
       console.log("[Server] ✅ Static files setup completed");
     }
