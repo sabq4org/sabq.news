@@ -217,6 +217,55 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent]    3. Multer configuration issue");
     }
 
+    // 📄 Extract text from Word documents AND upload to GCS immediately (BEFORE ANY VALIDATION)
+    // This ensures Word files are preserved even if sender/token validation fails
+    let extractedTextFromDocs = "";
+    const uploadedWordDocs: string[] = [];
+    
+    if (attachments.length > 0) {
+      console.log("[Email Agent] 📄 ============ PROCESSING WORD DOCUMENTS (EARLY) ============");
+      
+      for (const attachment of attachments) {
+        const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                          attachment.originalname?.toLowerCase().endsWith('.docx');
+        
+        if (isWordDoc) {
+          console.log(`[Email Agent] 📄 Found Word document: ${attachment.originalname}`);
+          
+          // Extract text for AI analysis
+          try {
+            const extractedText = await extractTextFromDocx(attachment.buffer);
+            
+            if (extractedText && extractedText.length > 0) {
+              console.log(`[Email Agent] ✅ Extracted text from Word: ${extractedText.length} characters`);
+              extractedTextFromDocs += extractedText + "\n\n";
+            } else {
+              console.log(`[Email Agent] ⚠️ No text extracted from Word document`);
+            }
+          } catch (extractError) {
+            console.error(`[Email Agent] ⚠️ Failed to extract text from Word:`, extractError);
+          }
+          
+          // Upload original Word file to GCS IMMEDIATELY (preserve even if rejected)
+          try {
+            const gcsPath = await uploadAttachmentToGCS(
+              attachment.buffer,
+              attachment.originalname,
+              attachment.mimetype
+            );
+            
+            uploadedWordDocs.push(gcsPath);
+            console.log(`[Email Agent] ✅ Word document uploaded to GCS: ${gcsPath}`);
+          } catch (uploadError) {
+            console.error(`[Email Agent] ❌ Failed to upload Word document to GCS:`, uploadError);
+          }
+        }
+      }
+      
+      console.log("[Email Agent] 📄 Word documents processed:", uploadedWordDocs.length);
+      console.log("[Email Agent] 📄 ==========================================");
+    }
+
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
     
     const logId = nanoid();
@@ -238,6 +287,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         rejectionReason: "sender_not_trusted",
         senderVerified: false,
         tokenVerified: false,
+        // Save Word documents even if rejected early (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0,
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -261,6 +317,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         senderVerified: true,
         tokenVerified: false,
         trustedSenderId: trustedSender.id,
+        // Save Word documents even if rejected early (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0,
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -313,6 +376,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         senderVerified: true,
         tokenVerified: false,
         trustedSenderId: trustedSender.id,
+        // Save Word documents even if rejected early (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0,
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -346,37 +416,6 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     );
     console.log("[Email Agent] ✅ Reporter user ready:", reporterUser.id, `-`, reporterUser.firstName, reporterUser.lastName);
 
-    // 📄 Extract text from Word documents BEFORE processing email content
-    let extractedTextFromDocs = "";
-    
-    if (attachments.length > 0) {
-      console.log("[Email Agent] 📄 ============ EXTRACTING TEXT FROM WORD DOCUMENTS ============");
-      
-      for (const attachment of attachments) {
-        const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-                          attachment.originalname?.toLowerCase().endsWith('.docx');
-        
-        if (isWordDoc) {
-          console.log(`[Email Agent] 📄 Found Word document: ${attachment.originalname}`);
-          
-          try {
-            const extractedText = await extractTextFromDocx(attachment.buffer);
-            
-            if (extractedText && extractedText.length > 0) {
-              console.log(`[Email Agent] ✅ Extracted text from Word: ${extractedText.length} characters`);
-              extractedTextFromDocs += extractedText + "\n\n";
-            } else {
-              console.log(`[Email Agent] ⚠️ No text extracted from Word document`);
-            }
-          } catch (extractError) {
-            console.error(`[Email Agent] ⚠️ Failed to extract text from Word:`, extractError);
-          }
-        }
-      }
-      
-      console.log("[Email Agent] 📄 ==========================================");
-    }
-
     // Extract content from text or HTML
     let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
     
@@ -403,6 +442,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         status: "rejected",
         rejectionReason: "no_content",
         trustedSenderId: trustedSender.id,
+        // Save Word document paths even if rejected (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0, // Size not tracked in this flow
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -451,6 +497,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           errors: editorialResult.issues,
           warnings: editorialResult.suggestions,
         },
+        // Save Word document paths even if rejected (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0, // Size not tracked in this flow
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -483,6 +536,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           errors: editorialResult.issues,
           warnings: editorialResult.suggestions,
         },
+        // Save Word document paths even if rejected (for editorial review)
+        attachmentsData: uploadedWordDocs.map(path => ({
+          filename: path.split('/').pop() || 'unknown',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 0, // Size not tracked in this flow
+          url: path
+        }))
       });
 
       const today = new Date();
@@ -519,27 +579,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         const attachment = attachments[i];
         
         try {
-          // Handle Word documents - upload to GCS after text extraction
+          // Skip Word documents (already processed and uploaded earlier)
           const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
                             attachment.originalname?.toLowerCase().endsWith('.docx');
           
           if (isWordDoc) {
-            console.log(`[Email Agent] 📄 Uploading Word document to storage: ${attachment.originalname}`);
-            
-            try {
-              const gcsPath = await uploadAttachmentToGCS(
-                attachment.buffer,
-                attachment.originalname,
-                attachment.mimetype
-              );
-              
-              uploadedAttachments.push(gcsPath);
-              console.log(`[Email Agent] ✅ Word document uploaded: ${gcsPath}`);
-            } catch (error) {
-              console.error(`[Email Agent] ❌ Failed to upload Word document ${attachment.originalname}:`, error);
-            }
-            
-            continue; // Move to next attachment (Word is not an image)
+            console.log(`[Email Agent] ⏭️ Skipping Word document (already uploaded): ${attachment.originalname}`);
+            continue;
           }
           
           // Validate image files
