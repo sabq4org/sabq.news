@@ -4223,6 +4223,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(and(...conditions))
         .orderBy(users.firstName, users.lastName);
 
+      console.log(`📊 [GET /api/users] Role filter: ${role || 'none'}`);
+      console.log(`📋 [GET /api/users] Returned ${usersList.length} users`);
+      if (role === 'reporter') {
+        console.log(`👥 [GET /api/users] Reporters:`, usersList.map(u => ({
+          name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+          email: u.email,
+          status: u.status
+        })));
+      }
+
       res.json(usersList);
     } catch (error: any) {
       console.error('Error fetching users:', error);
