@@ -2619,8 +2619,8 @@ export class DatabaseStorage implements IStorage {
     const topArticleDetails = topArticle[0]
       ? {
           ...topArticle[0].articles,
-          author: topArticle[0].users,
-          category: topArticle[0].categories,
+          author: topArticle[0].users || undefined,
+          category: topArticle[0].categories || undefined,
         }
       : null;
 
