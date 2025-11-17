@@ -38,10 +38,12 @@ interface SabqEditorialResult {
 /**
  * دالة جديدة موحدة: تحليل وتحسين المحتوى وفق أسلوب صحيفة سبق
  * تستخدم برومبت متقدم يجمع التقييم والتحرير في عملية واحدة
+ * @param availableCategories - قائمة التصنيفات المتاحة من قاعدة البيانات (اختياري)
  */
 export async function analyzeAndEditWithSabqStyle(
   text: string,
-  language: "ar" | "en" | "ur" = "ar"
+  language: "ar" | "en" | "ur" = "ar",
+  availableCategories?: Array<{ nameAr: string; nameEn: string }>
 ): Promise<SabqEditorialResult> {
   try {
     // Normalize language code to ensure it's valid
@@ -50,6 +52,22 @@ export async function analyzeAndEditWithSabqStyle(
     console.log("[Sabq Editor] Analyzing and editing content with Sabq style...");
     console.log("[Sabq Editor] Content length:", text.length);
     console.log("[Sabq Editor] Target language:", normalizedLang);
+    console.log("[Sabq Editor] Available categories:", availableCategories?.length || 'using defaults');
+
+    // إنشاء قائمة التصنيفات المتاحة ديناميكياً
+    const categoriesListAr = availableCategories && availableCategories.length > 0
+      ? availableCategories.map(c => `"${c.nameAr}"`).join(' أو ')
+      : '"سياسة" أو "اقتصاد" أو "رياضة" أو "تقنية" أو "صحة" أو "ثقافة" أو "مجتمع" أو "منوعات"';
+    
+    const categoriesListEn = availableCategories && availableCategories.length > 0
+      ? availableCategories.map(c => `"${c.nameEn}"`).join(' or ')
+      : '"Politics" or "Economy" or "Sports" or "Technology" or "Health" or "Culture" or "Society" or "Misc"';
+    
+    const categoriesListUr = availableCategories && availableCategories.length > 0
+      ? availableCategories.map(c => `"${c.nameAr}"`).join(' یا ')
+      : '"سیاست" یا "معیشت" یا "کھیل" یا "ٹیکنالوجی" یا "صحت" یا "ثقافت" یا "معاشرہ" یا "متفرق"';
+    
+    console.log("[Sabq Editor] Categories list (AR):", categoriesListAr);
 
     const SYSTEM_PROMPTS = {
       ar: `أنت محرّر صحفي ذكي يعمل داخل نظام "سبق الذكية" لإدارة المحتوى الإخباري. 
@@ -80,7 +98,7 @@ export async function analyzeAndEditWithSabqStyle(
 {
   "qualityScore": رقم من 0-100 (تقييم النص الأصلي فقط),
   "language": "ar",
-  "detectedCategory": "سياسة" أو "اقتصاد" أو "رياضة" أو "تقنية" أو "صحة" أو "ثقافة" أو "مجتمع" أو "منوعات",
+  "detectedCategory": ${categoriesListAr},
   "hasNewsValue": true (دائماً true إذا الدرجة 10 أو أكثر!),
   "issues": [ "فقط إذا كان spam أو غير إخباري نهائياً" ],
   "suggestions": [ "نصائح إيجابية للمراسل - ليست انتقادات!" ],
@@ -143,7 +161,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
 {
   "qualityScore": number from 0-100 (original text rating only),
   "language": "en",
-  "detectedCategory": "Politics" or "Economy" or "Sports" or "Technology" or "Health" or "Culture" or "Society" or "Miscellaneous",
+  "detectedCategory": ${categoriesListEn},
   "hasNewsValue": true (always true if score is 10+!),
   "issues": [ "only if spam or completely non-news" ],
   "suggestions": [ "positive tips for correspondent - not criticisms!" ],
@@ -206,7 +224,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
 {
   "qualityScore": 0-100 (صرف اصل متن کی درجہ بندی),
   "language": "ur",
-  "detectedCategory": "سیاست" یا "معیشت" یا "کھیل" یا "ٹیکنالوجی" یا "صحت" یا "ثقافت" یا "معاشرہ" یا "متفرقات",
+  "detectedCategory": ${categoriesListUr},
   "hasNewsValue": true (ہمیشہ true اگر سکور 10+ ہے!),
   "issues": [ "صرف اگر spam یا مکمل طور پر غیر خبری ہو" ],
   "suggestions": [ "نامہ نگار کے لیے مثبت مشورے - تنقید نہیں!" ],

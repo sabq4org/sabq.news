@@ -557,8 +557,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     
     console.log("[Email Agent] Using language:", language);
     
+    // 🎯 Fetch available categories for AI to choose from
+    const allCategories = await storage.getAllCategories();
+    const activeCategories = allCategories.filter(c => c.status === 'active');
+    const categoriesForAI = activeCategories.map(c => ({ nameAr: c.nameAr, nameEn: c.nameEn }));
+    
+    console.log("[Email Agent] Fetched", categoriesForAI.length, "active categories for AI");
     console.log("[Email Agent] Analyzing and editing with Sabq editorial style...");
-    const editorialResult = await analyzeAndEditWithSabqStyle(emailContent, language);
+    const editorialResult = await analyzeAndEditWithSabqStyle(emailContent, language, categoriesForAI);
     
     console.log("[Email Agent] Quality score:", editorialResult.qualityScore);
     console.log("[Email Agent] Language:", editorialResult.language);
@@ -651,10 +657,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] 🎯 Starting smart category matching...");
     console.log("[Email Agent] AI detected category:", editorialResult.detectedCategory);
     
-    // Fetch all active categories from database
-    const allCategories = await storage.getAllCategories();
-    const activeCategories = allCategories.filter(c => c.status === 'active');
-    
+    // Note: allCategories and activeCategories already fetched above for AI
     console.log("[Email Agent] Available categories:", activeCategories.length);
     
     // Smart category matching function
