@@ -3081,7 +3081,6 @@ router.post("/track/impression/:impressionId", async (req, res) => {
         target: [dailyStats.campaignId, dailyStats.date],
         set: {
           impressions: sql`${dailyStats.impressions} + 1`,
-          updatedAt: new Date(),
         },
       });
     
@@ -3140,7 +3139,6 @@ router.post("/track/click/:impressionId", async (req, res) => {
         target: [dailyStats.campaignId, dailyStats.date],
         set: {
           clicks: sql`${dailyStats.clicks} + 1`,
-          updatedAt: new Date(),
         },
       });
     
