@@ -132,10 +132,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     if (req.body.email) {
       console.log("[Email Agent] Detected RAW email format - parsing with mailparser");
       console.log("[Email Agent] Raw email length:", req.body.email.length);
+      console.log("[Email Agent] Raw email type:", typeof req.body.email);
       
       try {
         // Parse the raw email using mailparser
-        const parsed = await simpleParser(req.body.email);
+        // CRITICAL: Convert string to Buffer if needed for proper attachment extraction
+        const emailBuffer = typeof req.body.email === 'string' 
+          ? Buffer.from(req.body.email, 'utf-8')
+          : req.body.email;
+        const parsed = await simpleParser(emailBuffer);
+        
+        console.log("[Email Agent] 📧 Parsed email structure:");
+        console.log("[Email Agent] - Has attachments array:", !!parsed.attachments);
+        console.log("[Email Agent] - Attachments count:", parsed.attachments?.length || 0);
         
         // Use SendGrid's parsed from/to if available, otherwise extract from parsed email
         from = req.body.from || "";
