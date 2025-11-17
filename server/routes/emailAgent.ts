@@ -1193,4 +1193,25 @@ router.delete("/senders/:id", async (req: Request, res: Response) => {
   }
 });
 
+// 🔍 Diagnostic endpoint - Test if webhooks can reach the server
+router.post("/webhook-test", async (req: Request, res: Response) => {
+  console.log("🔍 [WEBHOOK TEST] ==================== START ====================");
+  console.log("🔍 [WEBHOOK TEST] Received request!");
+  console.log("🔍 [WEBHOOK TEST] Method:", req.method);
+  console.log("🔍 [WEBHOOK TEST] Headers:", JSON.stringify(req.headers, null, 2));
+  console.log("🔍 [WEBHOOK TEST] Body keys:", Object.keys(req.body));
+  console.log("🔍 [WEBHOOK TEST] Body:", JSON.stringify(req.body, null, 2).substring(0, 500));
+  console.log("🔍 [WEBHOOK TEST] ==================== END ====================");
+  
+  res.status(200).json({
+    success: true,
+    message: "Webhook test received successfully!",
+    timestamp: new Date().toISOString(),
+    bodyKeys: Object.keys(req.body),
+    hasEmail: !!req.body.email,
+    hasFrom: !!req.body.from,
+    hasSubject: !!req.body.subject,
+  });
+});
+
 export default router;
