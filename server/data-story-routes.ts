@@ -275,7 +275,7 @@ export function registerDataStoryRoutes(app: any, dbStorage: IStorage) {
         insights: analysis.aiInsights as any,
         charts: analysis.chartConfigs as any,
         provider: analysis.aiProvider || 'openai',
-        model: analysis.aiModel || 'gpt-4o',
+        model: analysis.aiModel || 'gpt-5.1',
         tokensUsed: analysis.tokensUsed || 0,
         processingTime: analysis.processingTime || 0
       };

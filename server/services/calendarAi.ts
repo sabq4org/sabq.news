@@ -59,7 +59,7 @@ export async function generateCalendarEventIdeas(
 أعد الإجابة بصيغة JSON فقط`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -99,7 +99,7 @@ export async function generateHeadlineVariations(
 أعد النتيجة بصيغة JSON: {"headlines": ["...", "...", ...]}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -146,7 +146,7 @@ export async function generateSocialMediaContent(
 أعد النتيجة بصيغة JSON: {"content": "...", "hashtags": ["...", ...]}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -192,7 +192,7 @@ export async function generateInfographicDataPoints(
 أعد النتيجة بصيغة JSON: {"dataPoints": ["...", "...", ...]}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -232,7 +232,7 @@ export async function generateSEOContent(
 أعد النتيجة بصيغة JSON فقط`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -278,7 +278,7 @@ export async function generateArticleDraft(
 أعد النتيجة بصيغة JSON فقط`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",

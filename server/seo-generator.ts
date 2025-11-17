@@ -30,14 +30,14 @@ interface ArticleInput {
   excerpt?: string;
 }
 
-// Configuration: Primary and fallback models per language
+// Configuration: Primary and fallback models per language (Migrated to gpt-5.1)
 const SEO_MODEL_CONFIG = {
   ar: {
     primary: { provider: "anthropic" as const, model: "claude-sonnet-4-5" },
-    fallback: { provider: "openai" as const, model: "gpt-4o" },
+    fallback: { provider: "openai" as const, model: "gpt-5.1" },
   },
   en: {
-    primary: { provider: "openai" as const, model: "gpt-4o" },
+    primary: { provider: "openai" as const, model: "gpt-5.1" },
     fallback: { provider: "gemini" as const, model: "gemini-2.0-flash-exp" },
   },
   ur: {

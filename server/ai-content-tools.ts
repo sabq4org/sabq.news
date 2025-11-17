@@ -186,8 +186,9 @@ export async function generateSocialPost(
 
     const spec = platformSpecs[platform];
 
+    // Migrated to gpt-5.1
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -464,9 +465,10 @@ ${context ? `السياق: ${context}` : ''}
     // GPT-4o
     (async () => {
       try {
-        console.log(`🤖 [GPT-4o] Starting analysis...`);
+        console.log(`🤖 [GPT-5.1] Starting analysis...`);
+        // Migrated to gpt-5.1
         const response = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: "gpt-5.1",
           messages: [
             {
               role: "system",
@@ -481,14 +483,14 @@ ${context ? `السياق: ${context}` : ''}
         const content = response.choices[0].message.content || "";
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
-          throw new Error("فشل استخراج JSON من استجابة GPT-4o");
+          throw new Error("فشل استخراج JSON من استجابة GPT-5.1");
         }
 
         const analysis = JSON.parse(jsonMatch[0]);
-        console.log(`✅ [GPT-4o] Analysis complete - Verdict: ${analysis.verdict}`);
+        console.log(`✅ [GPT-5.1] Analysis complete - Verdict: ${analysis.verdict}`);
 
         return {
-          model: "GPT-4o",
+          model: "GPT-5.1",
           verdict: analysis.verdict as Verdict,
           confidence: analysis.confidence,
           reasoning: analysis.reasoning,

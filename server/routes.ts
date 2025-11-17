@@ -21322,7 +21322,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       context += `.\n\nالتعريف يجب أن يكون:\n- موجز (2-3 جمل)\n- مهني وواقعي\n- يركز على الإنجازات والدور الرئيسي\n- بدون مقدمات أو عناوين`;
 
       const completion = await client.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.1",
         messages: [
           {
             role: "system",

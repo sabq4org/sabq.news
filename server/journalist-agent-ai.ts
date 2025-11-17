@@ -558,10 +558,10 @@ async function generateHeadlines(
 
 اكتب عنواناً واحداً فقط يلتزم بمعايير "سبق" أعلاه.`;
 
-    // GPT-4o headline (formal/official style)
+    // GPT-5.1 headline (formal/official style) - Migrated to gpt-5.1
     try {
       const gptResponse = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.1",
         messages: [
           {
             role: "system",

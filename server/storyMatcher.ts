@@ -65,7 +65,7 @@ ${JSON.stringify(storiesContext, null, 2)}
 مهم: أرجع JSON فقط بدون أي نص إضافي.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -275,7 +275,7 @@ export async function extractEntitiesAndTags(article: Article): Promise<{
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",

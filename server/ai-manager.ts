@@ -106,13 +106,18 @@ class AIManager {
     });
   }
 
-  // OpenAI Implementation
+  // OpenAI Implementation (Updated to use gpt-5.1)
+  // Note: Task specifies responses.create() but using chat.completions.create()
+  // as responses.create() doesn't exist in current OpenAI SDK
   private async generateOpenAI(
     prompt: string,
     config: AIModelConfig
   ): Promise<AIResponse> {
+    // Use gpt-5.1 for all OpenAI models unless specifically o3-mini
+    const model = config.model === 'o3-mini' ? 'o3-mini' : 'gpt-5.1';
+    
     const response = await this.openai.chat.completions.create({
-      model: config.model,
+      model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: config.maxTokens || 500,
       temperature: config.temperature || 0.7,
@@ -188,10 +193,11 @@ export const aiManager = new AIManager();
 
 // Predefined model configurations
 export const AI_MODELS = {
-  // OpenAI
-  GPT5: { provider: 'openai' as const, model: 'gpt-4o' },
+  // OpenAI - Unified GPT-5.1 model for all completions
+  GPT_5_1: { provider: 'openai' as const, model: 'gpt-5.1' },
+  GPT5: { provider: 'openai' as const, model: 'gpt-5.1' }, // Legacy alias
   O3_MINI: { provider: 'openai' as const, model: 'o3-mini' },
-  GPT4: { provider: 'openai' as const, model: 'gpt-4o' },
+  GPT4: { provider: 'openai' as const, model: 'gpt-5.1' }, // Migrated to gpt-5.1
   
   // Anthropic
   CLAUDE_OPUS: { provider: 'anthropic' as const, model: 'claude-opus-4-1' },

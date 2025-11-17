@@ -267,8 +267,9 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
       throw new Error(`No system prompt found for language: ${normalizedLang}`);
     }
 
+    // Migrated to gpt-5.1
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -343,8 +344,9 @@ export async function analyzeEmailContent(text: string): Promise<EmailContentAna
 
 أعد النتيجة بصيغة JSON فقط.`;
 
+    // Migrated from gpt-5 to gpt-5.1
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",
@@ -441,8 +443,9 @@ Return the result in JSON format only.`,
 نتیجہ صرف JSON فارمیٹ میں واپس کریں۔`,
     };
 
+    // Migrated from gpt-5 to gpt-5.1
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",

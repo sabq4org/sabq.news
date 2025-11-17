@@ -60,9 +60,9 @@ export async function analyzeContent(
       }
     }
 
-    // استخدام OpenAI لتحليل المحتوى
+    // استخدام OpenAI لتحليل المحتوى (Migrated to gpt-5.1)
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.1",
       messages: [
         {
           role: "system",

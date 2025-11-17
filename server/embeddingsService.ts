@@ -99,7 +99,7 @@ export async function extractEntities(title: string, content: string): Promise<s
 الكيانات:`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Faster and cheaper for entity extraction
+      model: 'gpt-5.1', // Faster and cheaper for entity extraction
       messages: [
         {
           role: 'system',

@@ -254,7 +254,7 @@ ${JSON.stringify(dataset.previewData.slice(0, 5), null, 2)}
 استخدم اللغة العربية الفصحى. اجعل التحليل جاهزاً للنشر كقصة إخبارية في صحيفة "سبق".`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-5.1",
     messages: [{
       role: "system",
       content: "أنت محلل بيانات وصحفي بيانات خبير. تتخصص في تحويل البيانات إلى قصص صحفية احترافية مدعومة بالأرقام والتحليل العميق. أسلوبك يجمع بين الدقة البيانية والسرد الصحفي الجذاب."
@@ -271,7 +271,7 @@ ${JSON.stringify(dataset.previewData.slice(0, 5), null, 2)}
   return {
     insights,
     provider: 'openai',
-    model: 'gpt-4o',
+    model: 'gpt-5.1',
     tokensUsed: response.usage?.total_tokens || 0
   };
 }
@@ -485,7 +485,7 @@ async function generateStoryWithGPT(
   const prompt = buildStoryPrompt(dataset, analysis, fileName);
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-5.1",
     messages: [{
       role: "system",
       content: "أنت صحفي بيانات محترف متخصص في كتابة القصص الإخبارية باللغة العربية."
@@ -503,7 +503,7 @@ async function generateStoryWithGPT(
   return {
     draft: storyData,
     provider: 'openai',
-    model: 'gpt-4o',
+    model: 'gpt-5.1',
     tokensUsed: response.usage?.total_tokens || 0,
     generationTime
   };
