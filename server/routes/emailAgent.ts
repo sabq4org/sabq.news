@@ -12,8 +12,8 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB for file attachments
-    fieldSize: 10 * 1024 * 1024, // 10MB for text/html email fields (SendGrid)
+    fileSize: 25 * 1024 * 1024, // 25MB for file attachments (SendGrid's max)
+    fieldSize: 50 * 1024 * 1024, // 50MB for raw MIME email field (increased to handle large emails with attachments)
   },
 });
 
@@ -134,6 +134,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent] Raw email length:", req.body.email.length);
       console.log("[Email Agent] Raw email type:", typeof req.body.email);
       
+      // 🔍 DIAGNOSTIC: Check for field size truncation
+      const MULTER_FIELD_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+      if (req.body.email.length >= MULTER_FIELD_SIZE_LIMIT * 0.95) {
+        console.warn("[Email Agent] ⚠️ WARNING: Raw email size approaching Multer fieldSize limit!");
+        console.warn(`[Email Agent] Size: ${(req.body.email.length / 1024 / 1024).toFixed(2)}MB, Limit: ${(MULTER_FIELD_SIZE_LIMIT / 1024 / 1024).toFixed(2)}MB`);
+      }
+      
+      // 🔍 DIAGNOSTIC: Log first 500 bytes of raw MIME for inspection
+      const preview = req.body.email.substring(0, 500);
+      console.log("[Email Agent] 🔍 Raw MIME preview (first 500 bytes):");
+      console.log(preview);
+      console.log("[Email Agent] 🔍 End of preview");
+      
       try {
         // Parse the raw email using mailparser
         // CRITICAL: SendGrid sends raw MIME as string, must preserve binary data for attachments
@@ -141,6 +154,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         const emailBuffer = typeof req.body.email === 'string' 
           ? Buffer.from(req.body.email, 'binary')  // ✅ Preserve binary data (images, files)
           : req.body.email;
+        
+        console.log("[Email Agent] Buffer created, size:", emailBuffer.length, "bytes");
         const parsed = await simpleParser(emailBuffer);
         
         console.log("[Email Agent] 📧 Parsed email structure:");
