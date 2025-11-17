@@ -102,7 +102,10 @@ export function AddSenderDialog({
       const res = await fetch('/api/users?role=reporter', { credentials: 'include' });
       if (!res.ok) throw new Error('فشل في تحميل المراسلين');
       const users = await res.json();
-      return users.filter((u: any) => u.role === 'reporter');
+      console.log('📊 [Reporters Dropdown] Total reporters fetched:', users.length);
+      console.log('📋 [Reporters Dropdown] Reporters list:', users);
+      // API already filters by role=reporter, no need to filter again
+      return users;
     },
   });
 
@@ -250,10 +253,11 @@ export function AddSenderDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="none">بدون مراسل</SelectItem>
-                      {reporters?.map((reporter) => {
+                      {reporters?.map((reporter, index) => {
                         const name = [reporter.firstName, reporter.lastName]
                           .filter(Boolean)
                           .join(" ") || reporter.email;
+                        console.log(`📝 [Rendering Reporter ${index + 1}/${reporters.length}]:`, name, reporter.id);
                         return (
                           <SelectItem key={reporter.id} value={reporter.id}>
                             {name}
