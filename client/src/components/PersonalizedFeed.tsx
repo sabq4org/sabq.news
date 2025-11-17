@@ -28,7 +28,7 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
   const [articles, setArticles] = useState(initialArticles);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(20);
+  const [offset, setOffset] = useState(initialArticles.length);
   const [error, setError] = useState<string | null>(null);
 
   const loadMore = async () => {
