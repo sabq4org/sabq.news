@@ -1,0 +1,136 @@
+2025-11-17 18:17:00.64
+52ea10bf
+User
+[Email Agent] - Attachments saved: 0
+2025-11-17 18:17:00.64
+52ea10bf
+User
+[Email Agent] - Word docs: 0
+2025-11-17 18:17:00.68
+52ea10bf
+User
+4:17:00 PM [express] POST /api/email-agent/webhook 200 in 18275ms :: {"success":true,"message":"Arti…
+2025-11-17 18:17:04.84
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:05.20
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:06.19
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:07.31
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:07.33
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:07.33
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.32
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.35
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.35
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.44
+52ea10bf
+User
+4:17:08 PM [express] GET /api/themes/active 200 in 2264ms
+2025-11-17 18:17:08.44
+52ea10bf
+User
+isAuthenticated: true,
+2025-11-17 18:17:08.44
+52ea10bf
+User
+}
+2025-11-17 18:17:08.44
+52ea10bf
+User
+hasUser: true,
+2025-11-17 18:17:08.44
+52ea10bf
+User
+userId: 'admin-sabq',
+2025-11-17 18:17:08.44
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.44
+52ea10bf
+User
+sessionID: 'cP_eNHDomuFG8fNQeJlE2jwF3HxhMh6A'
+2025-11-17 18:17:08.44
+52ea10bf
+User
+🔍 /api/auth/user check: {
+2025-11-17 18:17:08.54
+52ea10bf
+User
+4:17:08 PM [express] GET /api/auth/user 200 in 2362ms :: {"id":"admin-sabq","email":"admin@sabq.sa",…
+2025-11-17 18:17:08.82
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.82
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.83
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.84
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.85
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.86
+52ea10bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 18:17:08.89
+52ea10bf
+User
+4:17:08 PM [express] GET /api/email-agent/senders 304 in 88ms :: [{"id":"bcad3272-a377-476c-9454-0b5…
+2025-11-17 18:17:08.93
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.95
+52ea10bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 18:17:08.98
+52ea10bf
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-17 18:17:09.04
+52ea10bf
+User
+4:17:09 PM [express] GET /api/announcements/active 304 in 229ms :: []
+2025-11-17 18:17:09.70
+52ea10bf
+User
+4:17:09 PM [express] GET /api/email-agent/stats 200 in 896ms :: {"emailsReceived":4,"emailsPublished…
+2025-11-17 18:17:10.49
+52ea10bf
+User
+4:17:10 PM [express] GET /api/email-agent/logs 200 in 1519ms :: {"logs":[{"id":"5459a21a-2efc-4e18-9…
