@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, asc, sql, and, or, inArray, ne, gte, lte, isNull, isNotNull, ilike, count } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, inArray, ne, gte, lt, lte, isNull, isNotNull, ilike, count } from "drizzle-orm";
 import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
@@ -1381,6 +1381,7 @@ export interface IStorage {
     limit?: number;
     offset?: number;
   }): Promise<{ logs: EmailWebhookLog[]; total: number }>;
+  getEmailWebhookLogsByDateRange(startDate: Date, endDate: Date): Promise<EmailWebhookLog[]>;
   updateEmailWebhookLog(id: string, updates: Partial<EmailWebhookLog>): Promise<EmailWebhookLog>;
   deleteEmailWebhookLog(id: string): Promise<void>;
   deleteEmailWebhookLogs(ids: string[]): Promise<void>;
@@ -12023,6 +12024,21 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(emailWebhookLogs)
       .where(inArray(emailWebhookLogs.id, ids));
+  }
+
+  async getEmailWebhookLogsByDateRange(startDate: Date, endDate: Date): Promise<EmailWebhookLog[]> {
+    const logs = await db
+      .select()
+      .from(emailWebhookLogs)
+      .where(
+        and(
+          gte(emailWebhookLogs.receivedAt, startDate),
+          lt(emailWebhookLogs.receivedAt, endDate)
+        )
+      )
+      .orderBy(desc(emailWebhookLogs.receivedAt));
+    
+    return logs;
   }
 
   async getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null> {

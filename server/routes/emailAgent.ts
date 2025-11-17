@@ -691,23 +691,35 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 // GET /api/email-agent/stats - Get email agent statistics
 router.get("/stats", async (req: Request, res: Response) => {
   try {
-    // Get stats for today
+    // Calculate stats directly from webhook logs for today
     const today = new Date();
-    const stats = await storage.getEmailAgentStats(today);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // Get language counts from articles created via email agent
-    const languageCounts = await storage.getEmailLanguageCounts();
+    // Get all webhook logs for today using date range query
+    const todayLogs = await storage.getEmailWebhookLogsByDateRange(today, tomorrow);
+    
+    // Calculate stats from actual logs (already filtered by DB)
+    const stats = {
+      emailsReceived: todayLogs.length,
+      emailsPublished: todayLogs.filter((log: any) => log.status === 'published').length,
+      emailsDrafted: todayLogs.filter((log: any) => log.status === 'drafted').length,
+      emailsRejected: todayLogs.filter((log: any) => log.status === 'rejected').length,
+      emailsFailed: todayLogs.filter((log: any) => log.status === 'failed').length,
+    };
+    
+    // Get language counts from AI analysis in webhook logs
+    const languageCounts = {
+      arabicCount: todayLogs.filter((log: any) => log.aiAnalysis?.languageDetected === 'ar').length,
+      englishCount: todayLogs.filter((log: any) => log.aiAnalysis?.languageDetected === 'en').length,
+      urduCount: todayLogs.filter((log: any) => log.aiAnalysis?.languageDetected === 'ur').length,
+    };
     
     // Return combined stats
     return res.json({
-      emailsReceived: stats?.emailsReceived || 0,
-      emailsPublished: stats?.emailsPublished || 0,
-      emailsDrafted: stats?.emailsDrafted || 0,
-      emailsRejected: stats?.emailsRejected || 0,
-      emailsFailed: stats?.emailsFailed || 0,
-      arabicCount: languageCounts.ar || 0,
-      englishCount: languageCounts.en || 0,
-      urduCount: languageCounts.ur || 0,
+      ...stats,
+      ...languageCounts,
     });
   } catch (error: any) {
     console.error("[Email Agent] Error fetching stats:", error);
