@@ -9,7 +9,11 @@ packages = ["imagemagick", "unzip", "jq"]
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["node", "dist/index.js"]
+
+[proxy]
+path = "/"
+target = "http://localhost:5000"
 
 [[ports]]
 localPort = 5000
