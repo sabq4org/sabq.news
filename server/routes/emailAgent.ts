@@ -220,7 +220,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     // 📄 Extract text from Word documents AND upload to GCS immediately (BEFORE ANY VALIDATION)
     // This ensures Word files are preserved even if sender/token validation fails
     let extractedTextFromDocs = "";
-    const uploadedWordDocs: string[] = [];
+    const uploadedWordDocs: Array<{ filename: string; contentType: string; size: number; url: string }> = [];
     
     if (attachments.length > 0) {
       console.log("[Email Agent] 📄 ============ PROCESSING WORD DOCUMENTS (EARLY) ============");
@@ -254,7 +254,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               attachment.mimetype
             );
             
-            uploadedWordDocs.push(gcsPath);
+            // Save complete metadata
+            uploadedWordDocs.push({
+              filename: attachment.originalname,
+              contentType: attachment.mimetype,
+              size: attachment.size,
+              url: gcsPath
+            });
+            
             console.log(`[Email Agent] ✅ Word document uploaded to GCS: ${gcsPath}`);
           } catch (uploadError) {
             console.error(`[Email Agent] ❌ Failed to upload Word document to GCS:`, uploadError);
@@ -288,12 +295,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         senderVerified: false,
         tokenVerified: false,
         // Save Word documents even if rejected early (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0,
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -318,12 +321,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         tokenVerified: false,
         trustedSenderId: trustedSender.id,
         // Save Word documents even if rejected early (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0,
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -377,12 +376,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         tokenVerified: false,
         trustedSenderId: trustedSender.id,
         // Save Word documents even if rejected early (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0,
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -443,12 +438,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         rejectionReason: "no_content",
         trustedSenderId: trustedSender.id,
         // Save Word document paths even if rejected (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0, // Size not tracked in this flow
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -498,12 +489,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           warnings: editorialResult.suggestions,
         },
         // Save Word document paths even if rejected (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0, // Size not tracked in this flow
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -537,12 +524,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           warnings: editorialResult.suggestions,
         },
         // Save Word document paths even if rejected (for editorial review)
-        attachmentsData: uploadedWordDocs.map(path => ({
-          filename: path.split('/').pop() || 'unknown',
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 0, // Size not tracked in this flow
-          url: path
-        }))
+        attachmentsCount: uploadedWordDocs.length,
+        attachmentsData: uploadedWordDocs
       });
 
       const today = new Date();
@@ -561,6 +544,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     // 🖼️ Process image attachments
     const uploadedAttachments: string[] = [];
     const uploadedImages: string[] = [];
+    const attachmentsMetadata: Array<{ filename: string; contentType: string; size: number; url: string; type: 'image' | 'document' | 'other' }> = [];
     let attachmentInfo: any = {};
     
     // Parse SendGrid attachment-info for inline image metadata
@@ -610,6 +594,15 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             uploadedAttachments.push(gcsPath);
             uploadedImages.push(gcsPath);
             
+            // Save metadata
+            attachmentsMetadata.push({
+              filename: attachment.originalname,
+              contentType: attachment.mimetype,
+              size: attachment.size,
+              url: gcsPath,
+              type: 'image'
+            });
+            
             console.log(`[Email Agent] ✅ Image uploaded successfully: ${gcsPath}`);
           } else {
             // Non-image attachment - still upload it
@@ -622,6 +615,16 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             );
             
             uploadedAttachments.push(gcsPath);
+            
+            // Save metadata
+            attachmentsMetadata.push({
+              filename: attachment.originalname,
+              contentType: attachment.mimetype,
+              size: attachment.size,
+              url: gcsPath,
+              type: 'other'
+            });
+            
             console.log(`[Email Agent] ✅ Attachment uploaded: ${gcsPath}`);
           }
         } catch (error) {
@@ -758,13 +761,29 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] Article created:", article?.id);
     console.log("[Email Agent] Status:", articleData.status);
 
-    // Update webhook log with correct status based on publication state
+    // Combine all attachments metadata (Word docs + images + other files)
+    const allAttachmentsMetadata = [
+      ...uploadedWordDocs.map(doc => ({
+        ...doc,
+        type: 'document' as const
+      })),
+      ...attachmentsMetadata
+    ];
+
+    // Update webhook log with correct status and attachments data
     const webhookStatus = trustedSender.autoPublish ? "published" : "processed";
     await storage.updateEmailWebhookLog(webhookLog.id, {
       status: webhookStatus,
       trustedSenderId: trustedSender.id,
       articleId: article?.id,
+      attachmentsCount: allAttachmentsMetadata.length,
+      attachmentsData: allAttachmentsMetadata,
     });
+    
+    console.log("[Email Agent] 📊 Webhook log updated:");
+    console.log("[Email Agent]    - Attachments saved:", allAttachmentsMetadata.length);
+    console.log("[Email Agent]    - Images:", uploadedImages.length);
+    console.log("[Email Agent]    - Word docs:", uploadedWordDocs.length);
 
     const today = new Date();
     await storage.updateEmailAgentStats(today, {
