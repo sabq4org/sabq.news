@@ -26,15 +26,21 @@ interface SendGridAttachment {
 async function uploadAttachmentToGCS(
   file: Buffer,
   filename: string,
-  contentType: string
+  contentType: string,
+  isPublic: boolean = false
 ): Promise<string> {
   try {
-    const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || "";
-    if (!privateObjectDir) {
-      throw new Error("PRIVATE_OBJECT_DIR not set");
+    // For images, use PUBLIC directory so they can be displayed in browser
+    // For other files (Word docs, PDFs), use PRIVATE directory
+    const objectDir = isPublic 
+      ? (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "").split(',')[0]?.trim() || ""
+      : process.env.PRIVATE_OBJECT_DIR || "";
+    
+    if (!objectDir) {
+      throw new Error(`${isPublic ? 'PUBLIC_OBJECT_SEARCH_PATHS' : 'PRIVATE_OBJECT_DIR'} not set`);
     }
 
-    const { bucketName, objectPath } = parseObjectPath(privateObjectDir);
+    const { bucketName, objectPath } = parseObjectPath(objectDir);
     const bucket = objectStorageClient.bucket(bucketName);
     
     const fileId = nanoid();
@@ -52,8 +58,10 @@ async function uploadAttachmentToGCS(
       },
     });
 
-    console.log(`[Email Agent] Uploaded attachment: ${fullPath}`);
-    return `${privateObjectDir}/${storedFilename}`;
+    console.log(`[Email Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} attachment: ${fullPath}`);
+    
+    // Return the full path that can be used in the frontend
+    return `${objectDir}/${storedFilename}`;
   } catch (error) {
     console.error("[Email Agent] Error uploading attachment:", error);
     throw error;
@@ -337,7 +345,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             const gcsPath = await uploadAttachmentToGCS(
               attachment.buffer,
               attachment.originalname,
-              attachment.mimetype
+              attachment.mimetype,
+              true  // isPublic: true for images so they can be displayed in browser
             );
             
             uploadedImages.push(gcsPath);
