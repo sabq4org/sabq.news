@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { X, CheckCircle2, FileText, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 interface AutoPublishNotification {
   id: string;
@@ -29,6 +29,7 @@ interface AutoPublishNotification {
 
 export function AutoPublishBanner() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [notification, setNotification] = useState<AutoPublishNotification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,11 +52,23 @@ export function AutoPublishBanner() {
     }, 5000);
   };
 
-  // Manual close
-  const handleClose = () => {
+  // Manual close with event propagation stop
+  const handleClose = (e?: MouseEvent<HTMLButtonElement>) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     clearAutoHideTimeout();
     setIsVisible(false);
     setTimeout(() => setNotification(null), 300);
+  };
+
+  // Handle banner click to navigate
+  const handleBannerClick = () => {
+    if (notification?.deeplink) {
+      handleClose(); // Close banner first
+      setLocation(notification.deeplink); // Navigate using SPA
+    }
   };
 
   // SSE connection for auto-publish notifications only
@@ -221,7 +234,7 @@ export function AutoPublishBanner() {
               variant="ghost"
               size="icon"
               className="flex-shrink-0 h-6 w-6 text-green-700 dark:text-green-300 hover:bg-green-200/50 dark:hover:bg-green-800/50"
-              onClick={handleClose}
+              onClick={(e) => handleClose(e)}
               data-testid="button-close-banner"
             >
               <X className="h-4 w-4" />
@@ -253,12 +266,12 @@ export function AutoPublishBanner() {
     </div>
   );
 
-  // If there's a deeplink, wrap in Link
+  // If there's a deeplink, make the banner clickable
   if (notification.deeplink) {
     return (
-      <Link href={notification.deeplink}>
-        <a onClick={handleClose}>{content}</a>
-      </Link>
+      <div onClick={handleBannerClick} className="cursor-pointer">
+        {content}
+      </div>
     );
   }
 
