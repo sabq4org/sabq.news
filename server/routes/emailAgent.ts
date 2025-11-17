@@ -734,6 +734,11 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       categoryId: finalCategoryId, // 🎯 Always has a valid category!
       createdAt: new Date(),
       publishedAt: trustedSender.autoPublish ? new Date() : null,
+      // 🔥 Essential fields for article visibility
+      articleType: "news", // Ensures article appears in homepage queries
+      newsType: "regular", // Default news type (not breaking/featured)
+      hideFromHomepage: false, // Article must be visible on homepage
+      displayOrder: 0, // Default display order
     };
 
     let article;
