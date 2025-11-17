@@ -182,7 +182,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     let attachments: Express.Multer.File[] = (req.files as Express.Multer.File[]) || [];
     
     // 🔧 Convert parsed attachments (from raw MIME) to Multer format
-    if (parsedAttachments.length > 0 && attachments.length === 0) {
+    // In "Post raw MIME" mode, req.files is always empty - we must use parsedAttachments
+    if (parsedAttachments.length > 0) {
       console.log("[Email Agent] 📎 Converting parsed attachments to Multer format");
       attachments = parsedAttachments.map((att: any) => ({
         fieldname: 'attachment',
