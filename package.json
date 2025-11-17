@@ -114,6 +114,7 @@
     "jspdf": "^3.0.3",
     "lucide-react": "^0.453.0",
     "mailparser": "^3.9.0",
+    "mammoth": "^1.11.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
     "multer": "^2.0.2",

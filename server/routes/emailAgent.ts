@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import { simpleParser } from "mailparser";
+import mammoth from "mammoth";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
@@ -102,6 +103,16 @@ function generateSlug(text: string): string {
   
   // Add timestamp to ensure uniqueness
   return `${baseSlug}-${Date.now()}`;
+}
+
+async function extractTextFromDocx(buffer: Buffer): Promise<string> {
+  try {
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value.trim();
+  } catch (error) {
+    console.error("[Email Agent] Error extracting text from DOCX:", error);
+    return "";
+  }
 }
 
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
@@ -335,8 +346,45 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     );
     console.log("[Email Agent] ✅ Reporter user ready:", reporterUser.id, `-`, reporterUser.firstName, reporterUser.lastName);
 
+    // 📄 Extract text from Word documents BEFORE processing email content
+    let extractedTextFromDocs = "";
+    
+    if (attachments.length > 0) {
+      console.log("[Email Agent] 📄 ============ EXTRACTING TEXT FROM WORD DOCUMENTS ============");
+      
+      for (const attachment of attachments) {
+        const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                          attachment.originalname?.toLowerCase().endsWith('.docx');
+        
+        if (isWordDoc) {
+          console.log(`[Email Agent] 📄 Found Word document: ${attachment.originalname}`);
+          
+          try {
+            const extractedText = await extractTextFromDocx(attachment.buffer);
+            
+            if (extractedText && extractedText.length > 0) {
+              console.log(`[Email Agent] ✅ Extracted text from Word: ${extractedText.length} characters`);
+              extractedTextFromDocs += extractedText + "\n\n";
+            } else {
+              console.log(`[Email Agent] ⚠️ No text extracted from Word document`);
+            }
+          } catch (extractError) {
+            console.error(`[Email Agent] ⚠️ Failed to extract text from Word:`, extractError);
+          }
+        }
+      }
+      
+      console.log("[Email Agent] 📄 ==========================================");
+    }
+
     // Extract content from text or HTML
     let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
+    
+    // Add extracted text from Word documents
+    if (extractedTextFromDocs) {
+      console.log("[Email Agent] 📄 Extracted text from Word docs:", extractedTextFromDocs.length, "chars");
+      emailContent = extractedTextFromDocs + "\n\n" + emailContent;
+    }
     
     // Remove token from content (support all formats)
     emailContent = emailContent
@@ -471,6 +519,29 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         const attachment = attachments[i];
         
         try {
+          // Handle Word documents - upload to GCS after text extraction
+          const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                            attachment.originalname?.toLowerCase().endsWith('.docx');
+          
+          if (isWordDoc) {
+            console.log(`[Email Agent] 📄 Uploading Word document to storage: ${attachment.originalname}`);
+            
+            try {
+              const gcsPath = await uploadAttachmentToGCS(
+                attachment.buffer,
+                attachment.originalname,
+                attachment.mimetype
+              );
+              
+              uploadedAttachments.push(gcsPath);
+              console.log(`[Email Agent] ✅ Word document uploaded: ${gcsPath}`);
+            } catch (error) {
+              console.error(`[Email Agent] ❌ Failed to upload Word document ${attachment.originalname}:`, error);
+            }
+            
+            continue; // Move to next attachment (Word is not an image)
+          }
+          
           // Validate image files
           const isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(attachment.mimetype);
           
