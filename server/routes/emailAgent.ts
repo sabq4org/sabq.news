@@ -726,7 +726,6 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       excerpt: editorialResult.optimized.lead || "",
       authorId: reporterUser.id, // 👤 Article attributed to the reporter, not system!
       status: trustedSender.autoPublish ? "published" : "draft",
-      language: editorialResult.language,
       imageUrl: featuredImage, // 🖼️ Featured image URL (first uploaded image)
       seo: {
         keywords: editorialResult.optimized.seoKeywords,
