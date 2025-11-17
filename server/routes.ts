@@ -4221,7 +4221,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(users)
         .where(and(...conditions))
-        .orderBy(users.firstName, users.lastName);
+        .orderBy(
+          sql`COALESCE(${users.firstName}, '') || ' ' || COALESCE(${users.lastName}, '') || ' ' || ${users.email}`
+        );
 
       console.log(`📊 [GET /api/users] Role filter: ${role || 'none'}`);
       console.log(`📋 [GET /api/users] Returned ${usersList.length} users`);
