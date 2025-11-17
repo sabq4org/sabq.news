@@ -1,0 +1,87 @@
+2025-11-17 11:26:00.00
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 200 in 1…
+2025-11-17 11:26:00.01
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/shortlinks/article/09du7RRfN2so5m2gBjB5q 404 in 132ms :: {"message":"ل…
+2025-11-17 11:26:00.01
+c4a35d1a
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 11:26:00.02
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/social/is-following/user-1760950807037-09p6vtnwf 304 in 97ms :: {"isFo…
+2025-11-17 11:26:00.03
+c4a35d1a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:26:00.05
+c4a35d1a
+User
+✅ [EVENT TRACKING] Tracked event: view for article 09du7RRfN2so5m2gBjB5q (value: 1)
+2025-11-17 11:26:00.07
+1f006913
+System
+system: received signal terminated
+2025-11-17 11:26:00.10
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/articles/%D9%85%D8%AF%D8%A7%D8%B1%D8%B3-%D8%A7%D9%84%D8%B1%D9%8A%D8%A7…
+2025-11-17 11:26:00.11
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/ads/slot/sidebar 204 in 192ms
+2025-11-17 11:26:00.22
+c4a35d1a
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ
+2025-11-17 11:26:00.22
+c4a35d1a
+User
+userId: 'admin-sabq',
+2025-11-17 11:26:00.22
+c4a35d1a
+User
+passType: 'loyalty',
+2025-11-17 11:26:00.22
+c4a35d1a
+User
+timestamp: 2025-11-17T09:26:00.228Z
+2025-11-17 11:26:00.22
+c4a35d1a
+User
+📱 [Pass Update] Logged: {
+2025-11-17 11:26:00.25
+c4a35d1a
+User
+9:26:00 AM [express] POST /api/behavior/log 200 in 333ms :: {"success":true}
+2025-11-17 11:26:00.28
+c4a35d1a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:26:00.30
+c4a35d1a
+User
+9:26:00 AM [express] GET /api/articles/%D9%85%D8%AF%D8%A7%D8%B1%D8%B3-%D8%A7%D9%84%D8%B1%D9%8A%D8%A7…
+2025-11-17 11:26:00.33
+c4a35d1a
+User
+✅ Short link created: J2VvPQ2T -> https://sabq.life/article/مدارس-الرياض-تنظم-ملتقى-تخصصك-الجامعي-بمشاركة-45-جامعة-لإرشاد-الطلاب-1763371526783
+2025-11-17 11:26:00.39
+c4a35d1a
+User
+9:26:00 AM [express] POST /api/shortlinks 201 in 153ms :: {"id":"38290534-a223-49fa-892d-ac762b55bbf…
+2025-11-17 11:26:00.39
+c4a35d1a
+User
+9:26:00 AM [express] POST /api/shortlinks 201 in 153ms :: {"id":"38290534-a223-49fa-892d-ac762b55bbf…
+
+Collapse
+
+Wrap
+
+Colors
+

@@ -126,6 +126,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     let subject = "";
     let text = "";
     let html = "";
+    let parsedAttachments: any[] = [];
     
     // Check if SendGrid sent raw email (Inbound Parse Raw mode)
     if (req.body.email) {
@@ -143,12 +144,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         text = parsed.text || "";
         html = typeof parsed.html === 'string' ? parsed.html : (parsed.html ? String(parsed.html) : "");
         
+        // 📎 CRITICAL: Extract attachments from parsed email
+        if (parsed.attachments && parsed.attachments.length > 0) {
+          console.log(`[Email Agent] 📎 Found ${parsed.attachments.length} attachments in raw MIME`);
+          parsedAttachments = parsed.attachments;
+        }
+        
         console.log("[Email Agent] Parsed email successfully:");
         console.log("[Email Agent] - From:", from);
         console.log("[Email Agent] - To:", to);
         console.log("[Email Agent] - Subject:", subject);
         console.log("[Email Agent] - Text length:", text?.length || 0);
         console.log("[Email Agent] - HTML length:", html?.length || 0);
+        console.log("[Email Agent] - Parsed attachments:", parsedAttachments.length);
         
         if (text) {
           console.log("[Email Agent] - Text preview:", text.substring(0, 200));
@@ -170,8 +178,23 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       html = req.body.html || req.body.html_body || "";
     }
     
-    // 📎 Process attachments from SendGrid
-    const attachments = (req.files as Express.Multer.File[]) || [];
+    // 📎 Process attachments from SendGrid (multer files OR parsed attachments from raw MIME)
+    let attachments: Express.Multer.File[] = (req.files as Express.Multer.File[]) || [];
+    
+    // 🔧 Convert parsed attachments (from raw MIME) to Multer format
+    if (parsedAttachments.length > 0 && attachments.length === 0) {
+      console.log("[Email Agent] 📎 Converting parsed attachments to Multer format");
+      attachments = parsedAttachments.map((att: any) => ({
+        fieldname: 'attachment',
+        originalname: att.filename || 'unnamed',
+        encoding: '7bit',
+        mimetype: att.contentType || 'application/octet-stream',
+        buffer: att.content,
+        size: att.content ? att.content.length : 0,
+      } as Express.Multer.File));
+      
+      console.log(`[Email Agent] ✅ Converted ${attachments.length} attachments from raw MIME`);
+    }
     
     // Log SendGrid attachment metadata (if available)
     if (req.body.attachments) {
