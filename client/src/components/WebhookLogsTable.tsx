@@ -11,6 +11,7 @@ import {
 } from "./ui/table";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { Checkbox } from "./ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import type { EmailWebhookLog } from "@shared/schema";
 
@@ -31,6 +32,8 @@ interface WebhookLogsTableProps {
   onPageChange?: (page: number) => void;
   onStatusFilter?: (status: string) => void;
   onRowClick?: (log: EmailWebhookLog) => void;
+  onDelete?: (id: string) => void;
+  onBulkDelete?: (ids: string[]) => void;
 }
 
 export function WebhookLogsTable({
@@ -42,13 +45,50 @@ export function WebhookLogsTable({
   onPageChange,
   onStatusFilter,
   onRowClick,
+  onDelete,
+  onBulkDelete,
 }: WebhookLogsTableProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleStatusChange = (value: string) => {
     setSelectedStatus(value);
     onStatusFilter?.(value);
+    setSelectedIds([]); // Clear selection when filter changes
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && logs) {
+      setSelectedIds(logs.map((log) => log.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectLog = (logId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, logId]);
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => id !== logId));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length > 0 && onBulkDelete) {
+      onBulkDelete(selectedIds);
+      setSelectedIds([]);
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent, logId: string) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(logId);
+      setSelectedIds((prev) => prev.filter((id) => id !== logId));
+    }
+  };
+
+  const isAllSelected = logs && logs.length > 0 && selectedIds.length === logs.length;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -133,6 +173,18 @@ export function WebhookLogsTable({
             </SelectContent>
           </Select>
         </div>
+        {onBulkDelete && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            disabled={selectedIds.length === 0}
+            data-testid="button-delete-selected"
+          >
+            <Trash2 className="h-4 w-4 ml-2" />
+            حذف المحدد ({selectedIds.length})
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -147,6 +199,16 @@ export function WebhookLogsTable({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {onBulkDelete && (
+                      <TableHead className="text-right w-12">
+                        <Checkbox
+                          checked={isAllSelected}
+                          onCheckedChange={handleSelectAll}
+                          data-testid="checkbox-select-all"
+                          aria-label="تحديد الكل"
+                        />
+                      </TableHead>
+                    )}
                     <TableHead className="text-right">التاريخ/الوقت</TableHead>
                     <TableHead className="text-right">البريد</TableHead>
                     <TableHead className="text-right">الاسم</TableHead>
@@ -155,6 +217,7 @@ export function WebhookLogsTable({
                     <TableHead className="text-right">معرف المقال</TableHead>
                     <TableHead className="text-right">جودة AI</TableHead>
                     <TableHead className="text-right">اللغة</TableHead>
+                    {onDelete && <TableHead className="text-right w-12"></TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -165,6 +228,18 @@ export function WebhookLogsTable({
                       className="cursor-pointer hover-elevate"
                       data-testid={`row-log-${log.id}`}
                     >
+                      {onBulkDelete && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.includes(log.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectLog(log.id, checked as boolean)
+                            }
+                            data-testid={`checkbox-log-${log.id}`}
+                            aria-label={`تحديد السجل ${log.id}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(log.receivedAt), "dd MMM yyyy HH:mm", {
                           locale: ar,
@@ -208,6 +283,19 @@ export function WebhookLogsTable({
                       <TableCell>
                         {getLanguageName(log.aiAnalysis?.languageDetected)}
                       </TableCell>
+                      {onDelete && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => handleDelete(e, log.id)}
+                            data-testid={`button-delete-${log.id}`}
+                            aria-label={`حذف السجل ${log.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

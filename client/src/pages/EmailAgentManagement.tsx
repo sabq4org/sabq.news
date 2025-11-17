@@ -169,6 +169,55 @@ export default function EmailAgentManagement() {
     },
   });
 
+  // Delete log mutation
+  const deleteLogMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest(`/api/email-agent/logs/${id}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-agent/logs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/email-agent/stats'] });
+      toast({
+        title: "تم بنجاح",
+        description: "تم حذف السجل بنجاح",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حذف السجل",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bulk delete logs mutation
+  const bulkDeleteLogsMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return await apiRequest('/api/email-agent/logs/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      });
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-agent/logs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/email-agent/stats'] });
+      toast({
+        title: "تم بنجاح",
+        description: `تم حذف ${ids.length} سجل بنجاح`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حذف السجلات",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddSender = () => {
     setEditingSender(null);
     setAddDialogOpen(true);
@@ -211,6 +260,14 @@ export default function EmailAgentManagement() {
   const handleStatusFilter = (status: string) => {
     setLogsStatusFilter(status);
     setLogsPage(1); // Reset to first page when filtering
+  };
+
+  const handleDeleteLog = (id: string) => {
+    deleteLogMutation.mutate(id);
+  };
+
+  const handleBulkDeleteLogs = (ids: string[]) => {
+    bulkDeleteLogsMutation.mutate(ids);
   };
 
   // Show loading state while checking auth
@@ -374,6 +431,8 @@ export default function EmailAgentManagement() {
                 onPageChange={setLogsPage}
                 onStatusFilter={handleStatusFilter}
                 onRowClick={handleLogClick}
+                onDelete={handleDeleteLog}
+                onBulkDelete={handleBulkDeleteLogs}
               />
             )}
           </CardContent>

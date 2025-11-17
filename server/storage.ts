@@ -1382,6 +1382,8 @@ export interface IStorage {
     offset?: number;
   }): Promise<{ logs: EmailWebhookLog[]; total: number }>;
   updateEmailWebhookLog(id: string, updates: Partial<EmailWebhookLog>): Promise<EmailWebhookLog>;
+  deleteEmailWebhookLog(id: string): Promise<void>;
+  deleteEmailWebhookLogs(ids: string[]): Promise<void>;
   
   getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null>;
   updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats>;
@@ -12009,6 +12011,18 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  async deleteEmailWebhookLog(id: string): Promise<void> {
+    await db
+      .delete(emailWebhookLogs)
+      .where(eq(emailWebhookLogs.id, id));
+  }
+
+  async deleteEmailWebhookLogs(ids: string[]): Promise<void> {
+    await db
+      .delete(emailWebhookLogs)
+      .where(inArray(emailWebhookLogs.id, ids));
   }
 
   async getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null> {

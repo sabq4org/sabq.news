@@ -26750,6 +26750,42 @@ Allow: /
     }
   });
 
+  // DELETE /api/email-agent/logs/:id - Delete single webhook log (admin only)
+  app.delete("/api/email-agent/logs/:id", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await storage.deleteEmailWebhookLog(id);
+      
+      res.json({ success: true, message: 'تم حذف السجل بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting webhook log:', error);
+      res.status(500).json({ error: 'فشل في حذف السجل' });
+    }
+  });
+
+  // POST /api/email-agent/logs/bulk-delete - Delete multiple webhook logs (admin only)
+  app.post("/api/email-agent/logs/bulk-delete", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'يجب تحديد معرفات السجلات للحذف' });
+      }
+      
+      await storage.deleteEmailWebhookLogs(ids);
+      
+      res.json({ 
+        success: true, 
+        message: `تم حذف ${ids.length} سجل بنجاح`,
+        deleted: ids.length
+      });
+    } catch (error: any) {
+      console.error('Error bulk deleting webhook logs:', error);
+      res.status(500).json({ error: 'فشل في حذف السجلات' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

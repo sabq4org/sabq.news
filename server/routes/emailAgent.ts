@@ -610,8 +610,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       authorId: reporterUser.id, // 👤 Article attributed to the reporter, not system!
       status: trustedSender.autoPublish ? "published" : "draft",
       language: editorialResult.language,
-      featuredImage: featuredImage,
-      seoKeywords: editorialResult.optimized.seoKeywords,
+      imageUrl: featuredImage, // 🖼️ Featured image URL (first uploaded image)
+      seo: {
+        keywords: editorialResult.optimized.seoKeywords,
+      },
       categoryId: finalCategoryId, // 🎯 Always has a valid category!
       createdAt: new Date(),
       publishedAt: trustedSender.autoPublish ? new Date() : null,
