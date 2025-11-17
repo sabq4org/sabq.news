@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
+import { AutoPublishBanner } from "./AutoPublishBanner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -310,6 +311,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </header>
           
           <InternalAnnouncement />
+          <AutoPublishBanner />
           
           <main className="flex-1 overflow-auto p-4 md:p-6">
             <AppBreadcrumbs role={role} flags={flags} />
