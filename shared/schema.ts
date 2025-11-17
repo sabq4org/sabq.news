@@ -1734,6 +1734,9 @@ export type InsertNotificationQueue = z.infer<typeof insertNotificationQueueSche
 export type NotificationsInbox = typeof notificationsInbox.$inferSelect;
 export type InsertNotificationsInbox = z.infer<typeof insertNotificationsInboxSchema>;
 
+export type NotificationInbox = typeof notificationsInbox.$inferSelect;
+export type InsertNotificationInbox = z.infer<typeof insertNotificationsInboxSchema>;
+
 export type NotificationMetrics = typeof notificationMetrics.$inferSelect;
 export type InsertNotificationMetrics = z.infer<typeof insertNotificationMetricsSchema>;
 

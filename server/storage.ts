@@ -4,6 +4,7 @@ import { eq, desc, asc, sql, and, or, inArray, ne, gte, lt, lte, isNull, isNotNu
 import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
+import { notificationBus } from "./notificationBus";
 import {
   users,
   categories,
@@ -81,8 +82,11 @@ import {
   deepAnalyses,
   deepAnalysisMetrics,
   deepAnalysisEvents,
+  notificationsInbox,
   type DeepAnalysis,
   type InsertDeepAnalysis,
+  type NotificationInbox,
+  type InsertNotificationInbox,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -1389,6 +1393,35 @@ export interface IStorage {
   getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null>;
   updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats>;
   getEmailLanguageCounts(): Promise<{ ar: number; en: number; ur: number }>;
+  
+  // Notifications Operations
+  createNotification(data: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    deeplink?: string;
+    metadata?: any;
+  }): Promise<any>;
+  getNotifications(userId: string, filters?: {
+    read?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ notifications: any[]; total: number }>;
+  getUnreadNotificationsCount(userId: string): Promise<number>;
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  deleteNotification(notificationId: string): Promise<void>;
+  clearAllNotifications(userId: string): Promise<void>;
+  
+  // Broadcast notification to all staff/admin users
+  broadcastNotificationToStaff(data: {
+    type: string;
+    title: string;
+    body: string;
+    deeplink?: string;
+    metadata?: any;
+  }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -12097,6 +12130,138 @@ export class DatabaseStorage implements IStorage {
       en: enResults.length,
       ur: urResults.length,
     };
+  }
+
+  // Notification Operations
+  private async getStaffUserIds(): Promise<string[]> {
+    const staffRoles = ['super_admin', 'admin', 'editor', 'reporter', 'moderator', 'content_creator'];
+    
+    const staffUsers = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(inArray(roles.name, staffRoles));
+    
+    return staffUsers.map(u => u.userId);
+  }
+
+  async createNotification(data: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    deeplink?: string;
+    metadata?: any;
+  }): Promise<NotificationInbox> {
+    const [notification] = await db.insert(notificationsInbox).values({
+      id: nanoid(),
+      userId: data.userId,
+      type: data.type,
+      title: data.title,
+      body: data.body,
+      deeplink: data.deeplink,
+      metadata: data.metadata,
+    }).returning();
+    
+    notificationBus.emit(data.userId, notification);
+    
+    return notification;
+  }
+
+  async getNotifications(userId: string, filters?: {
+    read?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ notifications: NotificationInbox[]; total: number }> {
+    const conditions = [eq(notificationsInbox.userId, userId)];
+    
+    if (filters?.read !== undefined) {
+      conditions.push(eq(notificationsInbox.read, filters.read));
+    }
+    
+    const whereClause = and(...conditions);
+    
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(notificationsInbox)
+      .where(whereClause);
+    
+    const notifications = await db
+      .select()
+      .from(notificationsInbox)
+      .where(whereClause)
+      .orderBy(desc(notificationsInbox.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+    
+    return {
+      notifications,
+      total: Number(totalResult.count),
+    };
+  }
+
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(notificationsInbox)
+      .where(and(
+        eq(notificationsInbox.userId, userId),
+        eq(notificationsInbox.read, false)
+      ));
+    
+    return Number(result.count);
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db
+      .update(notificationsInbox)
+      .set({ read: true })
+      .where(eq(notificationsInbox.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notificationsInbox)
+      .set({ read: true })
+      .where(eq(notificationsInbox.userId, userId));
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    await db
+      .delete(notificationsInbox)
+      .where(eq(notificationsInbox.id, notificationId));
+  }
+
+  async clearAllNotifications(userId: string): Promise<void> {
+    await db
+      .delete(notificationsInbox)
+      .where(eq(notificationsInbox.userId, userId));
+  }
+
+  async broadcastNotificationToStaff(data: {
+    type: string;
+    title: string;
+    body: string;
+    deeplink?: string;
+    metadata?: any;
+  }): Promise<void> {
+    const staffUserIds = await this.getStaffUserIds();
+    
+    await db.transaction(async (tx) => {
+      for (const userId of staffUserIds) {
+        const [notification] = await tx.insert(notificationsInbox).values({
+          id: nanoid(),
+          userId,
+          type: data.type,
+          title: data.title,
+          body: data.body,
+          deeplink: data.deeplink,
+          metadata: data.metadata,
+        }).returning();
+        
+        notificationBus.emit(userId, notification);
+      }
+    });
   }
 }
 
