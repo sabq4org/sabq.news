@@ -159,24 +159,51 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       html = req.body.html || req.body.html_body || "";
     }
     
+    // 📎 Process attachments from SendGrid
     const attachments = (req.files as Express.Multer.File[]) || [];
+    
+    // Log SendGrid attachment metadata (if available)
+    if (req.body.attachments) {
+      console.log("[Email Agent] 📎 SendGrid reported attachments count:", req.body.attachments);
+    }
+    
+    if (req.body['attachment-info']) {
+      try {
+        const attachmentInfo = JSON.parse(req.body['attachment-info']);
+        console.log("[Email Agent] 📎 SendGrid attachment-info:", JSON.stringify(attachmentInfo, null, 2));
+      } catch (e) {
+        console.log("[Email Agent] ⚠️ Could not parse attachment-info");
+      }
+    }
 
     console.log("[Email Agent] Final extracted values:");
     console.log("[Email Agent] - From:", from);
     console.log("[Email Agent] - Subject:", subject);
     console.log("[Email Agent] - Text length:", text?.length || 0);
     console.log("[Email Agent] - HTML length:", html?.length || 0);
-    console.log("[Email Agent] - Attachments:", attachments.length);
+    console.log("[Email Agent] - Multer files received:", attachments.length);
+    console.log("[Email Agent] - req.files keys:", req.files ? Object.keys(req.files) : 'none');
     
     // Enhanced attachment logging
     if (attachments.length > 0) {
+      console.log("[Email Agent] 📎 ============ ATTACHMENTS DETAILS ============");
       attachments.forEach((att, idx) => {
-        console.log(`[Email Agent] Attachment ${idx + 1}:`, {
-          filename: att.originalname,
+        console.log(`[Email Agent] 📎 Attachment ${idx + 1}:`, {
+          fieldname: att.fieldname,
+          originalname: att.originalname,
+          filename: att.filename,
           size: `${(att.size / 1024).toFixed(2)} KB`,
-          type: att.mimetype,
+          mimetype: att.mimetype,
+          buffer: att.buffer ? 'Present' : 'Missing',
         });
       });
+      console.log("[Email Agent] 📎 ==========================================");
+    } else {
+      console.log("[Email Agent] ⚠️ No attachments found in req.files");
+      console.log("[Email Agent] ⚠️ This could mean:");
+      console.log("[Email Agent]    1. Email has no attachments");
+      console.log("[Email Agent]    2. SendGrid Inbound Parse not configured to send attachments");
+      console.log("[Email Agent]    3. Multer configuration issue");
     }
 
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
@@ -423,28 +450,85 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       });
     }
 
+    // 🖼️ Process image attachments
     const uploadedAttachments: string[] = [];
+    const uploadedImages: string[] = [];
+    let attachmentInfo: any = {};
     
-    if (attachments.length > 0) {
-      console.log("[Email Agent] Processing attachments...");
-      
-      for (const attachment of attachments) {
-        try {
-          const gcsPath = await uploadAttachmentToGCS(
-            attachment.buffer,
-            attachment.originalname,
-            attachment.mimetype
-          );
-          uploadedAttachments.push(gcsPath);
-        } catch (error) {
-          console.error("[Email Agent] Failed to upload attachment:", error);
-        }
+    // Parse SendGrid attachment-info for inline image metadata
+    if (req.body['attachment-info']) {
+      try {
+        attachmentInfo = JSON.parse(req.body['attachment-info']);
+      } catch (e) {
+        console.log("[Email Agent] Could not parse attachment-info");
       }
     }
+    
+    if (attachments.length > 0) {
+      console.log("[Email Agent] 🖼️ ============ PROCESSING ATTACHMENTS ============");
+      
+      for (let i = 0; i < attachments.length; i++) {
+        const attachment = attachments[i];
+        
+        try {
+          // Validate image files
+          const isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(attachment.mimetype);
+          
+          if (isImage) {
+            // Validate image size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (attachment.size > maxSize) {
+              console.log(`[Email Agent] ⚠️ Image ${attachment.originalname} too large (${(attachment.size / 1024 / 1024).toFixed(2)}MB), skipping`);
+              continue;
+            }
+            
+            console.log(`[Email Agent] 📸 Uploading image: ${attachment.originalname} (${(attachment.size / 1024).toFixed(2)} KB)`);
+            
+            const gcsPath = await uploadAttachmentToGCS(
+              attachment.buffer,
+              attachment.originalname,
+              attachment.mimetype
+            );
+            
+            uploadedAttachments.push(gcsPath);
+            uploadedImages.push(gcsPath);
+            
+            console.log(`[Email Agent] ✅ Image uploaded successfully: ${gcsPath}`);
+          } else {
+            // Non-image attachment - still upload it
+            console.log(`[Email Agent] 📎 Uploading non-image: ${attachment.originalname}`);
+            
+            const gcsPath = await uploadAttachmentToGCS(
+              attachment.buffer,
+              attachment.originalname,
+              attachment.mimetype
+            );
+            
+            uploadedAttachments.push(gcsPath);
+            console.log(`[Email Agent] ✅ Attachment uploaded: ${gcsPath}`);
+          }
+        } catch (error) {
+          console.error(`[Email Agent] ❌ Failed to upload ${attachment.originalname}:`, error);
+        }
+      }
+      
+      console.log("[Email Agent] 🖼️ Upload summary:");
+      console.log("[Email Agent]    - Total attachments:", attachments.length);
+      console.log("[Email Agent]    - Successfully uploaded:", uploadedAttachments.length);
+      console.log("[Email Agent]    - Images uploaded:", uploadedImages.length);
+      console.log("[Email Agent] 🖼️ ==========================================");
+    } else {
+      console.log("[Email Agent] ℹ️ No attachments to process");
+    }
 
-    const featuredImage = uploadedAttachments.find(path => 
-      /\.(jpg|jpeg|png|gif|webp)$/i.test(path)
-    ) || null;
+    // Select featured image (first uploaded image)
+    const featuredImage = uploadedImages[0] || null;
+    
+    if (featuredImage) {
+      console.log("[Email Agent] 🎨 Featured image selected:", featuredImage);
+    } else {
+      console.log("[Email Agent] ℹ️ No featured image (no images in email)");
+    }
 
     const articleTitle = editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
     const articleSlug = generateSlug(articleTitle);
