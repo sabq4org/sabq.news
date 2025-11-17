@@ -920,6 +920,59 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       throw createError; // Re-throw to trigger catch block
     }
 
+    // Broadcast notification to staff users about new published article
+    if (trustedSender.autoPublish && article) {
+      try {
+        console.log("[Email Agent] 📢 Broadcasting notification to staff about published article...");
+        
+        // Determine notification language based on detected language
+        const detectedLanguage = editorialResult.language;
+        let notificationTitle: string;
+        let notificationBody: string;
+        
+        if (detectedLanguage === "en") {
+          notificationTitle = "New Article Published";
+          notificationBody = `A new article has been published via email: ${articleData.title}`;
+        } else if (detectedLanguage === "ur") {
+          notificationTitle = "نیا مضمون شائع ہوا";
+          notificationBody = `ای میل کے ذریعے نیا مضمون شائع کیا گیا: ${articleData.title}`;
+        } else {
+          // Default to Arabic
+          notificationTitle = "مقال جديد";
+          notificationBody = `تم نشر مقال جديد عبر البريد الإلكتروني: ${articleData.title}`;
+        }
+        
+        await storage.broadcastNotificationToStaff({
+          type: "article_published",
+          title: notificationTitle,
+          body: notificationBody,
+          deeplink: `/articles/${articleData.slug}`,
+          metadata: {
+            articleId: article.id,
+            articleSlug: articleData.slug,
+            language: detectedLanguage,
+            articleTitle: articleData.title,
+            publishedAt: new Date().toISOString(),
+            reporter: {
+              userId: reporterUser.id,
+              name: reporterUser.firstName && reporterUser.lastName 
+                ? `${reporterUser.firstName} ${reporterUser.lastName}`
+                : reporterUser.email,
+            },
+            imageUrl: articleData.imageUrl || allAttachmentsMetadata.find(a => a.type === 'image')?.url || null,
+          }
+        });
+        
+        console.log("[Email Agent] ✅ Staff notification sent successfully");
+      } catch (notificationError) {
+        // Log error but don't fail the entire operation
+        console.error("[Email Agent] ⚠️ Failed to send staff notification:", notificationError);
+        console.error("[Email Agent] ⚠️ Article was published successfully, but notification failed");
+      }
+    } else {
+      console.log("[Email Agent] ℹ️ Skipping staff notification (auto-publish disabled or article not created)");
+    }
+
     // Update webhook log with correct status and attachments data (already processed early)
     const webhookStatus = trustedSender.autoPublish ? "published" : "processed";
     await storage.updateEmailWebhookLog(webhookLog.id, {
