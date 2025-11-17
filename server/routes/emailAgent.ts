@@ -130,6 +130,8 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
 }
 
 router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
+  let webhookLog: any = null; // Define outside try block so it's accessible in catch
+  
   try {
     console.log("[Email Agent] ============ WEBHOOK START ============");
     console.log("[Email Agent] Received webhook from SendGrid");
@@ -438,7 +440,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
     
     const logId = nanoid();
-    let webhookLog = await storage.createEmailWebhookLog({
+    webhookLog = await storage.createEmailWebhookLog({
       fromEmail: senderEmail,
       subject,
       bodyText: text,
@@ -578,7 +580,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     let reporterUser;
     if (trustedSender.reporterUserId) {
       console.log("[Email Agent] 👤 Fetching assigned reporter user:", trustedSender.reporterUserId);
-      reporterUser = await storage.getUserById(trustedSender.reporterUserId);
+      reporterUser = await storage.getUser(trustedSender.reporterUserId);
       if (!reporterUser) {
         console.log("[Email Agent] ⚠️ Assigned reporter not found, falling back to system user");
         reporterUser = systemUser;
@@ -737,7 +739,15 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     // ✅ SUCCESSFUL VALIDATION - Upload pending images to PUBLIC
     console.log("[Email Agent] ✅ Validation successful - uploading images to PUBLIC");
-    await uploadPendingImages(true);
+    console.log("[Email Agent] 📸 Pending images count:", pendingImageUploads.length);
+    
+    try {
+      await uploadPendingImages(true);
+      console.log("[Email Agent] ✅ Images uploaded successfully");
+    } catch (uploadError) {
+      console.error("[Email Agent] ❌ Error uploading images:", uploadError);
+      throw uploadError; // Re-throw to trigger catch block
+    }
     
     // 🎨 Select featured image from newly-uploaded images
     const featuredImage = uploadedImages[0] || null;
@@ -840,21 +850,32 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     let article;
     
-    // Use the correct table based on language
-    if (editorialResult.language === "en") {
-      // For English articles, use the articles table with language set to "en"
-      // Note: The system currently stores all articles in the main articles table
-      article = await storage.createArticle(articleData);
-    } else if (editorialResult.language === "ur") {
-      // For Urdu articles, use createUrArticle method
-      article = await storage.createUrArticle(articleData);
-    } else {
-      // For Arabic (default) and any other language, use the main articles table
-      article = await storage.createArticle(articleData);
-    }
+    console.log("[Email Agent] 📝 Creating article...");
+    console.log("[Email Agent]    - Language:", editorialResult.language);
+    console.log("[Email Agent]    - Status:", articleData.status);
+    console.log("[Email Agent]    - Auto-publish:", trustedSender.autoPublish);
+    
+    try {
+      // Use the correct table based on language
+      if (editorialResult.language === "en") {
+        // For English articles, use the articles table with language set to "en"
+        // Note: The system currently stores all articles in the main articles table
+        article = await storage.createArticle(articleData);
+      } else if (editorialResult.language === "ur") {
+        // For Urdu articles, use createUrArticle method
+        article = await storage.createUrArticle(articleData);
+      } else {
+        // For Arabic (default) and any other language, use the main articles table
+        article = await storage.createArticle(articleData);
+      }
 
-    console.log("[Email Agent] Article created:", article?.id);
-    console.log("[Email Agent] Status:", articleData.status);
+      console.log("[Email Agent] ✅ Article created successfully:", article?.id);
+      console.log("[Email Agent]    - Title:", articleData.title);
+      console.log("[Email Agent]    - Status:", articleData.status);
+    } catch (createError) {
+      console.error("[Email Agent] ❌ Error creating article:", createError);
+      throw createError; // Re-throw to trigger catch block
+    }
 
     // Update webhook log with correct status and attachments data (already processed early)
     const webhookStatus = trustedSender.autoPublish ? "published" : "processed";
@@ -899,7 +920,27 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error("[Email Agent] Error processing webhook:", error);
+    console.error("[Email Agent] ❌ Error processing webhook:", error);
+    console.error("[Email Agent] ❌ Error stack:", error.stack);
+    
+    // Update webhook log to "failed" status (if it was created)
+    if (webhookLog?.id) {
+      try {
+        await storage.updateEmailWebhookLog(webhookLog.id, {
+          status: "failed",
+          rejectionReason: "processing_error",
+          aiAnalysis: {
+            errors: [error.message],
+            warnings: error.stack ? [error.stack.substring(0, 500)] : [], // First 500 chars of stack trace
+          },
+        });
+        console.log("[Email Agent] ✅ Webhook log updated to 'failed' status");
+      } catch (updateError) {
+        console.error("[Email Agent] ⚠️ Failed to update webhook log status:", updateError);
+      }
+    } else {
+      console.log("[Email Agent] ⚠️ Webhook log not created yet - error occurred during email parsing");
+    }
     
     const today = new Date();
     await storage.updateEmailAgentStats(today, {
