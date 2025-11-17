@@ -4194,6 +4194,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get users list (admin only, supports role filtering)
+  app.get("/api/users", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { role } = req.query;
+
+      // Build where conditions
+      const conditions = [
+        eq(users.status, 'active'),
+        isNull(users.deletedAt)
+      ];
+
+      // Filter by role if provided
+      if (role && typeof role === 'string') {
+        conditions.push(eq(users.role, role));
+      }
+
+      const usersList = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          role: users.role,
+          status: users.status,
+        })
+        .from(users)
+        .where(and(...conditions))
+        .orderBy(users.firstName, users.lastName);
+
+      res.json(usersList);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'فشل في جلب المستخدمين' });
+    }
+  });
+
   // Get public user profile (no auth required)
   app.get("/api/users/:id/public", async (req, res) => {
     try {
