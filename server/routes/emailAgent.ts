@@ -61,12 +61,18 @@ async function uploadAttachmentToGCS(
 }
 
 function parseObjectPath(path: string): { bucketName: string; objectPath: string } {
-  const parts = path.split('/');
+  // Remove leading slash if present (e.g., "/bucket/path" → "bucket/path")
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  const parts = cleanPath.split('/');
+  
   if (parts.length < 2) {
     throw new Error(`Invalid object path: ${path}`);
   }
+  
   const bucketName = parts[0];
   const objectPath = parts.slice(1).join('/');
+  
+  console.log(`[Email Agent] 🪣 Parsed object path: bucket="${bucketName}", path="${objectPath}"`);
   return { bucketName, objectPath };
 }
 
