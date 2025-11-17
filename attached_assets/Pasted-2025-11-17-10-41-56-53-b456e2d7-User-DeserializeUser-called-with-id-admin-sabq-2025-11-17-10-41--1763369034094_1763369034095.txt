@@ -1,0 +1,136 @@
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.53
+b456e2d7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 10:41:56.55
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.55
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.55
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.55
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.56
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.56
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.56
+b456e2d7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 10:41:56.56
+b456e2d7
+User
+followerId: 'admin-sabq',
+2025-11-17 10:41:56.56
+b456e2d7
+User
+followingId: 'user-1760950807037-09p6vtnwf'
+2025-11-17 10:41:56.56
+b456e2d7
+User
+[Storage] Checking if user is following: {
+2025-11-17 10:41:56.56
+b456e2d7
+User
+}
+2025-11-17 10:41:56.59
+b456e2d7
+User
+}
+2025-11-17 10:41:56.59
+b456e2d7
+User
+[Social Follow] Checked following status: {
+2025-11-17 10:41:56.59
+b456e2d7
+User
+followerId: 'admin-sabq',
+2025-11-17 10:41:56.59
+b456e2d7
+User
+isFollowing: false
+2025-11-17 10:41:56.59
+b456e2d7
+User
+[Storage] Is following: false
+2025-11-17 10:41:56.61
+b456e2d7
+User
+8:41:56 AM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 200 in 1…
+2025-11-17 10:41:56.72
+b456e2d7
+User
+8:41:56 AM [express] GET /api/articles/%D9%85%D8%AF%D8%A7%D8%B1%D8%B3-%D8%A7%D9%84%D8%B1%D9%8A%D8%A7…
+2025-11-17 10:41:56.82
+b456e2d7
+User
+📱 [Pass Update] Logged: {
+2025-11-17 10:41:56.95
+b456e2d7
+User
+✅ Short link created: KAF3REHj -> https://sabq.life/article/مدارس-الرياض-تنظم-النسخة-الرابعة-من-ملتقى-التخصص-الجامعي-بمشاركة-واسعة-1763368894433
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-17 10:42:01.04
+2a098c19
+User
+📡 SSE connection closed for user: admin-sabq
