@@ -551,8 +551,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] Article created:", article?.id);
     console.log("[Email Agent] Status:", articleData.status);
 
+    // Update webhook log with correct status based on publication state
+    const webhookStatus = trustedSender.autoPublish ? "published" : "processed";
     await storage.updateEmailWebhookLog(webhookLog.id, {
-      status: "processed",
+      status: webhookStatus,
       trustedSenderId: trustedSender.id,
       articleId: article?.id,
     });

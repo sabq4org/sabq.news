@@ -88,7 +88,7 @@ export async function analyzeAndEditWithSabqStyle(
   "optimized": {
     "title": "عنوان احترافي جذاب من 6-15 كلمة - مباشر وواضح",
     "lead": "مقدمة قوية من 20-60 كلمة - استخرج أهم معلومة من النص",
-    "content": "النص كاملاً مُحسّن ومُنظّم بأسلوب سبق - جاهز للنشر فوراً!",
+    "content": "النص كاملاً مُحسّن ومُنظّم بأسلوب سبق - **احتفظ بكل التفاصيل والمعلومات ولا تختصر!** - منسّق بـ HTML paragraphs (<p>...</p>) - جاهز للنشر فوراً!",
     "seoKeywords": ["كلمات مفتاحية ذكية من 4-10 كلمات"]
   }
 }
@@ -96,7 +96,9 @@ export async function analyzeAndEditWithSabqStyle(
 ## ✨ قواعد الكتابة بأسلوب سبق (المُحسّن فقط)
 - لغة عربية فصحى سهلة، واضحة، مباشرة
 - أهم معلومة أولاً - ثم التفاصيل (هرم مقلوب)
+- **استخدم HTML paragraphs** - كل فقرة داخل وسم <p> منفصل
 - فقرات قصيرة ومنظمة (2-4 أسطر لكل فقرة)
+- **احتفظ بكل التفاصيل** - لا تختصر المحتوى أو تحذف معلومات أبداً
 - استخرج: من؟ ماذا؟ أين؟ متى؟ كيف؟ ولماذا؟
 - صوت صحفي محايد، دقيق، احترافي
 
@@ -149,7 +151,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
   "optimized": {
     "title": "Professional engaging headline of 6-15 words - direct and clear",
     "lead": "Strong introduction of 20-60 words - extract the most important info",
-    "content": "Full text enhanced and organized in Sabq style - ready for immediate publication!",
+    "content": "Full text enhanced and organized in Sabq style - **keep all details and do not shorten!** - formatted with HTML paragraphs (each paragraph in <p> tag) - ready for immediate publication!",
     "seoKeywords": ["smart keywords, 4-10 words"]
   }
 }
@@ -157,7 +159,9 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
 ## ✨ Sabq Writing Style (Improved Version Only)
 - Clear, simple, direct standard English
 - Most important info first - then details (inverted pyramid)
+- **Use HTML paragraphs** - each paragraph inside a separate <p> tag
 - Short organized paragraphs (2-4 lines each)
+- **Keep all details** - never shorten content or remove information
 - Extract: Who? What? Where? When? How? Why?
 - Neutral, accurate, professional journalistic voice
 
@@ -210,7 +214,7 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
   "optimized": {
     "title": "6-15 الفاظ کی پیشہ ورانہ دلکش سرخی - براہ راست اور واضح",
     "lead": "20-60 الفاظ کا مضبوط تعارف - سب سے اہم معلومات نکالیں",
-    "content": "سبق انداز میں بہتر اور منظم مکمل متن - فوری اشاعت کے لیے تیار!",
+    "content": "سبق انداز میں بہتر اور منظم مکمل متن - **تمام تفصیلات رکھیں اور مختصر نہ کریں!** - HTML paragraphs میں فارمیٹ کریں (ہر پیراگراف <p> ٹیگ میں) - فوری اشاعت کے لیے تیار!",
     "seoKeywords": ["سمارٹ کلیدی الفاظ، 4-10 الفاظ"]
   }
 }
@@ -218,7 +222,9 @@ Evaluate the ORIGINAL text (not the improved one) on a scale of 0 to 100:
 ## ✨ سبق تحریری انداز (صرف بہتر شدہ)
 - واضح، سادہ، براہ راست معیاری اردو
 - سب سے اہم معلومات پہلے - پھر تفصیلات
+- **HTML paragraphs استعمال کریں** - ہر پیراگراف الگ <p> ٹیگ میں
 - مختصر منظم پیراگراف (ہر ایک 2-4 لائنیں)
+- **تمام تفصیلات رکھیں** - مواد مختصر نہ کریں یا معلومات ہٹائیں نہیں
 - نکالیں: کون؟ کیا؟ کہاں؟ کب؟ کیسے؟ کیوں؟
 - غیر جانبدار، درست، پیشہ ورانہ صحافتی آواز
 
