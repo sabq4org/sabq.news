@@ -18,8 +18,9 @@ Successfully completed comprehensive migration from legacy OpenAI models (gpt-4,
 
 ### Model Standardization
 - **Replaced Models:** gpt-4, gpt-4o, gpt-4o-mini, gpt-3.5, gpt-5
-- **New Model:** gpt-5.1 (all completions)
-- **Status:** ✅ Zero remaining references to old models
+- **New Model:** gpt-5.1 (all chat completions)
+- **Exception:** text-embedding-3-large (kept for embeddings - not a chat model)
+- **Status:** ✅ Zero remaining references to old chat models
 
 ## Files Modified
 
@@ -75,7 +76,9 @@ Successfully completed comprehensive migration from legacy OpenAI models (gpt-4,
     - Updated inline model reference from "gpt-4o" to "gpt-5.1"
 
 12. **server/embeddingsService.ts**
-    - Updated model from "gpt-4o-mini" to "gpt-5.1"
+    - ⚠️ **EXCEPTION:** Embeddings model intentionally NOT migrated
+    - Keeps `text-embedding-3-large` for vector generation (required for embeddings)
+    - Only entity extraction updated to use gpt-5.1 (chat completion task)
 
 13. **server/data-story-routes.ts**
     - Updated model reference from "gpt-4o" to "gpt-5.1"
@@ -88,7 +91,8 @@ Successfully completed comprehensive migration from legacy OpenAI models (gpt-4,
 - **Files Modified:** 13
 - **API Calls Updated:** 20+
 - **Model References Updated:** 30+
-- **Validation:** ✅ Zero old model references remaining
+- **Embeddings Exception:** 1 file kept on text-embedding-3-large (required)
+- **Validation:** ✅ Zero old chat model references remaining
 - **Application Status:** ✅ Running without errors
 
 ## Reasoning Configuration (Future Enhancement)
