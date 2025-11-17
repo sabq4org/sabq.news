@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Paperclip } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import type { EmailWebhookLog } from "@shared/schema";
 
@@ -217,6 +217,7 @@ export function WebhookLogsTable({
                     <TableHead className="text-right">معرف المقال</TableHead>
                     <TableHead className="text-right">جودة AI</TableHead>
                     <TableHead className="text-right">اللغة</TableHead>
+                    <TableHead className="text-right">المرفقات</TableHead>
                     {onDelete && <TableHead className="text-right w-12"></TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -282,6 +283,16 @@ export function WebhookLogsTable({
                       </TableCell>
                       <TableCell>
                         {getLanguageName(log.aiAnalysis?.languageDetected)}
+                      </TableCell>
+                      <TableCell>
+                        {log.attachmentsCount !== undefined && log.attachmentsCount > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">{log.attachmentsCount}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       {onDelete && (
                         <TableCell onClick={(e) => e.stopPropagation()}>
