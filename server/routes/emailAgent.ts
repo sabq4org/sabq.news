@@ -136,9 +136,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       
       try {
         // Parse the raw email using mailparser
-        // CRITICAL: Convert string to Buffer if needed for proper attachment extraction
+        // CRITICAL: SendGrid sends raw MIME as string, must preserve binary data for attachments
+        // Using 'binary' encoding prevents corruption of base64/binary attachment data
         const emailBuffer = typeof req.body.email === 'string' 
-          ? Buffer.from(req.body.email, 'utf-8')
+          ? Buffer.from(req.body.email, 'binary')  // ✅ Preserve binary data (images, files)
           : req.body.email;
         const parsed = await simpleParser(emailBuffer);
         
