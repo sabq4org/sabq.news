@@ -26603,7 +26603,7 @@ Allow: /
   app.post("/api/email-agent/senders", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const { email, name, language, autoPublish, authorId } = req.body;
+      const { email, name, language, autoPublish, reporterUserId, defaultCategory, status, token } = req.body;
 
       if (!email || !name) {
         return res.status(400).json({ error: 'البريد الإلكتروني والاسم مطلوبان' });
@@ -26614,17 +26614,19 @@ Allow: /
         return res.status(400).json({ error: 'البريد الإلكتروني مسجل بالفعل' });
       }
 
-      const token = Array.from({ length: 32 }, () =>
+      const finalToken = token || Array.from({ length: 32 }, () =>
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
       ).join('');
 
       const sender = await storage.createTrustedSender({
         email,
         name,
-        token,
-        status: 'active',
+        token: finalToken,
+        status: status || 'active',
         language: language || 'ar',
         autoPublish: autoPublish !== false,
+        reporterUserId: reporterUserId || undefined,
+        defaultCategory: defaultCategory || undefined,
       }, userId);
 
       await logActivity({

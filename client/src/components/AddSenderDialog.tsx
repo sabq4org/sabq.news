@@ -40,6 +40,7 @@ const formSchema = z.object({
   language: z.enum(["ar", "en", "ur"]),
   autoPublish: z.boolean(),
   defaultCategory: z.string().optional(),
+  reporterUserId: z.string().optional(),
   status: z.enum(["active", "suspended", "revoked"]),
 });
 
@@ -49,6 +50,13 @@ interface Category {
   id: string;
   nameAr: string;
   status: string;
+}
+
+interface Reporter {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
 }
 
 interface AddSenderDialogProps {
@@ -87,6 +95,17 @@ export function AddSenderDialog({
     },
   });
 
+  // Fetch reporters (users with reporter role)
+  const { data: reporters } = useQuery<Reporter[]>({
+    queryKey: ['/api/users/reporters'],
+    queryFn: async () => {
+      const res = await fetch('/api/users?role=reporter', { credentials: 'include' });
+      if (!res.ok) throw new Error('فشل في تحميل المراسلين');
+      const users = await res.json();
+      return users.filter((u: any) => u.role === 'reporter');
+    },
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -95,6 +114,7 @@ export function AddSenderDialog({
       language: "ar",
       autoPublish: true,
       defaultCategory: undefined,
+      reporterUserId: undefined,
       status: "active",
     },
   });
@@ -109,6 +129,7 @@ export function AddSenderDialog({
           language: editingSender.language as "ar" | "en" | "ur",
           autoPublish: editingSender.autoPublish,
           defaultCategory: editingSender.defaultCategory || undefined,
+          reporterUserId: editingSender.reporterUserId || undefined,
           status: editingSender.status as "active" | "suspended" | "revoked",
         });
         setGeneratedToken(null);
@@ -119,6 +140,7 @@ export function AddSenderDialog({
           language: "ar",
           autoPublish: true,
           defaultCategory: undefined,
+          reporterUserId: undefined,
           status: "active",
         });
         // Generate token for new senders
@@ -202,6 +224,47 @@ export function AddSenderDialog({
                       data-testid="input-name"
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="reporterUserId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>المراسل المعتمد</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      // Allow clearing selection
+                      field.onChange(value === "none" ? undefined : value);
+                    }}
+                    defaultValue={field.value || "none"}
+                    value={field.value || "none"}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="select-reporter">
+                        <SelectValue placeholder="اختر المراسل (اختياري)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">بدون مراسل</SelectItem>
+                      {reporters?.map((reporter) => {
+                        const name = [reporter.firstName, reporter.lastName]
+                          .filter(Boolean)
+                          .join(" ") || reporter.email;
+                        return (
+                          <SelectItem key={reporter.id} value={reporter.id}>
+                            {name}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    المراسل الذي سيتم نسب المقالات المنشورة له
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
