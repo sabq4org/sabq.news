@@ -574,13 +574,21 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     const systemUser = await storage.getOrCreateSystemUser();
     console.log("[Email Agent] Using system user ID:", systemUser.id);
     
-    // 👤 Create or get reporter user for the trusted sender
-    console.log("[Email Agent] 👤 Creating/getting reporter user for sender:", trustedSender.name);
-    const reporterUser = await storage.getOrCreateReporterUser(
-      trustedSender.email,
-      trustedSender.name
-    );
-    console.log("[Email Agent] ✅ Reporter user ready:", reporterUser.id, `-`, reporterUser.firstName, reporterUser.lastName);
+    // 👤 Get assigned reporter user from trusted sender
+    let reporterUser;
+    if (trustedSender.reporterUserId) {
+      console.log("[Email Agent] 👤 Fetching assigned reporter user:", trustedSender.reporterUserId);
+      reporterUser = await storage.getUserById(trustedSender.reporterUserId);
+      if (!reporterUser) {
+        console.log("[Email Agent] ⚠️ Assigned reporter not found, falling back to system user");
+        reporterUser = systemUser;
+      } else {
+        console.log("[Email Agent] ✅ Reporter user found:", reporterUser.id, `-`, reporterUser.firstName, reporterUser.lastName);
+      }
+    } else {
+      console.log("[Email Agent] ℹ️ No reporter assigned to this sender, using system user");
+      reporterUser = systemUser;
+    }
 
     // Extract content from text or HTML
     let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
