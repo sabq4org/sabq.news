@@ -338,6 +338,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             
           } else if (isImage) {
             // 📸 Process Image - STORE IN MEMORY (DO NOT UPLOAD YET)
+            console.log(`[Email Agent] 📸 DETECTED IMAGE: ${attachment.originalname}, mimetype: ${attachment.mimetype}, size: ${attachment.size} bytes`);
+            
             // Validate image size (max 10MB)
             const maxSize = 10 * 1024 * 1024; // 10MB
             if (attachment.size > maxSize) {
@@ -346,6 +348,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             }
             
             console.log(`[Email Agent] 📸 Storing image in memory (deferred upload): ${attachment.originalname} (${(attachment.size / 1024).toFixed(2)} KB)`);
+            console.log(`[Email Agent] 📸 Buffer exists: ${!!attachment.buffer}, Buffer length: ${attachment.buffer?.length || 0}`);
             
             // SECURITY FIX: Store image in memory instead of uploading to PUBLIC
             pendingImageUploads.push({
@@ -356,6 +359,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             });
             
             console.log(`[Email Agent] ✅ Image stored in memory (will upload after validation)`);
+            console.log(`[Email Agent] 📸 pendingImageUploads count is now: ${pendingImageUploads.length}`);
             
           } else {
             // 📎 Process Other File Types - Upload to PRIVATE immediately
@@ -394,30 +398,47 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     // Helper function to upload pending images to PUBLIC or PRIVATE
     const uploadPendingImages = async (isPublic: boolean): Promise<void> => {
+      console.log(`[Email Agent] 📸 ========== uploadPendingImages called ==========`);
+      console.log(`[Email Agent] 📸 isPublic: ${isPublic}`);
+      console.log(`[Email Agent] 📸 pendingImageUploads.length: ${pendingImageUploads.length}`);
+      
       if (pendingImageUploads.length === 0) {
-        console.log(`[Email Agent] 📸 No pending images to upload`);
+        console.log(`[Email Agent] 📸 No pending images to upload - RETURNING EARLY`);
         return;
       }
 
       console.log(`[Email Agent] 📸 Uploading ${pendingImageUploads.length} pending images to ${isPublic ? 'PUBLIC' : 'PRIVATE'}...`);
+      console.log(`[Email Agent] 📸 Images to upload:`, pendingImageUploads.map(img => ({
+        filename: img.filename,
+        contentType: img.contentType,
+        size: img.size,
+        hasBuffer: !!img.buffer
+      })));
       
-      for (const image of pendingImageUploads) {
+      for (let i = 0; i < pendingImageUploads.length; i++) {
+        const image = pendingImageUploads[i];
+        console.log(`[Email Agent] 📸 Processing image ${i + 1}/${pendingImageUploads.length}: ${image.filename}`);
+        
         try {
+          console.log(`[Email Agent] 📸 Calling uploadAttachmentToGCS for ${image.filename}...`);
           const gcsPath = await uploadAttachmentToGCS(
             image.buffer,
             image.filename,
             image.contentType,
             isPublic
           );
+          console.log(`[Email Agent] 📸 uploadAttachmentToGCS returned: ${gcsPath}`);
           
           if (isPublic) {
             uploadedImages.push(gcsPath);
+            console.log(`[Email Agent] 📸 Added to uploadedImages array. Total now: ${uploadedImages.length}`);
           }
           
           // Update or add metadata
           const existingMetadata = allAttachmentsMetadata.find(m => m.filename === image.filename);
           if (existingMetadata) {
             existingMetadata.url = gcsPath;
+            console.log(`[Email Agent] 📸 Updated existing metadata for ${image.filename}`);
           } else {
             allAttachmentsMetadata.push({
               filename: image.filename,
@@ -426,15 +447,20 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               url: gcsPath,
               type: 'image'
             });
+            console.log(`[Email Agent] 📸 Added new metadata for ${image.filename}`);
           }
           
           console.log(`[Email Agent] ✅ Image uploaded to ${isPublic ? 'PUBLIC' : 'PRIVATE'}: ${gcsPath}`);
         } catch (error) {
           console.error(`[Email Agent] ❌ Failed to upload image ${image.filename}:`, error);
+          console.error(`[Email Agent] ❌ Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
         }
       }
       
       console.log(`[Email Agent] 📸 Finished uploading ${pendingImageUploads.length} images`);
+      console.log(`[Email Agent] 📸 uploadedImages count: ${uploadedImages.length}`);
+      console.log(`[Email Agent] 📸 uploadedImages:`, uploadedImages);
+      console.log(`[Email Agent] 📸 ========== uploadPendingImages completed ==========`);
     };
 
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
@@ -738,24 +764,35 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     }
 
     // ✅ SUCCESSFUL VALIDATION - Upload pending images to PUBLIC
+    console.log("[Email Agent] ========================================");
     console.log("[Email Agent] ✅ Validation successful - uploading images to PUBLIC");
-    console.log("[Email Agent] 📸 Pending images count:", pendingImageUploads.length);
+    console.log("[Email Agent] 📸 Pending images count BEFORE upload:", pendingImageUploads.length);
+    console.log("[Email Agent] 📸 Uploaded images count BEFORE upload:", uploadedImages.length);
+    console.log("[Email Agent] ========================================");
     
     try {
       await uploadPendingImages(true);
       console.log("[Email Agent] ✅ Images uploaded successfully");
+      console.log("[Email Agent] 📸 Uploaded images count AFTER upload:", uploadedImages.length);
+      console.log("[Email Agent] 📸 Uploaded images URLs:", uploadedImages);
     } catch (uploadError) {
       console.error("[Email Agent] ❌ Error uploading images:", uploadError);
       throw uploadError; // Re-throw to trigger catch block
     }
     
     // 🎨 Select featured image from newly-uploaded images
+    console.log("[Email Agent] 🎨 Selecting featured image from uploadedImages array...");
+    console.log("[Email Agent] 🎨 uploadedImages[0]:", uploadedImages[0]);
     const featuredImage = uploadedImages[0] || null;
     
     if (featuredImage) {
-      console.log("[Email Agent] 🎨 Featured image selected:", featuredImage);
+      console.log("[Email Agent] 🎨 ✅ Featured image selected:", featuredImage);
     } else {
-      console.log("[Email Agent] ℹ️ No featured image (no images in email)");
+      console.log("[Email Agent] ℹ️ No featured image (uploadedImages array is empty)");
+      console.log("[Email Agent] ℹ️ This could mean:");
+      console.log("[Email Agent]    1. Email has no image attachments");
+      console.log("[Email Agent]    2. Images failed to upload");
+      console.log("[Email Agent]    3. pendingImageUploads was empty");
     }
 
     const articleTitle = editorialResult.optimized.title || subject.replace(/\[TOKEN:[A-F0-9]{64}\]/gi, '').trim();
@@ -826,6 +863,11 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent] ✅ Final category ID selected:", finalCategoryId);
     }
 
+    console.log("[Email Agent] 📝 ========== PREPARING ARTICLE DATA ==========");
+    console.log("[Email Agent] 📝 Featured image to be used:", featuredImage || "NULL - NO IMAGE");
+    console.log("[Email Agent] 📝 Author ID (reporter):", reporterUser.id);
+    console.log("[Email Agent] 📝 Category ID:", finalCategoryId);
+    
     const articleData: any = {
       id: nanoid(),
       title: articleTitle,
@@ -854,6 +896,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent]    - Language:", editorialResult.language);
     console.log("[Email Agent]    - Status:", articleData.status);
     console.log("[Email Agent]    - Auto-publish:", trustedSender.autoPublish);
+    console.log("[Email Agent]    - Image URL in articleData:", articleData.imageUrl || "NULL");
     
     try {
       // Use the correct table based on language
