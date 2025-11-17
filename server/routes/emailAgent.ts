@@ -281,10 +281,12 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     }
 
     // 📎 Process ALL attachments EARLY (BEFORE ANY VALIDATION)
-    // This ensures all files (Word, Images, Other) are preserved even if sender/token validation fails
+    // SECURITY: Images are stored in memory (NOT uploaded) until after validation
+    // Word docs and other files are uploaded to PRIVATE immediately for processing
     let extractedTextFromDocs = "";
     const allAttachmentsMetadata: Array<{ filename: string; contentType: string; size: number; url: string; type: 'image' | 'document' | 'other' }> = [];
     const uploadedImages: string[] = [];
+    const pendingImageUploads: Array<{ buffer: Buffer; filename: string; contentType: string; size: number }> = [];
     
     if (attachments.length > 0) {
       console.log("[Email Agent] 📎 ============ PROCESSING ALL ATTACHMENTS (EARLY) ============");
@@ -313,11 +315,12 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               console.error(`[Email Agent] ⚠️ Failed to extract text from Word:`, extractError);
             }
             
-            // Upload original Word file to GCS IMMEDIATELY
+            // Upload original Word file to PRIVATE immediately (needed for text extraction)
             const gcsPath = await uploadAttachmentToGCS(
               attachment.buffer,
               attachment.originalname,
-              attachment.mimetype
+              attachment.mimetype,
+              false  // isPublic: false - Word docs go to PRIVATE
             );
             
             // Save complete metadata
@@ -329,10 +332,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               type: 'document'
             });
             
-            console.log(`[Email Agent] ✅ Word document uploaded to GCS: ${gcsPath}`);
+            console.log(`[Email Agent] ✅ Word document uploaded to PRIVATE: ${gcsPath}`);
             
           } else if (isImage) {
-            // 📸 Process Image
+            // 📸 Process Image - STORE IN MEMORY (DO NOT UPLOAD YET)
             // Validate image size (max 10MB)
             const maxSize = 10 * 1024 * 1024; // 10MB
             if (attachment.size > maxSize) {
@@ -340,36 +343,27 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               continue;
             }
             
-            console.log(`[Email Agent] 📸 Uploading image: ${attachment.originalname} (${(attachment.size / 1024).toFixed(2)} KB)`);
+            console.log(`[Email Agent] 📸 Storing image in memory (deferred upload): ${attachment.originalname} (${(attachment.size / 1024).toFixed(2)} KB)`);
+            
+            // SECURITY FIX: Store image in memory instead of uploading to PUBLIC
+            pendingImageUploads.push({
+              buffer: attachment.buffer,
+              filename: attachment.originalname,
+              contentType: attachment.mimetype,
+              size: attachment.size
+            });
+            
+            console.log(`[Email Agent] ✅ Image stored in memory (will upload after validation)`);
+            
+          } else {
+            // 📎 Process Other File Types - Upload to PRIVATE immediately
+            console.log(`[Email Agent] 📎 Uploading other file to PRIVATE: ${attachment.originalname}`);
             
             const gcsPath = await uploadAttachmentToGCS(
               attachment.buffer,
               attachment.originalname,
               attachment.mimetype,
-              true  // isPublic: true for images so they can be displayed in browser
-            );
-            
-            uploadedImages.push(gcsPath);
-            
-            // Save metadata
-            allAttachmentsMetadata.push({
-              filename: attachment.originalname,
-              contentType: attachment.mimetype,
-              size: attachment.size,
-              url: gcsPath,
-              type: 'image'
-            });
-            
-            console.log(`[Email Agent] ✅ Image uploaded successfully: ${gcsPath}`);
-            
-          } else {
-            // 📎 Process Other File Types
-            console.log(`[Email Agent] 📎 Uploading other file: ${attachment.originalname}`);
-            
-            const gcsPath = await uploadAttachmentToGCS(
-              attachment.buffer,
-              attachment.originalname,
-              attachment.mimetype
+              false  // isPublic: false - Other files go to PRIVATE
             );
             
             // Save metadata
@@ -381,21 +375,65 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
               type: 'other'
             });
             
-            console.log(`[Email Agent] ✅ Other file uploaded: ${gcsPath}`);
+            console.log(`[Email Agent] ✅ Other file uploaded to PRIVATE: ${gcsPath}`);
           }
         } catch (error) {
-          console.error(`[Email Agent] ❌ Failed to upload ${attachment.originalname}:`, error);
+          console.error(`[Email Agent] ❌ Failed to process ${attachment.originalname}:`, error);
         }
       }
       
-      console.log("[Email Agent] 📎 Upload summary:");
+      console.log("[Email Agent] 📎 Early processing summary:");
       console.log("[Email Agent]    - Total attachments:", attachments.length);
-      console.log("[Email Agent]    - Successfully uploaded:", allAttachmentsMetadata.length);
-      console.log("[Email Agent]    - Word documents:", allAttachmentsMetadata.filter(a => a.type === 'document').length);
-      console.log("[Email Agent]    - Images:", allAttachmentsMetadata.filter(a => a.type === 'image').length);
-      console.log("[Email Agent]    - Other files:", allAttachmentsMetadata.filter(a => a.type === 'other').length);
+      console.log("[Email Agent]    - Word documents (uploaded to PRIVATE):", allAttachmentsMetadata.filter(a => a.type === 'document').length);
+      console.log("[Email Agent]    - Images (pending upload):", pendingImageUploads.length);
+      console.log("[Email Agent]    - Other files (uploaded to PRIVATE):", allAttachmentsMetadata.filter(a => a.type === 'other').length);
       console.log("[Email Agent] 📎 ==========================================");
     }
+
+    // Helper function to upload pending images to PUBLIC or PRIVATE
+    const uploadPendingImages = async (isPublic: boolean): Promise<void> => {
+      if (pendingImageUploads.length === 0) {
+        console.log(`[Email Agent] 📸 No pending images to upload`);
+        return;
+      }
+
+      console.log(`[Email Agent] 📸 Uploading ${pendingImageUploads.length} pending images to ${isPublic ? 'PUBLIC' : 'PRIVATE'}...`);
+      
+      for (const image of pendingImageUploads) {
+        try {
+          const gcsPath = await uploadAttachmentToGCS(
+            image.buffer,
+            image.filename,
+            image.contentType,
+            isPublic
+          );
+          
+          if (isPublic) {
+            uploadedImages.push(gcsPath);
+          }
+          
+          // Update or add metadata
+          const existingMetadata = allAttachmentsMetadata.find(m => m.filename === image.filename);
+          if (existingMetadata) {
+            existingMetadata.url = gcsPath;
+          } else {
+            allAttachmentsMetadata.push({
+              filename: image.filename,
+              contentType: image.contentType,
+              size: image.size,
+              url: gcsPath,
+              type: 'image'
+            });
+          }
+          
+          console.log(`[Email Agent] ✅ Image uploaded to ${isPublic ? 'PUBLIC' : 'PRIVATE'}: ${gcsPath}`);
+        } catch (error) {
+          console.error(`[Email Agent] ❌ Failed to upload image ${image.filename}:`, error);
+        }
+      }
+      
+      console.log(`[Email Agent] 📸 Finished uploading ${pendingImageUploads.length} images`);
+    };
 
     const senderEmail = from.match(/<(.+)>/)?.[1] || from;
     
@@ -412,6 +450,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     
     if (!trustedSender) {
       console.log("[Email Agent] Sender not trusted:", senderEmail);
+      
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
@@ -437,6 +478,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
 
     if (trustedSender.status !== "active") {
       console.log("[Email Agent] Sender is inactive:", senderEmail);
+      
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
@@ -492,6 +536,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         storedLength: storedToken?.length || 0,
         match: providedToken === storedToken,
       });
+      
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
       
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
@@ -557,6 +604,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     if (!emailContent || emailContent.length < 10) {
       console.log("[Email Agent] No content found after token removal");
       
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
+      
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
         rejectionReason: "no_content",
@@ -606,6 +656,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent] Content quality too low - rejected");
       console.log("[Email Agent] Rejection reasons:", editorialResult.issues);
       
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
+      
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
         rejectionReason: "quality_too_low",
@@ -641,6 +694,9 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     if (!editorialResult.hasNewsValue) {
       console.log("[Email Agent] Content has no news value - rejected");
       
+      // SECURITY: Upload pending images to PRIVATE for editorial review
+      await uploadPendingImages(false);
+      
       await storage.updateEmailWebhookLog(webhookLog.id, {
         status: "rejected",
         rejectionReason: "no_news_value",
@@ -671,7 +727,11 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       });
     }
 
-    // 🎨 Select featured image from already-uploaded images
+    // ✅ SUCCESSFUL VALIDATION - Upload pending images to PUBLIC
+    console.log("[Email Agent] ✅ Validation successful - uploading images to PUBLIC");
+    await uploadPendingImages(true);
+    
+    // 🎨 Select featured image from newly-uploaded images
     const featuredImage = uploadedImages[0] || null;
     
     if (featuredImage) {
