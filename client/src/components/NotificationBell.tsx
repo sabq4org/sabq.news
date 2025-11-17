@@ -113,10 +113,10 @@ export function NotificationBell() {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const { data, isLoading } = useQuery<NotificationsResponse>({
-    queryKey: ["/api/me/notifications"],
+    queryKey: ["/api/notifications"],
     queryFn: async () => {
       // القائمة المنسدلة تعرض فقط غير المقروءة - للأرشيف الكامل اذهب لصفحة الإشعارات
-      const response = await fetch("/api/me/notifications?limit=20&unreadOnly=true", {
+      const response = await fetch("/api/notifications?limit=20&read=false", {
         credentials: "include",
       });
       if (!response.ok) {
@@ -153,7 +153,7 @@ export function NotificationBell() {
           console.log("📩 New notification received:", notification);
 
           // Invalidate queries to refresh notifications
-          queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
 
           // Show toast for breaking news only
           if (notification.type === "BreakingNews") {
@@ -208,23 +208,23 @@ export function NotificationBell() {
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      await apiRequest(`/api/me/notifications/${notificationId}/read`, {
-        method: "PATCH",
+      await apiRequest(`/api/notifications/${notificationId}/read`, {
+        method: "POST",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
     },
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/me/notifications/read-all", {
-        method: "PATCH",
+      await apiRequest("/api/notifications/read-all", {
+        method: "POST",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       toast({
         title: "تم التحديث",
         description: "تم تمييز جميع الإشعارات كمقروءة",
