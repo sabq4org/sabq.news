@@ -1,0 +1,151 @@
+2025-11-17 11:14:13.63
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.63
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.63
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.64
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.64
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.64
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.64
+1f006913
+User
+followingId: 'user-1760950807037-09p6vtnwf'
+2025-11-17 11:14:13.64
+1f006913
+User
+followerId: 'admin-sabq',
+2025-11-17 11:14:13.64
+1f006913
+User
+}
+2025-11-17 11:14:13.64
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:13.64
+1f006913
+User
+[Storage] Checking if user is following: {
+2025-11-17 11:14:13.67
+1f006913
+User
+followingId: 'user-1760950807037-09p6vtnwf',
+2025-11-17 11:14:13.67
+1f006913
+User
+[Storage] Is following: false
+2025-11-17 11:14:13.67
+1f006913
+User
+followerId: 'admin-sabq',
+2025-11-17 11:14:13.67
+1f006913
+User
+[Social Follow] Checked following status: {
+2025-11-17 11:14:13.67
+1f006913
+User
+}
+2025-11-17 11:14:13.67
+1f006913
+User
+isFollowing: false
+2025-11-17 11:14:13.69
+1f006913
+User
+9:14:13 AM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 200 in 9…
+2025-11-17 11:14:13.70
+1f006913
+User
+9:14:13 AM [express] GET /api/social/is-following/user-1760950807037-09p6vtnwf 304 in 95ms :: {"isFo…
+2025-11-17 11:14:13.70
+1f006913
+User
+9:14:13 AM [express] GET /api/shortlinks/article/rhUwgTUXvPJsfqoiaEj3p 404 in 96ms :: {"message":"لا…
+2025-11-17 11:14:13.71
+1f006913
+User
+9:14:13 AM [express] GET /api/ads/slot/sidebar 204 in 118ms
+2025-11-17 11:14:13.73
+1f006913
+User
+✅ [EVENT TRACKING] Tracked event: view for article rhUwgTUXvPJsfqoiaEj3p (value: 1)
+2025-11-17 11:14:13.77
+1f006913
+User
+9:14:13 AM [express] GET /api/articles/%D9%85%D8%AF%D8%A7%D8%B1%D8%B3-%D8%A7%D9%84%D8%B1%D9%8A%D8%A7…
+2025-11-17 11:14:13.92
+1f006913
+User
+passType: 'loyalty',
+2025-11-17 11:14:13.92
+1f006913
+User
+📱 [Pass Update] Logged: {
+2025-11-17 11:14:13.92
+1f006913
+User
+reason: 'READ',
+2025-11-17 11:14:13.92
+1f006913
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ
+2025-11-17 11:14:13.92
+1f006913
+User
+}
+2025-11-17 11:14:13.92
+1f006913
+User
+timestamp: 2025-11-17T09:14:13.921Z
+2025-11-17 11:14:13.92
+1f006913
+User
+userId: 'admin-sabq',
+2025-11-17 11:14:13.94
+1f006913
+User
+9:14:13 AM [express] POST /api/behavior/log 200 in 341ms :: {"success":true}
+2025-11-17 11:14:14.11
+1f006913
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-17 11:14:14.14
+1f006913
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-17 11:14:14.19
+1f006913
+User
+✅ Short link created: Xn3SCO8x -> https://sabq.life/article/مدارس-الرياض-تنظّم-ملتقى-تخصصك-الجامعي-بمشاركة-45-جامعة-محلية-ودولية-1763370834730
+2025-11-17 11:14:14.19
+1f006913
+User
+✅ Short link created: Xn3SCO8x -> https://sabq.life/article/مدارس-الرياض-تنظّم-ملتقى-تخصصك-الجامعي-بمشاركة-45-جامعة-محلية-ودولية-1763370834730
+2025-11-17 11:15:01.02
+b456e2d7
+System
+system: received signal terminated
+
+Collapse
+
+Wrap
+
+Colors
+
