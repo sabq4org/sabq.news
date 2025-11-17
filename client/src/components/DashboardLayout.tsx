@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -293,6 +294,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="flex h-16 items-center gap-4 border-b px-4 md:px-6">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex-1" />
+            <NotificationBell />
             <Button
               variant="outline"
               size="icon"

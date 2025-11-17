@@ -2,7 +2,6 @@ import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users } from "luc
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { NotificationBell } from "./NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { AdSlot } from "./AdSlot";
 import {
@@ -24,7 +23,6 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
-import { isStaff } from "@/hooks/useAuth";
 import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 import type { Category } from "@shared/schema";
 
@@ -149,8 +147,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <div className="md:hidden flex items-center gap-2">
               <LanguageSwitcher />
               <ThemeToggle />
-              
-              {user && <NotificationBell />}
 
               {user ? (
                 <DropdownMenu>
@@ -232,8 +228,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <div className="hidden md:flex items-center gap-2">
               <LanguageSwitcher />
               <ThemeToggle />
-              
-              {user && <NotificationBell />}
 
               {user ? (
                 <DropdownMenu>
