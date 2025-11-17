@@ -5850,6 +5850,10 @@ export const trustedEmailSenders = pgTable("trusted_email_senders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  
+  // Reporter assignment - link to actual reporter user in database
+  reporterUserId: varchar("reporter_user_id").references(() => users.id),
+  
   token: text("token").notNull().unique(), // Secret token for additional verification
   status: text("status").default("active").notNull(), // active, suspended, revoked
   
@@ -5961,6 +5965,10 @@ export const emailAgentStats = pgTable("email_agent_stats", {
 export const trustedEmailSendersRelations = relations(trustedEmailSenders, ({ one, many }) => ({
   createdByUser: one(users, {
     fields: [trustedEmailSenders.createdBy],
+    references: [users.id],
+  }),
+  reporterUser: one(users, {
+    fields: [trustedEmailSenders.reporterUserId],
     references: [users.id],
   }),
   webhookLogs: many(emailWebhookLogs),
