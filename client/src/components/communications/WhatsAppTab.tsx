@@ -481,7 +481,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -491,7 +491,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                 إدارة الرموز المصرح لها بإرسال الرسائل
               </CardDescription>
             </div>
-            <Button onClick={handleCreateToken} data-testid="button-create-token">
+            <Button onClick={handleCreateToken} data-testid="button-create-token" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 ml-2" />
               إنشاء رمز جديد
             </Button>
@@ -507,69 +507,110 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               <p className="text-muted-foreground">لا توجد رموز</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>التسمية</TableHead>
-                    <TableHead>الرمز</TableHead>
-                    <TableHead>رقم الهاتف</TableHead>
-                    <TableHead>نشر تلقائي</TableHead>
-                    <TableHead>اللغات</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead>مرات الاستخدام</TableHead>
-                    <TableHead>آخر استخدام</TableHead>
-                    <TableHead>الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tokens.map((token) => (
-                    <TableRow key={token.id} data-testid={`row-token-${token.id}`}>
-                      <TableCell data-testid={`text-label-${token.id}`}>{token.label}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <code className="text-xs bg-muted px-2 py-1 rounded font-mono" data-testid={`text-token-${token.id}`}>
-                            {token.token}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => copyToClipboard(token.token)}
-                            data-testid={`button-copy-token-${token.id}`}
-                            title="نسخ الرمز"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+            <>
+              {/* Desktop view - Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>التسمية</TableHead>
+                      <TableHead>الرمز</TableHead>
+                      <TableHead>رقم الهاتف</TableHead>
+                      <TableHead>نشر تلقائي</TableHead>
+                      <TableHead>اللغات</TableHead>
+                      <TableHead>الحالة</TableHead>
+                      <TableHead>مرات الاستخدام</TableHead>
+                      <TableHead>آخر استخدام</TableHead>
+                      <TableHead>الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tokens.map((token) => (
+                      <TableRow key={token.id} data-testid={`row-token-${token.id}`}>
+                        <TableCell data-testid={`text-label-${token.id}`}>{token.label}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <code className="text-xs bg-muted px-2 py-1 rounded font-mono" data-testid={`text-token-${token.id}`}>
+                              {token.token}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => copyToClipboard(token.token)}
+                              data-testid={`button-copy-token-${token.id}`}
+                              title="نسخ الرمز"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell data-testid={`text-phone-${token.id}`}>{token.phoneNumber}</TableCell>
+                        <TableCell data-testid={`text-autopublish-${token.id}`}>
+                          {token.autoPublish ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                        </TableCell>
+                        <TableCell data-testid={`text-languages-${token.id}`}>
+                          {token.allowedLanguages.join(", ")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={token.isActive ? "default" : "secondary"} data-testid={`badge-status-${token.id}`}>
+                            {token.isActive ? "نشط" : "معطل"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell data-testid={`text-usage-${token.id}`}>{token.usageCount || 0}</TableCell>
+                        <TableCell data-testid={`text-lastused-${token.id}`}>
+                          {token.lastUsedAt
+                            ? formatDistanceToNow(new Date(token.lastUsedAt), {
+                                addSuffix: true,
+                                locale: ar,
+                              })
+                            : "لم يستخدم بعد"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditToken(token)}
+                              data-testid={`button-edit-${token.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteToken(token)}
+                              data-testid={`button-delete-${token.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile view - Cards */}
+              <div className="lg:hidden space-y-4">
+                {tokens.map((token) => (
+                  <Card key={token.id} className="p-4" data-testid={`card-token-${token.id}`}>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-base mb-1" data-testid={`text-label-${token.id}`}>
+                            {token.label}
+                          </h3>
+                          <Badge variant={token.isActive ? "default" : "secondary"} data-testid={`badge-status-${token.id}`}>
+                            {token.isActive ? "نشط" : "معطل"}
+                          </Badge>
                         </div>
-                      </TableCell>
-                      <TableCell data-testid={`text-phone-${token.id}`}>{token.phoneNumber}</TableCell>
-                      <TableCell data-testid={`text-autopublish-${token.id}`}>
-                        {token.autoPublish ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </TableCell>
-                      <TableCell data-testid={`text-languages-${token.id}`}>
-                        {token.allowedLanguages.join(", ")}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={token.isActive ? "default" : "secondary"} data-testid={`badge-status-${token.id}`}>
-                          {token.isActive ? "نشط" : "معطل"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell data-testid={`text-usage-${token.id}`}>{token.usageCount || 0}</TableCell>
-                      <TableCell data-testid={`text-lastused-${token.id}`}>
-                        {token.lastUsedAt
-                          ? formatDistanceToNow(new Date(token.lastUsedAt), {
-                              addSuffix: true,
-                              locale: ar,
-                            })
-                          : "لم يستخدم بعد"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -587,12 +628,71 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">الرمز:</span>
+                          <code className="text-xs bg-muted px-2 py-1 rounded font-mono flex-1" data-testid={`text-token-${token.id}`}>
+                            {token.token}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => copyToClipboard(token.token)}
+                            data-testid={`button-copy-token-${token.id}`}
+                            title="نسخ الرمز"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">رقم الهاتف:</span>
+                          <span data-testid={`text-phone-${token.id}`}>{token.phoneNumber}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">نشر تلقائي:</span>
+                          <span data-testid={`text-autopublish-${token.id}`}>
+                            {token.autoPublish ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-500 inline" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-500 inline" />
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">اللغات:</span>
+                          <span data-testid={`text-languages-${token.id}`}>
+                            {token.allowedLanguages.join(", ")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">مرات الاستخدام:</span>
+                          <span data-testid={`text-usage-${token.id}`}>{token.usageCount || 0}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">آخر استخدام:</span>
+                          <span data-testid={`text-lastused-${token.id}`} className="text-xs">
+                            {token.lastUsedAt
+                              ? formatDistanceToNow(new Date(token.lastUsedAt), {
+                                  addSuffix: true,
+                                  locale: ar,
+                                })
+                              : "لم يستخدم بعد"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -601,7 +701,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -610,7 +710,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               <CardDescription>جميع الرسائل المستلمة وحالة معالجتها</CardDescription>
             </div>
             <Select value={logsStatusFilter} onValueChange={setLogsStatusFilter}>
-              <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
+              <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-status-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -633,7 +733,8 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop view - Table */}
+              <div className="hidden lg:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -734,6 +835,115 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Mobile view - Cards */}
+              <div className="lg:hidden space-y-4">
+                {logsData.logs.map((log) => (
+                  <Card key={log.id} className="p-4" data-testid={`card-log-${log.id}`}>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                            {getStatusBadge(log.status)}
+                            {log.publishStatus === 'published' ? (
+                              <Badge className="bg-green-600" data-testid={`badge-published-${log.id}`}>منشور</Badge>
+                            ) : log.publishStatus === 'draft' ? (
+                              <Badge className="bg-blue-600" data-testid={`badge-draft-${log.id}`}>مسودة</Badge>
+                            ) : null}
+                          </div>
+                          <p className="text-xs text-muted-foreground" data-testid={`text-created-${log.id}`}>
+                            {formatDistanceToNow(new Date(log.createdAt), {
+                              addSuffix: true,
+                              locale: ar,
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewLog(log)}
+                            data-testid={`button-view-${log.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteLog(log)}
+                            data-testid={`button-delete-log-${log.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">من:</span>
+                          <span data-testid={`text-from-${log.id}`} className="text-xs">{log.from}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-muted-foreground">الرسالة:</span>
+                          <p className="text-xs mt-1 line-clamp-2" data-testid={`text-message-${log.id}`}>
+                            {log.message || "-"}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">الرمز:</span>
+                          <span data-testid={`text-token-label-${log.id}`} className="text-xs">
+                            {tokens?.find((t) => t.id === log.tokenId)?.label || "غير معروف"}
+                          </span>
+                        </div>
+
+                        {log.reason && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">السبب:</span>
+                            <span data-testid={`text-reason-${log.id}`} className="text-xs">
+                              {log.reason}
+                            </span>
+                          </div>
+                        )}
+
+                        {log.qualityScore && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">الجودة:</span>
+                            <span data-testid={`text-quality-${log.id}`} className="text-xs">
+                              {log.qualityScore.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+
+                        {log.articleLink && (
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={log.articleLink}
+                              className="text-primary hover:underline text-xs flex-1"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              data-testid={`text-article-${log.id}`}
+                            >
+                              عرض المقال
+                            </a>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => copyToClipboard(log.articleLink!)}
+                              data-testid={`button-copy-article-link-${log.id}`}
+                              title="نسخ الرابط"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
 
               {totalPages > 1 && (
