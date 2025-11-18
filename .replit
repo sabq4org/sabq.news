@@ -7,7 +7,7 @@ channel = "stable-24_05"
 packages = ["imagemagick", "unzip", "jq"]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "gce"
 build = ["npm", "run", "build"]
 run = ["node", "dist/index.js"]
 
