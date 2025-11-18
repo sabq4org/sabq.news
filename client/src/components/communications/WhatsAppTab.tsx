@@ -527,9 +527,21 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                     <TableRow key={token.id} data-testid={`row-token-${token.id}`}>
                       <TableCell data-testid={`text-label-${token.id}`}>{token.label}</TableCell>
                       <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded" data-testid={`text-token-${token.id}`}>
-                          {token.token.substring(0, 15)}...
-                        </code>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs bg-muted px-2 py-1 rounded font-mono" data-testid={`text-token-${token.id}`}>
+                            {token.token}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => copyToClipboard(token.token)}
+                            data-testid={`button-copy-token-${token.id}`}
+                            title="نسخ الرمز"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell data-testid={`text-phone-${token.id}`}>{token.phoneNumber}</TableCell>
                       <TableCell data-testid={`text-autopublish-${token.id}`}>
