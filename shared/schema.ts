@@ -6084,6 +6084,28 @@ export const whatsappWebhookLogs = pgTable("whatsapp_webhook_logs", {
   index("whatsapp_webhook_logs_status_idx").on(table.status),
 ]);
 
+// WhatsApp Message Segments - for handling long messages split by Twilio
+export const whatsappMessageSegments = pgTable("whatsapp_message_segments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageSid: text("message_sid").notNull(), // Twilio's unique message ID
+  from: text("from").notNull(), // Phone number
+  segmentIndex: integer("segment_index").notNull(), // 0-based index of this segment
+  totalSegments: integer("total_segments").notNull(), // Total number of segments
+  content: text("content").notNull(), // Content of this segment
+  mediaUrls: text("media_urls").array(), // Media URLs (if any)
+  metadata: jsonb("metadata").$type<{
+    numMedia?: number;
+    mediaContentTypes?: string[];
+    twilioData?: Record<string, any>;
+  }>(),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(), // Auto-cleanup after 24 hours
+}, (table) => [
+  index("whatsapp_message_segments_message_sid_idx").on(table.messageSid),
+  index("whatsapp_message_segments_from_idx").on(table.from),
+  index("whatsapp_message_segments_expires_at_idx").on(table.expiresAt),
+]);
+
 // Relations
 export const whatsappTokensRelations = relations(whatsappTokens, ({ one, many }) => ({
   user: one(users, {
@@ -6121,11 +6143,18 @@ export const insertWhatsappWebhookLogSchema = createInsertSchema(whatsappWebhook
   createdAt: true,
 });
 
+export const insertWhatsappMessageSegmentSchema = createInsertSchema(whatsappMessageSegments).omit({
+  id: true,
+  receivedAt: true,
+});
+
 // Select types
 export type WhatsappToken = typeof whatsappTokens.$inferSelect;
 export type InsertWhatsappToken = z.infer<typeof insertWhatsappTokenSchema>;
 export type WhatsappWebhookLog = typeof whatsappWebhookLogs.$inferSelect;
 export type InsertWhatsappWebhookLog = z.infer<typeof insertWhatsappWebhookLogSchema>;
+export type WhatsappMessageSegment = typeof whatsappMessageSegments.$inferSelect;
+export type InsertWhatsappMessageSegment = z.infer<typeof insertWhatsappMessageSegmentSchema>;
 
 // ============================================
 // ACCESSIBILITY TELEMETRY
