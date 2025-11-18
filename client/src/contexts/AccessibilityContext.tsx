@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useLocation } from "wouter";
+import { useResolvedLanguage } from "@/hooks/useResolvedLanguage";
 
 type FontSize = "normal" | "large" | "x-large";
 
@@ -38,6 +40,9 @@ export function AccessibilityProvider({
   children,
   defaultSettings,
 }: AccessibilityProviderProps) {
+  const [location] = useLocation();
+  const currentLang = useResolvedLanguage();
+  
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     // SSR/SSG guard - only access localStorage in browser
     if (typeof window === 'undefined') {
@@ -55,6 +60,33 @@ export function AccessibilityProvider({
     }
     return { ...defaultAccessibilitySettings, ...defaultSettings };
   });
+
+  // Track accessibility event
+  const trackEvent = useCallback(async (
+    eventType: string,
+    eventAction: string,
+    eventValue?: string
+  ) => {
+    // Only track in browser
+    if (typeof window === 'undefined') return;
+    
+    try {
+      await fetch('/api/accessibility/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType,
+          eventAction,
+          eventValue,
+          language: currentLang,
+          pageUrl: location,
+        }),
+      });
+    } catch (error) {
+      // Silently fail - don't disrupt user experience
+      console.debug('Accessibility tracking failed:', error);
+    }
+  }, [currentLang, location]);
 
   // Apply settings to documentElement
   useEffect(() => {
@@ -98,25 +130,30 @@ export function AccessibilityProvider({
     }
   }, [settings]);
 
-  const setFontSize = (fontSize: FontSize) => {
+  const setFontSize = useCallback((fontSize: FontSize) => {
     setSettings((prev) => ({ ...prev, fontSize }));
-  };
+    trackEvent('fontSize', 'changed', fontSize);
+  }, [trackEvent]);
 
-  const setHighContrast = (highContrast: boolean) => {
+  const setHighContrast = useCallback((highContrast: boolean) => {
     setSettings((prev) => ({ ...prev, highContrast }));
-  };
+    trackEvent('highContrast', highContrast ? 'enabled' : 'disabled', String(highContrast));
+  }, [trackEvent]);
 
-  const setReduceMotion = (reduceMotion: boolean) => {
+  const setReduceMotion = useCallback((reduceMotion: boolean) => {
     setSettings((prev) => ({ ...prev, reduceMotion }));
-  };
+    trackEvent('reduceMotion', reduceMotion ? 'enabled' : 'disabled', String(reduceMotion));
+  }, [trackEvent]);
 
-  const setReadingMode = (readingMode: boolean) => {
+  const setReadingMode = useCallback((readingMode: boolean) => {
     setSettings((prev) => ({ ...prev, readingMode }));
-  };
+    trackEvent('readingMode', readingMode ? 'enabled' : 'disabled', String(readingMode));
+  }, [trackEvent]);
 
-  const resetSettings = () => {
+  const resetSettings = useCallback(() => {
     setSettings(defaultAccessibilitySettings);
-  };
+    trackEvent('settings', 'reset', 'all');
+  }, [trackEvent]);
 
   return (
     <AccessibilityContext.Provider

@@ -1,6 +1,42 @@
+import { useLocation } from "wouter";
+import { useResolvedLanguage } from "@/hooks/useResolvedLanguage";
+import { useCallback } from "react";
+
 export function SkipLinks() {
+  const [location] = useLocation();
+  const currentLang = useResolvedLanguage();
+
+  // Track skip link events
+  const trackEvent = useCallback(async (
+    eventType: string,
+    eventAction: string,
+    eventValue?: string
+  ) => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      await fetch('/api/accessibility/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType,
+          eventAction,
+          eventValue,
+          language: currentLang,
+          pageUrl: location,
+        }),
+      });
+    } catch (error) {
+      console.debug('Accessibility tracking failed:', error);
+    }
+  }, [currentLang, location]);
+
   const handleSkipLink = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
+    
+    // Track skip link click
+    trackEvent('skipLink', 'clicked', targetId);
+    
     const target = document.getElementById(targetId);
     if (target) {
       target.focus();

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { useResolvedLanguage } from "@/hooks/useResolvedLanguage";
 
 type VoiceCommand = {
@@ -37,6 +38,7 @@ const isSpeechSynthesisSupported = () => {
 };
 
 export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps) {
+  const [location] = useLocation();
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported] = useState(
@@ -48,6 +50,31 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
 
   // Use unified route-aware language detection hook
   const currentLang = useResolvedLanguage();
+
+  // Track voice command events
+  const trackEvent = useCallback(async (
+    eventType: string,
+    eventAction: string,
+    eventValue?: string
+  ) => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      await fetch('/api/accessibility/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType,
+          eventAction,
+          eventValue,
+          language: currentLang,
+          pageUrl: location,
+        }),
+      });
+    } catch (error) {
+      console.debug('Accessibility tracking failed:', error);
+    }
+  }, [currentLang, location]);
 
   // Initialize Speech Recognition with language support
   useEffect(() => {
@@ -90,6 +117,9 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
           detail: { transcript, confidence: event.results[0][0].confidence },
         })
       );
+
+      // Track voice command
+      trackEvent('voiceCommand', 'executed', transcript);
 
       // Check for registered commands
       commandsRef.current.forEach((cmd) => {

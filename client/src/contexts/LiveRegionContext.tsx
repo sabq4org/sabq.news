@@ -1,4 +1,6 @@
 import { createContext, useContext, useCallback, useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { useResolvedLanguage } from "@/hooks/useResolvedLanguage";
 
 type AnnouncementPriority = "polite" | "assertive" | "off";
 
@@ -27,8 +29,35 @@ const LiveRegionContext = createContext<LiveRegionProviderState | undefined>(
 let announcementCounter = 0;
 
 export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
+  const [location] = useLocation();
+  const currentLang = useResolvedLanguage();
   const [politeAnnouncements, setPoliteAnnouncements] = useState<Announcement[]>([]);
   const [assertiveAnnouncements, setAssertiveAnnouncements] = useState<Announcement[]>([]);
+
+  // Track live region events
+  const trackEvent = useCallback(async (
+    eventType: string,
+    eventAction: string,
+    eventValue?: string
+  ) => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      await fetch('/api/accessibility/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType,
+          eventAction,
+          eventValue,
+          language: currentLang,
+          pageUrl: location,
+        }),
+      });
+    } catch (error) {
+      console.debug('Accessibility tracking failed:', error);
+    }
+  }, [currentLang, location]);
 
   const announce = useCallback(
     (message: string, priority: AnnouncementPriority = "polite") => {
@@ -40,6 +69,10 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
         priority,
         timestamp: Date.now(),
       };
+
+      // Track announcement (first 100 characters)
+      const truncatedMessage = message.trim().substring(0, 100);
+      trackEvent('liveRegion', 'announced', truncatedMessage);
 
       if (priority === "assertive") {
         setAssertiveAnnouncements((prev) => [...prev, announcement]);
@@ -60,7 +93,7 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
         }
       }, 5000);
     },
-    []
+    [trackEvent]
   );
 
   // Listen for external announcements via custom events
