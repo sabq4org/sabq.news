@@ -87,13 +87,32 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+      // Graceful degradation for common errors
+      const errorType = event.error;
+      
+      // Don't show user-facing errors for technical issues
+      if (errorType === 'no-speech' || errorType === 'audio-capture') {
+        console.warn('Speech API unavailable:', errorType);
+        setIsListening(false);
+        return;
+      }
+      
+      // Only log and dispatch critical errors
+      if (errorType === 'not-allowed' || errorType === 'service-not-allowed') {
+        console.error('Speech recognition permission denied:', errorType);
+        window.dispatchEvent(
+          new CustomEvent('voice:error', {
+            detail: { 
+              error: errorType,
+              userMessage: 'يرجى السماح بالوصول إلى الميكروفون'
+            },
+          })
+        );
+      } else {
+        console.warn('Speech recognition error:', errorType);
+      }
+      
       setIsListening(false);
-      window.dispatchEvent(
-        new CustomEvent('voice:error', {
-          detail: { error: event.error },
-        })
-      );
     };
 
     recognitionRef.current = recognition;
@@ -108,10 +127,37 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
   const startListening = useCallback(() => {
     if (!isSupported || !recognitionRef.current || isListening) return;
     
+    // Check for HTTPS requirement (required for Speech API in most browsers)
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      console.warn('Speech Recognition requires HTTPS. Current protocol:', window.location.protocol);
+      window.dispatchEvent(
+        new CustomEvent('voice:error', {
+          detail: { 
+            error: 'https-required',
+            userMessage: 'المساعد الصوتي يتطلب اتصال آمن (HTTPS)'
+          },
+        })
+      );
+      return;
+    }
+    
     try {
       recognitionRef.current.start();
-    } catch (error) {
+    } catch (error: any) {
+      // Handle "already started" error gracefully
+      if (error.name === 'InvalidStateError') {
+        console.warn('Speech recognition already in progress');
+        return;
+      }
       console.error('Failed to start speech recognition:', error);
+      window.dispatchEvent(
+        new CustomEvent('voice:error', {
+          detail: { 
+            error: error.name || 'unknown',
+            userMessage: 'فشل بدء المساعد الصوتي'
+          },
+        })
+      );
     }
   }, [isSupported, isListening]);
 
