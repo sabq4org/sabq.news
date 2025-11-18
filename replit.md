@@ -6,6 +6,10 @@ Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platfor
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Bug Fixes (Nov 18, 2025)
+-   **Duplicate Test IDs Fixed:** Resolved test ID collision where multiple login buttons used the same `data-testid="button-login"`. Now each component has unique test IDs: `button-login-summary` (SmartSummaryBlock), `button-login-complete-profile` (CompleteProfile), while header buttons remain `button-login` and `button-login-mobile`.
+-   **Semantic HTML Improvement:** Added `role="article"` attributes to all NewsArticleCard view modes (grid, list, compact) for better accessibility and semantic HTML compliance. This ensures assistive technologies and tests can properly identify article content.
+
 ## System Architecture
 
 ### UI/UX Decisions
