@@ -1066,4 +1066,116 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* ============================================
+   * TOUCH TARGET IMPROVEMENTS (WCAG 2.5.5)
+   * Minimum 44x44px for mobile touch targets
+   * ============================================ */
+  
+  @media (max-width: 768px) {
+    /* Ensure all interactive elements meet minimum touch target size */
+    button:not(.no-min-touch-size),
+    a:not(.no-min-touch-size),
+    input[type="button"]:not(.no-min-touch-size),
+    input[type="submit"]:not(.no-min-touch-size),
+    input[type="reset"]:not(.no-min-touch-size),
+    [role="button"]:not(.no-min-touch-size),
+    [onclick]:not(.no-min-touch-size) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    
+    /* Exception for icon buttons - use padding to meet target size */
+    button[data-testid*="icon"]:not(.no-min-touch-size),
+    button.icon-button:not(.no-min-touch-size) {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  /* ============================================
+   * ENHANCED FOCUS INDICATORS
+   * Visible focus rings with high contrast
+   * ============================================ */
+  
+  /* Primary focus style - applies to all focusable elements */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  /* Enhanced focus for keyboard navigation */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.1);
+  }
+
+  /* High contrast focus indicators */
+  html.high-contrast *:focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px hsl(var(--ring) / 0.2);
+  }
+
+  /* Focus within containers */
+  .focus-within-ring:focus-within {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Skip links focus (always visible when focused) */
+  .skip-link:focus {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    padding: 1rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 2px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  /* ============================================
+   * SCREEN READER UTILITIES
+   * ============================================ */
+  
+  /* Screen reader only - visually hidden but accessible */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Screen reader only - not focusable */
+  .sr-only-not-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 }

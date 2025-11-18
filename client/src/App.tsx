@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { LiveRegionProvider } from "@/contexts/LiveRegionContext";
 import { SkipLinks } from "@/components/SkipLinks";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
@@ -411,13 +412,15 @@ function App() {
       <LanguageProvider>
         <ThemeProvider defaultTheme="light">
           <AccessibilityProvider>
-            <TooltipProvider>
-              <SkipLinks />
-              <Toaster />
-              <div id="main-content" tabIndex={-1}>
-                <Router />
-              </div>
-            </TooltipProvider>
+            <LiveRegionProvider>
+              <TooltipProvider>
+                <SkipLinks />
+                <Toaster />
+                <div id="main-content" tabIndex={-1}>
+                  <Router />
+                </div>
+              </TooltipProvider>
+            </LiveRegionProvider>
           </AccessibilityProvider>
         </ThemeProvider>
       </LanguageProvider>
