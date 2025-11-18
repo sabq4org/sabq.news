@@ -516,7 +516,12 @@ router.get("/tokens", requireAuth, requireRole('admin', 'manager'), async (req: 
 
 router.post("/tokens", requireAuth, requireRole('admin', 'manager'), async (req: Request, res: Response) => {
   try {
-    const validatedData = insertWhatsappTokenSchema.parse(req.body);
+    const userId = (req.user as any).id;
+    
+    const validatedData = insertWhatsappTokenSchema.parse({
+      ...req.body,
+      userId,
+    });
     
     const token = `SABQ-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
     
