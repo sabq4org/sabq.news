@@ -39,6 +39,11 @@ export function AccessibilityProvider({
   defaultSettings,
 }: AccessibilityProviderProps) {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
+    // SSR/SSG guard - only access localStorage in browser
+    if (typeof window === 'undefined') {
+      return { ...defaultAccessibilitySettings, ...defaultSettings };
+    }
+    
     // Load from localStorage
     const stored = localStorage.getItem("accessibility-settings");
     if (stored) {
@@ -87,8 +92,10 @@ export function AccessibilityProvider({
       root.removeAttribute("data-reading-mode");
     }
 
-    // Save to localStorage
-    localStorage.setItem("accessibility-settings", JSON.stringify(settings));
+    // Save to localStorage (browser only)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("accessibility-settings", JSON.stringify(settings));
+    }
   }, [settings]);
 
   const setFontSize = (fontSize: FontSize) => {

@@ -1,29 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
-/* OpenDyslexic Font for Reading Mode */
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Italic.otf') format('opentype');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
+/* OpenDyslexic font for Reading Mode - Production-ready via Fontsource (WOFF2, bundled) */
+@import '@fontsource/opendyslexic/400.css'; /* Regular */
+@import '@fontsource/opendyslexic/700.css'; /* Bold */
+@import '@fontsource/opendyslexic/400-italic.css'; /* Italic */
 
 @tailwind base;
 @tailwind components;
@@ -1098,7 +1078,18 @@
     font-family: 'OpenDyslexic', 'IBM Plex Sans Arabic', sans-serif;
   }
 
-  html.reading-mode * {
+  /* Scope reading mode text spacing to text elements only - preserves UI control spacing and table layouts */
+  html.reading-mode p,
+  html.reading-mode li,
+  html.reading-mode h1,
+  html.reading-mode h2,
+  html.reading-mode h3,
+  html.reading-mode h4,
+  html.reading-mode h5,
+  html.reading-mode h6,
+  html.reading-mode blockquote,
+  html.reading-mode article,
+  html.reading-mode section {
     /* Enhanced line height for better readability */
     line-height: 1.8 !important;
     
@@ -1111,10 +1102,7 @@
 
   /* Line highlighting on hover for paragraphs in reading mode */
   html.reading-mode p:hover,
-  html.reading-mode li:hover,
-  html.reading-mode td:hover,
-  html.reading-mode th:hover,
-  html.reading-mode span:hover {
+  html.reading-mode li:hover {
     background-color: hsl(var(--accent) / 0.3);
     outline: 2px solid hsl(var(--accent) / 0.5);
     outline-offset: 2px;
@@ -1124,10 +1112,7 @@
 
   /* Respect reduce motion in reading mode */
   html.reading-mode.reduce-motion p:hover,
-  html.reading-mode.reduce-motion li:hover,
-  html.reading-mode.reduce-motion td:hover,
-  html.reading-mode.reduce-motion th:hover,
-  html.reading-mode.reduce-mode span:hover {
+  html.reading-mode.reduce-motion li:hover {
     transition: none !important;
   }
 
