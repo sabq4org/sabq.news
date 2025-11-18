@@ -1419,6 +1419,7 @@ export interface IStorage {
   getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }>;
   getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
   deleteWhatsappWebhookLog(id: string): Promise<void>;
+  deleteWhatsappWebhookLogs(ids: string[]): Promise<void>;
 
   // WhatsApp Message Segments
   storeMessageSegment(segment: InsertWhatsappMessageSegment): Promise<WhatsappMessageSegment>;
@@ -12322,6 +12323,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(whatsappWebhookLogs)
       .where(eq(whatsappWebhookLogs.id, id));
+  }
+
+  async deleteWhatsappWebhookLogs(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await db
+      .delete(whatsappWebhookLogs)
+      .where(inArray(whatsappWebhookLogs.id, ids));
   }
 
   // ============================================
