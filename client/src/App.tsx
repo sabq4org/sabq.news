@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { SkipLinks } from "@/components/SkipLinks";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -411,8 +412,11 @@ function App() {
         <ThemeProvider defaultTheme="light">
           <AccessibilityProvider>
             <TooltipProvider>
+              <SkipLinks />
               <Toaster />
-              <Router />
+              <div id="main-content">
+                <Router />
+              </div>
             </TooltipProvider>
           </AccessibilityProvider>
         </ThemeProvider>

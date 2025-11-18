@@ -52,6 +52,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
   const readingTime = getReadingTime(article.content);
 
+  const categoryName = article.category?.nameAr || 'أخبار';
+  const ariaLabel = `مقال: ${article.title}${article.newsType === "breaking" ? ' - عاجل' : ''} - ${categoryName}${timeAgo ? ` - ${timeAgo}` : ''}`;
+
   if (viewMode === 'grid') {
     return (
       <Card
@@ -60,6 +63,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
         onMouseLeave={() => setIsHovered(false)}
         data-testid={`card-article-grid-${article.id}`}
         role="article"
+        aria-label={ariaLabel}
       >
         <Link href={`/article/${article.slug}`}>
           <div className="block">
@@ -82,12 +86,12 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 <div className="absolute top-3 right-3 flex gap-2">
                   {article.newsType === "breaking" ? (
                     <Badge variant="destructive" className="gap-1">
-                      <Zap className="h-3 w-3" />
+                      <Zap className="h-3 w-3" aria-hidden="true" />
                       عاجل
                     </Badge>
                   ) : isNewArticle(article.publishedAt) ? (
                     <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                      <Flame className="h-3 w-3" />
+                      <Flame className="h-3 w-3" aria-hidden="true" />
                       جديد
                     </Badge>
                   ) : article.category ? (
@@ -100,7 +104,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 {article.aiSummary && (
                   <div className="absolute top-3 left-3">
                     <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                      <Sparkles className="h-3 w-3 ml-1" />
+                      <Sparkles className="h-3 w-3 ml-1" aria-hidden="true" />
                       AI
                     </Badge>
                   </div>
@@ -116,8 +120,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                         e.preventDefault();
                       }}
                       data-testid={`button-bookmark-${article.id}`}
+                      aria-label={`حفظ المقال: ${article.title}`}
                     >
-                      <Bookmark className="h-4 w-4 ml-2" />
+                      <Bookmark className="h-4 w-4 ml-2" aria-hidden="true" />
                       حفظ
                     </Button>
                     <Button
@@ -128,8 +133,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                         e.preventDefault();
                       }}
                       data-testid={`button-share-${article.id}`}
+                      aria-label={`مشاركة المقال: ${article.title}`}
                     >
-                      <Share2 className="h-4 w-4 ml-2" />
+                      <Share2 className="h-4 w-4 ml-2" aria-hidden="true" />
                       مشاركة
                     </Button>
                   </div>
@@ -157,23 +163,23 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
               <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t">
                 {timeAgo && (
                   <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" aria-hidden="true" />
                     {timeAgo}
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
+                  <Eye className="h-3 w-3" aria-hidden="true" />
                   {(article.views || 0).toLocaleString('en-US')}
                 </div>
                 {(article.commentsCount ?? 0) > 0 && (
                   <div className="flex items-center gap-1">
-                    <MessageSquare className="h-3 w-3" />
+                    <MessageSquare className="h-3 w-3" aria-hidden="true" />
                     {(article.commentsCount ?? 0).toLocaleString('en-US')}
                   </div>
                 )}
                 {readingTime > 0 && (
                   <div className="flex items-center gap-1 mr-auto">
-                    <BookOpen className="h-3 w-3" />
+                    <BookOpen className="h-3 w-3" aria-hidden="true" />
                     {readingTime} د
                   </div>
                 )}
@@ -187,7 +193,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
   if (viewMode === 'list') {
     return (
-      <Card className="cursor-pointer hover-elevate transition-all" data-testid={`card-article-list-${article.id}`} role="article">
+      <Card className="cursor-pointer hover-elevate transition-all" data-testid={`card-article-list-${article.id}`} role="article" aria-label={ariaLabel}>
         <Link href={`/article/${article.slug}`}>
           <div className="block">
             <CardContent className="p-0">
@@ -208,7 +214,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                     {article.aiSummary && (
                       <div className="absolute top-2 left-2">
                         <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                          <Sparkles className="h-3 w-3 ml-1" />
+                          <Sparkles className="h-3 w-3 ml-1" aria-hidden="true" />
                           AI
                         </Badge>
                       </div>
@@ -220,12 +226,12 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                   <div className="flex items-center gap-2">
                     {article.newsType === "breaking" ? (
                       <Badge variant="destructive" className="gap-1">
-                        <Zap className="h-3 w-3" />
+                        <Zap className="h-3 w-3" aria-hidden="true" />
                         عاجل
                       </Badge>
                     ) : isNewArticle(article.publishedAt) ? (
                       <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                        <Flame className="h-3 w-3" />
+                        <Flame className="h-3 w-3" aria-hidden="true" />
                         جديد
                       </Badge>
                     ) : article.category ? (
@@ -254,23 +260,23 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     {timeAgo && (
                       <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-4 w-4" aria-hidden="true" />
                         {timeAgo}
                       </div>
                     )}
                     <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4" aria-hidden="true" />
                       {(article.views || 0).toLocaleString('en-US')} مشاهدة
                     </div>
                     {(article.commentsCount ?? 0) > 0 && (
                       <div className="flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-4 w-4" aria-hidden="true" />
                         {(article.commentsCount ?? 0).toLocaleString('en-US')} تعليق
                       </div>
                     )}
                     {readingTime > 0 && (
                       <div className="flex items-center gap-1">
-                        <BookOpen className="h-4 w-4" />
+                        <BookOpen className="h-4 w-4" aria-hidden="true" />
                         {readingTime} دقائق قراءة
                       </div>
                     )}
@@ -282,8 +288,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                       variant="outline"
                       onClick={(e) => e.preventDefault()}
                       data-testid={`button-bookmark-${article.id}`}
+                      aria-label={`حفظ المقال: ${article.title}`}
                     >
-                      <Bookmark className="h-4 w-4 ml-2" />
+                      <Bookmark className="h-4 w-4 ml-2" aria-hidden="true" />
                       حفظ
                     </Button>
                     <Button
@@ -291,8 +298,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                       variant="outline"
                       onClick={(e) => e.preventDefault()}
                       data-testid={`button-share-${article.id}`}
+                      aria-label={`مشاركة المقال: ${article.title}`}
                     >
-                      <Share2 className="h-4 w-4 ml-2" />
+                      <Share2 className="h-4 w-4 ml-2" aria-hidden="true" />
                       مشاركة
                     </Button>
                   </div>
@@ -307,7 +315,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
   if (viewMode === 'compact') {
     return (
-      <div className="border-b last:border-b-0 hover-elevate" data-testid={`card-article-compact-${article.id}`} role="article">
+      <div className="border-b last:border-b-0 hover-elevate" data-testid={`card-article-compact-${article.id}`} role="article" aria-label={ariaLabel}>
         <Link href={`/article/${article.slug}`}>
           <div className="block p-4">
             <div className="flex gap-3">
@@ -330,12 +338,12 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
               <div className="flex-1 min-w-0 space-y-2">
                 {article.newsType === "breaking" ? (
                   <Badge variant="destructive" className="text-xs h-5 gap-1">
-                    <Zap className="h-3 w-3" />
+                    <Zap className="h-3 w-3" aria-hidden="true" />
                     عاجل
                   </Badge>
                 ) : isNewArticle(article.publishedAt) ? (
                   <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                    <Flame className="h-3 w-3" />
+                    <Flame className="h-3 w-3" aria-hidden="true" />
                     جديد
                   </Badge>
                 ) : article.category ? (
@@ -357,17 +365,17 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   {timeAgo && (
                     <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
+                      <Clock className="h-3 w-3" aria-hidden="true" />
                       {timeAgo}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
+                    <Eye className="h-3 w-3" aria-hidden="true" />
                     {(article.views || 0).toLocaleString('en-US')}
                   </span>
                   {(article.commentsCount ?? 0) > 0 && (
                     <span className="flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
+                      <MessageSquare className="h-3 w-3" aria-hidden="true" />
                       {(article.commentsCount ?? 0).toLocaleString('en-US')}
                     </span>
                   )}

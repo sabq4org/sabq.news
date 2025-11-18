@@ -47,7 +47,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-footer border-t border-border" data-testid="footer" dir="rtl">
+    <footer className="bg-footer border-t border-border" data-testid="footer" dir="rtl" role="contentinfo" aria-label="ذيل الصفحة">
       {/* Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({
@@ -88,7 +88,7 @@ export function Footer() {
                 aria-label={social.name}
                 data-testid={`footer-social-${social.testId}`}
               >
-                <social.icon className="h-4 w-4" />
+                <social.icon className="h-4 w-4" aria-hidden="true" />
               </a>
             ))}
           </div>
@@ -187,7 +187,7 @@ export function Footer() {
                 aria-label={social.name}
                 data-testid={`footer-social-${social.testId}-mobile`}
               >
-                <social.icon className="h-4 w-4" />
+                <social.icon className="h-4 w-4" aria-hidden="true" />
               </a>
             ))}
           </div>

@@ -34,7 +34,7 @@ interface HeaderProps {
 
 export function Header({ user, onMenuClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const { theme, appTheme } = useTheme();
 
@@ -84,13 +84,13 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
+    <header role="banner" aria-label="رأس الصفحة الرئيسي" className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo - Left side (Desktop only) */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/">
-              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home">
+              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home" aria-label="الصفحة الرئيسية">
                 <img 
                   src={currentLogo} 
                   alt="سبق - SABQ" 
@@ -103,7 +103,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           {/* Mobile Logo */}
           <div className="md:hidden flex items-center">
             <Link href="/">
-              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile">
+              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile" aria-label="الصفحة الرئيسية">
                 <img 
                   src={currentLogo} 
                   alt="سبق - SABQ" 
@@ -114,17 +114,25 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </div>
 
           {/* Main Navigation - Center (Desktop only) */}
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
+          <nav id="main-nav" role="navigation" aria-label="القائمة الرئيسية" className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {mainSections.map((section) => (
               <Link key={section.name} href={section.href}>
-                <span className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" data-testid={`link-section-${section.name}`}>
+                <span 
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" 
+                  data-testid={`link-section-${section.name}`}
+                  aria-current={location === section.href ? "page" : undefined}
+                >
                   {section.name}
                 </span>
               </Link>
             ))}
             {user && (
               <Link href="/discover-users">
-                <span className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" data-testid="link-discover-users">
+                <span 
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" 
+                  data-testid="link-discover-users"
+                  aria-current={location === "/discover-users" ? "page" : undefined}
+                >
                   اكتشف
                 </span>
               </Link>
@@ -140,8 +148,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               className="md:hidden hover-elevate active-elevate-2"
               onClick={() => setMobileMenuOpen(true)}
               data-testid="button-menu"
+              aria-label="فتح القائمة"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
 
             {/* Mobile Actions */}
@@ -158,6 +167,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       size="icon"
                       className="hover-elevate active-elevate-2"
                       data-testid="button-user-menu-mobile"
+                      aria-label="قائمة المستخدم"
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarImage 
@@ -181,7 +191,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <>
                         <DropdownMenuItem asChild>
                           <a href="/dashboard" className="flex w-full items-center cursor-pointer" data-testid="link-dashboard-mobile">
-                            <LayoutDashboard className="ml-2 h-4 w-4" />
+                            <LayoutDashboard className="ml-2 h-4 w-4" aria-hidden="true" />
                             لوحة التحكم
                           </a>
                         </DropdownMenuItem>
@@ -190,19 +200,19 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                     )}
                     <DropdownMenuItem asChild>
                       <a href="/daily-brief" className="flex w-full items-center cursor-pointer" data-testid="link-daily-brief-mobile">
-                        <Newspaper className="ml-2 h-4 w-4" />
+                        <Newspaper className="ml-2 h-4 w-4" aria-hidden="true" />
                         ملخصي اليومي
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile-mobile">
-                        <User className="ml-2 h-4 w-4" />
+                        <User className="ml-2 h-4 w-4" aria-hidden="true" />
                         الملف الشخصي
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings-mobile">
-                        <Bell className="ml-2 h-4 w-4" />
+                        <Bell className="ml-2 h-4 w-4" aria-hidden="true" />
                         إعدادات الإشعارات
                       </a>
                     </DropdownMenuItem>
@@ -212,15 +222,15 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       className="flex w-full items-center cursor-pointer" 
                       data-testid="link-logout-mobile"
                     >
-                      <LogOut className="ml-2 h-4 w-4" />
+                      <LogOut className="ml-2 h-4 w-4" aria-hidden="true" />
                       تسجيل الخروج
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild size="icon" variant="ghost" data-testid="button-login-mobile">
+                <Button asChild size="icon" variant="ghost" data-testid="button-login-mobile" aria-label="تسجيل الدخول">
                   <a href="/login">
-                    <User className="h-5 w-5" />
+                    <User className="h-5 w-5" aria-hidden="true" />
                   </a>
                 </Button>
               )}
@@ -240,6 +250,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       size="icon"
                       className="hover-elevate active-elevate-2"
                       data-testid="button-user-menu"
+                      aria-label="قائمة المستخدم"
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarImage 
@@ -263,7 +274,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <>
                         <DropdownMenuItem asChild>
                           <a href="/dashboard" className="flex w-full items-center cursor-pointer" data-testid="link-dashboard">
-                            <LayoutDashboard className="ml-2 h-4 w-4" />
+                            <LayoutDashboard className="ml-2 h-4 w-4" aria-hidden="true" />
                             لوحة التحكم
                           </a>
                         </DropdownMenuItem>
@@ -272,19 +283,19 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                     )}
                     <DropdownMenuItem asChild>
                       <a href="/daily-brief" className="flex w-full items-center cursor-pointer" data-testid="link-daily-brief">
-                        <Newspaper className="ml-2 h-4 w-4" />
+                        <Newspaper className="ml-2 h-4 w-4" aria-hidden="true" />
                         ملخصي اليومي
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a href="/profile" className="flex w-full items-center cursor-pointer" data-testid="link-profile">
-                        <User className="ml-2 h-4 w-4" />
+                        <User className="ml-2 h-4 w-4" aria-hidden="true" />
                         الملف الشخصي
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a href="/notification-settings" className="flex w-full items-center cursor-pointer" data-testid="link-notification-settings">
-                        <Bell className="ml-2 h-4 w-4" />
+                        <Bell className="ml-2 h-4 w-4" aria-hidden="true" />
                         إعدادات الإشعارات
                       </a>
                     </DropdownMenuItem>
@@ -294,7 +305,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       className="flex w-full items-center cursor-pointer" 
                       data-testid="link-logout"
                     >
-                      <LogOut className="ml-2 h-4 w-4" />
+                      <LogOut className="ml-2 h-4 w-4" aria-hidden="true" />
                       تسجيل الخروج
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -344,7 +355,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-mobile-discover-users"
                 >
-                  <Users className="h-5 w-5" />
+                  <Users className="h-5 w-5" aria-hidden="true" />
                   اكتشف
                 </span>
               </Link>
