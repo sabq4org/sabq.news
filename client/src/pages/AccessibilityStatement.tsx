@@ -10,7 +10,8 @@ import {
   Mouse, 
   Volume2,
   FileText,
-  Shield
+  Shield,
+  BookOpen
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -37,6 +38,7 @@ const translations = {
     visualFeature2: "وضع التباين العالي لتسهيل القراءة",
     visualFeature3: "تصميم متجاوب يعمل على جميع الأجهزة",
     visualFeature4: "نسبة تباين ألوان تلبي معايير WCAG AA",
+    visualFeature5: "وضع القراءة المحسّن باستخدام خط OpenDyslexic",
     
     // Keyboard Navigation
     keyboardTitle: "التنقل بلوحة المفاتيح",
@@ -60,6 +62,13 @@ const translations = {
     motionTitle: "الحركة والرسوم المتحركة",
     motionFeature1: "خيار تقليل الحركة للمستخدمين الذين يعانون من حساسية للحركة",
     motionFeature2: "عدم وجود محتوى وامض قد يسبب نوبات",
+    
+    // Reading Mode
+    readingTitle: "وضع القراءة المحسّن",
+    readingFeature1: "خط OpenDyslexic المصمم خصيصاً لذوي صعوبات القراءة والديسلكسيا",
+    readingFeature2: "تباعد محسّن بين الأحرف والكلمات (0.12em و 0.16em)",
+    readingFeature3: "ارتفاع سطر محسّن (1.8) لتحسين قابلية القراءة",
+    readingFeature4: "تمييز الأسطر عند التمرير فوقها لتسهيل التتبع",
     
     // Testing & Compliance
     testingTitle: "الاختبار والامتثال",
@@ -111,6 +120,7 @@ const translations = {
     visualFeature2: "High contrast mode for easier reading",
     visualFeature3: "Responsive design that works on all devices",
     visualFeature4: "Color contrast ratios that meet WCAG AA standards",
+    visualFeature5: "Enhanced reading mode with OpenDyslexic font",
     
     // Keyboard Navigation
     keyboardTitle: "Keyboard Navigation",
@@ -134,6 +144,13 @@ const translations = {
     motionTitle: "Motion and Animation",
     motionFeature1: "Reduced motion option for users with motion sensitivity",
     motionFeature2: "No flashing content that could cause seizures",
+    
+    // Reading Mode
+    readingTitle: "Enhanced Reading Mode",
+    readingFeature1: "OpenDyslexic font designed specifically for users with dyslexia and reading difficulties",
+    readingFeature2: "Enhanced letter and word spacing (0.12em and 0.16em)",
+    readingFeature3: "Enhanced line height (1.8) for improved readability",
+    readingFeature4: "Line highlighting on hover for easier tracking",
     
     // Testing & Compliance
     testingTitle: "Testing and Compliance",
@@ -257,6 +274,10 @@ export default function AccessibilityStatement() {
                     <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
                     <span>{t.visualFeature4}</span>
                   </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+                    <span>{t.visualFeature5}</span>
+                  </li>
                 </ul>
               </div>
 
@@ -340,6 +361,32 @@ export default function AccessibilityStatement() {
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
                     <span>{t.motionFeature2}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Reading Mode */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
+                  {t.readingTitle}
+                </h3>
+                <ul className="space-y-2 text-foreground" role="list">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+                    <span>{t.readingFeature1}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+                    <span>{t.readingFeature2}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+                    <span>{t.readingFeature3}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+                    <span>{t.readingFeature4}</span>
                   </li>
                 </ul>
               </div>

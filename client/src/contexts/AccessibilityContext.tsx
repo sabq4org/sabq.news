@@ -6,6 +6,7 @@ type AccessibilitySettings = {
   fontSize: FontSize;
   highContrast: boolean;
   reduceMotion: boolean;
+  readingMode: boolean;
 };
 
 type AccessibilityProviderProps = {
@@ -18,6 +19,7 @@ type AccessibilityProviderState = {
   setFontSize: (size: FontSize) => void;
   setHighContrast: (enabled: boolean) => void;
   setReduceMotion: (enabled: boolean) => void;
+  setReadingMode: (enabled: boolean) => void;
   resetSettings: () => void;
 };
 
@@ -25,6 +27,7 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
   fontSize: "normal",
   highContrast: false,
   reduceMotion: false,
+  readingMode: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityProviderState | undefined>(
@@ -75,6 +78,15 @@ export function AccessibilityProvider({
       root.removeAttribute("data-reduce-motion");
     }
 
+    // Apply reading mode
+    if (settings.readingMode) {
+      root.classList.add("reading-mode");
+      root.setAttribute("data-reading-mode", "true");
+    } else {
+      root.classList.remove("reading-mode");
+      root.removeAttribute("data-reading-mode");
+    }
+
     // Save to localStorage
     localStorage.setItem("accessibility-settings", JSON.stringify(settings));
   }, [settings]);
@@ -91,6 +103,10 @@ export function AccessibilityProvider({
     setSettings((prev) => ({ ...prev, reduceMotion }));
   };
 
+  const setReadingMode = (readingMode: boolean) => {
+    setSettings((prev) => ({ ...prev, readingMode }));
+  };
+
   const resetSettings = () => {
     setSettings(defaultAccessibilitySettings);
   };
@@ -102,6 +118,7 @@ export function AccessibilityProvider({
         setFontSize,
         setHighContrast,
         setReduceMotion,
+        setReadingMode,
         resetSettings,
       }}
     >

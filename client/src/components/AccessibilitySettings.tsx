@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Type, Waves } from "lucide-react";
+import { Eye, Type, Waves, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +32,7 @@ export function AccessibilitySettings({ variant }: AccessibilitySettingsProps = 
     setFontSize,
     setHighContrast,
     setReduceMotion,
+    setReadingMode,
     resetSettings,
   } = useAccessibility();
 
@@ -150,6 +151,32 @@ export function AccessibilitySettings({ variant }: AccessibilitySettingsProps = 
                 onCheckedChange={setReduceMotion}
                 data-testid="switch-reduce-motion"
                 aria-label="تفعيل تقليل الحركة"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Reading Mode Setting */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <BookOpen className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1 flex-1">
+                  <Label htmlFor="reading-mode" className="text-base font-medium cursor-pointer">
+                    وضع القراءة المحسّن
+                  </Label>
+                  <p className="text-sm text-muted-foreground text-right">
+                    خط وتباعد محسّن لذوي صعوبات القراءة والديسلكسيا
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="reading-mode"
+                checked={settings.readingMode}
+                onCheckedChange={setReadingMode}
+                data-testid="switch-reading-mode"
+                aria-label="تفعيل وضع القراءة المحسّن"
               />
             </div>
           </div>

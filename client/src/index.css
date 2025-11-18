@@ -1,5 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
+/* OpenDyslexic Font for Reading Mode */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/OpenDyslexic-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1065,6 +1090,60 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  /* Reading Mode - Enhanced readability for dyslexia */
+  html.reading-mode {
+    /* Apply OpenDyslexic font */
+    font-family: 'OpenDyslexic', 'IBM Plex Sans Arabic', sans-serif;
+  }
+
+  html.reading-mode * {
+    /* Enhanced line height for better readability */
+    line-height: 1.8 !important;
+    
+    /* Enhanced letter spacing */
+    letter-spacing: 0.12em !important;
+    
+    /* Enhanced word spacing */
+    word-spacing: 0.16em !important;
+  }
+
+  /* Line highlighting on hover for paragraphs in reading mode */
+  html.reading-mode p:hover,
+  html.reading-mode li:hover,
+  html.reading-mode td:hover,
+  html.reading-mode th:hover,
+  html.reading-mode span:hover {
+    background-color: hsl(var(--accent) / 0.3);
+    outline: 2px solid hsl(var(--accent) / 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, outline 0.2s ease;
+  }
+
+  /* Respect reduce motion in reading mode */
+  html.reading-mode.reduce-motion p:hover,
+  html.reading-mode.reduce-motion li:hover,
+  html.reading-mode.reduce-motion td:hover,
+  html.reading-mode.reduce-motion th:hover,
+  html.reading-mode.reduce-mode span:hover {
+    transition: none !important;
+  }
+
+  /* Preserve monospace fonts for code in reading mode */
+  html.reading-mode code,
+  html.reading-mode pre,
+  html.reading-mode kbd,
+  html.reading-mode samp {
+    font-family: var(--font-mono) !important;
+    letter-spacing: normal !important;
+  }
+
+  /* Preserve icon fonts in reading mode */
+  html.reading-mode [class*="icon"],
+  html.reading-mode svg {
+    font-family: inherit !important;
   }
 
   /* ============================================
