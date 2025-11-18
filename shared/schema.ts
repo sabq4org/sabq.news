@@ -6024,6 +6024,46 @@ export type InsertEmailWebhookLog = z.infer<typeof insertEmailWebhookLogSchema>;
 export type EmailAgentStats = typeof emailAgentStats.$inferSelect;
 
 // ============================================
+// ACCESSIBILITY TELEMETRY
+// ============================================
+
+export const accessibilityEvents = pgTable("accessibility_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id), // nullable - allow anonymous tracking
+  sessionId: text("session_id").notNull(), // track anonymous sessions
+  eventType: text("event_type").notNull(), // fontSize, highContrast, reduceMotion, readingMode, voiceCommand, skipLink, etc.
+  eventAction: text("event_action").notNull(), // enabled, disabled, changed, clicked, activated, etc.
+  eventValue: text("event_value"), // the actual value: 'large', 'true', 'home command', etc.
+  language: text("language").notNull(), // ar, en, ur
+  pageUrl: text("page_url"), // current page when event occurred
+  metadata: jsonb("metadata"), // additional data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("accessibility_events_user_id_idx").on(table.userId),
+  index("accessibility_events_event_type_idx").on(table.eventType),
+  index("accessibility_events_created_at_idx").on(table.createdAt),
+  index("accessibility_events_language_idx").on(table.language),
+]);
+
+// Relations
+export const accessibilityEventsRelations = relations(accessibilityEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [accessibilityEvents.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schema
+export const insertAccessibilityEventSchema = createInsertSchema(accessibilityEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Select types
+export type AccessibilityEvent = typeof accessibilityEvents.$inferSelect;
+export type InsertAccessibilityEvent = z.infer<typeof insertAccessibilityEventSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
