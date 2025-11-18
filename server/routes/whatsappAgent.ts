@@ -316,20 +316,26 @@ router.post("/webhook", async (req: Request, res: Response) => {
       return res.status(200).send('OK');
     }
 
-    if (whatsappToken.phoneNumber && whatsappToken.phoneNumber !== phoneNumber) {
-      console.log("[WhatsApp Agent] Phone number mismatch");
-      console.log(`[WhatsApp Agent] Expected: ${whatsappToken.phoneNumber}, Got: ${phoneNumber}`);
+    if (whatsappToken.phoneNumber) {
+      const normalizePhone = (phone: string) => phone.replace(/[\s\-\+\(\)]/g, '');
+      const tokenPhone = normalizePhone(whatsappToken.phoneNumber);
+      const incomingPhone = normalizePhone(phoneNumber);
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
-        status: "rejected",
-        reason: "phone_number_mismatch",
-        userId: whatsappToken.userId,
-        token: token,
-      });
+      if (tokenPhone !== incomingPhone) {
+        console.log("[WhatsApp Agent] Phone number mismatch");
+        console.log(`[WhatsApp Agent] Expected: ${whatsappToken.phoneNumber} (${tokenPhone}), Got: ${phoneNumber} (${incomingPhone})`);
+        
+        await storage.createWhatsappWebhookLog({
+          from: phoneNumber,
+          message: body,
+          status: "rejected",
+          reason: "phone_number_mismatch",
+          userId: whatsappToken.userId,
+          token: token,
+        });
 
-      return res.status(200).send('OK');
+        return res.status(200).send('OK');
+      }
     }
 
     console.log("[WhatsApp Agent] ✅ Token validated successfully");
