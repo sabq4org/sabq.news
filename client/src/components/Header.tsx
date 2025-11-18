@@ -2,6 +2,7 @@ import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users } from "luc
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { AccessibilitySettings } from "./AccessibilitySettings";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { AdSlot } from "./AdSlot";
 import {
@@ -145,6 +146,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Mobile Actions */}
             <div className="md:hidden flex items-center gap-2">
+              <AccessibilitySettings />
               <LanguageSwitcher />
               <ThemeToggle />
 
@@ -226,6 +228,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
+              <AccessibilitySettings />
               <LanguageSwitcher />
               <ThemeToggle />
 

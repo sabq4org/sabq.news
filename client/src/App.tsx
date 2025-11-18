@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -408,10 +409,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <ThemeProvider defaultTheme="light">
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <AccessibilityProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </AccessibilityProvider>
         </ThemeProvider>
       </LanguageProvider>
     </QueryClientProvider>

@@ -1010,4 +1010,60 @@
       background: hsl(220, 30%, 10%);
     }
   }
+
+  /* ============================================
+   * ACCESSIBILITY SETTINGS
+   * ============================================ */
+
+  /* Font Size Settings */
+  html.font-normal {
+    font-size: 16px;
+  }
+
+  html.font-large {
+    font-size: 18px;
+  }
+
+  html.font-x-large {
+    font-size: 20px;
+  }
+
+  /* High Contrast Mode */
+  html.high-contrast {
+    --foreground: 220 20% 5%;
+    --background: 0 0% 100%;
+    --border: 220 13% 70%;
+    --card-border: 220 24% 60%;
+    --muted-foreground: 220 10% 40%;
+  }
+
+  html.high-contrast.dark {
+    --foreground: 0 0% 98%;
+    --background: 220 20% 5%;
+    --border: 220 13% 30%;
+    --card-border: 220 24% 40%;
+    --muted-foreground: 220 10% 60%;
+  }
+
+  /* Reduce Motion - Disable all animations */
+  html.reduce-motion *,
+  html.reduce-motion *::before,
+  html.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Also respect system prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
