@@ -31,6 +31,16 @@ Advanced accessibility features with AI-powered assistance and automated testing
 -   **Enhanced Focus Indicators:** Improved keyboard navigation with visible 2px focus rings, box-shadow halos, high contrast mode support (3px rings with 6px shadows), and skip link visibility on focus
 -   **Screen Reader Utilities:** .sr-only and .sr-only-not-focusable CSS classes for visually hiding content while maintaining screen reader accessibility
 
+### Production-Readiness Enhancements
+Critical refinements for deployment-ready accessibility (November 18, 2025):
+
+-   **Voice Assistant Error Handling:** Production-grade graceful degradation with HTTPS requirement checks, microphone permission handling, and comprehensive error code mapping (https-required, not-allowed, service-not-allowed, InvalidStateError) to bilingual user-friendly toast notifications
+-   **Bilingual Error Messages:** Complete localization system in VoiceAssistantButton with error code mapping providing actionable guidance in both Arabic and English for all failure scenarios (WCAG 3.1 Language of Parts compliance)
+-   **Accessibility Statement Page:** Comprehensive bilingual page at `/accessibility-statement` meeting WCAG 3.2.1 requirements with sections for compliance level (WCAG 2.1 AA), accessibility features (visual, keyboard, touch, screen reader, motion), testing & compliance, contact & feedback (accessibility@sabq.life), and known issues with future roadmap
+-   **Arabic Semantic Optimizations:** AccessibleDate component using semantic `<time>` elements with proper `dateTime` ISO attribute and localized `aria-label` (removed aria-roledescription misuse), plus UserContent component with `dir="auto"` for automatic bidirectional text handling in mixed-language content
+-   **LiveRegion External Events:** Fixed bug in LiveRegionProvider external event subscription for proper announcement broadcasting via custom events
+-   **Toast Duplicate Prevention:** Fixed toast announcement tracking with unique ID system preventing repetitive screen reader chatter
+
 ## System Architecture
 
 ### UI/UX Decisions

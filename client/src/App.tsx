@@ -222,7 +222,7 @@ function Router() {
         <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/accessibility" component={AccessibilityStatement} />
+      <Route path="/accessibility-statement" component={AccessibilityStatement} />
       <Route path="/ai-publisher" component={AIPublisher} />
       <Route path="/ai-policy" component={AIPolicy} />
       <Route path="/news" component={NewsPage} />

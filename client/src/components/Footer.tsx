@@ -36,7 +36,7 @@ export function Footer() {
     { label: "الخصوصية", href: "/privacy" },
     { label: "الشروط", href: "/terms" },
     { label: "الملفات", href: "/cookies" },
-    { label: "إمكانية الوصول", href: "/accessibility" },
+    { label: "إمكانية الوصول", href: "/accessibility-statement" },
   ];
 
   const socialLinks = [
