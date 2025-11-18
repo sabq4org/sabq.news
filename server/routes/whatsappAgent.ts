@@ -487,7 +487,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     });
 
     const replyMessage = articleStatus === 'published'
-      ? `✅ تم نشر الخبر\nhttps://sabq.life/news/${slug}`
+      ? `✅ تم نشر الخبر\nhttps://sabq.life/article/${slug}`
       : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;
 
     try {
