@@ -74,6 +74,7 @@ import ActivityLogsPage from "@/pages/dashboard/ActivityLogsPage";
 import AboutPage from "@/pages/AboutPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
+import AccessibilityStatement from "@/pages/AccessibilityStatement";
 import MirqabPage from "@/pages/MirqabPage";
 import SabqIndexListPage from "@/pages/mirqab/SabqIndexListPage";
 import SabqIndexDetailPage from "@/pages/mirqab/SabqIndexDetailPage";
@@ -221,6 +222,7 @@ function Router() {
         <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/accessibility" component={AccessibilityStatement} />
       <Route path="/ai-publisher" component={AIPublisher} />
       <Route path="/ai-policy" component={AIPolicy} />
       <Route path="/news" component={NewsPage} />
