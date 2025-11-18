@@ -6,6 +6,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useVoiceAssistant } from "@/contexts/VoiceAssistantContext";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 type VoiceAssistantButtonProps = {
@@ -35,6 +38,91 @@ export function VoiceAssistantButton({
     startListening,
     stopListening,
   } = useVoiceAssistant();
+  const { toast } = useToast();
+  const { language } = useLanguage();
+
+  // Localized messages
+  const messages = {
+    ar: {
+      error: "خطأ في المساعد الصوتي",
+      unexpected: "حدث خطأ غير متوقع",
+      notSupported: "المساعد الصوتي غير مدعوم",
+      noSupport: "المتصفح الخاص بك لا يدعم تقنية التعرف على الصوت",
+      listening: "جاري الاستماع... اضغط للإيقاف",
+      speaking: "جاري القراءة...",
+      pressToSpeak: "اضغط للتحدث",
+      // Error-specific messages
+      httpsRequired: "المساعد الصوتي يتطلب اتصال آمن (HTTPS). يرجى الوصول إلى الموقع عبر HTTPS.",
+      permissionDenied: "يرجى السماح بالوصول إلى الميكروفون من إعدادات المتصفح.",
+      failedToStart: "فشل بدء المساعد الصوتي. يرجى المحاولة مرة أخرى.",
+    },
+    en: {
+      error: "Voice Assistant Error",
+      unexpected: "An unexpected error occurred",
+      notSupported: "Voice Assistant Not Supported",
+      noSupport: "Your browser does not support speech recognition",
+      listening: "Listening... Click to stop",
+      speaking: "Speaking...",
+      pressToSpeak: "Click to speak",
+      // Error-specific messages
+      httpsRequired: "Voice assistant requires a secure connection (HTTPS). Please access the site via HTTPS.",
+      permissionDenied: "Please allow microphone access from browser settings.",
+      failedToStart: "Failed to start voice assistant. Please try again.",
+    }
+  };
+
+  const t = messages[language];
+
+  // Map error codes to localized messages
+  const getErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+      case 'https-required':
+        return t.httpsRequired;
+      case 'not-allowed':
+      case 'service-not-allowed':
+        return t.permissionDenied;
+      case 'InvalidStateError':
+      case 'unknown':
+        return t.failedToStart;
+      default:
+        return t.unexpected;
+    }
+  };
+
+  // Listen for voice assistant errors
+  useEffect(() => {
+    const handleVoiceError = (event: Event) => {
+      const customEvent = event as CustomEvent<{ 
+        error: string; 
+        userMessage?: string;
+      }>;
+      
+      const { error, userMessage } = customEvent.detail;
+      
+      // Use provided userMessage, or map error code to localized message
+      const description = userMessage || getErrorMessage(error);
+      
+      toast({
+        title: t.error,
+        description,
+        variant: "destructive",
+      });
+    };
+
+    window.addEventListener('voice:error', handleVoiceError);
+    return () => window.removeEventListener('voice:error', handleVoiceError);
+  }, [toast, t]);
+
+  // Show toast if not supported
+  useEffect(() => {
+    if (!isSupported) {
+      toast({
+        title: t.notSupported,
+        description: t.noSupport,
+        variant: "destructive",
+      });
+    }
+  }, [isSupported, toast, t]);
 
   if (!isSupported) {
     return null; // Don't render if browser doesn't support voice
@@ -49,9 +137,9 @@ export function VoiceAssistantButton({
   };
 
   const getTooltipText = () => {
-    if (isListening) return "جاري الاستماع... اضغط للإيقاف";
-    if (isSpeaking) return "جاري القراءة...";
-    return "اضغط للتحدث";
+    if (isListening) return t.listening;
+    if (isSpeaking) return t.speaking;
+    return t.pressToSpeak;
   };
 
   const getIcon = () => {
