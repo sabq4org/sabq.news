@@ -29,7 +29,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **Deep Analysis (Omq):** Public section with UI, navigation, and API endpoints for published analyses, event tracking, and RBAC-protected updates.
 -   **Hierarchical Task Management:** Tasks can have parent-child relationships with unlimited nesting depth, supported by database schema, backend API, and a tree-view UI component, with secure permission-based filtering.
 -   **Intelligent Email Agent System with Sabq Editorial Style:** Automated email-to-article publishing system that uses AI for content analysis, quality scoring, sender validation, and auto-publishing or drafting articles, adhering to Sabq's journalistic standards.
--   **WhatsApp Auto-Publish System:** Enterprise-grade WhatsApp-to-article publishing system integrated with Twilio API, mirroring the email agent architecture for AI-powered content processing and auto-publishing.
+-   **WhatsApp Auto-Publish System:** Enterprise-grade WhatsApp-to-article publishing system integrated with Twilio API, mirroring the email agent architecture for AI-powered content processing and auto-publishing. All articles created via WhatsApp Agent are configured with `hideFromHomepage: false` to ensure visibility in homepage article listings.
 -   **Accessibility:** Comprehensive infrastructure for WCAG 2.1 AA compliance, including global state management for accessibility settings, skip links, enhanced ARIA labels, semantic HTML, and advanced features like ARIA live regions, form/loading state announcements, and a Voice Assistant system. Includes production-ready Reading/Dyslexia Mode with OpenDyslexic font and trilingual Voice Commands for navigation and article reading.
 
 ### System Design Choices

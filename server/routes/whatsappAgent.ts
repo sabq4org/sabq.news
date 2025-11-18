@@ -505,6 +505,11 @@ router.post("/webhook", async (req: Request, res: Response) => {
         webhookLogId: webhookLog.id,
       },
       seoKeywords: aiResult.optimized.seoKeywords,
+      // 🔥 Essential fields for article visibility
+      articleType: "news", // Ensures article appears in homepage queries
+      newsType: "regular", // Default news type (not breaking/featured)
+      hideFromHomepage: false, // Article must be visible on homepage
+      displayOrder: 0, // Default display order
     } as any);
 
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
