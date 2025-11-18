@@ -10,6 +10,88 @@ import crypto from "crypto";
 
 const router = Router();
 
+// ============================================
+// MESSAGE SEGMENTATION HANDLING
+// ============================================
+
+// Track pending message timeouts
+const pendingMessages = new Map<string, NodeJS.Timeout>();
+
+// Segment collection timeout (30 seconds)
+const SEGMENT_TIMEOUT_MS = 30000;
+
+async function processCompleteMessage(messageSid: string): Promise<void> {
+  try {
+    console.log(`[WhatsApp Segmentation] Processing complete message: ${messageSid}`);
+    
+    // Get all segments for this message
+    const segments = await storage.getMessageSegments(messageSid);
+    
+    if (segments.length === 0) {
+      console.log(`[WhatsApp Segmentation] No segments found for ${messageSid}`);
+      return;
+    }
+    
+    // Sort by segment index and combine content
+    const sortedSegments = segments.sort((a, b) => a.segmentIndex - b.segmentIndex);
+    const fullBody = sortedSegments.map(s => s.content).join('');
+    const from = segments[0].from;
+    const mediaUrls = segments[0].mediaUrls || [];
+    const metadata = segments[0].metadata || {};
+    
+    console.log(`[WhatsApp Segmentation] Assembled ${segments.length} segments into message of ${fullBody.length} characters`);
+    
+    // Create a synthetic webhook payload
+    const syntheticPayload = {
+      From: `whatsapp:${from}`,
+      To: process.env.TWILIO_PHONE_NUMBER || '',
+      Body: fullBody,
+      NumMedia: mediaUrls.length.toString(),
+      MessageSid: messageSid,
+      ...metadata.twilioData,
+    };
+    
+    // Add media URLs to payload
+    mediaUrls.forEach((url, index) => {
+      syntheticPayload[`MediaUrl${index}`] = url;
+      if (metadata.mediaContentTypes && metadata.mediaContentTypes[index]) {
+        syntheticPayload[`MediaContentType${index}`] = metadata.mediaContentTypes[index];
+      }
+    });
+    
+    // Process the assembled message through the normal webhook handler
+    // We'll call a separate processing function to avoid duplication
+    await processWhatsAppMessage(syntheticPayload, true);
+    
+    // Clean up segments after successful processing
+    await storage.deleteMessageSegments(messageSid);
+    console.log(`[WhatsApp Segmentation] Cleaned up segments for ${messageSid}`);
+    
+  } catch (error) {
+    console.error(`[WhatsApp Segmentation] Error processing message ${messageSid}:`, error);
+  } finally {
+    // Remove the timeout from tracking
+    pendingMessages.delete(messageSid);
+  }
+}
+
+function scheduleMessageProcessing(messageSid: string): void {
+  // Clear existing timeout if any
+  const existingTimeout = pendingMessages.get(messageSid);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+  }
+  
+  // Schedule new timeout
+  const timeout = setTimeout(() => {
+    processCompleteMessage(messageSid);
+  }, SEGMENT_TIMEOUT_MS);
+  
+  pendingMessages.set(messageSid, timeout);
+  
+  console.log(`[WhatsApp Segmentation] Scheduled processing for ${messageSid} in ${SEGMENT_TIMEOUT_MS}ms`);
+}
+
 async function uploadToCloudStorage(
   file: Buffer,
   filename: string,
@@ -211,72 +293,88 @@ router.get("/badge-stats", requireAuth, requireRole('admin', 'manager', 'system_
 // WEBHOOK HANDLER
 // ============================================
 
-router.post("/webhook", async (req: Request, res: Response) => {
+// Main message processing function (extracted for reuse)
+async function processWhatsAppMessage(reqBody: any, isSegmented: boolean = false): Promise<void> {
   const startTime = Date.now();
   let webhookLog: any = null;
   
   try {
-    console.log("[WhatsApp Agent] ============ WEBHOOK START ============");
-    
-    // 🔐 SECURITY: Validate Twilio Signature
-    const twilioSignature = req.headers['x-twilio-signature'] as string;
-    
-    if (!twilioSignature) {
-      console.error("[WhatsApp Agent] ❌ Missing Twilio signature header");
-      
-      // Log failed attempt
-      await storage.createWhatsappWebhookLog({
-        from: req.body.From || 'unknown',
-        message: req.body.Body || '',
-        status: 'rejected',
-        reason: 'Missing Twilio signature - possible spoofing attempt',
-        processingTimeMs: Date.now() - startTime,
-      });
-      
-      // IMPORTANT: Return 200 to Twilio (prevents retry loop)
-      // But reject the request internally
-      return res.status(200).json({ 
-        success: false, 
-        error: 'Invalid request' 
-      });
-    }
-    
-    // Validate signature
-    const url = `https://${req.headers.host}${req.originalUrl}`;
-    const isValid = validateTwilioSignature(twilioSignature, url, req.body);
-    
-    if (!isValid) {
-      console.error("[WhatsApp Agent] ❌ Invalid Twilio signature");
-      
-      await storage.createWhatsappWebhookLog({
-        from: req.body.From || 'unknown',
-        message: req.body.Body || '',
-        status: 'rejected',
-        reason: 'Invalid Twilio signature - authentication failed',
-        processingTimeMs: Date.now() - startTime,
-      });
-      
-      return res.status(200).json({ 
-        success: false, 
-        error: 'Invalid request' 
-      });
-    }
-    
-    console.log("[WhatsApp Agent] ✅ Twilio signature validated successfully");
     
     console.log("[WhatsApp Agent] Received webhook from Twilio");
-    console.log("[WhatsApp Agent] Raw req.body keys:", Object.keys(req.body));
+    console.log("[WhatsApp Agent] Raw reqBody keys:", Object.keys(reqBody));
     
-    const from = req.body.From || "";
-    const to = req.body.To || "";
-    const body = req.body.Body || "";
-    const numMedia = parseInt(req.body.NumMedia || "0", 10);
+    const from = reqBody.From || "";
+    const to = reqBody.To || "";
+    const body = reqBody.Body || "";
+    const numMedia = parseInt(reqBody.NumMedia || "0", 10);
     
     console.log("[WhatsApp Agent] Extracted values:");
     console.log("[WhatsApp Agent] - From:", from);
     console.log("[WhatsApp Agent] - To:", to);
     console.log("[WhatsApp Agent] - Body:", body);
     console.log("[WhatsApp Agent] - NumMedia:", numMedia);
+
+    // ============================================
+    // LONG MESSAGE SEGMENTATION PRE-PROCESSING
+    // ============================================
+
+    // Extract or generate messageSid
+    const messageSid = reqBody.MessageSid || nanoid();
+
+    // Check if this is a reassembled segmented message
+    if (isSegmented) {
+      console.log("[WhatsApp Agent] Processing reassembled segmented message");
+    }
+
+    // Check for long messages or existing segments
+    const existingSegments = await storage.getMessageSegments(messageSid);
+    const isLongMessage = body.length > 1500;
+    const hasExistingSegments = existingSegments.length > 0;
+
+    if (!isSegmented && (isLongMessage || hasExistingSegments)) {
+      console.log(`[WhatsApp Agent] Detected segmentable message: length=${body.length}, existingSegments=${existingSegments.length}`);
+      
+      // Extract media URLs from reqBody
+      const mediaUrls: string[] = [];
+      const mediaContentTypes: string[] = [];
+      for (let i = 0; i < numMedia; i++) {
+        const mediaUrl = reqBody[`MediaUrl${i}`];
+        const contentType = reqBody[`MediaContentType${i}`];
+        if (mediaUrl) {
+          mediaUrls.push(mediaUrl);
+          mediaContentTypes.push(contentType || 'application/octet-stream');
+        }
+      }
+      
+      // Store this message as a segment
+      const phoneNumber = from.replace('whatsapp:', '');
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+      
+      await storage.storeMessageSegment({
+        messageSid,
+        from: phoneNumber,
+        segmentIndex: existingSegments.length,
+        totalSegments: -1,
+        content: body,
+        mediaUrls,
+        metadata: {
+          numMedia,
+          mediaContentTypes,
+          twilioData: reqBody,
+        },
+        expiresAt,
+      });
+      
+      console.log(`[WhatsApp Agent] Stored segment ${existingSegments.length} for message ${messageSid}`);
+      
+      // Schedule message processing
+      scheduleMessageProcessing(messageSid);
+      
+      // Return early - don't process immediately
+      console.log(`[WhatsApp Agent] Scheduled processing for ${messageSid}, returning early`);
+      return;
+    }
 
     const phoneNumber = from.replace('whatsapp:', '');
     
@@ -301,7 +399,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
 
     console.log(`[WhatsApp Agent] Token extracted: ${token}`);
@@ -319,7 +417,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
 
     if (!whatsappToken.isActive) {
@@ -334,7 +432,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
 
     if (whatsappToken.expiresAt && new Date(whatsappToken.expiresAt) < new Date()) {
@@ -349,7 +447,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
 
     if (whatsappToken.phoneNumber) {
@@ -370,7 +468,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
           processingTimeMs: Date.now() - startTime,
         });
 
-        return res.status(200).send('OK');
+        return;
       }
     }
 
@@ -383,8 +481,8 @@ router.post("/webhook", async (req: Request, res: Response) => {
       console.log(`[WhatsApp Agent] 📎 Processing ${numMedia} media attachments`);
       
       for (let i = 0; i < numMedia; i++) {
-        const mediaUrl = req.body[`MediaUrl${i}`];
-        const mediaContentType = req.body[`MediaContentType${i}`];
+        const mediaUrl = reqBody[`MediaUrl${i}`];
+        const mediaContentType = reqBody[`MediaContentType${i}`];
         
         if (!mediaUrl) continue;
 
@@ -442,7 +540,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
     
     console.log(`[WhatsApp Agent] Text validation passed (hasImages: ${hasImages}, textLength: ${textLength})`);
@@ -476,7 +574,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         processingTimeMs: Date.now() - startTime,
       });
 
-      return res.status(200).send('OK');
+      return;
     }
 
     const category = categories.find(
@@ -546,7 +644,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
     }
 
     console.log("[WhatsApp Agent] ============ WEBHOOK END (SUCCESS) ============");
-    return res.status(200).send('OK');
 
   } catch (error) {
     console.error("[WhatsApp Agent] ============ WEBHOOK ERROR ============");
@@ -564,7 +661,28 @@ router.post("/webhook", async (req: Request, res: Response) => {
         console.error("[WhatsApp Agent] Failed to update error log:", logError);
       }
     }
+  }
+}
 
+// POST /api/whatsapp/webhook - Twilio webhook endpoint
+router.post("/webhook", async (req: Request, res: Response) => {
+  try {
+    // Validate Twilio signature for security
+    const signature = req.headers['x-twilio-signature'] as string;
+    if (signature && !validateTwilioSignature(signature, req.body, req.protocol + '://' + req.get('host') + req.originalUrl)) {
+      console.log("[WhatsApp Agent] Invalid Twilio signature");
+      return res.status(403).send('Forbidden');
+    }
+
+    // Process the message asynchronously
+    processWhatsAppMessage(req.body, false).catch(error => {
+      console.error("[WhatsApp Agent] Async processing error:", error);
+    });
+
+    // Return 200 immediately to Twilio
+    return res.status(200).send('OK');
+  } catch (error) {
+    console.error("[WhatsApp Agent] Webhook endpoint error:", error);
     return res.status(200).send('OK');
   }
 });
