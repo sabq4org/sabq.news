@@ -161,6 +161,7 @@ import {
   taskComments,
   taskAttachments,
   taskActivityLog,
+  accessibilityEvents,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -247,6 +248,7 @@ import {
   insertShortLinkSchema,
   insertShortLinkClickSchema,
   insertSocialFollowSchema,
+  insertAccessibilityEventSchema,
   type EnArticleWithDetails,
   type UrArticleWithDetails,
   type User,
@@ -26802,6 +26804,181 @@ Allow: /
     } catch (error: any) {
       console.error('Error bulk deleting webhook logs:', error);
       res.status(500).json({ error: 'فشل في حذف السجلات' });
+    }
+  });
+
+  // ============================================================
+  // ACCESSIBILITY TELEMETRY ROUTES
+  // ============================================================
+
+  // POST /api/accessibility/track - Track accessibility event
+  app.post("/api/accessibility/track", async (req, res) => {
+    try {
+      const { nanoid } = await import('nanoid');
+      
+      // Get userId from authenticated user (if logged in)
+      const userId = req.user ? (req.user as any).id : null;
+      
+      // Get sessionId from cookies or create new one
+      let sessionId = req.cookies?.['accessibility_session'];
+      if (!sessionId) {
+        sessionId = nanoid();
+        res.cookie('accessibility_session', sessionId, {
+          maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+          httpOnly: true,
+          sameSite: 'lax',
+        });
+      }
+      
+      // Validate and insert event
+      const validated = insertAccessibilityEventSchema.parse({
+        ...req.body,
+        userId,
+        sessionId,
+      });
+      
+      const [event] = await db.insert(accessibilityEvents).values(validated).returning();
+      
+      res.json({ success: true, eventId: event.id });
+    } catch (error: any) {
+      console.error('Error tracking accessibility event:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: 'بيانات غير صالحة',
+          details: error.errors 
+        });
+      }
+      
+      res.status(500).json({ error: 'فشل في تسجيل الحدث' });
+    }
+  });
+
+  // GET /api/accessibility/stats - Get accessibility usage statistics
+  app.get("/api/accessibility/stats", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { startDate, endDate, language, eventType } = req.query;
+      
+      // Build where conditions
+      const conditions = [];
+      
+      if (startDate) {
+        conditions.push(gte(accessibilityEvents.createdAt, new Date(startDate as string)));
+      }
+      if (endDate) {
+        conditions.push(lte(accessibilityEvents.createdAt, new Date(endDate as string)));
+      }
+      if (language) {
+        conditions.push(eq(accessibilityEvents.language, language as string));
+      }
+      if (eventType) {
+        conditions.push(eq(accessibilityEvents.eventType, eventType as string));
+      }
+      
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      
+      // Get total events count
+      const [{ count: totalEvents }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(accessibilityEvents)
+        .where(whereClause);
+      
+      // Get events by event type
+      const byEventType = await db
+        .select({
+          eventType: accessibilityEvents.eventType,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(accessibilityEvents)
+        .where(whereClause)
+        .groupBy(accessibilityEvents.eventType)
+        .orderBy(desc(sql`count(*)`));
+      
+      // Get events by language
+      const byLanguage = await db
+        .select({
+          language: accessibilityEvents.language,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(accessibilityEvents)
+        .where(whereClause)
+        .groupBy(accessibilityEvents.language)
+        .orderBy(desc(sql`count(*)`));
+      
+      // Get daily trends (last 30 days or custom range)
+      const trendsStartDate = startDate 
+        ? new Date(startDate as string)
+        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      const trendsConditions = [...conditions];
+      if (!startDate) {
+        trendsConditions.push(gte(accessibilityEvents.createdAt, trendsStartDate));
+      }
+      
+      const trends = await db
+        .select({
+          date: sql<string>`DATE(${accessibilityEvents.createdAt})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(accessibilityEvents)
+        .where(trendsConditions.length > 0 ? and(...trendsConditions) : undefined)
+        .groupBy(sql`DATE(${accessibilityEvents.createdAt})`)
+        .orderBy(asc(sql`DATE(${accessibilityEvents.createdAt})`));
+      
+      res.json({
+        totalEvents,
+        byEventType,
+        byLanguage,
+        trends,
+      });
+    } catch (error: any) {
+      console.error('Error fetching accessibility stats:', error);
+      res.status(500).json({ error: 'فشل في جلب الإحصائيات' });
+    }
+  });
+
+  // GET /api/accessibility/recent - Get recent accessibility events
+  app.get("/api/accessibility/recent", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
+    try {
+      const { limit = '50', eventType } = req.query;
+      const limitNum = Math.min(parseInt(limit as string) || 50, 100);
+      
+      // Build where conditions
+      const conditions = [];
+      if (eventType) {
+        conditions.push(eq(accessibilityEvents.eventType, eventType as string));
+      }
+      
+      // Get recent events with user information
+      const events = await db
+        .select({
+          id: accessibilityEvents.id,
+          userId: accessibilityEvents.userId,
+          sessionId: accessibilityEvents.sessionId,
+          eventType: accessibilityEvents.eventType,
+          eventAction: accessibilityEvents.eventAction,
+          eventValue: accessibilityEvents.eventValue,
+          language: accessibilityEvents.language,
+          pageUrl: accessibilityEvents.pageUrl,
+          metadata: accessibilityEvents.metadata,
+          createdAt: accessibilityEvents.createdAt,
+          user: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+        })
+        .from(accessibilityEvents)
+        .leftJoin(users, eq(accessibilityEvents.userId, users.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(accessibilityEvents.createdAt))
+        .limit(limitNum);
+      
+      res.json({ events });
+    } catch (error: any) {
+      console.error('Error fetching recent accessibility events:', error);
+      res.status(500).json({ error: 'فشل في جلب الأحداث الأخيرة' });
     }
   });
 
