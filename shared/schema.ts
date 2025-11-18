@@ -221,6 +221,14 @@ export const articles = pgTable("articles", {
   credibilityScore: integer("credibility_score"),
   credibilityAnalysis: text("credibility_analysis"),
   credibilityLastUpdated: timestamp("credibility_last_updated"),
+  source: text("source").default("manual").notNull(), // 'email' | 'whatsapp' | 'manual'
+  sourceMetadata: jsonb("source_metadata").$type<{
+    type: 'email' | 'whatsapp' | 'manual';
+    from?: string;
+    token?: string;
+    originalMessage?: string;
+    webhookLogId?: string;
+  }>(),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -6022,6 +6030,94 @@ export type InsertTrustedEmailSender = z.infer<typeof insertTrustedEmailSenderSc
 export type EmailWebhookLog = typeof emailWebhookLogs.$inferSelect;
 export type InsertEmailWebhookLog = z.infer<typeof insertEmailWebhookLogSchema>;
 export type EmailAgentStats = typeof emailAgentStats.$inferSelect;
+
+// ============================================
+// WHATSAPP INTEGRATION
+// ============================================
+
+// WhatsApp Tokens - for secure WhatsApp webhook integration
+export const whatsappTokens = pgTable("whatsapp_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  token: text("token").notNull().unique(),
+  label: text("label"),
+  phoneNumber: text("phone_number").notNull(),
+  autoPublish: boolean("auto_publish").default(false).notNull(),
+  allowedLanguages: text("allowed_languages").array().default(sql`ARRAY['ar']::text[]`).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  expiresAt: timestamp("expires_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  usageCount: integer("usage_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("whatsapp_tokens_user_id_idx").on(table.userId),
+  index("whatsapp_tokens_phone_number_idx").on(table.phoneNumber),
+]);
+
+// WhatsApp Webhook Logs - track all incoming WhatsApp messages
+export const whatsappWebhookLogs = pgTable("whatsapp_webhook_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  from: text("from").notNull(),
+  message: text("message"),
+  mediaUrls: text("media_urls").array(),
+  token: text("token"),
+  userId: varchar("user_id").references(() => users.id),
+  articleId: varchar("article_id").references(() => articles.id),
+  status: text("status").notNull(), // success, rejected, failed, pending
+  reason: text("reason"),
+  qualityScore: integer("quality_score"),
+  aiAnalysis: jsonb("ai_analysis").$type<{
+    detectedLanguage?: string;
+    detectedCategory?: string;
+    hasNewsValue?: boolean;
+    issues?: string[];
+  }>(),
+  processingTimeMs: integer("processing_time_ms"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("whatsapp_webhook_logs_user_id_idx").on(table.userId),
+  index("whatsapp_webhook_logs_created_at_idx").on(table.createdAt),
+  index("whatsapp_webhook_logs_status_idx").on(table.status),
+]);
+
+// Relations
+export const whatsappTokensRelations = relations(whatsappTokens, ({ one, many }) => ({
+  user: one(users, {
+    fields: [whatsappTokens.userId],
+    references: [users.id],
+  }),
+  webhookLogs: many(whatsappWebhookLogs),
+}));
+
+export const whatsappWebhookLogsRelations = relations(whatsappWebhookLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [whatsappWebhookLogs.userId],
+    references: [users.id],
+  }),
+  article: one(articles, {
+    fields: [whatsappWebhookLogs.articleId],
+    references: [articles.id],
+  }),
+}));
+
+// Insert schemas
+export const insertWhatsappTokenSchema = createInsertSchema(whatsappTokens).omit({
+  id: true,
+  usageCount: true,
+  lastUsedAt: true,
+  createdAt: true,
+});
+
+export const insertWhatsappWebhookLogSchema = createInsertSchema(whatsappWebhookLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Select types
+export type WhatsappToken = typeof whatsappTokens.$inferSelect;
+export type InsertWhatsappToken = z.infer<typeof insertWhatsappTokenSchema>;
+export type WhatsappWebhookLog = typeof whatsappWebhookLogs.$inferSelect;
+export type InsertWhatsappWebhookLog = z.infer<typeof insertWhatsappWebhookLogSchema>;
 
 // ============================================
 // ACCESSIBILITY TELEMETRY

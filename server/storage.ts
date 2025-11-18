@@ -292,6 +292,12 @@ import {
   type EmailWebhookLog,
   type InsertEmailWebhookLog,
   type EmailAgentStats,
+  whatsappTokens,
+  whatsappWebhookLogs,
+  type WhatsappToken,
+  type InsertWhatsappToken,
+  type WhatsappWebhookLog,
+  type InsertWhatsappWebhookLog,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1393,6 +1399,22 @@ export interface IStorage {
   getEmailAgentStats(date?: Date): Promise<EmailAgentStats | null>;
   updateEmailAgentStats(date: Date, updates: Partial<EmailAgentStats>): Promise<EmailAgentStats>;
   getEmailLanguageCounts(): Promise<{ ar: number; en: number; ur: number }>;
+  
+  // WhatsApp Tokens
+  createWhatsappToken(token: InsertWhatsappToken): Promise<WhatsappToken>;
+  getWhatsappToken(id: string): Promise<WhatsappToken | null>;
+  getWhatsappTokenByToken(token: string): Promise<WhatsappToken | null>;
+  getWhatsappTokensByUser(userId: string): Promise<WhatsappToken[]>;
+  getAllWhatsappTokens(): Promise<WhatsappToken[]>;
+  updateWhatsappToken(id: string, updates: Partial<InsertWhatsappToken>): Promise<WhatsappToken | null>;
+  updateWhatsappTokenUsage(id: string): Promise<void>;
+  deleteWhatsappToken(id: string): Promise<void>;
+  
+  // WhatsApp Webhook Logs
+  createWhatsappWebhookLog(log: InsertWhatsappWebhookLog): Promise<WhatsappWebhookLog>;
+  getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }>;
+  getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
+  deleteWhatsappWebhookLog(id: string): Promise<void>;
   
   // Notifications Operations
   createNotification(data: {
@@ -12130,6 +12152,136 @@ export class DatabaseStorage implements IStorage {
       en: enResults.length,
       ur: urResults.length,
     };
+  }
+
+  // ============================================================
+  // WHATSAPP INTEGRATION OPERATIONS
+  // ============================================================
+
+  async createWhatsappToken(token: InsertWhatsappToken): Promise<WhatsappToken> {
+    const [newToken] = await db
+      .insert(whatsappTokens)
+      .values(token)
+      .returning();
+    
+    return newToken;
+  }
+
+  async getWhatsappToken(id: string): Promise<WhatsappToken | null> {
+    const [token] = await db
+      .select()
+      .from(whatsappTokens)
+      .where(eq(whatsappTokens.id, id));
+    
+    return token || null;
+  }
+
+  async getWhatsappTokenByToken(token: string): Promise<WhatsappToken | null> {
+    const [result] = await db
+      .select()
+      .from(whatsappTokens)
+      .where(eq(whatsappTokens.token, token));
+    
+    return result || null;
+  }
+
+  async getWhatsappTokensByUser(userId: string): Promise<WhatsappToken[]> {
+    return await db
+      .select()
+      .from(whatsappTokens)
+      .where(eq(whatsappTokens.userId, userId))
+      .orderBy(desc(whatsappTokens.createdAt));
+  }
+
+  async getAllWhatsappTokens(): Promise<WhatsappToken[]> {
+    return await db
+      .select()
+      .from(whatsappTokens)
+      .orderBy(desc(whatsappTokens.createdAt));
+  }
+
+  async updateWhatsappToken(id: string, updates: Partial<InsertWhatsappToken>): Promise<WhatsappToken | null> {
+    const [updated] = await db
+      .update(whatsappTokens)
+      .set(updates)
+      .where(eq(whatsappTokens.id, id))
+      .returning();
+    
+    return updated || null;
+  }
+
+  async updateWhatsappTokenUsage(id: string): Promise<void> {
+    await db
+      .update(whatsappTokens)
+      .set({
+        usageCount: sql`${whatsappTokens.usageCount} + 1`,
+        lastUsedAt: new Date(),
+      })
+      .where(eq(whatsappTokens.id, id));
+  }
+
+  async deleteWhatsappToken(id: string): Promise<void> {
+    await db
+      .delete(whatsappTokens)
+      .where(eq(whatsappTokens.id, id));
+  }
+
+  async createWhatsappWebhookLog(log: InsertWhatsappWebhookLog): Promise<WhatsappWebhookLog> {
+    const [newLog] = await db
+      .insert(whatsappWebhookLogs)
+      .values(log)
+      .returning();
+    
+    return newLog;
+  }
+
+  async getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }> {
+    const conditions = [];
+    
+    if (params?.status) {
+      conditions.push(eq(whatsappWebhookLogs.status, params.status));
+    }
+    
+    const query = db
+      .select()
+      .from(whatsappWebhookLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(whatsappWebhookLogs.createdAt));
+    
+    if (params?.limit) {
+      query.limit(params.limit);
+    }
+    
+    if (params?.offset) {
+      query.offset(params.offset);
+    }
+    
+    const logs = await query;
+    
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(whatsappWebhookLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    return {
+      logs,
+      total: Number(count),
+    };
+  }
+
+  async getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null> {
+    const [log] = await db
+      .select()
+      .from(whatsappWebhookLogs)
+      .where(eq(whatsappWebhookLogs.id, id));
+    
+    return log || null;
+  }
+
+  async deleteWhatsappWebhookLog(id: string): Promise<void> {
+    await db
+      .delete(whatsappWebhookLogs)
+      .where(eq(whatsappWebhookLogs.id, id));
   }
 
   // Notification Operations
