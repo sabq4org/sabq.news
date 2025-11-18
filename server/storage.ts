@@ -294,10 +294,13 @@ import {
   type EmailAgentStats,
   whatsappTokens,
   whatsappWebhookLogs,
+  whatsappMessageSegments,
   type WhatsappToken,
   type InsertWhatsappToken,
   type WhatsappWebhookLog,
   type InsertWhatsappWebhookLog,
+  type WhatsappMessageSegment,
+  type InsertWhatsappMessageSegment,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1416,6 +1419,12 @@ export interface IStorage {
   getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }>;
   getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
   deleteWhatsappWebhookLog(id: string): Promise<void>;
+
+  // WhatsApp Message Segments
+  storeMessageSegment(segment: InsertWhatsappMessageSegment): Promise<WhatsappMessageSegment>;
+  getMessageSegments(messageSid: string): Promise<WhatsappMessageSegment[]>;
+  deleteMessageSegments(messageSid: string): Promise<void>;
+  cleanupExpiredSegments(): Promise<number>;
   
   // Notifications Operations
   createNotification(data: {
@@ -12313,6 +12322,40 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(whatsappWebhookLogs)
       .where(eq(whatsappWebhookLogs.id, id));
+  }
+
+  // ============================================
+  // WHATSAPP MESSAGE SEGMENTS
+  // ============================================
+
+  async storeMessageSegment(segment: InsertWhatsappMessageSegment): Promise<WhatsappMessageSegment> {
+    const [result] = await db
+      .insert(whatsappMessageSegments)
+      .values(segment)
+      .returning();
+    return result;
+  }
+
+  async getMessageSegments(messageSid: string): Promise<WhatsappMessageSegment[]> {
+    return await db
+      .select()
+      .from(whatsappMessageSegments)
+      .where(eq(whatsappMessageSegments.messageSid, messageSid))
+      .orderBy(whatsappMessageSegments.segmentIndex);
+  }
+
+  async deleteMessageSegments(messageSid: string): Promise<void> {
+    await db
+      .delete(whatsappMessageSegments)
+      .where(eq(whatsappMessageSegments.messageSid, messageSid));
+  }
+
+  async cleanupExpiredSegments(): Promise<number> {
+    const result = await db
+      .delete(whatsappMessageSegments)
+      .where(lt(whatsappMessageSegments.expiresAt, new Date()))
+      .returning();
+    return result.length;
   }
 
   // Notification Operations
