@@ -1,0 +1,93 @@
+2025-11-18 19:41:55.52
+c8dc7d05
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-18 19:41:55.52
+c8dc7d05
+User
+5:41:55 PM [express] GET /api/email-agent/senders 304 in 176ms :: [{"id":"ab91b4e2-1fdc-4306-88ba-a2…
+2025-11-18 19:41:55.52
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-18 19:41:55.54
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-18 19:41:55.54
+c8dc7d05
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-18 19:41:56.30
+c8dc7d05
+User
+5:41:56 PM [express] GET /api/email-agent/logs 304 in 901ms :: {"logs":[{"id":"4c6adbd2-97f3-47e6-a1…
+2025-11-18 19:41:59.63
+c8dc7d05
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-18 19:41:59.65
+c8dc7d05
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-18 19:41:59.65
+c8dc7d05
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-18 19:41:59.66
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-18 19:41:59.66
+c8dc7d05
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-18 19:41:59.67
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-18 19:41:59.67
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-18 19:41:59.68
+c8dc7d05
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-18 19:41:59.69
+c8dc7d05
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager, user has: system_admin, admin
+2025-11-18 19:41:59.69
+c8dc7d05
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
+2025-11-18 19:41:59.70
+c8dc7d05
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
+2025-11-18 19:41:59.71
+c8dc7d05
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager, user has: system_admin, admin
+2025-11-18 19:41:59.71
+c8dc7d05
+User
+5:41:59 PM [express] GET /api/whatsapp/config 304 in 88ms :: {"whatsappNumber":"+14155238886","confi…
+2025-11-18 19:41:59.73
+c8dc7d05
+User
+5:41:59 PM [express] GET /api/whatsapp/tokens 304 in 116ms :: [{"id":"9166ebf9-8c39-4ccf-87d9-8e8590…
+2025-11-18 19:41:59.80
+c8dc7d05
+User
+5:41:59 PM [express] GET /api/whatsapp/logs 200 in 157ms :: {"logs":[{"id":"68123ed3-2011-466b-b958-…
+2025-11-18 19:41:59.80
+c8dc7d05
+User
+5:41:59 PM [express] GET /api/whatsapp/stats 200 in 173ms :: {"totalToday":16,"successRate":31.3,"av…
+2025-11-18 19:41:59.80
+c8dc7d05
+User
+5:41:59 PM [express] GET /api/whatsapp/stats 200 in 173ms :: {"totalToday":16,"successRate":31.3,"av…
