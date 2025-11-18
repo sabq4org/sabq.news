@@ -132,6 +132,7 @@ import EnglishKeywordPage from "@/pages/en/EnglishKeywordPage";
 import EnglishArticleEditor from "@/pages/en/EnglishArticleEditor";
 import EnglishDashboard from "@/pages/en/EnglishDashboard";
 import EmailAgentManagement from "@/pages/EmailAgentManagement";
+import WhatsAppManagement from "@/pages/admin/WhatsAppManagement";
 import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
 import EnglishCategoriesPage from "@/pages/en/EnglishCategoriesPage";
 import EnglishCategoriesListPage from "@/pages/en/EnglishCategoriesListPage";
@@ -419,6 +420,7 @@ function Router() {
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
       <Route path="/dashboard/system-settings" component={SystemSettings} />
       <Route path="/dashboard/email-agent" component={EmailAgentManagement} />
+      <Route path="/admin/whatsapp" component={WhatsAppManagement} />
       
       {/* Admin Routes */}
       <Route path="/admin/accessibility-insights" component={AccessibilityInsights} />

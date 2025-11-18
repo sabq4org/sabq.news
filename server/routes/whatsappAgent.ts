@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
-import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage } from "../services/whatsapp";
+import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature } from "../services/whatsapp";
 import { requireAuth, requireRole } from "../rbac";
 import { insertWhatsappTokenSchema } from "@shared/schema";
 import crypto from "crypto";
@@ -113,14 +113,104 @@ async function downloadWhatsAppMedia(mediaUrl: string): Promise<{ buffer: Buffer
 }
 
 // ============================================
+// STATISTICS ENDPOINT
+// ============================================
+
+// GET /api/whatsapp/stats - Get dashboard statistics
+router.get("/stats", requireAuth, requireRole('admin', 'manager', 'system_admin'), async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).id;
+    
+    // Get all logs
+    const allLogs = await storage.getWhatsappWebhookLogs({ limit: 1000, offset: 0 });
+    
+    // Get all tokens
+    const allTokens = await storage.getAllWhatsappTokens();
+    
+    // Calculate stats
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const logsToday = allLogs.logs.filter(log => new Date(log.createdAt) >= today);
+    const successLogs = logsToday.filter(log => log.status === 'processed');
+    const logsWithQuality = successLogs.filter(log => log.qualityScore !== null && log.qualityScore !== undefined);
+    
+    const totalToday = logsToday.length;
+    const successRate = totalToday > 0 ? (successLogs.length / totalToday) * 100 : 0;
+    const averageQualityScore = logsWithQuality.length > 0
+      ? logsWithQuality.reduce((sum, log) => sum + (log.qualityScore || 0), 0) / logsWithQuality.length
+      : 0;
+    const activeTokens = allTokens.filter(t => t.isActive).length;
+    
+    return res.json({
+      totalToday,
+      successRate: Math.round(successRate * 10) / 10, // Round to 1 decimal
+      averageQualityScore: Math.round(averageQualityScore * 10) / 10,
+      activeTokens,
+    });
+  } catch (error) {
+    console.error('[WhatsApp Stats] Error:', error);
+    return res.status(500).json({ message: 'فشل في تحميل الإحصائيات' });
+  }
+});
+
+// ============================================
 // WEBHOOK HANDLER
 // ============================================
 
 router.post("/webhook", async (req: Request, res: Response) => {
+  const startTime = Date.now();
   let webhookLog: any = null;
   
   try {
     console.log("[WhatsApp Agent] ============ WEBHOOK START ============");
+    
+    // 🔐 SECURITY: Validate Twilio Signature
+    const twilioSignature = req.headers['x-twilio-signature'] as string;
+    
+    if (!twilioSignature) {
+      console.error("[WhatsApp Agent] ❌ Missing Twilio signature header");
+      
+      // Log failed attempt
+      await storage.createWhatsappWebhookLog({
+        from: req.body.From || 'unknown',
+        message: req.body.Body || '',
+        status: 'rejected',
+        reason: 'Missing Twilio signature - possible spoofing attempt',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      // IMPORTANT: Return 200 to Twilio (prevents retry loop)
+      // But reject the request internally
+      return res.status(200).json({ 
+        success: false, 
+        error: 'Invalid request' 
+      });
+    }
+    
+    // Validate signature
+    const url = `https://${req.headers.host}${req.originalUrl}`;
+    const isValid = validateTwilioSignature(twilioSignature, url, req.body);
+    
+    if (!isValid) {
+      console.error("[WhatsApp Agent] ❌ Invalid Twilio signature");
+      
+      await storage.createWhatsappWebhookLog({
+        from: req.body.From || 'unknown',
+        message: req.body.Body || '',
+        status: 'rejected',
+        reason: 'Invalid Twilio signature - authentication failed',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      return res.status(200).json({ 
+        success: false, 
+        error: 'Invalid request' 
+      });
+    }
+    
+    console.log("[WhatsApp Agent] ✅ Twilio signature validated successfully");
+    
     console.log("[WhatsApp Agent] Received webhook from Twilio");
     console.log("[WhatsApp Agent] Raw req.body keys:", Object.keys(req.body));
     

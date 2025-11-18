@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users, MessageSquare } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -195,6 +195,14 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                             لوحة التحكم
                           </a>
                         </DropdownMenuItem>
+                        {(user.role === "admin" || user.role === "system_admin" || user.role === "manager") && (
+                          <DropdownMenuItem asChild>
+                            <a href="/admin/whatsapp" className="flex w-full items-center cursor-pointer" data-testid="link-whatsapp-mobile">
+                              <MessageSquare className="ml-2 h-4 w-4" aria-hidden="true" />
+                              إدارة واتساب
+                            </a>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                       </>
                     )}
@@ -278,6 +286,14 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                             لوحة التحكم
                           </a>
                         </DropdownMenuItem>
+                        {(user.role === "admin" || user.role === "system_admin" || user.role === "manager") && (
+                          <DropdownMenuItem asChild>
+                            <a href="/admin/whatsapp" className="flex w-full items-center cursor-pointer" data-testid="link-whatsapp">
+                              <MessageSquare className="ml-2 h-4 w-4" aria-hidden="true" />
+                              إدارة واتساب
+                            </a>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                       </>
                     )}
