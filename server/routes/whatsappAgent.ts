@@ -42,7 +42,7 @@ async function processCompleteMessage(messageSid: string): Promise<void> {
     console.log(`[WhatsApp Segmentation] Assembled ${segments.length} segments into message of ${fullBody.length} characters`);
     
     // Create a synthetic webhook payload
-    const syntheticPayload = {
+    const syntheticPayload: Record<string, any> = {
       From: `whatsapp:${from}`,
       To: process.env.TWILIO_PHONE_NUMBER || '',
       Body: fullBody,
