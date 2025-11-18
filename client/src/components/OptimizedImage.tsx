@@ -84,7 +84,7 @@ export function OptimizedImage({
         className={`relative flex items-center justify-center bg-gradient-to-br ${fallbackGradient} ${className}`}
         style={aspectRatio ? { aspectRatio } : undefined}
       >
-        <ImageOff className="h-8 w-8 text-muted-foreground/30" />
+        <ImageOff className="h-8 w-8 text-muted-foreground/30" aria-hidden="true" />
       </div>
     );
   }
