@@ -166,6 +166,7 @@ import CreativesManagement from "@/pages/dashboard/ads/CreativesManagement";
 import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManagement";
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
 import ChatbotPage from "@/pages/ChatbotPage";
+import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -418,6 +419,9 @@ function Router() {
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
       <Route path="/dashboard/system-settings" component={SystemSettings} />
       <Route path="/dashboard/email-agent" component={EmailAgentManagement} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin/accessibility-insights" component={AccessibilityInsights} />
       
       <Route component={NotFound} />
     </Switch>
