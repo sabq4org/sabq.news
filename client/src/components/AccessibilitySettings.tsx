@@ -160,10 +160,7 @@ export function AccessibilitySettings({ variant }: AccessibilitySettingsProps = 
           <div className="flex justify-end pt-2">
             <Button
               variant="outline"
-              onClick={() => {
-                resetSettings();
-                setOpen(false);
-              }}
+              onClick={resetSettings}
               data-testid="button-reset-accessibility"
               className="hover-elevate active-elevate-2"
             >

@@ -74,8 +74,8 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
         <div className="embla overflow-hidden" ref={emblaRef}>
           <div className="embla__container flex">
             {articles.map((article) => (
-            <div key={article.id} className="embla__slide relative flex-shrink-0 flex-grow-0" style={{ flexBasis: '100%' }}>
-              <Link href={`/article/${article.slug}`}>
+            <article key={article.id} className="embla__slide relative flex-shrink-0 flex-grow-0" style={{ flexBasis: '100%' }} role="article" aria-label={article.title}>
+              <Link href={`/article/${article.slug}`} aria-label={`اقرأ المقال: ${article.title}`}>
                 {/* Mobile: Vertical Layout */}
                 <div className="md:hidden relative cursor-pointer group">
                   {/* Image */}
@@ -237,7 +237,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   </div>
                 </div>
               </Link>
-            </div>
+            </article>
           ))}
         </div>
       </div>
