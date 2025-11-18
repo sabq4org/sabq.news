@@ -112,7 +112,7 @@ export default function CompleteProfile() {
             </p>
             <Button 
               onClick={() => window.location.href = "/api/login"}
-              data-testid="button-login"
+              data-testid="button-login-complete-profile"
             >
               تسجيل الدخول
             </Button>

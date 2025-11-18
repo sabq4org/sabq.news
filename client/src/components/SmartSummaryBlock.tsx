@@ -181,7 +181,7 @@ export function SmartSummaryBlock() {
             asChild
             variant="outline"
             className="w-full sm:w-auto border-2 border-primary/30 hover:bg-primary/5"
-            data-testid="button-login"
+            data-testid="button-login-summary"
           >
             <Link href="/login">
               لديك حساب؟ تسجيل الدخول

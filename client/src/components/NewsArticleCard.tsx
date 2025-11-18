@@ -59,6 +59,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         data-testid={`card-article-grid-${article.id}`}
+        role="article"
       >
         <Link href={`/article/${article.slug}`}>
           <div className="block">
@@ -186,7 +187,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
   if (viewMode === 'list') {
     return (
-      <Card className="cursor-pointer hover-elevate transition-all" data-testid={`card-article-list-${article.id}`}>
+      <Card className="cursor-pointer hover-elevate transition-all" data-testid={`card-article-list-${article.id}`} role="article">
         <Link href={`/article/${article.slug}`}>
           <div className="block">
             <CardContent className="p-0">
@@ -306,7 +307,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
   if (viewMode === 'compact') {
     return (
-      <div className="border-b last:border-b-0 hover-elevate" data-testid={`card-article-compact-${article.id}`}>
+      <div className="border-b last:border-b-0 hover-elevate" data-testid={`card-article-compact-${article.id}`} role="article">
         <Link href={`/article/${article.slug}`}>
           <div className="block p-4">
             <div className="flex gap-3">
