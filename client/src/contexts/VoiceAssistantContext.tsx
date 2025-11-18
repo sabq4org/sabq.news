@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useResolvedLanguage } from "@/hooks/useResolvedLanguage";
 
 type VoiceCommand = {
   command: string;
@@ -45,7 +46,10 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
   const recognitionRef = useRef<any>(null);
   const commandsRef = useRef<Map<string, VoiceCommand>>(new Map());
 
-  // Initialize Speech Recognition
+  // Use unified route-aware language detection hook
+  const currentLang = useResolvedLanguage();
+
+  // Initialize Speech Recognition with language support
   useEffect(() => {
     if (!isSpeechRecognitionSupported()) return;
 
@@ -53,7 +57,16 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     const recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA'; // Arabic (Saudi Arabia)
+    
+    // Set recognition language based on current language (including route-based Urdu)
+    if (currentLang === 'ar') {
+      recognition.lang = 'ar-SA'; // Arabic (Saudi Arabia)
+    } else if (currentLang === 'ur') {
+      recognition.lang = 'ur-PK'; // Urdu (Pakistan)  
+    } else {
+      recognition.lang = 'en-US'; // English (United States)
+    }
+    
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -122,7 +135,7 @@ export function VoiceAssistantProvider({ children }: VoiceAssistantProviderProps
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [currentLang]); // Recreate recognition when language changes (including route-based)
 
   const startListening = useCallback(() => {
     if (!isSupported || !recognitionRef.current || isListening) return;

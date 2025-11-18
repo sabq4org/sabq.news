@@ -7,8 +7,11 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { LiveRegionProvider } from "@/contexts/LiveRegionContext";
+import { VoiceAssistantProvider } from "@/contexts/VoiceAssistantContext";
 import { SkipLinks } from "@/components/SkipLinks";
 import { useEffect } from "react";
+import { useVoiceCommands } from "@/hooks/useVoiceCommands";
+import { VoiceCommandsHelp } from "@/components/VoiceCommandsHelp";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -173,6 +176,20 @@ function ScrollRestoration() {
   }, [location]);
 
   return null;
+}
+
+/**
+ * VoiceCommandsManager - Manages global voice commands and help dialog
+ */
+function VoiceCommandsManager() {
+  const { showHelp, setShowHelp } = useVoiceCommands();
+  
+  return (
+    <VoiceCommandsHelp 
+      open={showHelp} 
+      onOpenChange={setShowHelp} 
+    />
+  );
 }
 
 function Router() {
@@ -415,13 +432,16 @@ function App() {
         <ThemeProvider defaultTheme="light">
           <AccessibilityProvider>
             <LiveRegionProvider>
-              <TooltipProvider>
-                <SkipLinks />
-                <Toaster />
-                <div id="main-content" tabIndex={-1}>
-                  <Router />
-                </div>
-              </TooltipProvider>
+              <VoiceAssistantProvider>
+                <TooltipProvider>
+                  <SkipLinks />
+                  <Toaster />
+                  <VoiceCommandsManager />
+                  <div id="main-content" tabIndex={-1}>
+                    <Router />
+                  </div>
+                </TooltipProvider>
+              </VoiceAssistantProvider>
             </LiveRegionProvider>
           </AccessibilityProvider>
         </ThemeProvider>

@@ -41,6 +41,11 @@ Critical refinements for deployment-ready accessibility (November 18, 2025):
 -   **LiveRegion External Events:** Fixed bug in LiveRegionProvider external event subscription for proper announcement broadcasting via custom events
 -   **Toast Duplicate Prevention:** Fixed toast announcement tracking with unique ID system preventing repetitive screen reader chatter
 
+### Phase 3 Advanced Accessibility (التميز الشامل)
+Production-ready advanced accessibility features exceeding WCAG 2.1 AA standards:
+
+-   **Reading/Dyslexia Mode (COMPLETE):** Production-ready OpenDyslexic font integration via Fontsource NPM package (WOFF2 format) with global loading in index.css. Features enhanced typography (line-height 1.8, letter-spacing 0.12em, word-spacing 0.16em) scoped to text containers only (p, li, h1-h6, blockquote, article, section), preserving table layouts and UI controls. Includes line highlighting on hover with reduce-motion support. SSR/SSG compatible with localStorage guards (typeof window checks). AccessibilitySettings dialog toggle with state persistence. Scoping excludes table headers (td, th) to prevent dashboard layout breakage.
+
 ## System Architecture
 
 ### UI/UX Decisions
