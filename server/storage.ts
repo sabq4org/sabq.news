@@ -12348,7 +12348,12 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(whatsappMessageSegments)
-      .where(eq(whatsappMessageSegments.messageSid, messageSid))
+      .where(
+        and(
+          eq(whatsappMessageSegments.messageSid, messageSid),
+          gte(whatsappMessageSegments.expiresAt, new Date()) // Only get non-expired segments
+        )
+      )
       .orderBy(whatsappMessageSegments.segmentIndex);
   }
 
