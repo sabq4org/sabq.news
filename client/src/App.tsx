@@ -414,7 +414,7 @@ function App() {
             <TooltipProvider>
               <SkipLinks />
               <Toaster />
-              <div id="main-content">
+              <div id="main-content" tabIndex={-1}>
                 <Router />
               </div>
             </TooltipProvider>

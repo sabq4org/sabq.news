@@ -47,7 +47,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-footer border-t border-border" data-testid="footer" dir="rtl" role="contentinfo" aria-label="ذيل الصفحة">
+    <footer id="footer" className="bg-footer border-t border-border" data-testid="footer" dir="rtl" role="contentinfo" aria-label="ذيل الصفحة" tabIndex={-1}>
       {/* Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({

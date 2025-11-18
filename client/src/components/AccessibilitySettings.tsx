@@ -21,7 +21,11 @@ import {
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { Separator } from "@/components/ui/separator";
 
-export function AccessibilitySettings() {
+type AccessibilitySettingsProps = {
+  variant?: 'mobile' | 'desktop';
+};
+
+export function AccessibilitySettings({ variant }: AccessibilitySettingsProps = {}) {
   const [open, setOpen] = useState(false);
   const {
     settings,
@@ -37,6 +41,8 @@ export function AccessibilitySettings() {
     { value: "x-large", label: "كبير جداً" },
   ];
 
+  const testId = variant ? `button-accessibility-settings-${variant}` : "button-accessibility-settings";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -44,7 +50,7 @@ export function AccessibilitySettings() {
           variant="ghost"
           size="icon"
           className="hover-elevate active-elevate-2"
-          data-testid="button-accessibility-settings"
+          data-testid={testId}
           aria-label="إعدادات الوصول"
         >
           <Eye className="h-5 w-5" />

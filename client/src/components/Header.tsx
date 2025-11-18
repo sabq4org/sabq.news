@@ -114,7 +114,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </div>
 
           {/* Main Navigation - Center (Desktop only) */}
-          <nav id="main-nav" role="navigation" aria-label="القائمة الرئيسية" className="hidden md:flex items-center gap-6 flex-1 justify-center">
+          <nav id="main-nav" role="navigation" aria-label="القائمة الرئيسية" tabIndex={-1} className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {mainSections.map((section) => (
               <Link key={section.name} href={section.href}>
                 <span 
@@ -155,7 +155,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Mobile Actions */}
             <div className="md:hidden flex items-center gap-2">
-              <AccessibilitySettings />
+              <AccessibilitySettings variant="mobile" />
               <LanguageSwitcher />
               <ThemeToggle />
 
@@ -238,7 +238,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
-              <AccessibilitySettings />
+              <AccessibilitySettings variant="desktop" />
               <LanguageSwitcher />
               <ThemeToggle />
 
