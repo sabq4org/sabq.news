@@ -5,6 +5,7 @@ import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
+import { startWhatsAppSegmentsCleanupJob } from "./jobs/cleanupWhatsAppSegments";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -475,6 +476,18 @@ app.use((req, res, next) => {
           } catch (error) {
             console.error("[Server] ⚠️  Error starting campaign daily reset job:", error);
             console.error("[Server] Server will continue running without campaign daily reset automation");
+          }
+        });
+      }
+
+      // Start WhatsApp Segments Cleanup Job (removes expired message segments)
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startWhatsAppSegmentsCleanupJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting WhatsApp segments cleanup job:", error);
+            console.error("[Server] Server will continue running without WhatsApp segments cleanup automation");
           }
         });
       }
