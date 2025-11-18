@@ -113,6 +113,24 @@ async function downloadWhatsAppMedia(mediaUrl: string): Promise<{ buffer: Buffer
 }
 
 // ============================================
+// CONFIGURATION ENDPOINT
+// ============================================
+
+// GET /api/whatsapp/config - Get WhatsApp configuration
+router.get("/config", requireAuth, requireRole('admin', 'manager', 'system_admin'), async (req: Request, res: Response) => {
+  try {
+    const whatsappNumber = process.env.TWILIO_PHONE_NUMBER || '';
+    return res.json({
+      whatsappNumber: whatsappNumber || null,
+      configured: !!whatsappNumber,
+    });
+  } catch (error) {
+    console.error('[WhatsApp Config] Error:', error);
+    return res.status(500).json({ message: 'فشل في تحميل الإعدادات' });
+  }
+});
+
+// ============================================
 // STATISTICS ENDPOINT
 // ============================================
 
@@ -425,7 +443,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       content: aiResult.optimized.content,
       excerpt: aiResult.optimized.lead,
       imageUrl: uploadedMediaUrls[0] || null,
-      images: uploadedMediaUrls.length > 1 ? uploadedMediaUrls : null,
       categoryId: category?.id || null,
       authorId: whatsappToken.userId,
       status: articleStatus,
@@ -437,6 +454,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         token,
         originalMessage: body,
         webhookLogId: webhookLog.id,
+        mediaUrls: uploadedMediaUrls,
       },
       seoKeywords: aiResult.optimized.seoKeywords,
     });

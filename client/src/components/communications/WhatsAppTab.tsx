@@ -69,6 +69,11 @@ interface StatsData {
   activeTokens: number;
 }
 
+interface WhatsAppConfig {
+  whatsappNumber: string | null;
+  configured: boolean;
+}
+
 interface TokenFormValues {
   label: string;
   phoneNumber: string;
@@ -98,6 +103,13 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
     phoneNumber: "",
     autoPublish: false,
     allowedLanguages: ["ar"],
+  });
+
+  const { data: config } = useQuery<WhatsAppConfig>({
+    queryKey: ['/api/whatsapp/config'],
+    retry: 1,
+    staleTime: 60000,
+    enabled: !!user && ['admin', 'system_admin', 'manager'].includes(user.role || ''),
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<StatsData>({
@@ -255,7 +267,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
   const handleEditToken = (token: WhatsappToken) => {
     setSelectedToken(token);
     setFormData({
-      label: token.label,
+      label: token.label || "",
       phoneNumber: token.phoneNumber,
       autoPublish: token.autoPublish,
       allowedLanguages: token.allowedLanguages,
@@ -415,9 +427,16 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                   2
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium mb-1">اكتب الخبر مع الرمز</h4>
+                  <h4 className="font-medium mb-1">أرسل إلى واتساب</h4>
                   <p className="text-sm text-muted-foreground">
-                    أرسل الخبر إلى واتساب مع <code className="bg-muted px-1 rounded">#TOKEN الرمز</code>
+                    أرسل الخبر إلى رقم واتساب المنصة:{" "}
+                    {config?.whatsappNumber ? (
+                      <code className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono font-bold" dir="ltr">
+                        {config.whatsappNumber}
+                      </code>
+                    ) : (
+                      <span className="text-muted-foreground">جاري التحميل...</span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -436,7 +455,14 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
             </div>
             
             <div className="bg-muted/50 p-4 rounded-lg border">
-              <p className="text-sm font-medium mb-2">مثال على الرسالة:</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">مثال على الرسالة:</p>
+                {config?.whatsappNumber && (
+                  <p className="text-xs text-muted-foreground">
+                    أرسل إلى: <code className="text-primary font-mono" dir="ltr">{config.whatsappNumber}</code>
+                  </p>
+                )}
+              </div>
               <div className="bg-background p-3 rounded border font-mono text-sm" dir="ltr">
                 <div className="text-primary">#TOKEN SABQ-XXXXX</div>
                 <div className="mt-2">
@@ -749,7 +775,14 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <p>أرسل رسالة واتساب إلى رقم Twilio الخاص بك</p>
+                    <div className="flex-1">
+                      <p>أرسل رسالة واتساب إلى الرقم:</p>
+                      {config?.whatsappNumber && (
+                        <code className="bg-primary/10 text-primary px-2 py-1 rounded font-mono font-bold block mt-1" dir="ltr">
+                          {config.whatsappNumber}
+                        </code>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
