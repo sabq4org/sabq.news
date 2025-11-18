@@ -197,9 +197,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                         </DropdownMenuItem>
                         {(user.role === "admin" || user.role === "system_admin" || user.role === "manager") && (
                           <DropdownMenuItem asChild>
-                            <a href="/admin/whatsapp" className="flex w-full items-center cursor-pointer" data-testid="link-whatsapp-mobile">
+                            <a href="/dashboard/communications" className="flex w-full items-center cursor-pointer" data-testid="link-communications-mobile">
                               <MessageSquare className="ml-2 h-4 w-4" aria-hidden="true" />
-                              إدارة واتساب
+                              قنوات الاتصال
                             </a>
                           </DropdownMenuItem>
                         )}
@@ -288,9 +288,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                         </DropdownMenuItem>
                         {(user.role === "admin" || user.role === "system_admin" || user.role === "manager") && (
                           <DropdownMenuItem asChild>
-                            <a href="/admin/whatsapp" className="flex w-full items-center cursor-pointer" data-testid="link-whatsapp">
+                            <a href="/dashboard/communications" className="flex w-full items-center cursor-pointer" data-testid="link-communications">
                               <MessageSquare className="ml-2 h-4 w-4" aria-hidden="true" />
-                              إدارة واتساب
+                              قنوات الاتصال
                             </a>
                           </DropdownMenuItem>
                         )}
