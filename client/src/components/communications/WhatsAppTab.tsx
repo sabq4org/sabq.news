@@ -97,7 +97,6 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [logsPage, setLogsPage] = useState(1);
   const [logsStatusFilter, setLogsStatusFilter] = useState<string>("all");
-  const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<TokenFormValues>({
     label: "",
@@ -249,37 +248,11 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
       });
       setDeleteLogDialogOpen(false);
       setSelectedLog(null);
-      setSelectedLogIds((prev) => prev.filter((id) => id !== selectedLog?.id));
     },
     onError: (error: Error) => {
       toast({
         title: "خطأ",
         description: error.message || "فشل في حذف السجل",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const bulkDeleteLogsMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      return await apiRequest('/api/whatsapp/logs/bulk-delete', {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      });
-    },
-    onSuccess: (_, ids) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp/logs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp/stats'] });
-      toast({
-        title: "تم بنجاح",
-        description: `تم حذف ${ids.length} سجل بنجاح`,
-      });
-      setSelectedLogIds([]);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "خطأ",
-        description: error.message || "فشل في حذف السجلات",
         variant: "destructive",
       });
     },
@@ -316,36 +289,6 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
     setSelectedLog(log);
     setDeleteLogDialogOpen(true);
   };
-
-  const handleSelectAllLogs = (checked: boolean) => {
-    if (checked && logsData?.logs) {
-      setSelectedLogIds(logsData.logs.map((log) => log.id));
-    } else {
-      setSelectedLogIds([]);
-    }
-  };
-
-  const handleSelectLog = (logId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedLogIds((prev) => [...prev, logId]);
-    } else {
-      setSelectedLogIds((prev) => prev.filter((id) => id !== logId));
-    }
-  };
-
-  const handleBulkDeleteLogs = () => {
-    if (selectedLogIds.length > 0) {
-      bulkDeleteLogsMutation.mutate(selectedLogIds);
-    }
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setLogsStatusFilter(value);
-    setLogsPage(1);
-    setSelectedLogIds([]); // Clear selection when filter changes
-  };
-
-  const isAllLogsSelected = logsData?.logs && logsData.logs.length > 0 && selectedLogIds.length === logsData.logs.length;
 
   const handleSubmitCreate = async () => {
     if (!formData.label || !formData.phoneNumber) {
@@ -666,31 +609,17 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               </CardTitle>
               <CardDescription>جميع الرسائل المستلمة وحالة معالجتها</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={logsStatusFilter} onValueChange={handleStatusFilterChange}>
-                <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="success">نجح</SelectItem>
-                  <SelectItem value="rejected">مرفوض</SelectItem>
-                  <SelectItem value="failed">فشل</SelectItem>
-                </SelectContent>
-              </Select>
-              {selectedLogIds.length > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDeleteLogs}
-                  disabled={bulkDeleteLogsMutation.isPending}
-                  data-testid="button-delete-selected"
-                >
-                  <Trash2 className="h-4 w-4 ml-2" />
-                  حذف المحدد ({selectedLogIds.length})
-                </Button>
-              )}
-            </div>
+            <Select value={logsStatusFilter} onValueChange={setLogsStatusFilter}>
+              <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="success">نجح</SelectItem>
+                <SelectItem value="rejected">مرفوض</SelectItem>
+                <SelectItem value="failed">فشل</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -708,14 +637,6 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right w-12">
-                        <Checkbox
-                          checked={isAllLogsSelected}
-                          onCheckedChange={handleSelectAllLogs}
-                          data-testid="checkbox-select-all"
-                          aria-label="تحديد الكل"
-                        />
-                      </TableHead>
                       <TableHead>من</TableHead>
                       <TableHead>نص الرسالة</TableHead>
                       <TableHead>الرمز</TableHead>
@@ -731,16 +652,6 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                   <TableBody>
                     {logsData.logs.map((log) => (
                       <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedLogIds.includes(log.id)}
-                            onCheckedChange={(checked) =>
-                              handleSelectLog(log.id, checked as boolean)
-                            }
-                            data-testid={`checkbox-log-${log.id}`}
-                            aria-label={`تحديد السجل ${log.id}`}
-                          />
-                        </TableCell>
                         <TableCell data-testid={`text-from-${log.id}`}>{log.from}</TableCell>
                         <TableCell data-testid={`text-message-${log.id}`}>
                           <div className="max-w-[200px] truncate">
