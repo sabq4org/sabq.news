@@ -547,19 +547,19 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                   <TableBody>
                     {logsData.logs.map((log) => (
                       <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
-                        <TableCell data-testid={`text-from-${log.id}`}>{log.fromNumber}</TableCell>
+                        <TableCell data-testid={`text-from-${log.id}`}>{log.from}</TableCell>
                         <TableCell data-testid={`text-message-${log.id}`}>
                           <div className="max-w-[200px] truncate">
-                            {log.messageText?.substring(0, 50)}
-                            {(log.messageText?.length || 0) > 50 && "..."}
+                            {log.message?.substring(0, 50)}
+                            {(log.message?.length || 0) > 50 && "..."}
                           </div>
                         </TableCell>
                         <TableCell data-testid={`text-token-label-${log.id}`}>
-                          {tokens?.find((t) => t.id === log.tokenId)?.label || "غير معروف"}
+                          {tokens?.find((t) => t.id === log.token)?.label || "غير معروف"}
                         </TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
                         <TableCell data-testid={`text-reason-${log.id}`}>
-                          {log.rejectionReason || "-"}
+                          {log.reason || "-"}
                         </TableCell>
                         <TableCell data-testid={`text-quality-${log.id}`}>
                           {log.qualityScore ? log.qualityScore.toFixed(1) : "-"}
@@ -834,7 +834,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">من</Label>
-                  <p className="font-medium" data-testid="text-detail-from">{selectedLog.fromNumber}</p>
+                  <p className="font-medium" data-testid="text-detail-from">{selectedLog.from}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">الحالة</Label>
@@ -845,14 +845,14 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               <div>
                 <Label className="text-muted-foreground">الرسالة الكاملة</Label>
                 <div className="bg-muted p-3 rounded mt-1" data-testid="text-detail-message">
-                  {selectedLog.messageText}
+                  {selectedLog.message}
                 </div>
               </div>
 
-              {selectedLog.rejectionReason && (
+              {selectedLog.reason && (
                 <div>
                   <Label className="text-muted-foreground">سبب الرفض</Label>
-                  <p data-testid="text-detail-reason">{selectedLog.rejectionReason}</p>
+                  <p data-testid="text-detail-reason">{selectedLog.reason}</p>
                 </div>
               )}
 
