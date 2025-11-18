@@ -387,6 +387,72 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       <Separator />
 
+      {/* Usage Instructions */}
+      <Card className="bg-gradient-to-l from-primary/5 to-transparent border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            كيفية إرسال الأخبار عبر واتساب
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                  1
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium mb-1">أنشئ رمزاً جديداً</h4>
+                  <p className="text-sm text-muted-foreground">
+                    اضغط "إنشاء رمز جديد" وأدخل رقم جوالك
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                  2
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium mb-1">اكتب الخبر مع الرمز</h4>
+                  <p className="text-sm text-muted-foreground">
+                    أرسل الخبر إلى واتساب مع <code className="bg-muted px-1 rounded">#TOKEN الرمز</code>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                  3
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium mb-1">النشر التلقائي</h4>
+                  <p className="text-sm text-muted-foreground">
+                    سيتم نشر الخبر أو حفظه كمسودة حسب الإعدادات
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-muted/50 p-4 rounded-lg border">
+              <p className="text-sm font-medium mb-2">مثال على الرسالة:</p>
+              <div className="bg-background p-3 rounded border font-mono text-sm" dir="ltr">
+                <div className="text-primary">#TOKEN SABQ-XXXXX</div>
+                <div className="mt-2">
+                  عنوان الخبر هنا
+                  <br />
+                  محتوى الخبر...
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                💡 يمكنك إرفاق صور مع الرسالة وسيتم رفعها تلقائياً
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -656,20 +722,59 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
           {generatedToken ? (
             <div className="space-y-4">
-              <div className="bg-muted p-4 rounded flex items-center justify-between">
-                <code className="text-sm" data-testid="text-generated-token">{generatedToken}</code>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => copyToClipboard(generatedToken)}
-                  data-testid="button-copy-token"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+              <div className="space-y-2">
+                <Label>رمزك الجديد</Label>
+                <div className="bg-muted p-4 rounded flex items-center justify-between">
+                  <code className="text-sm font-mono" data-testid="text-generated-token">{generatedToken}</code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(generatedToken)}
+                    data-testid="button-copy-token"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <AlertCircle className="h-4 w-4 mt-0.5" />
+              
+              <div className="flex items-start gap-2 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-400 p-3 rounded-lg border border-amber-500/20">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <p>تأكد من حفظ هذا الرمز. لن تتمكن من رؤيته مرة أخرى.</p>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">كيفية الاستخدام:</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p>أرسل رسالة واتساب إلى رقم Twilio الخاص بك</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p>اكتب <code className="bg-muted px-1 rounded font-mono">#{generatedToken}</code> في أي مكان في الرسالة</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p>أضف محتوى الخبر (نص وصور)</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p>سيقوم الذكاء الاصطناعي بتحليل وتحسين الخبر ونشره</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-muted/50 p-3 rounded-lg border">
+                <p className="text-xs font-medium mb-2">مثال:</p>
+                <div className="bg-background p-2 rounded border font-mono text-xs" dir="ltr">
+                  <div className="text-primary">#{generatedToken}</div>
+                  <div className="mt-1 text-muted-foreground">
+                    عنوان الخبر هنا<br />
+                    محتوى الخبر...
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
