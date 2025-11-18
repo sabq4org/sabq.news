@@ -515,6 +515,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     await storage.updateWhatsappWebhookLog(webhookLog.id, {
       status: "processed",
       userId: whatsappToken.userId,
+      tokenId: whatsappToken.id,
       token: token,
       articleId: article.id,
       articleLink: `https://sabq.life/article/${slug}`,

@@ -641,6 +641,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                       <TableHead>نص الرسالة</TableHead>
                       <TableHead>الرمز</TableHead>
                       <TableHead>الحالة</TableHead>
+                      <TableHead>حالة النشر</TableHead>
                       <TableHead>السبب</TableHead>
                       <TableHead>درجة الجودة</TableHead>
                       <TableHead>رابط المقال</TableHead>
@@ -659,9 +660,18 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                           </div>
                         </TableCell>
                         <TableCell data-testid={`text-token-label-${log.id}`}>
-                          {tokens?.find((t) => t.id === log.token)?.label || "غير معروف"}
+                          {tokens?.find((t) => t.id === log.tokenId)?.label || "غير معروف"}
                         </TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
+                        <TableCell data-testid={`text-publish-status-${log.id}`}>
+                          {log.publishStatus === 'published' ? (
+                            <Badge className="bg-green-600" data-testid={`badge-published-${log.id}`}>منشور</Badge>
+                          ) : log.publishStatus === 'draft' ? (
+                            <Badge className="bg-blue-600" data-testid={`badge-draft-${log.id}`}>مسودة</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell data-testid={`text-reason-${log.id}`}>
                           {log.reason || "-"}
                         </TableCell>
@@ -669,15 +679,27 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                           {log.qualityScore ? log.qualityScore.toFixed(1) : "-"}
                         </TableCell>
                         <TableCell data-testid={`text-article-${log.id}`}>
-                          {log.articleId ? (
-                            <a
-                              href={`/dashboard/articles/${log.articleId}/edit`}
-                              className="text-primary hover:underline"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              عرض
-                            </a>
+                          {log.articleLink ? (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={log.articleLink}
+                                className="text-primary hover:underline text-sm"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                عرض المقال
+                              </a>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => copyToClipboard(log.articleLink!)}
+                                data-testid={`button-copy-article-link-${log.id}`}
+                                title="نسخ الرابط"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           ) : (
                             "-"
                           )}

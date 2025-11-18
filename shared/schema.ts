@@ -6061,6 +6061,7 @@ export const whatsappWebhookLogs = pgTable("whatsapp_webhook_logs", {
   message: text("message"),
   mediaUrls: text("media_urls").array(),
   token: text("token"),
+  tokenId: varchar("token_id").references(() => whatsappTokens.id),
   userId: varchar("user_id").references(() => users.id),
   articleId: varchar("article_id").references(() => articles.id),
   articleLink: text("article_link"),
@@ -6078,6 +6079,7 @@ export const whatsappWebhookLogs = pgTable("whatsapp_webhook_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("whatsapp_webhook_logs_user_id_idx").on(table.userId),
+  index("whatsapp_webhook_logs_token_id_idx").on(table.tokenId),
   index("whatsapp_webhook_logs_created_at_idx").on(table.createdAt),
   index("whatsapp_webhook_logs_status_idx").on(table.status),
 ]);
@@ -6095,6 +6097,10 @@ export const whatsappWebhookLogsRelations = relations(whatsappWebhookLogs, ({ on
   user: one(users, {
     fields: [whatsappWebhookLogs.userId],
     references: [users.id],
+  }),
+  whatsappToken: one(whatsappTokens, {
+    fields: [whatsappWebhookLogs.tokenId],
+    references: [whatsappTokens.id],
   }),
   article: one(articles, {
     fields: [whatsappWebhookLogs.articleId],
