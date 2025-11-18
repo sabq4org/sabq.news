@@ -48,7 +48,7 @@ async function processCompleteMessage(messageSid: string): Promise<void> {
       Body: fullBody,
       NumMedia: mediaUrls.length.toString(),
       MessageSid: messageSid,
-      ...metadata.twilioData,
+      ...(metadata.twilioData ?? {}),
     };
     
     // Add media URLs to payload
