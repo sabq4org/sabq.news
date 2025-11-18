@@ -147,7 +147,8 @@ export function TrustedSendersTable({
 
   return (
     <>
-      <div className="rounded-lg border overflow-hidden">
+      {/* Desktop view - Table */}
+      <div className="hidden lg:block rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -276,6 +277,132 @@ export function TrustedSendersTable({
             </TableBody>
           </Table>
         </div>
+      </div>
+
+      {/* Mobile view - Cards */}
+      <div className="lg:hidden space-y-4">
+        {senders.map((sender) => (
+          <div
+            key={sender.id}
+            className="rounded-lg border p-4 space-y-3"
+            data-testid={`card-sender-${sender.id}`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h3 className="font-semibold text-base mb-1">{sender.name}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{sender.email}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {getStatusBadge(sender.status)}
+                  {sender.autoPublish ? (
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                      نشر تلقائي
+                    </Badge>
+                  ) : null}
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    data-testid={`button-actions-${sender.id}`}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => onEdit(sender)}
+                    data-testid={`action-edit-${sender.id}`}
+                  >
+                    <Edit className="h-4 w-4 ml-2" />
+                    تعديل
+                  </DropdownMenuItem>
+                  
+                  {sender.status === "active" ? (
+                    <DropdownMenuItem
+                      onClick={() => onToggleStatus(sender.id, "suspended")}
+                      data-testid={`action-suspend-${sender.id}`}
+                    >
+                      <Ban className="h-4 w-4 ml-2" />
+                      تعليق
+                    </DropdownMenuItem>
+                  ) : sender.status === "suspended" ? (
+                    <DropdownMenuItem
+                      onClick={() => onToggleStatus(sender.id, "active")}
+                      data-testid={`action-activate-${sender.id}`}
+                    >
+                      <CheckCircle className="h-4 w-4 ml-2" />
+                      تنشيط
+                    </DropdownMenuItem>
+                  ) : null}
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    onClick={() => handleDeleteClick(sender.id)}
+                    className="text-destructive focus:text-destructive"
+                    data-testid={`action-delete-${sender.id}`}
+                  >
+                    <Trash2 className="h-4 w-4 ml-2" />
+                    حذف
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">اللغة:</span>
+                <span>{getLanguageName(sender.language)}</span>
+              </div>
+
+              {sender.token && (
+                <div className="space-y-1">
+                  <span className="text-muted-foreground">الرمز السري:</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-xs font-mono px-2 py-1 bg-muted rounded flex-1 overflow-hidden text-ellipsis">
+                      {visibleTokens.has(sender.id)
+                        ? sender.token
+                        : "•".repeat(Math.min(sender.token.length, 32))}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => toggleTokenVisibility(sender.id)}
+                      data-testid={`button-toggle-token-${sender.id}`}
+                    >
+                      {visibleTokens.has(sender.id) ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => copyToken(sender.token)}
+                      data-testid={`button-copy-token-${sender.id}`}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">تاريخ الإنشاء:</span>
+                <span className="text-xs">
+                  {format(new Date(sender.createdAt), "dd MMM yyyy", {
+                    locale: ar,
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

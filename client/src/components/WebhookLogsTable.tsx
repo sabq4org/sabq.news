@@ -156,11 +156,11 @@ export function WebhookLogsTable({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">الحالة:</label>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-2 flex-1">
+          <label className="text-sm font-medium whitespace-nowrap">الحالة:</label>
           <Select value={selectedStatus} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-40" data-testid="select-status-filter">
+            <SelectTrigger className="w-full sm:w-40" data-testid="select-status-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -180,6 +180,7 @@ export function WebhookLogsTable({
             onClick={handleBulkDelete}
             disabled={selectedIds.length === 0}
             data-testid="button-delete-selected"
+            className="w-full sm:w-auto"
           >
             <Trash2 className="h-4 w-4 ml-2" />
             حذف المحدد ({selectedIds.length})
@@ -194,7 +195,8 @@ export function WebhookLogsTable({
         </div>
       ) : (
         <>
-          <div className="rounded-lg border overflow-hidden">
+          {/* Desktop view - Table */}
+          <div className="hidden lg:block rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -312,6 +314,101 @@ export function WebhookLogsTable({
                 </TableBody>
               </Table>
             </div>
+          </div>
+
+          {/* Mobile view - Cards */}
+          <div className="lg:hidden space-y-4">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                onClick={() => onRowClick?.(log)}
+                className="rounded-lg border p-4 space-y-3 cursor-pointer hover-elevate"
+                data-testid={`card-log-${log.id}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      {getStatusBadge(log.status)}
+                      {log.aiAnalysis?.contentQuality && (
+                        <Badge
+                          variant="outline"
+                          className={
+                            log.aiAnalysis.contentQuality >= 70
+                              ? "border-emerald-500 text-emerald-700"
+                              : log.aiAnalysis.contentQuality >= 50
+                              ? "border-amber-500 text-amber-700"
+                              : "border-red-500 text-red-700"
+                          }
+                        >
+                          {log.aiAnalysis.contentQuality}%
+                        </Badge>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-2">
+                      {log.subject}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(log.receivedAt), "dd MMM yyyy HH:mm", {
+                        locale: ar,
+                      })}
+                    </p>
+                  </div>
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDelete(e, log.id)}
+                      data-testid={`button-delete-${log.id}`}
+                      aria-label={`حذف السجل ${log.id}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">من:</span>
+                    <span className="text-xs font-medium truncate max-w-[200px]">
+                      {log.fromEmail}
+                    </span>
+                  </div>
+
+                  {log.fromName && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">الاسم:</span>
+                      <span className="text-xs">{log.fromName}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">اللغة:</span>
+                    <span className="text-xs">
+                      {getLanguageName(log.aiAnalysis?.languageDetected)}
+                    </span>
+                  </div>
+
+                  {log.articleId && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">معرف المقال:</span>
+                      <code className="text-xs px-1.5 py-0.5 bg-muted rounded">
+                        {log.articleId.slice(0, 8)}
+                      </code>
+                    </div>
+                  )}
+
+                  {log.attachmentsCount !== undefined && log.attachmentsCount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">المرفقات:</span>
+                      <div className="flex items-center gap-1.5">
+                        <Paperclip className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs font-medium">{log.attachmentsCount}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Pagination */}
