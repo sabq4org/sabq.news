@@ -1102,6 +1102,34 @@ router.get("/stats", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/email-agent/badge-stats - Get badge notification statistics
+router.get("/badge-stats", async (req: Request, res: Response) => {
+  try {
+    // Calculate today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Get all webhook logs for today using date range query
+    const todayLogs = await storage.getEmailWebhookLogsByDateRange(today, tomorrow);
+    
+    // Calculate badge stats
+    const newMessages = todayLogs.filter((log: any) => log.status === 'received').length;
+    const publishedToday = todayLogs.filter((log: any) => log.status === 'published').length;
+    const rejectedToday = todayLogs.filter((log: any) => log.status === 'rejected').length;
+    
+    return res.json({
+      newMessages,
+      publishedToday,
+      rejectedToday,
+    });
+  } catch (error: any) {
+    console.error('[Email Badge Stats] Error:', error);
+    return res.status(500).json({ message: 'فشل في تحميل إحصائيات البادج' });
+  }
+});
+
 // GET /api/email-agent/senders - Get all trusted senders
 router.get("/senders", async (req: Request, res: Response) => {
   try {

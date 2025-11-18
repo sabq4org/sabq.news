@@ -6063,7 +6063,9 @@ export const whatsappWebhookLogs = pgTable("whatsapp_webhook_logs", {
   token: text("token"),
   userId: varchar("user_id").references(() => users.id),
   articleId: varchar("article_id").references(() => articles.id),
-  status: text("status").notNull(), // success, rejected, failed, pending
+  articleLink: text("article_link"),
+  publishStatus: text("publish_status"), // 'published', 'draft', null for rejected/failed
+  status: text("status").notNull(), // received, processed, rejected, error
   reason: text("reason"),
   qualityScore: integer("quality_score"),
   aiAnalysis: jsonb("ai_analysis").$type<{

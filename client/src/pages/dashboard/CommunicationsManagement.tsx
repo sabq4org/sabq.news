@@ -2,14 +2,36 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Mail, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import EmailAgentTab from "@/components/communications/EmailAgentTab";
 import WhatsAppTab from "@/components/communications/WhatsAppTab";
+
+interface BadgeStats {
+  newMessages: number;
+  publishedToday: number;
+  rejectedToday: number;
+}
 
 export default function CommunicationsManagement() {
   const { user, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("email");
+
+  // Fetch WhatsApp badge stats with 30 second polling
+  const { data: whatsappStats } = useQuery<BadgeStats>({
+    queryKey: ['/api/whatsapp/badge-stats'],
+    enabled: !!user && ['admin', 'system_admin', 'manager'].includes(user.role || ''),
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
+
+  // Fetch Email badge stats with 30 second polling
+  const { data: emailStats } = useQuery<BadgeStats>({
+    queryKey: ['/api/email-agent/badge-stats'],
+    enabled: !!user && ['admin', 'system_admin', 'manager'].includes(user.role || ''),
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
 
   if (authLoading) {
     return (
@@ -60,19 +82,29 @@ export default function CommunicationsManagement() {
               <TabsTrigger value="email" data-testid="tab-email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 البريد الذكي
+                {emailStats && emailStats.newMessages > 0 && (
+                  <Badge variant="default" className="mr-2" data-testid="badge-email-new">
+                    {emailStats.newMessages}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="whatsapp" data-testid="tab-whatsapp" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 واتساب
+                {whatsappStats && whatsappStats.newMessages > 0 && (
+                  <Badge variant="default" className="mr-2" data-testid="badge-whatsapp-new">
+                    {whatsappStats.newMessages}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="email" className="space-y-6 mt-6">
-              <EmailAgentTab user={user} />
+              <EmailAgentTab user={user as any} />
             </TabsContent>
 
             <TabsContent value="whatsapp" className="space-y-6 mt-6">
-              <WhatsAppTab user={user} />
+              <WhatsAppTab user={user as any} />
             </TabsContent>
           </Tabs>
         </div>

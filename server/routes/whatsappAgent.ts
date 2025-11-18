@@ -173,6 +173,41 @@ router.get("/stats", requireAuth, requireRole('admin', 'manager', 'system_admin'
 });
 
 // ============================================
+// BADGE STATISTICS ENDPOINT
+// ============================================
+
+// GET /api/whatsapp/badge-stats - Get badge notification statistics
+router.get("/badge-stats", requireAuth, requireRole('admin', 'manager', 'system_admin'), async (req: Request, res: Response) => {
+  try {
+    // Get all logs
+    const allLogs = await storage.getWhatsappWebhookLogs({ limit: 1000, offset: 0 });
+    
+    // Calculate today's date range
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Filter logs for today
+    const logsToday = allLogs.logs.filter(log => new Date(log.createdAt) >= today);
+    
+    // Calculate badge stats
+    const newMessages = logsToday.filter(log => log.status === 'received').length;
+    const publishedToday = logsToday.filter(log => 
+      log.status === 'processed' && log.publishStatus === 'published'
+    ).length;
+    const rejectedToday = logsToday.filter(log => log.status === 'rejected').length;
+    
+    return res.json({
+      newMessages,
+      publishedToday,
+      rejectedToday,
+    });
+  } catch (error) {
+    console.error('[WhatsApp Badge Stats] Error:', error);
+    return res.status(500).json({ message: 'فشل في تحميل إحصائيات البادج' });
+  }
+});
+
+// ============================================
 // WEBHOOK HANDLER
 // ============================================
 
@@ -245,6 +280,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
     const phoneNumber = from.replace('whatsapp:', '');
     
+    // ✅ CREATE ONE LOG AT THE BEGINNING
     webhookLog = await storage.createWhatsappWebhookLog({
       from: phoneNumber,
       message: body,
@@ -258,11 +294,11 @@ router.post("/webhook", async (req: Request, res: Response) => {
     if (!token) {
       console.log("[WhatsApp Agent] No token found in message");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "no_token_found",
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
@@ -275,12 +311,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
     if (!whatsappToken) {
       console.log("[WhatsApp Agent] Token not found in database");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "invalid_token",
         token: token,
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
@@ -289,13 +325,13 @@ router.post("/webhook", async (req: Request, res: Response) => {
     if (!whatsappToken.isActive) {
       console.log("[WhatsApp Agent] Token is inactive");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "token_inactive",
         userId: whatsappToken.userId,
         token: token,
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
@@ -304,13 +340,13 @@ router.post("/webhook", async (req: Request, res: Response) => {
     if (whatsappToken.expiresAt && new Date(whatsappToken.expiresAt) < new Date()) {
       console.log("[WhatsApp Agent] Token expired");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "token_expired",
         userId: whatsappToken.userId,
         token: token,
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
@@ -325,13 +361,13 @@ router.post("/webhook", async (req: Request, res: Response) => {
         console.log("[WhatsApp Agent] Phone number mismatch");
         console.log(`[WhatsApp Agent] Expected: ${whatsappToken.phoneNumber} (${tokenPhone}), Got: ${phoneNumber} (${incomingPhone})`);
         
-        await storage.createWhatsappWebhookLog({
-          from: phoneNumber,
-          message: body,
+        // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
           status: "rejected",
           reason: "phone_number_mismatch",
           userId: whatsappToken.userId,
           token: token,
+          processingTimeMs: Date.now() - startTime,
         });
 
         return res.status(200).send('OK');
@@ -389,21 +425,28 @@ router.post("/webhook", async (req: Request, res: Response) => {
     const cleanText = removeTokenFromMessage(body);
     console.log(`[WhatsApp Agent] Cleaned text: "${cleanText}"`);
 
-    if (!cleanText || cleanText.trim().length < 10) {
-      console.log("[WhatsApp Agent] Text too short after cleaning");
+    // ✅ IMPROVED IMAGE HANDLING: Allow short text if there are images
+    const hasImages = uploadedMediaUrls.length > 0;
+    const textLength = cleanText?.trim().length || 0;
+    
+    if (!hasImages && textLength < 10) {
+      console.log("[WhatsApp Agent] Text too short (no images attached)");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "text_too_short",
         userId: whatsappToken.userId,
         token: token,
         mediaUrls: mediaMetadata.map(m => m.url),
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
     }
+    
+    console.log(`[WhatsApp Agent] Text validation passed (hasImages: ${hasImages}, textLength: ${textLength})`);
+  
 
     const detectedLang = await detectLanguage(cleanText);
     console.log(`[WhatsApp Agent] Detected language: ${detectedLang}`);
@@ -416,9 +459,8 @@ router.post("/webhook", async (req: Request, res: Response) => {
     if (aiResult.qualityScore < 10 || !aiResult.hasNewsValue) {
       console.log("[WhatsApp Agent] Quality too low or no news value");
       
-      await storage.createWhatsappWebhookLog({
-        from: phoneNumber,
-        message: body,
+      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "low_quality",
         userId: whatsappToken.userId,
@@ -431,6 +473,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
           issues: aiResult.issues,
         },
         mediaUrls: mediaMetadata.map(m => m.url),
+        processingTimeMs: Date.now() - startTime,
       });
 
       return res.status(200).send('OK');
@@ -460,22 +503,22 @@ router.post("/webhook", async (req: Request, res: Response) => {
         token,
         originalMessage: body,
         webhookLogId: webhookLog.id,
-        mediaUrls: uploadedMediaUrls,
       },
       seoKeywords: aiResult.optimized.seoKeywords,
-    });
+    } as any);
 
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
 
     await storage.updateWhatsappTokenUsage(whatsappToken.id);
 
-    await storage.createWhatsappWebhookLog({
-      from: phoneNumber,
-      message: body,
+    // ✅ UPDATE THE LOG WITH SUCCESS STATUS, ARTICLE LINK, AND PUBLISH STATUS
+    await storage.updateWhatsappWebhookLog(webhookLog.id, {
       status: "processed",
       userId: whatsappToken.userId,
       token: token,
       articleId: article.id,
+      articleLink: `https://sabq.life/article/${slug}`,
+      publishStatus: articleStatus,
       qualityScore: aiResult.qualityScore,
       aiAnalysis: {
         detectedLanguage: aiResult.language,
@@ -484,6 +527,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         issues: aiResult.issues || [],
       },
       mediaUrls: uploadedMediaUrls,
+      processingTimeMs: Date.now() - startTime,
     });
 
     const replyMessage = articleStatus === 'published'
@@ -507,16 +551,16 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.error("[WhatsApp Agent] ============ WEBHOOK ERROR ============");
     console.error("[WhatsApp Agent] Error:", error);
     
-    if (webhookLog) {
+    // ✅ UPDATE THE LOG WITH ERROR STATUS INSTEAD OF CREATING NEW ONE
+    if (webhookLog && webhookLog.id) {
       try {
-        await storage.createWhatsappWebhookLog({
-          from: webhookLog.from || "",
-          message: webhookLog.message || "",
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
           status: "error",
           reason: error instanceof Error ? error.message : "unknown_error",
+          processingTimeMs: Date.now() - startTime,
         });
       } catch (logError) {
-        console.error("[WhatsApp Agent] Failed to log error:", logError);
+        console.error("[WhatsApp Agent] Failed to update error log:", logError);
       }
     }
 

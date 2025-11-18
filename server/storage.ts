@@ -1412,6 +1412,7 @@ export interface IStorage {
   
   // WhatsApp Webhook Logs
   createWhatsappWebhookLog(log: InsertWhatsappWebhookLog): Promise<WhatsappWebhookLog>;
+  updateWhatsappWebhookLog(id: string, updates: Partial<InsertWhatsappWebhookLog>): Promise<WhatsappWebhookLog | null>;
   getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }>;
   getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
   deleteWhatsappWebhookLog(id: string): Promise<void>;
@@ -12253,6 +12254,16 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return newLog;
+  }
+
+  async updateWhatsappWebhookLog(id: string, updates: Partial<InsertWhatsappWebhookLog>): Promise<WhatsappWebhookLog | null> {
+    const [updated] = await db
+      .update(whatsappWebhookLogs)
+      .set(updates)
+      .where(eq(whatsappWebhookLogs.id, id))
+      .returning();
+    
+    return updated || null;
   }
 
   async getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }> {
