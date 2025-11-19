@@ -43,10 +43,12 @@ export const categoryFeaturesSchema = z.object({
 
 export const aiConfigSchema = z.object({
   promptTemplate: z.string().optional(),
-  modelVersion: z.string().optional(),
-  maxArticles: z.number().optional(),
-  refreshStrategy: z.string().optional(),
-}).catchall(z.any()).optional();
+  modelVersion: z.enum(["gpt-4", "gpt-3.5-turbo", "claude-3", "gemini-pro"]).optional(),
+  maxArticles: z.number().int().min(1).max(100).optional(),
+  refreshStrategy: z.enum(["realtime", "hourly", "daily", "manual"]).optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().int().min(1).max(4000).optional(),
+}).optional();
 
 // Article jsonb schemas
 export const imageFocalPointSchema = z.object({
@@ -201,19 +203,36 @@ export const blockedCategoriesSchema = z.array(z.string()).optional();
 // Experiment schemas
 export const experimentVariantDataSchema = z.object({
   headline: z.string().optional(),
-  image: z.string().optional(),
+  image: z.string().url().optional(),
   cta: z.string().optional(),
-  layout: z.string().optional(),
-}).catchall(z.any()).optional();
+  layout: z.enum(["standard", "grid", "list", "featured"]).optional(),
+  buttonText: z.string().optional(),
+  buttonColor: z.string().optional(),
+}).optional();
 
 export const experimentMetadataSchema = z.object({
   notes: z.string().optional(),
   hypothesis: z.string().optional(),
-}).catchall(z.any()).optional();
+  expectedImpact: z.string().optional(),
+  startReason: z.string().optional(),
+  endReason: z.string().optional(),
+}).optional();
 
 // Mirqab schemas
-export const mirqabEntitySchema = z.record(z.any()).optional();
-export const mirqabMetadataSchema = z.record(z.any()).optional();
+export const mirqabEntitySchema = z.object({
+  topics: z.array(z.string()).optional(),
+  locations: z.array(z.string()).optional(),
+  organizations: z.array(z.string()).optional(),
+  people: z.array(z.string()).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+}).optional();
+
+export const mirqabMetadataSchema = z.object({
+  source: z.string().optional(),
+  reliability: z.number().min(0).max(10).optional(),
+  urgency: z.enum(["low", "medium", "high", "critical"]).optional(),
+  category: z.string().optional(),
+}).optional();
 
 // SEO history schemas
 export const seoContentSchema = z.object({
@@ -228,15 +247,19 @@ export const seoContentSchema = z.object({
 
 // Data story schemas
 export const chartDataSchema = z.array(z.object({
-  label: z.string().optional(),
-  value: z.number().optional(),
-}).catchall(z.any())).optional();
+  label: z.string(),
+  value: z.number(),
+  color: z.string().optional(),
+  category: z.string().optional(),
+})).optional();
 
 export const alertsSchema = z.array(z.object({
-  type: z.string().optional(),
-  message: z.string().optional(),
+  type: z.enum(["threshold", "trend", "anomaly", "prediction"]),
+  message: z.string(),
   threshold: z.number().optional(),
-}).catchall(z.any())).optional();
+  severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+  triggeredAt: z.string().datetime().optional(),
+})).optional();
 
 // Audio newsletter schemas
 export const voiceSettingsSchema = z.object({
@@ -264,8 +287,11 @@ export const internalAnnouncementMetaSchema = z.object({
 // Journalist tasks schemas
 export const taskConfigSchema = z.object({
   reminderEnabled: z.boolean().optional(),
-  priorityLevel: z.number().optional(),
-}).catchall(z.any()).optional();
+  priorityLevel: z.number().int().min(1).max(5).optional(),
+  tags: z.array(z.string()).optional(),
+  estimatedHours: z.number().min(0).max(100).optional(),
+  requiresReview: z.boolean().optional(),
+}).optional();
 
 // Calendar schemas
 export const calendarAttachmentsSchema = z.array(z.object({
@@ -312,7 +338,13 @@ export const modelInsightsSchema = z.object({
   suggestions: z.array(z.string()).optional(),
 }).optional();
 
-export const metadataSchema = z.record(z.any()).optional();
+export const metadataSchema = z.object({
+  source: z.string().optional(),
+  version: z.number().optional(),
+  timestamp: z.string().datetime().optional(),
+  userId: z.string().optional(),
+  notes: z.string().optional(),
+}).optional();
 
 // AI suggestions schemas
 export const aiSuggestionsSchema = z.object({
@@ -323,17 +355,21 @@ export const aiSuggestionsSchema = z.object({
 
 // Task changes schemas
 export const taskChangesSchema = z.object({
-  field: z.string().optional(),
-  oldValue: z.any().optional(),
-  newValue: z.any().optional(),
-}).catchall(z.any()).optional();
+  field: z.string(),
+  oldValue: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
+  newValue: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
+  changedAt: z.string().datetime().optional(),
+  changedBy: z.string().optional(),
+}).optional();
 
 // Deep analysis schemas
 export const deepAnalysisResultsSchema = z.object({
   findings: z.array(z.string()).optional(),
   recommendations: z.array(z.string()).optional(),
-  score: z.number().optional(),
-}).catchall(z.any()).optional();
+  score: z.number().min(0).max(100).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  methodology: z.string().optional(),
+}).optional();
 
 // Data story source schemas
 export const columnsSchema = z.record(z.object({
@@ -345,14 +381,20 @@ export const columnsSchema = z.record(z.object({
 })).optional();
 
 export const statisticsSchema = z.object({
-  rowCount: z.number().optional(),
-  columnCount: z.number().optional(),
-}).catchall(z.any()).optional();
+  rowCount: z.number().int().min(0).optional(),
+  columnCount: z.number().int().min(0).optional(),
+  nullPercentage: z.number().min(0).max(100).optional(),
+  uniqueValues: z.number().int().min(0).optional(),
+  completeness: z.number().min(0).max(100).optional(),
+}).optional();
 
 export const aiInsightsSchema = z.object({
   summary: z.string().optional(),
   keyFindings: z.array(z.string()).optional(),
-}).catchall(z.any()).optional();
+  trends: z.array(z.string()).optional(),
+  anomalies: z.array(z.string()).optional(),
+  recommendations: z.array(z.string()).optional(),
+}).optional();
 
 export const chartConfigsSchema = z.array(z.object({
   type: z.string(),
@@ -410,11 +452,14 @@ export const notificationTemplateContentSchema = z.object({
 
 // AI workflow config schema
 export const aiWorkflowConfigSchema = z.object({
-  model: z.string().optional(),
-  temperature: z.number().optional(),
-  maxTokens: z.number().optional(),
+  model: z.enum(["gpt-4", "gpt-3.5-turbo", "claude-3", "gemini-pro"]).optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().int().min(1).max(4000).optional(),
   prompt: z.string().optional(),
-}).catchall(z.any()).optional();
+  topP: z.number().min(0).max(1).optional(),
+  frequencyPenalty: z.number().min(-2).max(2).optional(),
+  presencePenalty: z.number().min(-2).max(2).optional(),
+}).optional();
 
 // Journalist task config schema (more specific)
 export const journalistTaskConfigSchema = z.object({
@@ -455,9 +500,12 @@ export const previewDataSchema = z.array(z.record(z.any())).optional();
 export const aiAnalysisSchema = z.object({
   summary: z.string().optional(),
   topics: z.array(z.string()).optional(),
-  sentiment: z.string().optional(),
+  sentiment: z.enum(["positive", "negative", "neutral", "mixed"]).optional(),
   entities: z.array(z.string()).optional(),
-}).catchall(z.any()).optional();
+  categories: z.array(z.string()).optional(),
+  language: z.string().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+}).optional();
 
 // Attachments data schema
 export const attachmentsDataSchema = z.array(z.object({
