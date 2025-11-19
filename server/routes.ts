@@ -192,6 +192,7 @@ import {
   insertStoryFollowSchema,
   insertExperimentSchema,
   insertExperimentVariantSchema,
+  updateExperimentVariantSchema,
   insertExperimentExposureSchema,
   insertTaskSchema,
   insertSubtaskSchema,
@@ -15481,7 +15482,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         });
       }
 
-      const updatedVariant = await storage.updateExperimentVariant(req.params.variantId, req.body);
+      // Validate request body
+      const validatedData = updateExperimentVariantSchema.parse(req.body);
+
+      const updatedVariant = await storage.updateExperimentVariant(req.params.variantId, validatedData);
 
       await logActivity({
         userId: req.user.id,
@@ -15491,8 +15495,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json(updatedVariant);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating variant:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
       res.status(500).json({ message: "فشل في تحديث النسخة" });
     }
   });

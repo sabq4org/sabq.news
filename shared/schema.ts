@@ -2883,6 +2883,8 @@ export const insertExperimentConversionSchema = createInsertSchema(experimentCon
   convertedAt: true,
 });
 
+export const updateExperimentVariantSchema = insertExperimentVariantSchema.partial();
+
 // ============================================================
 // MIRQAB SYSTEM - المرقاب (Observatory/Future Forecasting)
 // ============================================================
