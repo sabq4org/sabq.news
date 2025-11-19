@@ -12584,6 +12584,52 @@ export class DatabaseStorage implements IStorage {
     return publisher;
   }
 
+  async getPublisherByEmail(email: string): Promise<Publisher | undefined> {
+    if (!email) return undefined;
+    
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    const [result] = await db
+      .select({
+        publisher: publishers,
+        user: users,
+      })
+      .from(publishers)
+      .innerJoin(users, eq(publishers.userId, users.id))
+      .where(eq(users.email, normalizedEmail));
+
+    return result?.publisher;
+  }
+
+  async getPublisherByPhone(phone: string): Promise<Publisher | undefined> {
+    if (!phone) return undefined;
+    
+    const normalizedPhone = this.normalizePhoneNumber(phone);
+    
+    const [result] = await db
+      .select({
+        publisher: publishers,
+        user: users,
+      })
+      .from(publishers)
+      .innerJoin(users, eq(publishers.userId, users.id))
+      .where(eq(users.phone, normalizedPhone));
+
+    return result?.publisher;
+  }
+
+  normalizePhoneNumber(phone: string): string {
+    let cleaned = phone.replace(/\D/g, '');
+    
+    if (cleaned.startsWith('00')) {
+      cleaned = '+' + cleaned.substring(2);
+    } else if (!cleaned.startsWith('+')) {
+      cleaned = '+' + cleaned;
+    }
+    
+    return cleaned;
+  }
+
   async getAllPublishers(filters?: {
     isActive?: boolean;
     searchQuery?: string;

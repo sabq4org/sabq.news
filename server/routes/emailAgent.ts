@@ -872,10 +872,56 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent] ✅ Final category ID selected:", finalCategoryId);
     }
 
+    // ============================================
+    // 📚 PUBLISHER DETECTION
+    // ============================================
+    let detectedPublisher = null;
+    let isPublisherContent = false;
+    
+    try {
+      console.log("[Email Agent] 🔍 Checking if sender is a registered publisher...");
+      const publisher = await storage.getPublisherByEmail(senderEmail);
+      
+      if (publisher && publisher.isActive) {
+        detectedPublisher = publisher;
+        isPublisherContent = true;
+        console.log(`[Email Agent] ✅ Publisher detected: ${publisher.name} (ID: ${publisher.id})`);
+        console.log(`[Email Agent]    - Email: ${senderEmail}`);
+        console.log(`[Email Agent]    - Status: Active`);
+        console.log(`[Email Agent]    - Content will be marked for review (draft + pending)`);
+      } else if (publisher && !publisher.isActive) {
+        console.log(`[Email Agent] ⚠️ Publisher found but INACTIVE: ${publisher.name}`);
+        console.log(`[Email Agent]    - Content will be treated as regular submission`);
+      } else {
+        console.log(`[Email Agent] ℹ️ Sender is not a registered publisher`);
+        console.log(`[Email Agent]    - Content will follow standard workflow`);
+      }
+    } catch (publisherCheckError) {
+      console.error(`[Email Agent] ⚠️ Error checking publisher status:`, publisherCheckError);
+      console.error(`[Email Agent] ⚠️ Continuing with standard workflow`);
+    }
+
     console.log("[Email Agent] 📝 ========== PREPARING ARTICLE DATA ==========");
     console.log("[Email Agent] 📝 Featured image to be used:", featuredImage || "NULL - NO IMAGE");
     console.log("[Email Agent] 📝 Author ID (reporter):", reporterUser.id);
     console.log("[Email Agent] 📝 Category ID:", finalCategoryId);
+    console.log("[Email Agent] 📝 Is Publisher Content:", isPublisherContent);
+    
+    // Determine article status based on publisher detection
+    let articleStatus: string;
+    let publishedAt: Date | null;
+    
+    if (isPublisherContent) {
+      // Publisher content always goes to draft for review
+      articleStatus = "draft";
+      publishedAt = null;
+      console.log("[Email Agent] 📝 Publisher content - forcing status to 'draft' (requires review)");
+    } else {
+      // Non-publisher content follows original logic
+      articleStatus = trustedSender.autoPublish ? "published" : "draft";
+      publishedAt = trustedSender.autoPublish ? new Date() : null;
+      console.log("[Email Agent] 📝 Regular content - status:", articleStatus);
+    }
     
     const articleData: any = {
       id: nanoid(),
@@ -884,19 +930,30 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
       authorId: reporterUser.id, // 👤 Article attributed to the reporter, not system!
-      status: trustedSender.autoPublish ? "published" : "draft",
+      status: articleStatus,
       imageUrl: featuredImage, // 🖼️ Featured image URL (first uploaded image)
       seo: {
         keywords: editorialResult.optimized.seoKeywords,
       },
       categoryId: finalCategoryId, // 🎯 Always has a valid category!
       createdAt: new Date(),
-      publishedAt: trustedSender.autoPublish ? new Date() : null,
+      publishedAt,
       // 🔥 Essential fields for article visibility
       articleType: "news", // Ensures article appears in homepage queries
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
       displayOrder: 0, // Default display order
+      // 📚 Publisher fields (if applicable)
+      ...(isPublisherContent && {
+        publisherId: detectedPublisher!.id,
+        isPublisherContent: true,
+        publisherStatus: 'pending',
+        metadata: {
+          publisherEmail: senderEmail,
+          submittedVia: 'email',
+          submittedAt: new Date().toISOString(),
+        },
+      }),
     };
 
     let article;
@@ -929,30 +986,83 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       throw createError; // Re-throw to trigger catch block
     }
 
-    // Broadcast notification to staff users about new published article
-    if (trustedSender.autoPublish && article) {
+    // ============================================
+    // 📚 PUBLISHER ACTIVITY LOGGING
+    // ============================================
+    if (isPublisherContent && article && detectedPublisher) {
       try {
-        console.log("[Email Agent] 📢 Broadcasting notification to staff about published article...");
-        
+        console.log("[Email Agent] 📝 Logging publisher activity...");
+        await storage.createPublisherActivityLog({
+          publisherId: detectedPublisher.id,
+          activityType: 'article_submitted',
+          description: 'Article submitted via email',
+          metadata: {
+            articleId: article.id,
+            articleTitle: articleData.title,
+            articleSlug: articleData.slug,
+            email: senderEmail,
+            submittedAt: new Date().toISOString(),
+            qualityScore: editorialResult.qualityScore,
+            language: editorialResult.language,
+            categoryId: finalCategoryId,
+          },
+        });
+        console.log("[Email Agent] ✅ Publisher activity logged successfully");
+      } catch (activityLogError) {
+        console.error("[Email Agent] ⚠️ Failed to log publisher activity:", activityLogError);
+      }
+    }
+
+    // ============================================
+    // 📢 STAFF NOTIFICATIONS
+    // ============================================
+    // Broadcast notification to staff users about new article
+    // - For publisher content: Always notify for review
+    // - For regular content: Notify only if auto-published
+    if ((isPublisherContent || trustedSender.autoPublish) && article) {
+      try {
         // Determine notification language based on detected language
         const detectedLanguage = editorialResult.language;
         let notificationTitle: string;
         let notificationBody: string;
+        let notificationType: string;
         
-        if (detectedLanguage === "en") {
-          notificationTitle = "New Article Published";
-          notificationBody = `A new article has been published via email: ${articleData.title}`;
-        } else if (detectedLanguage === "ur") {
-          notificationTitle = "نیا مضمون شائع ہوا";
-          notificationBody = `ای میل کے ذریعے نیا مضمون شائع کیا گیا: ${articleData.title}`;
+        if (isPublisherContent) {
+          // Publisher content notification - needs review
+          console.log("[Email Agent] 📢 Broadcasting notification to staff about publisher content...");
+          
+          if (detectedLanguage === "en") {
+            notificationTitle = "Publisher Content - Review Required";
+            notificationBody = `New content from publisher "${detectedPublisher?.name}": ${articleData.title}`;
+          } else if (detectedLanguage === "ur") {
+            notificationTitle = "ناشر کی طرف سے مواد - جائزہ درکار";
+            notificationBody = `ناشر "${detectedPublisher?.name}" کی طرف سے نیا مواد: ${articleData.title}`;
+          } else {
+            // Default to Arabic
+            notificationTitle = "محتوى من ناشر - مراجعة مطلوبة";
+            notificationBody = `محتوى جديد من الناشر "${detectedPublisher?.name}": ${articleData.title}`;
+          }
+          notificationType = "publisher_content_review";
         } else {
-          // Default to Arabic
-          notificationTitle = "مقال جديد";
-          notificationBody = `تم نشر مقال جديد عبر البريد الإلكتروني: ${articleData.title}`;
+          // Regular published article notification
+          console.log("[Email Agent] 📢 Broadcasting notification to staff about published article...");
+          
+          if (detectedLanguage === "en") {
+            notificationTitle = "New Article Published";
+            notificationBody = `A new article has been published via email: ${articleData.title}`;
+          } else if (detectedLanguage === "ur") {
+            notificationTitle = "نیا مضمون شائع ہوا";
+            notificationBody = `ای میل کے ذریعے نیا مضمون شائع کیا گیا: ${articleData.title}`;
+          } else {
+            // Default to Arabic
+            notificationTitle = "مقال جديد";
+            notificationBody = `تم نشر مقال جديد عبر البريد الإلكتروني: ${articleData.title}`;
+          }
+          notificationType = "article_published";
         }
         
         await storage.broadcastNotificationToStaff({
-          type: "article_published",
+          type: notificationType,
           title: notificationTitle,
           body: notificationBody,
           deeplink: `/articles/${articleData.slug}`,
@@ -961,7 +1071,18 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             articleSlug: articleData.slug,
             language: detectedLanguage,
             articleTitle: articleData.title,
-            publishedAt: new Date().toISOString(),
+            publishedAt: articleData.publishedAt?.toISOString() || null,
+            status: articleData.status,
+            isPublisherContent,
+            ...(isPublisherContent && {
+              publisher: {
+                id: detectedPublisher?.id,
+                name: detectedPublisher?.name,
+                email: senderEmail,
+              },
+              requiresReview: true,
+              publisherStatus: 'pending',
+            }),
             reporter: {
               userId: reporterUser.id,
               name: reporterUser.firstName && reporterUser.lastName 
@@ -976,10 +1097,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       } catch (notificationError) {
         // Log error but don't fail the entire operation
         console.error("[Email Agent] ⚠️ Failed to send staff notification:", notificationError);
-        console.error("[Email Agent] ⚠️ Article was published successfully, but notification failed");
+        console.error("[Email Agent] ⚠️ Article was created successfully, but notification failed");
       }
     } else {
-      console.log("[Email Agent] ℹ️ Skipping staff notification (auto-publish disabled or article not created)");
+      console.log("[Email Agent] ℹ️ Skipping staff notification (auto-publish disabled and not publisher content)");
     }
 
     // Update webhook log with correct status and attachments data (already processed early)
