@@ -155,6 +155,7 @@ import {
   mediaFiles,
   mediaFolders,
   mediaUsageLog,
+  articleMediaAssets,
   shortLinks,
   shortLinkClicks,
   tasks,
@@ -247,6 +248,8 @@ import {
   insertMediaUsageLogSchema,
   updateMediaFileSchema,
   updateMediaFolderSchema,
+  insertArticleMediaAssetSchema,
+  updateArticleMediaAssetSchema,
   insertShortLinkSchema,
   insertShortLinkClickSchema,
   insertSocialFollowSchema,
@@ -8835,6 +8838,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create comment" });
     }
   });
+
+  // ============================================================
+  // ARTICLE MEDIA ASSETS ROUTES
+  // ============================================================
+
+  // POST /api/articles/:articleId/media-assets - Create media asset definition
+  app.post("/api/articles/:articleId/media-assets",
+    requireAuth,
+    requireRole("reporter", "editor", "admin"),
+    async (req: any, res) => {
+      try {
+        const { articleId } = req.params;
+        
+        const parsed = insertArticleMediaAssetSchema.safeParse({
+          ...req.body,
+          articleId,
+        });
+
+        if (!parsed.success) {
+          return res.status(400).json({ 
+            message: "Invalid data", 
+            errors: parsed.error.errors 
+          });
+        }
+        
+        const asset = await storage.createArticleMediaAsset(parsed.data);
+        res.status(201).json(asset);
+      } catch (error: any) {
+        console.error("Error creating media asset:", error);
+        res.status(500).json({ message: "Failed to create media asset" });
+      }
+    }
+  );
+
+  // GET /api/articles/:articleId/media-assets - Get all media assets for article (public)
+  app.get("/api/articles/:articleId/media-assets", async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const { locale } = req.query;
+      
+      const assets = await storage.getArticleMediaAssetWithDetails(
+        articleId,
+        locale as string | undefined
+      );
+      
+      res.json(assets);
+    } catch (error: any) {
+      console.error("Error fetching media assets:", error);
+      res.status(500).json({ message: "Failed to fetch media assets" });
+    }
+  });
+
+  // GET /api/media-assets/:id - Get single media asset by ID (public)
+  app.get("/api/media-assets/:id", async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const asset = await storage.getArticleMediaAssetById(id);
+      
+      if (!asset) {
+        return res.status(404).json({ message: "Media asset not found" });
+      }
+      
+      res.json(asset);
+    } catch (error: any) {
+      console.error("Error fetching media asset:", error);
+      res.status(500).json({ message: "Failed to fetch media asset" });
+    }
+  });
+
+  // PATCH /api/media-assets/:id - Update media asset
+  app.patch("/api/media-assets/:id",
+    requireAuth,
+    requireRole("reporter", "editor", "admin"),
+    async (req: any, res) => {
+      try {
+        const { id } = req.params;
+        
+        const parsed = updateArticleMediaAssetSchema.safeParse(req.body);
+
+        if (!parsed.success) {
+          return res.status(400).json({ 
+            message: "Invalid data", 
+            errors: parsed.error.errors 
+          });
+        }
+        
+        const asset = await storage.updateArticleMediaAsset(id, parsed.data);
+        
+        if (!asset) {
+          return res.status(404).json({ message: "Media asset not found" });
+        }
+        
+        res.json(asset);
+      } catch (error: any) {
+        console.error("Error updating media asset:", error);
+        res.status(500).json({ message: "Failed to update media asset" });
+      }
+    }
+  );
+
+  // DELETE /api/media-assets/:id - Delete media asset
+  app.delete("/api/media-assets/:id",
+    requireAuth,
+    requireRole("editor", "admin"),
+    async (req: any, res) => {
+      try {
+        const { id } = req.params;
+        
+        await storage.deleteArticleMediaAsset(id);
+        
+        res.status(204).send();
+      } catch (error: any) {
+        console.error("Error deleting media asset:", error);
+        res.status(500).json({ message: "Failed to delete media asset" });
+      }
+    }
+  );
 
   // ============================================================
   // DASHBOARD ROUTES (Editors & Admins)
