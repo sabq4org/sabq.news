@@ -1,0 +1,124 @@
+2025-11-19 13:10:06.81
+0659003c
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 13:10:06.81
+0659003c
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-19 13:10:06.81
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:06.83
+0659003c
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
+2025-11-19 13:10:06.92
+0659003c
+User
+11:10:06 AM [express] GET /api/whatsapp/badge-stats 304 in 322ms :: {"newMessages":0,"publishedToday"…
+2025-11-19 13:10:11.57
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:11.57
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:11.59
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:11.60
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:11.62
+0659003c
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 13:10:11.66
+0659003c
+User
+11:10:11 AM [express] GET /api/announcements/active 304 in 107ms :: []
+2025-11-19 13:10:11.74
+0659003c
+User
+11:10:11 AM [express] GET /api/email-agent/logs 200 in 186ms :: {"logs":[{"id":"6790261c-4786-4aaa-a9…
+2025-11-19 13:10:17.64
+0659003c
+User
+}
+2025-11-19 13:10:17.64
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.64
+0659003c
+User
+isAuthenticated: true,
+2025-11-19 13:10:17.64
+0659003c
+User
+userId: 'admin-sabq',
+2025-11-19 13:10:17.65
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.67
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.68
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.68
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.70
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.71
+0659003c
+User
+11:10:17 AM [express] GET /api/auth/user 200 in 124ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-19 13:10:17.71
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.73
+0659003c
+User
+11:10:17 AM [express] GET /api/homepage 200 in 230ms :: {"hero":[{"id":"b466c8a4-6a36-4394-9d48-d53b2…
+2025-11-19 13:10:17.74
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.74
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.75
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.75
+0659003c
+User
+11:10:17 AM [express] GET /api/categories 200 in 105ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55…
+2025-11-19 13:10:17.77
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:10:17.77
+0659003c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:10:17.77
+0659003c
+User
+✅ DeserializeUser: User found: admin@sabq.sa

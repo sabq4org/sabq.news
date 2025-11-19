@@ -2177,22 +2177,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // GET /api/public-media/* - Proxy endpoint for public media files (email/whatsapp attachments)
   app.get("/api/public-media/*", async (req: any, res) => {
-    console.log(`[Public Media Proxy] ===== REQUEST RECEIVED =====`);
-    console.log(`[Public Media Proxy] Full URL: ${req.url}`);
-    console.log(`[Public Media Proxy] Path: ${req.path}`);
-    console.log(`[Public Media Proxy] Params:`, req.params);
-    console.log(`[Public Media Proxy] User-Agent: ${req.headers['user-agent']}`);
-    
     try {
       // Extract the full path after /api/public-media/
       const fullPath = req.params[0] as string;
       
       if (!fullPath) {
-        console.error(`[Public Media Proxy] ERROR: fullPath is empty!`);
+        console.error(`[Public Media Proxy] Empty file path requested`);
         return res.status(400).json({ message: "مسار الملف مطلوب" });
       }
-
-      console.log(`[Public Media Proxy] Serving file: ${fullPath}`);
 
       // Get file from Object Storage
       const { objectStorageClient } = await import('./objectStorage');

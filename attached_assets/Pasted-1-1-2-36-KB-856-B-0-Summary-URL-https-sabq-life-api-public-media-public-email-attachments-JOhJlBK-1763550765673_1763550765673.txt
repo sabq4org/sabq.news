@@ -1,0 +1,57 @@
+1
+1
+2.36 KB
+856 B
+0
+Summary
+URL: https://sabq.life/api/public-media/public/email-attachments/JOhJlBKl8o4gMoKxYAaSq.jpeg
+Status: 200
+Source: Network
+Address: 34.111.179.208:443
+Initiator: 
+index-CXuOf3Aa.js:33:5375
+
+Request
+:method: GET
+:scheme: https
+:authority: sabq.life
+:path: /api/public-media/public/email-attachments/JOhJlBKl8o4gMoKxYAaSq.jpeg
+Accept: image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Priority: u=5, i
+Sec-Fetch-Dest: image
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: cross-site
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Safari/605.1.15
+
+Response
+:status: 200
+Accept-Ranges: bytes
+Access-Control-Allow-Credentials: true
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+Cache-Control: public, max-age=2592000
+Content-Encoding: br
+Content-Security-Policy: default-src 'self';script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://cdn.syndication.twimg.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://ton.twimg.com;img-src 'self' data: https: blob: https://*.twimg.com;font-src 'self' data: https://fonts.gstatic.com;connect-src 'self' ws: wss: https://api.openai.com https://api.elevenlabs.io https://storage.googleapis.com https://syndication.twitter.com;media-src 'self' https: blob:;object-src 'none';frame-src 'self' https://platform.twitter.com https://twitter.com https://x.com https://www.youtube.com https://www.dailymotion.com;base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none'
+Content-Type: text/html; charset=UTF-8
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: cross-origin
+Date: Wed, 19 Nov 2025 11:12:25 GMT
+ETag: W/"93c-19a9b2ef428"
+Last-Modified: Wed, 19 Nov 2025 08:15:37 GMT
+origin-agent-cluster: ?1
+ratelimit-limit: 500
+ratelimit-policy: 500;w=900
+ratelimit-remaining: 492
+ratelimit-reset: 605
+Referrer-Policy: no-referrer
+Server: Google Frontend
+Strict-Transport-Security: max-age=63072000; includeSubDomains, max-age=31536000; includeSubDomains
+Vary: Origin, Accept-Encoding
+Via: 1.1 google
+X-Content-Type-Options: nosniff
+x-dns-prefetch-control: off
+x-download-options: noopen
+X-Frame-Options: SAMEORIGIN
+x-permitted-cross-domain-policies: none
+X-XSS-Protection: 0

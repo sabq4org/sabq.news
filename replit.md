@@ -22,7 +22,7 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **AI Content Features:** AI-powered article classification, multi-type article support, multilingual SEO generation, AI ChatBot Assistant, Audio Summary, Daily Briefs, Smart Content Generation System, and a Deep Analysis Engine (multi-model AI analysis using GPT-5, Gemini, and Claude with SSE streaming).
 -   **AI Generation Tools:** One-click AI generation for headlines, classification, SEO, and summaries, and a Smart Journalist Agent for news writing assistance.
 -   **Real-Time Capabilities:** "Moment by Moment" Live News Desk with breaking news ticker and Smart Notifications System via SSE for staff-only real-time article publishing alerts.
--   **Social Media Integration:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics.
+-   **Social Media Integration:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics and Social Crawler Middleware for proper Open Graph meta tags generation (server-side rendering for WhatsApp, Facebook, Twitter crawlers).
 -   **Mobile Support:** Native mobile app support via Capacitor for iOS and Android.
 -   **Multilingual Support:** Locale-isolated user pages, trilingual related articles, and trilingual reporter profiles.
 -   **Digital Credentials:** Apple Wallet Dual Pass System for Press Cards and Loyalty Cards with PassKit integration.

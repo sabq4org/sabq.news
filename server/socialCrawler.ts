@@ -107,12 +107,11 @@ export async function socialCrawlerMiddleware(
   res: Response,
   next: NextFunction
 ) {
-  // Skip API routes - they should handle their own responses
-  if (req.path.startsWith('/api/')) {
-    console.log(`[SocialCrawler] Skipping API route: ${req.path}`);
+  // Skip API routes and static assets - they should handle their own responses
+  if (req.path.startsWith('/api/') || req.path.startsWith('/src/') || req.path.startsWith('/@fs/') || req.path.startsWith('/assets/')) {
     return next();
   }
-
+  
   // Only process if it's a crawler
   if (!isCrawler(req)) {
     return next();
@@ -120,11 +119,23 @@ export async function socialCrawlerMiddleware(
 
   console.log(`[SocialCrawler] Detected crawler: ${req.headers['user-agent']}`);
   console.log(`[SocialCrawler] Path: ${req.path}`);
+  
+  // Normalize path: decode URI components and remove trailing slash
+  let normalizedPath = req.path;
+  try {
+    normalizedPath = decodeURIComponent(req.path);
+  } catch (e) {
+    console.warn(`[SocialCrawler] Failed to decode path: ${req.path}`);
+  }
+  normalizedPath = normalizedPath.replace(/\/$/, ''); // Remove trailing slash
+  
+  console.log(`[SocialCrawler] Normalized path: ${normalizedPath}`);
 
   // Handle article pages: /article/:slug
-  const articleMatch = req.path.match(/^\/article\/([^\/]+)$/);
+  const articleMatch = normalizedPath.match(/^\/article\/([^\/]+)$/);
   if (articleMatch) {
     const slug = articleMatch[1];
+    console.log(`[SocialCrawler] Extracted slug: ${slug}`);
     
     try {
       // Fetch article from database
