@@ -1,0 +1,132 @@
+2025-11-19 12:23:41.77
+051e0f28
+User
+[Email Agent] ✅ Final category ID selected: 2cf0a77f-c7d0-47a0-8952-70cc3a83dea9
+2025-11-19 12:23:41.77
+051e0f28
+User
+[Email Agent] 📝 Category ID: 2cf0a77f-c7d0-47a0-8952-70cc3a83dea9
+2025-11-19 12:23:41.77
+051e0f28
+User
+[Email Agent] - Status: published
+2025-11-19 12:23:41.80
+051e0f28
+User
+[Email Agent] - Status: published
+2025-11-19 12:23:41.80
+051e0f28
+User
+[Email Agent] - Title: القيادة تهنئ أمير موناكو بذكرى اليوم الوطني لبلاده
+2025-11-19 12:23:41.80
+051e0f28
+User
+[Email Agent] ✅ Article created successfully: FHmkQyv9m8D_5S6ERipfj
+2025-11-19 12:23:42.24
+051e0f28
+User
+[Email Agent] - Attachments saved: 1
+2025-11-19 12:23:48.20
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:48.22
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:48.61
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:48.63
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:48.76
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:48.78
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.47
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.49
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.49
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.49
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.51
+051e0f28
+User
+10:23:50 AM [express] GET /api/smart-blocks 304 in 276ms :: []
+2025-11-19 12:23:50.52
+051e0f28
+User
+10:23:50 AM [express] GET /api/smart-blocks 304 in 270ms :: []
+2025-11-19 12:23:50.52
+051e0f28
+User
+10:23:50 AM [express] GET /api/categories/smart 200 in 375ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7…
+2025-11-19 12:23:50.53
+051e0f28
+User
+10:23:50 AM [express] GET /api/homepage/stats 200 in 294ms :: {"totalArticles":9,"todayArticles":9,"t…
+2025-11-19 12:23:50.54
+051e0f28
+User
+10:23:50 AM [express] GET /api/smart-blocks 304 in 298ms :: []
+2025-11-19 12:23:50.54
+051e0f28
+User
+10:23:50 AM [express] GET /api/smart-blocks 304 in 294ms :: []
+2025-11-19 12:23:50.54
+051e0f28
+User
+10:23:50 AM [express] GET /api/auth/user 304 in 305ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-19 12:23:50.56
+051e0f28
+User
+10:23:50 AM [express] GET /api/themes/active 304 in 317ms
+2025-11-19 12:23:50.68
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.69
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.69
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.69
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.70
+051e0f28
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:23:50.71
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.72
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:23:50.72
+051e0f28
+User
+✅ DeserializeUser: User found: admin@sabq.sa
