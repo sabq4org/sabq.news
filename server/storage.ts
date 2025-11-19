@@ -1416,6 +1416,7 @@ export interface IStorage {
   getWhatsappWebhookLogs(params: { limit?: number; offset?: number; status?: string }): Promise<{ logs: WhatsappWebhookLog[]; total: number }>;
   getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
   deleteWhatsappWebhookLog(id: string): Promise<void>;
+  bulkDeleteWhatsappWebhookLogs(ids: string[]): Promise<void>;
   
   // Notifications Operations
   createNotification(data: {
@@ -12331,6 +12332,12 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(whatsappWebhookLogs)
       .where(eq(whatsappWebhookLogs.id, id));
+  }
+
+  async bulkDeleteWhatsappWebhookLogs(ids: string[]): Promise<void> {
+    await db
+      .delete(whatsappWebhookLogs)
+      .where(inArray(whatsappWebhookLogs.id, ids));
   }
 
   // Notification Operations

@@ -92,8 +92,10 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLogDialogOpen, setDeleteLogDialogOpen] = useState(false);
+  const [bulkDeleteLogsDialogOpen, setBulkDeleteLogsDialogOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<WhatsappToken | null>(null);
   const [selectedLog, setSelectedLog] = useState<WhatsappWebhookLog | null>(null);
+  const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [logsPage, setLogsPage] = useState(1);
   const [logsStatusFilter, setLogsStatusFilter] = useState<string>("all");
@@ -258,6 +260,32 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
     },
   });
 
+  const bulkDeleteLogsMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return await apiRequest('/api/whatsapp/logs/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp/logs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp/stats'] });
+      toast({
+        title: "تم بنجاح",
+        description: "تم حذف السجلات المحددة بنجاح",
+      });
+      setBulkDeleteLogsDialogOpen(false);
+      setSelectedLogIds([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حذف السجلات",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateToken = () => {
     setFormData({ label: "", phoneNumber: "", autoPublish: false, allowedLanguages: ["ar"] });
     setGeneratedToken("");
@@ -288,6 +316,28 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
   const handleDeleteLog = (log: WhatsappWebhookLog) => {
     setSelectedLog(log);
     setDeleteLogDialogOpen(true);
+  };
+
+  const handleSelectAllLogs = (checked: boolean) => {
+    if (checked && logsData?.logs) {
+      setSelectedLogIds(logsData.logs.map((log) => log.id));
+    } else {
+      setSelectedLogIds([]);
+    }
+  };
+
+  const handleSelectLog = (logId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLogIds((prev) => [...prev, logId]);
+    } else {
+      setSelectedLogIds((prev) => prev.filter((id) => id !== logId));
+    }
+  };
+
+  const handleBulkDeleteLogs = () => {
+    if (selectedLogIds.length > 0) {
+      setBulkDeleteLogsDialogOpen(true);
+    }
   };
 
   const handleSubmitCreate = async () => {
@@ -322,11 +372,12 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
     }));
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = (text: string, isToken: boolean = false) => {
+    const textToCopy = isToken ? `#TOKEN ${text}` : text;
+    navigator.clipboard.writeText(textToCopy);
     toast({
       title: "تم النسخ",
-      description: "تم نسخ الرمز إلى الحافظة",
+      description: isToken ? "تم نسخ الرمز بالصيغة الكاملة #TOKEN SABQ-xxxx" : "تم نسخ النص إلى الحافظة",
     });
   };
 
@@ -537,9 +588,9 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              onClick={() => copyToClipboard(token.token)}
+                              onClick={() => copyToClipboard(token.token, true)}
                               data-testid={`button-copy-token-${token.id}`}
-                              title="نسخ الرمز"
+                              title="نسخ الرمز بالصيغة الكاملة #TOKEN SABQ-xxxx"
                             >
                               <Copy className="h-3 w-3" />
                             </Button>
@@ -640,9 +691,9 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
-                            onClick={() => copyToClipboard(token.token)}
+                            onClick={() => copyToClipboard(token.token, true)}
                             data-testid={`button-copy-token-${token.id}`}
-                            title="نسخ الرمز"
+                            title="نسخ الرمز بالصيغة الكاملة #TOKEN SABQ-xxxx"
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
@@ -701,25 +752,41 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                سجلات الرسائل
-              </CardTitle>
-              <CardDescription>جميع الرسائل المستلمة وحالة معالجتها</CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  سجلات الرسائل
+                </CardTitle>
+                <CardDescription>جميع الرسائل المستلمة وحالة معالجتها</CardDescription>
+              </div>
+              <Select value={logsStatusFilter} onValueChange={setLogsStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-status-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="success">نجح</SelectItem>
+                  <SelectItem value="rejected">مرفوض</SelectItem>
+                  <SelectItem value="failed">فشل</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={logsStatusFilter} onValueChange={setLogsStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-status-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="success">نجح</SelectItem>
-                <SelectItem value="rejected">مرفوض</SelectItem>
-                <SelectItem value="failed">فشل</SelectItem>
-              </SelectContent>
-            </Select>
+            {selectedLogIds.length > 0 && (
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                <p className="text-sm font-medium">تم تحديد {selectedLogIds.length} سجل</p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDeleteLogs}
+                  data-testid="button-bulk-delete-logs"
+                >
+                  <Trash2 className="h-4 w-4 ml-2" />
+                  حذف المحدد
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -738,6 +805,14 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={logsData.logs.length > 0 && selectedLogIds.length === logsData.logs.length}
+                          onCheckedChange={handleSelectAllLogs}
+                          data-testid="checkbox-select-all-logs"
+                          aria-label="تحديد الكل"
+                        />
+                      </TableHead>
                       <TableHead>من</TableHead>
                       <TableHead>نص الرسالة</TableHead>
                       <TableHead>الرمز</TableHead>
@@ -753,6 +828,14 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                   <TableBody>
                     {logsData.logs.map((log) => (
                       <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedLogIds.includes(log.id)}
+                            onCheckedChange={(checked) => handleSelectLog(log.id, checked as boolean)}
+                            data-testid={`checkbox-log-${log.id}`}
+                            aria-label={`تحديد السجل ${log.id}`}
+                          />
+                        </TableCell>
                         <TableCell data-testid={`text-from-${log.id}`}>{log.from}</TableCell>
                         <TableCell data-testid={`text-message-${log.id}`}>
                           <div className="max-w-[200px] truncate">
@@ -999,8 +1082,9 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => copyToClipboard(generatedToken)}
+                    onClick={() => copyToClipboard(generatedToken, true)}
                     data-testid="button-copy-token"
+                    title="نسخ الرمز بالصيغة الكاملة #TOKEN SABQ-xxxx"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -1349,6 +1433,27 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
               data-testid="button-confirm-delete-log"
             >
               حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Logs Dialog */}
+      <AlertDialog open={bulkDeleteLogsDialogOpen} onOpenChange={setBulkDeleteLogsDialogOpen}>
+        <AlertDialogContent dir="rtl" data-testid="dialog-bulk-delete-logs">
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف {selectedLogIds.length} سجل نهائياً. هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-bulk-delete-logs">إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkDeleteLogsMutation.mutate(selectedLogIds)}
+              data-testid="button-confirm-bulk-delete-logs"
+            >
+              حذف الكل
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

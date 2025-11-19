@@ -685,4 +685,21 @@ router.delete("/logs/:id", requireAuth, requireRole('admin', 'manager'), async (
   }
 });
 
+router.post("/logs/bulk-delete", requireAuth, requireRole('admin', 'manager'), async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Invalid or empty IDs array" });
+    }
+    
+    await storage.bulkDeleteWhatsappWebhookLogs(ids);
+    
+    return res.json({ success: true, count: ids.length });
+  } catch (error) {
+    console.error("[WhatsApp Agent] Error bulk deleting logs:", error);
+    return res.status(500).json({ error: "Failed to bulk delete logs" });
+  }
+});
+
 export default router;
