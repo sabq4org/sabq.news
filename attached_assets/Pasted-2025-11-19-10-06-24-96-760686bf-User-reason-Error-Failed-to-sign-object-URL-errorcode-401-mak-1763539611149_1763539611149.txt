@@ -1,0 +1,140 @@
+2025-11-19 10:06:24.96
+760686bf
+User
+} reason: Error: Failed to sign object URL, errorcode: 401, make sure you're running on Replit
+2025-11-19 10:06:25.11
+760686bf
+System
+command finished with error [node dist/index.js]: exit status 1
+2025-11-19 10:06:27.78
+760686bf
+User
+🔗 Initializing database connection...
+2025-11-19 10:06:27.79
+760686bf
+User
+✅ Database connection initialized successfully
+2025-11-19 10:06:27.80
+760686bf
+User
+✅ WhatsApp service initialized { configured: true, whatsappNumber: '+1415523...' }
+2025-11-19 10:06:27.80
+760686bf
+User
+✅ SendGrid email service initialized
+2025-11-19 10:06:27.80
+760686bf
+User
+🔗 Frontend URL for email links: https://sabq.life
+2025-11-19 10:06:27.90
+760686bf
+User
+[Server] Environment: development
+2025-11-19 10:06:27.90
+760686bf
+User
+[Server] Starting server initialization...
+2025-11-19 10:06:27.90
+760686bf
+User
+[Server] Port: 5000
+2025-11-19 10:06:27.96
+760686bf
+User
+✅ Google OAuth Strategy initialized
+2025-11-19 10:06:27.96
+760686bf
+User
+🔑 Apple private key formatted (length: 257 )
+2025-11-19 10:06:27.96
+760686bf
+User
+✅ Apple OAuth Strategy initialized
+2025-11-19 10:06:27.97
+760686bf
+User
+[Server] ✅ Routes registered successfully
+2025-11-19 10:06:27.97
+760686bf
+User
+[Server] ✅ Static files setup completed
+2025-11-19 10:06:27.97
+760686bf
+User
+[Server] ✅ Social crawler middleware registered
+2025-11-19 10:06:27.97
+760686bf
+User
+[Server] Starting in PRODUCTION mode with static files
+2025-11-19 10:06:27.98
+760686bf
+User
+[Server] Ready check available at http://0.0.0.0:5000/ready
+2025-11-19 10:06:27.98
+760686bf
+User
+[Server] Health check available at http://0.0.0.0:5000/health
+2025-11-19 10:06:27.98
+760686bf
+User
+[Server] ✅ Successfully started on port 5000
+2025-11-19 10:06:28.00
+760686bf
+User
+8:06:27 AM [express] serving on port 5000
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] ℹ️ Background workers disabled (ENABLE_BACKGROUND_WORKERS not set to 'true')
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] This is recommended for Autoscale deployments
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] To enable background workers, set ENABLE_BACKGROUND_WORKERS=true in a Reserved VM deployment
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] To enable background workers, set ENABLE_BACKGROUND_WORKERS=true in a Reserved VM deployment
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] This is recommended for Autoscale deployments
+2025-11-19 10:06:28.00
+760686bf
+User
+[Server] ℹ️ Background workers disabled (ENABLE_BACKGROUND_WORKERS not set to 'true')
+2025-11-19 10:06:30.64
+760686bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 10:06:30.65
+760686bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 10:06:30.75
+760686bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 10:06:30.76
+760686bf
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 10:06:30.76
+760686bf
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-19 10:06:30.76
+760686bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 10:06:30.77
+760686bf
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 10:06:30.77
+760686bf
+User
+📡 SSE connection opened for user: admin-sabq
