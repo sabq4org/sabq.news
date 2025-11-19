@@ -12606,6 +12606,7 @@ export class DatabaseStorage implements IStorage {
     
     const normalizedPhone = this.normalizePhoneNumber(phone);
     
+    // Search in both publishers.phone AND users.phone for flexibility
     const [result] = await db
       .select({
         publisher: publishers,
@@ -12613,7 +12614,12 @@ export class DatabaseStorage implements IStorage {
       })
       .from(publishers)
       .innerJoin(users, eq(publishers.userId, users.id))
-      .where(eq(users.phone, normalizedPhone));
+      .where(
+        or(
+          eq(publishers.phone, normalizedPhone),
+          eq(users.phone, normalizedPhone)
+        )!
+      );
 
     return result?.publisher;
   }

@@ -1,0 +1,117 @@
+025-11-19 19:45:06.67
+b021a8cf
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-19 19:45:06.67
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:06.70
+b021a8cf
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 19:45:06.73
+b021a8cf
+User
+5:45:06 PM [express] GET /api/email-agent/senders 304 in 199ms :: [{"id":"ab91b4e2-1fdc-4306-88ba-a2…
+2025-11-19 19:45:07.70
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:07.73
+b021a8cf
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
+2025-11-19 19:45:07.73
+b021a8cf
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
+2025-11-19 19:46:00.03
+b021a8cf
+User
+[NotificationWorker] Starting queue processing...
+2025-11-19 19:46:00.04
+b021a8cf
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-19 19:46:00.16
+b021a8cf
+User
+line: '3722',
+2025-11-19 19:46:00.16
+b021a8cf
+User
+[ScheduledPublisher] ❌ Error in scheduled publishing: error: column "is_publisher_content" does not exist
+2025-11-19 19:46:00.16
+b021a8cf
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 19:46:00.16
+b021a8cf
+User
+internalQuery: undefined,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-19 19:46:00.16
+b021a8cf
+User
+at async publishScheduledArticles (file:///home/runner/workspace/dist/index.js:46103:31) {
+2025-11-19 19:46:00.16
+b021a8cf
+User
+}
+2025-11-19 19:46:00.16
+b021a8cf
+User
+position: '494',
+2025-11-19 19:46:00.16
+b021a8cf
+User
+severity: 'ERROR',
+2025-11-19 19:46:00.16
+b021a8cf
+User
+length: 121,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+internalPosition: undefined,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+column: undefined,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+routine: 'errorMissingColumn'
+2025-11-19 19:46:00.16
+b021a8cf
+User
+[NotificationWorker] Queue processing completed
+2025-11-19 19:46:00.16
+b021a8cf
+User
+constraint: undefined,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+file: 'parse_relation.c',
+2025-11-19 19:46:00.16
+b021a8cf
+User
+code: '42703',
+2025-11-19 19:46:00.16
+b021a8cf
+User
+where: undefined,
+2025-11-19 19:46:00.16
+b021a8cf
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-19 19:46:00.16
+b021a8cf
+User
+dataType: undefined,
+
