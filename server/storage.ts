@@ -298,6 +298,9 @@ import {
   type InsertWhatsappToken,
   type WhatsappWebhookLog,
   type InsertWhatsappWebhookLog,
+  newsletterSubscriptions,
+  type NewsletterSubscription,
+  type InsertNewsletterSubscription,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1446,6 +1449,18 @@ export interface IStorage {
     deeplink?: string;
     metadata?: any;
   }): Promise<void>;
+  
+  // Newsletter Subscriptions
+  createNewsletterSubscription(data: InsertNewsletterSubscription): Promise<NewsletterSubscription>;
+  getNewsletterSubscription(email: string): Promise<NewsletterSubscription | null>;
+  getAllNewsletterSubscriptions(params?: { 
+    status?: string; 
+    language?: string;
+    limit?: number; 
+    offset?: number;
+  }): Promise<{ subscriptions: NewsletterSubscription[]; total: number }>;
+  updateNewsletterSubscription(id: string, updates: Partial<InsertNewsletterSubscription>): Promise<NewsletterSubscription | null>;
+  deleteNewsletterSubscription(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -12470,6 +12485,90 @@ export class DatabaseStorage implements IStorage {
         notificationBus.emit(userId, notification);
       }
     });
+  }
+
+  // Newsletter Subscriptions
+  async createNewsletterSubscription(data: InsertNewsletterSubscription): Promise<NewsletterSubscription> {
+    const [subscription] = await db
+      .insert(newsletterSubscriptions)
+      .values({
+        ...data,
+        id: nanoid(),
+      })
+      .returning();
+    
+    return subscription;
+  }
+
+  async getNewsletterSubscription(email: string): Promise<NewsletterSubscription | null> {
+    const [subscription] = await db
+      .select()
+      .from(newsletterSubscriptions)
+      .where(eq(newsletterSubscriptions.email, email));
+    
+    return subscription || null;
+  }
+
+  async getAllNewsletterSubscriptions(params?: { 
+    status?: string; 
+    language?: string;
+    limit?: number; 
+    offset?: number;
+  }): Promise<{ subscriptions: NewsletterSubscription[]; total: number }> {
+    const conditions = [];
+    
+    if (params?.status) {
+      conditions.push(eq(newsletterSubscriptions.status, params.status));
+    }
+    
+    if (params?.language) {
+      conditions.push(eq(newsletterSubscriptions.language, params.language));
+    }
+    
+    const query = db
+      .select()
+      .from(newsletterSubscriptions)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(newsletterSubscriptions.createdAt));
+    
+    if (params?.limit) {
+      query.limit(params.limit);
+    }
+    
+    if (params?.offset) {
+      query.offset(params.offset);
+    }
+    
+    const subscriptions = await query;
+    
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(newsletterSubscriptions)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    return {
+      subscriptions,
+      total: Number(count),
+    };
+  }
+
+  async updateNewsletterSubscription(id: string, updates: Partial<InsertNewsletterSubscription>): Promise<NewsletterSubscription | null> {
+    const [subscription] = await db
+      .update(newsletterSubscriptions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(newsletterSubscriptions.id, id))
+      .returning();
+    
+    return subscription || null;
+  }
+
+  async deleteNewsletterSubscription(id: string): Promise<void> {
+    await db
+      .delete(newsletterSubscriptions)
+      .where(eq(newsletterSubscriptions.id, id));
   }
 }
 

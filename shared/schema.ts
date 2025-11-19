@@ -6725,6 +6725,68 @@ export type AccessibilityEvent = typeof accessibilityEvents.$inferSelect;
 export type InsertAccessibilityEvent = z.infer<typeof insertAccessibilityEventSchema>;
 
 // ============================================
+// NEWSLETTER SUBSCRIPTIONS - اشتراكات النشرة البريدية
+// ============================================
+
+export const newsletterSubscriptions = pgTable("newsletter_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  status: text("status").default("active").notNull(), // active, unsubscribed, bounced
+  language: text("language").default("ar"), // ar, en, ur - preferred language
+  userId: varchar("user_id").references(() => users.id), // optional - if user is logged in
+  
+  // Subscription preferences
+  preferences: jsonb("preferences").$type<{
+    frequency?: "daily" | "weekly" | "monthly";
+    categories?: string[]; // interested categories
+    articleTypes?: string[]; // news, analysis, opinion
+  }>(),
+  
+  // Tracking
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  source: text("source"), // website-footer, popup, article-page, etc.
+  
+  // Verification
+  verifiedAt: timestamp("verified_at"),
+  verificationToken: text("verification_token"),
+  
+  // Unsubscribe
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  unsubscribeReason: text("unsubscribe_reason"),
+  
+  // Metadata
+  metadata: jsonb("metadata"), // additional data
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("newsletter_subscriptions_email_idx").on(table.email),
+  index("newsletter_subscriptions_status_idx").on(table.status),
+  index("newsletter_subscriptions_user_id_idx").on(table.userId),
+  index("newsletter_subscriptions_created_at_idx").on(table.createdAt),
+]);
+
+// Relations
+export const newsletterSubscriptionsRelations = relations(newsletterSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [newsletterSubscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schema
+export const insertNewsletterSubscriptionSchema = createInsertSchema(newsletterSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Select types
+export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;
+export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 

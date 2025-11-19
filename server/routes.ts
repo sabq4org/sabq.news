@@ -27053,6 +27053,107 @@ Allow: /
     }
   });
 
+  // =================================================================
+  // NEWSLETTER SUBSCRIPTION ROUTES
+  // =================================================================
+
+  // POST /api/newsletter/subscribe - Subscribe to newsletter (public)
+  app.post("/api/newsletter/subscribe", async (req: any, res) => {
+    try {
+      const { email, language = "ar", preferences, source = "footer" } = req.body;
+      
+      if (!email || !email.includes('@')) {
+        return res.status(400).json({ message: "يرجى إدخال بريد إلكتروني صحيح" });
+      }
+      
+      // Check if already subscribed
+      const existing = await storage.getNewsletterSubscription(email);
+      if (existing) {
+        if (existing.status === 'active') {
+          return res.status(400).json({ message: "هذا البريد مشترك بالفعل في النشرة البريدية" });
+        } else {
+          // Reactivate subscription
+          await storage.updateNewsletterSubscription(existing.id, {
+            status: 'active',
+            language,
+            preferences,
+            unsubscribedAt: null,
+            unsubscribeReason: null,
+          });
+          return res.json({ message: "تم تفعيل اشتراكك بنجاح", subscription: existing });
+        }
+      }
+      
+      // Get client info
+      const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+      
+      // Create new subscription
+      const subscription = await storage.createNewsletterSubscription({
+        email,
+        status: 'active',
+        language,
+        userId: req.user?.id || null,
+        preferences,
+        ipAddress: typeof ipAddress === 'string' ? ipAddress : ipAddress?.[0] || null,
+        userAgent: userAgent || null,
+        source,
+        verifiedAt: new Date(), // Auto-verify for now
+      });
+      
+      res.status(201).json({
+        message: "تم الاشتراك بنجاح في النشرة البريدية",
+        subscription: {
+          id: subscription.id,
+          email: subscription.email,
+          language: subscription.language,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error subscribing to newsletter:", error);
+      if (error.message?.includes('unique')) {
+        return res.status(400).json({ message: "هذا البريد مشترك بالفعل" });
+      }
+      res.status(500).json({ message: "فشل في الاشتراك في النشرة البريدية" });
+    }
+  });
+
+  // GET /api/newsletter/subscriptions - Get all subscriptions (admin only)
+  app.get("/api/newsletter/subscriptions", 
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const { status, language, limit, offset } = req.query;
+        const result = await storage.getAllNewsletterSubscriptions({
+          status: status as string,
+          language: language as string,
+          limit: limit ? parseInt(limit as string) : 50,
+          offset: offset ? parseInt(offset as string) : 0,
+        });
+        res.json(result);
+      } catch (error: any) {
+        console.error("Error fetching newsletter subscriptions:", error);
+        res.status(500).json({ message: "فشل في جلب الاشتراكات" });
+      }
+    }
+  );
+
+  // DELETE /api/newsletter/subscriptions/:id - Delete subscription (admin only)
+  app.delete("/api/newsletter/subscriptions/:id",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        await storage.deleteNewsletterSubscription(req.params.id);
+        res.json({ message: "تم حذف الاشتراك بنجاح" });
+      } catch (error: any) {
+        console.error("Error deleting newsletter subscription:", error);
+        res.status(500).json({ message: "فشل في حذف الاشتراك" });
+      }
+    }
+  );
+
   const httpServer = createServer(app);
   return httpServer;
 }
