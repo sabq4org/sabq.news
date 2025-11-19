@@ -1,0 +1,121 @@
+2025-11-19 09:35:15.69
+30e83680
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 09:35:15.79
+30e83680
+User
+7:35:15 AM [express] GET /api/admin/users 304 in 311ms :: {"items":[{"id":"L-0ZBIzT2t-WKtWh3FXgK","n…
+2025-11-19 09:35:15.91
+30e83680
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 09:35:15.94
+30e83680
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 09:35:15.96
+30e83680
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 09:35:16.03
+30e83680
+User
+7:35:16 AM [express] GET /api/admin/users 304 in 140ms :: {"items":[{"id":"RnP7eDOAl5T5rGpib9_8d","n…
+2025-11-19 09:35:19.78
+30e83680
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-19 09:35:19.80
+30e83680
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 09:35:19.88
+30e83680
+User
+at async file:///home/runner/workspace/dist/index.js:32663:23
+2025-11-19 09:35:19.88
+30e83680
+User
+} reason: Error: Failed to sign object URL, errorcode: 401, make sure you're running on Replit
+2025-11-19 09:35:19.88
+30e83680
+User
+at signObjectURL (file:///home/runner/workspace/dist/index.js:12560:11)
+2025-11-19 09:35:19.88
+30e83680
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 09:35:19.88
+30e83680
+User
+Error: Failed to sign object URL, errorcode: 401, make sure you're running on Replit
+2025-11-19 09:35:19.88
+30e83680
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 09:35:19.88
+30e83680
+User
+at signObjectURL (file:///home/runner/workspace/dist/index.js:12560:11)
+2025-11-19 09:35:19.88
+30e83680
+User
+at async file:///home/runner/workspace/dist/index.js:32663:23
+2025-11-19 09:35:19.88
+30e83680
+User
+[Server] ❌ Unhandled Rejection at: Promise {
+2025-11-19 09:35:20.03
+30e83680
+System
+command finished with error [node dist/index.js]: exit status 1
+2025-11-19 09:35:23.11
+30e83680
+User
+🔗 Initializing database connection...
+2025-11-19 09:35:23.13
+30e83680
+User
+✅ Database connection initialized successfully
+2025-11-19 09:35:23.14
+30e83680
+User
+✅ WhatsApp service initialized { configured: true, whatsappNumber: '+1415523...' }
+2025-11-19 09:35:23.14
+30e83680
+User
+🔗 Frontend URL for email links: https://sabq.life
+2025-11-19 09:35:23.14
+30e83680
+User
+✅ SendGrid email service initialized
+2025-11-19 09:35:23.26
+30e83680
+User
+[Server] Port: 5000
+2025-11-19 09:35:23.26
+30e83680
+User
+[Server] Starting server initialization...
+2025-11-19 09:35:23.26
+30e83680
+User
+[Server] Environment: development
+2025-11-19 09:35:23.33
+30e83680
+User
+✅ Google OAuth Strategy initialized
+2025-11-19 09:35:23.33
+30e83680
+User
+🔑 Apple private key formatted (length: 257 )
+2025-11-19 09:35:23.33
+30e83680
+User
+✅ Apple OAuth Strategy initialized
+2025-11-19 09:35:23.35
+30e83680
+User
+[Server] ✅ Routes registered successfully
