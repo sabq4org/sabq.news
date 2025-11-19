@@ -877,12 +877,6 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] 📝 Author ID (reporter):", reporterUser.id);
     console.log("[Email Agent] 📝 Category ID:", finalCategoryId);
     
-    // Determine article status based on trusted sender configuration
-    const articleStatus: string = trustedSender.autoPublish ? "published" : "draft";
-    const publishedAt: Date | null = trustedSender.autoPublish ? new Date() : null;
-    console.log("[Email Agent] 📝 Article status:", articleStatus);
-    console.log("[Email Agent] 📝 Auto-publish:", trustedSender.autoPublish);
-    
     const articleData: any = {
       id: nanoid(),
       title: articleTitle,
@@ -890,14 +884,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       content: editorialResult.optimized.content,
       excerpt: editorialResult.optimized.lead || "",
       authorId: reporterUser.id, // 👤 Article attributed to the reporter, not system!
-      status: articleStatus,
+      status: trustedSender.autoPublish ? "published" : "draft",
       imageUrl: featuredImage, // 🖼️ Featured image URL (first uploaded image)
       seo: {
         keywords: editorialResult.optimized.seoKeywords,
       },
       categoryId: finalCategoryId, // 🎯 Always has a valid category!
       createdAt: new Date(),
-      publishedAt,
+      publishedAt: trustedSender.autoPublish ? new Date() : null,
       // 🔥 Essential fields for article visibility
       articleType: "news", // Ensures article appears in homepage queries
       newsType: "regular", // Default news type (not breaking/featured)
@@ -935,10 +929,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       throw createError; // Re-throw to trigger catch block
     }
 
-    // ============================================
-    // 📢 STAFF NOTIFICATIONS
-    // ============================================
-    // Broadcast notification to staff when article is auto-published
+    // Broadcast notification to staff users about new published article
     if (trustedSender.autoPublish && article) {
       try {
         console.log("[Email Agent] 📢 Broadcasting notification to staff about published article...");
@@ -970,8 +961,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             articleSlug: articleData.slug,
             language: detectedLanguage,
             articleTitle: articleData.title,
-            publishedAt: articleData.publishedAt?.toISOString() || null,
-            status: articleData.status,
+            publishedAt: new Date().toISOString(),
             reporter: {
               userId: reporterUser.id,
               name: reporterUser.firstName && reporterUser.lastName 
@@ -986,10 +976,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       } catch (notificationError) {
         // Log error but don't fail the entire operation
         console.error("[Email Agent] ⚠️ Failed to send staff notification:", notificationError);
-        console.error("[Email Agent] ⚠️ Article was created successfully, but notification failed");
+        console.error("[Email Agent] ⚠️ Article was published successfully, but notification failed");
       }
     } else {
-      console.log("[Email Agent] ℹ️ Skipping staff notification (auto-publish disabled)");
+      console.log("[Email Agent] ℹ️ Skipping staff notification (auto-publish disabled or article not created)");
     }
 
     // Update webhook log with correct status and attachments data (already processed early)

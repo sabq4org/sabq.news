@@ -221,64 +221,51 @@ router.post("/webhook", async (req: Request, res: Response) => {
   try {
     console.log("[WhatsApp Agent] ============ WEBHOOK START ============");
     
-    // 🔐 SECURITY: Validate Twilio Signature (PRODUCTION ONLY)
-    // In development/testing, signature validation is disabled to allow testing
-    // In production, signature validation is REQUIRED for security
-    const isProduction = process.env.NODE_ENV === 'production';
-    const skipSignatureValidation = !isProduction;
+    // 🔐 SECURITY: Validate Twilio Signature
+    const twilioSignature = req.headers['x-twilio-signature'] as string;
     
-    if (skipSignatureValidation) {
-      console.log("[WhatsApp Agent] ⚠️ DEVELOPMENT MODE - Skipping Twilio signature validation");
-      console.log("[WhatsApp Agent] ⚠️ This is ONLY safe in development/testing environments");
-      console.log("[WhatsApp Agent] ⚠️ In production, signature validation is REQUIRED");
-    } else {
-      console.log("[WhatsApp Agent] 🔐 PRODUCTION MODE - Validating Twilio signature...");
+    if (!twilioSignature) {
+      console.error("[WhatsApp Agent] ❌ Missing Twilio signature header");
       
-      const twilioSignature = req.headers['x-twilio-signature'] as string;
+      // Log failed attempt
+      await storage.createWhatsappWebhookLog({
+        from: req.body.From || 'unknown',
+        message: req.body.Body || '',
+        status: 'rejected',
+        reason: 'Missing Twilio signature - possible spoofing attempt',
+        processingTimeMs: Date.now() - startTime,
+      });
       
-      if (!twilioSignature) {
-        console.error("[WhatsApp Agent] ❌ Missing Twilio signature header");
-        
-        // Log failed attempt
-        await storage.createWhatsappWebhookLog({
-          from: req.body.From || 'unknown',
-          message: req.body.Body || '',
-          status: 'rejected',
-          reason: 'Missing Twilio signature - possible spoofing attempt',
-          processingTimeMs: Date.now() - startTime,
-        });
-        
-        // IMPORTANT: Return 200 to Twilio (prevents retry loop)
-        // But reject the request internally
-        return res.status(200).json({ 
-          success: false, 
-          error: 'Invalid request' 
-        });
-      }
-      
-      // Validate signature
-      const url = `https://${req.headers.host}${req.originalUrl}`;
-      const isValid = validateTwilioSignature(twilioSignature, url, req.body);
-      
-      if (!isValid) {
-        console.error("[WhatsApp Agent] ❌ Invalid Twilio signature");
-        
-        await storage.createWhatsappWebhookLog({
-          from: req.body.From || 'unknown',
-          message: req.body.Body || '',
-          status: 'rejected',
-          reason: 'Invalid Twilio signature - authentication failed',
-          processingTimeMs: Date.now() - startTime,
-        });
-        
-        return res.status(200).json({ 
-          success: false, 
-          error: 'Invalid request' 
-        });
-      }
-      
-      console.log("[WhatsApp Agent] ✅ Twilio signature validated successfully");
+      // IMPORTANT: Return 200 to Twilio (prevents retry loop)
+      // But reject the request internally
+      return res.status(200).json({ 
+        success: false, 
+        error: 'Invalid request' 
+      });
     }
+    
+    // Validate signature
+    const url = `https://${req.headers.host}${req.originalUrl}`;
+    const isValid = validateTwilioSignature(twilioSignature, url, req.body);
+    
+    if (!isValid) {
+      console.error("[WhatsApp Agent] ❌ Invalid Twilio signature");
+      
+      await storage.createWhatsappWebhookLog({
+        from: req.body.From || 'unknown',
+        message: req.body.Body || '',
+        status: 'rejected',
+        reason: 'Invalid Twilio signature - authentication failed',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      return res.status(200).json({ 
+        success: false, 
+        error: 'Invalid request' 
+      });
+    }
+    
+    console.log("[WhatsApp Agent] ✅ Twilio signature validated successfully");
     
     console.log("[WhatsApp Agent] Received webhook from Twilio");
     console.log("[WhatsApp Agent] Raw req.body keys:", Object.keys(req.body));
@@ -500,12 +487,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     );
 
     const slug = generateSlug(aiResult.optimized.title);
-    
-    // Determine article status based on token configuration
-    const articleStatus: string = whatsappToken.autoPublish ? 'published' : 'draft';
-    const publishedAt: Date | null = articleStatus === 'published' ? new Date() : null;
-    console.log("[WhatsApp Agent] 📝 Article status:", articleStatus);
-    console.log("[WhatsApp Agent] 📝 Auto-publish:", whatsappToken.autoPublish);
+    const articleStatus = whatsappToken.autoPublish ? 'published' : 'draft';
 
     const article = await storage.createArticle({
       title: aiResult.optimized.title,
@@ -516,7 +498,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
       categoryId: category?.id || null,
       authorId: whatsappToken.userId,
       status: articleStatus,
-      publishedAt,
+      publishedAt: articleStatus === 'published' ? new Date() : null,
       source: 'whatsapp',
       sourceMetadata: {
         type: 'whatsapp',
@@ -536,52 +518,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
 
     await storage.updateWhatsappTokenUsage(whatsappToken.id);
-
-    // ============================================
-    // 📢 STAFF NOTIFICATIONS
-    // ============================================
-    // Broadcast notification to staff when article is auto-published
-    if (whatsappToken.autoPublish && article) {
-      try {
-        console.log("[WhatsApp Agent] 📢 Broadcasting notification to staff about published article...");
-        
-        const detectedLanguage = aiResult.language;
-        let notificationTitle: string;
-        let notificationBody: string;
-        
-        if (detectedLanguage === "en") {
-          notificationTitle = "New Article Published";
-          notificationBody = `A new article has been published via WhatsApp: ${article.title}`;
-        } else if (detectedLanguage === "ur") {
-          notificationTitle = "نیا مضمون شائع ہوا";
-          notificationBody = `واٹس ایپ کے ذریعے نیا مضمون شائع کیا گیا: ${article.title}`;
-        } else {
-          // Default to Arabic
-          notificationTitle = "مقال جديد";
-          notificationBody = `تم نشر مقال جديد عبر واتساب: ${article.title}`;
-        }
-        
-        await storage.broadcastNotificationToStaff({
-          type: "article_published",
-          title: notificationTitle,
-          body: notificationBody,
-          deeplink: `/articles/${slug}`,
-          metadata: {
-            articleId: article.id,
-            articleSlug: slug,
-            language: detectedLanguage,
-            articleTitle: article.title,
-            publishedAt: publishedAt?.toISOString() || null,
-            status: articleStatus,
-            imageUrl: article.imageUrl || null,
-          }
-        });
-        
-        console.log("[WhatsApp Agent] ✅ Staff notification sent successfully");
-      } catch (notificationError) {
-        console.error("[WhatsApp Agent] ⚠️ Failed to send staff notification:", notificationError);
-      }
-    }
 
     // ✅ UPDATE THE LOG WITH SUCCESS STATUS, ARTICLE LINK, AND PUBLISH STATUS
     await storage.updateWhatsappWebhookLog(webhookLog.id, {
@@ -603,7 +539,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       processingTimeMs: Date.now() - startTime,
     });
 
-    // Prepare reply message based on article status
     const replyMessage = articleStatus === 'published'
       ? `✅ تم نشر الخبر\nhttps://sabq.news/article/${slug}`
       : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;

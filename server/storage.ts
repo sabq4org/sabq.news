@@ -298,16 +298,6 @@ import {
   type InsertWhatsappToken,
   type WhatsappWebhookLog,
   type InsertWhatsappWebhookLog,
-  publishers,
-  publisherCredits,
-  publisherActivityLogs,
-  type Publisher,
-  type InsertPublisher,
-  type PublisherCredit,
-  type InsertPublisherCredit,
-  type PublisherActivityLog,
-  type InsertPublisherActivityLog,
-  type PublisherWithDetails,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -3318,20 +3308,13 @@ export class DatabaseStorage implements IStorage {
       seo: row.seo,
       seoMetadata: row.seo_metadata || null,
       publishedAt: row.published_at,
-      createdAt: row.updated_at,
+      createdAt: row.created_at,
       updatedAt: row.updated_at,
       credibilityScore: row.credibility_score || null,
       credibilityAnalysis: row.credibility_analysis || null,
       credibilityLastUpdated: row.credibility_last_updated || null,
       source: row.source || 'manual',
       sourceMetadata: row.source_metadata || null,
-
-      publisherId: row.publisher_id ?? null,
-      publisherStatus: row.publisher_status ?? null,
-      publisherSubmittedAt: row.publisher_submitted_at ?? null,
-      publisherReviewedBy: row.publisher_reviewed_by ?? null,
-      publisherReviewedAt: row.publisher_reviewed_at ?? null,
-      publisherReviewNotes: row.publisher_review_notes ?? null,
       category: row.category_id ? {
         id: row.category_id,
         nameAr: row.category_name_ar,
@@ -3631,13 +3614,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: row.credibility_last_updated || null,
       source: row.source || 'manual',
       sourceMetadata: row.source_metadata || null,
-
-      publisherId: row.publisher_id ?? null,
-      publisherStatus: row.publisher_status ?? null,
-      publisherSubmittedAt: row.publisher_submitted_at ?? null,
-      publisherReviewedBy: row.publisher_reviewed_by ?? null,
-      publisherReviewedAt: row.publisher_reviewed_at ?? null,
-      publisherReviewNotes: row.publisher_review_notes ?? null,
       category: row.category_id ? {
         id: row.category_id,
         nameAr: row.category_name_ar,
@@ -3813,13 +3789,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-
-      publisherId: null,
-      publisherStatus: null,
-      publisherSubmittedAt: null,
-      publisherReviewedBy: null,
-      publisherReviewedAt: null,
-      publisherReviewNotes: null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -3914,13 +3883,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-
-      publisherId: null,
-      publisherStatus: null,
-      publisherSubmittedAt: null,
-      publisherReviewedBy: null,
-      publisherReviewedAt: null,
-      publisherReviewNotes: null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4016,13 +3978,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-
-      publisherId: null,
-      publisherStatus: null,
-      publisherSubmittedAt: null,
-      publisherReviewedBy: null,
-      publisherReviewedAt: null,
-      publisherReviewNotes: null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4117,13 +4072,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-
-      publisherId: null,
-      publisherStatus: null,
-      publisherSubmittedAt: null,
-      publisherReviewedBy: null,
-      publisherReviewedAt: null,
-      publisherReviewNotes: null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4217,13 +4165,6 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-
-      publisherId: null,
-      publisherStatus: null,
-      publisherSubmittedAt: null,
-      publisherReviewedBy: null,
-      publisherReviewedAt: null,
-      publisherReviewNotes: null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4443,15 +4384,6 @@ export class DatabaseStorage implements IStorage {
       credibilityScore: r.article.credibilityScore || null,
       credibilityAnalysis: r.article.credibilityAnalysis || null,
       credibilityLastUpdated: r.article.credibilityLastUpdated || null,
-      source: r.article.source || 'manual',
-      sourceMetadata: r.article.sourceMetadata || null,
-
-      publisherId: r.article.publisherId ?? null,
-      publisherStatus: r.article.publisherStatus ?? null,
-      publisherSubmittedAt: r.article.publisherSubmittedAt ?? null,
-      publisherReviewedBy: r.article.publisherReviewedBy ?? null,
-      publisherReviewedAt: r.article.publisherReviewedAt ?? null,
-      publisherReviewNotes: r.article.publisherReviewNotes ?? null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -4491,15 +4423,6 @@ export class DatabaseStorage implements IStorage {
       credibilityScore: r.article.credibilityScore || null,
       credibilityAnalysis: r.article.credibilityAnalysis || null,
       credibilityLastUpdated: r.article.credibilityLastUpdated || null,
-      source: r.article.source || 'manual',
-      sourceMetadata: r.article.sourceMetadata || null,
-
-      publisherId: r.article.publisherId ?? null,
-      publisherStatus: r.article.publisherStatus ?? null,
-      publisherSubmittedAt: r.article.publisherSubmittedAt ?? null,
-      publisherReviewedBy: r.article.publisherReviewedBy ?? null,
-      publisherReviewedAt: r.article.publisherReviewedAt ?? null,
-      publisherReviewNotes: r.article.publisherReviewNotes ?? null,
       category: r.category || undefined,
       author: r.author || undefined,
     }));
@@ -12540,653 +12463,6 @@ export class DatabaseStorage implements IStorage {
         notificationBus.emit(userId, notification);
       }
     });
-  }
-
-  // ============================================
-  // PUBLISHER SYSTEM OPERATIONS
-  // ============================================
-
-  // 1. Publishers CRUD
-  async createPublisher(data: InsertPublisher): Promise<Publisher> {
-    const [publisher] = await db
-      .insert(publishers)
-      .values({
-        ...data,
-        id: nanoid(),
-      })
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: publisher.id,
-      action: 'created',
-      performedBy: data.userId,
-      details: `Publisher "${data.agencyName}" created`,
-    });
-
-    return publisher;
-  }
-
-  async getPublisherById(id: string): Promise<Publisher | undefined> {
-    const [publisher] = await db
-      .select()
-      .from(publishers)
-      .where(eq(publishers.id, id));
-
-    return publisher;
-  }
-
-  async getPublisherByUserId(userId: string): Promise<Publisher | undefined> {
-    const [publisher] = await db
-      .select()
-      .from(publishers)
-      .where(eq(publishers.userId, userId));
-
-    return publisher;
-  }
-
-  async getPublisherByEmail(email: string): Promise<Publisher | undefined> {
-    if (!email) return undefined;
-    
-    const normalizedEmail = email.toLowerCase().trim();
-    
-    const [result] = await db
-      .select({
-        publisher: publishers,
-        user: users,
-      })
-      .from(publishers)
-      .innerJoin(users, eq(publishers.userId, users.id))
-      .where(eq(users.email, normalizedEmail));
-
-    return result?.publisher;
-  }
-
-  async getPublisherByPhone(phone: string): Promise<Publisher | undefined> {
-    if (!phone) return undefined;
-    
-    const normalizedPhone = this.normalizePhoneNumber(phone);
-    
-    // Search in both publishers.phone AND users.phone for flexibility
-    const [result] = await db
-      .select({
-        publisher: publishers,
-        user: users,
-      })
-      .from(publishers)
-      .innerJoin(users, eq(publishers.userId, users.id))
-      .where(
-        or(
-          eq(publishers.phone, normalizedPhone),
-          eq(users.phone, normalizedPhone)
-        )!
-      );
-
-    return result?.publisher;
-  }
-
-  normalizePhoneNumber(phone: string): string {
-    let cleaned = phone.replace(/\D/g, '');
-    
-    if (cleaned.startsWith('00')) {
-      cleaned = '+' + cleaned.substring(2);
-    } else if (!cleaned.startsWith('+')) {
-      cleaned = '+' + cleaned;
-    }
-    
-    return cleaned;
-  }
-
-  async getAllPublishers(filters?: {
-    isActive?: boolean;
-    searchQuery?: string;
-  }): Promise<Publisher[]> {
-    const conditions = [];
-
-    if (filters?.isActive !== undefined) {
-      conditions.push(eq(publishers.isActive, filters.isActive));
-    }
-
-    if (filters?.searchQuery) {
-      conditions.push(
-        or(
-          ilike(publishers.agencyName, `%${filters.searchQuery}%`),
-          ilike(publishers.contactPerson, `%${filters.searchQuery}%`),
-          ilike(publishers.email, `%${filters.searchQuery}%`)
-        )!
-      );
-    }
-
-    return await db
-      .select()
-      .from(publishers)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(publishers.createdAt));
-  }
-
-  async getPublisherWithDetails(publisherId: string): Promise<PublisherWithDetails | undefined> {
-    const [publisher] = await db
-      .select()
-      .from(publishers)
-      .where(eq(publishers.id, publisherId));
-
-    if (!publisher) return undefined;
-
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, publisher.userId));
-
-    const credits = await db
-      .select()
-      .from(publisherCredits)
-      .where(eq(publisherCredits.publisherId, publisherId));
-
-    const activeCredits = credits.filter(c => c.isActive);
-    const totalCredits = activeCredits.reduce((sum, c) => sum + c.totalCredits, 0);
-    const usedCredits = activeCredits.reduce((sum, c) => sum + c.usedCredits, 0);
-    const remainingCredits = totalCredits - usedCredits;
-
-    const publisherArticles = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.publisherId, publisherId));
-
-    const totalArticles = publisherArticles.length;
-    const publishedArticles = publisherArticles.filter(a => a.status === 'published').length;
-    const pendingArticles = publisherArticles.filter(a => a.publisherStatus === 'pending').length;
-
-    return {
-      ...publisher,
-      user,
-      totalCredits,
-      usedCredits,
-      remainingCredits,
-      activePackages: activeCredits.length,
-      totalArticles,
-      publishedArticles,
-      pendingArticles,
-    };
-  }
-
-  async updatePublisher(id: string, data: Partial<InsertPublisher>): Promise<Publisher> {
-    const [updated] = await db
-      .update(publishers)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(publishers.id, id))
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: id,
-      action: 'edited',
-      performedBy: data.userId,
-      details: 'Publisher information updated',
-    });
-
-    return updated;
-  }
-
-  async deletePublisher(id: string): Promise<void> {
-    await db
-      .delete(publishers)
-      .where(eq(publishers.id, id));
-  }
-
-  async togglePublisherStatus(id: string, isActive: boolean): Promise<Publisher> {
-    const [updated] = await db
-      .update(publishers)
-      .set({
-        isActive,
-        updatedAt: new Date(),
-      })
-      .where(eq(publishers.id, id))
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: id,
-      action: isActive ? 'activated' : 'deactivated',
-      details: `Publisher ${isActive ? 'activated' : 'deactivated'}`,
-    });
-
-    return updated;
-  }
-
-  // 2. Publisher Credits CRUD
-  async createPublisherCredit(data: InsertPublisherCredit): Promise<PublisherCredit> {
-    const [credit] = await db
-      .insert(publisherCredits)
-      .values({
-        ...data,
-        id: nanoid(),
-        remainingCredits: data.totalCredits,
-        usedCredits: 0,
-      })
-      .returning();
-
-    const balanceAfter = await this.getRemainingCredits(data.publisherId);
-
-    await this.createPublisherActivityLog({
-      publisherId: data.publisherId,
-      action: 'credit_added',
-      creditChange: data.totalCredits,
-      balanceBefore: balanceAfter - data.totalCredits,
-      balanceAfter,
-      performedBy: data.createdBy,
-      details: `Added ${data.totalCredits} credits via package: ${data.packageName}`,
-    });
-
-    return credit;
-  }
-
-  async getPublisherCredits(publisherId: string): Promise<PublisherCredit[]> {
-    return await db
-      .select()
-      .from(publisherCredits)
-      .where(eq(publisherCredits.publisherId, publisherId))
-      .orderBy(desc(publisherCredits.createdAt));
-  }
-
-  async getActivePublisherCredits(publisherId: string): Promise<PublisherCredit[]> {
-    const now = new Date();
-
-    return await db
-      .select()
-      .from(publisherCredits)
-      .where(
-        and(
-          eq(publisherCredits.publisherId, publisherId),
-          eq(publisherCredits.isActive, true),
-          or(
-            isNull(publisherCredits.expiryDate),
-            gte(publisherCredits.expiryDate, now)
-          )!,
-          sql`${publisherCredits.remainingCredits} > 0`
-        )!
-      )
-      .orderBy(asc(publisherCredits.expiryDate));
-  }
-
-  async updatePublisherCredit(id: string, data: Partial<InsertPublisherCredit>): Promise<PublisherCredit> {
-    const [updated] = await db
-      .update(publisherCredits)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(publisherCredits.id, id))
-      .returning();
-
-    return updated;
-  }
-
-  async deductCredit(publisherId: string, articleId: string, performedBy?: string): Promise<void> {
-    await db.transaction(async (tx) => {
-      const activeCredits = await tx
-        .select()
-        .from(publisherCredits)
-        .where(
-          and(
-            eq(publisherCredits.publisherId, publisherId),
-            eq(publisherCredits.isActive, true),
-            sql`${publisherCredits.remainingCredits} > 0`
-          )!
-        )
-        .orderBy(asc(publisherCredits.expiryDate))
-        .limit(1);
-
-      if (activeCredits.length === 0) {
-        throw new Error('No available credits');
-      }
-
-      const credit = activeCredits[0];
-
-      if (credit.expiryDate && credit.expiryDate < new Date()) {
-        throw new Error('Credit package has expired');
-      }
-
-      const balanceBefore = await this.getRemainingCredits(publisherId);
-
-      await tx
-        .update(publisherCredits)
-        .set({
-          usedCredits: sql`${publisherCredits.usedCredits} + 1`,
-          remainingCredits: sql`${publisherCredits.remainingCredits} - 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(publisherCredits.id, credit.id));
-
-      await tx.insert(publisherActivityLogs).values({
-        id: nanoid(),
-        publisherId,
-        articleId,
-        action: 'credit_deducted',
-        creditChange: -1,
-        balanceBefore,
-        balanceAfter: balanceBefore - 1,
-        performedBy,
-        details: 'Credit deducted for article publication',
-      });
-    });
-  }
-
-  async addCredit(publisherId: string, amount: number, reason: string, performedBy?: string): Promise<void> {
-    await db.transaction(async (tx) => {
-      await tx.insert(publisherCredits).values({
-        id: nanoid(),
-        publisherId,
-        packageName: 'Manual Addition',
-        totalCredits: amount,
-        usedCredits: 0,
-        remainingCredits: amount,
-        period: 'one-time',
-        startDate: new Date(),
-        isActive: true,
-        notes: reason,
-        createdBy: performedBy,
-      });
-
-      const balanceAfter = await this.getRemainingCredits(publisherId);
-
-      await tx.insert(publisherActivityLogs).values({
-        id: nanoid(),
-        publisherId,
-        action: 'credit_added',
-        creditChange: amount,
-        balanceBefore: balanceAfter - amount,
-        balanceAfter,
-        performedBy,
-        details: `Manually added ${amount} credits: ${reason}`,
-      });
-    });
-  }
-
-  async getRemainingCredits(publisherId: string): Promise<number> {
-    const activeCredits = await this.getActivePublisherCredits(publisherId);
-    return activeCredits.reduce((sum, credit) => sum + credit.remainingCredits, 0);
-  }
-
-  async checkCreditAvailability(publisherId: string): Promise<boolean> {
-    const remaining = await this.getRemainingCredits(publisherId);
-    return remaining > 0;
-  }
-
-  // 3. Publisher Activity Logs CRUD
-  async createPublisherActivityLog(data: InsertPublisherActivityLog): Promise<PublisherActivityLog> {
-    const [log] = await db
-      .insert(publisherActivityLogs)
-      .values({
-        ...data,
-        id: nanoid(),
-      })
-      .returning();
-
-    return log;
-  }
-
-  async getPublisherActivityLogs(
-    publisherId: string,
-    filters?: {
-      action?: string;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<PublisherActivityLog[]> {
-    const conditions = [eq(publisherActivityLogs.publisherId, publisherId)];
-
-    if (filters?.action) {
-      conditions.push(eq(publisherActivityLogs.action, filters.action));
-    }
-
-    const query = db
-      .select()
-      .from(publisherActivityLogs)
-      .where(and(...conditions))
-      .orderBy(desc(publisherActivityLogs.createdAt));
-
-    if (filters?.limit) {
-      query.limit(filters.limit);
-    }
-
-    if (filters?.offset) {
-      query.offset(filters.offset);
-    }
-
-    return await query;
-  }
-
-  async getPublisherStatistics(publisherId: string): Promise<{
-    totalArticles: number;
-    publishedArticles: number;
-    pendingArticles: number;
-    approvedArticles: number;
-    rejectedArticles: number;
-    revisionRequestedArticles: number;
-    totalCreditsUsed: number;
-    remainingCredits: number;
-  }> {
-    const publisherArticles = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.publisherId, publisherId));
-
-    const totalArticles = publisherArticles.length;
-    const publishedArticles = publisherArticles.filter(a => a.status === 'published').length;
-    const pendingArticles = publisherArticles.filter(a => a.publisherStatus === 'pending').length;
-    const approvedArticles = publisherArticles.filter(a => a.publisherStatus === 'approved').length;
-    const rejectedArticles = publisherArticles.filter(a => a.publisherStatus === 'rejected').length;
-    const revisionRequestedArticles = publisherArticles.filter(a => a.publisherStatus === 'revision_required').length;
-
-    const credits = await db
-      .select()
-      .from(publisherCredits)
-      .where(eq(publisherCredits.publisherId, publisherId));
-
-    const totalCreditsUsed = credits.reduce((sum, c) => sum + c.usedCredits, 0);
-    const remainingCredits = await this.getRemainingCredits(publisherId);
-
-    return {
-      totalArticles,
-      publishedArticles,
-      pendingArticles,
-      approvedArticles,
-      rejectedArticles,
-      revisionRequestedArticles,
-      totalCreditsUsed,
-      remainingCredits,
-    };
-  }
-
-  // 4. Publisher Articles
-  async getPublisherArticles(
-    publisherId: string,
-    filters?: {
-      status?: string;
-      publisherStatus?: string;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<ArticleWithDetails[]> {
-    const conditions = [eq(articles.publisherId, publisherId)];
-
-    if (filters?.status) {
-      conditions.push(eq(articles.status, filters.status));
-    }
-
-    if (filters?.publisherStatus) {
-      conditions.push(eq(articles.publisherStatus, filters.publisherStatus));
-    }
-
-    const query = db
-      .select()
-      .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .leftJoin(users, eq(articles.authorId, users.id))
-      .where(and(...conditions))
-      .orderBy(desc(articles.createdAt));
-
-    if (filters?.limit) {
-      query.limit(filters.limit);
-    }
-
-    if (filters?.offset) {
-      query.offset(filters.offset);
-    }
-
-    const results = await query;
-
-    return results.map(row => ({
-      ...row.articles,
-      category: row.categories || undefined,
-      author: row.users || undefined,
-    }));
-  }
-
-  async getPendingPublisherArticles(publisherId?: string): Promise<ArticleWithDetails[]> {
-    const conditions = [
-      eq(articles.publisherStatus, 'pending'),
-    ];
-
-    if (publisherId) {
-      conditions.push(eq(articles.publisherId, publisherId));
-    }
-
-    const results = await db
-      .select()
-      .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .leftJoin(users, eq(articles.authorId, users.id))
-      .leftJoin(publishers, eq(articles.publisherId, publishers.id))
-      .where(and(...conditions))
-      .orderBy(asc(articles.publisherSubmittedAt));
-
-    return results.map(row => ({
-      ...row.articles,
-      category: row.categories || undefined,
-      author: row.users || undefined,
-    }));
-  }
-
-  async approvePublisherArticle(
-    articleId: string,
-    reviewedBy: string,
-    notes?: string
-  ): Promise<Article> {
-    const [article] = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.id, articleId));
-
-    if (!article) {
-      throw new Error('Article not found');
-    }
-
-    if (!article.publisherId) {
-      throw new Error('Article is not from a publisher');
-    }
-
-    const [updated] = await db
-      .update(articles)
-      .set({
-        publisherStatus: 'approved',
-        publisherReviewedBy: reviewedBy,
-        publisherReviewedAt: new Date(),
-        publisherReviewNotes: notes,
-        status: 'published',
-      })
-      .where(eq(articles.id, articleId))
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: article.publisherId,
-      articleId,
-      action: 'approved',
-      performedBy: reviewedBy,
-      details: notes || 'Article approved for publication',
-    });
-
-    return updated;
-  }
-
-  async rejectPublisherArticle(
-    articleId: string,
-    reviewedBy: string,
-    notes: string
-  ): Promise<Article> {
-    const [article] = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.id, articleId));
-
-    if (!article) {
-      throw new Error('Article not found');
-    }
-
-    if (!article.publisherId) {
-      throw new Error('Article is not from a publisher');
-    }
-
-    const [updated] = await db
-      .update(articles)
-      .set({
-        publisherStatus: 'rejected',
-        publisherReviewedBy: reviewedBy,
-        publisherReviewedAt: new Date(),
-        publisherReviewNotes: notes,
-      })
-      .where(eq(articles.id, articleId))
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: article.publisherId,
-      articleId,
-      action: 'rejected',
-      performedBy: reviewedBy,
-      details: notes,
-    });
-
-    return updated;
-  }
-
-  async requestRevision(
-    articleId: string,
-    reviewedBy: string,
-    notes: string
-  ): Promise<Article> {
-    const [article] = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.id, articleId));
-
-    if (!article) {
-      throw new Error('Article not found');
-    }
-
-    if (!article.publisherId) {
-      throw new Error('Article is not from a publisher');
-    }
-
-    const [updated] = await db
-      .update(articles)
-      .set({
-        publisherStatus: 'revision_required',
-        publisherReviewedBy: reviewedBy,
-        publisherReviewedAt: new Date(),
-        publisherReviewNotes: notes,
-      })
-      .where(eq(articles.id, articleId))
-      .returning();
-
-    await this.createPublisherActivityLog({
-      publisherId: article.publisherId,
-      articleId,
-      action: 'revision_required',
-      performedBy: reviewedBy,
-      details: notes,
-    });
-
-    return updated;
   }
 }
 

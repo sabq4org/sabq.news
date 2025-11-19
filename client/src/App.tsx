@@ -33,9 +33,6 @@ import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
 import RolesManagement from "@/pages/RolesManagement";
-import PublishersList from "@/pages/admin/PublishersList";
-import PublisherDetail from "@/pages/admin/PublisherDetail";
-import PublisherReviewQueue from "@/pages/admin/PublisherReviewQueue";
 import Profile from "@/pages/Profile";
 import PublicProfile from "@/pages/PublicProfile";
 import DiscoverUsers from "@/pages/DiscoverUsers";
@@ -170,12 +167,6 @@ import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManage
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
 import ChatbotPage from "@/pages/ChatbotPage";
 import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
-import PublisherDashboard from "@/pages/publisher/Dashboard";
-import SubmitArticle from "@/pages/publisher/SubmitArticle";
-import MyArticles from "@/pages/publisher/MyArticles";
-import ActivityLogPage from "@/pages/publisher/ActivityLog";
-import { PublisherSidebar } from "@/components/PublisherSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -199,32 +190,6 @@ function VoiceCommandsManager() {
       open={showHelp} 
       onOpenChange={setShowHelp} 
     />
-  );
-}
-
-/**
- * PublisherLayout - Wrapper for publisher routes with sidebar
- */
-function PublisherLayout({ children }: { children: React.ReactNode }) {
-  const style = {
-    "--sidebar-width": "16rem",
-    "--sidebar-width-icon": "3rem",
-  };
-
-  return (
-    <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full">
-        <PublisherSidebar />
-        <div className="flex flex-col flex-1">
-          <header className="flex items-center justify-between p-2 border-b">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-          </header>
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
   );
 }
 
@@ -386,11 +351,6 @@ function Router() {
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       
-      {/* Publishers Management Routes */}
-      <Route path="/admin/publishers" component={PublishersList} />
-      <Route path="/admin/publishers/review" component={PublisherReviewQueue} />
-      <Route path="/admin/publishers/:id" component={PublisherDetail} />
-      
       {/* Advertising Dashboard - Arabic only */}
       <Route path="/dashboard/ads" component={AdvertiserDashboard} />
       <Route path="/dashboard/ads/campaigns" component={CampaignsList} />
@@ -466,28 +426,6 @@ function Router() {
       
       {/* Admin Routes */}
       <Route path="/admin/accessibility-insights" component={AccessibilityInsights} />
-      
-      {/* Publisher Routes */}
-      <Route path="/publisher/dashboard">
-        <PublisherLayout>
-          <PublisherDashboard />
-        </PublisherLayout>
-      </Route>
-      <Route path="/publisher/submit/:id?">
-        <PublisherLayout>
-          <SubmitArticle />
-        </PublisherLayout>
-      </Route>
-      <Route path="/publisher/articles">
-        <PublisherLayout>
-          <MyArticles />
-        </PublisherLayout>
-      </Route>
-      <Route path="/publisher/activity">
-        <PublisherLayout>
-          <ActivityLogPage />
-        </PublisherLayout>
-      </Route>
       
       <Route component={NotFound} />
     </Switch>

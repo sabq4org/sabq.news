@@ -1,7 +1,6 @@
 // Reference: javascript_log_in_with_replit blueprint
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
 
 export type User = {
   id: string;
@@ -12,7 +11,6 @@ export type User = {
   firstName?: string;
   lastName?: string;
   isProfileComplete?: boolean;
-  profileImageUrl?: string;
 };
 
 // Helper function to check if user has any of the specified roles
@@ -88,20 +86,10 @@ export function useAuth(options?: { redirectToLogin?: boolean }) {
     }
   }, [user, isLoading, isError, redirectToLogin]);
 
-  const logout = async () => {
-    await fetch("/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    queryClient.clear();
-    window.location.href = "/login";
-  };
-
   return {
     user,
     isLoading,
     isAuthenticated: !!user && !isError,
     isError,
-    logout,
   };
 }
