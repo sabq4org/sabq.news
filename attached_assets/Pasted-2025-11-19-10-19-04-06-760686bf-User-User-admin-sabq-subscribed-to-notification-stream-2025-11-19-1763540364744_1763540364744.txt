@@ -1,0 +1,80 @@
+2025-11-19 10:19:04.06
+760686bf
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 10:19:04.06
+760686bf
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-19 10:19:04.09
+760686bf
+User
+8:19:04 AM [express] GET /api/admin/users 304 in 201ms :: {"items":[{"id":"L-0ZBIzT2t-WKtWh3FXgK","n…
+2025-11-19 10:19:07.52
+760686bf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 10:19:07.55
+760686bf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 10:19:07.65
+760686bf
+User
+Error: Failed to sign object URL, errorcode: 401, make sure you're running on Replit
+2025-11-19 10:19:07.65
+760686bf
+User
+at async file:///home/runner/workspace/dist/index.js:32663:23
+2025-11-19 10:19:07.65
+760686bf
+User
+at async file:///home/runner/workspace/dist/index.js:32663:23
+2025-11-19 10:19:07.65
+760686bf
+User
+[Server] ❌ Unhandled Rejection at: Promise {
+2025-11-19 10:19:07.65
+760686bf
+User
+at signObjectURL (file:///home/runner/workspace/dist/index.js:12560:11)
+2025-11-19 10:19:07.65
+760686bf
+User
+} reason: Error: Failed to sign object URL, errorcode: 401, make sure you're running on Replit
+2025-11-19 10:19:07.65
+760686bf
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 10:19:07.65
+760686bf
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 10:19:07.65
+760686bf
+User
+at signObjectURL (file:///home/runner/workspace/dist/index.js:12560:11)
+2025-11-19 10:19:07.80
+760686bf
+System
+command finished with error [node dist/index.js]: exit status 1
+2025-11-19 10:19:10.53
+760686bf
+User
+🔗 Initializing database connection...
+2025-11-19 10:19:10.55
+760686bf
+User
+✅ Database connection initialized successfully
+2025-11-19 10:19:10.56
+760686bf
+User
+✅ WhatsApp service initialized { configured: true, whatsappNumber: '+1415523...' }
+2025-11-19 10:19:10.56
+760686bf
+User
+🔗 Frontend URL for email links: https://sabq.life
+2025-11-19 10:19:10.56
+760686bf
+User
+✅ SendGrid email service initialized
