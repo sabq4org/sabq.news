@@ -27053,6 +27053,876 @@ Allow: /
     }
   });
 
+  // ============================================================
+  // PUBLISHER SYSTEM ROUTES
+  // ============================================================
+
+  // Publisher middleware - تحقق من أن المستخدم ناشر نشط
+  const isPublisher = async (req: any, res: any, next: any) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+      
+      const publisher = await storage.getPublisherByUserId(req.user.id);
+      if (!publisher) {
+        return res.status(403).json({ message: "هذا الحساب ليس حساب ناشر" });
+      }
+      
+      if (!publisher.isActive) {
+        return res.status(403).json({ message: "حساب الناشر معطل" });
+      }
+      
+      req.publisher = publisher;
+      next();
+    } catch (error) {
+      console.error("Error verifying publisher:", error);
+      res.status(500).json({ message: "خطأ في التحقق من صلاحيات الناشر" });
+    }
+  };
+
+  // ============================================================
+  // 1. PUBLISHERS MANAGEMENT (Admin Only)
+  // ============================================================
+
+  // GET /api/admin/publishers - جلب كل الناشرين مع pagination
+  app.get("/api/admin/publishers", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.view_publishers'), async (req, res) => {
+    try {
+      const { page = '1', limit = '20', searchQuery, isActive } = req.query;
+      
+      const filters: any = {};
+      if (searchQuery) filters.searchQuery = searchQuery as string;
+      if (isActive !== undefined) filters.isActive = isActive === 'true';
+
+      const allPublishers = await storage.getAllPublishers(filters);
+      
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedPublishers = allPublishers.slice(startIndex, endIndex);
+      
+      // جلب تفاصيل إضافية لكل ناشر
+      const publishersWithDetails = await Promise.all(
+        paginatedPublishers.map(async (publisher) => {
+          const details = await storage.getPublisherWithDetails(publisher.id);
+          return details;
+        })
+      );
+
+      res.json({
+        publishers: publishersWithDetails,
+        total: allPublishers.length,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(allPublishers.length / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching publishers:", error);
+      res.status(500).json({ message: "فشل في جلب الناشرين" });
+    }
+  });
+
+  // GET /api/admin/publishers/:id - جلب ناشر بالتفاصيل
+  app.get("/api/admin/publishers/:id", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.view_publishers'), async (req, res) => {
+    try {
+      const publisherDetails = await storage.getPublisherWithDetails(req.params.id);
+      
+      if (!publisherDetails) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      res.json(publisherDetails);
+    } catch (error) {
+      console.error("Error fetching publisher:", error);
+      res.status(500).json({ message: "فشل في جلب بيانات الناشر" });
+    }
+  });
+
+  // POST /api/admin/publishers - إنشاء ناشر جديد
+  app.post("/api/admin/publishers", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const validatedData = insertPublisherSchema.parse(req.body);
+      
+      // التحقق من أن المستخدم موجود
+      const user = await storage.getUser(validatedData.userId);
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      // التحقق من عدم وجود ناشر آخر لنفس المستخدم
+      const existingPublisher = await storage.getPublisherByUserId(validatedData.userId);
+      if (existingPublisher) {
+        return res.status(400).json({ message: "هذا المستخدم لديه حساب ناشر بالفعل" });
+      }
+
+      const newPublisher = await storage.createPublisher(validatedData);
+
+      console.log(`Publisher created: ${newPublisher.agencyName} by admin ${req.user.id}`);
+      
+      res.status(201).json(newPublisher);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error creating publisher:", error);
+      res.status(500).json({ message: "فشل في إنشاء الناشر" });
+    }
+  });
+
+  // PUT /api/admin/publishers/:id - تحديث ناشر
+  app.put("/api/admin/publishers/:id", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const publisherId = req.params.id;
+      
+      // التحقق من وجود الناشر
+      const existingPublisher = await storage.getPublisherById(publisherId);
+      if (!existingPublisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const validatedData = insertPublisherSchema.partial().parse(req.body);
+      
+      const updatedPublisher = await storage.updatePublisher(publisherId, {
+        ...validatedData,
+        userId: req.user.id,
+      });
+
+      console.log(`Publisher updated: ${publisherId} by admin ${req.user.id}`);
+      
+      res.json(updatedPublisher);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error updating publisher:", error);
+      res.status(500).json({ message: "فشل في تحديث الناشر" });
+    }
+  });
+
+  // DELETE /api/admin/publishers/:id - حذف ناشر
+  app.delete("/api/admin/publishers/:id", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const publisherId = req.params.id;
+      
+      // التحقق من وجود الناشر
+      const existingPublisher = await storage.getPublisherById(publisherId);
+      if (!existingPublisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      await storage.deletePublisher(publisherId);
+
+      console.log(`Publisher deleted: ${publisherId} by admin ${req.user.id}`);
+      
+      res.json({ message: "تم حذف الناشر بنجاح" });
+    } catch (error) {
+      console.error("Error deleting publisher:", error);
+      res.status(500).json({ message: "فشل في حذف الناشر" });
+    }
+  });
+
+  // PATCH /api/admin/publishers/:id/toggle - تفعيل/تعطيل ناشر
+  app.patch("/api/admin/publishers/:id/toggle", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const publisherId = req.params.id;
+      const { isActive } = req.body;
+      
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: "يجب تحديد isActive كقيمة boolean" });
+      }
+
+      // التحقق من وجود الناشر
+      const existingPublisher = await storage.getPublisherById(publisherId);
+      if (!existingPublisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const updatedPublisher = await storage.togglePublisherStatus(publisherId, isActive);
+
+      console.log(`Publisher ${isActive ? 'activated' : 'deactivated'}: ${publisherId} by admin ${req.user.id}`);
+      
+      res.json(updatedPublisher);
+    } catch (error) {
+      console.error("Error toggling publisher status:", error);
+      res.status(500).json({ message: "فشل في تغيير حالة الناشر" });
+    }
+  });
+
+  // ============================================================
+  // 2. PUBLISHER CREDITS MANAGEMENT
+  // ============================================================
+
+  // GET /api/admin/publishers/:publisherId/credits - جلب باقات ناشر
+  app.get("/api/admin/publishers/:publisherId/credits", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.view_publishers'), async (req, res) => {
+    try {
+      const { publisherId } = req.params;
+      
+      // التحقق من وجود الناشر
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const credits = await storage.getPublisherCredits(publisherId);
+      
+      res.json(credits);
+    } catch (error) {
+      console.error("Error fetching publisher credits:", error);
+      res.status(500).json({ message: "فشل في جلب باقات الناشر" });
+    }
+  });
+
+  // POST /api/admin/publishers/:publisherId/credits - إنشاء باقة جديدة
+  app.post("/api/admin/publishers/:publisherId/credits", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const { publisherId } = req.params;
+      
+      // التحقق من وجود الناشر
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const validatedData = insertPublisherCreditSchema.parse({
+        ...req.body,
+        publisherId,
+        createdBy: req.user.id,
+      });
+
+      const newCredit = await storage.createPublisherCredit(validatedData);
+
+      console.log(`Credit package created for publisher ${publisherId}: ${validatedData.totalCredits} credits by admin ${req.user.id}`);
+      
+      res.status(201).json(newCredit);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error creating publisher credit:", error);
+      res.status(500).json({ message: "فشل في إنشاء باقة الرصيد" });
+    }
+  });
+
+  // PUT /api/admin/publishers/:publisherId/credits/:creditId - تحديث باقة
+  app.put("/api/admin/publishers/:publisherId/credits/:creditId", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const { publisherId, creditId } = req.params;
+      
+      // التحقق من وجود الناشر
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const validatedData = insertPublisherCreditSchema.partial().parse(req.body);
+      
+      const updatedCredit = await storage.updatePublisherCredit(creditId, validatedData);
+
+      console.log(`Credit package updated: ${creditId} for publisher ${publisherId} by admin ${req.user.id}`);
+      
+      res.json(updatedCredit);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error updating publisher credit:", error);
+      res.status(500).json({ message: "فشل في تحديث باقة الرصيد" });
+    }
+  });
+
+  // GET /api/admin/publishers/:publisherId/credits/remaining - جلب الرصيد المتبقي
+  app.get("/api/admin/publishers/:publisherId/credits/remaining", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.view_publishers'), async (req, res) => {
+    try {
+      const { publisherId } = req.params;
+      
+      // التحقق من وجود الناشر
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const remainingCredits = await storage.getRemainingCredits(publisherId);
+      const activeCredits = await storage.getActivePublisherCredits(publisherId);
+      
+      res.json({
+        remainingCredits,
+        activePackagesCount: activeCredits.length,
+        activePackages: activeCredits,
+      });
+    } catch (error) {
+      console.error("Error fetching remaining credits:", error);
+      res.status(500).json({ message: "فشل في جلب الرصيد المتبقي" });
+    }
+  });
+
+  // ============================================================
+  // 3. PUBLISHER ARTICLES REVIEW (Admin)
+  // ============================================================
+
+  // GET /api/admin/publisher-articles - جلب الأخبار المعلقة للمراجعة
+  app.get("/api/admin/publisher-articles", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.review_articles'), async (req, res) => {
+    try {
+      const { status = 'pending', page = '1', limit = '20' } = req.query;
+      
+      const allArticles = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          content: articles.content,
+          excerpt: articles.excerpt,
+          imageUrl: articles.imageUrl,
+          publisherId: articles.publisherId,
+          publisherStatus: articles.publisherStatus,
+          publisherReviewedBy: articles.publisherReviewedBy,
+          publisherReviewedAt: articles.publisherReviewedAt,
+          publisherReviewNotes: articles.publisherReviewNotes,
+          status: articles.status,
+          createdAt: articles.createdAt,
+          updatedAt: articles.updatedAt,
+          author: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+          publisher: {
+            id: publishers.id,
+            agencyName: publishers.agencyName,
+            contactPerson: publishers.contactPerson,
+            isActive: publishers.isActive,
+          },
+        })
+        .from(articles)
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .leftJoin(publishers, eq(articles.publisherId, publishers.id))
+        .where(
+          and(
+            isNotNull(articles.publisherId),
+            status === 'all' ? undefined : eq(articles.publisherStatus, status as string)
+          )
+        )
+        .orderBy(desc(articles.createdAt));
+
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedArticles = allArticles.slice(startIndex, endIndex);
+
+      res.json({
+        articles: paginatedArticles,
+        total: allArticles.length,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(allArticles.length / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching publisher articles:", error);
+      res.status(500).json({ message: "فشل في جلب أخبار الناشرين" });
+    }
+  });
+
+  // GET /api/admin/publisher-articles/:articleId - جلب خبر للمراجعة
+  app.get("/api/admin/publisher-articles/:articleId", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.review_articles'), async (req, res) => {
+    try {
+      const { articleId } = req.params;
+      
+      const [article] = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          content: articles.content,
+          excerpt: articles.excerpt,
+          imageUrl: articles.imageUrl,
+          publisherId: articles.publisherId,
+          publisherStatus: articles.publisherStatus,
+          publisherReviewedBy: articles.publisherReviewedBy,
+          publisherReviewedAt: articles.publisherReviewedAt,
+          publisherReviewNotes: articles.publisherReviewNotes,
+          status: articles.status,
+          categoryId: articles.categoryId,
+          createdAt: articles.createdAt,
+          updatedAt: articles.updatedAt,
+          author: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+          publisher: {
+            id: publishers.id,
+            agencyName: publishers.agencyName,
+            contactPerson: publishers.contactPerson,
+            email: publishers.email,
+            phone: publishers.phone,
+            isActive: publishers.isActive,
+          },
+          category: {
+            id: categories.id,
+            nameAr: categories.nameAr,
+            nameEn: categories.nameEn,
+          },
+        })
+        .from(articles)
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .leftJoin(publishers, eq(articles.publisherId, publishers.id))
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .where(eq(articles.id, articleId));
+
+      if (!article) {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+
+      if (!article.publisherId) {
+        return res.status(400).json({ message: "هذا الخبر ليس من ناشر" });
+      }
+
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching publisher article:", error);
+      res.status(500).json({ message: "فشل في جلب الخبر" });
+    }
+  });
+
+  // POST /api/admin/publisher-articles/:articleId/approve - الموافقة على خبر
+  app.post("/api/admin/publisher-articles/:articleId/approve", requireAuth, requirePermission('admin.review_articles'), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const { notes } = req.body;
+
+      // التحقق من وجود الخبر والناشر
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId));
+
+      if (!article) {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+
+      if (!article.publisherId) {
+        return res.status(400).json({ message: "هذا الخبر ليس من ناشر" });
+      }
+
+      // التحقق من وجود رصيد
+      const hasCredit = await storage.checkCreditAvailability(article.publisherId);
+      if (!hasCredit) {
+        return res.status(400).json({ message: "الناشر ليس لديه رصيد كافٍ" });
+      }
+
+      // الموافقة على الخبر (سيتم خصم الرصيد تلقائياً داخل الدالة)
+      const approvedArticle = await storage.approvePublisherArticle(
+        articleId,
+        req.user.id,
+        notes
+      );
+
+      // خصم رصيد
+      await storage.deductCredit(article.publisherId, articleId, req.user.id);
+
+      console.log(`Article approved: ${articleId} for publisher ${article.publisherId} by admin ${req.user.id}`);
+      
+      res.json({
+        message: "تمت الموافقة على الخبر ونشره بنجاح",
+        article: approvedArticle,
+      });
+    } catch (error) {
+      console.error("Error approving publisher article:", error);
+      if (error instanceof Error && error.message === 'No available credits') {
+        return res.status(400).json({ message: "الناشر ليس لديه رصيد كافٍ" });
+      }
+      res.status(500).json({ message: "فشل في الموافقة على الخبر" });
+    }
+  });
+
+  // POST /api/admin/publisher-articles/:articleId/reject - رفض خبر
+  app.post("/api/admin/publisher-articles/:articleId/reject", requireAuth, requirePermission('admin.review_articles'), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const { notes } = req.body;
+
+      if (!notes || notes.trim() === '') {
+        return res.status(400).json({ message: "يجب تقديم سبب الرفض" });
+      }
+
+      // رفض الخبر (لا يتم خصم الرصيد)
+      const rejectedArticle = await storage.rejectPublisherArticle(
+        articleId,
+        req.user.id,
+        notes
+      );
+
+      console.log(`Article rejected: ${articleId} by admin ${req.user.id}`);
+      
+      res.json({
+        message: "تم رفض الخبر",
+        article: rejectedArticle,
+      });
+    } catch (error) {
+      console.error("Error rejecting publisher article:", error);
+      if (error instanceof Error && error.message === 'Article not found') {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+      if (error instanceof Error && error.message === 'Article is not from a publisher') {
+        return res.status(400).json({ message: "هذا الخبر ليس من ناشر" });
+      }
+      res.status(500).json({ message: "فشل في رفض الخبر" });
+    }
+  });
+
+  // POST /api/admin/publisher-articles/:articleId/request-revision - طلب تعديل
+  app.post("/api/admin/publisher-articles/:articleId/request-revision", requireAuth, requirePermission('admin.review_articles'), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+      const { notes } = req.body;
+
+      if (!notes || notes.trim() === '') {
+        return res.status(400).json({ message: "يجب تقديم ملاحظات التعديل" });
+      }
+
+      // طلب تعديل (لا يتم خصم الرصيد)
+      const article = await storage.requestRevision(
+        articleId,
+        req.user.id,
+        notes
+      );
+
+      console.log(`Revision requested for article: ${articleId} by admin ${req.user.id}`);
+      
+      res.json({
+        message: "تم طلب التعديل",
+        article,
+      });
+    } catch (error) {
+      console.error("Error requesting revision:", error);
+      if (error instanceof Error && error.message === 'Article not found') {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+      if (error instanceof Error && error.message === 'Article is not from a publisher') {
+        return res.status(400).json({ message: "هذا الخبر ليس من ناشر" });
+      }
+      res.status(500).json({ message: "فشل في طلب التعديل" });
+    }
+  });
+
+  // ============================================================
+  // 4. PUBLISHER DASHBOARD
+  // ============================================================
+
+  // GET /api/publisher/profile - جلب ملف الناشر الحالي
+  app.get("/api/publisher/profile", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherDetails = await storage.getPublisherWithDetails(req.publisher.id);
+      
+      if (!publisherDetails) {
+        return res.status(404).json({ message: "بيانات الناشر غير موجودة" });
+      }
+
+      res.json(publisherDetails);
+    } catch (error) {
+      console.error("Error fetching publisher profile:", error);
+      res.status(500).json({ message: "فشل في جلب بيانات الناشر" });
+    }
+  });
+
+  // GET /api/publisher/dashboard - إحصائيات Dashboard
+  app.get("/api/publisher/dashboard", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherId = req.publisher.id;
+      
+      const statistics = await storage.getPublisherStatistics(publisherId);
+      const remainingCredits = await storage.getRemainingCredits(publisherId);
+      const activePackages = await storage.getActivePublisherCredits(publisherId);
+
+      res.json({
+        ...statistics,
+        remainingCredits,
+        activePackagesCount: activePackages.length,
+        canPublish: remainingCredits > 0,
+      });
+    } catch (error) {
+      console.error("Error fetching publisher dashboard:", error);
+      res.status(500).json({ message: "فشل في جلب إحصائيات لوحة التحكم" });
+    }
+  });
+
+  // GET /api/publisher/articles - جلب أخبار الناشر الحالي
+  app.get("/api/publisher/articles", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherId = req.publisher.id;
+      const { status, page = '1', limit = '20' } = req.query;
+
+      const filters: any = { publisherId };
+      if (status) filters.publisherStatus = status as string;
+
+      const allArticles = await storage.getPublisherArticles(filters);
+
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedArticles = allArticles.slice(startIndex, endIndex);
+
+      res.json({
+        articles: paginatedArticles,
+        total: allArticles.length,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(allArticles.length / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching publisher articles:", error);
+      res.status(500).json({ message: "فشل في جلب الأخبار" });
+    }
+  });
+
+  // GET /api/publisher/credits - جلب باقات الناشر الحالي
+  app.get("/api/publisher/credits", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherId = req.publisher.id;
+      
+      const credits = await storage.getPublisherCredits(publisherId);
+      const remainingCredits = await storage.getRemainingCredits(publisherId);
+      const activePackages = await storage.getActivePublisherCredits(publisherId);
+
+      res.json({
+        credits,
+        remainingCredits,
+        activePackagesCount: activePackages.length,
+      });
+    } catch (error) {
+      console.error("Error fetching publisher credits:", error);
+      res.status(500).json({ message: "فشل في جلب باقات الرصيد" });
+    }
+  });
+
+  // POST /api/publisher/articles - رفع خبر جديد
+  app.post("/api/publisher/articles", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherId = req.publisher.id;
+      
+      // التحقق من وجود رصيد
+      const hasCredit = await storage.checkCreditAvailability(publisherId);
+      if (!hasCredit) {
+        return res.status(400).json({ 
+          message: "ليس لديك رصيد كافٍ. يرجى التواصل مع الإدارة لشراء باقة جديدة",
+          remainingCredits: 0,
+        });
+      }
+
+      const validatedData = insertArticleSchema.parse({
+        ...req.body,
+        authorId: req.user.id,
+        publisherId,
+        publisherStatus: 'pending', // دائماً pending عند الإنشاء
+        status: 'draft', // يبقى draft حتى الموافقة
+      });
+
+      const newArticle = await storage.createArticle(validatedData);
+
+      // سجل في activity logs
+      await storage.createPublisherActivityLog({
+        publisherId,
+        articleId: newArticle.id,
+        action: 'created',
+        performedBy: req.user.id,
+        details: `Article created: ${newArticle.title}`,
+      });
+
+      console.log(`Article created by publisher ${publisherId}: ${newArticle.id}`);
+      
+      res.status(201).json({
+        message: "تم رفع الخبر بنجاح. في انتظار المراجعة",
+        article: newArticle,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error creating publisher article:", error);
+      res.status(500).json({ message: "فشل في رفع الخبر" });
+    }
+  });
+
+  // PUT /api/publisher/articles/:id - تعديل خبر (فقط draft)
+  app.put("/api/publisher/articles/:id", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const publisherId = req.publisher.id;
+
+      // التحقق من ملكية الخبر
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, id));
+
+      if (!article) {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+
+      if (article.publisherId !== publisherId) {
+        return res.status(403).json({ message: "غير مصرح لك بتعديل هذا الخبر" });
+      }
+
+      // يمكن التعديل فقط إذا كان draft أو revision_required
+      if (article.publisherStatus !== 'draft' && article.publisherStatus !== 'revision_required') {
+        return res.status(400).json({ 
+          message: "لا يمكن تعديل الخبر بعد إرساله للمراجعة",
+          currentStatus: article.publisherStatus,
+        });
+      }
+
+      const validatedData = insertArticleSchema.partial().parse(req.body);
+      
+      const updatedArticle = await storage.updateArticle(id, validatedData);
+
+      // سجل في activity logs
+      await storage.createPublisherActivityLog({
+        publisherId,
+        articleId: id,
+        action: 'edited',
+        performedBy: req.user.id,
+        details: 'Article updated',
+      });
+
+      console.log(`Article updated by publisher ${publisherId}: ${id}`);
+      
+      res.json({
+        message: "تم تحديث الخبر بنجاح",
+        article: updatedArticle,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      console.error("Error updating publisher article:", error);
+      res.status(500).json({ message: "فشل في تحديث الخبر" });
+    }
+  });
+
+  // DELETE /api/publisher/articles/:id - حذف خبر (فقط draft)
+  app.delete("/api/publisher/articles/:id", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const publisherId = req.publisher.id;
+
+      // التحقق من ملكية الخبر
+      const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, id));
+
+      if (!article) {
+        return res.status(404).json({ message: "الخبر غير موجود" });
+      }
+
+      if (article.publisherId !== publisherId) {
+        return res.status(403).json({ message: "غير مصرح لك بحذف هذا الخبر" });
+      }
+
+      // يمكن الحذف فقط إذا كان draft
+      if (article.publisherStatus !== 'draft') {
+        return res.status(400).json({ 
+          message: "لا يمكن حذف الخبر بعد إرساله للمراجعة",
+          currentStatus: article.publisherStatus,
+        });
+      }
+
+      await storage.deleteArticle(id);
+
+      // سجل في activity logs
+      await storage.createPublisherActivityLog({
+        publisherId,
+        articleId: id,
+        action: 'deleted',
+        performedBy: req.user.id,
+        details: 'Article deleted',
+      });
+
+      console.log(`Article deleted by publisher ${publisherId}: ${id}`);
+      
+      res.json({ message: "تم حذف الخبر بنجاح" });
+    } catch (error) {
+      console.error("Error deleting publisher article:", error);
+      res.status(500).json({ message: "فشل في حذف الخبر" });
+    }
+  });
+
+  // ============================================================
+  // 5. PUBLISHER ACTIVITY LOGS
+  // ============================================================
+
+  // GET /api/admin/publishers/:publisherId/logs - سجل نشاط ناشر (للأدمن)
+  app.get("/api/admin/publishers/:publisherId/logs", requireAuth, requireAnyPermission('admin.manage_publishers', 'admin.view_publishers'), async (req, res) => {
+    try {
+      const { publisherId } = req.params;
+      const { page = '1', limit = '50' } = req.query;
+
+      // التحقق من وجود الناشر
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "الناشر غير موجود" });
+      }
+
+      const allLogs = await storage.getPublisherActivityLogs(publisherId);
+
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedLogs = allLogs.slice(startIndex, endIndex);
+
+      res.json({
+        logs: paginatedLogs,
+        total: allLogs.length,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(allLogs.length / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching publisher activity logs:", error);
+      res.status(500).json({ message: "فشل في جلب سجل النشاط" });
+    }
+  });
+
+  // GET /api/publisher/logs - سجل نشاط الناشر الحالي
+  app.get("/api/publisher/logs", requireAuth, isPublisher, async (req: any, res) => {
+    try {
+      const publisherId = req.publisher.id;
+      const { page = '1', limit = '50' } = req.query;
+
+      const allLogs = await storage.getPublisherActivityLogs(publisherId);
+
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedLogs = allLogs.slice(startIndex, endIndex);
+
+      res.json({
+        logs: paginatedLogs,
+        total: allLogs.length,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(allLogs.length / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching publisher activity logs:", error);
+      res.status(500).json({ message: "فشل في جلب سجل النشاط" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
