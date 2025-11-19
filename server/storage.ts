@@ -3325,7 +3325,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: row.credibility_last_updated || null,
       source: row.source || 'manual',
       sourceMetadata: row.source_metadata || null,
-      isPublisherContent: row.is_publisher_content ?? false,
+
       publisherId: row.publisher_id ?? null,
       publisherStatus: row.publisher_status ?? null,
       publisherSubmittedAt: row.publisher_submitted_at ?? null,
@@ -3631,7 +3631,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: row.credibility_last_updated || null,
       source: row.source || 'manual',
       sourceMetadata: row.source_metadata || null,
-      isPublisherContent: row.is_publisher_content ?? false,
+
       publisherId: row.publisher_id ?? null,
       publisherStatus: row.publisher_status ?? null,
       publisherSubmittedAt: row.publisher_submitted_at ?? null,
@@ -3813,7 +3813,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-      isPublisherContent: false,
+
       publisherId: null,
       publisherStatus: null,
       publisherSubmittedAt: null,
@@ -3914,7 +3914,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-      isPublisherContent: false,
+
       publisherId: null,
       publisherStatus: null,
       publisherSubmittedAt: null,
@@ -4016,7 +4016,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-      isPublisherContent: false,
+
       publisherId: null,
       publisherStatus: null,
       publisherSubmittedAt: null,
@@ -4117,7 +4117,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-      isPublisherContent: false,
+
       publisherId: null,
       publisherStatus: null,
       publisherSubmittedAt: null,
@@ -4217,7 +4217,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: null,
       source: r.source || 'manual',
       sourceMetadata: null,
-      isPublisherContent: false,
+
       publisherId: null,
       publisherStatus: null,
       publisherSubmittedAt: null,
@@ -4445,7 +4445,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       source: r.article.source || 'manual',
       sourceMetadata: r.article.sourceMetadata || null,
-      isPublisherContent: r.article.isPublisherContent ?? false,
+
       publisherId: r.article.publisherId ?? null,
       publisherStatus: r.article.publisherStatus ?? null,
       publisherSubmittedAt: r.article.publisherSubmittedAt ?? null,
@@ -4493,7 +4493,7 @@ export class DatabaseStorage implements IStorage {
       credibilityLastUpdated: r.article.credibilityLastUpdated || null,
       source: r.article.source || 'manual',
       sourceMetadata: r.article.sourceMetadata || null,
-      isPublisherContent: r.article.isPublisherContent ?? false,
+
       publisherId: r.article.publisherId ?? null,
       publisherStatus: r.article.publisherStatus ?? null,
       publisherSubmittedAt: r.article.publisherSubmittedAt ?? null,
@@ -13045,7 +13045,6 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingPublisherArticles(publisherId?: string): Promise<ArticleWithDetails[]> {
     const conditions = [
-      eq(articles.isPublisherContent, true),
       eq(articles.publisherStatus, 'pending'),
     ];
 

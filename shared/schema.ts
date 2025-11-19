@@ -742,8 +742,7 @@ export const articles = pgTable("articles", {
     webhookLogId?: string;
   }>(),
   
-  // Publisher fields
-  isPublisherContent: boolean("is_publisher_content").default(false).notNull(), // Is this from a publisher?
+  // Publisher fields (nullable - for Publisher Management UI only, not used by Email/WhatsApp agents)
   publisherId: varchar("publisher_id"), // Will add FK after publishers table is defined
   publisherStatus: text("publisher_status"), // pending, approved, rejected, revision_required
   publisherSubmittedAt: timestamp("publisher_submitted_at"),
