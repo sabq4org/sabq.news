@@ -2256,7 +2256,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
 
     return results.map((r) => ({
       ...r.article,
@@ -3739,7 +3739,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.views))
+      .orderBy(desc(articles.publishedAt), desc(articles.views))
       .limit(3);
 
     return results.map((r) => ({
@@ -3833,7 +3833,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
+      .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -3927,7 +3927,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
+      .orderBy(desc(articles.publishedAt))
       .limit(limit)
       .offset(offset);
 
@@ -4022,7 +4022,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.views), desc(articles.publishedAt))
+      .orderBy(desc(articles.publishedAt), desc(articles.views))
       .limit(limit);
 
     return results.map((r) => ({
@@ -4115,7 +4115,7 @@ export class DatabaseStorage implements IStorage {
           ne(articles.articleType, 'opinion')
         )
       ))
-      .orderBy(desc(articles.displayOrder), desc(articles.createdAt))
+      .orderBy(desc(articles.publishedAt), desc(articles.createdAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -9093,7 +9093,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(shorts.categoryId, categories.id))
       .leftJoin(users, eq(shorts.reporterId, users.id))
       .where(whereClause)
-      .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt), desc(shorts.createdAt))
+      .orderBy(desc(shorts.publishedAt), desc(shorts.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -9376,7 +9376,7 @@ export class DatabaseStorage implements IStorage {
           eq(shorts.isFeatured, true)
         )
       )
-      .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt))
+      .orderBy(desc(shorts.publishedAt))
       .limit(limit);
 
     return results.map(r => ({
