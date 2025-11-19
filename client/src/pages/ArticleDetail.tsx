@@ -942,7 +942,7 @@ export default function ArticleDetail() {
             {/* Smart Summary - TailAdmin Style */}
             {(article.aiSummary || article.excerpt) && (
               <Collapsible open={isSummaryExpanded} onOpenChange={setIsSummaryExpanded}>
-                <div className="bg-card border rounded-lg p-6 space-y-4">
+                <div className="bg-muted/50 border rounded-lg p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
