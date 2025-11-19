@@ -1,0 +1,105 @@
+2025-11-19 19:45:05.17
+b021a8cf
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-19 19:45:05.17
+b021a8cf
+User
+📡 SSE connection closed for user: admin-sabq
+
+2025-11-19 19:45:05.20
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:05.22
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:05.58
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:05.59
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:05.61
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:05.61
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:05.99
+b021a8cf
+User
+[WhatsApp Agent] ============ WEBHOOK START ============
+2025-11-19 19:45:05.99
+b021a8cf
+User
+[WhatsApp Agent] 🔐 PRODUCTION MODE - Validating Twilio signature...
+2025-11-19 19:45:05.99
+b021a8cf
+User
+[WhatsApp Agent] ❌ Invalid Twilio signature
+2025-11-19 19:45:06.02
+b021a8cf
+User
+5:45:06 PM [express] POST /api/whatsapp/webhook 200 in 30ms :: {"success":false,"error":"Invalid req…
+2025-11-19 19:45:06.10
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:06.10
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:06.12
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:06.12
+b021a8cf
+User
+isAuthenticated: true,
+2025-11-19 19:45:06.12
+b021a8cf
+User
+userId: 'admin-sabq',
+2025-11-19 19:45:06.12
+b021a8cf
+User
+sessionID: 'Qlf-jQIQTs8yegs_nC_Mw_-aps5CoMQd'
+2025-11-19 19:45:06.12
+b021a8cf
+User
+🔍 /api/auth/user check: {
+2025-11-19 19:45:06.12
+b021a8cf
+User
+hasUser: true,
+2025-11-19 19:45:06.12
+b021a8cf
+User
+}
+2025-11-19 19:45:06.12
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:06.13
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 19:45:06.15
+b021a8cf
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 19:45:06.19
+b021a8cf
+User
+5:45:06 PM [express] GET /api/auth/user 304 in 110ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-19 19:45:06.46
+b021a8cf
+User
+🔸 DeserializeUser called with id: admin-sabq
