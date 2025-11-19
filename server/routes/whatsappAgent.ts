@@ -526,7 +526,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
       tokenId: whatsappToken.id,
       token: token,
       articleId: article.id,
-      articleLink: `https://sabq.life/article/${slug}`,
+      articleLink: `https://sabq.news/article/${slug}`,
       publishStatus: articleStatus,
       qualityScore: aiResult.qualityScore,
       aiAnalysis: {
@@ -540,7 +540,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     });
 
     const replyMessage = articleStatus === 'published'
-      ? `✅ تم نشر الخبر\nhttps://sabq.life/article/${slug}`
+      ? `✅ تم نشر الخبر\nhttps://sabq.news/article/${slug}`
       : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;
 
     try {
