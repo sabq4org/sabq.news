@@ -741,6 +741,16 @@ export const articles = pgTable("articles", {
     originalMessage?: string;
     webhookLogId?: string;
   }>(),
+  
+  // Publisher fields
+  isPublisherContent: boolean("is_publisher_content").default(false).notNull(), // Is this from a publisher?
+  publisherId: varchar("publisher_id"), // Will add FK after publishers table is defined
+  publisherStatus: text("publisher_status"), // pending, approved, rejected, revision_required
+  publisherSubmittedAt: timestamp("publisher_submitted_at"),
+  publisherReviewedBy: varchar("publisher_reviewed_by").references(() => users.id),
+  publisherReviewedAt: timestamp("publisher_reviewed_at"),
+  publisherReviewNotes: text("publisher_review_notes"),
+  
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -6723,6 +6733,160 @@ export const insertAccessibilityEventSchema = createInsertSchema(accessibilityEv
 // Select types
 export type AccessibilityEvent = typeof accessibilityEvents.$inferSelect;
 export type InsertAccessibilityEvent = z.infer<typeof insertAccessibilityEventSchema>;
+
+// ============================================
+// PUBLISHER SYSTEM
+// ============================================
+
+// Publishers table (extends users)
+export const publishers = pgTable("publishers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull().unique(), // One-to-one with users
+  agencyName: text("agency_name").notNull(), // Name of the agency/organization
+  contactPerson: text("contact_person"), // Primary contact person
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  address: text("address"),
+  taxId: text("tax_id"), // Tax ID or business registration number
+  notes: text("notes"), // Internal notes
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_publishers_user_id").on(table.userId),
+  index("idx_publishers_active").on(table.isActive),
+]);
+
+// Publisher credits (packages)
+export const publisherCredits = pgTable("publisher_credits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: 'cascade' }).notNull(),
+  packageName: text("package_name").notNull(), // e.g., "20 Articles Package", "Monthly 50", etc.
+  totalCredits: integer("total_credits").notNull(), // Total articles purchased
+  usedCredits: integer("used_credits").default(0).notNull(), // Articles consumed
+  remainingCredits: integer("remaining_credits").notNull(), // Computed: totalCredits - usedCredits
+  period: text("period").notNull(), // monthly, quarterly, yearly, one-time
+  startDate: timestamp("start_date").notNull(),
+  expiryDate: timestamp("expiry_date"), // null for unlimited
+  isActive: boolean("is_active").default(true).notNull(),
+  price: real("price"), // Package price (optional)
+  currency: text("currency").default("SAR"), // SAR, USD, etc.
+  notes: text("notes"),
+  createdBy: varchar("created_by").references(() => users.id), // Admin who created this package
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_publisher_credits_publisher_id").on(table.publisherId),
+  index("idx_publisher_credits_active").on(table.isActive),
+  index("idx_publisher_credits_expiry").on(table.expiryDate),
+]);
+
+// Publisher activity logs
+export const publisherActivityLogs = pgTable("publisher_activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: 'cascade' }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: 'set null' }),
+  action: text("action").notNull(), // created, edited, submitted, approved, rejected, revision_required, credit_added, credit_deducted
+  creditChange: integer("credit_change").default(0), // +1 for added, -1 for consumed
+  balanceBefore: integer("balance_before"), // Credits before this action
+  balanceAfter: integer("balance_after"), // Credits after this action
+  performedBy: varchar("performed_by").references(() => users.id), // Who performed the action
+  details: text("details"), // Additional details/notes
+  metadata: jsonb("metadata"), // Additional structured data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_publisher_activity_publisher_id").on(table.publisherId),
+  index("idx_publisher_activity_article_id").on(table.articleId),
+  index("idx_publisher_activity_created_at").on(table.createdAt.desc()),
+]);
+
+// Relations
+export const publishersRelations = relations(publishers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [publishers.userId],
+    references: [users.id],
+  }),
+  credits: many(publisherCredits),
+  articles: many(articles),
+  activityLogs: many(publisherActivityLogs),
+}));
+
+export const publisherCreditsRelations = relations(publisherCredits, ({ one }) => ({
+  publisher: one(publishers, {
+    fields: [publisherCredits.publisherId],
+    references: [publishers.id],
+  }),
+  createdByUser: one(users, {
+    fields: [publisherCredits.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const publisherActivityLogsRelations = relations(publisherActivityLogs, ({ one }) => ({
+  publisher: one(publishers, {
+    fields: [publisherActivityLogs.publisherId],
+    references: [publishers.id],
+  }),
+  article: one(articles, {
+    fields: [publisherActivityLogs.articleId],
+    references: [articles.id],
+  }),
+  performedByUser: one(users, {
+    fields: [publisherActivityLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
+// Update articles relations to include publisher
+export const articlesPublisherRelation = relations(articles, ({ one }) => ({
+  publisher: one(publishers, {
+    fields: [articles.publisherId],
+    references: [publishers.id],
+  }),
+  publisherReviewer: one(users, {
+    fields: [articles.publisherReviewedBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas
+export const insertPublisherSchema = createInsertSchema(publishers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPublisherCreditSchema = createInsertSchema(publisherCredits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPublisherActivityLogSchema = createInsertSchema(publisherActivityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Select types
+export type Publisher = typeof publishers.$inferSelect;
+export type InsertPublisher = z.infer<typeof insertPublisherSchema>;
+export type PublisherCredit = typeof publisherCredits.$inferSelect;
+export type InsertPublisherCredit = z.infer<typeof insertPublisherCreditSchema>;
+export type PublisherActivityLog = typeof publisherActivityLogs.$inferSelect;
+export type InsertPublisherActivityLog = z.infer<typeof insertPublisherActivityLogSchema>;
+
+// Publisher with details (for UI)
+export interface PublisherWithDetails extends Publisher {
+  user: typeof users.$inferSelect;
+  totalCredits: number;
+  usedCredits: number;
+  remainingCredits: number;
+  activePackages: number;
+  totalArticles: number;
+  publishedArticles: number;
+  pendingArticles: number;
+}
 
 // ============================================
 // HOMEPAGE STATISTICS
