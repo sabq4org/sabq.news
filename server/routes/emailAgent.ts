@@ -5,7 +5,6 @@ import mammoth from "mammoth";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
-import { setObjectAclPolicy } from "../objectAcl";
 import { nanoid } from "nanoid";
 
 const router = Router();
@@ -59,16 +58,23 @@ async function uploadAttachmentToGCS(
       },
     });
 
-    // 🔓 Make file public if it's in the public directory
+    // 🔓 Make file PUBLIC in Google Cloud Storage (real ACL, not just metadata)
     if (isPublic) {
       try {
-        await setObjectAclPolicy(gcsFile, {
-          owner: "system",
-          visibility: "public"
-        });
-        console.log(`[Email Agent] ✅ File made public: ${fullPath}`);
+        await gcsFile.makePublic();
+        console.log(`[Email Agent] ✅ File made PUBLIC in GCS: ${fullPath}`);
       } catch (aclError) {
-        console.error(`[Email Agent] ⚠️ Failed to set public ACL (file still accessible via signed URL):`, aclError);
+        console.error(`[Email Agent] ⚠️ Failed to make file public:`, aclError);
+        // Fallback: try adding allUsers reader permission
+        try {
+          await gcsFile.acl.add({
+            entity: 'allUsers',
+            role: 'READER'
+          });
+          console.log(`[Email Agent] ✅ File made public via ACL.add: ${fullPath}`);
+        } catch (aclError2) {
+          console.error(`[Email Agent] ❌ Both makePublic and ACL.add failed:`, aclError2);
+        }
       }
     }
 

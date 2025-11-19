@@ -2,7 +2,6 @@ import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
-import { setObjectAclPolicy } from "../objectAcl";
 import { nanoid } from "nanoid";
 import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature } from "../services/whatsapp";
 import { requireAuth, requireRole } from "../rbac";
@@ -44,16 +43,23 @@ async function uploadToCloudStorage(
       },
     });
 
-    // 🔓 Make file public if it's in the public directory
+    // 🔓 Make file PUBLIC in Google Cloud Storage (real ACL, not just metadata)
     if (isPublic) {
       try {
-        await setObjectAclPolicy(gcsFile, {
-          owner: "system",
-          visibility: "public"
-        });
-        console.log(`[WhatsApp Agent] ✅ File made public: ${fullPath}`);
+        await gcsFile.makePublic();
+        console.log(`[WhatsApp Agent] ✅ File made PUBLIC in GCS: ${fullPath}`);
       } catch (aclError) {
-        console.error(`[WhatsApp Agent] ⚠️ Failed to set public ACL (file still accessible via signed URL):`, aclError);
+        console.error(`[WhatsApp Agent] ⚠️ Failed to make file public:`, aclError);
+        // Fallback: try adding allUsers reader permission
+        try {
+          await gcsFile.acl.add({
+            entity: 'allUsers',
+            role: 'READER'
+          });
+          console.log(`[WhatsApp Agent] ✅ File made public via ACL.add: ${fullPath}`);
+        } catch (aclError2) {
+          console.error(`[WhatsApp Agent] ❌ Both makePublic and ACL.add failed:`, aclError2);
+        }
       }
     }
 
