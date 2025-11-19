@@ -1,0 +1,152 @@
+2025-11-19 15:39:06.23
+19f54390
+User
+1:39:06 PM [express] GET /api/shorts/featured 200 in 29ms :: {"shorts":[],"total":0}
+2025-11-19 15:39:06.26
+19f54390
+User
+1:39:06 PM [express] GET /api/ads/slot/header-banner 204 in 61ms
+2025-11-19 15:39:06.26
+19f54390
+User
+1:39:06 PM [express] GET /api/mirqab/algorithm-writes 200 in 29ms :: {"entries":[],"total":0}
+2025-11-19 15:39:06.26
+19f54390
+User
+1:39:06 PM [express] GET /api/mirqab/sabq-index 200 in 24ms :: []
+2025-11-19 15:39:06.29
+19f54390
+User
+1:39:06 PM [express] GET /api/mirqab/next-stories 200 in 25ms :: []
+2025-11-19 15:39:06.29
+19f54390
+User
+1:39:06 PM [express] GET /api/opinion 200 in 59ms :: {"articles":[],"pagination":{"page":1,"limit":6…
+2025-11-19 15:39:06.38
+19f54390
+User
+1:39:06 PM [express] GET /api/trending-keywords 200 in 70ms :: [{"keyword":"صفقة F-35 السعودية","cou…
+2025-11-19 15:39:06.41
+19f54390
+User
+1:39:06 PM [express] GET /api/ai-insights 200 in 123ms :: {"mostViewed":{"article":{"id":"b466c8a4-6…
+2025-11-19 15:39:06.88
+19f54390
+User
+1:39:06 PM [express] GET /api/public-media/public/email-attachments/ETLV5t6AwDdRW6lIbn_Mu.jpg 200 in…
+2025-11-19 15:39:06.95
+19f54390
+User
+1:39:06 PM [express] GET /api/public-media/public/email-attachments/-ctFUjZm3AkVEB5tWA2jb.jpg 200 in…
+2025-11-19 15:39:06.98
+19f54390
+User
+1:39:06 PM [express] GET /api/blocks/quad-categories 200 in 626ms :: {"items":[{"category":{"slug":"…
+2025-11-19 15:39:12.23
+19f54390
+User
+isAuthenticated: false,
+2025-11-19 15:39:12.23
+19f54390
+User
+userId: undefined,
+2025-11-19 15:39:12.23
+19f54390
+User
+hasUser: false,
+2025-11-19 15:39:12.23
+19f54390
+User
+sessionID: 'GkKfldbJwJbvM-PStdlSlWsSC9A3j3xy'
+2025-11-19 15:39:12.23
+19f54390
+User
+}
+2025-11-19 15:39:12.23
+19f54390
+User
+🔍 /api/auth/user check: {
+2025-11-19 15:39:12.23
+19f54390
+User
+1:39:12 PM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+2025-11-19 15:39:12.28
+19f54390
+User
+1:39:12 PM [express] GET /api/smart-blocks 200 in 27ms :: []
+2025-11-19 15:39:12.31
+19f54390
+User
+1:39:12 PM [express] GET /api/themes/active 200 in 48ms
+2025-11-19 15:39:12.32
+19f54390
+User
+1:39:12 PM [express] GET /api/homepage 200 in 88ms :: {"hero":[{"id":"b466c8a4-6a36-4394-9d48-d53b21…
+2025-11-19 15:39:12.34
+19f54390
+User
+1:39:12 PM [express] GET /api/smart-blocks 200 in 23ms :: []
+2025-11-19 15:39:12.35
+19f54390
+User
+1:39:12 PM [express] GET /api/homepage/stats 200 in 101ms :: {"totalArticles":10,"todayArticles":10,…
+2025-11-19 15:39:12.37
+19f54390
+User
+1:39:12 PM [express] GET /api/categories 200 in 51ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55e…
+2025-11-19 15:39:12.37
+19f54390
+User
+1:39:12 PM [express] GET /api/categories/smart 200 in 74ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7b…
+2025-11-19 15:39:12.38
+19f54390
+User
+1:39:12 PM [express] GET /api/smart-blocks 200 in 25ms :: []
+2025-11-19 15:39:12.39
+19f54390
+User
+1:39:12 PM [express] GET /api/smart-blocks 200 in 25ms :: []
+2025-11-19 15:39:12.51
+19f54390
+User
+1:39:12 PM [express] GET /api/shorts/featured 200 in 28ms :: {"shorts":[],"total":0}
+2025-11-19 15:39:12.51
+19f54390
+User
+1:39:12 PM [express] GET /api/mirqab/next-stories 200 in 27ms :: []
+2025-11-19 15:39:12.54
+19f54390
+User
+1:39:12 PM [express] GET /api/ads/slot/header-banner 204 in 58ms
+2025-11-19 15:39:12.54
+19f54390
+User
+1:39:12 PM [express] GET /api/mirqab/algorithm-writes 200 in 25ms :: {"entries":[],"total":0}
+2025-11-19 15:39:12.64
+19f54390
+User
+1:39:12 PM [express] GET /api/ai-insights 200 in 128ms :: {"mostViewed":{"article":{"id":"b466c8a4-6…
+2025-11-19 15:39:12.65
+19f54390
+User
+1:39:12 PM [express] GET /api/trending-keywords 200 in 49ms :: [{"keyword":"صفقة F-35 السعودية","cou…
+2025-11-19 15:39:12.68
+19f54390
+User
+1:39:12 PM [express] GET /api/mirqab/sabq-index 200 in 29ms :: []
+2025-11-19 15:39:12.73
+19f54390
+User
+1:39:12 PM [express] GET /api/public-media/public/email-attachments/ETLV5t6AwDdRW6lIbn_Mu.jpg 200 in…
+2025-11-19 15:39:12.73
+19f54390
+User
+1:39:12 PM [express] GET /api/opinion 200 in 69ms :: {"articles":[],"pagination":{"page":1,"limit":6…
+2025-11-19 15:39:12.97
+19f54390
+User
+1:39:12 PM [express] GET /api/public-media/public/email-attachments/-ctFUjZm3AkVEB5tWA2jb.jpg 200 in…
+2025-11-19 15:39:13.04
+19f54390
+User
+1:39:13 PM [express] GET /api/blocks/quad-categories 200 in 556ms :: {"items":[{"category":{"slug":"…
