@@ -43,32 +43,24 @@ async function uploadToCloudStorage(
       },
     });
 
-    // 🔓 Make file PUBLIC in Google Cloud Storage (real ACL, not just metadata)
+    console.log(`[WhatsApp Agent] ✅ Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} media: ${fullPath}`);
+    
+    // 🎯 Generate SIGNED URL for public images (Replit Object Storage doesn't allow makePublic)
+    // Signed URLs allow temporary public access without changing bucket permissions
     if (isPublic) {
       try {
-        await gcsFile.makePublic();
-        console.log(`[WhatsApp Agent] ✅ File made PUBLIC in GCS: ${fullPath}`);
-      } catch (aclError) {
-        console.error(`[WhatsApp Agent] ⚠️ Failed to make file public:`, aclError);
-        // Fallback: try adding allUsers reader permission
-        try {
-          await gcsFile.acl.add({
-            entity: 'allUsers',
-            role: 'READER'
-          });
-          console.log(`[WhatsApp Agent] ✅ File made public via ACL.add: ${fullPath}`);
-        } catch (aclError2) {
-          console.error(`[WhatsApp Agent] ❌ Both makePublic and ACL.add failed:`, aclError2);
-        }
+        // Generate a signed URL valid for 10 years (max supported)
+        const [signedUrl] = await gcsFile.getSignedUrl({
+          action: 'read',
+          expires: Date.now() + (10 * 365 * 24 * 60 * 60 * 1000), // 10 years
+        });
+        console.log(`[WhatsApp Agent] 🔐 Signed URL generated (valid for 10 years): ${signedUrl.substring(0, 100)}...`);
+        return signedUrl;
+      } catch (signedUrlError) {
+        console.error(`[WhatsApp Agent] ❌ Failed to generate signed URL:`, signedUrlError);
+        // Fallback: return the GCS path for backend proxy
+        return `${objectDir}/${storedFilename}`;
       }
-    }
-
-    console.log(`[WhatsApp Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} media: ${fullPath}`);
-    
-    if (isPublic) {
-      const publicUrl = `https://storage.googleapis.com/${bucketName}/${fullPath}`;
-      console.log(`[WhatsApp Agent] 🌐 Public URL generated: ${publicUrl}`);
-      return publicUrl;
     }
     
     return `${objectDir}/${storedFilename}`;

@@ -58,34 +58,24 @@ async function uploadAttachmentToGCS(
       },
     });
 
-    // 🔓 Make file PUBLIC in Google Cloud Storage (real ACL, not just metadata)
+    console.log(`[Email Agent] ✅ Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} attachment: ${fullPath}`);
+    
+    // 🎯 Generate SIGNED URL for public images (Replit Object Storage doesn't allow makePublic)
+    // Signed URLs allow temporary public access without changing bucket permissions
     if (isPublic) {
       try {
-        await gcsFile.makePublic();
-        console.log(`[Email Agent] ✅ File made PUBLIC in GCS: ${fullPath}`);
-      } catch (aclError) {
-        console.error(`[Email Agent] ⚠️ Failed to make file public:`, aclError);
-        // Fallback: try adding allUsers reader permission
-        try {
-          await gcsFile.acl.add({
-            entity: 'allUsers',
-            role: 'READER'
-          });
-          console.log(`[Email Agent] ✅ File made public via ACL.add: ${fullPath}`);
-        } catch (aclError2) {
-          console.error(`[Email Agent] ❌ Both makePublic and ACL.add failed:`, aclError2);
-        }
+        // Generate a signed URL valid for 10 years (max supported)
+        const [signedUrl] = await gcsFile.getSignedUrl({
+          action: 'read',
+          expires: Date.now() + (10 * 365 * 24 * 60 * 60 * 1000), // 10 years
+        });
+        console.log(`[Email Agent] 🔐 Signed URL generated (valid for 10 years): ${signedUrl.substring(0, 100)}...`);
+        return signedUrl;
+      } catch (signedUrlError) {
+        console.error(`[Email Agent] ❌ Failed to generate signed URL:`, signedUrlError);
+        // Fallback: return the GCS path for backend proxy
+        return `${objectDir}/${storedFilename}`;
       }
-    }
-
-    console.log(`[Email Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} attachment: ${fullPath}`);
-    
-    // 🎯 Return full Google Cloud Storage URL for public images
-    // This ensures images are accessible from the frontend without proxy
-    if (isPublic) {
-      const publicUrl = `https://storage.googleapis.com/${bucketName}/${fullPath}`;
-      console.log(`[Email Agent] 🌐 Public URL generated: ${publicUrl}`);
-      return publicUrl;
     }
     
     // For private files, return the relative path (requires proxy/download endpoint)
