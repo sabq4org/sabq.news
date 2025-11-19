@@ -6787,6 +6787,119 @@ export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect
 export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
 
 // ============================================
+// ARTICLE MEDIA ASSETS - تعريفات الصور في المقالات
+// ============================================
+
+export const articleMediaAssets = pgTable("article_media_assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  mediaFileId: varchar("media_file_id").references(() => mediaFiles.id, { onDelete: "cascade" }).notNull(),
+  
+  // Language-specific content
+  locale: text("locale").default("ar").notNull(), // ar, en, ur
+  
+  // Display order for multiple images in article
+  displayOrder: integer("display_order").default(0).notNull(),
+  
+  // SEO-optimized alt text (concise for screen readers)
+  altText: text("alt_text").notNull(),
+  
+  // Rich caption (can include HTML formatting)
+  captionHtml: text("caption_html"),
+  
+  // Plain text caption (fallback)
+  captionPlain: text("caption_plain"),
+  
+  // Keywords for SEO
+  keywordTags: text("keyword_tags").array().default(sql`ARRAY[]::text[]`),
+  
+  // Related articles (internal linking)
+  relatedArticleSlugs: text("related_article_slugs").array().default(sql`ARRAY[]::text[]`),
+  
+  // Source attribution
+  sourceName: text("source_name"),
+  sourceUrl: text("source_url"),
+  rightsStatement: text("rights_statement"),
+  
+  // AI-generated metadata
+  aiGeneratedSummary: jsonb("ai_generated_summary").$type<{
+    provider?: "openai" | "anthropic" | "gemini";
+    model?: string;
+    generatedAt?: string;
+    summary?: string;
+    suggestedKeywords?: string[];
+  }>(),
+  
+  // Moderation
+  moderationStatus: text("moderation_status").default("approved").notNull(), // approved, pending, rejected
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  moderationNotes: text("moderation_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("article_media_assets_article_id_idx").on(table.articleId),
+  index("article_media_assets_media_file_id_idx").on(table.mediaFileId),
+  index("article_media_assets_locale_idx").on(table.locale),
+  index("article_media_assets_display_order_idx").on(table.displayOrder),
+  // Unique constraint: one caption per article+media+locale combination
+  uniqueIndex("article_media_assets_unique_idx").on(table.articleId, table.mediaFileId, table.locale),
+]);
+
+// Relations
+export const articleMediaAssetsRelations = relations(articleMediaAssets, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleMediaAssets.articleId],
+    references: [articles.id],
+  }),
+  mediaFile: one(mediaFiles, {
+    fields: [articleMediaAssets.mediaFileId],
+    references: [mediaFiles.id],
+  }),
+  moderator: one(users, {
+    fields: [articleMediaAssets.moderatedBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schema
+export const insertArticleMediaAssetSchema = createInsertSchema(articleMediaAssets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  articleId: z.string().min(1, "Article ID is required"),
+  mediaFileId: z.string().min(1, "Media File ID is required"),
+  locale: z.enum(["ar", "en", "ur"]),
+  altText: z.string().min(1, "Alt text is required for accessibility").max(125, "Alt text should be concise (max 125 chars)"),
+  captionHtml: z.string().optional(),
+  captionPlain: z.string().max(500, "Caption should be concise (max 500 chars)").optional(),
+  keywordTags: z.array(z.string()).optional(),
+  relatedArticleSlugs: z.array(z.string()).optional(),
+});
+
+// Update schema
+export const updateArticleMediaAssetSchema = z.object({
+  altText: z.string().min(1).max(125).optional(),
+  captionHtml: z.string().optional(),
+  captionPlain: z.string().max(500).optional(),
+  keywordTags: z.array(z.string()).optional(),
+  relatedArticleSlugs: z.array(z.string()).optional(),
+  sourceName: z.string().optional(),
+  sourceUrl: z.string().url().optional(),
+  rightsStatement: z.string().optional(),
+  displayOrder: z.number().int().min(0).optional(),
+  moderationStatus: z.enum(["approved", "pending", "rejected"]).optional(),
+  moderationNotes: z.string().optional(),
+});
+
+// Select types
+export type ArticleMediaAsset = typeof articleMediaAssets.$inferSelect;
+export type InsertArticleMediaAsset = z.infer<typeof insertArticleMediaAssetSchema>;
+export type UpdateArticleMediaAsset = z.infer<typeof updateArticleMediaAssetSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 

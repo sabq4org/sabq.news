@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, asc, sql, and, or, inArray, ne, gte, lt, lte, isNull, isNotNull, ilike, count } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, inArray, ne, gte, lt, lte, isNull, isNotNull, ilike, count, getTableColumns } from "drizzle-orm";
 import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
@@ -83,10 +83,16 @@ import {
   deepAnalysisMetrics,
   deepAnalysisEvents,
   notificationsInbox,
+  articleMediaAssets,
+  mediaFiles,
   type DeepAnalysis,
   type InsertDeepAnalysis,
   type NotificationInbox,
   type InsertNotificationInbox,
+  type ArticleMediaAsset,
+  type InsertArticleMediaAsset,
+  type UpdateArticleMediaAsset,
+  type MediaFile,
   type User,
   type InsertUser,
   type UpdateUser,
@@ -1461,6 +1467,14 @@ export interface IStorage {
   }): Promise<{ subscriptions: NewsletterSubscription[]; total: number }>;
   updateNewsletterSubscription(id: string, updates: Partial<InsertNewsletterSubscription>): Promise<NewsletterSubscription | null>;
   deleteNewsletterSubscription(id: string): Promise<void>;
+  
+  // Article Media Assets operations
+  createArticleMediaAsset(data: InsertArticleMediaAsset): Promise<ArticleMediaAsset>;
+  getArticleMediaAssets(articleId: string, locale?: string): Promise<ArticleMediaAsset[]>;
+  getArticleMediaAssetById(id: string): Promise<ArticleMediaAsset | null>;
+  updateArticleMediaAsset(id: string, data: UpdateArticleMediaAsset): Promise<ArticleMediaAsset>;
+  deleteArticleMediaAsset(id: string): Promise<void>;
+  getArticleMediaAssetWithDetails(articleId: string, locale?: string): Promise<Array<ArticleMediaAsset & { mediaFile: MediaFile }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -12569,6 +12583,87 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(newsletterSubscriptions)
       .where(eq(newsletterSubscriptions.id, id));
+  }
+
+  // Article Media Assets operations
+  async createArticleMediaAsset(data: InsertArticleMediaAsset): Promise<ArticleMediaAsset> {
+    const [asset] = await db
+      .insert(articleMediaAssets)
+      .values(data)
+      .returning();
+    
+    return asset;
+  }
+
+  async getArticleMediaAssets(articleId: string, locale?: string): Promise<ArticleMediaAsset[]> {
+    const conditions = [eq(articleMediaAssets.articleId, articleId)];
+    
+    if (locale) {
+      conditions.push(eq(articleMediaAssets.locale, locale));
+    }
+    
+    const assets = await db
+      .select()
+      .from(articleMediaAssets)
+      .where(and(...conditions))
+      .orderBy(asc(articleMediaAssets.displayOrder));
+    
+    return assets;
+  }
+
+  async getArticleMediaAssetById(id: string): Promise<ArticleMediaAsset | null> {
+    const [asset] = await db
+      .select()
+      .from(articleMediaAssets)
+      .where(eq(articleMediaAssets.id, id));
+    
+    return asset || null;
+  }
+
+  async updateArticleMediaAsset(id: string, data: UpdateArticleMediaAsset): Promise<ArticleMediaAsset> {
+    const [asset] = await db
+      .update(articleMediaAssets)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(articleMediaAssets.id, id))
+      .returning();
+    
+    if (!asset) {
+      throw new Error(`Article media asset with id ${id} not found`);
+    }
+    
+    return asset;
+  }
+
+  async deleteArticleMediaAsset(id: string): Promise<void> {
+    await db
+      .delete(articleMediaAssets)
+      .where(eq(articleMediaAssets.id, id));
+  }
+
+  async getArticleMediaAssetWithDetails(
+    articleId: string,
+    locale?: string
+  ): Promise<Array<ArticleMediaAsset & { mediaFile: MediaFile }>> {
+    const conditions = [eq(articleMediaAssets.articleId, articleId)];
+    
+    if (locale) {
+      conditions.push(eq(articleMediaAssets.locale, locale));
+    }
+    
+    const results = await db
+      .select({
+        ...getTableColumns(articleMediaAssets),
+        mediaFile: getTableColumns(mediaFiles),
+      })
+      .from(articleMediaAssets)
+      .innerJoin(mediaFiles, eq(articleMediaAssets.mediaFileId, mediaFiles.id))
+      .where(and(...conditions))
+      .orderBy(asc(articleMediaAssets.displayOrder));
+    
+    return results as Array<ArticleMediaAsset & { mediaFile: MediaFile }>;
   }
 }
 
