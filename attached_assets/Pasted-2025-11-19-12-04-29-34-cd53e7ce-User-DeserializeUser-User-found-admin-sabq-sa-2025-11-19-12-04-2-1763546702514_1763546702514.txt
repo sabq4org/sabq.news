@@ -1,0 +1,140 @@
+2025-11-19 12:04:29.34
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.42
+cd53e7ce
+User
+10:04:29 AM [express] GET /api/auth/user 304 in 126ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-19 12:04:29.75
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.75
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.76
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.76
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.76
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.76
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.78
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.78
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.78
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.79
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.79
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.79
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.81
+cd53e7ce
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 12:04:29.83
+cd53e7ce
+User
+10:04:29 AM [express] GET /api/email-agent/senders 304 in 101ms :: [{"id":"ab91b4e2-1fdc-4306-88ba-a2…
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+📊 [GET /api/users] Role filter: reporter
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+📋 [GET /api/users] Returned 1 users
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+}
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+]
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+status: 'active'
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+email: 'system@sabq.sa',
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+👥 [GET /api/users] Reporters: [
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+{
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+name: 'Email Agent System',
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.84
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:04:29.86
+cd53e7ce
+User
+10:04:29 AM [express] GET /api/users 304 in 135ms :: [{"id":"email-agent-system","firstName":"Email A…
+2025-11-19 12:04:29.87
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.87
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:04:29.87
+cd53e7ce
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-19 12:04:29.87
+cd53e7ce
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-19 12:04:29.87
+cd53e7ce
+User
+10:04:29 AM [express] GET /api/email-agent/stats 200 in 143ms :: {"emailsReceived":1,"emailsPublished…
+2025-11-19 12:04:29.88
+cd53e7ce
+User
+10:04:29 AM [express] GET /api/email-agent/badge-stats 200 in 144ms :: {"newMessages":0,"publishedTod…
+2025-11-19 12:04:29.89
+cd53e7ce
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,manager,system_admin, user has: system_admin, admin
