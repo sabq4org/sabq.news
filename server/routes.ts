@@ -2175,6 +2175,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/public-media/* - Proxy endpoint for public media files (email/whatsapp attachments)
+  app.get("/api/public-media/*", async (req: any, res) => {
+    try {
+      // Extract the full path after /api/public-media/
+      const fullPath = req.params[0] as string;
+      
+      if (!fullPath) {
+        return res.status(400).json({ message: "مسار الملف مطلوب" });
+      }
+
+      console.log(`[Public Media Proxy] Serving file: ${fullPath}`);
+
+      // Get file from Object Storage
+      const { objectStorageClient } = await import('./objectStorage');
+      
+      // Get the default bucket name from environment
+      const bucketName = process.env.PUBLIC_OBJECT_SEARCH_PATHS?.split('/')[0] || 
+                        'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(fullPath);
+
+      // Check if file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        console.error(`[Public Media Proxy] File not found: ${fullPath}`);
+        return res.status(404).json({ message: "الملف غير موجود في التخزين" });
+      }
+
+      // Get file metadata to determine content type
+      const [metadata] = await file.getMetadata();
+      const contentType = metadata.contentType || 'application/octet-stream';
+
+      // Stream the file to response
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for public files
+      
+      file.createReadStream()
+        .on('error', (error) => {
+          console.error('[Public Media Proxy] Error streaming file:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ message: "فشل في تحميل الملف" });
+          }
+        })
+        .pipe(res);
+
+    } catch (error) {
+      console.error('[Public Media Proxy] Error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "فشل في تحميل الملف" });
+      }
+    }
+  });
+
   // ============================================================
   // TWO-FACTOR AUTHENTICATION (2FA) ROUTES
   // ============================================================

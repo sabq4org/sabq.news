@@ -1,0 +1,144 @@
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📸 Added new metadata for image0.jpeg
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📸 uploadedImages count: 1
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📸 Added to uploadedImages array. Total now: 1
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+at GoogleAuth.sign (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/googleauth.js:790:19)
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+at async sign (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/signer.js:113:35) {
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] ❌ Failed to generate signed URL: Error: Cannot sign data without `client_email`.
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+'/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/vqPgspIcGLDYcAg054Zfn.jpeg'
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] AI detected category: محليات
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+]
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 🎨 uploadedImages[0]: /replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/vqPgspIcGLDYcAg054Zfn.jpeg
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 🎯 Starting smart category matching...
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📸 uploadedImages: [
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📸 Uploaded images count AFTER upload: 1
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📝 ========== PREPARING ARTICLE DATA ==========
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📝 Author ID (reporter): email-agent-system
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] ✅ Exact category match found: محليات (ID: 3a1e94e6-91e2-4203-88e7-42bc7baae55e)
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] - Language: ar
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] 📝 Creating article...
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] - Status: published
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] ✅ Final category ID selected: 3a1e94e6-91e2-4203-88e7-42bc7baae55e
+2025-11-19 12:13:53.79
+cd53e7ce
+User
+[Email Agent] - Auto-publish: true
+2025-11-19 12:13:53.82
+cd53e7ce
+User
+[Email Agent] - Title: الأمن البيئي يضبط مواطنًا يرعى 22 من الإبل في محمية الملك عبدالعزيز
+2025-11-19 12:13:54.13
+cd53e7ce
+User
+📡 Broadcasting notification to 2 client(s) for user admin-sabq
+2025-11-19 12:13:54.28
+cd53e7ce
+User
+[Email Agent] ✅ Staff notification sent successfully
+2025-11-19 12:13:54.37
+cd53e7ce
+User
+[Email Agent] - Attachments saved: 1
+2025-11-19 12:13:54.37
+cd53e7ce
+User
+[Email Agent] 📊 Webhook log updated:
+2025-11-19 12:13:54.37
+cd53e7ce
+User
+[Email Agent] - Word docs: 0
+2025-11-19 12:13:54.37
+cd53e7ce
+User
+[Email Agent] - Images: 1
+2025-11-19 12:13:54.37
+cd53e7ce
+User
+[Email Agent] - Other files: 0
+2025-11-19 12:13:54.40
+cd53e7ce
+User
+10:13:54 AM [express] POST /api/email-agent/webhook 200 in 8996ms :: {"success":true,"message":"Artic…
+2025-11-19 12:14:00.02
+cd53e7ce
+User
+[NotificationWorker] Starting queue processing...
+2025-11-19 12:14:00.02
+cd53e7ce
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-19 12:14:00.13
+cd53e7ce
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-19 12:14:00.13
+cd53e7ce
+User
+[NotificationWorker] Queue processing completed
+2025-11-19 12:14:00.13
+cd53e7ce
+User
+[NotificationWorker] Found 0 notifications to process

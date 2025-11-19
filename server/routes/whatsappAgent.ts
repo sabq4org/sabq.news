@@ -45,22 +45,13 @@ async function uploadToCloudStorage(
 
     console.log(`[WhatsApp Agent] ✅ Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} media: ${fullPath}`);
     
-    // 🎯 Generate SIGNED URL for public images (Replit Object Storage doesn't allow makePublic)
-    // Signed URLs allow temporary public access without changing bucket permissions
+    // 🎯 Return Backend Proxy URL (Replit Object Storage doesn't allow makePublic or signed URLs)
+    // The backend will stream the file from Object Storage
     if (isPublic) {
-      try {
-        // Generate a signed URL valid for 10 years (max supported)
-        const [signedUrl] = await gcsFile.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + (10 * 365 * 24 * 60 * 60 * 1000), // 10 years
-        });
-        console.log(`[WhatsApp Agent] 🔐 Signed URL generated (valid for 10 years): ${signedUrl.substring(0, 100)}...`);
-        return signedUrl;
-      } catch (signedUrlError) {
-        console.error(`[WhatsApp Agent] ❌ Failed to generate signed URL:`, signedUrlError);
-        // Fallback: return the GCS path for backend proxy
-        return `${objectDir}/${storedFilename}`;
-      }
+      const frontendUrl = process.env.FRONTEND_URL || 'https://sabq.life';
+      const proxyUrl = `${frontendUrl}/api/public-media/${fullPath}`;
+      console.log(`[WhatsApp Agent] 🌐 Generated proxy URL: ${proxyUrl}`);
+      return proxyUrl;
     }
     
     return `${objectDir}/${storedFilename}`;
