@@ -131,6 +131,12 @@ export default function ArticleEditor() {
     staleTime: 0, // Consider data stale immediately to ensure fresh data
   });
 
+  // Fetch media assets for this article
+  const { data: mediaAssets = [], refetch: refetchMediaAssets } = useQuery<any[]>({
+    queryKey: ["/api/articles", article?.id, "media-assets"],
+    enabled: !isNewArticle && !!article?.id,
+  });
+
   // Load article data when editing
   useEffect(() => {
     if (article && !isNewArticle) {
@@ -1103,6 +1109,58 @@ const generateSlug = (text: string) => {
     }
   };
 
+  // Create media asset caption
+  const createCaptionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest(`/api/articles/${article?.id}/media-assets`, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "تم إضافة التعريف بنجاح" });
+      refetchMediaAssets();
+    },
+    onError: () => {
+      toast({ title: "فشل في إضافة التعريف", variant: "destructive" });
+    },
+  });
+
+  // Update media asset caption
+  const updateCaptionMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return apiRequest(`/api/media-assets/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "تم تحديث التعريف بنجاح" });
+      refetchMediaAssets();
+    },
+    onError: () => {
+      toast({ title: "فشل في تحديث التعريف", variant: "destructive" });
+    },
+  });
+
+  // Delete media asset caption
+  const deleteCaptionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/media-assets/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "تم حذف التعريف بنجاح" });
+      refetchMediaAssets();
+    },
+    onError: () => {
+      toast({ title: "فشل في حذف التعريف", variant: "destructive" });
+    },
+  });
+
   const isSaving = saveArticleMutation.isPending;
   const isGeneratingAI = 
     generateSummaryMutation.isPending || 
@@ -1648,9 +1706,15 @@ const generateSlug = (text: string) => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="seo" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="seo">الحقول</TabsTrigger>
                     <TabsTrigger value="preview">المعاينة</TabsTrigger>
+                    {!isNewArticle && (
+                      <TabsTrigger value="media-captions">
+                        <ImageIcon className="h-4 w-4 ml-2" />
+                        تعريفات الصور
+                      </TabsTrigger>
+                    )}
                   </TabsList>
                   
                   <TabsContent value="seo" className="space-y-4">
@@ -1755,6 +1819,52 @@ const generateSlug = (text: string) => {
                       slug={slug}
                     />
                   </TabsContent>
+
+                  {!isNewArticle && (
+                    <TabsContent value="media-captions" className="space-y-4">
+                      {/* Current Hero Image */}
+                      {imageUrl && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-base">الصورة الرئيسية</Label>
+                            <Badge variant="secondary">Hero Image</Badge>
+                          </div>
+                          <img 
+                            src={imageUrl} 
+                            alt="Hero" 
+                            className="w-full max-w-md rounded-md border" 
+                            data-testid="img-hero-caption-preview"
+                          />
+                          
+                          {/* Caption Form for Hero Image */}
+                          <ImageCaptionForm
+                            imageUrl={imageUrl}
+                            articleId={article?.id}
+                            locale="ar"
+                            displayOrder={0}
+                            existingCaption={mediaAssets.find((asset: any) => asset.displayOrder === 0)}
+                            onSave={(data) => {
+                              const existingCaption = mediaAssets.find((asset: any) => asset.displayOrder === 0);
+                              if (existingCaption?.id) {
+                                updateCaptionMutation.mutate({ id: existingCaption.id, data });
+                              } else {
+                                createCaptionMutation.mutate({ ...data, displayOrder: 0 });
+                              }
+                            }}
+                            onDelete={(id) => deleteCaptionMutation.mutate(id)}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Info Message */}
+                      {!imageUrl && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>قم بإضافة صورة رئيسية للمقال أولاً</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  )}
                 </Tabs>
               </CardContent>
             </Card>
@@ -1782,5 +1892,140 @@ const generateSlug = (text: string) => {
         currentImageUrl={imageUrl}
       />
     </DashboardLayout>
+  );
+}
+
+// ImageCaptionForm Component
+interface ImageCaptionFormProps {
+  imageUrl: string;
+  articleId?: string;
+  locale: string;
+  displayOrder: number;
+  existingCaption?: any;
+  onSave: (data: any) => void;
+  onDelete?: (id: string) => void;
+}
+
+function ImageCaptionForm({
+  imageUrl,
+  articleId,
+  locale,
+  displayOrder,
+  existingCaption,
+  onSave,
+  onDelete,
+}: ImageCaptionFormProps) {
+  const [altText, setAltText] = useState(existingCaption?.altText || "");
+  const [captionPlain, setCaptionPlain] = useState(existingCaption?.captionPlain || "");
+  const [sourceName, setSourceName] = useState(existingCaption?.sourceName || "");
+  const [sourceUrl, setSourceUrl] = useState(existingCaption?.sourceUrl || "");
+  const [keywordTags, setKeywordTags] = useState<string[]>(existingCaption?.keywordTags || []);
+  
+  const { toast } = useToast();
+  
+  const handleSave = () => {
+    if (!altText) {
+      toast({ title: "نص بديل مطلوب", variant: "destructive" });
+      return;
+    }
+    
+    onSave({
+      mediaFileId: imageUrl, // Using imageUrl as identifier
+      locale,
+      altText,
+      captionPlain: captionPlain || null,
+      sourceName: sourceName || null,
+      sourceUrl: sourceUrl || null,
+      keywordTags: keywordTags.length > 0 ? keywordTags : null,
+      displayOrder,
+    });
+  };
+  
+  return (
+    <div className="space-y-4 p-4 border rounded-md">
+      {/* Alt Text */}
+      <div className="space-y-2">
+        <Label htmlFor="altText">النص البديل (مطلوب لـ SEO) *</Label>
+        <Input
+          id="altText"
+          value={altText}
+          onChange={(e) => setAltText(e.target.value)}
+          placeholder="وصف دقيق للصورة..."
+          required
+          data-testid="input-caption-alt-text"
+        />
+      </div>
+      
+      {/* Caption */}
+      <div className="space-y-2">
+        <Label htmlFor="captionPlain">التعريف النصي</Label>
+        <Textarea
+          id="captionPlain"
+          value={captionPlain}
+          onChange={(e) => setCaptionPlain(e.target.value)}
+          placeholder="تعريف يظهر أسفل الصورة..."
+          rows={3}
+          data-testid="textarea-caption-plain"
+        />
+      </div>
+      
+      {/* Source */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="sourceName">اسم المصدر</Label>
+          <Input
+            id="sourceName"
+            value={sourceName}
+            onChange={(e) => setSourceName(e.target.value)}
+            placeholder="وكالة الأنباء..."
+            data-testid="input-caption-source-name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sourceUrl">رابط المصدر</Label>
+          <Input
+            id="sourceUrl"
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+            placeholder="https://..."
+            data-testid="input-caption-source-url"
+          />
+        </div>
+      </div>
+      
+      {/* Keywords */}
+      <div className="space-y-2">
+        <Label>الكلمات المفتاحية (اختياري)</Label>
+        <TagInput
+          tags={keywordTags}
+          onTagsChange={setKeywordTags}
+          placeholder="أضف كلمات مفتاحية..."
+        />
+      </div>
+      
+      {/* Actions */}
+      <div className="flex justify-between items-center pt-2">
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!altText}
+          data-testid="button-save-caption"
+        >
+          <Save className="h-4 w-4 ml-2" />
+          {existingCaption ? "تحديث التعريف" : "حفظ التعريف"}
+        </Button>
+        
+        {existingCaption && onDelete && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => onDelete(existingCaption.id)}
+            data-testid="button-delete-caption"
+          >
+            حذف التعريف
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

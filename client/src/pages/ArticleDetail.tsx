@@ -384,14 +384,84 @@ export default function ArticleDetail() {
     };
   }, [article?.id]);
 
+  // Add ImageObject JSON-LD for image SEO
+  useEffect(() => {
+    if (!article?.imageUrl) return;
+
+    // Get hero image asset data (displayOrder === 0)
+    const heroAsset = mediaAssets?.find((asset: any) => asset.displayOrder === 0);
+    
+    // Convert relative URL to absolute URL
+    const absoluteImageUrl = article.imageUrl.startsWith('http') 
+      ? article.imageUrl 
+      : `${window.location.origin}${article.imageUrl}`;
+
+    const imageObject: any = {
+      "@context": "https://schema.org",
+      "@type": "ImageObject",
+      "contentUrl": absoluteImageUrl,
+      "url": absoluteImageUrl,
+      "caption": heroAsset?.captionPlain || article.title,
+      "description": heroAsset?.altText || article.title,
+    };
+
+    // Add keywords if available
+    if (heroAsset?.keywordTags && heroAsset.keywordTags.length > 0) {
+      imageObject["keywords"] = heroAsset.keywordTags.join(", ");
+    } else if (article.seo?.keywords && article.seo.keywords.length > 0) {
+      imageObject["keywords"] = article.seo.keywords.join(", ");
+    }
+
+    // Add author/source if available
+    if (heroAsset?.sourceName) {
+      imageObject["author"] = {
+        "@type": "Organization",
+        "name": heroAsset.sourceName,
+      };
+      if (heroAsset.sourceUrl) {
+        imageObject["author"]["url"] = heroAsset.sourceUrl;
+      }
+    }
+
+    // Add copyright notice if available
+    if (heroAsset?.rightsStatement) {
+      imageObject["copyrightNotice"] = heroAsset.rightsStatement;
+    }
+
+    // Add script tag to head
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(imageObject);
+    script.id = 'image-structured-data';
+    document.head.appendChild(script);
+
+    // Cleanup on unmount
+    return () => {
+      const existingScript = document.getElementById('image-structured-data');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, [article?.id, article?.imageUrl, mediaAssets]);
+
   // Add Open Graph and Twitter Cards meta tags
   useEffect(() => {
     if (!article) return;
 
     const seoTitle = article.seo?.metaTitle || article.title;
     const seoDescription = article.seo?.metaDescription || article.excerpt || article.aiSummary || "";
-    const seoImage = article.imageUrl || `${window.location.origin}/og-image.png`;
+    
+    // Convert relative imageUrl to absolute URL
+    let seoImage = article.imageUrl || `${window.location.origin}/og-image.png`;
+    if (article.imageUrl && !article.imageUrl.startsWith('http')) {
+      seoImage = `${window.location.origin}${article.imageUrl}`;
+    }
+    
     const seoUrl = window.location.href;
+
+    // Get hero image asset data for alt text
+    const heroAsset = mediaAssets?.find((asset: any) => asset.displayOrder === 0);
+    const imageAlt = heroAsset?.altText || article.title;
 
     // Store original values to restore on cleanup
     const originalValues = new Map<HTMLMetaElement, string>();
@@ -426,6 +496,14 @@ export default function ArticleDetail() {
     updateMetaTag('og:site_name', 'صحيفة سبق الإلكترونية');
     updateMetaTag('og:locale', 'ar_SA');
 
+    // Open Graph Image Tags
+    if (article.imageUrl) {
+      updateMetaTag('og:image:alt', imageAlt);
+      updateMetaTag('og:image:type', 'image/jpeg');
+      updateMetaTag('og:image:width', '1200');
+      updateMetaTag('og:image:height', '630');
+    }
+
     if (article.publishedAt) {
       updateMetaTag('article:published_time', new Date(article.publishedAt).toISOString());
     }
@@ -441,6 +519,11 @@ export default function ArticleDetail() {
     updateMetaTag('twitter:title', seoTitle, true);
     updateMetaTag('twitter:description', seoDescription, true);
     updateMetaTag('twitter:image', seoImage, true);
+    
+    // Twitter Card Image Tags
+    if (article.imageUrl) {
+      updateMetaTag('twitter:image:alt', imageAlt, true);
+    }
 
     // SEO Meta Tags
     updateMetaTag('description', seoDescription, true);
@@ -465,7 +548,7 @@ export default function ArticleDetail() {
         }
       });
     };
-  }, [article?.id, article?.seo]);
+  }, [article?.id, article?.seo, article?.imageUrl, mediaAssets]);
 
   const reactMutation = useMutation({
     mutationFn: async () => {
