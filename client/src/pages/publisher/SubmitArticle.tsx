@@ -64,6 +64,24 @@ export default function SubmitArticle() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState<PublisherArticleFormData | null>(null);
 
+  // RBAC Guard: Publisher only
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (user.role !== 'publisher') {
+      navigate('/');
+      toast({ 
+        title: 'غير مصرح', 
+        description: 'هذه الصفحة للناشرين فقط', 
+        variant: 'destructive' 
+      });
+    }
+  }, [user, navigate, toast]);
+
+  if (!user || user.role !== 'publisher') {
+    return null;
+  }
+
   const form = useForm<PublisherArticleFormData>({
     resolver: zodResolver(publisherArticleSchema),
     defaultValues: {
@@ -274,7 +292,7 @@ export default function SubmitArticle() {
                       <Input
                         {...field}
                         placeholder="أدخل عنوان المقال"
-                        data-testid="input-title"
+                        data-testid="input-article-title"
                       />
                     </FormControl>
                     <FormMessage />
@@ -292,7 +310,7 @@ export default function SubmitArticle() {
                       <Input
                         {...field}
                         placeholder="أدخل العنوان الفرعي (اختياري)"
-                        data-testid="input-subtitle"
+                        data-testid="input-article-subtitle"
                       />
                     </FormControl>
                     <FormMessage />
@@ -308,7 +326,7 @@ export default function SubmitArticle() {
                     <FormLabel>التصنيف *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-category">
+                        <SelectTrigger data-testid="select-article-category">
                           <SelectValue placeholder="اختر التصنيف" />
                         </SelectTrigger>
                       </FormControl>
@@ -333,7 +351,7 @@ export default function SubmitArticle() {
                     <FormLabel>اللغة</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-language">
+                        <SelectTrigger data-testid="select-article-language">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -359,7 +377,7 @@ export default function SubmitArticle() {
                         {...field}
                         placeholder="أدخل مقتطف المقال (اختياري)"
                         rows={3}
-                        data-testid="textarea-excerpt"
+                        data-testid="textarea-article-excerpt"
                       />
                     </FormControl>
                     <FormDescription>
@@ -414,7 +432,7 @@ export default function SubmitArticle() {
                       <Input
                         {...field}
                         placeholder="https://example.com/image.jpg"
-                        data-testid="input-image-url"
+                        data-testid="input-article-image"
                       />
                     </FormControl>
                     <FormMessage />
@@ -498,7 +516,7 @@ export default function SubmitArticle() {
               type="button"
               onClick={() => form.handleSubmit(handleSubmitForReview)()}
               disabled={submitArticleMutation.isPending}
-              data-testid="button-submit-review"
+              data-testid="button-submit-article"
             >
               {submitArticleMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

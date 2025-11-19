@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -70,9 +70,28 @@ const statusLabels = {
 export default function MyArticles() {
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("all");
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
   const [viewingFeedback, setViewingFeedback] = useState<Article | null>(null);
+
+  // RBAC Guard: Publisher only
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (user.role !== 'publisher') {
+      navigate('/');
+      toast({ 
+        title: 'غير مصرح', 
+        description: 'هذه الصفحة للناشرين فقط', 
+        variant: 'destructive' 
+      });
+    }
+  }, [user, navigate, toast]);
+
+  if (!user || user.role !== 'publisher') {
+    return null;
+  }
 
   const { data: articles = [], isLoading } = useQuery<Article[]>({
     queryKey: ["/api/publisher/articles", activeTab],
@@ -165,19 +184,19 @@ export default function MyArticles() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all" data-testid="tab-all">
+          <TabsTrigger value="all" data-testid="tab-filter-all">
             الكل
           </TabsTrigger>
-          <TabsTrigger value="pending" data-testid="tab-pending">
+          <TabsTrigger value="pending" data-testid="tab-filter-pending">
             قيد الانتظار
           </TabsTrigger>
-          <TabsTrigger value="approved" data-testid="tab-approved">
+          <TabsTrigger value="approved" data-testid="tab-filter-approved">
             موافق عليها
           </TabsTrigger>
-          <TabsTrigger value="rejected" data-testid="tab-rejected">
+          <TabsTrigger value="rejected" data-testid="tab-filter-rejected">
             مرفوضة
           </TabsTrigger>
-          <TabsTrigger value="needs_revision" data-testid="tab-needs-revision">
+          <TabsTrigger value="needs_revision" data-testid="tab-filter-needs-revision">
             تحتاج مراجعة
           </TabsTrigger>
         </TabsList>

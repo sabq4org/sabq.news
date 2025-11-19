@@ -4806,6 +4806,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search users by email (for publisher creation)
+  app.get("/api/admin/users/search", requireAuth, requirePermission("users.view"), async (req: any, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email parameter is required" });
+      }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          status: users.status,
+        })
+        .from(users)
+        .where(eq(users.email, email as string))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error searching user:", error);
+      res.status(500).json({ message: "Failed to search user" });
+    }
+  });
+
+  // Create new user (admin only - for publisher creation)
+  app.post("/api/admin/users", requireAuth, requirePermission("users.create"), async (req: any, res) => {
+    try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { email, firstName, lastName, role, password } = req.body;
+
+      // Validate input
+      if (!email || !firstName || !role) {
+        return res.status(400).json({ message: "Email, firstName, and role are required" });
+      }
+
+      // Check if user already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Hash password (use a default if not provided)
+      const hashedPassword = password 
+        ? await bcrypt.hash(password, 10)
+        : await bcrypt.hash(randomUUID(), 10); // Random password if not provided
+
+      // Create user
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          id: randomUUID(),
+          email,
+          firstName,
+          lastName: lastName || null,
+          passwordHash: hashedPassword,
+          status: "active",
+          emailVerified: false,
+          isProfileComplete: false,
+        })
+        .returning();
+
+      // Assign role
+      const [roleRecord] = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.name, role))
+        .limit(1);
+
+      if (roleRecord) {
+        await db.insert(userRoles).values({
+          userId: newUser.id,
+          roleId: roleRecord.id,
+          assignedBy: adminUserId,
+        });
+      }
+
+      // Log activity
+      await logActivity({
+        userId: adminUserId,
+        action: "created",
+        entityType: "user",
+        entityId: newUser.id,
+        newValue: { email, firstName, lastName, role },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.status(201).json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   // Reset user password (admin only)
   app.post("/api/admin/users/:id/reset-password", requireAuth, requirePermission("users.update"), async (req: any, res) => {
     try {
@@ -27690,13 +27809,23 @@ Allow: /
   });
 
   // GET /api/publisher/credits - جلب باقات الناشر الحالي
-  app.get("/api/publisher/credits", requireAuth, isPublisher, async (req: any, res) => {
+  app.get("/api/publisher/credits", requireAuth, async (req: any, res) => {
     try {
-      const publisherId = req.publisher.id;
+      const { publisherId } = req.query;
       
-      const credits = await storage.getPublisherCredits(publisherId);
-      const remainingCredits = await storage.getRemainingCredits(publisherId);
-      const activePackages = await storage.getActivePublisherCredits(publisherId);
+      // Allow admin to query any publisher's credits, or publisher to query their own
+      let targetPublisherId;
+      if (publisherId && req.user.role === 'admin') {
+        targetPublisherId = publisherId;
+      } else if (req.publisher?.id) {
+        targetPublisherId = req.publisher.id;
+      } else {
+        return res.status(403).json({ message: "غير مصرح" });
+      }
+      
+      const credits = await storage.getPublisherCredits(targetPublisherId);
+      const remainingCredits = await storage.getRemainingCredits(targetPublisherId);
+      const activePackages = await storage.getActivePublisherCredits(targetPublisherId);
 
       res.json({
         credits,
@@ -27706,6 +27835,58 @@ Allow: /
     } catch (error) {
       console.error("Error fetching publisher credits:", error);
       res.status(500).json({ message: "فشل في جلب باقات الرصيد" });
+    }
+  });
+
+  // POST /api/publisher/credits/adjust - إضافة/خصم نقاط (Admin only)
+  app.post("/api/publisher/credits/adjust", requireAuth, requirePermission('admin.manage_publishers'), async (req: any, res) => {
+    try {
+      const { publisherId, amount, type, notes, packageType } = req.body;
+
+      if (!publisherId || !amount || !type) {
+        return res.status(400).json({ message: "publisherId, amount, and type are required" });
+      }
+
+      // Validate publisher exists
+      const publisher = await storage.getPublisherById(publisherId);
+      if (!publisher) {
+        return res.status(404).json({ message: "Publisher not found" });
+      }
+
+      // Create credit record
+      const creditData = insertPublisherCreditSchema.parse({
+        publisherId,
+        credits: amount,
+        packageType: packageType || 'adjustment',
+        type,
+        notes: notes || '',
+        createdBy: req.user.id,
+        expiresAt: null, // No expiry for manual adjustments
+      });
+
+      const [newCredit] = await db
+        .insert(publisherCredits)
+        .values(creditData)
+        .returning();
+
+      // Log activity
+      await storage.createPublisherActivityLog({
+        publisherId,
+        action: type === 'deduction' ? 'credits_deducted' : 'credits_added',
+        performedBy: req.user.id,
+        details: `${type}: ${amount} credits. ${notes || ''}`,
+      });
+
+      res.status(201).json({
+        message: "تم تعديل الرصيد بنجاح",
+        credit: newCredit,
+      });
+    } catch (error) {
+      console.error("Error adjusting credits:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+      }
+      res.status(500).json({ message: "فشل في تعديل الرصيد" });
     }
   });
 

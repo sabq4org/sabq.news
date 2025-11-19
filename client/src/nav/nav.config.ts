@@ -366,6 +366,33 @@ export const navConfig: NavItem[] = [
     ],
   },
 
+  // ===== الناشرون / Publishers =====
+  {
+    id: "publishers",
+    labelKey: "nav.publishers",
+    labelAr: "نظام الناشرين",
+    icon: Newspaper,
+    roles: ["admin"],
+    children: [
+      {
+        id: "publishers_list",
+        labelKey: "nav.publishers_list",
+        labelAr: "إدارة الناشرين",
+        path: "/admin/publishers",
+        icon: Users,
+        roles: ["admin"],
+      },
+      {
+        id: "publisher_review",
+        labelKey: "nav.publisher_review",
+        labelAr: "مراجعة مقالات الناشرين",
+        path: "/admin/publishers/review",
+        icon: FileText,
+        roles: ["admin"],
+      },
+    ],
+  },
+
   // ===== المظهر / Appearance =====
   {
     id: "appearance",

@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   FileText,
   Clock,
@@ -46,6 +47,25 @@ type ActivityLog = {
 export default function PublisherDashboard() {
   const { user } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // RBAC Guard: Publisher only
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (user.role !== 'publisher') {
+      navigate('/');
+      toast({ 
+        title: 'غير مصرح', 
+        description: 'هذه الصفحة للناشرين فقط', 
+        variant: 'destructive' 
+      });
+    }
+  }, [user, navigate, toast]);
+
+  if (!user || user.role !== 'publisher') {
+    return null;
+  }
 
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
     queryKey: ["/api/publisher/dashboard"],

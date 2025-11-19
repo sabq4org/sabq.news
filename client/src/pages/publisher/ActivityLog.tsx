@@ -1,5 +1,8 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,6 +27,26 @@ type ActivityLog = {
 
 export default function ActivityLogPage() {
   const { user } = useAuth({ redirectToLogin: true });
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // RBAC Guard: Publisher only
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (user.role !== 'publisher') {
+      navigate('/');
+      toast({ 
+        title: 'غير مصرح', 
+        description: 'هذه الصفحة للناشرين فقط', 
+        variant: 'destructive' 
+      });
+    }
+  }, [user, navigate, toast]);
+
+  if (!user || user.role !== 'publisher') {
+    return null;
+  }
 
   const { data: activities = [], isLoading } = useQuery<ActivityLog[]>({
     queryKey: ["/api/publisher/logs"],

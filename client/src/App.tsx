@@ -33,6 +33,9 @@ import ArticlesManagement from "@/pages/ArticlesManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
 import RolesManagement from "@/pages/RolesManagement";
+import PublishersList from "@/pages/admin/PublishersList";
+import PublisherDetail from "@/pages/admin/PublisherDetail";
+import PublisherReviewQueue from "@/pages/admin/PublisherReviewQueue";
 import Profile from "@/pages/Profile";
 import PublicProfile from "@/pages/PublicProfile";
 import DiscoverUsers from "@/pages/DiscoverUsers";
@@ -382,6 +385,11 @@ function Router() {
       <Route path="/dashboard/ai-tools" component={AITools} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
+      
+      {/* Publishers Management Routes */}
+      <Route path="/admin/publishers" component={PublishersList} />
+      <Route path="/admin/publishers/review" component={PublisherReviewQueue} />
+      <Route path="/admin/publishers/:id" component={PublisherDetail} />
       
       {/* Advertising Dashboard - Arabic only */}
       <Route path="/dashboard/ads" component={AdvertiserDashboard} />
