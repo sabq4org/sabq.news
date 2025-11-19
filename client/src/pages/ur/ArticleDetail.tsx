@@ -164,7 +164,7 @@ export default function UrduArticleDetail() {
             {/* Breadcrumb / Category Badge */}
             {article.category && (
               <div className="mb-6 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" data-testid="badge-category">
+                <Badge variant="outline" className="bg-primary/5 border-primary/30" data-testid="badge-category">
                   {article.category.name}
                 </Badge>
                 {article.status === 'archived' && (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'editor') && (

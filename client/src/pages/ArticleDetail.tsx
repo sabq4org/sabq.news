@@ -819,7 +819,7 @@ export default function ArticleDetail() {
             <div className="bg-card border rounded-lg p-6 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 {article.category && (
-                  <Badge variant="default" data-testid="badge-article-category">
+                  <Badge variant="outline" className="bg-primary/5 border-primary/30 gap-1" data-testid="badge-article-category">
                     {article.category.icon} {article.category.nameAr}
                   </Badge>
                 )}
