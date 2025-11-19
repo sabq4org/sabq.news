@@ -1,0 +1,94 @@
+
+اسم bucket الهدف: sabq-production-bucket
+
+🔍 التحقق من الـ buckets...
+❌ خطأ في التحقق من الـ buckets: ApiError: heimdall-production@replit-user-deployments.iam.gserviceaccount.com does not have storage.buckets.get access to the Google Cloud Storage bucket. Permission 'storage.buckets.get' denied on resource (or it may not exist).
+    at new ApiError (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:85:15)
+    at Util.parseHttpRespBody (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:222:38)
+    at Util.handleResp (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:162:30)
+    at file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:552:22
+    at onResponse (/home/runner/workspace/node_modules/retry-request/index.js:259:7)
+    at <anonymous> (/home/runner/workspace/node_modules/teeny-request/src/index.ts:333:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 403,
+  errors: [
+    {
+      message: "heimdall-production@replit-user-deployments.iam.gserviceaccount.com does not have storage.buckets.get access to the Google Cloud Storage bucket. Permission 'storage.buckets.get' denied on resource (or it may not exist).",
+      domain: 'global',
+      reason: 'forbidden'
+    }
+  ],
+  response: PassThrough {
+    _events: {
+      close: undefined,
+      error: [Array],
+      prefinish: [Function: prefinish],
+      finish: undefined,
+      drain: undefined,
+      data: [Function (anonymous)],
+      end: [Function (anonymous)],
+      readable: undefined,
+      unpipe: undefined
+    },
+    _readableState: ReadableState {
+      highWaterMark: 16384,
+      buffer: [],
+      bufferIndex: 0,
+      length: 0,
+      pipes: [],
+      awaitDrainWriters: null,
+      [Symbol(kState)]: 194512764
+    },
+    _writableState: WritableState {
+      highWaterMark: 16384,
+      length: 0,
+      corked: 0,
+      onwrite: [Function: bound onwrite],
+      writelen: 0,
+      bufferedIndex: 0,
+      pendingcb: 0,
+      [Symbol(kState)]: 1091466620,
+      [Symbol(kBufferedValue)]: null,
+      [Symbol(kWriteCbValue)]: null
+    },
+    allowHalfOpen: true,
+    _maxListeners: undefined,
+    _eventsCount: 4,
+    statusCode: 403,
+    statusMessage: 'Forbidden',
+    request: {
+      agent: [Agent],
+      headers: [Object],
+      href: 'https://storage.googleapis.com/storage/v1/b/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52?'
+    },
+    body: '{\n' +
+      '  "error": {\n' +
+      '    "code": 403,\n' +
+      `    "message": "heimdall-production@replit-user-deployments.iam.gserviceaccount.com does not have storage.buckets.get access to the Google Cloud Storage bucket. Permission 'storage.buckets.get' denied on resource (or it may not exist).",\n` +
+      '    "errors": [\n' +
+      '      {\n' +
+      `        "message": "heimdall-production@replit-user-deployments.iam.gserviceaccount.com does not have storage.buckets.get access to the Google Cloud Storage bucket. Permission 'storage.buckets.get' denied on resource (or it may not exist).",\n` +
+      '        "domain": "global",\n' +
+      '        "reason": "forbidden"\n' +
+      '      }\n' +
+      '    ]\n' +
+      '  }\n' +
+      '}\n',
+    headers: {
+      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+      'content-length': '614',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Wed, 19 Nov 2025 07:18:15 GMT',
+      expires: 'Mon, 01 Jan 1990 00:00:00 GMT',
+      pragma: 'no-cache',
+      server: 'UploadServer',
+      vary: 'Origin, X-Origin',
+      'x-guploader-uploadid': 'AOCedOHyI7F9zwoKoLJicn9k0Jz6kj6yJYUeBti2ls9YFFCTAJwWM-IvC11WuDKEfIzIMDKZoADc3n4'
+    },
+    toJSON: [Function: toJSON],
+    [Symbol(shapeMode)]: true,
+    [Symbol(kCapture)]: false,
+    [Symbol(kCallback)]: null
+  }
+}
+~/workspace$ 
