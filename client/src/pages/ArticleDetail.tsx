@@ -12,6 +12,7 @@ import { ViewsCount } from "@/components/ViewsCount";
 import { AiArticleStats } from "@/components/AiArticleStats";
 import { AdSlot } from "@/components/AdSlot";
 import { SocialShareBar } from "@/components/SocialShareBar";
+import { ImageWithCaption } from "@/components/ImageWithCaption";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -77,6 +78,11 @@ export default function ArticleDetail() {
 
   const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles", slug, "related"],
+  });
+
+  const { data: mediaAssets } = useQuery<any[]>({
+    queryKey: ["/api/articles", article?.id, "media-assets"],
+    enabled: !!article?.id,
   });
 
   // Unified author resolution for both news and opinion articles
@@ -928,16 +934,26 @@ export default function ArticleDetail() {
             </div>
 
             {/* Featured Image - Clean TailAdmin Style */}
-            {article.imageUrl && (
-              <div className="bg-card border rounded-lg overflow-hidden">
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-full h-auto object-cover"
-                  data-testid="img-article-featured"
+            {article.imageUrl && (() => {
+              // Find caption data for hero image (if exists)
+              const heroImageAsset = mediaAssets?.find(
+                (asset: any) => asset.displayOrder === 0
+              );
+              
+              return (
+                <ImageWithCaption
+                  imageUrl={article.imageUrl}
+                  altText={heroImageAsset?.altText || article.title}
+                  captionHtml={heroImageAsset?.captionHtml}
+                  captionPlain={heroImageAsset?.captionPlain}
+                  sourceName={heroImageAsset?.sourceName}
+                  sourceUrl={heroImageAsset?.sourceUrl}
+                  relatedArticleSlugs={heroImageAsset?.relatedArticleSlugs}
+                  keywordTags={heroImageAsset?.keywordTags}
+                  className=""
                 />
-              </div>
-            )}
+              );
+            })()}
 
             {/* Smart Summary - TailAdmin Style */}
             {(article.aiSummary || article.excerpt) && (
