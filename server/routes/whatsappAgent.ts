@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
+import { setObjectAclPolicy } from "../objectAcl";
 import { nanoid } from "nanoid";
 import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature } from "../services/whatsapp";
 import { requireAuth, requireRole } from "../rbac";
@@ -42,6 +43,19 @@ async function uploadToCloudStorage(
         uploadedAt: new Date().toISOString(),
       },
     });
+
+    // 🔓 Make file public if it's in the public directory
+    if (isPublic) {
+      try {
+        await setObjectAclPolicy(gcsFile, {
+          owner: "system",
+          visibility: "public"
+        });
+        console.log(`[WhatsApp Agent] ✅ File made public: ${fullPath}`);
+      } catch (aclError) {
+        console.error(`[WhatsApp Agent] ⚠️ Failed to set public ACL (file still accessible via signed URL):`, aclError);
+      }
+    }
 
     console.log(`[WhatsApp Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} media: ${fullPath}`);
     

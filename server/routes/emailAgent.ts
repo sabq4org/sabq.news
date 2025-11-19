@@ -5,6 +5,7 @@ import mammoth from "mammoth";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
+import { setObjectAclPolicy } from "../objectAcl";
 import { nanoid } from "nanoid";
 
 const router = Router();
@@ -57,6 +58,19 @@ async function uploadAttachmentToGCS(
         uploadedAt: new Date().toISOString(),
       },
     });
+
+    // 🔓 Make file public if it's in the public directory
+    if (isPublic) {
+      try {
+        await setObjectAclPolicy(gcsFile, {
+          owner: "system",
+          visibility: "public"
+        });
+        console.log(`[Email Agent] ✅ File made public: ${fullPath}`);
+      } catch (aclError) {
+        console.error(`[Email Agent] ⚠️ Failed to set public ACL (file still accessible via signed URL):`, aclError);
+      }
+    }
 
     console.log(`[Email Agent] Uploaded ${isPublic ? 'PUBLIC' : 'PRIVATE'} attachment: ${fullPath}`);
     

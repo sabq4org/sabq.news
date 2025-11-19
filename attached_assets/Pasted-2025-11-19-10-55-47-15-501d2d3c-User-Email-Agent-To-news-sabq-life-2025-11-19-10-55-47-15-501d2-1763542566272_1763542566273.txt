@@ -1,0 +1,144 @@
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - To: news@sabq.life
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Text preview: 783ba8db0f873ca773bfebf660f402f6a1814797cfe4a389f857e84693d51026
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Subject: Fwd: «كلاودفلير» توضح أسباب العطل العالمي في شبكتها
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - From: Ali Alhazmi <aalhazmi@sabq.org>
+2025-11-19 10:55:47.15
+501d2d3c
+User
+> Begin forwarded message:
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] Parsed email successfully:
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 Found 1 attachments in raw MIME
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Text length: 1135
+2025-11-19 10:55:47.15
+501d2d3c
+User
+> Subject: «كلاودفلير» توضح أسباب العطل العالمي في شبكتها
+2025-11-19 10:55:47.15
+501d2d3c
+User
+>
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 Converting parsed attachments to Multer format
+2025-11-19 10:55:47.15
+501d2d3c
+User
+> From: abudulmalek sroor <sr282s@gmail.com>
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Has attachments array: true
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📧 Parsed email structure:
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - HTML length: 10491
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Attachments count: 1
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Subject: Fwd: «كلاودفلير» توضح أسباب العطل العالمي في شبكتها
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - From: Ali Alhazmi <aalhazmi@sabq.org>
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - req.files keys: []
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📸 Storing image in memory (deferred upload): IMG_1467.WEBP (27.09 KB)
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Multer files received: 1
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] ✅ Converted 1 attachments from raw MIME
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 ==========================================
+2025-11-19 10:55:47.15
+501d2d3c
+User
+size: '27.09 KB',
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 Attachment 1: {
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📸 DETECTED IMAGE: IMG_1467.WEBP, mimetype: image/webp, size: 27736 bytes
+2025-11-19 10:55:47.15
+501d2d3c
+User
+mimetype: 'image/webp',
+2025-11-19 10:55:47.15
+501d2d3c
+User
+fieldname: 'attachment',
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] Final extracted values:
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 ============ ATTACHMENTS DETAILS ============
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Text length: 1135
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 Early processing summary:
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] 📎 ============ PROCESSING ALL ATTACHMENTS (EARLY) ============
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - HTML length: 10491
+2025-11-19 10:55:47.15
+501d2d3c
+User
+originalname: 'IMG_1467.WEBP',
+2025-11-19 10:55:47.15
+501d2d3c
+User
+[Email Agent] - Total attachments: 1

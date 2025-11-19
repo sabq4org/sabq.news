@@ -1,0 +1,140 @@
+2025-11-19 10:55:58.92
+501d2d3c
+User
+[Email Agent] Quality score: 82
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 🌐 Public URL generated: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] ✅ Image uploaded to PUBLIC: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] Uploaded PUBLIC attachment: public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 Finished uploading 1 images
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 uploadAttachmentToGCS returned: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 Added new metadata for IMG_1467.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 uploadedImages count: 1
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 Added to uploadedImages array. Total now: 1
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 Uploaded images count AFTER upload: 1
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] - Language: ar
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📝 Author ID (reporter): email-agent-system
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 uploadedImages: [
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 🎨 uploadedImages[0]: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] ✅ Images uploaded successfully
+2025-11-19 10:55:59.09
+501d2d3c
+User
+'https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP'
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 Uploaded images URLs: [
+2025-11-19 10:55:59.09
+501d2d3c
+User
+'https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP'
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📸 ========== uploadPendingImages completed ==========
+2025-11-19 10:55:59.09
+501d2d3c
+User
+]
+2025-11-19 10:55:59.09
+501d2d3c
+User
+]
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 🎨 ✅ Featured image selected: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/email-attachments/8WUGjJUE5UiH0jDqOMveB.WEBP
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] ✅ Final category ID selected: fbed5124-d2f7-48fe-87f2-ad7a23656b4f
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📝 Category ID: fbed5124-d2f7-48fe-87f2-ad7a23656b4f
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📝 Creating article...
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] ✅ Exact category match found: تقنية (ID: fbed5124-d2f7-48fe-87f2-ad7a23656b4f)
+2025-11-19 10:55:59.09
+501d2d3c
+User
+[Email Agent] 📝 ========== PREPARING ARTICLE DATA ==========
+2025-11-19 10:55:59.11
+501d2d3c
+User
+[Email Agent] - Title: «كلاودفلير» تكشف سبب العطل العالمي وتستبعد الهجوم السيبراني
+2025-11-19 10:56:00.12
+501d2d3c
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-19 10:56:09.26
+501d2d3c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 10:56:09.27
+501d2d3c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 10:56:09.29
+501d2d3c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 10:56:09.30
+501d2d3c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 10:56:09.35
+501d2d3c
+User
+8:56:09 AM [express] GET /api/live/breaking 304 in 230ms :: {"items":[]}
+2025-11-19 10:56:09.40
+501d2d3c
+User
+8:56:09 AM [express] GET /api/live/updates 200 in 294ms :: {"items":[{"id":"5BQqJSb-XL8X54jDpNftP","…
