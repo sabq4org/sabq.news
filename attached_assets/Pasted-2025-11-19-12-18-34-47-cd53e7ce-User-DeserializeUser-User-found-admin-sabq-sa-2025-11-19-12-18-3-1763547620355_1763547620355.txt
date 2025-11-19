@@ -1,0 +1,129 @@
+2025-11-19 12:18:34.47
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:37.41
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:18:37.43
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:37.45
+cd53e7ce
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 12:18:37.54
+cd53e7ce
+User
+10:18:37 AM [express] GET /api/admin/users 200 in 160ms :: {"items":[{"id":"y7isbbIGqJChGfFHPENbB","n…
+2025-11-19 12:18:45.84
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-19 12:18:45.86
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:49.37
+cd53e7ce
+User
+10:18:49 AM [express] POST /api/ai/compare-headlines 200 in 3552ms :: {"suggestions":[{"provider":"op…
+2025-11-19 12:18:52.72
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:18:52.74
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:52.79
+cd53e7ce
+User
+10:18:52 AM [express] POST /api/accessibility/track 200 in 92ms :: {"success":true,"eventId":"fe3632a…
+2025-11-19 12:18:54.41
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:18:54.43
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:54.50
+cd53e7ce
+User
+10:18:54 AM [express] GET /api/themes/active 304 in 115ms
+2025-11-19 12:18:57.52
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:18:57.54
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:57.56
+cd53e7ce
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-19 12:18:57.59
+cd53e7ce
+User
+10:18:57 AM [express] POST /api/admin/articles 400 in 95ms :: {"message":"Invalid article data","erro…
+2025-11-19 12:18:57.94
+cd53e7ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:18:57.97
+cd53e7ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:18:58.02
+cd53e7ce
+User
+10:18:58 AM [express] POST /api/accessibility/track 200 in 94ms :: {"success":true,"eventId":"95af565…
+2025-11-19 12:19:00.02
+cd53e7ce
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-19 12:19:00.02
+cd53e7ce
+User
+[NotificationWorker] Starting queue processing...
+2025-11-19 12:19:00.05
+cd53e7ce
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-19 12:19:00.13
+cd53e7ce
+User
+[NotificationWorker] Queue processing completed
+2025-11-19 12:19:00.13
+cd53e7ce
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-19 12:20:00.02
+cd53e7ce
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-19 12:20:00.02
+cd53e7ce
+User
+[NotificationWorker] Starting queue processing...
+2025-11-19 12:20:00.13
+cd53e7ce
+User
+[NotificationWorker] Queue processing completed
+2025-11-19 12:20:00.13
+cd53e7ce
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-19 12:20:00.17
+cd53e7ce
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-19 12:20:00.17
+cd53e7ce
+User
+[ScheduledPublisher] Found 0 articles ready to publish
