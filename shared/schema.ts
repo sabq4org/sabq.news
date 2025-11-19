@@ -391,6 +391,82 @@ export const creativeRecommendationSchema = z.object({
   score: z.number().optional(),
 }).optional();
 
+// System settings value schema (highly variable, but validate common types)
+export const systemSettingsValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.any()),
+  z.record(z.any()),
+]);
+
+// Notification template content schema
+export const notificationTemplateContentSchema = z.object({
+  subject: z.string().optional(),
+  body: z.string(),
+  template: z.string().optional(),
+  variables: z.array(z.string()).optional(),
+}).optional();
+
+// AI workflow config schema
+export const aiWorkflowConfigSchema = z.object({
+  model: z.string().optional(),
+  temperature: z.number().optional(),
+  maxTokens: z.number().optional(),
+  prompt: z.string().optional(),
+}).catchall(z.any()).optional();
+
+// Journalist task config schema (more specific)
+export const journalistTaskConfigSchema = z.object({
+  reminderEnabled: z.boolean().optional(),
+  priorityLevel: z.number().optional(),
+  tags: z.array(z.string()).optional(),
+  estimatedHours: z.number().optional(),
+}).optional();
+
+// Session data schema
+export const sessionDataSchema = z.object({
+  cookie: z.object({
+    originalMaxAge: z.number().optional(),
+    expires: z.union([z.string(), z.date()]).optional(),
+    secure: z.boolean().optional(),
+    httpOnly: z.boolean().optional(),
+    path: z.string().optional(),
+  }).optional(),
+  passport: z.object({
+    user: z.any().optional(),
+  }).optional(),
+}).catchall(z.any());
+
+// Activity log old/new value schemas
+export const activityLogValueSchema = z.record(z.any()).optional();
+
+// Internal announcement revision schemas
+export const revisionDiffSchema = z.any().optional();
+export const revisionMetaSchema = z.object({
+  editor: z.string().optional(),
+  reason: z.string().optional(),
+}).optional();
+
+// Preview data schema
+export const previewDataSchema = z.array(z.record(z.any())).optional();
+
+// AI analysis schemas
+export const aiAnalysisSchema = z.object({
+  summary: z.string().optional(),
+  topics: z.array(z.string()).optional(),
+  sentiment: z.string().optional(),
+  entities: z.array(z.string()).optional(),
+}).catchall(z.any()).optional();
+
+// Attachments data schema
+export const attachmentsDataSchema = z.array(z.object({
+  url: z.string(),
+  name: z.string(),
+  type: z.string(),
+  size: z.number().optional(),
+})).optional();
+
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",
@@ -1681,6 +1757,8 @@ export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit
   id: true, 
   createdAt: true, 
   updatedAt: true 
+}).extend({
+  value: systemSettingsValueSchema,
 });
 export const insertThemeSchema = createInsertSchema(themes).omit({ 
   id: true, 
@@ -1768,14 +1846,16 @@ export const updateStaffSchema = z.object({
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true }).extend({
-  oldValue: z.record(z.any()).optional(),
-  newValue: z.record(z.any()).optional(),
+  oldValue: activityLogValueSchema,
+  newValue: activityLogValueSchema,
   metadata: activityLogMetadataSchema,
 });
 
 export const insertNotificationTemplateSchema = createInsertSchema(notificationTemplates).omit({ 
   id: true, 
   createdAt: true 
+}).extend({
+  config: notificationTemplateContentSchema,
 });
 
 export const insertUserNotificationPrefsSchema = createInsertSchema(userNotificationPrefs).omit({ 
@@ -2741,6 +2821,8 @@ export const insertExperimentVariantSchema = createInsertSchema(experimentVarian
   exposures: true,
   conversions: true,
   conversionRate: true,
+}).extend({
+  variantData: experimentVariantDataSchema,
 });
 
 export const insertExperimentExposureSchema = createInsertSchema(experimentExposures).omit({
@@ -5564,12 +5646,19 @@ export const insertDataStorySourceSchema = createInsertSchema(dataStorySources).
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  columns: columnsSchema,
+  previewData: previewDataSchema,
 });
 
 export const insertDataStoryAnalysisSchema = createInsertSchema(dataStoryAnalyses).omit({
   id: true,
   createdAt: true,
   completedAt: true,
+}).extend({
+  statistics: statisticsSchema,
+  aiInsights: aiInsightsSchema,
+  chartConfigs: chartConfigsSchema,
 });
 
 export const insertDataStoryDraftSchema = createInsertSchema(dataStoryDrafts).omit({
@@ -5579,6 +5668,7 @@ export const insertDataStoryDraftSchema = createInsertSchema(dataStoryDrafts).om
 }).extend({
   title: z.string().min(1, "عنوان القصة مطلوب"),
   content: z.string().min(10, "محتوى القصة مطلوب"),
+  outline: outlineSchema,
 });
 
 // ============================================
