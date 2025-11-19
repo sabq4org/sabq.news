@@ -36,7 +36,7 @@ export function SocialShareBar({
   const { toast } = useToast();
   const { logBehavior } = useBehaviorTracking();
 
-  const shareUrl = url.startsWith("http") ? url : `https://sabq.life${url}`;
+  const shareUrl = url.startsWith("http") ? url : `https://sabq.news${url}`;
   const shareText = `${title}${description ? `\n\n${description}` : ""}`;
 
   const trackShare = (platform: string) => {

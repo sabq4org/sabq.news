@@ -83,7 +83,7 @@ export class PressPassBuilder extends PassBuilder {
       {
         key: 'website',
         label: 'الموقع الإلكتروني',
-        value: 'https://sabq.life',
+        value: 'https://sabq.news',
       }
     );
   }

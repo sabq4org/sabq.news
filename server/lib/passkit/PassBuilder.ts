@@ -74,7 +74,7 @@ export abstract class PassBuilder {
           passTypeIdentifier: this.passTypeId,
           teamIdentifier: this.teamId,
           authenticationToken: data.authToken,
-          webServiceURL: process.env.FRONTEND_URL || 'https://sabq.life',
+          webServiceURL: process.env.FRONTEND_URL || 'https://sabq.news',
           backgroundColor: this.getBackgroundColor(),
           foregroundColor: 'rgb(255, 255, 255)',
           labelColor: 'rgb(255, 255, 255)',

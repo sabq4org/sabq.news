@@ -21445,7 +21445,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // Dynamic XML Sitemap
   app.get("/sitemap.xml", async (req, res) => {
     try {
-      const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.life";
+      const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.news";
       
       // Get all published articles
       const publishedArticles = await db
@@ -21509,7 +21509,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
   // Robots.txt
   app.get("/robots.txt", (req, res) => {
-    const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.life";
+    const baseUrl = process.env.REPL_DOMAINS?.split(',')[0] || "https://sabq.news";
     
     const robotsTxt = `# Sabq Smart - سبق الذكية
 User-agent: *
@@ -25065,8 +25065,8 @@ Allow: /
       // Prepare Open Graph data with proper escaping
       const ogTitle = escapeHtml(article?.title || 'سبق الذكية - منصة الأخبار الذكية');
       const ogDescription = escapeHtml(article?.excerpt || 'أخبار محدثة مع تلخيص تلقائي بالذكاء الاصطناعي ونظام توصيات شخصي');
-      const ogImage = escapeHtml(article?.imageUrl || 'https://sabq.life/default-og-image.jpg');
-      const ogUrl = escapeHtml(`https://sabq.life/s/${code}`);
+      const ogImage = escapeHtml(article?.imageUrl || 'https://sabq.news/default-og-image.jpg');
+      const ogUrl = escapeHtml(`https://sabq.news/s/${code}`);
       const safeRedirectUrl = escapeHtml(redirectUrl);
 
       const html = `<!DOCTYPE html>

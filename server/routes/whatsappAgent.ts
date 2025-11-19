@@ -48,7 +48,7 @@ async function uploadToCloudStorage(
     // 🎯 Return Backend Proxy URL (Replit Object Storage doesn't allow makePublic or signed URLs)
     // The backend will stream the file from Object Storage
     if (isPublic) {
-      const frontendUrl = process.env.FRONTEND_URL || 'https://sabq.life';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://sabq.news';
       const proxyUrl = `${frontendUrl}/api/public-media/${fullPath}`;
       console.log(`[WhatsApp Agent] 🌐 Generated proxy URL: ${proxyUrl}`);
       return proxyUrl;

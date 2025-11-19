@@ -96,7 +96,7 @@ const translations = {
     knownIssue3: "تحسين وضع القراءة للمستخدمين ذوي صعوبات التعلم",
     
     // Footer
-    footerAppliesTo: "بيان إمكانية الوصول هذا ينطبق على منصة صبق سمارت (sabq.life)",
+    footerAppliesTo: "بيان إمكانية الوصول هذا ينطبق على منصة صبق سمارت (sabq.news)",
     footerLastReview: "آخر مراجعة:",
   },
   en: {
@@ -178,7 +178,7 @@ const translations = {
     knownIssue3: "Improving reading mode for users with learning difficulties",
     
     // Footer
-    footerAppliesTo: "This accessibility statement applies to Sabq Smart platform (sabq.life)",
+    footerAppliesTo: "This accessibility statement applies to Sabq Smart platform (sabq.news)",
     footerLastReview: "Last Review:",
   }
 };
@@ -452,11 +452,11 @@ export default function AccessibilityStatement() {
                   <span className="font-medium">{t.emailLabel}</span>
                 </div>
                 <a 
-                  href="mailto:accessibility@sabq.life" 
+                  href="mailto:accessibility@sabq.news" 
                   className={`text-primary hover:underline block ${isRTL ? 'mr-6' : 'ml-6'}`}
                   data-testid="link-email-contact"
                 >
-                  accessibility@sabq.life
+                  accessibility@sabq.news
                 </a>
               </div>
 
@@ -470,7 +470,7 @@ export default function AccessibilityStatement() {
                 asChild
                 data-testid="button-send-feedback"
               >
-                <a href="mailto:accessibility@sabq.life">
+                <a href="mailto:accessibility@sabq.news">
                   <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
                   {t.sendFeedbackButton}
                 </a>

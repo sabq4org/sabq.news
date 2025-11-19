@@ -188,7 +188,7 @@ export default function ArticleDetail() {
       const response = await apiRequest("/api/shortlinks", {
         method: "POST",
         body: JSON.stringify({
-          originalUrl: `https://sabq.life/article/${slug}`,
+          originalUrl: `https://sabq.news/article/${slug}`,
           articleId: article.id,
           utmMedium: "social",
           utmCampaign: "article_share",
@@ -1067,7 +1067,7 @@ export default function ArticleDetail() {
               ) : (
                 <SocialShareBar
                   title={article.title}
-                  url={shortLink?.shortCode ? `https://sabq.life/s/${shortLink.shortCode}` : `https://sabq.life/article/${slug}`}
+                  url={shortLink?.shortCode ? `https://sabq.news/s/${shortLink.shortCode}` : `https://sabq.news/article/${slug}`}
                   description={article.excerpt || ""}
                   articleId={article.id}
                 />
