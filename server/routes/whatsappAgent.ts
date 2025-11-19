@@ -501,50 +501,11 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
     const slug = generateSlug(aiResult.optimized.title);
     
-    // ============================================
-    // 📚 PUBLISHER DETECTION
-    // ============================================
-    let detectedPublisher = null;
-    let isPublisherContent = false;
-    
-    try {
-      console.log("[WhatsApp Agent] 🔍 Checking if sender is a registered publisher...");
-      const publisher = await storage.getPublisherByPhone(phoneNumber);
-      
-      if (publisher && publisher.isActive) {
-        detectedPublisher = publisher;
-        isPublisherContent = true;
-        console.log(`[WhatsApp Agent] ✅ Publisher detected: ${publisher.agencyName} (ID: ${publisher.id})`);
-        console.log(`[WhatsApp Agent]    - Phone: ${phoneNumber}`);
-        console.log(`[WhatsApp Agent]    - Status: Active`);
-        console.log(`[WhatsApp Agent]    - Content will be marked for review (draft + pending)`);
-      } else if (publisher && !publisher.isActive) {
-        console.log(`[WhatsApp Agent] ⚠️ Publisher found but INACTIVE: ${publisher.agencyName}`);
-        console.log(`[WhatsApp Agent]    - Content will be treated as regular submission`);
-      } else {
-        console.log(`[WhatsApp Agent] ℹ️ Sender is not a registered publisher`);
-        console.log(`[WhatsApp Agent]    - Content will follow standard workflow`);
-      }
-    } catch (publisherCheckError) {
-      console.error(`[WhatsApp Agent] ⚠️ Error checking publisher status:`, publisherCheckError);
-      console.error(`[WhatsApp Agent] ⚠️ Continuing with standard workflow`);
-    }
-    
-    // Determine article status based on publisher detection
-    let articleStatus: string;
-    let publishedAt: Date | null;
-    
-    if (isPublisherContent) {
-      // Publisher content always goes to draft for review
-      articleStatus = "draft";
-      publishedAt = null;
-      console.log("[WhatsApp Agent] 📝 Publisher content - forcing status to 'draft' (requires review)");
-    } else {
-      // Non-publisher content follows original logic
-      articleStatus = whatsappToken.autoPublish ? 'published' : 'draft';
-      publishedAt = articleStatus === 'published' ? new Date() : null;
-      console.log("[WhatsApp Agent] 📝 Regular content - status:", articleStatus);
-    }
+    // Determine article status based on token configuration
+    const articleStatus: string = whatsappToken.autoPublish ? 'published' : 'draft';
+    const publishedAt: Date | null = articleStatus === 'published' ? new Date() : null;
+    console.log("[WhatsApp Agent] 📝 Article status:", articleStatus);
+    console.log("[WhatsApp Agent] 📝 Auto-publish:", whatsappToken.autoPublish);
 
     const article = await storage.createArticle({
       title: aiResult.optimized.title,
@@ -563,10 +524,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
         token,
         originalMessage: body,
         webhookLogId: webhookLog.id,
-        ...(isPublisherContent && {
-          publisherPhone: phoneNumber,
-          submittedVia: 'whatsapp',
-        }),
       },
       seoKeywords: aiResult.optimized.seoKeywords,
       // 🔥 Essential fields for article visibility
@@ -574,17 +531,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
       displayOrder: 0, // Default display order
-      // 📚 Publisher fields (if applicable)
-      ...(isPublisherContent && {
-        publisherId: detectedPublisher!.id,
-        isPublisherContent: true,
-        publisherStatus: 'pending',
-        metadata: {
-          publisherPhone: phoneNumber,
-          submittedVia: 'whatsapp',
-          submittedAt: new Date().toISOString(),
-        },
-      }),
     } as any);
 
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
@@ -592,81 +538,31 @@ router.post("/webhook", async (req: Request, res: Response) => {
     await storage.updateWhatsappTokenUsage(whatsappToken.id);
 
     // ============================================
-    // 📚 PUBLISHER ACTIVITY LOGGING
-    // ============================================
-    if (isPublisherContent && article && detectedPublisher) {
-      try {
-        console.log("[WhatsApp Agent] 📝 Logging publisher activity...");
-        await storage.createPublisherActivityLog({
-          publisherId: detectedPublisher.id,
-          action: 'article_submitted',
-          details: 'Article submitted via WhatsApp',
-          metadata: {
-            articleId: article.id,
-            articleTitle: article.title,
-            articleSlug: slug,
-            phone: phoneNumber,
-            submittedAt: new Date().toISOString(),
-            qualityScore: aiResult.qualityScore,
-            language: aiResult.language,
-            categoryId: category?.id,
-          },
-        });
-        console.log("[WhatsApp Agent] ✅ Publisher activity logged successfully");
-      } catch (activityLogError) {
-        console.error("[WhatsApp Agent] ⚠️ Failed to log publisher activity:", activityLogError);
-      }
-    }
-
-    // ============================================
     // 📢 STAFF NOTIFICATIONS
     // ============================================
-    // Broadcast notification to staff users about new article
-    // - For publisher content: Always notify for review
-    // - For regular content: Notify only if auto-published
-    if ((isPublisherContent || whatsappToken.autoPublish) && article) {
+    // Broadcast notification to staff when article is auto-published
+    if (whatsappToken.autoPublish && article) {
       try {
+        console.log("[WhatsApp Agent] 📢 Broadcasting notification to staff about published article...");
+        
         const detectedLanguage = aiResult.language;
         let notificationTitle: string;
         let notificationBody: string;
-        let notificationType: string;
         
-        if (isPublisherContent) {
-          // Publisher content notification - needs review
-          console.log("[WhatsApp Agent] 📢 Broadcasting notification to staff about publisher content...");
-          
-          if (detectedLanguage === "en") {
-            notificationTitle = "Publisher Content - Review Required";
-            notificationBody = `New content from publisher "${detectedPublisher?.agencyName}" via WhatsApp: ${article.title}`;
-          } else if (detectedLanguage === "ur") {
-            notificationTitle = "ناشر کی طرف سے مواد - جائزہ درکار";
-            notificationBody = `واٹس ایپ کے ذریعے ناشر "${detectedPublisher?.agencyName}" کی طرف سے نیا مواد: ${article.title}`;
-          } else {
-            // Default to Arabic
-            notificationTitle = "محتوى من ناشر - مراجعة مطلوبة";
-            notificationBody = `محتوى جديد من الناشر "${detectedPublisher?.agencyName}" عبر واتساب: ${article.title}`;
-          }
-          notificationType = "publisher_content_review";
+        if (detectedLanguage === "en") {
+          notificationTitle = "New Article Published";
+          notificationBody = `A new article has been published via WhatsApp: ${article.title}`;
+        } else if (detectedLanguage === "ur") {
+          notificationTitle = "نیا مضمون شائع ہوا";
+          notificationBody = `واٹس ایپ کے ذریعے نیا مضمون شائع کیا گیا: ${article.title}`;
         } else {
-          // Regular published article notification
-          console.log("[WhatsApp Agent] 📢 Broadcasting notification to staff about published article...");
-          
-          if (detectedLanguage === "en") {
-            notificationTitle = "New Article Published";
-            notificationBody = `A new article has been published via WhatsApp: ${article.title}`;
-          } else if (detectedLanguage === "ur") {
-            notificationTitle = "نیا مضمون شائع ہوا";
-            notificationBody = `واٹس ایپ کے ذریعے نیا مضمون شائع کیا گیا: ${article.title}`;
-          } else {
-            // Default to Arabic
-            notificationTitle = "مقال جديد";
-            notificationBody = `تم نشر مقال جديد عبر واتساب: ${article.title}`;
-          }
-          notificationType = "article_published";
+          // Default to Arabic
+          notificationTitle = "مقال جديد";
+          notificationBody = `تم نشر مقال جديد عبر واتساب: ${article.title}`;
         }
         
         await storage.broadcastNotificationToStaff({
-          type: notificationType,
+          type: "article_published",
           title: notificationTitle,
           body: notificationBody,
           deeplink: `/articles/${slug}`,
@@ -677,16 +573,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
             articleTitle: article.title,
             publishedAt: publishedAt?.toISOString() || null,
             status: articleStatus,
-            isPublisherContent,
-            ...(isPublisherContent && {
-              publisher: {
-                id: detectedPublisher?.id,
-                name: detectedPublisher?.agencyName,
-                phone: phoneNumber,
-              },
-              requiresReview: true,
-              publisherStatus: 'pending',
-            }),
             imageUrl: article.imageUrl || null,
           }
         });
@@ -717,23 +603,10 @@ router.post("/webhook", async (req: Request, res: Response) => {
       processingTimeMs: Date.now() - startTime,
     });
 
-    // Prepare reply message based on whether it's publisher content or regular content
-    let replyMessage: string;
-    if (isPublisherContent) {
-      // Publisher content - always draft for review
-      if (aiResult.language === "en") {
-        replyMessage = `✅ Content received successfully\nYour submission is under review\nYou will be notified once it's published`;
-      } else if (aiResult.language === "ur") {
-        replyMessage = `✅ مواد کامیابی سے موصول ہوا\nآپ کی جمع کرائی جائزے کے تحت ہے\nشائع ہونے پر آپ کو مطلع کیا جائے گا`;
-      } else {
-        replyMessage = `✅ تم استلام المحتوى بنجاح\nمحتواك قيد المراجعة\nسيتم إخطارك عند نشره`;
-      }
-    } else {
-      // Regular content - published or draft based on token setting
-      replyMessage = articleStatus === 'published'
-        ? `✅ تم نشر الخبر\nhttps://sabq.news/article/${slug}`
-        : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;
-    }
+    // Prepare reply message based on article status
+    const replyMessage = articleStatus === 'published'
+      ? `✅ تم نشر الخبر\nhttps://sabq.news/article/${slug}`
+      : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;
 
     try {
       await sendWhatsAppMessage({
