@@ -35,6 +35,13 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes a scope-aware theme management system, Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with a versioned migration approach handles database schema changes.
 
+**Article Ordering Strategy:**
+The platform employs a hybrid ordering approach to balance editorial curation with chronological feeds:
+
+-   **Curated Sections (Manual Priority):** Hero Articles, Breaking News, Editor Picks, and Featured Shorts use `displayOrder` as the primary sort key, followed by `publishedAt` (and `views` where applicable). This allows editors to manually pin important content regardless of publish time.
+-   **Automated Feeds (Chronological):** For You Feed, General Article Listings, Deep Dive Articles, and Shorts Feeds use pure chronological ordering based on `publishedAt` and `createdAt`. This ensures articles from automated sources (Email Agent, WhatsApp Agent) appear in correct time sequence without manual intervention.
+-   **Implementation Note:** Articles without `displayOrder` values (NULL) are automatically sorted after manually prioritized content in curated sections, ensuring editorial control remains intact while automated content flows naturally into time-based feeds.
+
 ## External Dependencies
 
 -   **Authentication & Identity:** Passport.js (`passport-local`, `passport-google-oauth20`, `passport-apple`), `express-session`, `connect-pg-simple`, `apple-signin-auth`

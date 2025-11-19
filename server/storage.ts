@@ -3739,7 +3739,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt), desc(articles.views))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.views))
       .limit(3);
 
     return results.map((r) => ({
@@ -3833,7 +3833,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -4022,7 +4022,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt), desc(articles.views))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.views))
       .limit(limit);
 
     return results.map((r) => ({
@@ -9376,7 +9376,7 @@ export class DatabaseStorage implements IStorage {
           eq(shorts.isFeatured, true)
         )
       )
-      .orderBy(desc(shorts.publishedAt))
+      .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt))
       .limit(limit);
 
     return results.map(r => ({
