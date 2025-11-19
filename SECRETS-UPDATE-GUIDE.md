@@ -29,7 +29,7 @@
 
 #### ج) أدخل القيمة الجديدة:
 ```
-/sabq-production-bucket/public
+/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public
 ```
 - **لا تضيف مسافات** قبل أو بعد
 - **لا تضيف علامات اقتباس** (" أو ')
@@ -51,7 +51,7 @@
 
 #### ج) أدخل القيمة الجديدة:
 ```
-/sabq-production-bucket/.private
+/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/.private
 ```
 - **لاحظ النقطة** قبل `private` (مهمة جداً)
 - **لا تضيف مسافات** قبل أو بعد
@@ -107,7 +107,7 @@
    ```
 
 3. **تأكد من الإملاء:**
-   - `sabq-production-bucket` (كل الحروف صغيرة)
+   - `replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138` (نسخ كامل)
    - `.private` (بنقطة في البداية)
 
 4. **انتظر قليلاً:**
