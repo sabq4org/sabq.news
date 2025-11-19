@@ -1,0 +1,144 @@
+2025-11-19 13:29:06.09
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.11
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.11
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.11
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.17
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/shortlinks/article/dpS67VGD766EyIyj5pqNH 404 in 103ms :: {"message":"ل…
+2025-11-19 13:29:06.17
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.19
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.19
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/ads/slot/sidebar 204 in 126ms
+2025-11-19 13:29:06.19
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.20
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.21
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.22
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.27
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/opinion/related/category/fbed5124-d2f7-48fe-87f2-ad7a23656b4f 200 in 9…
+2025-11-19 13:29:06.28
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/articles/%D9%83%D9%84%D8%A7%D9%88%D8%AF%D9%81%D9%84%D9%8A%D8%B1-%D8%AA…
+2025-11-19 13:29:06.32
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.33
+d5aff1f8
+User
+✅ [EVENT TRACKING] Tracked event: view for article dpS67VGD766EyIyj5pqNH (value: 1)
+2025-11-19 13:29:06.34
+d5aff1f8
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 13:29:06.34
+d5aff1f8
+User
+[Storage] Checking if user is following: { followerId: 'admin-sabq', followingId: 'email-agent-system' }
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+[Social Follow] Checked following status: {
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+followerId: 'admin-sabq',
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+isFollowing: true
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+[Storage] Is following: true
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+followingId: 'email-agent-system',
+2025-11-19 13:29:06.36
+d5aff1f8
+User
+}
+2025-11-19 13:29:06.39
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/social/is-following/email-agent-system 304 in 214ms :: {"isFollowing":…
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+reason: 'READ',
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+}
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+passType: 'loyalty',
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+timestamp: 2025-11-19T11:29:06.495Z
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+📱 [Pass Update] Logged: {
+2025-11-19 13:29:06.49
+d5aff1f8
+User
+userId: 'admin-sabq',
+2025-11-19 13:29:06.50
+d5aff1f8
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 13:29:06.51
+d5aff1f8
+User
+11:29:06 AM [express] POST /api/behavior/log 200 in 344ms :: {"success":true}
+2025-11-19 13:29:06.52
+d5aff1f8
+User
+11:29:06 AM [express] GET /api/articles/%D9%83%D9%84%D8%A7%D9%88%D8%AF%D9%81%D9%84%D9%8A%D8%B1-%D8%AA…
+2025-11-19 13:29:06.57
+d5aff1f8
+User
+✅ Short link created: ZV_0bLnA -> https://sabq.life/article/كلاودفلير-تكشف-سبب-العطل-العالمي-وتؤكد-ليس-هجومًا-سيبرانيًا-1763551735857
