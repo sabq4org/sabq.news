@@ -163,6 +163,9 @@ import {
   taskAttachments,
   taskActivityLog,
   accessibilityEvents,
+  publishers,
+  publisherCredits,
+  publisherActivityLogs,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -251,6 +254,9 @@ import {
   insertShortLinkClickSchema,
   insertSocialFollowSchema,
   insertAccessibilityEventSchema,
+  insertPublisherSchema,
+  insertPublisherCreditSchema,
+  insertPublisherActivityLogSchema,
   type EnArticleWithDetails,
   type UrArticleWithDetails,
   type User,
