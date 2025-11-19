@@ -39,6 +39,7 @@ import {
   UserCheck,
   Eye,
   MessageSquare,
+  Archive,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -61,7 +62,7 @@ export default function ArticleDetail() {
   // Smart summary collapsible state
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
@@ -820,6 +821,12 @@ export default function ArticleDetail() {
                 {article.category && (
                   <Badge variant="default" data-testid="badge-article-category">
                     {article.category.icon} {article.category.nameAr}
+                  </Badge>
+                )}
+                {article.status === 'archived' && (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'editor') && (
+                  <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700 gap-1" data-testid="badge-article-archived">
+                    <Archive className="h-3 w-3" />
+                    مؤرشف
                   </Badge>
                 )}
                 {article.aiGenerated && (

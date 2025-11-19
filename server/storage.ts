@@ -2211,7 +2211,19 @@ export class DatabaseStorage implements IStorage {
     status?: string;
     authorId?: string;
     searchQuery?: string;
+    userRole?: string;
   }): Promise<ArticleWithDetails[]> {
+    // Security: Check authorization BEFORE applying status filter
+    const isAuthorized = filters?.userRole === 'system_admin' || 
+                        filters?.userRole === 'admin' || 
+                        filters?.userRole === 'editor';
+
+    // CRITICAL SECURITY: Prevent unauthorized access to archived articles
+    if (filters?.status === 'archived' && !isAuthorized) {
+      console.warn(`[SECURITY] Unauthorized attempt to access archived articles - UserRole: ${filters.userRole || 'unauthenticated'}`);
+      return []; // Early return: no results for unauthorized archived requests
+    }
+
     const conditions = [];
 
     if (filters?.categoryId) {
@@ -2221,6 +2233,7 @@ export class DatabaseStorage implements IStorage {
     if (filters?.status) {
       conditions.push(eq(articles.status, filters.status));
     } else {
+      // Default to published articles only
       conditions.push(eq(articles.status, "published"));
     }
 
@@ -2305,7 +2318,7 @@ export class DatabaseStorage implements IStorage {
 
     // Security: Prevent access to archived articles for non-admin/editor users
     if (article.status === 'archived') {
-      const isAuthorized = userRole === 'admin' || userRole === 'editor';
+      const isAuthorized = userRole === 'system_admin' || userRole === 'admin' || userRole === 'editor';
       if (!isAuthorized) {
         console.warn(`[SECURITY] Archived article access denied - Article: ${article.slug}, UserRole: ${userRole || 'unauthenticated'}, UserId: ${userId || 'none'}`);
         return undefined; // Hide archived articles from regular users

@@ -519,7 +519,7 @@ export default function ArticlesManagement() {
       draft: <Badge variant="secondary" data-testid="badge-draft">مسودة</Badge>,
       scheduled: <Badge variant="outline" data-testid="badge-scheduled">مجدول</Badge>,
       published: <Badge variant="default" data-testid="badge-published">منشور</Badge>,
-      archived: <Badge variant="destructive" data-testid="badge-archived">مؤرشف</Badge>,
+      archived: <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700 gap-1" data-testid="badge-archived"><Archive className="h-3 w-3" /> مؤرشف</Badge>,
     };
     return badges[status as keyof typeof badges] || <Badge>{status}</Badge>;
   };

@@ -20,6 +20,7 @@ import {
   User,
   ChevronDown,
   ChevronUp,
+  Archive,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -34,7 +35,7 @@ export default function UrduArticleDetail() {
   const { toast } = useToast();
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string }>({
+  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
@@ -162,10 +163,16 @@ export default function UrduArticleDetail() {
           <article>
             {/* Breadcrumb / Category Badge */}
             {article.category && (
-              <div className="mb-6">
+              <div className="mb-6 flex flex-wrap items-center gap-2">
                 <Badge variant="secondary" data-testid="badge-category">
                   {article.category.name}
                 </Badge>
+                {article.status === 'archived' && (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'editor') && (
+                  <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700 gap-1" data-testid="badge-article-archived">
+                    <Archive className="h-3 w-3" />
+                    آرکائیو شدہ
+                  </Badge>
+                )}
               </div>
             )}
 

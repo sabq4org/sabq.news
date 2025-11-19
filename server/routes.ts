@@ -8121,14 +8121,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ARTICLE ROUTES
   // ============================================================
 
-  app.get("/api/articles", async (req, res) => {
+  app.get("/api/articles", async (req: any, res) => {
     try {
       const { category, search, status, author } = req.query;
+      const userRole = req.user?.role;
       const articles = await storage.getArticles({
         categoryId: category as string,
         searchQuery: search as string,
         status: status as string,
         authorId: author as string,
+        userRole: userRole,
       });
       res.json(articles);
     } catch (error) {
