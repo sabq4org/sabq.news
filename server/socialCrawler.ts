@@ -107,6 +107,11 @@ export async function socialCrawlerMiddleware(
   res: Response,
   next: NextFunction
 ) {
+  // Skip API routes - they should handle their own responses
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
   // Only process if it's a crawler
   if (!isCrawler(req)) {
     return next();
