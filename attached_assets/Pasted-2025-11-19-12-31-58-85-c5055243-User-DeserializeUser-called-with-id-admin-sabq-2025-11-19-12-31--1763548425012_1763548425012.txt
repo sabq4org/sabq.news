@@ -1,0 +1,132 @@
+2025-11-19 12:31:58.85
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:58.86
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:58.87
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.88
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.88
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.88
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.94
+c5055243
+User
+10:31:58 AM [express] GET /api/shorts/featured 304 in 114ms :: {"shorts":[],"total":0}
+2025-11-19 12:31:58.94
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:58.95
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:58.95
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:58.97
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.97
+c5055243
+User
+10:31:58 AM [express] GET /api/opinion 304 in 135ms :: {"articles":[],"pagination":{"page":1,"limit":…
+2025-11-19 12:31:58.97
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:58.97
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:59.01
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:59.02
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:59.02
+c5055243
+User
+10:31:59 AM [express] GET /api/mirqab/sabq-index 304 in 102ms :: []
+2025-11-19 12:31:59.04
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:59.04
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:59.05
+c5055243
+User
+10:31:59 AM [express] GET /api/ai-insights 200 in 221ms :: {"mostViewed":{"article":{"id":"NBR4HU7-uo…
+2025-11-19 12:31:59.09
+c5055243
+User
+10:31:59 AM [express] GET /api/mirqab/algorithm-writes 304 in 250ms :: {"entries":[],"total":0}
+2025-11-19 12:31:59.10
+c5055243
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-19 12:31:59.10
+c5055243
+User
+10:31:59 AM [express] GET /api/ads/slot/header-banner 204 in 281ms
+2025-11-19 12:31:59.12
+c5055243
+User
+10:31:59 AM [express] GET /api/user/followed-keywords 304 in 124ms :: [{"tagId":"db9c0e6e-7033-4599-b…
+2025-11-19 12:31:59.12
+c5055243
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-19 12:31:59.13
+c5055243
+User
+10:31:59 AM [express] GET /api/ai/insights/today 304 in 211ms :: {"greeting":"صباح الخير يا مسؤول","m…
+2025-11-19 12:31:59.35
+c5055243
+User
+10:31:59 AM [express] GET /api/blocks/quad-categories 200 in 423ms :: {"items":[{"category":{"slug":"…
+2025-11-19 12:32:00.02
+c5055243
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-19 12:32:00.04
+c5055243
+User
+[NotificationWorker] Queue processing completed
+2025-11-19 12:32:00.04
+c5055243
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-19 12:32:00.04
+c5055243
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-19 12:32:09.50
+c5055243
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-19 12:32:09.50
+c5055243
+User
+📡 User admin-sabq unsubscribed from notification stream
