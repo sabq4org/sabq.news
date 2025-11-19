@@ -1,0 +1,109 @@
+import { Camera, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import DOMPurify from "isomorphic-dompurify";
+
+interface ImageWithCaptionProps {
+  imageUrl: string;
+  altText: string;
+  captionHtml?: string;
+  captionPlain?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  relatedArticleSlugs?: string[];
+  keywordTags?: string[];
+  className?: string;
+}
+
+export function ImageWithCaption({
+  imageUrl,
+  altText,
+  captionHtml,
+  captionPlain,
+  sourceName,
+  sourceUrl,
+  relatedArticleSlugs,
+  keywordTags,
+  className = "",
+}: ImageWithCaptionProps) {
+  // Sanitize HTML caption
+  const sanitizedCaption = captionHtml ? DOMPurify.sanitize(captionHtml) : null;
+  
+  return (
+    <figure className={`my-6 ${className}`} data-testid="figure-image-with-caption">
+      {/* Image */}
+      <img
+        src={imageUrl}
+        alt={altText}
+        loading="lazy"
+        className="w-full rounded-md"
+        data-testid="img-article-image"
+      />
+      
+      {/* Caption */}
+      {(sanitizedCaption || captionPlain) && (
+        <figcaption className="mt-3 p-3 bg-muted/50 rounded-md" data-testid="figcaption-text">
+          {sanitizedCaption ? (
+            <div
+              className="text-sm text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: sanitizedCaption }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">{captionPlain}</p>
+          )}
+          
+          {/* Source Attribution */}
+          {sourceName && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <Camera className="h-3 w-3" />
+              <span>المصدر:</span>
+              {sourceUrl ? (
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary hover:underline inline-flex items-center gap-1"
+                  data-testid="link-image-source"
+                >
+                  {sourceName}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <span>{sourceName}</span>
+              )}
+            </div>
+          )}
+          
+          {/* Related Articles */}
+          {relatedArticleSlugs && relatedArticleSlugs.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-2">مقالات ذات صلة:</p>
+              <div className="flex flex-wrap gap-2">
+                {relatedArticleSlugs.map((slug, index) => (
+                  <Link key={slug} href={`/articles/${slug}`}>
+                    <a>
+                      <Badge variant="outline" className="hover-elevate cursor-pointer" data-testid={`link-related-article-${index}`}>
+                        {slug}
+                      </Badge>
+                    </a>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Keywords */}
+          {keywordTags && keywordTags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {keywordTags.map((keyword) => (
+                <Badge key={keyword} variant="secondary" className="text-xs">
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
