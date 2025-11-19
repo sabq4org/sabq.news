@@ -109,6 +109,7 @@ export async function socialCrawlerMiddleware(
 ) {
   // Skip API routes - they should handle their own responses
   if (req.path.startsWith('/api/')) {
+    console.log(`[SocialCrawler] Skipping API route: ${req.path}`);
     return next();
   }
 
