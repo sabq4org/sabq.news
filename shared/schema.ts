@@ -3,6 +3,394 @@ import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ============================================
+// ZOD SCHEMAS FOR JSONB COLUMNS
+// ============================================
+
+// Category jsonb schemas
+export const seasonalRulesSchema = z.object({
+  hijriMonth: z.string().optional(),
+  hijriYear: z.union([z.string(), z.literal("auto")]).optional(),
+  gregorianMonth: z.number().optional(),
+  dateRange: z.object({
+    start: z.string(),
+    end: z.string(),
+  }).optional(),
+  activateDaysBefore: z.number().optional(),
+  deactivateDaysAfter: z.number().optional(),
+}).optional();
+
+export const categoryFeaturesSchema = z.object({
+  realtime: z.boolean().optional(),
+  ai_powered: z.boolean().optional(),
+  trending: z.boolean().optional(),
+  breaking_news: z.boolean().optional(),
+  personalized: z.boolean().optional(),
+  recommendation_engine: z.boolean().optional(),
+  learning: z.boolean().optional(),
+  data_visualization: z.boolean().optional(),
+  ai_analysis: z.boolean().optional(),
+  interactive: z.boolean().optional(),
+  charts: z.boolean().optional(),
+  long_form: z.boolean().optional(),
+  expert_analysis: z.boolean().optional(),
+  ai_summary: z.boolean().optional(),
+  audio_version: z.boolean().optional(),
+  opinion: z.boolean().optional(),
+  authors: z.boolean().optional(),
+  audio_newsletter: z.boolean().optional(),
+}).catchall(z.boolean()).optional();
+
+export const aiConfigSchema = z.object({
+  promptTemplate: z.string().optional(),
+  modelVersion: z.string().optional(),
+  maxArticles: z.number().optional(),
+  refreshStrategy: z.string().optional(),
+}).catchall(z.any()).optional();
+
+// Article jsonb schemas
+export const imageFocalPointSchema = z.object({
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+}).optional();
+
+export const seoSchema = z.object({
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  socialTitle: z.string().optional(),
+  socialDescription: z.string().optional(),
+  imageAltText: z.string().optional(),
+  ogImageUrl: z.string().optional(),
+}).optional();
+
+export const seoMetadataSchema = z.object({
+  status: z.enum(["draft", "generated", "approved", "rejected"]).optional(),
+  version: z.number().optional(),
+  generatedAt: z.string().optional(),
+  generatedBy: z.string().optional(),
+  provider: z.enum(["anthropic", "openai", "gemini", "qwen"]).optional(),
+  model: z.string().optional(),
+  manualOverride: z.boolean().optional(),
+  overrideBy: z.string().optional(),
+  overrideReason: z.string().optional(),
+  rawResponse: z.any().optional(),
+}).optional();
+
+export const sourceMetadataSchema = z.object({
+  type: z.enum(["email", "whatsapp", "manual"]),
+  from: z.string().optional(),
+  token: z.string().optional(),
+  originalMessage: z.string().optional(),
+  webhookLogId: z.string().optional(),
+}).optional();
+
+// Behavior logs
+export const behaviorMetadataSchema = z.object({
+  articleId: z.string().optional(),
+  categoryId: z.string().optional(),
+  duration: z.number().optional(),
+  query: z.string().optional(),
+  action: z.string().optional(),
+}).optional();
+
+// Sentiment scores
+export const emotionalBreakdownSchema = z.object({
+  enthusiasm: z.number().optional(),
+  satisfaction: z.number().optional(),
+  anger: z.number().optional(),
+  sadness: z.number().optional(),
+  neutral: z.number().optional(),
+}).optional();
+
+// Theme assets
+export const themeAssetsSchema = z.object({
+  logoLight: z.string().optional(),
+  logoDark: z.string().optional(),
+  favicon: z.string().optional(),
+  banner: z.string().optional(),
+  ogImage: z.string().optional(),
+}).optional();
+
+export const themeTokensSchema = z.object({
+  colors: z.record(z.string()).optional(),
+  fonts: z.record(z.string()).optional(),
+  spacing: z.record(z.string()).optional(),
+  borderRadius: z.record(z.string()).optional(),
+}).optional();
+
+export const themeChangelogSchema = z.array(z.object({
+  version: z.number(),
+  changes: z.string(),
+  timestamp: z.string(),
+  userId: z.string(),
+})).optional();
+
+// Theme audit
+export const themeAuditChangesSchema = z.record(z.any()).optional();
+
+export const themeAuditMetadataSchema = z.object({
+  previousStatus: z.string().optional(),
+  newStatus: z.string().optional(),
+  reason: z.string().optional(),
+}).optional();
+
+// Activity logs
+export const activityLogMetadataSchema = z.object({
+  ipAddress: z.string().optional(),
+  userAgent: z.string().optional(),
+  reason: z.string().optional(),
+}).optional();
+
+// Loyalty system
+export const loyaltyPayloadSchema = z.object({
+  articleId: z.string().optional(),
+  categoryId: z.string().optional(),
+  duration: z.number().optional(),
+  commentId: z.string().optional(),
+  reactionId: z.string().optional(),
+}).optional();
+
+export const loyaltyMetadataSchema = z.object({
+  prevRank: z.string().optional(),
+  newRank: z.string().optional(),
+  pointsRequired: z.number().optional(),
+  source: z.string().optional(),
+}).optional();
+
+export const rewardDataSchema = z.object({
+  digitalCode: z.string().optional(),
+  qrCode: z.string().optional(),
+  expiryDate: z.string().optional(),
+  instructions: z.string().optional(),
+  customFields: z.record(z.any()).optional(),
+}).optional();
+
+export const rewardSnapshotSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  pointsCost: z.number().optional(),
+  imageUrl: z.string().optional(),
+  category: z.string().optional(),
+}).optional();
+
+export const deliveryDataSchema = z.object({
+  method: z.string().optional(),
+  status: z.string().optional(),
+  trackingInfo: z.string().optional(),
+  estimatedDelivery: z.string().optional(),
+}).optional();
+
+// Smart blocks
+export const smartBlockFiltersSchema = z.object({
+  categories: z.array(z.string()).optional(),
+  dateRange: z.object({
+    from: z.string(),
+    to: z.string(),
+  }).optional(),
+}).optional();
+
+// Additional jsonb schemas for remaining fields
+export const rawMetadataSchema = z.record(z.any()).optional();
+
+// User preferences arrays
+export const preferredCategoriesSchema = z.array(z.string()).optional();
+export const preferredAuthorsSchema = z.array(z.string()).optional();
+export const blockedCategoriesSchema = z.array(z.string()).optional();
+
+// Experiment schemas
+export const experimentVariantDataSchema = z.object({
+  headline: z.string().optional(),
+  image: z.string().optional(),
+  cta: z.string().optional(),
+  layout: z.string().optional(),
+}).catchall(z.any()).optional();
+
+export const experimentMetadataSchema = z.object({
+  notes: z.string().optional(),
+  hypothesis: z.string().optional(),
+}).catchall(z.any()).optional();
+
+// Mirqab schemas
+export const mirqabEntitySchema = z.record(z.any()).optional();
+export const mirqabMetadataSchema = z.record(z.any()).optional();
+
+// SEO history schemas
+export const seoContentSchema = z.object({
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  socialTitle: z.string().optional(),
+  socialDescription: z.string().optional(),
+  imageAltText: z.string().optional(),
+  ogImageUrl: z.string().optional(),
+}).optional();
+
+// Data story schemas
+export const chartDataSchema = z.array(z.object({
+  label: z.string().optional(),
+  value: z.number().optional(),
+}).catchall(z.any())).optional();
+
+export const alertsSchema = z.array(z.object({
+  type: z.string().optional(),
+  message: z.string().optional(),
+  threshold: z.number().optional(),
+}).catchall(z.any())).optional();
+
+// Audio newsletter schemas
+export const voiceSettingsSchema = z.object({
+  voice: z.string().optional(),
+  speed: z.number().optional(),
+  pitch: z.number().optional(),
+}).optional();
+
+// Internal announcements schemas
+export const channelsSchema = z.array(z.string()).optional();
+export const audienceRolesSchema = z.array(z.string()).optional();
+export const audienceUserIdsSchema = z.array(z.string()).optional();
+export const tagsSchema = z.array(z.string()).optional();
+export const attachmentsSchema = z.array(z.object({
+  url: z.string(),
+  name: z.string(),
+  type: z.string(),
+})).optional();
+
+export const internalAnnouncementMetaSchema = z.object({
+  version: z.number().optional(),
+  changes: z.string().optional(),
+}).optional();
+
+// Journalist tasks schemas
+export const taskConfigSchema = z.object({
+  reminderEnabled: z.boolean().optional(),
+  priorityLevel: z.number().optional(),
+}).catchall(z.any()).optional();
+
+// Calendar schemas
+export const calendarAttachmentsSchema = z.array(z.object({
+  name: z.string(),
+  url: z.string(),
+  type: z.string(),
+})).optional();
+
+export const aiDraftIdeasSchema = z.object({
+  main: z.string().optional(),
+  alternatives: z.array(z.string()).optional(),
+}).optional();
+
+export const aiDraftHeadlinesSchema = z.object({
+  primary: z.string().optional(),
+  alternatives: z.array(z.string()).optional(),
+}).optional();
+
+export const aiDraftInfographicSchema = z.object({
+  title: z.string().optional(),
+  dataPoints: z.array(z.string()).optional(),
+}).optional();
+
+export const aiDraftSocialSchema = z.object({
+  twitter: z.string().optional(),
+  facebook: z.string().optional(),
+}).optional();
+
+export const aiDraftSeoSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+}).optional();
+
+// Smart entities schemas
+export const smartEntitiesSchema = z.object({
+  entities: z.array(z.string()).optional(),
+  confidence: z.number().optional(),
+}).optional();
+
+export const modelInsightsSchema = z.object({
+  model: z.string().optional(),
+  confidence: z.number().optional(),
+  suggestions: z.array(z.string()).optional(),
+}).optional();
+
+export const metadataSchema = z.record(z.any()).optional();
+
+// AI suggestions schemas
+export const aiSuggestionsSchema = z.object({
+  keywords: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  relatedTopics: z.array(z.string()).optional(),
+}).optional();
+
+// Task changes schemas
+export const taskChangesSchema = z.object({
+  field: z.string().optional(),
+  oldValue: z.any().optional(),
+  newValue: z.any().optional(),
+}).catchall(z.any()).optional();
+
+// Deep analysis schemas
+export const deepAnalysisResultsSchema = z.object({
+  findings: z.array(z.string()).optional(),
+  recommendations: z.array(z.string()).optional(),
+  score: z.number().optional(),
+}).catchall(z.any()).optional();
+
+// Data story source schemas
+export const columnsSchema = z.record(z.object({
+  name: z.string(),
+  type: z.string(),
+  sampleValues: z.array(z.any()).optional(),
+  uniqueCount: z.number().optional(),
+  nullCount: z.number().optional(),
+})).optional();
+
+export const statisticsSchema = z.object({
+  rowCount: z.number().optional(),
+  columnCount: z.number().optional(),
+}).catchall(z.any()).optional();
+
+export const aiInsightsSchema = z.object({
+  summary: z.string().optional(),
+  keyFindings: z.array(z.string()).optional(),
+}).catchall(z.any()).optional();
+
+export const chartConfigsSchema = z.array(z.object({
+  type: z.string(),
+  title: z.string(),
+  data: z.any(),
+})).optional();
+
+// Data story draft schemas
+export const outlineSchema = z.object({
+  introduction: z.string().optional(),
+  sections: z.array(z.object({
+    title: z.string(),
+    content: z.string(),
+  })).optional(),
+}).optional();
+
+// Wallet device metadata
+export const deviceMetadataSchema = z.object({
+  manufacturer: z.string().optional(),
+  model: z.string().optional(),
+  osVersion: z.string().optional(),
+}).optional();
+
+// Ad account billing
+export const billingAddressSchema = z.object({
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip: z.string().optional(),
+  country: z.string().optional(),
+}).optional();
+
+// Creative recommendation
+export const creativeRecommendationSchema = z.object({
+  suggestions: z.array(z.string()).optional(),
+  score: z.number().optional(),
+}).optional();
+
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",
@@ -1192,6 +1580,9 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 }).extend({
   type: z.enum(["core", "dynamic", "smart", "seasonal"]).default("core"),
   status: z.enum(["active", "inactive"]).default("active"),
+  seasonalRules: seasonalRulesSchema,
+  features: categoryFeaturesSchema,
+  aiConfig: aiConfigSchema,
 });
 export const insertArticleSchema = createInsertSchema(articles).omit({ 
   id: true, 
@@ -1205,6 +1596,10 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   authorId: true, // Backend adds this from req.user.id
 }).extend({
   slug: z.string().max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف"),
+  imageFocalPoint: imageFocalPointSchema,
+  seo: seoSchema,
+  seoMetadata: seoMetadataSchema,
+  sourceMetadata: sourceMetadataSchema,
 });
 export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({ 
   id: true, 
@@ -1222,6 +1617,8 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 export const insertCommentSentimentSchema = createInsertSchema(commentSentiments).omit({
   id: true,
   analyzedAt: true,
+}).extend({
+  rawMetadata: rawMetadataSchema,
 });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
@@ -1248,8 +1645,9 @@ export const insertUserPreferenceSchema = createInsertSchema(userPreferences).om
   pushNotifications: z.boolean().optional(),
   weeklyDigest: z.boolean().optional(),
   followingNotifications: z.boolean().optional(),
-  preferredAuthors: z.array(z.string()).optional(),
-  blockedCategories: z.array(z.string()).optional(),
+  preferredCategories: preferredCategoriesSchema,
+  preferredAuthors: preferredAuthorsSchema,
+  blockedCategories: blockedCategoriesSchema,
   recommendationFrequency: z.enum(["daily", "weekly", "never"]).default("daily"),
 });
 export const updateUserPreferenceSchema = insertUserPreferenceSchema.partial();
@@ -1273,8 +1671,12 @@ export const insertUserInterestSchema = createInsertSchema(userInterests).omit({
   createdAt: true, 
   updatedAt: true 
 });
-export const insertBehaviorLogSchema = createInsertSchema(behaviorLogs).omit({ id: true, createdAt: true });
-export const insertSentimentScoreSchema = createInsertSchema(sentimentScores).omit({ id: true, createdAt: true });
+export const insertBehaviorLogSchema = createInsertSchema(behaviorLogs).omit({ id: true, createdAt: true }).extend({
+  metadata: behaviorMetadataSchema,
+});
+export const insertSentimentScoreSchema = createInsertSchema(sentimentScores).omit({ id: true, createdAt: true }).extend({
+  emotionalBreakdown: emotionalBreakdownSchema,
+});
 export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({ 
   id: true, 
   createdAt: true, 
@@ -1323,7 +1725,10 @@ export const updateThemeSchema = z.object({
   approvedBy: z.union([z.string(), z.null()]).optional(),
   publishedBy: z.union([z.string(), z.null()]).optional(),
 });
-export const insertThemeAuditLogSchema = createInsertSchema(themeAuditLog).omit({ id: true, createdAt: true });
+export const insertThemeAuditLogSchema = createInsertSchema(themeAuditLog).omit({ id: true, createdAt: true }).extend({
+  changes: themeAuditChangesSchema,
+  metadata: themeAuditMetadataSchema,
+});
 
 export const insertRoleSchema = createInsertSchema(roles).omit({ 
   id: true, 
@@ -1362,7 +1767,11 @@ export const updateStaffSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true });
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, createdAt: true }).extend({
+  oldValue: z.record(z.any()).optional(),
+  newValue: z.record(z.any()).optional(),
+  metadata: activityLogMetadataSchema,
+});
 
 export const insertNotificationTemplateSchema = createInsertSchema(notificationTemplates).omit({ 
   id: true, 
@@ -1408,6 +1817,9 @@ export const insertNotificationMetricsSchema = createInsertSchema(notificationMe
 export const insertUserLoyaltyEventSchema = createInsertSchema(userLoyaltyEvents).omit({ 
   id: true, 
   createdAt: true 
+}).extend({
+  payload: loyaltyPayloadSchema,
+  metadata: loyaltyMetadataSchema,
 });
 
 export const insertUserPointsTotalSchema = createInsertSchema(userPointsTotal).omit({ 
@@ -1420,12 +1832,17 @@ export const insertUserPointsTotalSchema = createInsertSchema(userPointsTotal).o
 export const insertLoyaltyRewardSchema = createInsertSchema(loyaltyRewards).omit({ 
   id: true, 
   createdAt: true 
+}).extend({
+  rewardData: rewardDataSchema,
 });
 
 export const insertUserRewardsHistorySchema = createInsertSchema(userRewardsHistory).omit({ 
   id: true, 
   redeemedAt: true,
   deliveredAt: true,
+}).extend({
+  rewardSnapshot: rewardSnapshotSchema,
+  deliveryData: deliveryDataSchema,
 });
 
 export const insertLoyaltyCampaignSchema = createInsertSchema(loyaltyCampaigns).omit({ 
