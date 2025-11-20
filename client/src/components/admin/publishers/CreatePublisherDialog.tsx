@@ -15,8 +15,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Upload, X } from "lucide-react";
 import type { Publisher } from "@shared/schema";
 
-const publisherFormSchema = z.object({
-  userId: z.string().min(1, "يرجى اختيار مستخدم"),
+// Create mode schema - requires user fields
+const createPublisherSchema = z.object({
+  userEmail: z.string().email("البريد الإلكتروني غير صحيح"),
+  userPassword: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
+  userFirstName: z.string().min(2, "الاسم الأول مطلوب"),
+  userLastName: z.string().min(2, "اسم العائلة مطلوب"),
   agencyName: z.string().min(2, "اسم الوكالة مطلوب (حرفين على الأقل)"),
   agencyNameEn: z.string().optional(),
   contactPerson: z.string().min(2, "اسم الشخص المسؤول مطلوب"),
@@ -31,7 +35,26 @@ const publisherFormSchema = z.object({
   notes: z.string().optional(),
 });
 
-type PublisherFormData = z.infer<typeof publisherFormSchema>;
+// Edit mode schema - requires userId, no user fields
+const editPublisherSchema = z.object({
+  userId: z.string(),
+  agencyName: z.string().min(2, "اسم الوكالة مطلوب (حرفين على الأقل)"),
+  agencyNameEn: z.string().optional(),
+  contactPerson: z.string().min(2, "اسم الشخص المسؤول مطلوب"),
+  contactPersonEn: z.string().optional(),
+  email: z.string().email("البريد الإلكتروني غير صحيح"),
+  phoneNumber: z.string().min(8, "رقم الهاتف مطلوب"),
+  logoUrl: z.string().nullable().optional(),
+  commercialRegistration: z.string().optional(),
+  taxNumber: z.string().optional(),
+  address: z.string().optional(),
+  isActive: z.boolean().default(true),
+  notes: z.string().optional(),
+});
+
+type CreatePublisherFormData = z.infer<typeof createPublisherSchema>;
+type EditPublisherFormData = z.infer<typeof editPublisherSchema>;
+type PublisherFormData = CreatePublisherFormData | EditPublisherFormData;
 
 interface CreatePublisherDialogProps {
   open: boolean;
@@ -53,17 +76,15 @@ export function CreatePublisherDialog({
   const [logoPreview, setLogoPreview] = useState<string | null>(publisher?.logoUrl || null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
-  // Fetch users with publisher role for selection
-  const { data: publisherUsers } = useQuery<any[]>({
-    queryKey: ["/api/admin/users", { role: "publisher" }],
-    enabled: mode === "create",
-  });
-
   const form = useForm<PublisherFormData>({
-    resolver: zodResolver(publisherFormSchema),
+    resolver: zodResolver(mode === "create" ? createPublisherSchema : editPublisherSchema) as any,
     defaultValues: publisher
       ? {
           userId: publisher.userId,
+          userEmail: "",
+          userPassword: "",
+          userFirstName: "",
+          userLastName: "",
           agencyName: publisher.agencyName,
           agencyNameEn: publisher.agencyNameEn || "",
           contactPerson: publisher.contactPerson,
@@ -79,6 +100,10 @@ export function CreatePublisherDialog({
         }
       : {
           userId: "",
+          userEmail: "",
+          userPassword: "",
+          userFirstName: "",
+          userLastName: "",
           agencyName: "",
           agencyNameEn: "",
           contactPerson: "",
@@ -100,6 +125,10 @@ export function CreatePublisherDialog({
       // Edit mode: reset form with publisher data
       form.reset({
         userId: publisher.userId,
+        userEmail: "",
+        userPassword: "",
+        userFirstName: "",
+        userLastName: "",
         agencyName: publisher.agencyName,
         agencyNameEn: publisher.agencyNameEn || "",
         contactPerson: publisher.contactPerson,
@@ -119,6 +148,10 @@ export function CreatePublisherDialog({
       // Create mode: reset to empty form
       form.reset({
         userId: "",
+        userEmail: "",
+        userPassword: "",
+        userFirstName: "",
+        userLastName: "",
         agencyName: "",
         agencyNameEn: "",
         contactPerson: "",
@@ -271,30 +304,72 @@ export function CreatePublisherDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {mode === "create" && (
-              <FormField
-                control={form.control}
-                name="userId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>المستخدم *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-user">
-                          <SelectValue placeholder="اختر مستخدماً من قائمة الناشرين" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {publisherUsers?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.username || user.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <>
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                  <h3 className="text-sm font-medium">بيانات حساب المستخدم</h3>
+                  <p className="text-xs text-muted-foreground">
+                    سيتم إنشاء حساب مستخدم جديد بدور "ناشر" تلقائياً
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="userFirstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>الاسم الأول *</FormLabel>
+                          <FormControl>
+                            <Input {...field} data-testid="input-user-firstname" dir="rtl" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="userLastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>اسم العائلة *</FormLabel>
+                          <FormControl>
+                            <Input {...field} data-testid="input-user-lastname" dir="rtl" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="userEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>البريد الإلكتروني *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" data-testid="input-user-email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="userPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>كلمة المرور *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="password" data-testid="input-user-password" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
             )}
 
             <div className="grid grid-cols-2 gap-4">

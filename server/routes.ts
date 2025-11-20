@@ -27291,13 +27291,63 @@ Allow: /
   // Publisher Management Routes (Admin Only)
   // ========================================
 
-  // POST /api/admin/publishers - Create new publisher
+  // POST /api/admin/publishers - Create new publisher (with user account creation)
   app.post("/api/admin/publishers", 
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
       try {
-        const publisherData = insertPublisherSchema.parse(req.body);
+        const { userEmail, userPassword, userFirstName, userLastName, ...publisherFields } = req.body;
+        
+        // Validate: must provide user credentials for new publisher
+        if (!userEmail || !userPassword || !userFirstName || !userLastName) {
+          return res.status(400).json({ 
+            message: "بيانات حساب المستخدم مطلوبة (البريد، كلمة المرور، الاسم الأول، اسم العائلة)" 
+          });
+        }
+        
+        // Check if user email already exists
+        const existingUser = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+        if (existingUser.length > 0) {
+          return res.status(400).json({ message: "البريد الإلكتروني مستخدم مسبقاً" });
+        }
+        
+        // Hash password
+        const passwordHash = await bcrypt.hash(userPassword, 10);
+        
+        // Get publisher role ID
+        const publisherRole = await db.select().from(roles).where(eq(roles.name, 'publisher')).limit(1);
+        if (publisherRole.length === 0) {
+          return res.status(500).json({ message: "دور الناشر غير موجود في النظام" });
+        }
+        
+        // Create user with publisher role
+        const { nanoid } = await import('nanoid');
+        const userId = nanoid();
+        await db.insert(users).values({
+          id: userId,
+          email: userEmail,
+          passwordHash,
+          firstName: userFirstName,
+          lastName: userLastName,
+          role: 'publisher', // Legacy role field
+          authProvider: 'local',
+          isProfileComplete: true,
+          status: 'active',
+          emailVerified: true,
+        });
+        
+        // Assign publisher role via RBAC
+        await db.insert(userRoles).values({
+          userId,
+          roleId: publisherRole[0].id,
+        });
+        
+        // Create publisher record linked to new user
+        const publisherData = insertPublisherSchema.parse({
+          userId,
+          ...publisherFields,
+        });
         const publisher = await storage.createPublisher(publisherData);
         
         // Log activity
@@ -27306,7 +27356,7 @@ Allow: /
           action: 'create',
           entityType: 'publisher',
           entityId: publisher.id,
-          newValue: publisherData,
+          newValue: { ...publisherData, userEmail },
         });
         
         res.status(201).json(publisher);
