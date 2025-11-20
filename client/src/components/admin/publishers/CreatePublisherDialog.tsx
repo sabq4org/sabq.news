@@ -303,75 +303,7 @@ export function CreatePublisherDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {mode === "create" && (
-              <>
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                  <h3 className="text-sm font-medium">بيانات حساب المستخدم</h3>
-                  <p className="text-xs text-muted-foreground">
-                    سيتم إنشاء حساب مستخدم جديد بدور "ناشر" تلقائياً
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="userFirstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>الاسم الأول *</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-user-firstname" dir="rtl" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="userLastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>اسم العائلة *</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-user-lastname" dir="rtl" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="userEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>البريد الإلكتروني *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" data-testid="input-user-email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="userPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>كلمة المرور *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" data-testid="input-user-password" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </>
-            )}
-
+            {/* 1. بيانات الناشر/الوكالة */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -402,6 +334,7 @@ export function CreatePublisherDialog({
               />
             </div>
 
+            {/* 2. الشخص المسؤول */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -432,6 +365,7 @@ export function CreatePublisherDialog({
               />
             </div>
 
+            {/* 3. معلومات الاتصال */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -462,7 +396,7 @@ export function CreatePublisherDialog({
               />
             </div>
 
-            {/* Logo Upload */}
+            {/* 4. شعار الناشر */}
             <div className="space-y-2">
               <FormLabel>شعار الناشر / الوكالة</FormLabel>
               <div className="flex items-center gap-4">
@@ -507,6 +441,7 @@ export function CreatePublisherDialog({
               </div>
             </div>
 
+            {/* 5. السجل التجاري والضريبي */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -537,6 +472,7 @@ export function CreatePublisherDialog({
               />
             </div>
 
+            {/* 6. العنوان */}
             <FormField
               control={form.control}
               name="address"
@@ -551,6 +487,77 @@ export function CreatePublisherDialog({
               )}
             />
 
+            {/* 7. بيانات حساب المستخدم (في وضع الإنشاء فقط) */}
+            {mode === "create" && (
+              <>
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                  <h3 className="text-sm font-medium">بيانات حساب الدخول</h3>
+                  <p className="text-xs text-muted-foreground">
+                    سيتم إنشاء حساب مستخدم جديد بدور "ناشر" تلقائياً
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="userFirstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>الاسم الأول *</FormLabel>
+                          <FormControl>
+                            <Input {...field} data-testid="input-user-firstname" dir="rtl" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="userLastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>اسم العائلة *</FormLabel>
+                          <FormControl>
+                            <Input {...field} data-testid="input-user-lastname" dir="rtl" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="userEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>البريد الإلكتروني (لتسجيل الدخول) *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" data-testid="input-user-email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="userPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>كلمة المرور *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="password" data-testid="input-user-password" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 8. ملاحظات */}
             <FormField
               control={form.control}
               name="notes"
@@ -565,6 +572,7 @@ export function CreatePublisherDialog({
               )}
             />
 
+            {/* 9. حالة الحساب */}
             <FormField
               control={form.control}
               name="isActive"

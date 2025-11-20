@@ -1,0 +1,125 @@
+2025-11-20 16:21:47.11
+37afbc1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 16:21:47.17
+37afbc1e
+User
+2:21:47 PM [express] GET /api/themes/active 200 in 233ms
+
+2025-11-20 16:21:47.17
+37afbc1e
+User
+2:21:47 PM [express] GET /api/auth/user 200 in 239ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-20 16:21:47.18
+37afbc1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 16:22:00.02
+37afbc1e
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 16:22:00.02
+37afbc1e
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 16:22:00.05
+37afbc1e
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-20 16:22:00.05
+37afbc1e
+User
+[NotificationWorker] Queue processing completed
+2025-11-20 16:22:00.05
+37afbc1e
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-20 16:23:00.49
+37afbc1e
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 16:23:00.50
+37afbc1e
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 16:23:00.62
+37afbc1e
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-20 16:23:00.62
+37afbc1e
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-20 16:23:00.62
+37afbc1e
+User
+[NotificationWorker] Queue processing completed
+2025-11-20 16:24:00.02
+37afbc1e
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 16:24:00.03
+37afbc1e
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 16:24:00.15
+37afbc1e
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-20 16:24:00.15
+37afbc1e
+User
+[NotificationWorker] Queue processing completed
+2025-11-20 16:24:00.15
+37afbc1e
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-20 16:24:06.35
+37afbc1e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 16:24:06.38
+37afbc1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 16:24:06.41
+37afbc1e
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 16:24:08.96
+37afbc1e
+User
+2:24:08 PM [express] POST /api/admin/publishers/upload-logo 200 in 2773ms :: {"url":"https://storage…
+2025-11-20 16:24:09.25
+37afbc1e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 16:24:09.27
+37afbc1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 16:24:09.33
+37afbc1e
+User
+2:24:09 PM [express] POST /api/accessibility/track 200 in 101ms :: {"success":true,"eventId":"e7f9c5…
+2025-11-20 16:24:55.01
+37afbc1e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 16:24:55.10
+37afbc1e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 16:24:55.13
+37afbc1e
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 16:24:55.31
+37afbc1e
+User
+2:24:55 PM [express] POST /api/admin/publishers/upload-logo 200 in 494ms :: {"url":"https://storage.…
+2025-11-20 16:24:55.64
+37afbc1e
+User
+🔸 DeserializeUser called with id: admin-sabq
