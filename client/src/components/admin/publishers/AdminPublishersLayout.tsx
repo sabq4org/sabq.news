@@ -45,14 +45,14 @@ const navItems: NavItem[] = [
   },
   {
     id: "publishers-articles",
-    href: "/dashboard/admin/publishers/articles",
+    href: "/dashboard/admin/publisher-articles",
     label: "مراجعة المقالات",
     icon: FileCheck,
     testId: "nav-review-articles",
   },
   {
     id: "publishers-analytics",
-    href: "/dashboard/admin/publishers/analytics",
+    href: "/dashboard/admin/publisher-analytics",
     label: "التحليلات والإحصائيات",
     icon: BarChart3,
     testId: "nav-analytics",
