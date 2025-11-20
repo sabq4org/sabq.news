@@ -11,16 +11,10 @@ import { eq } from 'drizzle-orm';
 
 const router = Router();
 
-// Extract bucket name from PRIVATE_OBJECT_DIR environment variable
+// Get the actual Replit bucket ID
 function getBucketName(): string {
-  const privateDir = process.env.PRIVATE_OBJECT_DIR || '';
-  if (privateDir) {
-    const match = privateDir.match(/\/(replit-objstore-[^/]+)/);
-    if (match) {
-      return match[1];
-    }
-  }
-  return 'replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52';
+  // Use the actual Replit bucket ID
+  return process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
 }
 
 const bucketName = getBucketName();

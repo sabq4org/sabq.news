@@ -78,16 +78,12 @@ async function uploadAttachmentToGCS(
 }
 
 function parseObjectPath(path: string): { bucketName: string; objectPath: string } {
-  // Remove leading slash if present (e.g., "/bucket/path" → "bucket/path")
+  // Use the actual Replit bucket ID
+  const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+  
+  // Treat the entire path (e.g., "sabq-production-bucket/public") as the object path
   const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-  const parts = cleanPath.split('/');
-  
-  if (parts.length < 2) {
-    throw new Error(`Invalid object path: ${path}`);
-  }
-  
-  const bucketName = parts[0];
-  const objectPath = parts.slice(1).join('/');
+  const objectPath = cleanPath;
   
   console.log(`[Email Agent] 🪣 Parsed object path: bucket="${bucketName}", path="${objectPath}"`);
   return { bucketName, objectPath };

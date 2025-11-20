@@ -1315,8 +1315,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Type 3: GCS paths (gs://) - stream from Object Storage
       if (storagePath.startsWith('gs://')) {
         const pathParts = storagePath.replace('gs://', '').split('/');
-        const bucketName = pathParts[0];
-        const objectPath = pathParts.slice(1).join('/');
+        // Use the actual Replit bucket ID
+        const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+        // Treat the entire path as the object path
+        const objectPath = pathParts.join('/');
 
         // Get file from Object Storage
         const { objectStorageClient } = await import('./objectStorage');
@@ -1481,8 +1483,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { objectStorageClient } = await import('./objectStorage');
         const url = new URL(existingMedia.url);
         const pathParts = url.pathname.split('/').filter(Boolean);
-        const bucketName = pathParts[0];
-        const objectPath = pathParts.slice(1).join('/');
+        // Use the actual Replit bucket ID
+        const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+        // Treat the entire path as the object path
+        const objectPath = pathParts.join('/');
 
         const bucket = objectStorageClient.bucket(bucketName);
         const file = bucket.file(objectPath);
@@ -1722,8 +1726,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Parse gs://bucket-name/path
           const gcsPath = file.url.replace('gs://', '');
           const pathParts = gcsPath.split('/');
-          const bucketName = pathParts[0];
-          const objectPath = pathParts.slice(1).join('/');
+          // Use the actual Replit bucket ID
+          const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+          // Treat the entire path as the object path
+          const objectPath = pathParts.join('/');
 
           const bucket = objectStorageClient.bucket(bucketName);
           const gcsFile = bucket.file(objectPath);
@@ -2155,8 +2161,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const pathParts = storagePath.replace('gs://', '').split('/');
-      const bucketName = pathParts[0];
-      const objectPath = pathParts.slice(1).join('/');
+      // Use the actual Replit bucket ID
+      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      // Treat the entire path as the object path
+      const objectPath = pathParts.join('/');
 
       // Get file from Object Storage
       const { objectStorageClient } = await import('./objectStorage');
@@ -4197,15 +4205,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/upload/profile-image", isAuthenticated, strictLimiter, profileImageUpload.single('file'), async (req: any, res) => {
     const parseObjectPath = (path: string): { bucketName: string; objectName: string } => {
+      // Use the actual Replit bucket ID
+      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      
+      // Treat the entire path as the object name
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      const pathParts = path.split("/");
-      if (pathParts.length < 3) {
-        throw new Error("Invalid path: must contain at least a bucket name");
-      }
-      const bucketName = pathParts[1];
-      const objectName = pathParts.slice(2).join("/");
+      const objectName = path.substring(1); // Remove leading slash
       return { bucketName, objectName };
     };
 
@@ -21468,8 +21475,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       
       // استخراج bucket name و object name
       const pathParts = fullPath.split('/').filter(Boolean);
-      const bucketName = pathParts[0];
-      const objectName = pathParts.slice(1).join('/');
+      // Use the actual Replit bucket ID
+      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      // Treat the entire path as the object name
+      const objectName = pathParts.join('/');
 
       // رفع الملف
       const bucket = objectStorageClient.bucket(bucketName);
