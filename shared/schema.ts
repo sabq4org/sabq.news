@@ -741,6 +741,15 @@ export const articles = pgTable("articles", {
     originalMessage?: string;
     webhookLogId?: string;
   }>(),
+  
+  // Publisher/Agency content sales fields
+  isPublisherNews: boolean("is_publisher_news").default(false).notNull(),
+  publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: "set null" }),
+  publisherCreditDeducted: boolean("publisher_credit_deducted").default(false).notNull(), // Track if credit was already deducted
+  publisherSubmittedAt: timestamp("publisher_submitted_at"), // When publisher created the draft
+  publisherApprovedAt: timestamp("publisher_approved_at"), // When admin approved it
+  publisherApprovedBy: varchar("publisher_approved_by").references(() => users.id), // Admin who approved
+  
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -6898,6 +6907,190 @@ export const updateArticleMediaAssetSchema = z.object({
 export type ArticleMediaAsset = typeof articleMediaAssets.$inferSelect;
 export type InsertArticleMediaAsset = z.infer<typeof insertArticleMediaAssetSchema>;
 export type UpdateArticleMediaAsset = z.infer<typeof updateArticleMediaAssetSchema>;
+
+// ============================================
+// PUBLISHERS / CONTENT SALES
+// ============================================
+
+export const publishers = pgTable("publishers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  
+  // Agency/Publisher details
+  agencyName: text("agency_name").notNull(),
+  agencyNameEn: text("agency_name_en"),
+  contactPerson: text("contact_person").notNull(),
+  contactPersonEn: text("contact_person_en"),
+  phoneNumber: text("phone_number").notNull(),
+  email: text("email").notNull(),
+  
+  // Business info
+  commercialRegistration: text("commercial_registration"),
+  taxNumber: text("tax_number"),
+  address: text("address"),
+  
+  // Status
+  isActive: boolean("is_active").default(true).notNull(),
+  suspendedUntil: timestamp("suspended_until"),
+  suspensionReason: text("suspension_reason"),
+  
+  // Metadata
+  notes: text("notes"), // Internal admin notes
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("publishers_user_id_idx").on(table.userId),
+  index("publishers_is_active_idx").on(table.isActive),
+]);
+
+export const publisherCredits = pgTable("publisher_credits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: "cascade" }).notNull(),
+  
+  // Package details
+  packageName: text("package_name").notNull(), // e.g., "باقة 20 خبر", "Package 50 news"
+  totalCredits: integer("total_credits").notNull(), // Total number of articles in package
+  usedCredits: integer("used_credits").default(0).notNull(), // Number of published articles
+  remainingCredits: integer("remaining_credits").notNull(), // Remaining articles
+  
+  // Package period
+  period: text("period").notNull(), // monthly, quarterly, yearly, one-time
+  startDate: timestamp("start_date").notNull(),
+  expiryDate: timestamp("expiry_date"), // null for one-time packages
+  
+  // Pricing (optional - for invoicing)
+  pricePerArticle: real("price_per_article"),
+  totalPrice: real("total_price"),
+  currency: text("currency").default("SAR"),
+  
+  // Status
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  // Metadata
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("publisher_credits_publisher_id_idx").on(table.publisherId),
+  index("publisher_credits_is_active_idx").on(table.isActive),
+  index("publisher_credits_expiry_date_idx").on(table.expiryDate),
+]);
+
+export const publisherCreditLogs = pgTable("publisher_credit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: "cascade" }).notNull(),
+  creditPackageId: varchar("credit_package_id").references(() => publisherCredits.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  
+  // Action type
+  actionType: text("action_type").notNull(), // credit_added, credit_used, credit_refunded, package_expired
+  
+  // Details
+  creditsBefore: integer("credits_before").notNull(),
+  creditsChanged: integer("credits_changed").notNull(), // +/- amount
+  creditsAfter: integer("credits_after").notNull(),
+  
+  // Who performed the action
+  performedBy: varchar("performed_by").references(() => users.id),
+  
+  // Notes
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("publisher_credit_logs_publisher_id_idx").on(table.publisherId),
+  index("publisher_credit_logs_article_id_idx").on(table.articleId),
+  index("publisher_credit_logs_created_at_idx").on(table.createdAt.desc()),
+]);
+
+// Relations
+export const publishersRelations = relations(publishers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [publishers.userId],
+    references: [users.id],
+  }),
+  creditPackages: many(publisherCredits),
+  creditLogs: many(publisherCreditLogs),
+}));
+
+export const publisherCreditsRelations = relations(publisherCredits, ({ one, many }) => ({
+  publisher: one(publishers, {
+    fields: [publisherCredits.publisherId],
+    references: [publishers.id],
+  }),
+  logs: many(publisherCreditLogs),
+}));
+
+export const publisherCreditLogsRelations = relations(publisherCreditLogs, ({ one }) => ({
+  publisher: one(publishers, {
+    fields: [publisherCreditLogs.publisherId],
+    references: [publishers.id],
+  }),
+  creditPackage: one(publisherCredits, {
+    fields: [publisherCreditLogs.creditPackageId],
+    references: [publisherCredits.id],
+  }),
+  article: one(articles, {
+    fields: [publisherCreditLogs.articleId],
+    references: [articles.id],
+  }),
+  performedBy: one(users, {
+    fields: [publisherCreditLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert/Update Schemas
+export const insertPublisherSchema = createInsertSchema(publishers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updatePublisherSchema = z.object({
+  agencyName: z.string().min(2).optional(),
+  agencyNameEn: z.string().min(2).optional(),
+  contactPerson: z.string().min(2).optional(),
+  contactPersonEn: z.string().min(2).optional(),
+  phoneNumber: z.string().optional(),
+  email: z.string().email().optional(),
+  commercialRegistration: z.string().optional(),
+  taxNumber: z.string().optional(),
+  address: z.string().optional(),
+  isActive: z.boolean().optional(),
+  suspendedUntil: z.string().optional(),
+  suspensionReason: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const insertPublisherCreditSchema = createInsertSchema(publisherCredits).omit({
+  id: true,
+  usedCredits: true,
+  remainingCredits: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  totalCredits: z.number().int().min(1, "يجب أن يكون عدد الأخبار 1 على الأقل"),
+  period: z.enum(["monthly", "quarterly", "yearly", "one-time"]),
+});
+
+export const insertPublisherCreditLogSchema = createInsertSchema(publisherCreditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Select types
+export type Publisher = typeof publishers.$inferSelect;
+export type InsertPublisher = z.infer<typeof insertPublisherSchema>;
+export type UpdatePublisher = z.infer<typeof updatePublisherSchema>;
+
+export type PublisherCredit = typeof publisherCredits.$inferSelect;
+export type InsertPublisherCredit = z.infer<typeof insertPublisherCreditSchema>;
+
+export type PublisherCreditLog = typeof publisherCreditLogs.$inferSelect;
+export type InsertPublisherCreditLog = z.infer<typeof insertPublisherCreditLogSchema>;
 
 // ============================================
 // HOMEPAGE STATISTICS

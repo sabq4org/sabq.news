@@ -307,6 +307,16 @@ import {
   newsletterSubscriptions,
   type NewsletterSubscription,
   type InsertNewsletterSubscription,
+  publishers,
+  publisherCredits,
+  publisherCreditLogs,
+  type Publisher,
+  type InsertPublisher,
+  type UpdatePublisher,
+  type PublisherCredit,
+  type InsertPublisherCredit,
+  type PublisherCreditLog,
+  type InsertPublisherCreditLog,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1475,6 +1485,35 @@ export interface IStorage {
   updateArticleMediaAsset(id: string, data: UpdateArticleMediaAsset): Promise<ArticleMediaAsset>;
   deleteArticleMediaAsset(id: string): Promise<void>;
   getArticleMediaAssetWithDetails(articleId: string, locale?: string): Promise<Array<ArticleMediaAsset & { mediaFile: MediaFile }>>;
+  
+  // Publisher operations
+  getPublisher(id: string): Promise<Publisher | undefined>;
+  getPublisherByUserId(userId: string): Promise<Publisher | undefined>;
+  createPublisher(publisher: InsertPublisher): Promise<Publisher>;
+  updatePublisher(id: string, publisher: UpdatePublisher): Promise<Publisher>;
+  getAllPublishers(params: { page?: number; limit?: number; isActive?: boolean }): Promise<{ publishers: Publisher[]; total: number }>;
+  
+  // Publisher Credits operations
+  getPublisherCredits(publisherId: string): Promise<PublisherCredit[]>;
+  getActivePublisherCredit(publisherId: string): Promise<PublisherCredit | undefined>;
+  createPublisherCredit(credit: InsertPublisherCredit & { remainingCredits: number }): Promise<PublisherCredit>;
+  deductPublisherCredit(publisherId: string, articleId: string, performedBy: string): Promise<void>;
+  getPublisherStats(publisherId: string, period?: { start: Date; end: Date }): Promise<{
+    totalArticles: number;
+    publishedArticles: number;
+    pendingArticles: number;
+    rejectedArticles: number;
+    remainingCredits: number;
+    usedCredits: number;
+  }>;
+  
+  // Publisher Credit Logs
+  getPublisherCreditLogs(publisherId: string, page?: number, limit?: number): Promise<{ logs: PublisherCreditLog[]; total: number }>;
+  createCreditLog(log: InsertPublisherCreditLog): Promise<PublisherCreditLog>;
+  
+  // Publisher Article Operations (with security & transactions)
+  approvePublisherArticle(articleId: string, publisherId: string, performedBy: string): Promise<Article>;
+  updatePublisherArticle(articleId: string, publisherId: string, authorId: string, updates: Partial<InsertArticle>): Promise<Article>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -12664,6 +12703,447 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(articleMediaAssets.displayOrder));
     
     return results as Array<ArticleMediaAsset & { mediaFile: MediaFile }>;
+  }
+
+  // Publisher operations
+  async getPublisher(id: string): Promise<Publisher | undefined> {
+    const [publisher] = await db
+      .select()
+      .from(publishers)
+      .where(eq(publishers.id, id));
+    return publisher;
+  }
+
+  async getPublisherByUserId(userId: string): Promise<Publisher | undefined> {
+    const [publisher] = await db
+      .select()
+      .from(publishers)
+      .where(eq(publishers.userId, userId));
+    return publisher;
+  }
+
+  async createPublisher(publisherData: InsertPublisher): Promise<Publisher> {
+    const [publisher] = await db
+      .insert(publishers)
+      .values(publisherData)
+      .returning();
+    return publisher;
+  }
+
+  async updatePublisher(id: string, publisherData: UpdatePublisher): Promise<Publisher> {
+    const [publisher] = await db
+      .update(publishers)
+      .set({
+        ...publisherData,
+        updatedAt: new Date(),
+      })
+      .where(eq(publishers.id, id))
+      .returning();
+    
+    if (!publisher) {
+      throw new Error(`Publisher with id ${id} not found`);
+    }
+    
+    return publisher;
+  }
+
+  async getAllPublishers(params: { 
+    page?: number; 
+    limit?: number; 
+    isActive?: boolean;
+  }): Promise<{ publishers: Publisher[]; total: number }> {
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    const offset = (page - 1) * limit;
+
+    const conditions: any[] = [];
+    if (params.isActive !== undefined) {
+      conditions.push(eq(publishers.isActive, params.isActive));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const publishersData = await db
+      .select()
+      .from(publishers)
+      .where(whereClause)
+      .orderBy(desc(publishers.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(publishers)
+      .where(whereClause);
+
+    return {
+      publishers: publishersData,
+      total: Number(count),
+    };
+  }
+
+  // Publisher Credits operations
+  async getPublisherCredits(publisherId: string): Promise<PublisherCredit[]> {
+    const credits = await db
+      .select()
+      .from(publisherCredits)
+      .where(eq(publisherCredits.publisherId, publisherId))
+      .orderBy(desc(publisherCredits.createdAt));
+    return credits;
+  }
+
+  async getActivePublisherCredit(publisherId: string): Promise<PublisherCredit | undefined> {
+    const now = new Date();
+    const [credit] = await db
+      .select()
+      .from(publisherCredits)
+      .where(
+        and(
+          eq(publisherCredits.publisherId, publisherId),
+          eq(publisherCredits.isActive, true),
+          sql`${publisherCredits.remainingCredits} > 0`,
+          or(
+            isNull(publisherCredits.expiryDate),
+            gte(publisherCredits.expiryDate, now)
+          )
+        )
+      )
+      .orderBy(asc(publisherCredits.expiryDate))
+      .limit(1);
+    return credit;
+  }
+
+  async createPublisherCredit(
+    creditData: InsertPublisherCredit & { remainingCredits: number }
+  ): Promise<PublisherCredit> {
+    const [credit] = await db
+      .insert(publisherCredits)
+      .values(creditData)
+      .returning();
+    
+    // Log the credit addition
+    await this.createCreditLog({
+      publisherId: credit.publisherId,
+      creditPackageId: credit.id,
+      actionType: 'credit_added',
+      creditsBefore: 0,
+      creditsChanged: credit.totalCredits,
+      creditsAfter: credit.remainingCredits,
+      notes: `تمت إضافة باقة ${credit.packageName}`,
+    });
+    
+    return credit;
+  }
+
+  async deductPublisherCredit(
+    publisherId: string, 
+    articleId: string, 
+    performedBy: string
+  ): Promise<void> {
+    // Get active credit package
+    const activeCredit = await this.getActivePublisherCredit(publisherId);
+    
+    if (!activeCredit) {
+      throw new Error('No active credit package available');
+    }
+
+    if (activeCredit.remainingCredits <= 0) {
+      throw new Error('No remaining credits');
+    }
+
+    // Deduct one credit
+    const creditsBefore = activeCredit.remainingCredits;
+    const creditsAfter = creditsBefore - 1;
+
+    await db
+      .update(publisherCredits)
+      .set({
+        usedCredits: activeCredit.usedCredits + 1,
+        remainingCredits: creditsAfter,
+        updatedAt: new Date(),
+      })
+      .where(eq(publisherCredits.id, activeCredit.id));
+
+    // Log the deduction
+    await this.createCreditLog({
+      publisherId,
+      creditPackageId: activeCredit.id,
+      articleId,
+      actionType: 'credit_used',
+      creditsBefore,
+      creditsChanged: -1,
+      creditsAfter,
+      performedBy,
+      notes: `تم خصم رصيد مقابل نشر خبر`,
+    });
+  }
+
+  async getPublisherStats(
+    publisherId: string, 
+    period?: { start: Date; end: Date }
+  ): Promise<{
+    totalArticles: number;
+    publishedArticles: number;
+    pendingArticles: number;
+    rejectedArticles: number;
+    remainingCredits: number;
+    usedCredits: number;
+  }> {
+    // Get publisher to find userId
+    const publisher = await this.getPublisher(publisherId);
+    if (!publisher) {
+      throw new Error('Publisher not found');
+    }
+
+    // Build conditions for articles query
+    const articleConditions: any[] = [eq(articles.authorId, publisher.userId)];
+    
+    if (period) {
+      articleConditions.push(
+        and(
+          gte(articles.createdAt, period.start),
+          lte(articles.createdAt, period.end)
+        )
+      );
+    }
+
+    // Get article counts
+    const [stats] = await db
+      .select({
+        totalArticles: sql<number>`count(*)`,
+        publishedArticles: sql<number>`count(*) filter (where ${articles.status} = 'published')`,
+        pendingArticles: sql<number>`count(*) filter (where ${articles.status} = 'draft')`,
+        rejectedArticles: sql<number>`count(*) filter (where ${articles.status} = 'archived')`,
+      })
+      .from(articles)
+      .where(and(...articleConditions));
+
+    // Get credit stats
+    const [creditStats] = await db
+      .select({
+        remainingCredits: sql<number>`sum(${publisherCredits.remainingCredits})`,
+        usedCredits: sql<number>`sum(${publisherCredits.usedCredits})`,
+      })
+      .from(publisherCredits)
+      .where(
+        and(
+          eq(publisherCredits.publisherId, publisherId),
+          eq(publisherCredits.isActive, true)
+        )
+      );
+
+    return {
+      totalArticles: Number(stats.totalArticles) || 0,
+      publishedArticles: Number(stats.publishedArticles) || 0,
+      pendingArticles: Number(stats.pendingArticles) || 0,
+      rejectedArticles: Number(stats.rejectedArticles) || 0,
+      remainingCredits: Number(creditStats?.remainingCredits) || 0,
+      usedCredits: Number(creditStats?.usedCredits) || 0,
+    };
+  }
+
+  // Publisher Credit Logs
+  async getPublisherCreditLogs(
+    publisherId: string, 
+    page: number = 1, 
+    limit: number = 50
+  ): Promise<{ logs: PublisherCreditLog[]; total: number }> {
+    const offset = (page - 1) * limit;
+
+    const logs = await db
+      .select()
+      .from(publisherCreditLogs)
+      .where(eq(publisherCreditLogs.publisherId, publisherId))
+      .orderBy(desc(publisherCreditLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(publisherCreditLogs)
+      .where(eq(publisherCreditLogs.publisherId, publisherId));
+
+    return {
+      logs,
+      total: Number(count),
+    };
+  }
+
+  async createCreditLog(log: InsertPublisherCreditLog): Promise<PublisherCreditLog> {
+    const [creditLog] = await db
+      .insert(publisherCreditLogs)
+      .values(log)
+      .returning();
+    return creditLog;
+  }
+
+  /**
+   * CRITICAL: Approve publisher article with transactional safety
+   * Wraps article publish + credit deduction in a single transaction
+   * If ANY step fails, entire transaction rolls back
+   */
+  async approvePublisherArticle(
+    articleId: string, 
+    publisherId: string, 
+    performedBy: string
+  ): Promise<Article> {
+    // Use Drizzle transaction to ensure atomicity
+    return await db.transaction(async (tx) => {
+      // Step 1: Lock and verify article exists AND is in draft status
+      // Using SELECT FOR UPDATE to prevent concurrent approvals
+      const [article] = await tx
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, articleId),
+            eq(articles.status, 'draft')  // Check status in locked SELECT
+          )
+        )
+        .for('update')  // Row-level lock - prevents concurrent modifications
+        .limit(1);
+
+      if (!article) {
+        throw new Error('المقال غير موجود أو تمت الموافقة عليه مسبقاً');
+      }
+
+      // Step 2: Lock and get active credit package (within transaction)
+      // Using SELECT FOR UPDATE to prevent concurrent credit deductions
+      const [activeCredit] = await tx
+        .select()
+        .from(publisherCredits)
+        .where(
+          and(
+            eq(publisherCredits.publisherId, publisherId),
+            eq(publisherCredits.isActive, true),
+            or(
+              isNull(publisherCredits.expiryDate),
+              gte(publisherCredits.expiryDate, new Date())
+            )
+          )
+        )
+        .orderBy(desc(publisherCredits.createdAt))
+        .for('update')  // Row-level lock - prevents concurrent credit updates
+        .limit(1);
+
+      if (!activeCredit) {
+        throw new Error('لا يوجد رصيد نشط متاح للناشر');
+      }
+
+      // Re-validate credit balance inside the locked transaction
+      if (activeCredit.remainingCredits < 1) {
+        throw new Error('رصيد الناشر غير كافٍ');
+      }
+
+      // Step 3: Update article to published (within transaction)
+      const [publishedArticle] = await tx
+        .update(articles)
+        .set({
+          status: 'published',
+          publishedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, articleId))
+        .returning();
+
+      // Step 4: Deduct credit (within transaction)
+      const creditsBefore = activeCredit.remainingCredits;
+      const creditsAfter = creditsBefore - 1;
+
+      await tx
+        .update(publisherCredits)
+        .set({
+          usedCredits: activeCredit.usedCredits + 1,
+          remainingCredits: creditsAfter,
+          updatedAt: new Date(),
+        })
+        .where(eq(publisherCredits.id, activeCredit.id));
+
+      // Step 5: Create credit log (within transaction)
+      await tx
+        .insert(publisherCreditLogs)
+        .values({
+          publisherId,
+          creditPackageId: activeCredit.id,
+          articleId,
+          actionType: 'credit_used',
+          creditsBefore,
+          creditsChanged: -1,
+          creditsAfter,
+          performedBy,
+          notes: `تم خصم رصيد مقابل نشر خبر: ${article.title}`,
+        });
+
+      // If we reach here, all operations succeeded
+      // Transaction will commit automatically
+      return publishedArticle;
+    });
+  }
+
+  /**
+   * CRITICAL: Update publisher article with security checks
+   * Verifies ownership AND draft status before allowing updates
+   */
+  async updatePublisherArticle(
+    articleId: string,
+    publisherId: string,
+    authorId: string,
+    updates: Partial<InsertArticle>
+  ): Promise<Article> {
+    // Get publisher info to verify ownership
+    const publisher = await this.getPublisher(publisherId);
+    if (!publisher) {
+      throw new Error('الناشر غير موجود');
+    }
+
+    // Security Check 1: Verify ownership (publisher's userId must match article's authorId)
+    if (publisher.userId !== authorId) {
+      throw new Error('غير مسموح: المقال لا ينتمي إلى هذا الناشر');
+    }
+
+    // Get current article to check status
+    const [currentArticle] = await db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          eq(articles.id, articleId),
+          eq(articles.authorId, authorId)  // Ownership check at DB level
+        )
+      )
+      .limit(1);
+
+    if (!currentArticle) {
+      throw new Error('المقال غير موجود أو غير مسموح بالتعديل');
+    }
+
+    // Security Check 2: Verify article is still in draft status
+    if (currentArticle.status !== 'draft') {
+      throw new Error('غير مسموح: يمكن تعديل المقالات في حالة المسودة فقط');
+    }
+
+    // Perform update with combined security checks
+    const result = await db
+      .update(articles)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(articles.id, articleId),
+          eq(articles.authorId, authorId),  // Ownership check
+          eq(articles.status, 'draft')       // Status check
+        )
+      )
+      .returning();
+
+    // Check if any rows were affected (0 rows = conditions failed)
+    if (result.length === 0) {
+      throw new Error('لم يتم العثور على المقال أو لا يمكن تعديله');
+    }
+
+    return result[0];
   }
 }
 
