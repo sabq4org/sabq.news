@@ -167,6 +167,10 @@ import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManage
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
 import ChatbotPage from "@/pages/ChatbotPage";
 import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
+import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
+import PublisherArticles from "@/pages/publisher/PublisherArticles";
+import PublisherArticleEditor from "@/pages/publisher/PublisherArticleEditor";
+import PublisherCredits from "@/pages/publisher/PublisherCredits";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -371,6 +375,13 @@ function Router() {
       <Route path="/select-interests" component={SelectInterests} />
       <Route path="/interests/edit" component={EditInterests} />
       <Route path="/notification-settings" component={NotificationSettings} />
+      
+      {/* Publisher Dashboard Routes */}
+      <Route path="/dashboard/publisher" component={PublisherDashboard} />
+      <Route path="/dashboard/publisher/articles" component={PublisherArticles} />
+      <Route path="/dashboard/publisher/article/new" component={PublisherArticleEditor} />
+      <Route path="/dashboard/publisher/article/:id/edit" component={PublisherArticleEditor} />
+      <Route path="/dashboard/publisher/credits" component={PublisherCredits} />
       
       {/* Onboarding routes - Arabic */}
       <Route path="/ar/onboarding/welcome" component={Welcome} />
