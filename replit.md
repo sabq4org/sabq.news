@@ -64,6 +64,17 @@ Publisher users access a dedicated authenticated shell via `PublisherLayout` com
 - All publisher pages (Dashboard, Articles, Credits, ArticleEditor) wrapped in PublisherLayout for consistent UI/UX
 - Responsive design with off-canvas behavior on tablet/mobile viewports
 
+**Admin Publishers Dashboard Layout (AdminPublishersLayout Component):**
+Admin users manage publishers through a dedicated authenticated shell via `AdminPublishersLayout` component (`client/src/components/admin/publishers/AdminPublishersLayout.tsx`), mirroring the PublisherLayout design for consistency:
+- RTL-aware sidebar navigation positioned on the right (`side="right"`)
+- Collapsible sidebar with toggle button for responsive behavior
+- Navigation menu items: قائمة الناشرين (Publishers List), مراجعة المقالات (Review Articles), التحليلات والإحصائيات (Analytics)
+- Active state detection with special logic to highlight "Publishers List" for detail pages (e.g., `/dashboard/admin/publishers/:id`)
+- Header with sidebar trigger, notifications bell, "View Site" button, and theme toggle
+- Sidebar footer with admin user avatar, name, role badge, and logout button
+- All admin publisher pages (AdminPublishers, AdminPublisherArticles, AdminPublisherAnalytics, AdminPublisherDetails) wrapped in AdminPublishersLayout for consistent UI/UX
+- Responsive design with off-canvas sidebar behavior on tablet/mobile viewports
+
 **Article Ordering Strategy:**
 The platform employs a hybrid ordering approach to balance editorial curation with chronological feeds:
 
