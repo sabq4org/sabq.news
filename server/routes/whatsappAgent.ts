@@ -226,8 +226,10 @@ router.post("/webhook", async (req: Request, res: Response) => {
     
     // 🔐 SECURITY: Validate Twilio Signature
     const twilioSignature = req.headers['x-twilio-signature'] as string;
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const skipValidation = isDevelopment && process.env.SKIP_TWILIO_VALIDATION === 'true';
     
-    if (!twilioSignature) {
+    if (!twilioSignature && !skipValidation) {
       console.error("[WhatsApp Agent] ❌ Missing Twilio signature header");
       
       // Log failed attempt
@@ -247,9 +249,23 @@ router.post("/webhook", async (req: Request, res: Response) => {
       });
     }
     
-    // Validate signature
-    const url = `https://${req.headers.host}${req.originalUrl}`;
-    const isValid = validateTwilioSignature(twilioSignature, url, req.body);
+    // Validate signature (if not skipped in development)
+    let isValid = skipValidation;
+    if (!skipValidation) {
+      // Use FRONTEND_URL for Replit environment (Twilio uses the public URL)
+      const frontendUrl = process.env.FRONTEND_URL || 'https://sabq.life';
+      const url = `${frontendUrl}/api/whatsapp/webhook`;
+      
+      console.log(`[WhatsApp Agent] 🔐 Validating signature for URL: ${url}`);
+      isValid = validateTwilioSignature(twilioSignature, url, req.body);
+      
+      // If it fails with frontend URL, try with the request host as fallback
+      if (!isValid) {
+        const fallbackUrl = `https://${req.headers.host}${req.originalUrl}`;
+        console.log(`[WhatsApp Agent] 🔄 Retrying with fallback URL: ${fallbackUrl}`);
+        isValid = validateTwilioSignature(twilioSignature, fallbackUrl, req.body);
+      }
+    }
     
     if (!isValid) {
       console.error("[WhatsApp Agent] ❌ Invalid Twilio signature");
