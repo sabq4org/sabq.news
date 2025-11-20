@@ -673,14 +673,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       });
     }
 
-    // Detect language and normalize to ensure valid code
+    // Detect language for logging purposes only
     const detectedLang = await detectLanguage(emailContent);
-    const senderLang = normalizeLanguageCode(trustedSender.language || "ar");
-    const language = (trustedSender.language === "ar" || trustedSender.language === "en" || trustedSender.language === "ur") 
-      ? senderLang
-      : detectedLang;
+    console.log("[Email Agent] Detected language:", detectedLang);
     
-    console.log("[Email Agent] Using language:", language);
+    // 🌐 FORCE ARABIC OUTPUT: Email Agent always publishes in Arabic
+    // Regardless of source language or sender preference, translate/rewrite to Arabic for consistency
+    const language = "ar" as const;
+    console.log("[Email Agent] Target language (forced):", language);
     
     // 🎯 Fetch available categories for AI to choose from
     const allCategories = await storage.getAllCategories();

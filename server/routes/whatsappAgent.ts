@@ -453,9 +453,14 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
     const detectedLang = await detectLanguage(cleanText);
     console.log(`[WhatsApp Agent] Detected language: ${detectedLang}`);
+    
+    // 🌐 FORCE ARABIC OUTPUT: WhatsApp Agent always publishes in Arabic
+    // Regardless of source language, translate/rewrite to Arabic for consistency
+    const targetLang = "ar" as const;
+    console.log(`[WhatsApp Agent] Target language (forced): ${targetLang}`);
 
     const categories = await storage.getAllCategories();
-    const aiResult = await analyzeAndEditWithSabqStyle(cleanText, detectedLang, categories);
+    const aiResult = await analyzeAndEditWithSabqStyle(cleanText, targetLang, categories);
 
     console.log(`[WhatsApp Agent] AI analysis complete. Quality score: ${aiResult.qualityScore}`);
 
