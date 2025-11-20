@@ -6928,6 +6928,7 @@ export const publishers = pgTable("publishers", {
   contactPersonEn: text("contact_person_en"),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull(),
+  logoUrl: text("logo_url"), // Publisher/Agency logo
   
   // Business info
   commercialRegistration: text("commercial_registration"),
