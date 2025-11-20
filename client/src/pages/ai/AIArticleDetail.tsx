@@ -1,0 +1,298 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, Link } from "wouter";
+import { format } from "date-fns";
+import { ar, enUS } from "date-fns/locale";
+import { 
+  ArrowLeft,
+  Share2,
+  Bookmark,
+  MessageCircle,
+  Eye,
+  Clock,
+  User,
+  ChevronRight,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Copy,
+  CheckCircle
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import AIHeader from "@/components/ai/AIHeader";
+import AINewsCard from "@/components/ai/AINewsCard";
+import { useLanguage } from "@/contexts/LanguageContext";
+import ImageWithCaption from "@/components/ImageWithCaption";
+
+export default function AIArticleDetail() {
+  const params = useParams<{ slug: string }>();
+  const { language } = useLanguage();
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Fetch article details
+  const { data: article, isLoading } = useQuery({
+    queryKey: [`/api/articles/${params.slug}`],
+    enabled: !!params.slug
+  });
+
+  // Fetch related articles
+  const { data: relatedArticles = [] } = useQuery({
+    queryKey: [`/api/articles/${params.slug}/related`],
+    enabled: !!params.slug && !!article
+  });
+
+  const handleShare = (platform: string) => {
+    const url = window.location.href;
+    const title = article?.title || "";
+    
+    switch (platform) {
+      case "twitter":
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`);
+        break;
+      case "facebook":
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+        break;
+      case "linkedin":
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
+        break;
+      case "copy":
+        navigator.clipboard.writeText(url);
+        setCopied(true);
+        toast({
+          title: language === "ar" ? "تم النسخ!" : "Copied!",
+          description: language === "ar" ? "تم نسخ الرابط" : "Link copied to clipboard"
+        });
+        setTimeout(() => setCopied(false), 2000);
+        break;
+    }
+  };
+
+  const toggleBookmark = () => {
+    setBookmarked(!bookmarked);
+    toast({
+      title: !bookmarked 
+        ? (language === "ar" ? "تم الحفظ!" : "Saved!") 
+        : (language === "ar" ? "تم الإلغاء!" : "Removed!"),
+      description: !bookmarked
+        ? (language === "ar" ? "تم حفظ المقال في المفضلة" : "Article saved to bookmarks")
+        : (language === "ar" ? "تم إزالة المقال من المفضلة" : "Article removed from bookmarks")
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <AIHeader />
+        <div className="container mx-auto max-w-4xl px-4 py-12">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-slate-800 rounded w-3/4" />
+            <div className="h-64 bg-slate-800 rounded" />
+            <div className="h-4 bg-slate-800 rounded w-full" />
+            <div className="h-4 bg-slate-800 rounded w-5/6" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <AIHeader />
+        <div className="container mx-auto max-w-4xl px-4 py-12">
+          <Card className="bg-slate-900/50 border-slate-800">
+            <CardContent className="p-12 text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">
+                {language === "ar" ? "المقال غير موجود" : "Article not found"}
+              </h2>
+              <Link href="/ai">
+                <Button variant="default" data-testid="button-back-to-ai">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {language === "ar" ? "العودة لقسم AI" : "Back to AI Section"}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Header */}
+      <AIHeader />
+
+      {/* Article Content */}
+      <article className="container mx-auto max-w-4xl px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* Back Button */}
+          <Link href="/ai">
+            <Button
+              variant="ghost"
+              className="text-gray-400 hover:text-white mb-6"
+              data-testid="button-back-to-ai"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {language === "ar" ? "العودة لـ iFox" : "Back to iFox"}
+            </Button>
+          </Link>
+
+          {/* Article Header */}
+          <header className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+              {article.title}
+            </h1>
+            
+            {article.summary && (
+              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+                {article.summary}
+              </p>
+            )}
+
+            {/* Article Meta */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                <User className="w-4 h-4" />
+                <span>{article.author || (language === "ar" ? "فريق iFox" : "iFox Team")}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>
+                  {format(new Date(article.publishedAt || article.createdAt), "PPP", {
+                    locale: language === "ar" ? ar : enUS
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                <span>{article.views || 0} {language === "ar" ? "مشاهدة" : "views"}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageCircle className="w-4 h-4" />
+                <span>{article.commentsCount || 0} {language === "ar" ? "تعليق" : "comments"}</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Share and Actions Bar */}
+          <div className="flex flex-wrap justify-between items-center gap-4 p-4 bg-slate-900/50 rounded-lg mb-8">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-700 hover:bg-slate-800"
+                onClick={() => handleShare("twitter")}
+                data-testid="button-share-twitter"
+              >
+                <Twitter className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-700 hover:bg-slate-800"
+                onClick={() => handleShare("facebook")}
+                data-testid="button-share-facebook"
+              >
+                <Facebook className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-700 hover:bg-slate-800"
+                onClick={() => handleShare("linkedin")}
+                data-testid="button-share-linkedin"
+              >
+                <Linkedin className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-700 hover:bg-slate-800"
+                onClick={() => handleShare("copy")}
+                data-testid="button-copy-link"
+              >
+                {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+            <Button
+              variant={bookmarked ? "default" : "outline"}
+              size="sm"
+              className={bookmarked ? "" : "border-slate-700 hover:bg-slate-800"}
+              onClick={toggleBookmark}
+              data-testid="button-bookmark"
+            >
+              <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
+              <span className="ml-2">
+                {bookmarked 
+                  ? (language === "ar" ? "محفوظ" : "Saved")
+                  : (language === "ar" ? "حفظ" : "Save")}
+              </span>
+            </Button>
+          </div>
+
+          {/* Featured Image */}
+          {article.imageUrl && (
+            <div className="mb-8 rounded-xl overflow-hidden">
+              <ImageWithCaption
+                src={article.imageUrl}
+                alt={article.title}
+                caption={article.imageCaption}
+                className="w-full h-auto"
+              />
+            </div>
+          )}
+
+          {/* Article Content */}
+          <div 
+            className="prose prose-invert prose-lg max-w-none mb-12"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
+
+          {/* Tags */}
+          {article.tags && article.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {article.tags.map((tag: string) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="bg-slate-800 hover:bg-slate-700"
+                >
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <Separator className="bg-slate-800 mb-8" />
+
+          {/* Related Articles */}
+          {relatedArticles.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                {language === "ar" ? "مقالات ذات صلة" : "Related Articles"}
+                <ChevronRight className="w-6 h-6" />
+              </h2>
+              <div className="grid gap-6">
+                {relatedArticles.slice(0, 3).map((relatedArticle: any) => (
+                  <AINewsCard key={relatedArticle.id} article={relatedArticle} />
+                ))}
+              </div>
+            </section>
+          )}
+        </motion.div>
+      </article>
+    </div>
+  );
+}

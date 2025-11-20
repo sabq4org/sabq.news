@@ -176,6 +176,8 @@ import AdminPublisherDetails from "@/pages/admin/publishers/AdminPublisherDetail
 import AdminPublisherArticles from "@/pages/admin/publishers/AdminPublisherArticles";
 import AdminPublisherAnalytics from "@/pages/admin/publishers/AdminPublisherAnalytics";
 import AIHomePage from "@/pages/ai/AIHomePage";
+import AICategoryPage from "@/pages/ai/AICategoryPage";
+import AIArticleDetail from "@/pages/ai/AIArticleDetail";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -287,8 +289,12 @@ function Router() {
       
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/chatbot" component={ChatbotPage} />
+      
+      {/* AI/iFox Routes */}
       <Route path="/ai" component={AIHomePage} />
-      <Route path="/ai/:category" component={AIHomePage} />
+      <Route path="/ai/category/:category" component={AICategoryPage} />
+      <Route path="/ai/article/:slug" component={AIArticleDetail} />
+      
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
       {/* Smart Links pages */}
