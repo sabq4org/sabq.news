@@ -48,7 +48,7 @@ export default function AdminPublishers() {
     page: number;
     limit: number;
   }>({
-    queryKey: ["/api/admin/publishers", { page, isActive: statusFilter === "all" ? undefined : statusFilter === "active" }],
+    queryKey: ["/api/publishers", { page, isActive: statusFilter === "all" ? undefined : (statusFilter === "active" ? 'true' : 'false') }],
   });
 
   const filteredPublishers = publishersData?.publishers.filter((publisher) => {
