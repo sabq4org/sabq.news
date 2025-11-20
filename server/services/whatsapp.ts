@@ -60,13 +60,31 @@ export function validateTwilioSignature(signature: string, url: string, params: 
 }
 
 export function extractTokenFromMessage(message: string): string | null {
-  const tokenPattern = /#TOKEN[:\s]*([A-Z0-9\-_]+)/i;
-  const match = message.match(tokenPattern);
+  // Support multiple TOKEN patterns:
+  // 1. #TOKEN:XXX or #TOKEN-XXX or #TOKEN XXX (with hash)
+  // 2. TOKEN:XXX or TOKEN-XXX (without hash, requires colon or dash)
+  // 3. TOKEN XXX (without hash, requires space after TOKEN and uppercase token)
+  // Case insensitive matching for TOKEN word
+  
+  // First try patterns with explicit separators (: or -)
+  const explicitPattern = /\b#?TOKEN[:\-]([A-Z0-9\-_]+)/i;
+  let match = message.match(explicitPattern);
+  
+  if (!match) {
+    // Try pattern with space, but ensure the token part is uppercase/numbers
+    const spacePattern = /\bTOKEN\s+([A-Z0-9\-_]+)/i;
+    match = message.match(spacePattern);
+  }
+  
   return match ? match[1].toUpperCase() : null;
 }
 
 export function removeTokenFromMessage(message: string): string {
-  return message.replace(/#TOKEN[:\s]*[A-Z0-9\-_]+/i, '').trim();
+  // Remove TOKEN patterns
+  return message
+    .replace(/\b#?TOKEN[:\-][A-Z0-9\-_]+/i, '')
+    .replace(/\bTOKEN\s+[A-Z0-9\-_]+/i, '')
+    .trim();
 }
 
 console.log('✅ WhatsApp service initialized', {
