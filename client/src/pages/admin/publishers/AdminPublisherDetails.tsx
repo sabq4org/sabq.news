@@ -57,7 +57,7 @@ export default function AdminPublisherDetails() {
   const [articlesPage, setArticlesPage] = useState(1);
 
   const { data: publisher, isLoading: isLoadingPublisher } = useQuery<Publisher>({
-    queryKey: ["/api/admin/publishers", publisherId],
+    queryKey: [`/api/admin/publishers/${publisherId}`],
     enabled: !!publisherId,
   });
 

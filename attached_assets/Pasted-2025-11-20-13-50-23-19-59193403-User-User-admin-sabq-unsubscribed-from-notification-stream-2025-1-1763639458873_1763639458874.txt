@@ -1,0 +1,121 @@
+2025-11-20 13:50:23.19
+59193403
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-20 13:50:23.22
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.22
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.23
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-20 13:50:23.25
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.25
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.25
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.27
+59193403
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 13:50:23.27
+59193403
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-20 13:50:23.32
+59193403
+User
+11:50:23 AM [express] GET /api/admin/publishers/[object%20Object] 404 in 116ms :: {"message":"الناشر …
+2025-11-20 13:50:23.32
+59193403
+User
+11:50:23 AM [express] GET /api/admin/users/[object%20Object] 404 in 115ms :: {"message":"User not fou…
+2025-11-20 13:50:23.33
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.36
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.43
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.46
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.48
+59193403
+User
+11:50:23 AM [express] GET /api/categories/smart 304 in 274ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7…
+2025-11-20 13:50:23.52
+59193403
+User
+11:50:23 AM [express] POST /api/accessibility/track 200 in 112ms :: {"success":true,"eventId":"1a8a6b…
+2025-11-20 13:50:23.54
+59193403
+User
+11:50:23 AM [express] GET /api/homepage 304 in 231ms :: {"hero":[{"id":"b466c8a4-6a36-4394-9d48-d53b2…
+2025-11-20 13:50:23.81
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.82
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.82
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.82
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.82
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.84
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.85
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.85
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.85
+59193403
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 13:50:23.89
+59193403
+User
+11:50:23 AM [express] GET /api/shorts/featured 304 in 95ms :: {"shorts":[],"total":0}
+2025-11-20 13:50:23.91
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 13:50:23.91
+59193403
+User
+🔸 DeserializeUser called with id: admin-sabq

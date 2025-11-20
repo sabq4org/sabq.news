@@ -123,7 +123,7 @@ export function AddCreditPackageDialog({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/publishers", publisherId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/publishers/${publisherId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/publishers"] });
       toast({
         title: "تم إضافة الباقة",
