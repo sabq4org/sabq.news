@@ -76,17 +76,12 @@ export default function AdminPublisherDetails() {
     enabled: !!publisherId,
   });
 
-  const { data: articlesData } = useQuery<{
-    articles: Article[];
-    total: number;
-  }>({
-    queryKey: [`/api/admin/articles`, publisher?.userId, articlesPage],
+  const { data: articlesData = [] } = useQuery<Article[]>({
+    queryKey: [`/api/admin/articles`, publisher?.userId],
     queryFn: async () => {
       if (!publisher?.userId) throw new Error('Publisher not loaded');
       const params = new URLSearchParams({
-        authorId: publisher.userId,
-        limit: '50',
-        offset: ((articlesPage - 1) * 50).toString()
+        authorId: publisher.userId
       });
       const response = await fetch(`/api/admin/articles?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch articles');
@@ -450,7 +445,7 @@ export default function AdminPublisherDetails() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {articlesData && articlesData.articles.length > 0 ? (
+          {articlesData && articlesData.length > 0 ? (
             <div className="space-y-4">
               <div className="rounded-md border">
                 <Table>
@@ -463,7 +458,7 @@ export default function AdminPublisherDetails() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {articlesData.articles.map((article) => (
+                    {articlesData.map((article) => (
                       <TableRow key={article.id}>
                         <TableCell className="font-medium">{article.title}</TableCell>
                         <TableCell>
