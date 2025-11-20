@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
+import { AdminPublishersLayout } from "@/components/admin/publishers/AdminPublishersLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -121,9 +121,8 @@ export default function AdminPublisherAnalytics() {
   const totalArticlesForChart = analytics.publishedArticles + analytics.pendingArticles + analytics.rejectedArticles;
 
   return (
-    <>
-      <AdminPublisherNav />
-      <div className="container mx-auto p-6 space-y-6">
+    <AdminPublishersLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -428,6 +427,6 @@ export default function AdminPublisherAnalytics() {
         </Card>
       </div>
       </div>
-    </>
+    </AdminPublishersLayout>
   );
 }

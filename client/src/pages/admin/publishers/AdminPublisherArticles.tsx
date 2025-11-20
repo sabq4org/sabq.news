@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
+import { AdminPublishersLayout } from "@/components/admin/publishers/AdminPublishersLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,9 +186,8 @@ export default function AdminPublisherArticles() {
   const isProcessing = approveMutation.isPending || rejectMutation.isPending;
 
   return (
-    <>
-      <AdminPublisherNav />
-      <div className="container mx-auto p-6 space-y-6">
+    <AdminPublishersLayout>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">
@@ -445,6 +444,6 @@ export default function AdminPublisherArticles() {
         </AlertDialogContent>
       </AlertDialog>
       </div>
-    </>
+    </AdminPublishersLayout>
   );
 }

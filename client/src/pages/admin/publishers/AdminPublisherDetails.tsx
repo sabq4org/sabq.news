@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
+import { AdminPublishersLayout } from "@/components/admin/publishers/AdminPublishersLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,23 +111,17 @@ export default function AdminPublisherDetails() {
 
   if (isLoadingPublisher) {
     return (
-      <>
-        <AdminPublisherNav />
-        <div className="container mx-auto p-6">
-          <div className="text-center py-12">جاري التحميل...</div>
-        </div>
-      </>
+      <AdminPublishersLayout>
+        <div className="text-center py-12">جاري التحميل...</div>
+      </AdminPublishersLayout>
     );
   }
 
   if (!publisher) {
     return (
-      <>
-        <AdminPublisherNav />
-        <div className="container mx-auto p-6">
-          <div className="text-center py-12">الناشر غير موجود</div>
-        </div>
-      </>
+      <AdminPublishersLayout>
+        <div className="text-center py-12">الناشر غير موجود</div>
+      </AdminPublishersLayout>
     );
   }
 
@@ -138,9 +132,8 @@ export default function AdminPublisherDetails() {
     .reduce((sum, c) => sum + c.remainingCredits, 0) || 0;
 
   return (
-    <>
-      <AdminPublisherNav />
-      <div className="container mx-auto p-6 space-y-6">
+    <AdminPublishersLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -515,6 +508,6 @@ export default function AdminPublisherDetails() {
         />
       )}
       </div>
-    </>
+    </AdminPublishersLayout>
   );
 }
