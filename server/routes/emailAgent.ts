@@ -673,13 +673,19 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       });
     }
 
-    // Detect language for logging purposes only
-    const detectedLang = await detectLanguage(emailContent);
-    console.log("[Email Agent] Detected language:", detectedLang);
-    
     // 🌐 FORCE ARABIC OUTPUT: Email Agent always publishes in Arabic
     // Regardless of source language or sender preference, translate/rewrite to Arabic for consistency
     const language = "ar" as const;
+    
+    // Detect language for logging only (with fallback to avoid blocking)
+    let detectedLang = "ar";
+    try {
+      detectedLang = await detectLanguage(emailContent);
+      console.log("[Email Agent] Detected language:", detectedLang);
+    } catch (error) {
+      console.warn("[Email Agent] Language detection failed, using fallback:", error);
+    }
+    
     console.log("[Email Agent] Target language (forced):", language);
     
     // 🎯 Fetch available categories for AI to choose from

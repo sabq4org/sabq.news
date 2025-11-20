@@ -1,0 +1,112 @@
+2025-11-20 08:38:06.55
+a7de8107
+User
+length: 121,
+2025-11-20 08:38:06.55
+a7de8107
+User
+severity: 'ERROR',
+2025-11-20 08:38:06.55
+a7de8107
+User
+internalQuery: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+file: 'parse_relation.c',
+2025-11-20 08:38:06.55
+a7de8107
+User
+position: '1394',
+2025-11-20 08:38:06.55
+a7de8107
+User
+line: '1449',
+2025-11-20 08:38:06.55
+a7de8107
+User
+hint: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+Error fetching media assets: error: relation "article_media_assets" does not exist
+2025-11-20 08:38:06.55
+a7de8107
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-20 08:38:06.55
+a7de8107
+User
+table: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+where: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+at async DatabaseStorage.getArticleMediaAssetWithDetails (file:///home/runner/workspace/dist/index.js:12660:25)
+2025-11-20 08:38:06.55
+a7de8107
+User
+constraint: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+column: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+code: '42P01',
+2025-11-20 08:38:06.55
+a7de8107
+User
+dataType: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+detail: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+schema: undefined,
+2025-11-20 08:38:06.55
+a7de8107
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-20 08:38:06.55
+a7de8107
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-20 08:38:06.57
+a7de8107
+User
+6:38:06 AM [express] GET /api/social/is-following/email-agent-system 304 in 90ms :: {"isFollowing":t…
+2025-11-20 08:38:06.58
+a7de8107
+User
+6:38:06 AM [express] GET /api/articles/HYfwC-1H1F7HGnu5sPJ8Z/media-assets 500 in 90ms :: {"message":…
+2025-11-20 08:38:06.61
+a7de8107
+User
+6:38:06 AM [express] GET /api/ads/slot/sidebar 204 in 128ms
+2025-11-20 08:38:06.61
+a7de8107
+User
+6:38:06 AM [express] GET /api/articles/%D8%B5%D9%86%D8%AF%D9%88%D9%82-%D8%A7%D9%84%D8%A7%D8%B3%D8%AA…
+2025-11-20 08:38:06.65
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:38:06.65
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:38:06.66
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:38:06.67
+a7de8107
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ

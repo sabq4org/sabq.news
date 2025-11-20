@@ -1,0 +1,138 @@
+2025-11-20 08:34:14.80
+a7de8107
+User
+2025-11-20 08:34:14.80
+a7de8107
+User
+'content-length': '155',
+2025-11-20 08:34:14.80
+a7de8107
+User
+'content-type': 'text/html',
+2025-11-20 08:34:14.80
+a7de8107
+User
+cloudflare
+2025-11-20 08:34:14.80
+a7de8107
+User
+at APIError.generate (file:///home/runner/workspace/node_modules/openai/core/error.mjs:62:20)
+2025-11-20 08:34:14.80
+a7de8107
+User
+connection: 'keep-alive',
+2025-11-20 08:34:14.80
+a7de8107
+User
+error: undefined,
+2025-11-20 08:34:14.80
+a7de8107
+User
+at async file:///home/runner/workspace/dist/index.js:40652:22 {
+2025-11-20 08:34:14.80
+a7de8107
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-20 08:34:14.80
+a7de8107
+User
+},
+2025-11-20 08:34:14.80
+a7de8107
+User
+502 Bad Gateway
+2025-11-20 08:34:14.80
+a7de8107
+User
+status: 502,
+2025-11-20 08:34:14.80
+a7de8107
+User
+at OpenAI.makeRequest (file:///home/runner/workspace/node_modules/openai/client.mjs:330:30)
+2025-11-20 08:34:14.80
+a7de8107
+User
+2025-11-20 08:34:14.80
+a7de8107
+User
+requestID: null,
+2025-11-20 08:34:14.80
+a7de8107
+User
+headers: Headers {
+2025-11-20 08:34:14.80
+a7de8107
+User
+}
+2025-11-20 08:34:14.80
+a7de8107
+User
+code: undefined,
+2025-11-20 08:34:14.80
+a7de8107
+User
+param: undefined,
+2025-11-20 08:34:14.80
+a7de8107
+User
+type: undefined
+2025-11-20 08:34:14.80
+a7de8107
+User
+[SmartLinks] Error analyzing content: InternalServerError: 502
+2025-11-20 08:34:14.98
+a7de8107
+User
+6:34:14 AM [express] POST /api/smart-links/analyze 200 in 36675ms :: {"suggestions":[],"entities":[]…
+2025-11-20 08:34:15.52
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:34:15.54
+a7de8107
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 08:34:15.59
+a7de8107
+User
+6:34:15 AM [express] POST /api/accessibility/track 200 in 91ms :: {"success":true,"eventId":"8cf040f…
+2025-11-20 08:34:18.11
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:34:18.13
+a7de8107
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 08:34:18.21
+a7de8107
+User
+6:34:18 AM [express] GET /api/ads/slot/header-banner 204 in 120ms
+2025-11-20 08:34:25.75
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:34:25.77
+a7de8107
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 08:34:25.82
+a7de8107
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 08:34:25.85
+a7de8107
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 08:34:25.89
+a7de8107
+User
+6:34:25 AM [express] POST /api/accessibility/track 200 in 88ms :: {"success":true,"eventId":"d1a7f8b…
+2025-11-20 08:34:25.97
+a7de8107
+User
+6:34:25 AM [express] GET /api/themes/active 200 in 240ms
+2025-11-20 08:34:25.97
+a7de8107
+User
+6:34:25 AM [express] GET /api/themes/active 200 in 240ms

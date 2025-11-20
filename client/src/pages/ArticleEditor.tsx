@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -112,6 +112,9 @@ export default function ArticleEditor() {
   const [isClassifying, setIsClassifying] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  
+  // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
+  const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
 
   const { toast } = useToast();
 
@@ -190,6 +193,51 @@ export default function ArticleEditor() {
     }
   }, [article, isNewArticle]);
   
+  // Helper function to save uploaded images to media library (memoized to prevent duplicate uploads)
+  const saveToMediaLibrary = useCallback(async (imageUrl: string): Promise<string | null> => {
+    // If already saving this specific URL, return the existing promise
+    const existingPromise = savingMediaMapRef.current.get(imageUrl);
+    if (existingPromise) {
+      console.log("[Media Library] Already saving this URL, returning existing promise");
+      return existingPromise;
+    }
+    
+    // Create new promise for this URL
+    const savePromise = (async () => {
+      try {
+        const fileName = imageUrl.split('/').pop() || 'image.jpg';
+        const mediaTitle = title || "صورة المقال";
+        const description = (excerpt || content.substring(0, 100) || mediaTitle);
+        
+        const mediaFile = await apiRequest("/api/media/save-existing", {
+          method: "POST",
+          body: JSON.stringify({
+            fileName,
+            url: imageUrl,
+            title: mediaTitle,
+            description,
+            category: "articles",
+          }),
+          headers: { "Content-Type": "application/json" },
+        }) as MediaFile;
+        
+        console.log("[Media Library] Successfully saved image to library:", fileName, "ID:", mediaFile.id);
+        return mediaFile.id;
+      } catch (error) {
+        console.error("Failed to save to media library:", error);
+        // Don't show error to user - this is background operation
+        return null;
+      } finally {
+        // Clear this URL's promise after completion
+        savingMediaMapRef.current.delete(imageUrl);
+      }
+    })();
+    
+    // Store promise for potential concurrent callers of the same URL
+    savingMediaMapRef.current.set(imageUrl, savePromise);
+    return savePromise;
+  }, [title, excerpt, content]);
+  
   // Helper to fetch media ID from media library based on URL
   useEffect(() => {
     const fetchMediaIdForUrl = async (url: string) => {
@@ -203,8 +251,16 @@ export default function ArticleEditor() {
           setHeroImageMediaId(media.id);
           console.log("[Media ID] Found media ID for URL:", media.id);
         } else {
-          console.log("[Media ID] No media file found for URL");
-          setHeroImageMediaId(null);
+          console.log("[Media ID] No media file found for URL, auto-saving to library...");
+          // Auto-save image to media library if not found
+          const mediaId = await saveToMediaLibrary(url);
+          if (mediaId) {
+            setHeroImageMediaId(mediaId);
+            console.log("[Media ID] Auto-saved to library with ID:", mediaId);
+          } else {
+            console.error("[Media ID] Failed to auto-save to library");
+            setHeroImageMediaId(null);
+          }
         }
       } catch (error) {
         console.error("[Media ID] Failed to fetch media ID:", error);
@@ -215,35 +271,7 @@ export default function ArticleEditor() {
     if (imageUrl && !heroImageMediaId && !isNewArticle) {
       fetchMediaIdForUrl(imageUrl);
     }
-  }, [imageUrl, heroImageMediaId, isNewArticle]);
-
-  // Helper function to save uploaded images to media library
-  const saveToMediaLibrary = async (imageUrl: string): Promise<string | null> => {
-    try {
-      const fileName = imageUrl.split('/').pop() || 'image.jpg';
-      const mediaTitle = title || "صورة المقال";
-      const description = (excerpt || content.substring(0, 100) || mediaTitle);
-      
-      const mediaFile = await apiRequest("/api/media/save-existing", {
-        method: "POST",
-        body: JSON.stringify({
-          fileName,
-          url: imageUrl,
-          title: mediaTitle,
-          description,
-          category: "articles",
-        }),
-        headers: { "Content-Type": "application/json" },
-      }) as MediaFile;
-      
-      console.log("[Media Library] Successfully saved image to library:", fileName, "ID:", mediaFile.id);
-      return mediaFile.id;
-    } catch (error) {
-      console.error("Failed to save to media library:", error);
-      // Don't show error to user - this is background operation
-      return null;
-    }
-  };
+  }, [imageUrl, heroImageMediaId, isNewArticle, saveToMediaLibrary]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

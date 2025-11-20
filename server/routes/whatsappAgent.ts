@@ -450,13 +450,19 @@ router.post("/webhook", async (req: Request, res: Response) => {
     
     console.log(`[WhatsApp Agent] Text validation passed (hasImages: ${hasImages}, textLength: ${textLength})`);
   
-
-    const detectedLang = await detectLanguage(cleanText);
-    console.log(`[WhatsApp Agent] Detected language: ${detectedLang}`);
-    
     // 🌐 FORCE ARABIC OUTPUT: WhatsApp Agent always publishes in Arabic
     // Regardless of source language, translate/rewrite to Arabic for consistency
     const targetLang = "ar" as const;
+    
+    // Detect language for logging only (with fallback to avoid blocking)
+    let detectedLang = "ar";
+    try {
+      detectedLang = await detectLanguage(cleanText);
+      console.log(`[WhatsApp Agent] Detected language: ${detectedLang}`);
+    } catch (error) {
+      console.warn(`[WhatsApp Agent] Language detection failed, using fallback:`, error);
+    }
+    
     console.log(`[WhatsApp Agent] Target language (forced): ${targetLang}`);
 
     const categories = await storage.getAllCategories();
