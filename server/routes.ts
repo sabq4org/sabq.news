@@ -27432,9 +27432,255 @@ Allow: /
     }
   );
 
+  // GET /api/admin/publishers/:id/credits - Get publisher credit packages
+  app.get("/api/admin/publishers/:id/credits",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisher(req.params.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const credits = await storage.getPublisherCredits(req.params.id);
+        res.json(credits);
+      } catch (error: any) {
+        console.error("Error fetching publisher credits:", error);
+        res.status(500).json({ message: "فشل في جلب حزم الأرصدة" });
+      }
+    }
+  );
+
+  // PATCH /api/admin/publishers/:id/credits/:creditId - Update credit package
+  app.patch("/api/admin/publishers/:id/credits/:creditId",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisher(req.params.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const credit = await storage.getPublisherCreditById(req.params.creditId);
+        if (!credit || credit.publisherId !== req.params.id) {
+          return res.status(404).json({ message: "حزمة الأرصدة غير موجودة" });
+        }
+
+        const updateData = z.object({
+          packageName: z.string().optional(),
+          expiryDate: z.string().datetime().optional(),
+          isActive: z.boolean().optional(),
+          notes: z.string().optional(),
+        }).parse(req.body);
+
+        const updatedCredit = await storage.updatePublisherCredit(req.params.creditId, updateData);
+
+        // Log activity
+        await logActivity({
+          userId: req.user.id,
+          action: 'update',
+          entityType: 'publisher_credit',
+          entityId: updatedCredit.id,
+          oldValue: credit as any,
+          newValue: updateData as any,
+        });
+
+        res.json(updatedCredit);
+      } catch (error: any) {
+        console.error("Error updating publisher credit:", error);
+        if (error.name === 'ZodError') {
+          return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+        }
+        res.status(500).json({ message: "فشل في تحديث حزمة الأرصدة" });
+      }
+    }
+  );
+
+  // GET /api/admin/publishers/:id/logs - Get publisher credit logs
+  app.get("/api/admin/publishers/:id/logs",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisher(req.params.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const { page, limit } = req.query;
+        const result = await storage.getPublisherCreditLogs(
+          req.params.id,
+          page ? parseInt(page as string) : 1,
+          limit ? parseInt(limit as string) : 50
+        );
+
+        res.json(result);
+      } catch (error: any) {
+        console.error("Error fetching publisher credit logs:", error);
+        res.status(500).json({ message: "فشل في جلب سجل الأرصدة" });
+      }
+    }
+  );
+
+  // ========================================
+  // Publisher Management APIs (/api/publishers)
+  // ========================================
+
+  // GET /api/publishers - List all publishers (admin only)
+  app.get("/api/publishers",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const { page, limit, isActive } = req.query;
+        const result = await storage.getAllPublishers({
+          page: page ? parseInt(page as string) : 1,
+          limit: limit ? parseInt(limit as string) : 20,
+          isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        });
+        res.json(result);
+      } catch (error: any) {
+        console.error("Error fetching publishers:", error);
+        res.status(500).json({ message: "فشل في جلب الناشرين" });
+      }
+    }
+  );
+
+  // GET /api/publishers/:id - Get publisher details (admin only)
+  app.get("/api/publishers/:id",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisher(req.params.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+        res.json(publisher);
+      } catch (error: any) {
+        console.error("Error fetching publisher:", error);
+        res.status(500).json({ message: "فشل في جلب بيانات الناشر" });
+      }
+    }
+  );
+
+  // POST /api/publishers - Create new publisher (admin only)
+  app.post("/api/publishers",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const publisherData = insertPublisherSchema.parse(req.body);
+        const publisher = await storage.createPublisher(publisherData);
+
+        // Log activity
+        await logActivity({
+          userId: req.user.id,
+          action: 'create',
+          entityType: 'publisher',
+          entityId: publisher.id,
+          newValue: publisherData,
+        });
+
+        res.status(201).json(publisher);
+      } catch (error: any) {
+        console.error("Error creating publisher:", error);
+        if (error.name === 'ZodError') {
+          return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+        }
+        res.status(500).json({ message: "فشل في إنشاء الناشر" });
+      }
+    }
+  );
+
+  // PATCH /api/publishers/:id - Update publisher (admin only)
+  app.patch("/api/publishers/:id",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const updateData = updatePublisherSchema.parse(req.body);
+        const oldPublisher = await storage.getPublisher(req.params.id);
+
+        if (!oldPublisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const publisher = await storage.updatePublisher(req.params.id, updateData);
+
+        // Log activity
+        await logActivity({
+          userId: req.user.id,
+          action: 'update',
+          entityType: 'publisher',
+          entityId: publisher.id,
+          oldValue: oldPublisher as any,
+          newValue: updateData as any,
+        });
+
+        res.json(publisher);
+      } catch (error: any) {
+        console.error("Error updating publisher:", error);
+        if (error.name === 'ZodError') {
+          return res.status(400).json({ message: "بيانات غير صحيحة", errors: error.errors });
+        }
+        res.status(500).json({ message: "فشل في تحديث الناشر" });
+      }
+    }
+  );
+
   // ========================================
   // Publisher Dashboard Routes
   // ========================================
+
+  // GET /api/publisher/me - Get current publisher info
+  app.get("/api/publisher/me",
+    requireAuth,
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisherByUserId(req.user.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
+        }
+
+        res.json(publisher);
+      } catch (error: any) {
+        console.error("Error fetching publisher info:", error);
+        res.status(500).json({ message: "فشل في جلب معلومات الناشر" });
+      }
+    }
+  );
+
+  // GET /api/publisher/stats - Get publisher statistics
+  app.get("/api/publisher/stats",
+    requireAuth,
+    async (req: any, res) => {
+      try {
+        const publisher = await storage.getPublisherByUserId(req.user.id);
+        if (!publisher) {
+          return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
+        }
+
+        if (!publisher.isActive) {
+          return res.status(403).json({ message: "حساب الناشر معطل" });
+        }
+
+        const { startDate, endDate } = req.query;
+        const period = startDate && endDate ? {
+          start: new Date(startDate as string),
+          end: new Date(endDate as string),
+        } : undefined;
+
+        const stats = await storage.getPublisherStats(publisher.id, period);
+        res.json(stats);
+      } catch (error: any) {
+        console.error("Error fetching publisher stats:", error);
+        res.status(500).json({ message: "فشل في جلب إحصائيات الناشر" });
+      }
+    }
+  );
 
   // GET /api/publisher/dashboard - Get stats (credits, articles, etc)
   app.get("/api/publisher/dashboard", 
@@ -27603,7 +27849,7 @@ Allow: /
     }
   );
 
-  // GET /api/publisher/credits - Get credit history
+  // GET /api/publisher/credits - Get active credit packages
   app.get("/api/publisher/credits", 
     requireAuth,
     async (req: any, res) => {
@@ -27613,17 +27859,11 @@ Allow: /
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
         }
         
-        const { page, limit } = req.query;
-        const result = await storage.getPublisherCreditLogs(
-          publisher.id,
-          page ? parseInt(page as string) : 1,
-          limit ? parseInt(limit as string) : 50
-        );
-        
-        res.json(result);
+        const activeCredits = await storage.getPublisherActiveCredits(publisher.id);
+        res.json(activeCredits);
       } catch (error: any) {
-        console.error("Error fetching publisher credits:", error);
-        res.status(500).json({ message: "فشل في جلب سجل الرصيد" });
+        console.error("Error fetching publisher active credits:", error);
+        res.status(500).json({ message: "فشل في جلب حزم الأرصدة النشطة" });
       }
     }
   );
@@ -27825,6 +28065,118 @@ Allow: /
       } catch (error: any) {
         console.error("Error generating publisher report:", error);
         res.status(500).json({ message: "فشل في إنشاء التقرير" });
+      }
+    }
+  );
+
+  // ========================================
+  // Article Approval Workflow (/api/admin/publishers/articles)
+  // ========================================
+
+  // POST /api/admin/publishers/articles/:id/approve - Approve & publish article (deduct credit)
+  app.post("/api/admin/publishers/articles/:id/approve",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const article = await storage.getArticleById(req.params.id);
+        if (!article) {
+          return res.status(404).json({ message: "المقال غير موجود" });
+        }
+
+        const publisher = await storage.getPublisherByUserId(article.authorId);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const publishedArticle = await storage.approvePublisherArticle(
+          req.params.id,
+          publisher.id,
+          req.user.id
+        );
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'approve_publish',
+          entityType: 'publisher_article',
+          entityId: article.id,
+          oldValue: article as any,
+          newValue: {
+            status: 'published',
+            publisherId: publisher.id,
+          },
+        });
+
+        res.json({
+          message: "تم الموافقة على المقال ونشره بنجاح",
+          article: publishedArticle,
+          creditDeducted: true,
+        });
+      } catch (error: any) {
+        console.error("Error approving publisher article:", error);
+
+        if (error.message?.includes('لا يوجد رصيد نشط') || error.message?.includes('No active credit')) {
+          return res.status(400).json({ message: "لا يوجد رصيد نشط متاح للناشر" });
+        }
+        if (error.message?.includes('لا يوجد رصيد متبقي') || error.message?.includes('No remaining credits')) {
+          return res.status(400).json({ message: "لا يوجد رصيد متبقي للناشر" });
+        }
+        if (error.message?.includes('منشور بالفعل')) {
+          return res.status(400).json({ message: "المقال منشور بالفعل" });
+        }
+
+        res.status(500).json({
+          message: "فشل في الموافقة على المقال",
+          error: error.message
+        });
+      }
+    }
+  );
+
+  // POST /api/admin/publishers/articles/:id/reject - Reject article
+  app.post("/api/admin/publishers/articles/:id/reject",
+    requireAuth,
+    requireRole('admin'),
+    async (req: any, res) => {
+      try {
+        const { reason } = req.body;
+
+        const article = await storage.getArticleById(req.params.id);
+        if (!article) {
+          return res.status(404).json({ message: "المقال غير موجود" });
+        }
+
+        const publisher = await storage.getPublisherByUserId(article.authorId);
+        if (!publisher) {
+          return res.status(404).json({ message: "الناشر غير موجود" });
+        }
+
+        const rejectedArticle = await storage.updateArticle(req.params.id, {
+          status: 'archived',
+        });
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'reject',
+          entityType: 'publisher_article',
+          entityId: article.id,
+          oldValue: article as any,
+          newValue: {
+            status: 'archived',
+            publisherId: publisher.id,
+          },
+          metadata: {
+            reason,
+          },
+        });
+
+        res.json({
+          message: "تم رفض المقال",
+          article: rejectedArticle,
+        });
+      } catch (error: any) {
+        console.error("Error rejecting publisher article:", error);
+        res.status(500).json({ message: "فشل في رفض المقال" });
       }
     }
   );

@@ -36,6 +36,14 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes a scope-aware theme management system, Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with a versioned migration approach handles database schema changes.
 
+**Publisher/Agency Content Sales System - Technical Implementation:**
+The publisher content sales system uses a three-table architecture:
+- `publishers`: Publisher/agency registration with contact details, business info (commercial registration, tax number), and account status management
+- `publisher_credits`: Credit packages with flexible periods (monthly/quarterly/yearly/one-time), expiry tracking, and pricing information
+- `publisher_credit_logs`: Complete audit trail for all credit operations (additions, deductions, refunds, expirations)
+
+Article workflow integration adds dedicated fields to the articles table: `isPublisherNews`, `publisherId`, `publisherCreditDeducted`, `publisherSubmittedAt`, `publisherApprovedAt`. The approval workflow (`approvePublisherArticle`) runs in a single database transaction with row-level locking to ensure atomic credit deduction, preventing race conditions and double charges. RBAC enforcement prevents publishers from bypassing the approval workflow - all publisher-submitted content enters as draft status, requiring explicit admin approval before publication and credit deduction. The system includes 12 dedicated API endpoints split between publisher self-service (`/api/publisher/*` for dashboard, stats, articles), admin management (`/api/publishers/*` for CRUD operations), and credit administration (`/api/admin/publishers/*/credits`, `/api/admin/publishers/*/logs`). All credit-sensitive operations are activity-logged with full traceability.
+
 **Article Ordering Strategy:**
 The platform employs a hybrid ordering approach to balance editorial curation with chronological feeds:
 
