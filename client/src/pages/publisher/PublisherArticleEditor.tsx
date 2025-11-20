@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { PublisherNav } from "@/components/publisher/PublisherNav";
+import { PublisherLayout } from "@/components/publisher/PublisherLayout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -231,22 +231,20 @@ export default function PublisherArticleEditor() {
 
   if (isEditMode && articleLoading) {
     return (
-      <>
-        <PublisherNav />
-        <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <PublisherLayout>
+        <div className="space-y-6" dir="rtl">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-96" />
         </div>
-      </>
+      </PublisherLayout>
     );
   }
 
   // Check if article can be edited
   if (isEditMode && articleData && articleData.status !== "draft") {
     return (
-      <>
-        <PublisherNav />
-        <div className="container mx-auto p-6" dir="rtl">
+      <PublisherLayout>
+        <div dir="rtl">
           <Card>
             <CardContent className="pt-6 text-center">
               <p className="text-lg font-medium">لا يمكن تعديل هذا المقال</p>
@@ -262,14 +260,13 @@ export default function PublisherArticleEditor() {
             </CardContent>
           </Card>
         </div>
-      </>
+      </PublisherLayout>
     );
   }
 
   return (
-    <>
-      <PublisherNav />
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <PublisherLayout>
+      <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold" data-testid="text-page-title">
@@ -549,6 +546,6 @@ export default function PublisherArticleEditor() {
         </form>
       </Form>
       </div>
-    </>
+    </PublisherLayout>
   );
 }

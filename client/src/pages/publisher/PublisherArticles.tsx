@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { PublisherNav } from "@/components/publisher/PublisherNav";
+import { PublisherLayout } from "@/components/publisher/PublisherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,9 +86,8 @@ export default function PublisherArticles() {
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
   return (
-    <>
-      <PublisherNav />
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <PublisherLayout>
+      <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -275,6 +274,6 @@ export default function PublisherArticles() {
         </CardContent>
       </Card>
       </div>
-    </>
+    </PublisherLayout>
   );
 }

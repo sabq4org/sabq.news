@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { PublisherNav } from "@/components/publisher/PublisherNav";
+import { PublisherLayout } from "@/components/publisher/PublisherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,9 +95,8 @@ export default function PublisherCredits() {
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
   return (
-    <>
-      <PublisherNav />
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <PublisherLayout>
+      <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold" data-testid="text-page-title">سجل الرصيد</h1>
@@ -244,6 +243,6 @@ export default function PublisherCredits() {
         </CardContent>
       </Card>
       </div>
-    </>
+    </PublisherLayout>
   );
 }

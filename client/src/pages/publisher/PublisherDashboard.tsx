@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { PublisherNav } from "@/components/publisher/PublisherNav";
+import { PublisherLayout } from "@/components/publisher/PublisherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,9 +79,8 @@ export default function PublisherDashboard() {
 
   if (isLoading) {
     return (
-      <>
-        <PublisherNav />
-        <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <PublisherLayout>
+        <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
@@ -89,16 +88,12 @@ export default function PublisherDashboard() {
             ))}
           </div>
         </div>
-      </>
+      </PublisherLayout>
     );
   }
 
   if (!data) {
-    return (
-      <>
-        <PublisherNav />
-      </>
-    );
+    return <PublisherLayout><div /></PublisherLayout>;
   }
 
   const { publisher, credits, stats, recentArticles, creditUsageChart } = data;
@@ -115,9 +110,8 @@ export default function PublisherDashboard() {
   };
 
   return (
-    <>
-      <PublisherNav />
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <PublisherLayout>
+      <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -328,6 +322,6 @@ export default function PublisherDashboard() {
         </CardContent>
       </Card>
       </div>
-    </>
+    </PublisherLayout>
   );
 }
