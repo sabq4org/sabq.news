@@ -47,6 +47,8 @@ import {
   ListTodo,
   Globe,
   Mail,
+  Building2,
+  FileCheck,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -361,6 +363,41 @@ export const navConfig: NavItem[] = [
         labelAr: "الصلاحيات",
         path: "/dashboard/permissions",
         icon: KeyRound,
+        roles: ["admin"],
+      },
+    ],
+  },
+
+  // ===== الناشرون والوكالات / Publishers & Agencies =====
+  {
+    id: "publishers",
+    labelKey: "nav.publishers",
+    labelAr: "الناشرون والوكالات",
+    icon: Building2,
+    roles: ["admin"],
+    children: [
+      {
+        id: "publishers_list",
+        labelKey: "nav.publishers_list",
+        labelAr: "قائمة الناشرين",
+        path: "/dashboard/admin/publishers",
+        icon: Building2,
+        roles: ["admin"],
+      },
+      {
+        id: "publishers_articles",
+        labelKey: "nav.publishers_articles",
+        labelAr: "مراجعة المقالات",
+        path: "/dashboard/admin/publishers/articles",
+        icon: FileCheck,
+        roles: ["admin"],
+      },
+      {
+        id: "publishers_analytics",
+        labelKey: "nav.publishers_analytics",
+        labelAr: "التحليلات والإحصائيات",
+        path: "/dashboard/admin/publishers/analytics",
+        icon: BarChart,
         roles: ["admin"],
       },
     ],
