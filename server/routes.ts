@@ -886,6 +886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const {
         search,
+        url,
         folder,
         folderId,
         category,
@@ -900,6 +901,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build where conditions
       const conditions = [];
+      
+      // Filter by exact URL match (for finding media by URL)
+      if (url) {
+        conditions.push(eq(mediaFiles.url, url as string));
+      }
 
       if (search) {
         conditions.push(

@@ -90,6 +90,7 @@ export default function ArticleEditor() {
     console.log('[ArticleEditor] reporterId state changed to:', reporterId);
   }, [reporterId]);
   const [imageUrl, setImageUrl] = useState("");
+  const [heroImageMediaId, setHeroImageMediaId] = useState<string | null>(null);
   const [imageFocalPoint, setImageFocalPoint] = useState<{ x: number; y: number } | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
   
@@ -188,15 +189,42 @@ export default function ArticleEditor() {
       setStatus(article.status as any);
     }
   }, [article, isNewArticle]);
+  
+  // Helper to fetch media ID from media library based on URL
+  useEffect(() => {
+    const fetchMediaIdForUrl = async (url: string) => {
+      try {
+        const response = await apiRequest(`/api/media?url=${encodeURIComponent(url)}`, {
+          method: "GET",
+        }) as any;
+        
+        if (response && response.length > 0) {
+          const media = response[0];
+          setHeroImageMediaId(media.id);
+          console.log("[Media ID] Found media ID for URL:", media.id);
+        } else {
+          console.log("[Media ID] No media file found for URL");
+          setHeroImageMediaId(null);
+        }
+      } catch (error) {
+        console.error("[Media ID] Failed to fetch media ID:", error);
+        setHeroImageMediaId(null);
+      }
+    };
+    
+    if (imageUrl && !heroImageMediaId && !isNewArticle) {
+      fetchMediaIdForUrl(imageUrl);
+    }
+  }, [imageUrl, heroImageMediaId, isNewArticle]);
 
   // Helper function to save uploaded images to media library
-  const saveToMediaLibrary = async (imageUrl: string) => {
+  const saveToMediaLibrary = async (imageUrl: string): Promise<string | null> => {
     try {
       const fileName = imageUrl.split('/').pop() || 'image.jpg';
       const mediaTitle = title || "صورة المقال";
       const description = (excerpt || content.substring(0, 100) || mediaTitle);
       
-      await apiRequest("/api/media/save-existing", {
+      const mediaFile = await apiRequest("/api/media/save-existing", {
         method: "POST",
         body: JSON.stringify({
           fileName,
@@ -206,12 +234,14 @@ export default function ArticleEditor() {
           category: "articles",
         }),
         headers: { "Content-Type": "application/json" },
-      });
+      }) as MediaFile;
       
-      console.log("[Media Library] Successfully saved image to library:", fileName);
+      console.log("[Media Library] Successfully saved image to library:", fileName, "ID:", mediaFile.id);
+      return mediaFile.id;
     } catch (error) {
       console.error("Failed to save to media library:", error);
       // Don't show error to user - this is background operation
+      return null;
     }
   };
 
@@ -273,8 +303,11 @@ export default function ArticleEditor() {
 
       setImageUrl(aclData.objectPath);
 
-      // Auto-save to media library in background
-      saveToMediaLibrary(aclData.objectPath);
+      // Auto-save to media library in background and save media ID
+      const mediaId = await saveToMediaLibrary(aclData.objectPath);
+      if (mediaId) {
+        setHeroImageMediaId(mediaId);
+      }
 
       toast({
         title: "تم الرفع بنجاح",
@@ -1839,6 +1872,7 @@ const generateSlug = (text: string) => {
                           {/* Caption Form for Hero Image */}
                           <ImageCaptionForm
                             imageUrl={imageUrl}
+                            mediaFileId={heroImageMediaId}
                             articleId={article?.id}
                             locale="ar"
                             displayOrder={0}
@@ -1881,6 +1915,8 @@ const generateSlug = (text: string) => {
           // This ensures we store the actual GCS URL (https:// or gs://)
           const urlToStore = (media as any).originalUrl || media.url;
           setImageUrl(urlToStore);
+          // Save media ID for caption creation
+          setHeroImageMediaId(media.id);
           setShowMediaPicker(false);
           toast({
             title: "تم اختيار الصورة",
@@ -1898,6 +1934,7 @@ const generateSlug = (text: string) => {
 // ImageCaptionForm Component
 interface ImageCaptionFormProps {
   imageUrl: string;
+  mediaFileId: string | null;
   articleId?: string;
   locale: string;
   displayOrder: number;
@@ -1908,6 +1945,7 @@ interface ImageCaptionFormProps {
 
 function ImageCaptionForm({
   imageUrl,
+  mediaFileId,
   articleId,
   locale,
   displayOrder,
@@ -1929,8 +1967,17 @@ function ImageCaptionForm({
       return;
     }
     
+    if (!mediaFileId) {
+      toast({ 
+        title: "خطأ", 
+        description: "لم يتم العثور على معرّف الصورة. يرجى إعادة اختيار الصورة.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     onSave({
-      mediaFileId: imageUrl, // Using imageUrl as identifier
+      mediaFileId,
       locale,
       altText,
       captionPlain: captionPlain || null,
