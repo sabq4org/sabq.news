@@ -1,7 +1,7 @@
 # Sabq Smart News Platform
 
 ## Overview
-Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform designed to revolutionize news consumption. It achieves this through AI-driven summarization, personalized recommendations, comprehensive content management, and viral social media distribution. Key capabilities include trilingual dashboards, independent content management per language, smart links, AI-powered SEO, one-click AI content generation, and detailed social sharing analytics. The platform aims to deliver an advanced news experience by leveraging AI, content enrichment, and social media virality to a broad market.
+Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform that revolutionizes news consumption through AI-driven summarization, personalized recommendations, comprehensive content management, and viral social media distribution. Key capabilities include trilingual dashboards, independent content management per language, smart links, AI-powered SEO, one-click AI content generation, and detailed social sharing analytics. The platform leverages AI, content enrichment, and social media virality to deliver an advanced news experience.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,10 +9,10 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features an RTL-first design with custom light/dark theming, Arabic-optimized fonts, and a multi-section homepage. It includes a comprehensive publishing template system with Framer Motion animations for flexible content presentation and mobile responsiveness. Key architectural decisions include a trilingual system with separate database schemas, language-specific dashboards, and an i18n system with `LanguageContext` and bidirectional routing. A unified brand color system and a consistent smart blocks architecture are applied across all languages, adhering to WCAG 2.1 AA accessibility standards, including a standardized Hindu-Arabic numeral format using `toLocaleString('ar-SA')`. UI components are professional, standard-sized, and optimized for mobile, adhering to WCAG AA compliance (24px minimum touch targets).
+The platform features an RTL-first design with custom light/dark theming, Arabic-optimized fonts, and a multi-section homepage. It includes a comprehensive publishing template system with Framer Motion animations for flexible content presentation and mobile responsiveness. Key architectural decisions include a trilingual system with separate database schemas, language-specific dashboards, and an i18n system with `LanguageContext` and bidirectional routing. A unified brand color system and a consistent smart blocks architecture are applied across all languages, adhering to WCAG 2.1 AA accessibility standards, including a standardized Hindu-Arabic numeral format. UI components are professional, standard-sized, and optimized for mobile, adhering to WCAG AA compliance (24px minimum touch targets).
 
 ### Technical Implementations
-The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Authentication is managed by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) serves as the database, accessed via Drizzle ORM. Google Cloud Storage (Replit Object Storage) handles file storage, and Server-Sent Events (SSE) provide real-time features.
+The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query for state management. The backend is built with Express.js and TypeScript, exposing RESTful APIs. Authentication is managed by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) serves as the database, accessed via Drizzle ORM. Google Cloud Storage handles file storage, and Server-Sent Events (SSE) provide real-time features.
 
 ### Feature Specifications
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
@@ -22,65 +22,19 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **AI Content Features:** AI-powered article classification, multi-type article support, multilingual SEO generation, AI ChatBot Assistant, Audio Summary, Daily Briefs, Smart Content Generation System, and a Deep Analysis Engine (multi-model AI analysis using GPT-5, Gemini, and Claude with SSE streaming).
 -   **AI Generation Tools:** One-click AI generation for headlines, classification, SEO, and summaries, and a Smart Journalist Agent for news writing assistance.
 -   **Real-Time Capabilities:** "Moment by Moment" Live News Desk with breaking news ticker and Smart Notifications System via SSE for staff-only real-time article publishing alerts.
--   **Social Media Integration:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics and Social Crawler Middleware for proper Open Graph meta tags generation (server-side rendering for WhatsApp, Facebook, Twitter crawlers).
+-   **Social Media Integration:** Enterprise-grade viral distribution infrastructure with comprehensive click tracking analytics and Social Crawler Middleware for proper Open Graph meta tags generation.
 -   **Mobile Support:** Native mobile app support via Capacitor for iOS and Android.
 -   **Multilingual Support:** Locale-isolated user pages, trilingual related articles, and trilingual reporter profiles.
 -   **Digital Credentials:** Apple Wallet Dual Pass System for Press Cards and Loyalty Cards with PassKit integration.
 -   **Deep Analysis (Omq):** Public section with UI, navigation, and API endpoints for published analyses, event tracking, and RBAC-protected updates.
 -   **Hierarchical Task Management:** Tasks can have parent-child relationships with unlimited nesting depth, supported by database schema, backend API, and a tree-view UI component, with secure permission-based filtering.
--   **Intelligent Email Agent System with Sabq Editorial Style:** Automated email-to-article publishing system that uses AI for content analysis, quality scoring, sender validation, and auto-publishing or drafting articles, adhering to Sabq's journalistic standards. Features advanced content cleaning that automatically removes sender names, email signatures, greetings/closings, contact information, and any metadata unrelated to news content before AI processing.
--   **WhatsApp Auto-Publish System:** Enterprise-grade WhatsApp-to-article publishing system integrated with Twilio API, mirroring the email agent architecture for AI-powered content processing and auto-publishing. All articles created via WhatsApp Agent are configured with `hideFromHomepage: false` to ensure visibility in homepage article listings. Includes the same intelligent content cleaning system as Email Agent.
--   **Publisher/Agency Content Sales System:** Enterprise-grade B2B content publishing platform enabling external publishers and PR agencies to submit news articles through a credit-based package system. Publishers can only create/edit draft articles; admin approval is required for publishing, at which point credits are automatically deducted. The system includes comprehensive credit package management (monthly/quarterly/yearly/one-time), automatic credit logging for audit trails, publisher performance analytics, and admin controls for package assignment and credit monitoring. All credit deductions are logged with full traceability including articleId, performedBy, and timestamp. Business logic enforces: (1) publishers cannot publish directly, (2) credit deduction occurs only upon admin approval and publish, (3) published articles cannot be edited by publishers, (4) credit availability is validated before approval. **Navigation Access:** Admin users can access the Publisher Management section via the main sidebar menu under "الناشرون والوكالات" (Publishers & Agencies) with three subsections: قائمة الناشرين (Publishers List) at `/dashboard/admin/publishers`, مراجعة المقالات (Review Articles) at `/dashboard/admin/publishers/articles`, and التحليلات والإحصائيات (Analytics) at `/dashboard/admin/publishers/analytics`. Publisher role users have their own dedicated navigation menu with access to their dashboard at `/dashboard/publisher`, their articles at `/dashboard/publisher/articles`, and credit history at `/dashboard/publisher/credits`.
--   **Accessibility:** Comprehensive infrastructure for WCAG 2.1 AA compliance, including global state management for accessibility settings, skip links, enhanced ARIA labels, semantic HTML, and advanced features like ARIA live regions, form/loading state announcements, and a Voice Assistant system. Includes production-ready Reading/Dyslexia Mode with OpenDyslexic font and trilingual Voice Commands for navigation and article reading.
+-   **Intelligent Email Agent System:** Automated email-to-article publishing system with AI for content analysis, quality scoring, sender validation, auto-publishing, and advanced content cleaning.
+-   **WhatsApp Auto-Publish System with Multi-Image Support:** Enterprise-grade WhatsApp-to-article publishing system integrated with Twilio API, featuring AI-powered content processing, auto-publishing, comprehensive multi-image management with Google Cloud Storage integration, and intelligent content cleaning.
+-   **Publisher/Agency Content Sales System:** Enterprise-grade B2B content publishing platform enabling external publishers and PR agencies to submit news articles through a credit-based package system, requiring admin approval for publishing and credit deduction. Includes publisher logo upload, credit package management, and performance analytics.
+-   **Accessibility:** Comprehensive infrastructure for WCAG 2.1 AA compliance, including global state management for accessibility settings, skip links, enhanced ARIA labels, semantic HTML, ARIA live regions, form/loading state announcements, and a Voice Assistant system with Reading/Dyslexia Mode.
 
 ### System Design Choices
-Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes a scope-aware theme management system, Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with a versioned migration approach handles database schema changes.
-
-**Publisher/Agency Content Sales System - Technical Implementation:**
-The publisher content sales system uses a three-table architecture:
-- `publishers`: Publisher/agency registration with contact details, business info (commercial registration, tax number), account status management, and **logo upload capability for brand identity**
-- `publisher_credits`: Credit packages with flexible periods (monthly/quarterly/yearly/one-time), expiry tracking, and pricing information
-- `publisher_credit_logs`: Complete audit trail for all credit operations (additions, deductions, refunds, expirations)
-
-**Publisher Logo Upload Feature:**
-Publishers now support brand logo uploads with comprehensive management:
-- `logoUrl` field in publishers table (nullable TEXT column)
-- Dedicated upload endpoint `/api/admin/publishers/upload-logo` with RBAC (admin-only)
-- Server-side validation: image-only files, max 5MB
-- Storage: Google Cloud Storage (Object Storage) in `publishers/logos/` directory
-- Frontend: immediate upload on file selection, live preview, removal capability
-- Form handling: supports null values for logo removal, preserves edit functionality
-- All logo operations logged for audit trail
-
-Article workflow integration adds dedicated fields to the articles table: `isPublisherNews`, `publisherId`, `publisherCreditDeducted`, `publisherSubmittedAt`, `publisherApprovedAt`. The approval workflow (`approvePublisherArticle`) runs in a single database transaction with row-level locking to ensure atomic credit deduction, preventing race conditions and double charges. RBAC enforcement prevents publishers from bypassing the approval workflow - all publisher-submitted content enters as draft status, requiring explicit admin approval before publication and credit deduction. The system includes 12 dedicated API endpoints split between publisher self-service (`/api/publisher/*` for dashboard, stats, articles), admin management (`/api/publishers/*` for CRUD operations), and credit administration (`/api/admin/publishers/*/credits`, `/api/admin/publishers/*/logs`). All credit-sensitive operations are activity-logged with full traceability.
-
-**Publisher Dashboard Layout (PublisherLayout Component):**
-Publisher users access a dedicated authenticated shell via `PublisherLayout` component (`client/src/components/publisher/PublisherLayout.tsx`), featuring:
-- RTL-aware sidebar navigation positioned on the right (`side="right"`)
-- Collapsible sidebar with toggle button for responsive behavior
-- Navigation menu items: لوحة التحكم (Dashboard), المقالات (Articles), الرصيد (Credits)
-- Header with notifications bell, theme toggle, and external site link
-- Auth gating with loading spinner until user authentication resolves
-- All publisher pages (Dashboard, Articles, Credits, ArticleEditor) wrapped in PublisherLayout for consistent UI/UX
-- Responsive design with off-canvas behavior on tablet/mobile viewports
-
-**Admin Publishers Dashboard Layout (AdminPublishersLayout Component):**
-Admin users manage publishers through a dedicated authenticated shell via `AdminPublishersLayout` component (`client/src/components/admin/publishers/AdminPublishersLayout.tsx`), mirroring the PublisherLayout design for consistency:
-- RTL-aware sidebar navigation positioned on the right (`side="right"`)
-- Collapsible sidebar with toggle button for responsive behavior
-- Navigation menu items: قائمة الناشرين (Publishers List), مراجعة المقالات (Review Articles), التحليلات والإحصائيات (Analytics)
-- Active state detection with special logic to highlight "Publishers List" for detail pages (e.g., `/dashboard/admin/publishers/:id`)
-- Header with sidebar trigger, notifications bell, "View Site" button, and theme toggle
-- Sidebar footer with admin user avatar, name, role badge, and logout button
-- All admin publisher pages (AdminPublishers, AdminPublisherArticles, AdminPublisherAnalytics, AdminPublisherDetails) wrapped in AdminPublishersLayout for consistent UI/UX
-- Responsive design with off-canvas sidebar behavior on tablet/mobile viewports
-
-**Article Ordering Strategy:**
-The platform employs a hybrid ordering approach to balance editorial curation with chronological feeds:
-
--   **Curated Sections (Manual Priority):** Hero Articles, Breaking News, Editor Picks, and Featured Shorts use `displayOrder` as the primary sort key, followed by `publishedAt` (and `views` where applicable). This allows editors to manually pin important content regardless of publish time.
--   **Automated Feeds (Chronological):** For You Feed, General Article Listings, Deep Dive Articles, and Shorts Feeds use pure chronological ordering based on `publishedAt` and `createdAt`. This ensures articles from automated sources (Email Agent, WhatsApp Agent) appear in correct time sequence without manual intervention.
--   **Implementation Note:** Articles without `displayOrder` values (NULL) are automatically sorted after manually prioritized content in curated sections, ensuring editorial control remains intact while automated content flows naturally into time-based feeds.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes a scope-aware theme management system, Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with a versioned migration approach handles database schema changes. The publisher content sales system uses a three-table architecture (`publishers`, `publisher_credits`, `publisher_credit_logs`) with RBAC-controlled workflows and atomic credit deductions. Article ordering employs a hybrid approach, combining manually prioritized curated sections with chronological automated feeds.
 
 ## External Dependencies
 
@@ -89,9 +43,9 @@ The platform employs a hybrid ordering approach to balance editorial curation wi
 -   **AI & Machine Learning:** OpenAI API (GPT-5), ElevenLabs API
 -   **Email Service:** SendGrid
 -   **Messaging Services:** Twilio API (WhatsApp Business API integration)
--   **File Storage:** `@google-cloud/storage` (via Replit Object Storage)
--   **Content Processing:** `rss-parser`, `mammoth` (Word document text extraction)
+-   **File Storage:** `@google-cloud/storage`
+-   **Content Processing:** `rss-parser`, `mammoth`
 -   **Frontend Libraries:** `@tanstack/react-query`, `wouter`, `@radix-ui/*`, `tailwindcss`, `class-variance-authority`
--   **Digital Credentials:** `passkit-generator` (Apple Wallet Pass generation)
--   **Accessibility Testing:** `axe-core` (automated WCAG compliance testing)
--   **Voice Assistant:** Web Speech API (browser native)
+-   **Digital Credentials:** `passkit-generator`
+-   **Accessibility Testing:** `axe-core`
+-   **Voice Assistant:** Web Speech API

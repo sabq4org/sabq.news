@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import { storage } from "../storage";
-import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
+import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode, generateImageAltText } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
 import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature } from "../services/whatsapp";
 import { requireAuth, requireRole } from "../rbac";
-import { insertWhatsappTokenSchema } from "@shared/schema";
+import { insertWhatsappTokenSchema, mediaFiles, articleMediaAssets } from "@shared/schema";
 import crypto from "crypto";
+import { db } from "../db";
 
 const router = Router();
 
@@ -380,7 +381,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log("[WhatsApp Agent] ✅ Token validated successfully");
 
     const uploadedMediaUrls: string[] = [];
-    const mediaMetadata: Array<{ filename: string; contentType: string; size: number; url: string }> = [];
+    const mediaMetadata: Array<{ 
+      filename: string; 
+      contentType: string; 
+      size: number; 
+      url: string;
+    }> = [];
 
     if (numMedia > 0) {
       console.log(`[WhatsApp Agent] 📎 Processing ${numMedia} media attachments`);
@@ -409,6 +415,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
             uploadedMediaUrls.push(gcsPath);
           }
           
+          // Store metadata WITHOUT buffer to prevent OOM
           mediaMetadata.push({
             filename,
             contentType,
@@ -527,6 +534,85 @@ router.post("/webhook", async (req: Request, res: Response) => {
     } as any);
 
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
+
+    // 🆕 Create MediaFiles and link all uploaded images to the article
+    // This happens AFTER article creation to avoid orphaned records
+    const imageMedia = uploadedMediaUrls.map((url, index) => ({
+      url,
+      metadata: mediaMetadata.find(m => m.url === url),
+      index
+    })).filter(item => item.metadata);
+    
+    if (imageMedia.length > 0) {
+      console.log(`[WhatsApp Agent] 🔗 Creating mediaFiles and linking ${imageMedia.length} images to article...`);
+      
+      for (const { url, metadata, index } of imageMedia) {
+        if (!metadata) continue;
+        
+        try {
+          // Generate descriptive alt text based on article context
+          const titleWords = aiResult.optimized.title.split(' ').slice(0, 8).join(' ');
+          const leadWords = aiResult.optimized.lead.split(' ').slice(0, 5).join(' ');
+          
+          const altTextTemplates = {
+            ar: index === 0 
+              ? `صورة ${titleWords}`
+              : `${leadWords} - صورة ${index + 1}`,
+            en: index === 0
+              ? `Image: ${titleWords}`
+              : `${leadWords} - Image ${index + 1}`,
+            ur: index === 0
+              ? `تصویر: ${titleWords}`
+              : `${leadWords} - تصویر ${index + 1}`
+          };
+          
+          let altText = altTextTemplates[targetLang];
+          // Ensure max 125 chars for WCAG AA compliance
+          if (altText.length > 125) {
+            altText = altText.substring(0, 122) + "...";
+          }
+          
+          // Use transaction to ensure atomicity (mediaFile + articleMediaAsset)
+          await db.transaction(async (tx) => {
+            // Create MediaFile record
+            const [mediaFile] = await tx.insert(mediaFiles).values({
+              fileName: metadata.filename,
+              originalName: metadata.filename,
+              url: metadata.url,
+              type: "image",
+              mimeType: metadata.contentType,
+              size: metadata.size,
+              category: "articles",
+              uploadedBy: whatsappToken.userId,
+              title: `${titleWords} - صورة ${index + 1}`,
+              keywords: ["whatsapp", "auto-upload"],
+              altText: altText,
+            }).returning();
+            
+            console.log(`[WhatsApp Agent] ✅ Created mediaFile: ${mediaFile.id}`);
+            
+            // Link image to article via articleMediaAssets (in same transaction)
+            await tx.insert(articleMediaAssets).values({
+              articleId: article.id,
+              mediaFileId: mediaFile.id,
+              locale: targetLang,
+              displayOrder: index,
+              altText: altText,
+              moderationStatus: "approved",
+              sourceName: "WhatsApp",
+            });
+            
+            console.log(`[WhatsApp Agent] ✅ Linked image ${index + 1} to article (altText: "${altText}")`);
+          });
+          
+        } catch (linkError) {
+          console.error(`[WhatsApp Agent] ⚠️ Failed to process image ${index + 1}:`, linkError);
+          // Continue with other images even if one fails (transaction rollback for this image only)
+        }
+      }
+      
+      console.log(`[WhatsApp Agent] 🔗 Successfully processed ${imageMedia.length} images for article`);
+    }
 
     await storage.updateWhatsappTokenUsage(whatsappToken.id);
 

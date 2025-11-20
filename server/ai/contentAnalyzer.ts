@@ -668,3 +668,186 @@ export function normalizeLanguageCode(lang: string): "ar" | "en" | "ur" {
   console.warn("[Language Normalizer] Unknown language code:", lang, "- defaulting to 'ar'");
   return "ar"; // Default to Arabic
 }
+
+/**
+ * Generate SEO-optimized alt text for WhatsApp images
+ * @param articleTitle - The title of the article
+ * @param articleLead - The lead/excerpt of the article
+ * @param imageIndex - The index of the image (0 for first, 1 for second, etc.)
+ * @param language - The language of the article
+ * @returns altText (max 125 chars) and captionHtml
+ */
+export async function generateImageAltText(
+  articleTitle: string,
+  articleLead: string,
+  imageIndex: number = 0,
+  language: "ar" | "en" | "ur" = "ar"
+): Promise<{ altText: string; captionHtml: string }> {
+  try {
+    console.log(`[AI Image Alt] Generating alt text for image #${imageIndex + 1}, language: ${language}`);
+    
+    const PROMPTS = {
+      ar: `أنت خبير في SEO وإمكانية الوصول (Accessibility) للمواقع الإخبارية.
+
+المهمة: إنشاء نص بديل (Alt Text) ووصف مختصر للصورة المرفقة مع الخبر التالي:
+
+📰 **عنوان الخبر:**
+${articleTitle}
+
+📝 **مقدمة الخبر:**
+${articleLead}
+
+🖼️ **رقم الصورة:** ${imageIndex === 0 ? 'الأولى (الرئيسية)' : `الصورة رقم ${imageIndex + 1}`}
+
+✅ **المطلوب:**
+1. **Alt Text** (نص بديل للصورة):
+   - يجب ألا يتجاوز 125 حرفاً (WCAG AA)
+   - يصف محتوى الصورة بدقة
+   - يتضمن كلمات مفتاحية من العنوان
+   - مناسب لقارئات الشاشة
+   - بدون "صورة لـ" أو "تظهر" (ابدأ مباشرة بالوصف)
+
+2. **Caption** (تعليق على الصورة):
+   - جملة واحدة أو جملتين قصيرتين (max 200 حرف)
+   - تُضيف سياقاً للصورة
+   - مرتبطة بموضوع الخبر
+
+🎯 **أمثلة:**
+- إذا كان الخبر عن حادث مروري → Alt: "سيارة متضررة بعد حادث مروري على طريق الرياض جدة"
+- إذا كان عن افتتاح مشروع → Alt: "ولي العهد يقص شريط افتتاح مشروع نيوم"
+- إذا كان عن مؤتمر صحفي → Alt: "وزير الخارجية خلال مؤتمر صحفي بالرياض"
+
+⚠️ **قواعد إلزامية:**
+- لا تذكر "صورة" أو "تظهر" في بداية Alt Text
+- استخدم لغة عربية فصيحة واضحة
+- ركز على المحتوى البصري المتوقع
+- لا تكرر العنوان حرفياً
+
+📤 **الإخراج (JSON فقط):**
+\`\`\`json
+{
+  "altText": "نص بديل مختصر (max 125 حرف)",
+  "captionHtml": "تعليق قصير على الصورة"
+}
+\`\`\``,
+      en: `You are an SEO and Accessibility expert for news websites.
+
+Task: Create alt text and a brief caption for the image attached to this news article:
+
+📰 **Article Title:**
+${articleTitle}
+
+📝 **Article Lead:**
+${articleLead}
+
+🖼️ **Image Number:** ${imageIndex === 0 ? 'First (Main)' : `Image #${imageIndex + 1}`}
+
+✅ **Requirements:**
+1. **Alt Text**:
+   - Max 125 characters (WCAG AA)
+   - Accurately describes the image content
+   - Includes keywords from the title
+   - Suitable for screen readers
+   - Don't start with "Image of" or "Shows" (start directly with description)
+
+2. **Caption**:
+   - One or two short sentences (max 200 chars)
+   - Adds context to the image
+   - Related to the news topic
+
+🎯 **Examples:**
+- Traffic accident news → Alt: "Damaged car after accident on Riyadh-Jeddah highway"
+- Project opening → Alt: "Crown Prince cuts ribbon at NEOM project opening"
+- Press conference → Alt: "Foreign Minister during press conference in Riyadh"
+
+⚠️ **Mandatory Rules:**
+- Don't start with "Image" or "Shows"
+- Use clear, professional language
+- Focus on expected visual content
+- Don't repeat the title verbatim
+
+📤 **Output (JSON only):**
+\`\`\`json
+{
+  "altText": "brief alt text (max 125 chars)",
+  "captionHtml": "short image caption"
+}
+\`\`\``,
+      ur: `آپ خبروں کی ویب سائٹس کے لیے SEO اور رسائی (Accessibility) کے ماہر ہیں۔
+
+کام: اس خبر کے ساتھ منسلک تصویر کے لیے Alt Text اور مختصر تفصیل بنائیں:
+
+📰 **خبر کا عنوان:**
+${articleTitle}
+
+📝 **خبر کا تعارف:**
+${articleLead}
+
+🖼️ **تصویر نمبر:** ${imageIndex === 0 ? 'پہلی (مرکزی)' : `تصویر #${imageIndex + 1}`}
+
+✅ **ضروریات:**
+1. **Alt Text**:
+   - زیادہ سے زیادہ 125 حروف (WCAG AA)
+   - تصویر کے مواد کی درست وضاحت
+   - عنوان سے کلیدی الفاظ شامل کریں
+   - اسکرین ریڈرز کے لیے موزوں
+   - "تصویر" یا "ظاہر" سے شروع نہ کریں
+
+2. **Caption**:
+   - ایک یا دو مختصر جملے (زیادہ سے زیادہ 200 حروف)
+   - تصویر کا سیاق و سباق
+   - خبر کے موضوع سے متعلق
+
+📤 **آؤٹ پٹ (صرف JSON):**
+\`\`\`json
+{
+  "altText": "مختصر alt text (max 125 chars)",
+  "captionHtml": "تصویر کی مختصر تفصیل"
+}
+\`\`\``
+    };
+
+    const prompt = PROMPTS[language];
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are an expert in generating SEO-optimized, accessible alt text for news images." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 300,
+      response_format: { type: "json_object" }
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No response from OpenAI");
+    }
+
+    const result = JSON.parse(content);
+    
+    // Validate alt text length (max 125 chars for WCAG AA)
+    let altText = result.altText || "صورة توضيحية للخبر";
+    if (altText.length > 125) {
+      altText = altText.substring(0, 122) + "...";
+    }
+    
+    const captionHtml = result.captionHtml || "";
+    
+    console.log(`[AI Image Alt] Generated alt text (${altText.length} chars): ${altText}`);
+    
+    return { altText, captionHtml };
+  } catch (error) {
+    console.error("[AI Image Alt] Error generating alt text:", error);
+    
+    // Fallback to generic alt text based on language
+    const fallbacks = {
+      ar: { altText: "صورة توضيحية للخبر", captionHtml: "" },
+      en: { altText: "Illustrative image for the news", captionHtml: "" },
+      ur: { altText: "خبر کی وضاحتی تصویر", captionHtml: "" }
+    };
+    
+    return fallbacks[language];
+  }
+}
