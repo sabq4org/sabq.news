@@ -271,6 +271,9 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log("[WhatsApp Agent] Received webhook from Twilio");
     console.log("[WhatsApp Agent] Raw req.body keys:", Object.keys(req.body));
     
+    // 🔍 COMPLETE BODY DUMP FOR DEBUGGING
+    console.log("[WhatsApp Agent] 🔍 COMPLETE req.body:", JSON.stringify(req.body, null, 2));
+    
     const from = req.body.From || "";
     const to = req.body.To || "";
     const body = req.body.Body || "";

@@ -1,0 +1,160 @@
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Category: رياضة
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Optimized title: انطلاق بطولة جولات الرياض لقفز الحواجز بمشاركة 155 فارساً من
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Analysis and editing completed successfully
+2025-11-20 20:09:49.19
+b75fd037
+User
+[WhatsApp Agent] AI analysis complete. Quality score: 72
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Quality score: 72
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Language: ar
+2025-11-20 20:09:49.19
+b75fd037
+User
+[Sabq Editor] Has news value: true
+2025-11-20 20:09:49.22
+b75fd037
+User
+[WhatsApp Agent] ✅ Article created: 1322a2a0-19c7-41e7-8b9d-4b08a4f1b9e9, status: published
+2025-11-20 20:09:49.43
+b75fd037
+User
+[WhatsApp Agent] ============ WEBHOOK END (SUCCESS) ============
+2025-11-20 20:09:49.43
+b75fd037
+User
+[WhatsApp Agent] ✅ Sent reply to +966564255999
+2025-11-20 20:09:49.43
+b75fd037
+User
+[WhatsApp Service] Message sent successfully: SM865115120de464dcf2ce445b76985d45
+2025-11-20 20:09:49.43
+b75fd037
+User
+6:09:49 PM [express] POST /api/whatsapp/webhook 200 in 9662ms
+2025-11-20 20:09:59.45
+b75fd037
+User
+hasUser: false,
+2025-11-20 20:09:59.45
+b75fd037
+User
+🔍 /api/auth/user check: {
+2025-11-20 20:09:59.45
+b75fd037
+User
+}
+2025-11-20 20:09:59.45
+b75fd037
+User
+isAuthenticated: false,
+2025-11-20 20:09:59.45
+b75fd037
+User
+userId: undefined,
+2025-11-20 20:09:59.45
+b75fd037
+User
+sessionID: '0c7h6aMP2XGYGmOmNC0Plc7oCGgUtD1X'
+2025-11-20 20:09:59.45
+b75fd037
+User
+6:09:59 PM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+2025-11-20 20:09:59.54
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82-%D8%A8%D8%B7%D9%88%D9%84…
+2025-11-20 20:09:59.57
+b75fd037
+User
+6:09:59 PM [express] GET /api/themes/active 304 in 115ms
+2025-11-20 20:09:59.59
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82-%D8%A8%D8%B7%D9%88%D9%84…
+2025-11-20 20:09:59.63
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82-%D8%A8%D8%B7%D9%88%D9%84…
+2025-11-20 20:09:59.81
+b75fd037
+User
+6:09:59 PM [express] GET /api/opinion/related/category/c90a2b81-a56d-4e80-8b96-f3586ed538d6 200 in 2…
+2025-11-20 20:09:59.81
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/1322a2a0-19c7-41e7-8b9d-4b08a4f1b9e9/media-assets 200 in 27ms…
+2025-11-20 20:09:59.83
+b75fd037
+User
+6:09:59 PM [express] GET /api/ads/slot/sidebar 204 in 58ms
+2025-11-20 20:09:59.89
+b75fd037
+User
+6:09:59 PM [express] GET /api/shortlinks/article/1322a2a0-19c7-41e7-8b9d-4b08a4f1b9e9 404 in 103ms :…
+2025-11-20 20:09:59.93
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82-%D8%A8%D8%B7%D9%88%D9%84…
+2025-11-20 20:09:59.96
+b75fd037
+User
+6:09:59 PM [express] GET /api/articles/%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82-%D8%A8%D8%B7%D9%88%D9%84…
+2025-11-20 20:10:00.02
+b75fd037
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 20:10:00.02
+b75fd037
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 20:10:00.05
+b75fd037
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-20 20:10:00.05
+b75fd037
+User
+[NotificationWorker] Queue processing completed
+2025-11-20 20:10:00.06
+b75fd037
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-20 20:10:00.16
+b75fd037
+User
+✅ Short link created: rvCxLol9 -> https://sabq.news/article/انطلاق-بطولة-جولات-الرياض-لقفز-الحواجز-بمشاركة-155-فارساً-من-15-دولة-1763662189199
+2025-11-20 20:10:00.18
+b75fd037
+User
+6:10:00 PM [express] POST /api/shortlinks 201 in 74ms :: {"id":"ad569515-7b2b-4f1d-980e-c0b6abf7e1a6…
+2025-11-20 20:10:29.79
+b75fd037
+User
+6:10:29 PM [express] GET /api/themes/active 304 in 172ms
+2025-11-20 20:10:30.77
+b75fd037
+User
+6:10:30 PM [express] GET /api/ads/slot/header-banner 204 in 1150ms
+
+
+Collapse
+
+Wrap
+
+Colors
+
