@@ -23,7 +23,7 @@ const publisherFormSchema = z.object({
   contactPersonEn: z.string().optional(),
   email: z.string().email("البريد الإلكتروني غير صحيح"),
   phoneNumber: z.string().min(8, "رقم الهاتف مطلوب"),
-  logoUrl: z.string().optional(),
+  logoUrl: z.string().nullable().optional(),
   commercialRegistration: z.string().optional(),
   taxNumber: z.string().optional(),
   address: z.string().optional(),
@@ -70,7 +70,7 @@ export function CreatePublisherDialog({
           contactPersonEn: publisher.contactPersonEn || "",
           email: publisher.email,
           phoneNumber: publisher.phoneNumber,
-          logoUrl: publisher.logoUrl || "",
+          logoUrl: publisher.logoUrl || null,
           commercialRegistration: publisher.commercialRegistration || "",
           taxNumber: publisher.taxNumber || "",
           address: publisher.address || "",
@@ -85,7 +85,7 @@ export function CreatePublisherDialog({
           contactPersonEn: "",
           email: "",
           phoneNumber: "",
-          logoUrl: "",
+          logoUrl: null,
           commercialRegistration: "",
           taxNumber: "",
           address: "",
@@ -164,7 +164,7 @@ export function CreatePublisherDialog({
   const handleRemoveLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
-    form.setValue('logoUrl', '');
+    form.setValue('logoUrl', null);
   };
 
   const createMutation = useMutation({

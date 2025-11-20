@@ -7062,6 +7062,7 @@ export const updatePublisherSchema = z.object({
   contactPersonEn: z.string().min(2).optional(),
   phoneNumber: z.string().optional(),
   email: z.string().email().optional(),
+  logoUrl: z.string().nullable().optional(),
   commercialRegistration: z.string().optional(),
   taxNumber: z.string().optional(),
   address: z.string().optional(),
