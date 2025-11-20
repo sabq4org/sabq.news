@@ -1,0 +1,101 @@
+2025-11-20 12:49:15.72
+e798451d
+User
+10:49:15 AM [express] GET /api/articles/%D8%B5%D9%81%D9%82%D8%A9-%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A…
+2025-11-20 12:50:00.02
+e798451d
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 12:50:00.03
+e798451d
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 12:50:00.13
+e798451d
+User
+hint: 'Perhaps you meant to reference the column "articles.publisher_approved_at".',
+
+2025-11-20 12:50:00.13
+e798451d
+User
+at async publishScheduledArticles (file:///home/runner/workspace/dist/index.js:45768:31) {
+2025-11-20 12:50:00.13
+e798451d
+User
+[ScheduledPublisher] ❌ Error in scheduled publishing: error: column "publisher_approved_by" does not exist
+2025-11-20 12:50:00.13
+e798451d
+User
+severity: 'ERROR',
+2025-11-20 12:50:00.13
+e798451d
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-20 12:50:00.13
+e798451d
+User
+schema: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-20 12:50:00.13
+e798451d
+User
+file: 'parse_relation.c',
+2025-11-20 12:50:00.13
+e798451d
+User
+internalQuery: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+line: '3729',
+2025-11-20 12:50:00.13
+e798451d
+User
+column: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+internalPosition: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-20 12:50:00.13
+e798451d
+User
+detail: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+position: '611',
+2025-11-20 12:50:00.13
+e798451d
+User
+code: '42703',
+2025-11-20 12:50:00.13
+e798451d
+User
+routine: 'errorMissingColumn'
+2025-11-20 12:50:00.13
+e798451d
+User
+constraint: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+table: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+length: 199,
+2025-11-20 12:50:00.13
+e798451d
+User
+where: undefined,
+2025-11-20 12:50:00.13
+e798451d
+User
+}
