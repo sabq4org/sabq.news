@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { AdminPublishersLayout } from "@/components/admin/publishers/AdminPublishersLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,17 +111,17 @@ export default function AdminPublisherDetails() {
 
   if (isLoadingPublisher) {
     return (
-      <AdminPublishersLayout>
+      <DashboardLayout>
         <div className="text-center py-12">جاري التحميل...</div>
-      </AdminPublishersLayout>
+      </DashboardLayout>
     );
   }
 
   if (!publisher) {
     return (
-      <AdminPublishersLayout>
+      <DashboardLayout>
         <div className="text-center py-12">الناشر غير موجود</div>
-      </AdminPublishersLayout>
+      </DashboardLayout>
     );
   }
 
@@ -132,8 +132,8 @@ export default function AdminPublisherDetails() {
     .reduce((sum, c) => sum + c.remainingCredits, 0) || 0;
 
   return (
-    <AdminPublishersLayout>
-      <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -508,6 +508,6 @@ export default function AdminPublisherDetails() {
         />
       )}
       </div>
-    </AdminPublishersLayout>
+    </DashboardLayout>
   );
 }
