@@ -1,0 +1,133 @@
+2025-11-20 13:25:00.23
+df1924ae
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 13:25:00.24
+df1924ae
+User
+11:25:00 AM [express] GET /api/publisher/credits/[object%20Object] 200 in 399ms
+2025-11-20 13:25:00.25
+df1924ae
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 13:25:00.26
+df1924ae
+User
+where: undefined,
+2025-11-20 13:25:00.26
+df1924ae
+User
+file: 'parse_relation.c',
+2025-11-20 13:25:00.26
+df1924ae
+User
+constraint: undefined,
+
+2025-11-20 13:25:00.26
+df1924ae
+User
+routine: 'errorMissingColumn'
+2025-11-20 13:25:00.26
+df1924ae
+User
+line: '3729',
+2025-11-20 13:25:00.26
+df1924ae
+User
+schema: undefined,
+2025-11-20 13:25:00.26
+df1924ae
+User
+severity: 'ERROR',
+2025-11-20 13:25:00.26
+df1924ae
+User
+hint: 'Perhaps you meant to reference the column "publishers.agency_name".',
+2025-11-20 13:25:00.26
+df1924ae
+User
+position: '40',
+2025-11-20 13:25:00.26
+df1924ae
+User
+code: '42703',
+2025-11-20 13:25:00.26
+df1924ae
+User
+dataType: undefined,
+2025-11-20 13:25:00.26
+df1924ae
+User
+table: undefined,
+2025-11-20 13:25:00.26
+df1924ae
+User
+Error generating publisher report: error: column "agency_name_en" does not exist
+2025-11-20 13:25:00.26
+df1924ae
+User
+at async file:///home/runner/workspace/dist/index.js:46030:27 {
+2025-11-20 13:25:00.26
+df1924ae
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-20 13:25:00.26
+df1924ae
+User
+at async DatabaseStorage.getPublisher (file:///home/runner/workspace/dist/index.js:13049:29)
+2025-11-20 13:25:00.26
+df1924ae
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-20 13:25:00.26
+df1924ae
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-20 13:25:00.27
+df1924ae
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-20 13:25:00.27
+df1924ae
+User
+position: '40',
+2025-11-20 13:25:00.27
+df1924ae
+User
+schema: undefined,
+2025-11-20 13:25:00.27
+df1924ae
+User
+column: undefined,
+2025-11-20 13:25:00.27
+df1924ae
+User
+routine: 'errorMissingColumn'
+2025-11-20 13:25:00.27
+df1924ae
+User
+}
+2025-11-20 13:25:00.27
+df1924ae
+User
+file: 'parse_relation.c',
+2025-11-20 13:25:00.27
+df1924ae
+User
+Error fetching publisher: error: column "agency_name_en" does not exist
+2025-11-20 13:25:00.27
+df1924ae
+User
+table: undefined,
+2025-11-20 13:25:00.30
+df1924ae
+User
+11:25:00 AM [express] GET /api/auth/user 304 in 479ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-20 13:25:00.31
+df1924ae
+User
+11:25:00 AM [express] GET /api/admin/publishers/articles 500 in 480ms :: {"message":"فشل في جلب بيانا…
+2025-11-20 13:25:00.67
+df1924ae
+User
+🔸 DeserializeUser called with id: admin-sabq

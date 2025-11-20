@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import type { Publisher } from "@shared/schema";
 
 const publisherFormSchema = z.object({
@@ -23,6 +23,7 @@ const publisherFormSchema = z.object({
   contactPersonEn: z.string().optional(),
   email: z.string().email("البريد الإلكتروني غير صحيح"),
   phoneNumber: z.string().min(8, "رقم الهاتف مطلوب"),
+  logoUrl: z.string().optional(),
   commercialRegistration: z.string().optional(),
   taxNumber: z.string().optional(),
   address: z.string().optional(),
@@ -48,6 +49,9 @@ export function CreatePublisherDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(publisher?.logoUrl || null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Fetch users with publisher role for selection
   const { data: publisherUsers } = useQuery<any[]>({
@@ -66,6 +70,7 @@ export function CreatePublisherDialog({
           contactPersonEn: publisher.contactPersonEn || "",
           email: publisher.email,
           phoneNumber: publisher.phoneNumber,
+          logoUrl: publisher.logoUrl || "",
           commercialRegistration: publisher.commercialRegistration || "",
           taxNumber: publisher.taxNumber || "",
           address: publisher.address || "",
@@ -80,6 +85,7 @@ export function CreatePublisherDialog({
           contactPersonEn: "",
           email: "",
           phoneNumber: "",
+          logoUrl: "",
           commercialRegistration: "",
           taxNumber: "",
           address: "",
@@ -87,6 +93,79 @@ export function CreatePublisherDialog({
           notes: "",
         },
   });
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار صورة فقط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن لا يتجاوز 5 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload logo immediately
+    setIsUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      const response = await fetch('/api/admin/publishers/upload-logo', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('فشل في رفع اللوقو');
+      }
+
+      const data = await response.json();
+      form.setValue('logoUrl', data.url);
+      
+      toast({
+        title: "تم رفع اللوقو",
+        description: "تم رفع شعار الناشر بنجاح",
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في رفع اللوقو",
+        variant: "destructive",
+      });
+      setLogoFile(null);
+      setLogoPreview(publisher?.logoUrl || null);
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    form.setValue('logoUrl', '');
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: PublisherFormData) => {
@@ -259,6 +338,51 @@ export function CreatePublisherDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <FormLabel>شعار الناشر / الوكالة</FormLabel>
+              <div className="flex items-center gap-4">
+                {logoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={logoPreview}
+                      alt="Publisher Logo"
+                      className="h-24 w-24 object-contain border rounded-md"
+                      data-testid="img-logo-preview"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveLogo}
+                      disabled={isUploadingLogo}
+                      data-testid="button-remove-logo"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="h-24 w-24 border-2 border-dashed rounded-md flex items-center justify-center bg-muted">
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    disabled={isUploadingLogo}
+                    data-testid="input-logo"
+                    className="cursor-pointer"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isUploadingLogo ? "جاري رفع الشعار..." : "صورة بصيغة PNG أو JPG (حجم أقصى 5 ميجابايت)"}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

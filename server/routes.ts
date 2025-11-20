@@ -27320,6 +27320,40 @@ Allow: /
     }
   );
 
+  // POST /api/admin/publishers/upload-logo - Upload publisher logo
+  app.post("/api/admin/publishers/upload-logo",
+    requireAuth,
+    requireRole('admin'),
+    upload.single('logo'),
+    async (req: any, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "لم يتم إرفاق صورة" });
+        }
+
+        // Validate file type
+        if (!req.file.mimetype.startsWith('image/')) {
+          return res.status(400).json({ message: "يرجى رفع صورة فقط" });
+        }
+
+        // Upload to Object Storage
+        const objectStorageService = new ObjectStorageService();
+        const fileName = `publishers/logos/${Date.now()}-${req.file.originalname}`;
+        const publicUrl = await objectStorageService.uploadFile(
+          req.file.buffer,
+          fileName,
+          req.file.mimetype,
+          true // isPublic
+        );
+
+        res.json({ url: publicUrl });
+      } catch (error: any) {
+        console.error("Error uploading publisher logo:", error);
+        res.status(500).json({ message: "فشل في رفع الشعار" });
+      }
+    }
+  );
+
   // GET /api/admin/publishers - List all publishers (admin only)
   app.get("/api/admin/publishers", 
     requireAuth,
