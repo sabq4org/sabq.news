@@ -1127,6 +1127,38 @@ export default function ArticleDetail() {
               />
             </div>
 
+            {/* Additional Images */}
+            {mediaAssets && mediaAssets.length > 0 && (() => {
+              // Filter out hero image (displayOrder === 0) and sort by displayOrder
+              const additionalImages = mediaAssets
+                .filter((asset: any) => asset.displayOrder !== 0)
+                .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+              
+              if (additionalImages.length === 0) return null;
+              
+              return (
+                <div className="bg-card border rounded-lg p-6 space-y-8">
+                  <h3 className="text-lg font-bold mb-4">الصور المرفقة</h3>
+                  <div className="space-y-8">
+                    {additionalImages.map((asset: any, index: number) => (
+                      <ImageWithCaption
+                        key={asset.id || index}
+                        imageUrl={asset.url}
+                        altText={asset.altText || `صورة ${index + 1}`}
+                        captionHtml={asset.captionHtml}
+                        captionPlain={asset.captionPlain}
+                        sourceName={asset.sourceName}
+                        sourceUrl={asset.sourceUrl}
+                        relatedArticleSlugs={asset.relatedArticleSlugs}
+                        keywordTags={asset.keywordTags}
+                        className="w-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Engagement Actions - TailAdmin Style */}
             <div className="bg-card border rounded-lg p-6">
               <h3 className="text-lg font-bold mb-4">تفاعل مع المقال</h3>

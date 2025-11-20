@@ -29,6 +29,7 @@ import type { EnArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
 import { EnAiArticleStats } from "@/components/en/EnAiArticleStats";
 import { EnglishRecommendationsWidget } from "@/components/EnglishRecommendationsWidget";
+import { ImageWithCaption } from "@/components/ImageWithCaption";
 
 export default function EnglishArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -49,6 +50,11 @@ export default function EnglishArticleDetail() {
   const { data: relatedArticles = [] } = useQuery<any[]>({
     queryKey: [`/api/en/articles/${params.slug}/related`],
     enabled: !!params.slug,
+  });
+
+  const { data: mediaAssets } = useQuery<any[]>({
+    queryKey: ["/api/en/articles", article?.id, "media-assets"],
+    enabled: !!article?.id,
   });
 
   const reactMutation = useMutation({
@@ -241,16 +247,26 @@ export default function EnglishArticleDetail() {
             </div>
 
             {/* Featured Image */}
-            {article.imageUrl && (
-              <div className="mb-8 rounded-lg overflow-hidden">
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="w-full h-auto"
-                  data-testid="img-article-cover"
+            {article.imageUrl && (() => {
+              // Find caption data for hero image (if exists)
+              const heroImageAsset = mediaAssets?.find(
+                (asset: any) => asset.displayOrder === 0
+              );
+              
+              return (
+                <ImageWithCaption
+                  imageUrl={article.imageUrl}
+                  altText={heroImageAsset?.altText || article.title}
+                  captionHtml={heroImageAsset?.captionHtml}
+                  captionPlain={heroImageAsset?.captionPlain}
+                  sourceName={heroImageAsset?.sourceName}
+                  sourceUrl={heroImageAsset?.sourceUrl}
+                  relatedArticleSlugs={heroImageAsset?.relatedArticleSlugs}
+                  keywordTags={heroImageAsset?.keywordTags}
+                  className="mb-8"
                 />
-              </div>
-            )}
+              );
+            })()}
 
             {/* AI Summary */}
             {(article.aiSummary || article.excerpt) && (
@@ -303,6 +319,38 @@ export default function EnglishArticleDetail() {
               dangerouslySetInnerHTML={{ __html: sanitizedContent }}
               data-testid="text-article-content"
             />
+
+            {/* Additional Images */}
+            {mediaAssets && mediaAssets.length > 0 && (() => {
+              // Filter out hero image (displayOrder === 0) and sort by displayOrder
+              const additionalImages = mediaAssets
+                .filter((asset: any) => asset.displayOrder !== 0)
+                .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+              
+              if (additionalImages.length === 0) return null;
+              
+              return (
+                <div className="mb-12 border rounded-lg p-6 bg-card">
+                  <h3 className="text-lg font-bold mb-6">Gallery</h3>
+                  <div className="space-y-8">
+                    {additionalImages.map((asset: any, index: number) => (
+                      <ImageWithCaption
+                        key={asset.id || index}
+                        imageUrl={asset.url}
+                        altText={asset.altText || `Image ${index + 1}`}
+                        captionHtml={asset.captionHtml}
+                        captionPlain={asset.captionPlain}
+                        sourceName={asset.sourceName}
+                        sourceUrl={asset.sourceUrl}
+                        relatedArticleSlugs={asset.relatedArticleSlugs}
+                        keywordTags={asset.keywordTags}
+                        className="w-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 border-t pt-6 mb-8">
