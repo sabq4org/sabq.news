@@ -27559,7 +27559,14 @@ Allow: /
           notes: z.string().optional(),
         }).parse(req.body);
 
-        const updatedCredit = await storage.updatePublisherCredit(req.params.creditId, updateData);
+        // Convert expiryDate string to Date object if present
+        const { expiryDate, ...rest } = updateData;
+        const updates = {
+          ...rest,
+          ...(expiryDate && { expiryDate: new Date(expiryDate) })
+        };
+
+        const updatedCredit = await storage.updatePublisherCredit(req.params.creditId, updates);
 
         // Log activity
         await logActivity({
