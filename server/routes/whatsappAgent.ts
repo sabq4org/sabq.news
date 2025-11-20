@@ -416,23 +416,67 @@ router.post("/webhook", async (req: Request, res: Response) => {
           
           const { buffer, contentType, filename } = await downloadWhatsAppMedia(mediaUrl);
           
-          const isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(contentType);
+          console.log(`[WhatsApp Agent] 🔍 Downloaded: contentType="${contentType}", filename="${filename}", size=${buffer.length}`);
+          
+          // 🔧 FIX: Detect image type from buffer magic bytes, not content-type header
+          // Many WhatsApp images come with wrong content-type (e.g., application/xml)
+          let actualContentType = contentType;
+          let isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(contentType);
+          
+          // Check magic bytes if content-type is not image/*
+          if (!isImage && buffer.length > 4) {
+            const magic = buffer.slice(0, 4).toString('hex');
+            console.log(`[WhatsApp Agent] 🔍 Magic bytes: ${magic}`);
+            
+            // JPEG: FF D8 FF
+            if (magic.startsWith('ffd8ff')) {
+              actualContentType = 'image/jpeg';
+              isImage = true;
+              console.log(`[WhatsApp Agent] ✅ Detected JPEG from magic bytes (despite content-type: ${contentType})`);
+            }
+            // PNG: 89 50 4E 47
+            else if (magic.startsWith('89504e47')) {
+              actualContentType = 'image/png';
+              isImage = true;
+              console.log(`[WhatsApp Agent] ✅ Detected PNG from magic bytes (despite content-type: ${contentType})`);
+            }
+            // GIF: 47 49 46 38
+            else if (magic.startsWith('47494638')) {
+              actualContentType = 'image/gif';
+              isImage = true;
+              console.log(`[WhatsApp Agent] ✅ Detected GIF from magic bytes (despite content-type: ${contentType})`);
+            }
+            // WebP: 52 49 46 46 (RIFF) + WebP marker at offset 8
+            else if (magic.startsWith('52494646') && buffer.length > 12) {
+              const webpMarker = buffer.slice(8, 12).toString();
+              if (webpMarker === 'WEBP') {
+                actualContentType = 'image/webp';
+                isImage = true;
+                console.log(`[WhatsApp Agent] ✅ Detected WebP from magic bytes (despite content-type: ${contentType})`);
+              }
+            }
+          }
+          
+          console.log(`[WhatsApp Agent] 🔍 Final determination: isImage=${isImage}, actualContentType="${actualContentType}"`);
           
           const gcsPath = await uploadToCloudStorage(
             buffer,
             filename,
-            contentType,
+            actualContentType,
             isImage
           );
           
           if (isImage) {
             uploadedMediaUrls.push(gcsPath);
+            console.log(`[WhatsApp Agent] ✅ Added to uploadedMediaUrls (total: ${uploadedMediaUrls.length})`);
+          } else {
+            console.log(`[WhatsApp Agent] ⚠️ Not an image, skipped from uploadedMediaUrls`);
           }
           
           // Store metadata WITHOUT buffer to prevent OOM
           mediaMetadata.push({
             filename,
-            contentType,
+            contentType: actualContentType,
             size: buffer.length,
             url: gcsPath,
           });
