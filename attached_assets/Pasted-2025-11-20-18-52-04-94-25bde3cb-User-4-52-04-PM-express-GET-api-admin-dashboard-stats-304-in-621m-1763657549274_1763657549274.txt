@@ -1,0 +1,120 @@
+2025-11-20 18:52:04.94
+25bde3cb
+User
+4:52:04 PM [express] GET /api/admin/dashboard/stats 304 in 621ms :: {"articles":{"total":161,"publis…
+2025-11-20 18:52:07.02
+25bde3cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-20 18:52:07.02
+25bde3cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-20 18:52:07.02
+25bde3cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-20 18:52:07.02
+25bde3cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-20 18:52:07.14
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:07.15
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:07.15
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:07.16
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:07.17
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:07.17
+25bde3cb
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-20 18:52:07.17
+25bde3cb
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-20 18:52:07.18
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:07.18
+25bde3cb
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-20 18:52:07.18
+25bde3cb
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-20 18:52:07.18
+25bde3cb
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 18:52:07.23
+25bde3cb
+User
+4:52:07 PM [express] GET /api/publishers/[object%20Object] 404 in 113ms :: {"message":"الناشر غير مو…
+2025-11-20 18:52:09.66
+25bde3cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-20 18:52:09.66
+25bde3cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-20 18:52:09.66
+25bde3cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-20 18:52:09.66
+25bde3cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-20 18:52:09.69
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:09.71
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:09.74
+25bde3cb
+User
+4:52:09 PM [express] GET /api/admin/publishers/articles/[object%20Object] 304 in 70ms
+2025-11-20 18:52:09.78
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:09.78
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:09.79
+25bde3cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 18:52:09.80
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:09.81
+25bde3cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 18:52:09.81
+25bde3cb
+User
+📡 User admin-sabq subscribed to notification stream

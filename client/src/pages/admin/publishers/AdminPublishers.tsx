@@ -42,13 +42,31 @@ export default function AdminPublishers() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPublisher, setEditingPublisher] = useState<Publisher | null>(null);
 
+  const isActiveParam = statusFilter === "all" ? undefined : (statusFilter === "active" ? 'true' : 'false');
+  
   const { data: publishersData, isLoading } = useQuery<{
     publishers: PublisherWithCredits[];
     total: number;
     page: number;
     limit: number;
   }>({
-    queryKey: ["/api/publishers", { page, isActive: statusFilter === "all" ? undefined : (statusFilter === "active" ? 'true' : 'false') }],
+    queryKey: ["/api/publishers", page, isActiveParam],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20'
+      });
+      
+      if (isActiveParam !== undefined) {
+        params.append('isActive', isActiveParam);
+      }
+      
+      const response = await fetch(`/api/publishers?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch publishers');
+      }
+      return response.json();
+    }
   });
 
   const filteredPublishers = publishersData?.publishers.filter((publisher) => {
