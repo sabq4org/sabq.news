@@ -7081,6 +7081,8 @@ export const insertPublisherCreditSchema = createInsertSchema(publisherCredits).
 }).extend({
   totalCredits: z.number().int().min(1, "يجب أن يكون عدد الأخبار 1 على الأقل"),
   period: z.enum(["monthly", "quarterly", "yearly", "one-time"]),
+  startDate: z.coerce.date({ message: "تاريخ البداية مطلوب" }),
+  expiryDate: z.coerce.date({ message: "تاريخ النهاية غير صحيح" }).optional().nullable(),
 });
 
 export const insertPublisherCreditLogSchema = createInsertSchema(publisherCreditLogs).omit({

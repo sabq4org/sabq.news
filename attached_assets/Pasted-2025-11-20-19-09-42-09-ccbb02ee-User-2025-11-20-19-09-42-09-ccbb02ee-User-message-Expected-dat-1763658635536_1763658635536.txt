@@ -1,0 +1,152 @@
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+}
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"message": "Expected date, received string"
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+message: 'Required'
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/v3/types.js:114:22)
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+message: 'Expected date, received string'
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+at file:///home/runner/workspace/dist/index.js:45580:56
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"code": "invalid_type",
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"code": "invalid_type",
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"expiryDate"
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"path": [
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+path: [Array],
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+path: [Array],
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"message": "Expected date, received string"
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+},
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+received: 'undefined',
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"received": "string",
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+},
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+expected: 'string',
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+code: 'invalid_type',
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+]
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+expected: 'date',
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"path": [
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+path: [Array],
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+{
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+expected: 'date',
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"expected": "string",
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+],
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+{
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"expected": "date",
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+{
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+"path": [
+2025-11-20 19:09:42.09
+ccbb02ee
+User
+code: 'invalid_type',
+2025-11-20 19:10:00.02
+ccbb02ee
+User
+[NotificationWorker] Starting queue processing...
+2025-11-20 19:10:00.02
+ccbb02ee
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-20 19:10:00.12
+ccbb02ee
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-20 19:10:00.13
+ccbb02ee
+User
+[NotificationWorker] Queue processing completed
+2025-11-20 19:10:00.13
+ccbb02ee
+User
+[NotificationWorker] Found 0 notifications to process
