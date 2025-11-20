@@ -1496,8 +1496,12 @@ export interface IStorage {
   // Publisher Credits operations
   getPublisherCredits(publisherId: string): Promise<PublisherCredit[]>;
   getActivePublisherCredit(publisherId: string): Promise<PublisherCredit | undefined>;
+  getPublisherActiveCredits(publisherId: string): Promise<PublisherCredit[]>;
+  getPublisherCreditById(creditId: string): Promise<PublisherCredit | undefined>;
   createPublisherCredit(credit: InsertPublisherCredit & { remainingCredits: number }): Promise<PublisherCredit>;
+  updatePublisherCredit(creditId: string, updates: Partial<Pick<PublisherCredit, 'packageName' | 'expiryDate' | 'isActive' | 'notes'>>): Promise<PublisherCredit>;
   deductPublisherCredit(publisherId: string, articleId: string, performedBy: string): Promise<void>;
+  deactivateExpiredCredits(): Promise<{ deactivated: number; creditIds: string[] }>;
   getPublisherStats(publisherId: string, period?: { start: Date; end: Date }): Promise<{
     totalArticles: number;
     publishedArticles: number;
@@ -1510,8 +1514,26 @@ export interface IStorage {
   // Publisher Credit Logs
   getPublisherCreditLogs(publisherId: string, page?: number, limit?: number): Promise<{ logs: PublisherCreditLog[]; total: number }>;
   createCreditLog(log: InsertPublisherCreditLog): Promise<PublisherCreditLog>;
+  logCreditAction(params: {
+    publisherId: string;
+    creditPackageId?: string;
+    articleId?: string;
+    actionType: 'credit_added' | 'credit_used' | 'credit_refunded' | 'credit_expired' | 'credit_adjusted';
+    creditsBefore: number;
+    creditsChanged: number;
+    creditsAfter: number;
+    performedBy?: string;
+    notes?: string;
+  }): Promise<PublisherCreditLog>;
   
   // Publisher Article Operations (with security & transactions)
+  getPublisherArticles(publisherId: string, filters?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ articles: ArticleWithDetails[]; total: number }>;
   approvePublisherArticle(articleId: string, publisherId: string, performedBy: string): Promise<Article>;
   updatePublisherArticle(articleId: string, publisherId: string, authorId: string, updates: Partial<InsertArticle>): Promise<Article>;
 }
@@ -13038,6 +13060,92 @@ export class DatabaseStorage implements IStorage {
     return credit;
   }
 
+  async getPublisherActiveCredits(publisherId: string): Promise<PublisherCredit[]> {
+    const now = new Date();
+    const credits = await db
+      .select()
+      .from(publisherCredits)
+      .where(
+        and(
+          eq(publisherCredits.publisherId, publisherId),
+          eq(publisherCredits.isActive, true),
+          sql`${publisherCredits.remainingCredits} > 0`,
+          or(
+            isNull(publisherCredits.expiryDate),
+            gte(publisherCredits.expiryDate, now)
+          )
+        )
+      )
+      .orderBy(asc(publisherCredits.expiryDate));
+    
+    return credits;
+  }
+
+  async getPublisherCreditById(creditId: string): Promise<PublisherCredit | undefined> {
+    const [credit] = await db
+      .select()
+      .from(publisherCredits)
+      .where(eq(publisherCredits.id, creditId));
+    
+    return credit;
+  }
+
+  async updatePublisherCredit(
+    creditId: string,
+    updates: Partial<Pick<PublisherCredit, 'packageName' | 'expiryDate' | 'isActive' | 'notes'>>
+  ): Promise<PublisherCredit> {
+    const [credit] = await db
+      .update(publisherCredits)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(publisherCredits.id, creditId))
+      .returning();
+    
+    if (!credit) {
+      throw new Error(`Credit package with id ${creditId} not found`);
+    }
+    
+    return credit;
+  }
+
+  async deactivateExpiredCredits(): Promise<{ deactivated: number; creditIds: string[] }> {
+    const now = new Date();
+    
+    const expiredCredits = await db
+      .update(publisherCredits)
+      .set({
+        isActive: false,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(publisherCredits.isActive, true),
+          isNotNull(publisherCredits.expiryDate),
+          lt(publisherCredits.expiryDate, now)
+        )
+      )
+      .returning({ id: publisherCredits.id, publisherId: publisherCredits.publisherId });
+    
+    for (const credit of expiredCredits) {
+      await this.logCreditAction({
+        publisherId: credit.publisherId,
+        creditPackageId: credit.id,
+        actionType: 'credit_expired',
+        creditsBefore: 0,
+        creditsChanged: 0,
+        creditsAfter: 0,
+        notes: 'تم إلغاء تفعيل الباقة تلقائياً بسبب انتهاء صلاحيتها',
+      });
+    }
+    
+    return {
+      deactivated: expiredCredits.length,
+      creditIds: expiredCredits.map(c => c.id),
+    };
+  }
+
   async deductPublisherCredit(
     publisherId: string, 
     articleId: string, 
@@ -13178,6 +13286,105 @@ export class DatabaseStorage implements IStorage {
       .values(log)
       .returning();
     return creditLog;
+  }
+
+  async logCreditAction(params: {
+    publisherId: string;
+    creditPackageId?: string;
+    articleId?: string;
+    actionType: 'credit_added' | 'credit_used' | 'credit_refunded' | 'credit_expired' | 'credit_adjusted';
+    creditsBefore: number;
+    creditsChanged: number;
+    creditsAfter: number;
+    performedBy?: string;
+    notes?: string;
+  }): Promise<PublisherCreditLog> {
+    return await this.createCreditLog({
+      publisherId: params.publisherId,
+      creditPackageId: params.creditPackageId,
+      articleId: params.articleId,
+      actionType: params.actionType,
+      creditsBefore: params.creditsBefore,
+      creditsChanged: params.creditsChanged,
+      creditsAfter: params.creditsAfter,
+      performedBy: params.performedBy,
+      notes: params.notes,
+    });
+  }
+
+  async getPublisherArticles(
+    publisherId: string,
+    filters?: {
+      status?: string;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ articles: ArticleWithDetails[]; total: number }> {
+    const publisher = await this.getPublisher(publisherId);
+    if (!publisher) {
+      throw new Error('Publisher not found');
+    }
+
+    const conditions: any[] = [
+      eq(articles.authorId, publisher.userId),
+      eq(articles.isPublisherNews, true),
+    ];
+
+    if (filters?.status) {
+      conditions.push(eq(articles.status, filters.status));
+    }
+
+    if (filters?.startDate) {
+      conditions.push(gte(articles.createdAt, filters.startDate));
+    }
+
+    if (filters?.endDate) {
+      conditions.push(lte(articles.createdAt, filters.endDate));
+    }
+
+    const whereClause = and(...conditions);
+    const limit = filters?.limit || 20;
+    const offset = filters?.offset || 0;
+
+    const articlesData = await db
+      .select({
+        ...getTableColumns(articles),
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          description: categories.description,
+          imageUrl: categories.imageUrl,
+          isActive: categories.isActive,
+        },
+        author: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+        },
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(whereClause)
+      .orderBy(desc(articles.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(articles)
+      .where(whereClause);
+
+    return {
+      articles: articlesData as ArticleWithDetails[],
+      total: Number(count),
+    };
   }
 
   /**
