@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { PublisherNav } from "@/components/publisher/PublisherNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,7 @@ interface PublisherDashboardData {
 export default function PublisherDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  useRoleProtection('publisher');
 
   const { data, isLoading, error } = useQuery<PublisherDashboardData>({
     queryKey: ["/api/publisher/dashboard"],
@@ -76,19 +79,26 @@ export default function PublisherDashboard() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
+      <>
+        <PublisherNav />
+        <div className="container mx-auto p-6 space-y-6" dir="rtl">
+          <Skeleton className="h-10 w-64" />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!data) {
-    return null;
+    return (
+      <>
+        <PublisherNav />
+      </>
+    );
   }
 
   const { publisher, credits, stats, recentArticles, creditUsageChart } = data;
@@ -105,7 +115,9 @@ export default function PublisherDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <>
+      <PublisherNav />
+      <div className="container mx-auto p-6 space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -315,6 +327,7 @@ export default function PublisherDashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

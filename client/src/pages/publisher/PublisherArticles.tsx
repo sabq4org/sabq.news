@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { PublisherNav } from "@/components/publisher/PublisherNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +45,7 @@ interface Article {
 }
 
 export default function PublisherArticles() {
+  useRoleProtection('publisher');
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -83,7 +86,9 @@ export default function PublisherArticles() {
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <>
+      <PublisherNav />
+      <div className="container mx-auto p-6 space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -269,6 +274,7 @@ export default function PublisherArticles() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

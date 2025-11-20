@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +46,7 @@ interface PublisherStats {
 }
 
 export default function AdminPublisherDetails() {
+  useRoleProtection('admin');
   const [, params] = useRoute("/dashboard/admin/publishers/:id");
   const publisherId = params?.id;
   const { toast } = useToast();
@@ -108,17 +111,23 @@ export default function AdminPublisherDetails() {
 
   if (isLoadingPublisher) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">جاري التحميل...</div>
-      </div>
+      <>
+        <AdminPublisherNav />
+        <div className="container mx-auto p-6">
+          <div className="text-center py-12">جاري التحميل...</div>
+        </div>
+      </>
     );
   }
 
   if (!publisher) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">الناشر غير موجود</div>
-      </div>
+      <>
+        <AdminPublisherNav />
+        <div className="container mx-auto p-6">
+          <div className="text-center py-12">الناشر غير موجود</div>
+        </div>
+      </>
     );
   }
 
@@ -129,7 +138,9 @@ export default function AdminPublisherDetails() {
     .reduce((sum, c) => sum + c.remainingCredits, 0) || 0;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <AdminPublisherNav />
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -503,6 +514,7 @@ export default function AdminPublisherDetails() {
           publisherId={publisherId}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }

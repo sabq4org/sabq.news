@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -41,6 +43,7 @@ interface ChartData {
 }
 
 export default function AdminPublisherAnalytics() {
+  useRoleProtection('admin');
   const [timeRange, setTimeRange] = useState<"7days" | "30days" | "all">("30days");
 
   // Fetch publishers
@@ -118,7 +121,9 @@ export default function AdminPublisherAnalytics() {
   const totalArticlesForChart = analytics.publishedArticles + analytics.pendingArticles + analytics.rejectedArticles;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <AdminPublisherNav />
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -422,6 +427,7 @@ export default function AdminPublisherAnalytics() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

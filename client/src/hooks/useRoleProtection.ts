@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import type { User } from "@shared/schema";
 
 export function useRoleProtection(requiredRole: string) {
-  const { data: user, isLoading } = useQuery({ 
+  const { data: user, isLoading } = useQuery<User>({ 
     queryKey: ['/api/auth/user'],
     retry: false,
   });

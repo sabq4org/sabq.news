@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { PublisherNav } from "@/components/publisher/PublisherNav";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,6 +72,7 @@ interface Article {
 }
 
 export default function PublisherArticleEditor() {
+  useRoleProtection('publisher');
   const { id } = useParams<{ id?: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -228,37 +231,45 @@ export default function PublisherArticleEditor() {
 
   if (isEditMode && articleLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6" dir="rtl">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96" />
-      </div>
+      <>
+        <PublisherNav />
+        <div className="container mx-auto p-6 space-y-6" dir="rtl">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-96" />
+        </div>
+      </>
     );
   }
 
   // Check if article can be edited
   if (isEditMode && articleData && articleData.status !== "draft") {
     return (
-      <div className="container mx-auto p-6" dir="rtl">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-lg font-medium">لا يمكن تعديل هذا المقال</p>
-            <p className="text-muted-foreground mt-2">يمكن تعديل المسودات فقط</p>
-            <Button
-              className="mt-4"
-              onClick={() => setLocation("/dashboard/publisher/articles")}
-              data-testid="button-back"
-            >
-              <ArrowRight className="ml-2 h-4 w-4" />
-              العودة للقائمة
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <PublisherNav />
+        <div className="container mx-auto p-6" dir="rtl">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-lg font-medium">لا يمكن تعديل هذا المقال</p>
+              <p className="text-muted-foreground mt-2">يمكن تعديل المسودات فقط</p>
+              <Button
+                className="mt-4"
+                onClick={() => setLocation("/dashboard/publisher/articles")}
+                data-testid="button-back"
+              >
+                <ArrowRight className="ml-2 h-4 w-4" />
+                العودة للقائمة
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <>
+      <PublisherNav />
+      <div className="container mx-auto p-6 space-y-6" dir="rtl">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold" data-testid="text-page-title">
@@ -537,6 +548,7 @@ export default function PublisherArticleEditor() {
           </Card>
         </form>
       </Form>
-    </div>
+      </div>
+    </>
   );
 }

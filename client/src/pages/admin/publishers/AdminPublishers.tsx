@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { AdminPublisherNav } from "@/components/admin/publishers/AdminPublisherNav";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,7 @@ interface PublisherWithCredits extends Publisher {
 }
 
 export default function AdminPublishers() {
+  useRoleProtection('admin');
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
   const [page, setPage] = useState(1);
@@ -66,7 +69,9 @@ export default function AdminPublishers() {
   });
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <AdminPublisherNav />
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">إدارة الناشرين</h1>
@@ -271,6 +276,7 @@ export default function AdminPublishers() {
         publisher={editingPublisher || undefined}
         mode={editingPublisher ? "edit" : "create"}
       />
-    </div>
+      </div>
+    </>
   );
 }
