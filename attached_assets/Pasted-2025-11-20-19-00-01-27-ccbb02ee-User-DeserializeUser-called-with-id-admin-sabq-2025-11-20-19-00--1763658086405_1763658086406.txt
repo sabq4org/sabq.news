@@ -1,0 +1,126 @@
+2025-11-20 19:00:01.27
+ccbb02ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 19:00:01.27
+ccbb02ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-20 19:00:01.29
+ccbb02ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-20 19:00:01.29
+ccbb02ee
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-20 19:00:01.29
+ccbb02ee
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-20 19:00:01.30
+ccbb02ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 19:00:01.32
+ccbb02ee
+User
+5:00:01 PM [express] GET /api/announcements/active 304 in 126ms :: []
+2025-11-20 19:00:01.33
+ccbb02ee
+User
+5:00:01 PM [express] GET /api/notifications 304 in 137ms :: {"notifications":[{"id":"-cP7Vg80jB7FWE0…
+2025-11-20 19:00:20.32
+ccbb02ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 19:00:20.33
+ccbb02ee
+User
+5:00:20 PM [express] GET /api/publisher/articles/[object%20Object] 200 in 235ms
+2025-11-20 19:00:20.34
+ccbb02ee
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 19:00:20.34
+ccbb02ee
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-20 19:00:20.39
+ccbb02ee
+User
+5:00:20 PM [express] GET /api/admin/publishers/b5517d5a-540b-4f86-b7da-b1f36b25a8f3 200 in 305ms :: …
+2025-11-20 19:00:20.40
+ccbb02ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-20 19:00:20.43
+ccbb02ee
+User
+5:00:20 PM [express] GET /api/publisher/credits/[object%20Object] 200 in 335ms
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+where: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+constraint: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+detail: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+at async file:///home/runner/workspace/dist/index.js:46117:25 {
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+hint: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+severity: 'ERROR',
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+table: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+file: 'parse_relation.c',
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+column: undefined,
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+}
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+code: '42703',
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+Error generating publisher report: error: column "price_per_article" does not exist
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+routine: 'errorMissingColumn'
+2025-11-20 19:00:20.45
+ccbb02ee
+User
+internalPosition: undefined,
+

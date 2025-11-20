@@ -27,8 +27,7 @@ const creditPackageSchema = z.object({
     required_error: "تاريخ البداية مطلوب",
   }),
   expiryDate: z.date().optional(),
-  pricePerArticle: z.number().min(0).optional(),
-  totalPrice: z.number().min(0).optional(),
+  price: z.number().min(0).optional(),
   currency: z.string().default("SAR"),
   notes: z.string().optional(),
 });
@@ -83,8 +82,7 @@ export function AddCreditPackageDialog({
       period: "monthly",
       startDate: new Date(),
       expiryDate: calculateExpiryDate(new Date(), "monthly"),
-      pricePerArticle: undefined,
-      totalPrice: undefined,
+      price: undefined,
       currency: "SAR",
       notes: "",
     },
@@ -92,8 +90,6 @@ export function AddCreditPackageDialog({
 
   const period = form.watch("period");
   const startDate = form.watch("startDate");
-  const totalCredits = form.watch("totalCredits");
-  const pricePerArticle = form.watch("pricePerArticle");
 
   // Auto-calculate expiry date based on period and start date
   useEffect(() => {
@@ -102,13 +98,6 @@ export function AddCreditPackageDialog({
       form.setValue("expiryDate", calculated);
     }
   }, [startDate, period, form]);
-
-  // Auto-calculate total price based on credits and price per article
-  useEffect(() => {
-    if (totalCredits && pricePerArticle) {
-      form.setValue("totalPrice", totalCredits * pricePerArticle);
-    }
-  }, [totalCredits, pricePerArticle, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: CreditPackageFormData) => {
@@ -298,42 +287,22 @@ export function AddCreditPackageDialog({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="pricePerArticle"
+                name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>سعر الخبر</FormLabel>
+                    <FormLabel>السعر (اختياري)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01"
                         min="0"
+                        placeholder="السعر الإجمالي للباقة"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                        data-testid="input-price-per-article"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="totalPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>السعر الإجمالي</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        min="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                        data-testid="input-total-price"
+                        data-testid="input-price"
                       />
                     </FormControl>
                     <FormMessage />

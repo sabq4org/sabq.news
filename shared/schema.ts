@@ -6966,8 +6966,7 @@ export const publisherCredits = pgTable("publisher_credits", {
   expiryDate: timestamp("expiry_date"), // null for one-time packages
   
   // Pricing (optional - for invoicing)
-  pricePerArticle: real("price_per_article"),
-  totalPrice: real("total_price"),
+  price: real("price"),
   currency: text("currency").default("SAR"),
   
   // Status
@@ -6975,6 +6974,7 @@ export const publisherCredits = pgTable("publisher_credits", {
   
   // Metadata
   notes: text("notes"),
+  createdBy: varchar("created_by").references(() => users.id),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

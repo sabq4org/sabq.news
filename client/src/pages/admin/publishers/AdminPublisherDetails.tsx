@@ -62,7 +62,12 @@ export default function AdminPublisherDetails() {
   });
 
   const { data: credits, isLoading: isLoadingCredits } = useQuery<PublisherCredit[]>({
-    queryKey: [`/api/publisher/credits`, { publisherId }],
+    queryKey: [`/api/publisher/credits`, publisherId],
+    queryFn: async () => {
+      const response = await fetch(`/api/publisher/credits?publisherId=${publisherId}`);
+      if (!response.ok) throw new Error('Failed to fetch credits');
+      return response.json();
+    },
     enabled: !!publisherId,
   });
 
@@ -80,7 +85,16 @@ export default function AdminPublisherDetails() {
     articles: Article[];
     total: number;
   }>({
-    queryKey: [`/api/publisher/articles`, { publisherId, page: articlesPage }],
+    queryKey: [`/api/publisher/articles`, publisherId, articlesPage],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        publisherId: publisherId!,
+        page: articlesPage.toString()
+      });
+      const response = await fetch(`/api/publisher/articles?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch articles');
+      return response.json();
+    },
     enabled: !!publisherId,
   });
 
