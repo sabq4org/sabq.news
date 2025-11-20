@@ -42,13 +42,23 @@ export default function AdminPublishers() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPublisher, setEditingPublisher] = useState<Publisher | null>(null);
 
-  const { data: publishersData, isLoading } = useQuery<{
+  const { data: publishersData, isLoading, error } = useQuery<{
     publishers: PublisherWithCredits[];
     total: number;
     page: number;
     limit: number;
   }>({
     queryKey: ["/api/publishers", { page, isActive: statusFilter === "all" ? undefined : (statusFilter === "active" ? 'true' : 'false') }],
+  });
+
+  console.log('AdminPublishers Debug:', {
+    isLoading,
+    hasData: !!publishersData,
+    publishersCount: publishersData?.publishers?.length,
+    total: publishersData?.total,
+    statusFilter,
+    search,
+    error
   });
 
   const filteredPublishers = publishersData?.publishers.filter((publisher) => {
@@ -67,6 +77,8 @@ export default function AdminPublishers() {
     
     return matchesSearch && matchesStatus;
   });
+
+  console.log('Filtered publishers:', filteredPublishers?.length);
 
   return (
     <DashboardLayout>
