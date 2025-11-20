@@ -38,9 +38,19 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 
 **Publisher/Agency Content Sales System - Technical Implementation:**
 The publisher content sales system uses a three-table architecture:
-- `publishers`: Publisher/agency registration with contact details, business info (commercial registration, tax number), and account status management
+- `publishers`: Publisher/agency registration with contact details, business info (commercial registration, tax number), account status management, and **logo upload capability for brand identity**
 - `publisher_credits`: Credit packages with flexible periods (monthly/quarterly/yearly/one-time), expiry tracking, and pricing information
 - `publisher_credit_logs`: Complete audit trail for all credit operations (additions, deductions, refunds, expirations)
+
+**Publisher Logo Upload Feature:**
+Publishers now support brand logo uploads with comprehensive management:
+- `logoUrl` field in publishers table (nullable TEXT column)
+- Dedicated upload endpoint `/api/admin/publishers/upload-logo` with RBAC (admin-only)
+- Server-side validation: image-only files, max 5MB
+- Storage: Google Cloud Storage (Object Storage) in `publishers/logos/` directory
+- Frontend: immediate upload on file selection, live preview, removal capability
+- Form handling: supports null values for logo removal, preserves edit functionality
+- All logo operations logged for audit trail
 
 Article workflow integration adds dedicated fields to the articles table: `isPublisherNews`, `publisherId`, `publisherCreditDeducted`, `publisherSubmittedAt`, `publisherApprovedAt`. The approval workflow (`approvePublisherArticle`) runs in a single database transaction with row-level locking to ensure atomic credit deduction, preventing race conditions and double charges. RBAC enforcement prevents publishers from bypassing the approval workflow - all publisher-submitted content enters as draft status, requiring explicit admin approval before publication and credit deduction. The system includes 12 dedicated API endpoints split between publisher self-service (`/api/publisher/*` for dashboard, stats, articles), admin management (`/api/publishers/*` for CRUD operations), and credit administration (`/api/admin/publishers/*/credits`, `/api/admin/publishers/*/logs`). All credit-sensitive operations are activity-logged with full traceability.
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -93,6 +93,53 @@ export function CreatePublisherDialog({
           notes: "",
         },
   });
+
+  // Reset logo state and form when dialog opens with new publisher data
+  useEffect(() => {
+    if (open && publisher) {
+      // Edit mode: reset form with publisher data
+      form.reset({
+        userId: publisher.userId,
+        agencyName: publisher.agencyName,
+        agencyNameEn: publisher.agencyNameEn || "",
+        contactPerson: publisher.contactPerson,
+        contactPersonEn: publisher.contactPersonEn || "",
+        email: publisher.email,
+        phoneNumber: publisher.phoneNumber,
+        logoUrl: publisher.logoUrl || null,
+        commercialRegistration: publisher.commercialRegistration || "",
+        taxNumber: publisher.taxNumber || "",
+        address: publisher.address || "",
+        isActive: publisher.isActive,
+        notes: publisher.notes || "",
+      });
+      setLogoPreview(publisher.logoUrl || null);
+      setLogoFile(null);
+    } else if (open && !publisher) {
+      // Create mode: reset to empty form
+      form.reset({
+        userId: "",
+        agencyName: "",
+        agencyNameEn: "",
+        contactPerson: "",
+        contactPersonEn: "",
+        email: "",
+        phoneNumber: "",
+        logoUrl: null,
+        commercialRegistration: "",
+        taxNumber: "",
+        address: "",
+        isActive: true,
+        notes: "",
+      });
+      setLogoPreview(null);
+      setLogoFile(null);
+    } else if (!open) {
+      // Dialog closed: just reset logo state, form will be reset on next open
+      setLogoFile(null);
+      setLogoPreview(null);
+    }
+  }, [open, publisher]);
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
