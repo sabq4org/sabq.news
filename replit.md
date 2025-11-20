@@ -54,6 +54,16 @@ Publishers now support brand logo uploads with comprehensive management:
 
 Article workflow integration adds dedicated fields to the articles table: `isPublisherNews`, `publisherId`, `publisherCreditDeducted`, `publisherSubmittedAt`, `publisherApprovedAt`. The approval workflow (`approvePublisherArticle`) runs in a single database transaction with row-level locking to ensure atomic credit deduction, preventing race conditions and double charges. RBAC enforcement prevents publishers from bypassing the approval workflow - all publisher-submitted content enters as draft status, requiring explicit admin approval before publication and credit deduction. The system includes 12 dedicated API endpoints split between publisher self-service (`/api/publisher/*` for dashboard, stats, articles), admin management (`/api/publishers/*` for CRUD operations), and credit administration (`/api/admin/publishers/*/credits`, `/api/admin/publishers/*/logs`). All credit-sensitive operations are activity-logged with full traceability.
 
+**Publisher Dashboard Layout (PublisherLayout Component):**
+Publisher users access a dedicated authenticated shell via `PublisherLayout` component (`client/src/components/publisher/PublisherLayout.tsx`), featuring:
+- RTL-aware sidebar navigation positioned on the right (`side="right"`)
+- Collapsible sidebar with toggle button for responsive behavior
+- Navigation menu items: لوحة التحكم (Dashboard), المقالات (Articles), الرصيد (Credits)
+- Header with notifications bell, theme toggle, and external site link
+- Auth gating with loading spinner until user authentication resolves
+- All publisher pages (Dashboard, Articles, Credits, ArticleEditor) wrapped in PublisherLayout for consistent UI/UX
+- Responsive design with off-canvas behavior on tablet/mobile viewports
+
 **Article Ordering Strategy:**
 The platform employs a hybrid ordering approach to balance editorial curation with chronological feeds:
 
