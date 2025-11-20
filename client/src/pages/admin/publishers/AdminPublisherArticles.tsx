@@ -273,9 +273,9 @@ export default function AdminPublisherArticles() {
                           <FileText className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
                           <div>
                             <p className="line-clamp-2">{article.title}</p>
-                            {article.subheading && (
+                            {article.summary && (
                               <p className="text-xs text-muted-foreground line-clamp-1">
-                                {article.subheading}
+                                {article.summary}
                               </p>
                             )}
                           </div>
