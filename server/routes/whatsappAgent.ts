@@ -421,6 +421,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
           // 🔧 FIX: Detect image type from buffer magic bytes, not content-type header
           // Many WhatsApp images come with wrong content-type (e.g., application/xml)
           let actualContentType = contentType;
+          let actualFilename = filename;
           let isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(contentType);
           
           // Check magic bytes if content-type is not image/*
@@ -431,37 +432,45 @@ router.post("/webhook", async (req: Request, res: Response) => {
             // JPEG: FF D8 FF
             if (magic.startsWith('ffd8ff')) {
               actualContentType = 'image/jpeg';
+              actualFilename = filename.replace(/\.[^.]+$/, '.jpg');
               isImage = true;
               console.log(`[WhatsApp Agent] ✅ Detected JPEG from magic bytes (despite content-type: ${contentType})`);
+              console.log(`[WhatsApp Agent] 🔧 Corrected filename: ${filename} → ${actualFilename}`);
             }
             // PNG: 89 50 4E 47
             else if (magic.startsWith('89504e47')) {
               actualContentType = 'image/png';
+              actualFilename = filename.replace(/\.[^.]+$/, '.png');
               isImage = true;
               console.log(`[WhatsApp Agent] ✅ Detected PNG from magic bytes (despite content-type: ${contentType})`);
+              console.log(`[WhatsApp Agent] 🔧 Corrected filename: ${filename} → ${actualFilename}`);
             }
             // GIF: 47 49 46 38
             else if (magic.startsWith('47494638')) {
               actualContentType = 'image/gif';
+              actualFilename = filename.replace(/\.[^.]+$/, '.gif');
               isImage = true;
               console.log(`[WhatsApp Agent] ✅ Detected GIF from magic bytes (despite content-type: ${contentType})`);
+              console.log(`[WhatsApp Agent] 🔧 Corrected filename: ${filename} → ${actualFilename}`);
             }
             // WebP: 52 49 46 46 (RIFF) + WebP marker at offset 8
             else if (magic.startsWith('52494646') && buffer.length > 12) {
               const webpMarker = buffer.slice(8, 12).toString();
               if (webpMarker === 'WEBP') {
                 actualContentType = 'image/webp';
+                actualFilename = filename.replace(/\.[^.]+$/, '.webp');
                 isImage = true;
                 console.log(`[WhatsApp Agent] ✅ Detected WebP from magic bytes (despite content-type: ${contentType})`);
+                console.log(`[WhatsApp Agent] 🔧 Corrected filename: ${filename} → ${actualFilename}`);
               }
             }
           }
           
-          console.log(`[WhatsApp Agent] 🔍 Final determination: isImage=${isImage}, actualContentType="${actualContentType}"`);
+          console.log(`[WhatsApp Agent] 🔍 Final determination: isImage=${isImage}, actualContentType="${actualContentType}", actualFilename="${actualFilename}"`);
           
           const gcsPath = await uploadToCloudStorage(
             buffer,
-            filename,
+            actualFilename,
             actualContentType,
             isImage
           );
@@ -475,7 +484,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
           
           // Store metadata WITHOUT buffer to prevent OOM
           mediaMetadata.push({
-            filename,
+            filename: actualFilename,
             contentType: actualContentType,
             size: buffer.length,
             url: gcsPath,
