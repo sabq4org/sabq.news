@@ -115,6 +115,9 @@ export default function ArticleEditor() {
   
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
+  
+  // Request token to track and discard stale responses when hero image changes
+  const imageRequestTokenRef = useRef<number>(0);
 
   const { toast } = useToast();
 
@@ -240,7 +243,7 @@ export default function ArticleEditor() {
   
   // Helper to fetch media ID from media library based on URL
   useEffect(() => {
-    const fetchMediaIdForUrl = async (url: string) => {
+    const fetchMediaIdForUrl = async (url: string, requestToken: number) => {
       try {
         const response = await apiRequest(`/api/media?url=${encodeURIComponent(url)}`, {
           method: "GET",
@@ -248,28 +251,50 @@ export default function ArticleEditor() {
         
         if (response && response.length > 0) {
           const media = response[0];
-          setHeroImageMediaId(media.id);
-          console.log("[Media ID] Found media ID for URL:", media.id);
+          
+          // Only update state if this is still the current request
+          if (imageRequestTokenRef.current === requestToken) {
+            setHeroImageMediaId(media.id);
+            console.log("[Media ID] Found media ID for URL:", media.id);
+          } else {
+            console.log("[Media ID] Discarding stale response - image changed");
+          }
         } else {
           console.log("[Media ID] No media file found for URL, auto-saving to library...");
           // Auto-save image to media library if not found
           const mediaId = await saveToMediaLibrary(url);
-          if (mediaId) {
+          
+          // Only update state if this is still the current request
+          if (mediaId && imageRequestTokenRef.current === requestToken) {
             setHeroImageMediaId(mediaId);
             console.log("[Media ID] Auto-saved to library with ID:", mediaId);
+          } else if (mediaId) {
+            console.log("[Media ID] Discarding stale auto-save - image changed");
           } else {
             console.error("[Media ID] Failed to auto-save to library");
-            setHeroImageMediaId(null);
+            
+            // Only update state if this is still the current request
+            if (imageRequestTokenRef.current === requestToken) {
+              setHeroImageMediaId(null);
+            }
           }
         }
       } catch (error) {
         console.error("[Media ID] Failed to fetch media ID:", error);
-        setHeroImageMediaId(null);
+        
+        // Only update state if this is still the current request
+        if (imageRequestTokenRef.current === requestToken) {
+          setHeroImageMediaId(null);
+        }
       }
     };
     
     if (imageUrl && !heroImageMediaId && !isNewArticle) {
-      fetchMediaIdForUrl(imageUrl);
+      // Increment token to invalidate any in-flight requests
+      imageRequestTokenRef.current += 1;
+      const currentToken = imageRequestTokenRef.current;
+      
+      fetchMediaIdForUrl(imageUrl, currentToken);
     }
   }, [imageUrl, heroImageMediaId, isNewArticle, saveToMediaLibrary]);
 
