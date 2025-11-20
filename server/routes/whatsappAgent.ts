@@ -221,6 +221,8 @@ router.post("/webhook", async (req: Request, res: Response) => {
   
   try {
     console.log("[WhatsApp Agent] ============ WEBHOOK START ============");
+    console.log(`[WhatsApp Agent] 📝 Request Body Keys: ${Object.keys(req.body).join(', ')}`);
+    console.log(`[WhatsApp Agent] 📝 NumMedia in body: "${req.body.NumMedia}"`);
     
     // 🔐 SECURITY: Validate Twilio Signature
     const twilioSignature = req.headers['x-twilio-signature'] as string;
