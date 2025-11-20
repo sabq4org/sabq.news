@@ -741,6 +741,11 @@ export const articles = pgTable("articles", {
     originalMessage?: string;
     webhookLogId?: string;
   }>(),
+  sourceUrl: text("source_url"), // URL of the original source
+  
+  // Verification fields
+  verifiedBy: varchar("verified_by").references(() => users.id), // Staff/admin who verified the article
+  verifiedAt: timestamp("verified_at"), // When the article was verified
   
   // Publisher/Agency content sales fields
   isPublisherNews: boolean("is_publisher_news").default(false).notNull(),
