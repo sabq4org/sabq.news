@@ -27389,14 +27389,14 @@ Allow: /
         // Upload to Object Storage
         const objectStorageService = new ObjectStorageService();
         const fileName = `publishers/logos/${Date.now()}-${req.file.originalname}`;
-        const publicUrl = await objectStorageService.uploadFile(
-          req.file.buffer,
-          fileName,
-          req.file.mimetype,
-          true // isPublic
+        const result = await objectStorageService.uploadFile(
+          fileName,           // path
+          req.file.buffer,    // buffer
+          req.file.mimetype,  // contentType
+          "public"            // visibility
         );
 
-        res.json({ url: publicUrl });
+        res.json({ url: result.url });
       } catch (error: any) {
         console.error("Error uploading publisher logo:", error);
         res.status(500).json({ message: "فشل في رفع الشعار" });
