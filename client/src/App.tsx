@@ -171,6 +171,10 @@ import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
 import PublisherArticles from "@/pages/publisher/PublisherArticles";
 import PublisherArticleEditor from "@/pages/publisher/PublisherArticleEditor";
 import PublisherCredits from "@/pages/publisher/PublisherCredits";
+import AdminPublishers from "@/pages/admin/publishers/AdminPublishers";
+import AdminPublisherDetails from "@/pages/admin/publishers/AdminPublisherDetails";
+import AdminPublisherArticles from "@/pages/admin/publishers/AdminPublisherArticles";
+import AdminPublisherAnalytics from "@/pages/admin/publishers/AdminPublisherAnalytics";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -382,6 +386,12 @@ function Router() {
       <Route path="/dashboard/publisher/article/new" component={PublisherArticleEditor} />
       <Route path="/dashboard/publisher/article/:id/edit" component={PublisherArticleEditor} />
       <Route path="/dashboard/publisher/credits" component={PublisherCredits} />
+      
+      {/* Admin Publisher Management Routes */}
+      <Route path="/dashboard/admin/publishers" component={AdminPublishers} />
+      <Route path="/dashboard/admin/publishers/:id" component={AdminPublisherDetails} />
+      <Route path="/dashboard/admin/publisher-articles" component={AdminPublisherArticles} />
+      <Route path="/dashboard/admin/publisher-analytics" component={AdminPublisherAnalytics} />
       
       {/* Onboarding routes - Arabic */}
       <Route path="/ar/onboarding/welcome" component={Welcome} />
