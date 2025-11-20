@@ -175,6 +175,7 @@ import AdminPublishers from "@/pages/admin/publishers/AdminPublishers";
 import AdminPublisherDetails from "@/pages/admin/publishers/AdminPublisherDetails";
 import AdminPublisherArticles from "@/pages/admin/publishers/AdminPublisherArticles";
 import AdminPublisherAnalytics from "@/pages/admin/publishers/AdminPublisherAnalytics";
+import AIHomePage from "@/pages/ai/AIHomePage";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -286,6 +287,8 @@ function Router() {
       
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/chatbot" component={ChatbotPage} />
+      <Route path="/ai" component={AIHomePage} />
+      <Route path="/ai/:category" component={AIHomePage} />
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
       {/* Smart Links pages */}

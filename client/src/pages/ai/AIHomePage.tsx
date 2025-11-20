@@ -93,15 +93,12 @@ export default function AIHomePage() {
 
   // Fetch latest AI articles
   const { data: articles = [], isLoading } = useQuery<Article[]>({
-    queryKey: ["/api/articles/ai-category"],
+    queryKey: ["/api/categories/ifox-ai/articles"],
     enabled: true
   });
 
-  // Fetch AI trends
-  const { data: trends = [] } = useQuery({
-    queryKey: ["/api/ai/trends"],
-    enabled: true
-  });
+  // Fetch AI trends (placeholder for now)
+  const trends: any[] = [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
