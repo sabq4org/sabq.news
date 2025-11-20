@@ -90,26 +90,53 @@ function generateSlug(text: string): string {
 }
 
 async function downloadWhatsAppMedia(mediaUrl: string): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
-  if (!twilioClient) {
-    throw new Error("Twilio client not initialized");
-  }
-
   try {
     console.log(`[WhatsApp Agent] Downloading media from: ${mediaUrl}`);
     
-    const response = await twilioClient.request({
-      method: 'get',
-      uri: mediaUrl,
-    });
+    // For Twilio-hosted media (starting with api.twilio.com), use Twilio client
+    if (mediaUrl.includes('api.twilio.com') || mediaUrl.includes('media.twiliocdn.com')) {
+      if (!twilioClient) {
+        throw new Error("Twilio client not initialized");
+      }
+      
+      const response = await twilioClient.request({
+        method: 'get',
+        uri: mediaUrl,
+      });
 
-    const buffer = Buffer.from(response.body);
-    const contentType = response.headers['content-type'] || 'application/octet-stream';
-    const extension = contentType.split('/')[1] || 'bin';
-    const filename = `media-${nanoid()}.${extension}`;
+      const buffer = Buffer.from(response.body);
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      const extension = contentType.split('/')[1] || 'bin';
+      const filename = `media-${nanoid()}.${extension}`;
 
-    console.log(`[WhatsApp Agent] ✅ Downloaded media: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
-    
-    return { buffer, contentType, filename };
+      console.log(`[WhatsApp Agent] ✅ Downloaded Twilio media: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
+      
+      return { buffer, contentType, filename };
+    } else {
+      // For external URLs (testing or other sources), use regular HTTP fetch
+      console.log(`[WhatsApp Agent] Downloading external media using fetch...`);
+      
+      const response = await fetch(mediaUrl, {
+        headers: {
+          'User-Agent': 'WhatsApp-Media-Downloader/1.0',
+        },
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const contentType = response.headers.get('content-type') || 'application/octet-stream';
+      const extension = contentType.split('/')[1]?.split(';')[0] || 'bin';
+      const filename = `media-${nanoid()}.${extension}`;
+
+      console.log(`[WhatsApp Agent] ✅ Downloaded external media: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
+      
+      return { buffer, contentType, filename };
+    }
   } catch (error) {
     console.error(`[WhatsApp Agent] ❌ Failed to download media from ${mediaUrl}:`, error);
     throw error;
