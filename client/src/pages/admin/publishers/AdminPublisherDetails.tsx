@@ -62,12 +62,7 @@ export default function AdminPublisherDetails() {
   });
 
   const { data: credits, isLoading: isLoadingCredits } = useQuery<PublisherCredit[]>({
-    queryKey: [`/api/publisher/credits`, publisherId],
-    queryFn: async () => {
-      const response = await fetch(`/api/publisher/credits?publisherId=${publisherId}`);
-      if (!response.ok) throw new Error('Failed to fetch credits');
-      return response.json();
-    },
+    queryKey: [`/api/admin/publishers/${publisherId}/credits`],
     enabled: !!publisherId,
   });
 
@@ -85,17 +80,19 @@ export default function AdminPublisherDetails() {
     articles: Article[];
     total: number;
   }>({
-    queryKey: [`/api/publisher/articles`, publisherId, articlesPage],
+    queryKey: [`/api/admin/articles`, publisher?.userId, articlesPage],
     queryFn: async () => {
+      if (!publisher?.userId) throw new Error('Publisher not loaded');
       const params = new URLSearchParams({
-        publisherId: publisherId!,
-        page: articlesPage.toString()
+        authorId: publisher.userId,
+        limit: '50',
+        offset: ((articlesPage - 1) * 50).toString()
       });
-      const response = await fetch(`/api/publisher/articles?${params.toString()}`);
+      const response = await fetch(`/api/admin/articles?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch articles');
       return response.json();
     },
-    enabled: !!publisherId,
+    enabled: !!publisher?.userId,
   });
 
   const deactivateCreditMutation = useMutation({
@@ -107,7 +104,7 @@ export default function AdminPublisherDetails() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/publisher/credits`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/publishers/${publisherId}/credits`] });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/publisher-reports/${publisherId}`] });
       toast({
         title: "تم التعطيل",
