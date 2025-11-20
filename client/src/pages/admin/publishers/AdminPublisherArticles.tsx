@@ -71,7 +71,7 @@ export default function AdminPublisherArticles() {
     page: number;
     limit: number;
   }>({
-    queryKey: ["/api/admin/publisher-articles", { page, status: statusFilter === "all" ? undefined : statusFilter }],
+    queryKey: ["/api/admin/publishers/articles", { page, status: statusFilter === "all" ? undefined : statusFilter }],
   });
 
   // Fetch publishers for filter
@@ -84,13 +84,13 @@ export default function AdminPublisherArticles() {
   // Approve mutation
   const approveMutation = useMutation({
     mutationFn: async ({ articleId }: { articleId: string }) => {
-      return apiRequest(`/api/admin/publisher-articles/${articleId}/approve`, {
+      return apiRequest(`/api/admin/publishers/articles/${articleId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/publisher-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/publishers/articles"] });
       toast({
         title: "تمت الموافقة",
         description: "تم الموافقة على المقال ونشره بنجاح",
@@ -109,14 +109,14 @@ export default function AdminPublisherArticles() {
   // Reject mutation
   const rejectMutation = useMutation({
     mutationFn: async ({ articleId, reason }: { articleId: string; reason: string }) => {
-      return apiRequest(`/api/admin/publisher-articles/${articleId}/reject`, {
+      return apiRequest(`/api/admin/publishers/articles/${articleId}/reject`, {
         method: "POST",
         body: JSON.stringify({ reason }),
         headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/publisher-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/publishers/articles"] });
       toast({
         title: "تم الرفض",
         description: "تم رفض المقال",

@@ -59,7 +59,7 @@ export default function AdminPublisherAnalytics() {
     articles: Article[];
     total: number;
   }>({
-    queryKey: ["/api/admin/publisher-articles", { limit: 1000 }],
+    queryKey: ["/api/admin/publishers/articles", { limit: 1000 }],
   });
 
   // Calculate analytics
