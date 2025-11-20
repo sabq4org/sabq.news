@@ -388,6 +388,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
       url: string;
     }> = [];
 
+    // 🔍 DETAILED LOGGING FOR MEDIA DEBUGGING
+    console.log(`[WhatsApp Agent] 📎 Media debugging info:`);
+    console.log(`[WhatsApp Agent] - NumMedia from body: "${req.body.NumMedia}" (parsed: ${numMedia})`);
+    console.log(`[WhatsApp Agent] - MediaUrl0: ${req.body.MediaUrl0 ? 'EXISTS' : 'MISSING'}`);
+    console.log(`[WhatsApp Agent] - MediaContentType0: ${req.body.MediaContentType0 || 'MISSING'}`);
+    
     if (numMedia > 0) {
       console.log(`[WhatsApp Agent] 📎 Processing ${numMedia} media attachments`);
       
@@ -395,7 +401,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
         const mediaUrl = req.body[`MediaUrl${i}`];
         const mediaContentType = req.body[`MediaContentType${i}`];
         
-        if (!mediaUrl) continue;
+        console.log(`[WhatsApp Agent] 📎 Media ${i}: URL=${mediaUrl ? 'EXISTS' : 'MISSING'}, Type=${mediaContentType || 'MISSING'}`);
+        
+        if (!mediaUrl) {
+          console.warn(`[WhatsApp Agent] ⚠️ Skipping media ${i} - no URL found`);
+          continue;
+        }
 
         try {
           console.log(`[WhatsApp Agent] 📎 Downloading media ${i + 1}/${numMedia}: ${mediaUrl}`);
