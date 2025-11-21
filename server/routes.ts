@@ -3425,6 +3425,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let articlesList;
 
+      // Check if this is an AI category
+      const isAICategory = category.slug === 'ifox-ai' || category.slug.startsWith('ai-');
+
       // For smart/dynamic categories, use articleSmartCategories table
       if (category.type === "dynamic" || category.type === "smart") {
         const smartAssignments = await db
@@ -3443,8 +3446,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         articlesList = smartAssignments.map(item => item.article);
       } else {
         // For core/seasonal categories, use traditional categoryId
+        // Include AI flag to determine if we should filter AI articles
         articlesList = await storage.getArticles({ 
           categoryId: category.id,
+          includeAI: isAICategory, // Include AI articles only if this is an AI category
           status: "published"
         });
       }
@@ -8134,6 +8139,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // AI-SPECIFIC ENDPOINTS FOR IFOX SECTION
+  // ============================================================
+  
+  // AI Articles endpoint - fetches only AI articles
+  app.get("/api/ai/articles", async (req: any, res) => {
+    try {
+      const { category, search, status, author } = req.query;
+      const userRole = req.user?.role;
+      
+      // Get AI category IDs
+      const aiCategories = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          or(
+            eq(categories.slug, 'ifox-ai'),
+            sql`${categories.slug} LIKE 'ai-%'`
+          )
+        );
+      
+      const aiCategoryIds = aiCategories.map(c => c.id);
+      
+      // If specific category requested, check if it's an AI category
+      if (category && !aiCategoryIds.includes(category as string)) {
+        return res.json([]); // Return empty if not an AI category
+      }
+      
+      const articles = await storage.getArticles({
+        categoryId: category as string || undefined,
+        searchQuery: search as string,
+        status: status as string,
+        authorId: author as string,
+        userRole: userRole,
+        includeAI: true, // Include AI articles
+      });
+      
+      // Filter to only AI articles
+      const aiArticles = articles.filter(article => 
+        article.categoryId && aiCategoryIds.includes(article.categoryId)
+      );
+      
+      res.json(aiArticles);
+    } catch (error) {
+      console.error("Error fetching AI articles:", error);
+      res.status(500).json({ message: "Failed to fetch AI articles" });
+    }
+  });
+
+  // AI Categories endpoint - fetches only AI categories
+  app.get("/api/ai/categories", async (req, res) => {
+    try {
+      const aiCategories = await db
+        .select({
+          id: categories.id,
+          slug: categories.slug,
+          nameAr: categories.nameAr,
+          nameEn: categories.nameEn,
+          description: categories.description,
+          icon: categories.icon,
+          color: categories.color,
+          articleCount: sql<number>`count(distinct ${articles.id})::int`,
+        })
+        .from(categories)
+        .leftJoin(articles, and(
+          eq(articles.categoryId, categories.id),
+          eq(articles.status, 'published')
+        ))
+        .where(
+          or(
+            eq(categories.slug, 'ifox-ai'),
+            sql`${categories.slug} LIKE 'ai-%'`
+          )
+        )
+        .groupBy(categories.id);
+      
+      res.json(aiCategories);
+    } catch (error) {
+      console.error("Error fetching AI categories:", error);
+      res.status(500).json({ message: "Failed to fetch AI categories" });
+    }
+  });
+
   // Homepage statistics (cached for 5 min)
   app.get("/api/homepage/stats", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
@@ -8159,6 +8247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: status as string,
         authorId: author as string,
         userRole: userRole,
+        includeAI: false, // Exclude AI articles from main feed
       });
       res.json(articles);
     } catch (error) {

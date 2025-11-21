@@ -427,6 +427,7 @@ export interface IStorage {
     status?: string;
     authorId?: string;
     searchQuery?: string;
+    includeAI?: boolean;
   }): Promise<ArticleWithDetails[]>;
   getArticleBySlug(slug: string, userId?: string, userRole?: string): Promise<ArticleWithDetails | undefined>;
   getArticleById(id: string, userId?: string): Promise<ArticleWithDetails | undefined>;
@@ -2303,6 +2304,7 @@ export class DatabaseStorage implements IStorage {
     authorId?: string;
     searchQuery?: string;
     userRole?: string;
+    includeAI?: boolean; // New parameter to explicitly include AI articles
   }): Promise<ArticleWithDetails[]> {
     // Security: Check authorization BEFORE applying status filter
     const isAuthorized = filters?.userRole === 'system_admin' || 
@@ -2345,6 +2347,34 @@ export class DatabaseStorage implements IStorage {
         ne(articles.articleType, 'opinion')
       )
     );
+
+    // IMPORTANT: Exclude AI/iFox articles from regular news feed unless explicitly requested
+    if (!filters?.includeAI) {
+      // Exclude articles from AI categories
+      const aiCategorySlugs = ['ifox-ai', 'ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice', 'ai-academy', 'ai-community'];
+      
+      // Get category IDs for AI categories
+      const aiCategories = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          or(
+            eq(categories.slug, 'ifox-ai'),
+            sql`${categories.slug} LIKE 'ai-%'`
+          )
+        );
+      
+      const aiCategoryIds = aiCategories.map(c => c.id);
+      
+      if (aiCategoryIds.length > 0) {
+        conditions.push(
+          or(
+            isNull(articles.categoryId),
+            not(inArray(articles.categoryId, aiCategoryIds))
+          )
+        );
+      }
+    }
 
     const reporterAlias = aliasedTable(users, 'reporter');
     
@@ -2570,6 +2600,37 @@ export class DatabaseStorage implements IStorage {
   async getFeaturedArticle(userId?: string): Promise<ArticleWithDetails | undefined> {
     const reporterAlias = aliasedTable(users, 'reporter');
     
+    // Get AI category IDs to exclude
+    const aiCategories = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        or(
+          eq(categories.slug, 'ifox-ai'),
+          sql`${categories.slug} LIKE 'ai-%'`
+        )
+      );
+    
+    const aiCategoryIds = aiCategories.map(c => c.id);
+    
+    const conditions = [
+      eq(articles.status, "published"),
+      or(
+        isNull(articles.articleType),
+        ne(articles.articleType, 'opinion')
+      )
+    ];
+    
+    // Exclude AI articles
+    if (aiCategoryIds.length > 0) {
+      conditions.push(
+        or(
+          isNull(articles.categoryId),
+          not(inArray(articles.categoryId, aiCategoryIds))
+        )
+      );
+    }
+    
     const results = await db
       .select({
         article: articles,
@@ -2581,15 +2642,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(
-        and(
-          eq(articles.status, "published"),
-          or(
-            isNull(articles.articleType),
-            ne(articles.articleType, 'opinion')
-          )
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(articles.views), desc(articles.publishedAt))
       .limit(1);
 

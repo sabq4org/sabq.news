@@ -59,7 +59,7 @@ export default function AINewsCard({ article }: AINewsCardProps) {
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
     >
-      <Link href={`/article/${article.slug}`}>
+      <Link href={`/ai/article/${article.slug}`}>
         <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group overflow-hidden">
           <CardContent className="p-0">
             <div className="flex gap-4">
