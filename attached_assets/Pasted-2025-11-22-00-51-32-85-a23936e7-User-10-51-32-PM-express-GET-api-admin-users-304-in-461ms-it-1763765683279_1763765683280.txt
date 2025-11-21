@@ -1,0 +1,101 @@
+2025-11-22 00:51:32.85
+a23936e7
+User
+10:51:32 PM [express] GET /api/admin/users 304 in 461ms :: {"items":[{"id":"bkIhDx7BM8quPu2W1tB6Z","n…
+2025-11-22 00:51:33.55
+a23936e7
+User
+[Seasonal Categories Job] 🚀 Running initial update on startup...
+2025-11-22 00:51:57.97
+a23936e7
+User
+10:51:57 PM [express] GET /api/ads/slot/sidebar 204 in 136ms
+2025-11-22 00:52:00.02
+a23936e7
+User
+[NotificationWorker] Starting queue processing...
+
+2025-11-22 00:52:00.02
+a23936e7
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 00:52:00.13
+a23936e7
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 00:52:00.13
+a23936e7
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 00:52:00.14
+a23936e7
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-22 00:52:00.21
+a23936e7
+User
+10:52:00 PM [express] GET /api/articles/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8…
+2025-11-22 00:52:37.13
+a23936e7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:52:37.23
+a23936e7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:52:37.23
+a23936e7
+User
+[API] Image generation request from user admin-sabq
+2025-11-22 00:52:37.26
+a23936e7
+User
+[Nano Banana Pro] Generating image with prompt: "صورة صحفية احترافية عالية الجودة تُظهر شهدت فعاليات سيتي سكيب توقيع شراكة حصرية تجمع بين الجانب السع..."
+2025-11-22 00:52:53.64
+a23936e7
+User
+[Nano Banana Pro] Image generated successfully in 16s
+2025-11-22 00:52:53.97
+a23936e7
+User
+[Nano Banana Pro] Public URL: /public-objects/ai-generated/admin-sabq_1763765573644.png
+2025-11-22 00:52:53.97
+a23936e7
+User
+[Nano Banana Pro] Image uploaded to GCS: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/ai-generated/admin-sabq_1763765573644.png
+2025-11-22 00:52:54.16
+a23936e7
+User
+10:52:54 PM [express] POST /api/nano-banana/generate 200 in 17231ms :: {"message":"تم توليد الصورة بن…
+2025-11-22 00:52:54.44
+a23936e7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:52:54.46
+a23936e7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:52:54.51
+a23936e7
+User
+10:52:54 PM [express] POST /api/accessibility/track 200 in 94ms :: {"success":true,"eventId":"b98a152…
+2025-11-22 00:52:58.35
+a23936e7
+User
+10:52:58 PM [express] GET /api/ads/slot/sidebar 204 in 71ms
+2025-11-22 00:53:00.02
+a23936e7
+User
+[NotificationWorker] Starting queue processing...
+2025-11-22 00:53:00.03
+a23936e7
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 00:53:00.06
+a23936e7
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 00:53:00.06
+a23936e7
+User
+[NotificationWorker] Found 0 notifications to process
