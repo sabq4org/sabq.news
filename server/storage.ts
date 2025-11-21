@@ -1574,6 +1574,14 @@ export interface IStorage {
     total: number;
   }>;
   
+  getIFoxArticleMetrics(): Promise<{
+    published: number;
+    scheduled: number;
+    draft: number;
+    archived: number;
+    total: number;
+  }>;
+  
   // iFox Settings
   getIFoxSettings(keys?: string[]): Promise<IfoxSettings[]>;
   upsertIFoxSetting(key: string, value: any, description?: string, userId?: string): Promise<IfoxSettings>;
@@ -13810,6 +13818,49 @@ export class DatabaseStorage implements IStorage {
       scheduled: scheduledCount[0]?.count ?? 0,
       total: totalCount[0]?.count ?? 0
     };
+  }
+
+  async getIFoxArticleMetrics(): Promise<{
+    published: number;
+    scheduled: number;
+    draft: number;
+    archived: number;
+    total: number;
+  }> {
+    // Get metrics for iFox articles by status
+    const statusCounts = await db
+      .select({
+        status: articles.status,
+        count: sql<number>`count(*)::int`
+      })
+      .from(articles)
+      .where(eq(articles.categorySlug, 'ifox'))
+      .groupBy(articles.status);
+    
+    const metrics = {
+      published: 0,
+      scheduled: 0,
+      draft: 0,
+      archived: 0,
+      total: 0
+    };
+    
+    statusCounts.forEach(stat => {
+      const count = stat.count;
+      metrics.total += count;
+      
+      if (stat.status === 'published') {
+        metrics.published = count;
+      } else if (stat.status === 'scheduled') {
+        metrics.scheduled = count;
+      } else if (stat.status === 'draft') {
+        metrics.draft = count;
+      } else if (stat.status === 'archived') {
+        metrics.archived = count;
+      }
+    });
+    
+    return metrics;
   }
 
   // iFox Settings

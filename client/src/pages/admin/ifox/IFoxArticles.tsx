@@ -21,6 +21,7 @@ import { IFoxArticlesFilters, type FilterValues } from "@/components/admin/ifox/
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { cn } from "@/lib/utils";
 import {
   Plus,
   Trash2,
