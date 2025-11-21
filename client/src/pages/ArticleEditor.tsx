@@ -47,6 +47,7 @@ import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
 import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
+import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -112,6 +113,7 @@ export default function ArticleEditor() {
   const [isClassifying, setIsClassifying] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [showAIImageDialog, setShowAIImageDialog] = useState(false);
   
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
@@ -1411,6 +1413,15 @@ const generateSlug = (text: string) => {
                     <ImageIcon className="h-4 w-4" />
                     اختر من المكتبة
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAIImageDialog(true)}
+                    className="gap-2"
+                    data-testid="button-generate-ai-image"
+                  >
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    توليد بالذكاء الاصطناعي
+                  </Button>
                   <input
                     id="image-upload"
                     type="file"
@@ -1979,6 +1990,22 @@ const generateSlug = (text: string) => {
         articleTitle={title}
         articleContent={content?.substring(0, 500)}
         currentImageUrl={imageUrl}
+      />
+
+      {/* AI Image Generator Dialog for Featured Image */}
+      <AIImageGeneratorDialog
+        open={showAIImageDialog}
+        onClose={() => setShowAIImageDialog(false)}
+        onImageGenerated={(generatedUrl, alt) => {
+          // Set the generated image as the featured image
+          setImageUrl(generatedUrl);
+          setShowAIImageDialog(false);
+          toast({
+            title: "تم توليد الصورة البارزة",
+            description: "تم إضافة الصورة المولدة بالذكاء الاصطناعي كصورة بارزة للمقال",
+          });
+        }}
+        initialPrompt={title ? `صورة بارزة احترافية لمقال بعنوان: ${title}` : ""}
       />
     </DashboardLayout>
   );
