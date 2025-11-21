@@ -178,6 +178,15 @@ import AdminPublisherAnalytics from "@/pages/admin/publishers/AdminPublisherAnal
 import AIHomePage from "@/pages/ai/AIHomePage";
 import AICategoryPage from "@/pages/ai/AICategoryPage";
 import AIArticleDetail from "@/pages/ai/AIArticleDetail";
+// iFox Admin Dashboard imports
+import IFoxDashboard from "@/pages/admin/ifox/IFoxDashboard";
+// Placeholder imports for iFox pages (to be created later)
+const IFoxArticles = () => <div>iFox Articles Management</div>;
+const IFoxCategory = () => <div>iFox Category Page</div>;
+const IFoxMedia = () => <div>iFox Media Library</div>;
+const IFoxSchedule = () => <div>iFox Scheduling</div>;
+const IFoxAnalytics = () => <div>iFox Analytics</div>;
+const IFoxSettings = () => <div>iFox Settings</div>;
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -401,6 +410,15 @@ function Router() {
       <Route path="/dashboard/admin/publishers/:id" component={AdminPublisherDetails} />
       <Route path="/dashboard/admin/publisher-articles" component={AdminPublisherArticles} />
       <Route path="/dashboard/admin/publisher-analytics" component={AdminPublisherAnalytics} />
+      
+      {/* iFox Admin Dashboard Routes */}
+      <Route path="/dashboard/admin/ifox" component={IFoxDashboard} />
+      <Route path="/dashboard/admin/ifox/articles" component={IFoxArticles} />
+      <Route path="/dashboard/admin/ifox/categories/:slug" component={IFoxCategory} />
+      <Route path="/dashboard/admin/ifox/media" component={IFoxMedia} />
+      <Route path="/dashboard/admin/ifox/schedule" component={IFoxSchedule} />
+      <Route path="/dashboard/admin/ifox/analytics" component={IFoxAnalytics} />
+      <Route path="/dashboard/admin/ifox/settings" component={IFoxSettings} />
       
       {/* Onboarding routes - Arabic */}
       <Route path="/ar/onboarding/welcome" component={Welcome} />
