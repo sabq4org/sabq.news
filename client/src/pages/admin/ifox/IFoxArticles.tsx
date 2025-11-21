@@ -107,7 +107,7 @@ export default function IFoxArticles() {
     mutationFn: async (ids: string[]) => {
       return apiRequest("/api/admin/ifox/articles/bulk-delete", {
         method: "POST",
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({ articleIds: ids }),
         headers: { "Content-Type": "application/json" },
       });
     },
@@ -135,7 +135,7 @@ export default function IFoxArticles() {
     mutationFn: async (ids: string[]) => {
       return apiRequest("/api/admin/ifox/articles/bulk-archive", {
         method: "POST",
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({ articleIds: ids }),
         headers: { "Content-Type": "application/json" },
       });
     },

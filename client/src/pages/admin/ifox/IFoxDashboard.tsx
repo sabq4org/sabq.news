@@ -73,110 +73,23 @@ interface PublishingActivity {
   engagement: number;
 }
 
-// Mock data for development
-const mockStats: DashboardStats = {
-  published: 1247,
-  scheduled: 38,
-  draft: 92,
-  archived: 520,
-  todayViews: 45320,
-  weeklyGrowth: 18.5,
-  totalEngagement: 89234,
-  averageReadTime: "4:32"
-};
-
-const mockRecentArticles: RecentArticle[] = [
-  {
-    id: "1",
-    title: "تطورات جديدة في نماذج GPT-5: ما يمكن توقعه",
-    category: "AI News",
-    author: "محمد العلي",
-    publishedAt: "2024-01-15T10:30:00Z",
-    views: 12450,
-    engagement: 89,
-    aiScore: 95
-  },
-  {
-    id: "2",
-    title: "أفضل أدوات الذكاء الاصطناعي للمطورين في 2024",
-    category: "AI Tools",
-    author: "سارة أحمد",
-    publishedAt: "2024-01-15T09:15:00Z",
-    views: 8920,
-    engagement: 76,
-    aiScore: 88
-  },
-  {
-    id: "3",
-    title: "دورة تدريبية: تعلم بناء نماذج ML من الصفر",
-    category: "AI Academy",
-    author: "عبدالله الحربي",
-    publishedAt: "2024-01-14T14:45:00Z",
-    views: 6780,
-    engagement: 92,
-    aiScore: 91
-  },
-  {
-    id: "4",
-    title: "مجتمع AI السعودي ينظم هاكاثون للذكاء الاصطناعي",
-    category: "AI Community",
-    author: "فاطمة الزهراء",
-    publishedAt: "2024-01-14T11:00:00Z",
-    views: 5430,
-    engagement: 84,
-    aiScore: 86
-  },
-  {
-    id: "5",
-    title: "رؤى جديدة: كيف يغير AI مستقبل الأعمال",
-    category: "AI Insights",
-    author: "خالد المنصور",
-    publishedAt: "2024-01-13T16:20:00Z",
-    views: 9870,
-    engagement: 81,
-    aiScore: 93
-  }
-];
-
-const mockActivityData: PublishingActivity[] = [
-  { date: "الأحد", articles: 12, views: 4500, engagement: 320 },
-  { date: "الإثنين", articles: 18, views: 6800, engagement: 450 },
-  { date: "الثلاثاء", articles: 15, views: 5200, engagement: 380 },
-  { date: "الأربعاء", articles: 22, views: 8900, engagement: 620 },
-  { date: "الخميس", articles: 19, views: 7200, engagement: 510 },
-  { date: "الجمعة", articles: 25, views: 9800, engagement: 680 },
-  { date: "السبت", articles: 21, views: 8100, engagement: 590 }
-];
-
 export default function IFoxDashboard() {
   useRoleProtection('admin');
   const [activeStatus, setActiveStatus] = useState<"published" | "scheduled" | "draft" | "archived">("published");
 
   // Fetch statistics
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/admin/ifox/articles/stats"],
-    queryFn: async () => {
-      // Using mock data for now
-      return mockStats;
-    }
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
+    queryKey: ["/api/admin/ifox/articles/stats"]
   });
 
   // Fetch recent articles
-  const { data: recentArticles, isLoading: articlesLoading } = useQuery<RecentArticle[]>({
-    queryKey: ["/api/admin/ifox/articles", { limit: 5 }],
-    queryFn: async () => {
-      // Using mock data for now
-      return mockRecentArticles;
-    }
+  const { data: recentArticles, isLoading: articlesLoading, error: articlesError } = useQuery<RecentArticle[]>({
+    queryKey: ["/api/admin/ifox/articles?limit=5&sort=publishedAt"]
   });
 
   // Fetch activity data
-  const { data: activityData } = useQuery<PublishingActivity[]>({
-    queryKey: ["/api/admin/ifox/analytics/summary"],
-    queryFn: async () => {
-      // Using mock data for now
-      return mockActivityData;
-    }
+  const { data: activityData, error: analyticsError } = useQuery<PublishingActivity[]>({
+    queryKey: ["/api/admin/ifox/analytics/summary"]
   });
 
   const quickActions = [

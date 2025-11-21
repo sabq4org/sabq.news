@@ -28461,6 +28461,102 @@ Allow: /
     }
   );
 
+  // GET /api/admin/ifox/articles/metrics - Get detailed iFox article metrics
+  app.get("/api/admin/ifox/articles/metrics",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const metrics = await storage.getIFoxArticleMetrics();
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view_metrics',
+          entityType: 'ifox_articles',
+          entityId: 'metrics',
+        });
+
+        res.json(metrics);
+      } catch (error: any) {
+        console.error("Error fetching iFox metrics:", error);
+        res.status(500).json({ message: "فشل في جلب مقاييس آي فوكس" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/articles/bulk-delete - Bulk delete iFox articles
+  app.post("/api/admin/ifox/articles/bulk-delete",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          articleIds: z.array(z.string()).min(1),
+        });
+
+        const { articleIds } = bodySchema.parse(req.body);
+        const result = await storage.bulkDeleteIFoxArticles(articleIds);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'bulk_delete',
+          entityType: 'ifox_articles',
+          entityId: 'bulk',
+          metadata: { count: articleIds.length, articleIds },
+        });
+
+        res.json({
+          message: `تم حذف ${result.deleted} مقال بنجاح`,
+          deleted: result.deleted,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error bulk deleting iFox articles:", error);
+        res.status(500).json({ message: "فشل في حذف المقالات" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/articles/bulk-archive - Bulk archive iFox articles
+  app.post("/api/admin/ifox/articles/bulk-archive",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          articleIds: z.array(z.string()).min(1),
+        });
+
+        const { articleIds } = bodySchema.parse(req.body);
+        const result = await storage.bulkArchiveIFoxArticles(articleIds);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'bulk_archive',
+          entityType: 'ifox_articles',
+          entityId: 'bulk',
+          metadata: { count: articleIds.length, articleIds },
+        });
+
+        res.json({
+          message: `تم أرشفة ${result.archived} مقال بنجاح`,
+          archived: result.archived,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error bulk archiving iFox articles:", error);
+        res.status(500).json({ message: "فشل في أرشفة المقالات" });
+      }
+    }
+  );
+
   // ============================================================
   // iFox Settings - إعدادات آي فوكس
   // ============================================================

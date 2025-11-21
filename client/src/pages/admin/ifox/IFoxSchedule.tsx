@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isPast, isFuture } from "date-fns";
 import { ar } from "date-fns/locale";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
 import { IFoxCalendar } from "@/components/admin/ifox/IFoxCalendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,88 +87,6 @@ interface PublishingSlot {
   isOptimal: boolean;
 }
 
-// Mock data
-const mockScheduledArticles: ScheduledArticle[] = [
-  {
-    id: "1",
-    articleId: "a1",
-    title: "تطورات جديدة في نماذج GPT-5: ما يمكن توقعه",
-    category: "AI News",
-    author: "محمد العلي",
-    scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    status: "scheduled",
-    publishOptions: {
-      publishToSite: true,
-      shareToSocial: ["twitter", "facebook"],
-      sendNotifications: true,
-    },
-    aiScore: 95
-  },
-  {
-    id: "2",
-    articleId: "a2",
-    title: "أفضل أدوات الذكاء الاصطناعي للمطورين في 2024",
-    category: "AI Tools",
-    author: "سارة أحمد",
-    scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    status: "scheduled",
-    publishOptions: {
-      publishToSite: true,
-      shareToSocial: ["twitter", "linkedin"],
-      sendNotifications: false,
-    },
-    recurrence: {
-      type: "weekly",
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    aiScore: 88
-  },
-  {
-    id: "3",
-    articleId: "a3",
-    title: "دورة تدريبية: تعلم بناء نماذج ML من الصفر",
-    category: "AI Academy",
-    author: "عبدالله الحربي",
-    scheduledAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    status: "published",
-    publishOptions: {
-      publishToSite: true,
-      shareToSocial: ["facebook", "instagram"],
-      sendNotifications: true,
-    },
-    aiScore: 91
-  }
-];
-
-const mockDraftArticles: DraftArticle[] = [
-  {
-    id: "d1",
-    title: "الذكاء الاصطناعي في الطب: ثورة في التشخيص",
-    category: "AI Insights",
-    author: "فاطمة الزهراء",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    wordCount: 1250,
-    aiScore: 87
-  },
-  {
-    id: "d2",
-    title: "مستقبل العمل مع AI: الوظائف الجديدة",
-    category: "AI Opinions",
-    author: "خالد المنصور",
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    wordCount: 980,
-    aiScore: 92
-  }
-];
-
-const mockPublishingSlots: PublishingSlot[] = [
-  { time: "09:00", maxArticles: 3, currentArticles: 1, isOptimal: true },
-  { time: "12:00", maxArticles: 2, currentArticles: 0, isOptimal: true },
-  { time: "15:00", maxArticles: 3, currentArticles: 2, isOptimal: false },
-  { time: "18:00", maxArticles: 3, currentArticles: 0, isOptimal: true },
-  { time: "21:00", maxArticles: 2, currentArticles: 1, isOptimal: false },
-];
-
 const socialPlatforms = [
   { value: "twitter", label: "Twitter", icon: Twitter, color: "text-blue-400" },
   { value: "facebook", label: "Facebook", icon: Facebook, color: "text-blue-600" },
@@ -199,37 +117,28 @@ export default function IFoxSchedule() {
   });
 
   // Fetch scheduled articles
-  const { data: scheduledArticles = [], isLoading } = useQuery<ScheduledArticle[]>({
-    queryKey: ["/api/admin/ifox/schedule"],
-    queryFn: async () => {
-      // Mock data for now
-      return mockScheduledArticles;
-    }
+  const { data: scheduledArticles = [], isLoading, error: scheduleError } = useQuery<ScheduledArticle[]>({
+    queryKey: ["/api/admin/ifox/schedule"]
   });
 
   // Fetch draft articles
-  const { data: draftArticles = [] } = useQuery<DraftArticle[]>({
-    queryKey: ["/api/admin/ifox/articles/drafts"],
-    queryFn: async () => {
-      // Mock data for now
-      return mockDraftArticles;
-    }
+  const { data: draftArticles = [], error: draftsError } = useQuery<DraftArticle[]>({
+    queryKey: ["/api/admin/ifox/articles/drafts"]
   });
 
   // Fetch publishing slots
-  const { data: publishingSlots = [] } = useQuery<PublishingSlot[]>({
-    queryKey: ["/api/admin/ifox/schedule/slots", selectedDate],
-    queryFn: async () => {
-      // Mock data for now
-      return mockPublishingSlots;
-    }
+  const { data: publishingSlots = [], error: slotsError } = useQuery<PublishingSlot[]>({
+    queryKey: ["/api/admin/ifox/schedule/slots", selectedDate]
   });
 
   // Create/Update schedule mutation
   const scheduleArticleMutation = useMutation({
     mutationFn: async (data: any) => {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      return apiRequest("/api/admin/ifox/schedule", {
+        method: editingSchedule ? "PUT" : "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ifox/schedule"] });
@@ -252,8 +161,9 @@ export default function IFoxSchedule() {
   // Delete schedule mutation
   const deleteScheduleMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      return apiRequest(`/api/admin/ifox/schedule/${scheduleId}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ifox/schedule"] });

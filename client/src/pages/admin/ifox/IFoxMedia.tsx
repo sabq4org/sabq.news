@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
 import { IFoxUploader } from "@/components/admin/ifox/IFoxUploader";
@@ -114,99 +114,21 @@ export default function IFoxMedia() {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   // Fetch media files
-  const { data: files = [], isLoading } = useQuery<MediaFile[]>({
-    queryKey: ["/api/admin/ifox/media", { type: selectedType, category: selectedCategory, search: searchQuery, sortBy, sortOrder }],
-    queryFn: async () => {
-      // Mock data for now
-      return [
-        {
-          id: "1",
-          name: "gpt5-announcement.jpg",
-          type: "image",
-          url: "/api/media/gpt5-announcement.jpg",
-          thumbnailUrl: "/api/media/thumbs/gpt5-announcement.jpg",
-          size: 2458624,
-          width: 1920,
-          height: 1080,
-          category: "ai-news",
-          tags: ["GPT-5", "OpenAI", "AI News"],
-          altText: "GPT-5 announcement banner",
-          caption: "OpenAI announces GPT-5 with revolutionary capabilities",
-          uploadedBy: "admin@sabq.sa",
-          uploadedAt: "2024-01-15T10:30:00Z",
-          lastModified: "2024-01-15T10:30:00Z",
-          usageCount: 12
-        },
-        {
-          id: "2",
-          name: "ai-podcast-episode.mp3",
-          type: "audio",
-          url: "/api/media/ai-podcast-episode.mp3",
-          size: 15728640,
-          duration: 1200,
-          category: "ai-voice",
-          tags: ["Podcast", "AI Voice", "Interview"],
-          caption: "AI Voice podcast episode with industry experts",
-          uploadedBy: "editor@sabq.sa",
-          uploadedAt: "2024-01-14T14:20:00Z",
-          lastModified: "2024-01-14T14:20:00Z",
-          usageCount: 5
-        },
-        {
-          id: "3",
-          name: "ml-tutorial.mp4",
-          type: "video",
-          url: "/api/media/ml-tutorial.mp4",
-          thumbnailUrl: "/api/media/thumbs/ml-tutorial.jpg",
-          size: 52428800,
-          width: 1280,
-          height: 720,
-          duration: 600,
-          category: "ai-academy",
-          tags: ["Tutorial", "Machine Learning", "Education"],
-          altText: "Machine learning tutorial video",
-          caption: "Complete machine learning tutorial for beginners",
-          uploadedBy: "instructor@sabq.sa",
-          uploadedAt: "2024-01-13T09:15:00Z",
-          lastModified: "2024-01-13T09:15:00Z",
-          usageCount: 28
-        },
-        {
-          id: "4",
-          name: "ai-tools-comparison.pdf",
-          type: "document",
-          url: "/api/media/ai-tools-comparison.pdf",
-          size: 1048576,
-          category: "ai-tools",
-          tags: ["Comparison", "Tools", "Guide"],
-          caption: "Comprehensive comparison of AI tools 2024",
-          uploadedBy: "analyst@sabq.sa",
-          uploadedAt: "2024-01-12T16:45:00Z",
-          lastModified: "2024-01-12T16:45:00Z",
-          usageCount: 15
-        }
-      ];
-    }
+  const { data: files = [], isLoading, error: filesError } = useQuery<MediaFile[]>({
+    queryKey: ["/api/admin/ifox/media", { type: selectedType, category: selectedCategory, search: searchQuery, sortBy, sortOrder }]
   });
 
   // Fetch storage info
-  const { data: storageInfo } = useQuery<StorageInfo>({
-    queryKey: ["/api/admin/ifox/media/storage"],
-    queryFn: async () => {
-      // Mock data for now
-      return {
-        used: 2147483648, // 2 GB
-        total: 10737418240, // 10 GB
-        percentage: 20
-      };
-    }
+  const { data: storageInfo, error: storageError } = useQuery<StorageInfo>({
+    queryKey: ["/api/admin/ifox/media/storage"]
   });
 
   // Delete file mutation
   const deleteFileMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      return apiRequest(`/api/admin/ifox/media/${fileId}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ifox/media"] });
@@ -228,8 +150,11 @@ export default function IFoxMedia() {
   // Update file mutation
   const updateFileMutation = useMutation({
     mutationFn: async (file: MediaFile) => {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      return apiRequest(`/api/admin/ifox/media/${file.id}`, {
+        method: "PUT",
+        body: JSON.stringify(file),
+        headers: { "Content-Type": "application/json" },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ifox/media"] });
