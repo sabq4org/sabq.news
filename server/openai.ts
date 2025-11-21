@@ -790,8 +790,7 @@ export async function generateIFoxTitle(
   "titleEn": "English Title (optional)"
 }`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
+    const response = await createAIResponse({
       messages: [
         {
           role: "system",
@@ -802,17 +801,36 @@ export async function generateIFoxTitle(
           content: `${categoryContext}المحتوى:\n${cleanContent.substring(0, 1500)}`,
         },
       ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 512,
+      responseFormat: { type: "json_object" },
+      maxTokens: 512,
+      temperature: 0.7,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const messageContent = response.choices[0]?.message?.content;
+    if (!messageContent) {
+      console.warn("[iFox AI] Empty response from AI");
+      return { title: "", titleEn: undefined };
+    }
+
+    const result = JSON.parse(messageContent);
+    
+    // Validate and sanitize required fields
+    const title = typeof result.title === 'string' 
+      ? result.title.trim().substring(0, 200) // Max 200 chars
+      : "";
+      
+    const titleEn = result.titleEn && typeof result.titleEn === 'string'
+      ? result.titleEn.trim().substring(0, 200)
+      : undefined;
+    
+    if (!title) {
+      console.warn("[iFox AI] Invalid or empty title in response");
+      return { title: "", titleEn: undefined };
+    }
+    
     console.log("[iFox AI] ✅ Title generated successfully");
     
-    return {
-      title: result.title || "",
-      titleEn: result.titleEn,
-    };
+    return { title, titleEn };
   } catch (error) {
     console.error("[iFox AI] Error generating title:", error);
     throw new Error("Failed to generate iFox title");
@@ -846,8 +864,7 @@ export async function generateIFoxContentSuggestions(
   "suggestions": ["اقتراح 1", "اقتراح 2", ...]
 }`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
+    const response = await createAIResponse({
       messages: [
         {
           role: "system",
@@ -858,14 +875,35 @@ export async function generateIFoxContentSuggestions(
           content: `${categoryContext}العنوان: ${title}\n\nالمحتوى الحالي:\n${cleanContent.substring(0, 2000)}`,
         },
       ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 1024,
+      responseFormat: { type: "json_object" },
+      maxTokens: 1024,
+      temperature: 0.7,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const messageContent = response.choices[0]?.message?.content;
+    if (!messageContent) {
+      console.warn("[iFox AI] Empty response from AI");
+      return [];
+    }
+
+    const result = JSON.parse(messageContent);
+    
+    // Validate and sanitize suggestions field
+    if (!Array.isArray(result.suggestions)) {
+      console.warn("[iFox AI] Invalid suggestions in response:", result);
+      return [];
+    }
+    
+    // Filter, trim, limit length, and cap array size
+    const suggestions = result.suggestions
+      .filter((s): s is string => typeof s === 'string')
+      .map(s => s.trim().substring(0, 500)) // Max 500 chars per suggestion
+      .filter(s => s.length > 0) // Remove empty strings
+      .slice(0, 10); // Max 10 suggestions
+    
     console.log("[iFox AI] ✅ Suggestions generated successfully");
     
-    return result.suggestions || [];
+    return suggestions;
   } catch (error) {
     console.error("[iFox AI] Error generating suggestions:", error);
     throw new Error("Failed to generate content suggestions");
@@ -924,8 +962,7 @@ export async function analyzeIFoxContent(
 
 أعد النتيجة بصيغة JSON فقط.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
+    const response = await createAIResponse({
       messages: [
         {
           role: "system",
@@ -936,20 +973,77 @@ export async function analyzeIFoxContent(
           content: `${categoryContext}العنوان: ${title}\n\nالمحتوى:\n${cleanContent.substring(0, 3000)}`,
         },
       ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 1536,
+      responseFormat: { type: "json_object" },
+      maxTokens: 1536,
+      temperature: 0.7,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const messageContent = response.choices[0]?.message?.content;
+    if (!messageContent) {
+      console.warn("[iFox AI] Empty response from AI");
+      return {
+        score: 0,
+        sentiment: { positive: 33, neutral: 34, negative: 33 },
+        readability: 0,
+        technicalDepth: 0,
+        engagement: 0,
+        suggestions: [],
+      };
+    }
+
+    const result = JSON.parse(messageContent);
+    
+    // Validate and sanitize all numeric scores (0-100 range)
+    const score = typeof result.score === 'number' 
+      ? Math.round(Math.max(0, Math.min(100, result.score))) 
+      : 0;
+      
+    const readability = typeof result.readability === 'number' 
+      ? Math.round(Math.max(0, Math.min(100, result.readability))) 
+      : 0;
+      
+    const technicalDepth = typeof result.technicalDepth === 'number' 
+      ? Math.round(Math.max(0, Math.min(100, result.technicalDepth))) 
+      : 0;
+      
+    const engagement = typeof result.engagement === 'number' 
+      ? Math.round(Math.max(0, Math.min(100, result.engagement))) 
+      : 0;
+    
+    // Validate sentiment object with normalized percentages
+    let sentiment = { positive: 33, neutral: 34, negative: 33 };
+    if (result.sentiment && 
+        typeof result.sentiment.positive === 'number' &&
+        typeof result.sentiment.neutral === 'number' &&
+        typeof result.sentiment.negative === 'number') {
+      const total = result.sentiment.positive + result.sentiment.neutral + result.sentiment.negative;
+      if (total > 0) {
+        sentiment = {
+          positive: Math.round((result.sentiment.positive / total) * 100),
+          neutral: Math.round((result.sentiment.neutral / total) * 100),
+          negative: Math.round((result.sentiment.negative / total) * 100),
+        };
+      }
+    }
+    
+    // Validate and sanitize suggestions array
+    const suggestions = Array.isArray(result.suggestions) 
+      ? result.suggestions
+          .filter((s): s is string => typeof s === 'string')
+          .map(s => s.trim().substring(0, 500)) // Max 500 chars per suggestion
+          .filter(s => s.length > 0) // Remove empty strings
+          .slice(0, 10) // Max 10 suggestions
+      : [];
+    
     console.log("[iFox AI] ✅ Content analyzed successfully");
     
     return {
-      score: result.score || 0,
-      sentiment: result.sentiment || { positive: 33, neutral: 34, negative: 33 },
-      readability: result.readability || 0,
-      technicalDepth: result.technicalDepth || 0,
-      engagement: result.engagement || 0,
-      suggestions: result.suggestions || [],
+      score,
+      sentiment,
+      readability,
+      technicalDepth,
+      engagement,
+      suggestions,
     };
   } catch (error) {
     console.error("[iFox AI] Error analyzing content:", error);
