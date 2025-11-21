@@ -86,7 +86,7 @@ export function AIImageGeneratorDialog({
       });
     },
     onSuccess: (data) => {
-      if (data.success && data.imageUrl) {
+      if (data.imageUrl) {
         setGeneratedImage({ 
           url: data.imageUrl, 
           alt: prompt || "صورة مولدة بالذكاء الاصطناعي" 
@@ -96,7 +96,7 @@ export function AIImageGeneratorDialog({
           description: "يمكنك الآن إدراج الصورة في المقال",
         });
       } else {
-        throw new Error(data.error || "فشل توليد الصورة");
+        throw new Error(data.error || data.message || "فشل توليد الصورة");
       }
     },
     onError: (error: any) => {
