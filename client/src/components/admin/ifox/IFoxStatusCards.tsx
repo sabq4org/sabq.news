@@ -153,16 +153,16 @@ export function IFoxStatusCards({ metrics, activeStatus, onSelect, loading = fal
                       animate={{ scale: 1 }}
                       transition={{ type: "spring" }}
                     >
-                      <Sparkles className="w-5 h-5 text-gray-300" />
+                      <Sparkles className="w-5 h-5 text-yellow-300" />
                     </motion.div>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-200 dark:text-gray-100">
+                  <p className="text-sm font-bold text-white">
                     {config.label}
                   </p>
-                  <p className="text-xs text-gray-300 dark:text-gray-200">
+                  <p className="text-xs text-gray-100">
                     {config.labelEn}
                   </p>
                 </div>
@@ -192,11 +192,11 @@ export function IFoxStatusCards({ metrics, activeStatus, onSelect, loading = fal
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <TrendingUp className="w-3 h-3 text-green-400" />
-                  <span className="text-xs text-green-400">
+                  <TrendingUp className="w-3 h-3 text-green-300" />
+                  <span className="text-xs font-semibold text-green-300">
                     +{Math.floor(Math.random() * 20 + 5)}%
                   </span>
-                  <span className="text-xs text-gray-300">هذا الأسبوع</span>
+                  <span className="text-xs text-gray-100">هذا الأسبوع</span>
                 </motion.div>
               </div>
 

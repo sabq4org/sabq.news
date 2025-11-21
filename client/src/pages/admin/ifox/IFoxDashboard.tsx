@@ -196,7 +196,7 @@ export default function IFoxDashboard() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                       لوحة تحكم آي فوكس
                     </h1>
-                    <p className="text-gray-300" data-testid="text-page-description">
+                    <p className="text-gray-100 text-lg" data-testid="text-page-description">
                       بوابة إدارة المحتوى الذكي
                     </p>
                   </div>
@@ -236,47 +236,47 @@ export default function IFoxDashboard() {
 
               {/* Key Metrics Row */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-                <Card className="bg-gradient-to-br from-violet-500/30 to-purple-500/20 border-violet-400/20 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-violet-500/40 to-purple-500/30 border-violet-400/30 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-200">المشاهدات اليوم</p>
+                        <p className="text-sm font-semibold text-white">المشاهدات اليوم</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.todayViews.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Eye className="w-8 h-8 text-violet-300 opacity-60" />
+                      <Eye className="w-8 h-8 text-violet-200" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-4 h-4 text-green-400" />
-                      <span className="text-xs text-green-400">+12.5%</span>
+                      <TrendingUp className="w-4 h-4 text-green-300" />
+                      <span className="text-xs font-semibold text-green-300">+12.5%</span>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/30 to-cyan-500/20 border-cyan-400/20 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-blue-500/40 to-cyan-500/30 border-cyan-400/30 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-200">التفاعل الكلي</p>
+                        <p className="text-sm font-semibold text-white">التفاعل الكلي</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.totalEngagement.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Activity className="w-8 h-8 text-cyan-300 opacity-60" />
+                      <Activity className="w-8 h-8 text-cyan-200" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-4 h-4 text-green-400" />
-                      <span className="text-xs text-green-400">+{stats?.weeklyGrowth || 0}%</span>
+                      <TrendingUp className="w-4 h-4 text-green-300" />
+                      <span className="text-xs font-semibold text-green-300">+{stats?.weeklyGrowth || 0}%</span>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/30 to-orange-500/20 border-orange-400/20 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-amber-500/40 to-orange-500/30 border-orange-400/30 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-200">متوسط وقت القراءة</p>
+                        <p className="text-sm font-semibold text-white">متوسط وقت القراءة</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.averageReadTime || '0:00'}
                         </p>
