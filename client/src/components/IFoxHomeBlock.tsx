@@ -79,7 +79,7 @@ export function IFoxHomeBlock() {
 
   return (
     <section 
-      className="relative py-12 md:py-16 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      className="relative py-8 md:py-12 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
       dir="rtl"
       data-testid="section-ifox-home"
     >
@@ -122,10 +122,10 @@ export function IFoxHomeBlock() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-10"
+          className="text-center mb-8"
         >
           {/* Animated Logo */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -135,15 +135,15 @@ export function IFoxHomeBlock() {
           </div>
 
           {/* Title */}
-          <h2 className="text-3xl md:text-5xl font-bold mb-3">
+          <h2 className="text-2xl md:text-4xl font-bold mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
               آي فوكس
             </span>
             {" "}
-            <span className="text-gray-400 text-2xl md:text-3xl">| iFox AI</span>
+            <span className="text-gray-400 text-xl md:text-2xl">| iFox AI</span>
           </h2>
 
-          <p className="text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-6">
+          <p className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-4">
             بوابتك المتخصصة لعالم الذكاء الاصطناعي - أخبار، تحليلات، وأدوات عملية
           </p>
 
@@ -188,7 +188,7 @@ export function IFoxHomeBlock() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-10"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-8"
         >
           {categories.map((category, index) => {
             const Icon = category.icon;
@@ -207,9 +207,9 @@ export function IFoxHomeBlock() {
                     className="bg-slate-900/60 border-slate-800/50 hover:border-slate-700 hover:bg-slate-900/80 transition-all cursor-pointer group backdrop-blur-sm"
                     data-testid={`card-category-${category.slug}`}
                   >
-                    <CardContent className="p-4 text-center">
+                    <CardContent className="p-3 text-center">
                       <motion.div
-                        className="w-12 h-12 mx-auto mb-2 rounded-lg flex items-center justify-center transition-all group-hover:shadow-lg"
+                        className="w-10 h-10 mx-auto mb-1.5 rounded-lg flex items-center justify-center transition-all group-hover:shadow-lg"
                         style={{
                           backgroundColor: `${category.color}20`,
                         }}
@@ -217,9 +217,9 @@ export function IFoxHomeBlock() {
                           boxShadow: `0 0 20px ${category.color}40`,
                         }}
                       >
-                        <Icon className="w-6 h-6" style={{ color: category.color }} />
+                        <Icon className="w-5 h-5" style={{ color: category.color }} />
                       </motion.div>
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-xs font-bold text-white">
                         {category.nameAr}
                       </h3>
                     </CardContent>
@@ -238,9 +238,9 @@ export function IFoxHomeBlock() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-violet-400" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-violet-400" />
                 أحدث مقالات آي فوكس
               </h3>
               <Link href="/ai">
@@ -255,7 +255,7 @@ export function IFoxHomeBlock() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.slice(0, 3).map((article, index) => (
                 <motion.div
                   key={article.id}
@@ -275,16 +275,16 @@ export function IFoxHomeBlock() {
                           <img
                             src={article.imageUrl}
                             alt={article.title}
-                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
                         </div>
                       )}
-                      <CardContent className="p-5">
+                      <CardContent className="p-4">
                         {/* Category Badge */}
                         {article.categoryId && (
                           <Badge
-                            className="mb-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-blue-400/30 text-blue-300"
+                            className="mb-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-blue-400/30 text-blue-300"
                             data-testid={`badge-category-${article.id}`}
                           >
                             آي فوكس
@@ -292,13 +292,13 @@ export function IFoxHomeBlock() {
                         )}
 
                         {/* Title */}
-                        <h4 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-blue-300 transition-colors">
+                        <h4 className="text-base font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-300 transition-colors">
                           {article.title}
                         </h4>
 
                         {/* Excerpt */}
                         {article.excerpt && (
-                          <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                          <p className="text-sm text-gray-400 mb-3 line-clamp-2">
                             {article.excerpt}
                           </p>
                         )}
@@ -334,12 +334,12 @@ export function IFoxHomeBlock() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-10"
+          className="text-center mt-8"
         >
           <Link href="/ai">
             <Button
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-8 py-6 text-lg shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
+              size="default"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
               data-testid="button-explore-ifox"
             >
               <Sparkles className="w-5 h-5 ml-2" />
