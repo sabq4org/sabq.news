@@ -8222,6 +8222,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // iFox Home Featured endpoint - fetches latest 3 published AI articles for homepage
+  app.get("/api/ifox/home-featured", cacheControl({ maxAge: CACHE_DURATIONS.SHORT }), async (req, res) => {
+    try {
+      // Get AI category IDs
+      const aiCategories = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          or(
+            eq(categories.slug, 'ifox-ai'),
+            sql`${categories.slug} LIKE 'ai-%'`
+          )
+        );
+      
+      const aiCategoryIds = aiCategories.map(c => c.id);
+      
+      if (aiCategoryIds.length === 0) {
+        return res.json([]);
+      }
+      
+      // Fetch latest 3 published AI articles with proper Drizzle inArray
+      const featuredArticles = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.status, 'published'),
+            inArray(articles.categoryId, aiCategoryIds),
+            isNotNull(articles.publishedAt)
+          )
+        )
+        .orderBy(desc(articles.publishedAt))
+        .limit(3);
+      
+      res.json(featuredArticles);
+    } catch (error) {
+      console.error("Error fetching iFox home featured articles:", error);
+      res.status(500).json({ message: "Failed to fetch featured AI articles" });
+    }
+  });
+
   // Homepage statistics (cached for 5 min)
   app.get("/api/homepage/stats", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {

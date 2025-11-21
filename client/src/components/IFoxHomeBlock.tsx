@@ -74,6 +74,9 @@ export function IFoxHomeBlock() {
     queryKey: ["/api/ifox/home-featured"],
   });
 
+  // Check for reduced motion preference
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   return (
     <section 
       className="relative py-12 md:py-16 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
@@ -81,34 +84,36 @@ export function IFoxHomeBlock() {
       data-testid="section-ifox-home"
     >
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-20 -right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-        <motion.div
-          className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, -50, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      </div>
+      {!prefersReducedMotion && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute -top-20 -right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+          <motion.div
+            className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, -50, 0],
+              y: [0, 30, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        </div>
+      )}
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         {/* Header Section */}
@@ -145,7 +150,7 @@ export function IFoxHomeBlock() {
           {/* Live Status Indicator */}
           <motion.div
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full"
-            animate={{
+            animate={prefersReducedMotion ? {} : {
               boxShadow: [
                 "0 0 10px rgba(34, 197, 94, 0.2)",
                 "0 0 20px rgba(34, 197, 94, 0.4)",
@@ -160,7 +165,7 @@ export function IFoxHomeBlock() {
           >
             <motion.div
               className="w-2 h-2 bg-green-500 rounded-full"
-              animate={{
+              animate={prefersReducedMotion ? {} : {
                 opacity: [0.5, 1, 0.5],
                 scale: [0.8, 1.2, 0.8],
               }}
@@ -194,8 +199,8 @@ export function IFoxHomeBlock() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -5 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
               >
                 <Link href={`/ai/category/${category.slug}`}>
                   <Card
@@ -258,7 +263,7 @@ export function IFoxHomeBlock() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  whileHover={prefersReducedMotion ? {} : { y: -8 }}
                 >
                   <Link href={`/ai/article/${article.slug}`}>
                     <Card

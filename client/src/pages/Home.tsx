@@ -16,6 +16,7 @@ import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
 import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
+import { IFoxHomeBlock } from "@/components/IFoxHomeBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -340,6 +341,11 @@ export default function Home() {
         {/* Quad Categories Block - Full Width */}
         <div className="scroll-fade-in">
           <QuadCategoriesBlock />
+        </div>
+
+        {/* iFox AI Block - Full Width */}
+        <div className="scroll-fade-in">
+          <IFoxHomeBlock />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
