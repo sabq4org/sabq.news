@@ -7102,6 +7102,188 @@ export type PublisherCreditLog = typeof publisherCreditLogs.$inferSelect;
 export type InsertPublisherCreditLog = z.infer<typeof insertPublisherCreditLogSchema>;
 
 // ============================================
+// IFOX SECTION - قسم آي فوكس
+// ============================================
+
+// إعدادات قسم آي فوكس
+export const ifoxSettings = pgTable("ifox_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(), // مفتاح الإعداد
+  value: jsonb("value").notNull(), // قيمة الإعداد (يمكن أن تكون أي نوع من البيانات)
+  description: text("description"), // وصف الإعداد
+  updatedAt: timestamp("updated_at").defaultNow().notNull(), // آخر تحديث
+  updatedBy: varchar("updated_by").references(() => users.id), // المستخدم الذي قام بالتحديث
+});
+
+// مكتبة الوسائط الخاصة بآي فوكس
+export const ifoxMedia = pgTable("ifox_media", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 20 }).notNull(), // نوع الملف: image, video, audio, document
+  fileName: varchar("file_name", { length: 255 }).notNull(), // اسم الملف
+  fileUrl: text("file_url").notNull(), // رابط الملف
+  fileSize: integer("file_size"), // حجم الملف بالبايت
+  mimeType: varchar("mime_type", { length: 100 }), // نوع MIME للملف
+  metadata: jsonb("metadata"), // بيانات إضافية: الأبعاد، المدة، الخ
+  categorySlug: varchar("category_slug", { length: 100 }), // تصنيف الملف: ai-news, ai-voice, etc
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(), // تاريخ الرفع
+  uploadedBy: varchar("uploaded_by").references(() => users.id), // المستخدم الذي رفع الملف
+}, (table) => [
+  // فهرس على التصنيف للبحث السريع
+  index("ifox_media_category_slug_idx").on(table.categorySlug),
+  index("ifox_media_type_idx").on(table.type),
+  index("ifox_media_uploaded_at_idx").on(table.uploadedAt.desc()),
+]);
+
+// تحليلات قسم آي فوكس
+export const ifoxAnalytics = pgTable("ifox_analytics", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(), // التاريخ
+  categorySlug: varchar("category_slug", { length: 100 }).notNull(), // تصنيف البيانات
+  metric: varchar("metric", { length: 50 }).notNull(), // نوع المقياس: views, engagement, shares, etc
+  value: integer("value").notNull().default(0), // قيمة المقياس
+  metadata: jsonb("metadata"), // بيانات إضافية للسياق
+  createdAt: timestamp("created_at").defaultNow().notNull(), // تاريخ الإنشاء
+}, (table) => [
+  // فهارس للأداء
+  index("ifox_analytics_date_idx").on(table.date.desc()),
+  index("ifox_analytics_category_slug_idx").on(table.categorySlug),
+  index("ifox_analytics_metric_idx").on(table.metric),
+  // فهرس مركب للاستعلامات الشائعة
+  index("ifox_analytics_date_category_metric_idx").on(table.date, table.categorySlug, table.metric),
+]);
+
+// جدولة نشر المحتوى
+export const ifoxSchedule = pgTable("ifox_schedule", {
+  id: serial("id").primaryKey(),
+  articleId: varchar("article_id").references(() => articles.id).notNull(), // المقال المجدول
+  scheduledAt: timestamp("scheduled_at").notNull(), // وقت النشر المجدول
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // الحالة: pending, published, failed
+  publishSettings: jsonb("publish_settings"), // إعدادات النشر: social media, notifications, etc
+  createdAt: timestamp("created_at").defaultNow().notNull(), // تاريخ إنشاء الجدولة
+  createdBy: varchar("created_by").references(() => users.id), // المستخدم الذي أنشأ الجدولة
+}, (table) => [
+  // فهارس للأداء
+  index("ifox_schedule_scheduled_at_idx").on(table.scheduledAt),
+  index("ifox_schedule_status_idx").on(table.status),
+  index("ifox_schedule_article_id_idx").on(table.articleId),
+]);
+
+// إعدادات خاصة بكل تصنيف
+export const ifoxCategorySettings = pgTable("ifox_category_settings", {
+  id: serial("id").primaryKey(),
+  categorySlug: varchar("category_slug", { length: 100 }).notNull().unique(), // معرف التصنيف
+  layoutConfig: jsonb("layout_config"), // إعدادات التخطيط المخصصة
+  featureFlags: jsonb("feature_flags"), // الميزات المفعلة لكل تصنيف
+  customFields: jsonb("custom_fields"), // حقول مخصصة خاصة بالتصنيف
+  displayOrder: integer("display_order").notNull().default(0), // ترتيب العرض
+  isActive: boolean("is_active").notNull().default(true), // هل التصنيف نشط
+  updatedAt: timestamp("updated_at").defaultNow().notNull(), // آخر تحديث
+}, (table) => [
+  // فهرس على التصنيف للبحث السريع
+  index("ifox_category_settings_slug_idx").on(table.categorySlug),
+  index("ifox_category_settings_active_idx").on(table.isActive),
+  index("ifox_category_settings_display_order_idx").on(table.displayOrder),
+]);
+
+// Relations for iFox tables
+export const ifoxSettingsRelations = relations(ifoxSettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [ifoxSettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxMediaRelations = relations(ifoxMedia, ({ one }) => ({
+  uploadedByUser: one(users, {
+    fields: [ifoxMedia.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxScheduleRelations = relations(ifoxSchedule, ({ one }) => ({
+  article: one(articles, {
+    fields: [ifoxSchedule.articleId],
+    references: [articles.id],
+  }),
+  createdByUser: one(users, {
+    fields: [ifoxSchedule.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for iFox tables
+export const insertIfoxSettingsSchema = createInsertSchema(ifoxSettings).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  key: z.string().min(1, "المفتاح مطلوب").max(100, "المفتاح طويل جداً"),
+  value: z.any(), // jsonb can be any valid JSON
+  description: z.string().optional(),
+});
+
+export const insertIfoxMediaSchema = createInsertSchema(ifoxMedia).omit({
+  id: true,
+  uploadedAt: true,
+}).extend({
+  type: z.enum(["image", "video", "audio", "document"]),
+  fileName: z.string().min(1, "اسم الملف مطلوب").max(255, "اسم الملف طويل جداً"),
+  fileUrl: z.string().url("رابط الملف غير صحيح"),
+  fileSize: z.number().int().positive().optional(),
+  mimeType: z.string().max(100).optional(),
+  metadata: z.any().optional(), // jsonb
+  categorySlug: z.string().max(100).optional(),
+});
+
+export const insertIfoxAnalyticsSchema = createInsertSchema(ifoxAnalytics).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  date: z.coerce.date({ message: "التاريخ مطلوب" }),
+  categorySlug: z.string().min(1, "التصنيف مطلوب").max(100),
+  metric: z.string().min(1, "المقياس مطلوب").max(50),
+  value: z.number().int().min(0, "القيمة يجب أن تكون صفر أو أكثر"),
+  metadata: z.any().optional(), // jsonb
+});
+
+export const insertIfoxScheduleSchema = createInsertSchema(ifoxSchedule).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  articleId: z.string().min(1, "معرف المقال مطلوب"),
+  scheduledAt: z.coerce.date({ message: "وقت الجدولة مطلوب" }),
+  status: z.enum(["pending", "published", "failed"]).default("pending"),
+  publishSettings: z.any().optional(), // jsonb
+});
+
+export const insertIfoxCategorySettingsSchema = createInsertSchema(ifoxCategorySettings).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  categorySlug: z.string().min(1, "معرف التصنيف مطلوب").max(100),
+  layoutConfig: z.any().optional(), // jsonb
+  featureFlags: z.any().optional(), // jsonb
+  customFields: z.any().optional(), // jsonb
+  displayOrder: z.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+// Select types for iFox tables
+export type IfoxSettings = typeof ifoxSettings.$inferSelect;
+export type InsertIfoxSettings = z.infer<typeof insertIfoxSettingsSchema>;
+
+export type IfoxMedia = typeof ifoxMedia.$inferSelect;
+export type InsertIfoxMedia = z.infer<typeof insertIfoxMediaSchema>;
+
+export type IfoxAnalytics = typeof ifoxAnalytics.$inferSelect;
+export type InsertIfoxAnalytics = z.infer<typeof insertIfoxAnalyticsSchema>;
+
+export type IfoxSchedule = typeof ifoxSchedule.$inferSelect;
+export type InsertIfoxSchedule = z.infer<typeof insertIfoxScheduleSchema>;
+
+export type IfoxCategorySettings = typeof ifoxCategorySettings.$inferSelect;
+export type InsertIfoxCategorySettings = z.infer<typeof insertIfoxCategorySettingsSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
