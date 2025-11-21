@@ -184,10 +184,9 @@ import IFoxArticles from "@/pages/admin/ifox/IFoxArticles";
 import IFoxArticleEditor from "@/pages/admin/ifox/IFoxArticleEditor";
 import IFoxMedia from "@/pages/admin/ifox/IFoxMedia";
 import IFoxSchedule from "@/pages/admin/ifox/IFoxSchedule";
-// Placeholder imports for iFox pages (to be created later)
-const IFoxCategory = () => <div>iFox Category Page</div>;
-const IFoxAnalytics = () => <div>iFox Analytics</div>;
-const IFoxSettings = () => <div>iFox Settings</div>;
+import IFoxCategory from "@/pages/admin/ifox/IFoxCategory";
+import IFoxAnalytics from "@/pages/admin/ifox/IFoxAnalytics";
+import IFoxSettings from "@/pages/admin/ifox/IFoxSettings";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
