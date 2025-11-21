@@ -223,11 +223,11 @@ export default function AIHomePage() {
             </TabsList>
 
             <TabsContent value="latest" className="mt-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Activity className="w-6 h-6 text-blue-500" />
+              <div className="grid md:grid-cols-3 gap-6" dir="rtl">
+                <div className="md:col-span-2 order-2 md:order-1">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2" dir="rtl">
                     آخر الأخبار والتطورات
+                    <Activity className="w-6 h-6 text-blue-500" />
                   </h2>
                   <div className="space-y-4">
                     {isLoading ? (
@@ -261,7 +261,7 @@ export default function AIHomePage() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-6">
+                <div className="space-y-6 order-1 md:order-2">
                   <AITrendsWidget trends={trends} />
                   
                   {/* Stats removed - will be connected to real data in future */}

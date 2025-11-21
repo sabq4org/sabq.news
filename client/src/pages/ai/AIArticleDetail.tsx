@@ -17,7 +17,8 @@ import {
   Facebook,
   Linkedin,
   Copy,
-  CheckCircle
+  CheckCircle,
+  Heart
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ export default function AIArticleDetail() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(342);
 
   // Fetch article details
   const { data: article, isLoading } = useQuery<Article>({
@@ -85,6 +88,23 @@ export default function AIArticleDetail() {
         ? (language === "ar" ? "تم حفظ المقال في المفضلة" : "Article saved to bookmarks")
         : (language === "ar" ? "تم إزالة المقال من المفضلة" : "Article removed from bookmarks")
     });
+  };
+
+  const toggleLike = () => {
+    setLiked(!liked);
+    if (!liked) {
+      setLikesCount(prev => prev + 1);
+      toast({
+        title: language === "ar" ? "أعجبك المقال!" : "You liked this article!",
+        description: language === "ar" ? "تم إضافة إعجابك" : "Your like has been added"
+      });
+    } else {
+      setLikesCount(prev => prev - 1);
+      toast({
+        title: language === "ar" ? "تم إلغاء الإعجاب" : "Like removed",
+        description: language === "ar" ? "تم إزالة إعجابك" : "Your like has been removed"
+      });
+    }
   };
 
   if (isLoading) {
@@ -162,12 +182,37 @@ export default function AIArticleDetail() {
               </p>
             )}
 
+            {/* Author Section */}
+            <div className="flex items-center gap-4 mb-6 p-4 bg-slate-900/50 rounded-lg">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                {(() => {
+                  if (typeof article.author === 'string') {
+                    return article.author.charAt(0);
+                  } else if (article.author?.firstName) {
+                    return article.author.firstName.charAt(0);
+                  }
+                  return "S";
+                })()}
+              </div>
+              <div className="flex-1">
+                <div className="text-white font-semibold">
+                  {(() => {
+                    if (typeof article.author === 'string') {
+                      return article.author;
+                    } else if (article.author) {
+                      return `${article.author.firstName || ''} ${article.author.lastName || ''}`.trim();
+                    }
+                    return language === "ar" ? "فريق سبق الرقمي" : "Sabq Digital Team";
+                  })()}
+                </div>
+                <div className="text-gray-500 text-sm">
+                  {language === "ar" ? "محرر تقني" : "Tech Editor"}
+                </div>
+              </div>
+            </div>
+            
             {/* Article Meta */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <User className="w-4 h-4" />
-                <span>{language === "ar" ? "فريق iFox" : "iFox Team"}</span>
-              </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 <span>
@@ -188,54 +233,96 @@ export default function AIArticleDetail() {
           </header>
 
           {/* Share and Actions Bar */}
-          <div className="flex flex-wrap justify-between items-center gap-4 p-4 bg-slate-900/50 rounded-lg mb-8">
-            <div className="flex gap-2">
+          <div className="flex flex-wrap justify-between items-center gap-4 p-4 bg-slate-900/50 rounded-lg mb-8 border border-slate-800">
+            <div className="flex items-center gap-3">
+              {/* Like Button with Counter */}
               <Button
-                variant="outline"
+                variant={liked ? "default" : "outline"}
                 size="sm"
-                className="border-slate-700 hover:bg-slate-800"
-                onClick={() => handleShare("twitter")}
-                data-testid="button-share-twitter"
+                className={`flex items-center gap-2 transition-all ${
+                  liked 
+                    ? "bg-red-600 hover:bg-red-700 border-red-600" 
+                    : "border-slate-700 hover:bg-slate-800 hover:border-red-500"
+                }`}
+                onClick={toggleLike}
+                data-testid="button-like"
+                title={language === "ar" ? "أعجبني" : "Like"}
               >
-                <Twitter className="w-4 h-4" />
+                <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+                <span className="font-semibold">{likesCount}</span>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-slate-700 hover:bg-slate-800"
-                onClick={() => handleShare("facebook")}
-                data-testid="button-share-facebook"
-              >
-                <Facebook className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-slate-700 hover:bg-slate-800"
-                onClick={() => handleShare("linkedin")}
-                data-testid="button-share-linkedin"
-              >
-                <Linkedin className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-slate-700 hover:bg-slate-800"
-                onClick={() => handleShare("copy")}
-                data-testid="button-copy-link"
-              >
-                {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </Button>
+
+              <div className="w-px h-8 bg-slate-700" />
+
+              {/* Share Buttons Group */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400 mr-2">
+                  {language === "ar" ? "شارك:" : "Share:"}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-500 transition-all"
+                  onClick={() => handleShare("twitter")}
+                  data-testid="button-share-twitter"
+                  title={language === "ar" ? "شارك على تويتر" : "Share on Twitter"}
+                >
+                  <Twitter className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-600 transition-all"
+                  onClick={() => handleShare("facebook")}
+                  data-testid="button-share-facebook"
+                  title={language === "ar" ? "شارك على فيسبوك" : "Share on Facebook"}
+                >
+                  <Facebook className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-700 transition-all"
+                  onClick={() => handleShare("linkedin")}
+                  data-testid="button-share-linkedin"
+                  title={language === "ar" ? "شارك على لينكد إن" : "Share on LinkedIn"}
+                >
+                  <Linkedin className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`border-slate-700 hover:bg-slate-800 transition-all ${
+                    copied ? "border-green-500 bg-green-500/10" : ""
+                  }`}
+                  onClick={() => handleShare("copy")}
+                  data-testid="button-copy-link"
+                  title={language === "ar" ? "نسخ الرابط" : "Copy Link"}
+                >
+                  {copied ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </div>
+
+            {/* Bookmark Button */}
             <Button
               variant={bookmarked ? "default" : "outline"}
               size="sm"
-              className={bookmarked ? "" : "border-slate-700 hover:bg-slate-800"}
+              className={`flex items-center gap-2 transition-all ${
+                bookmarked 
+                  ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600" 
+                  : "border-slate-700 hover:bg-slate-800 hover:border-yellow-500"
+              }`}
               onClick={toggleBookmark}
               data-testid="button-bookmark"
+              title={language === "ar" ? "حفظ المقال" : "Save Article"}
             >
               <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
-              <span className="ml-2">
+              <span>
                 {bookmarked 
                   ? (language === "ar" ? "محفوظ" : "Saved")
                   : (language === "ar" ? "حفظ" : "Save")}

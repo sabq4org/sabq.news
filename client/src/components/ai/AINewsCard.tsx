@@ -100,7 +100,18 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                   <div className="mb-2">
                     <Badge className={`${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border} text-xs`}>
                       <Sparkles className="w-3 h-3 mr-1" />
-                      {categoryKey.replace("ai-", "").replace("-", " ").toUpperCase()}
+                      {(() => {
+                        const categoryMap: Record<string, string> = {
+                          "ai-news": "أخبار",
+                          "ai-insights": "رؤى",
+                          "ai-opinions": "آراء",
+                          "ai-tools": "أدوات",
+                          "ai-voice": "صوت",
+                          "ai-academy": "أكاديمية",
+                          "ai-community": "مجتمع"
+                        };
+                        return categoryMap[categoryKey] || "عام";
+                      })()}
                     </Badge>
                   </div>
                 )}
@@ -115,15 +126,6 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                   <p className="text-sm text-gray-400 line-clamp-2 mb-3">
                     {article.summary}
                   </p>
-                )}
-
-                {/* AI Classification */}
-                {article.aiClassification && (
-                  <div className="mb-3">
-                    <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-xs">
-                      AI: {article.aiClassification}
-                    </Badge>
-                  </div>
                 )}
 
                 {/* Meta Info */}
