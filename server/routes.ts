@@ -28376,6 +28376,713 @@ Allow: /
     }
   );
 
+  // ============================================================
+  // iFOX API ROUTES - مسارات API لإدارة قسم آي فوكس
+  // ============================================================
+
+  // Rate limiter for iFox operations
+  const ifoxLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 30, // 30 requests per minute
+    message: { error: "تم تجاوز حد طلبات آي فوكس. يرجى المحاولة بعد دقيقة" },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // ============================================================
+  // iFox Articles Management - إدارة مقالات آي فوكس
+  // ============================================================
+
+  // GET /api/admin/ifox/articles - Get iFox articles with filtering
+  app.get("/api/admin/ifox/articles",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          categorySlug: z.string().optional(),
+          status: z.enum(['draft', 'published', 'scheduled', 'archived']).optional(),
+          page: z.coerce.number().int().positive().default(1),
+          limit: z.coerce.number().int().min(1).max(100).default(20),
+          search: z.string().optional(),
+        });
+
+        const params = querySchema.parse(req.query);
+
+        const result = await storage.listIFoxArticles({
+          categorySlug: params.categorySlug,
+          status: params.status,
+          page: params.page,
+          limit: params.limit,
+          search: params.search,
+        });
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'list',
+          entityType: 'ifox_articles',
+          entityId: 'all',
+          metadata: params as any,
+        });
+
+        res.json(result);
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox articles:", error);
+        res.status(500).json({ message: "فشل في جلب مقالات آي فوكس" });
+      }
+    }
+  );
+
+  // GET /api/admin/ifox/articles/stats - Get iFox article statistics
+  app.get("/api/admin/ifox/articles/stats",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const stats = await storage.getIFoxArticleStats();
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view_stats',
+          entityType: 'ifox_articles',
+          entityId: 'stats',
+        });
+
+        res.json(stats);
+      } catch (error: any) {
+        console.error("Error fetching iFox stats:", error);
+        res.status(500).json({ message: "فشل في جلب إحصائيات آي فوكس" });
+      }
+    }
+  );
+
+  // ============================================================
+  // iFox Settings - إعدادات آي فوكس
+  // ============================================================
+
+  // GET /api/admin/ifox/settings - Get iFox settings
+  app.get("/api/admin/ifox/settings",
+    requireAuth,
+    requireRole('admin'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          keys: z.array(z.string()).optional(),
+        });
+
+        const { keys } = querySchema.parse(req.query);
+        const settings = await storage.getIFoxSettings(keys);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view',
+          entityType: 'ifox_settings',
+          entityId: 'all',
+          metadata: { keys },
+        });
+
+        res.json({ settings });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox settings:", error);
+        res.status(500).json({ message: "فشل في جلب إعدادات آي فوكس" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/settings - Update iFox setting
+  app.post("/api/admin/ifox/settings",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          key: z.string().min(1).max(100),
+          value: z.any(),
+          description: z.string().optional(),
+        });
+
+        const { key, value, description } = bodySchema.parse(req.body);
+        const setting = await storage.upsertIFoxSetting(key, value, description, req.user.id);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'update',
+          entityType: 'ifox_settings',
+          entityId: key,
+          newValue: { key, value, description },
+        });
+
+        res.json({
+          message: "تم حفظ الإعداد بنجاح",
+          setting,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error updating iFox setting:", error);
+        res.status(500).json({ message: "فشل في حفظ إعداد آي فوكس" });
+      }
+    }
+  );
+
+  // DELETE /api/admin/ifox/settings/:key - Delete iFox setting
+  app.delete("/api/admin/ifox/settings/:key",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const { key } = req.params;
+        await storage.deleteIFoxSetting(key);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'delete',
+          entityType: 'ifox_settings',
+          entityId: key,
+        });
+
+        res.json({ message: "تم حذف الإعداد بنجاح" });
+      } catch (error: any) {
+        console.error("Error deleting iFox setting:", error);
+        res.status(500).json({ message: "فشل في حذف إعداد آي فوكس" });
+      }
+    }
+  );
+
+  // GET /api/admin/ifox/categories/settings - Get category settings
+  app.get("/api/admin/ifox/categories/settings",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          categorySlug: z.string().optional(),
+        });
+
+        const { categorySlug } = querySchema.parse(req.query);
+        const settings = await storage.getIFoxCategorySettings(categorySlug);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view',
+          entityType: 'ifox_category_settings',
+          entityId: categorySlug || 'all',
+        });
+
+        res.json({ settings });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox category settings:", error);
+        res.status(500).json({ message: "فشل في جلب إعدادات الفئات" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/categories/settings - Update category settings
+  app.post("/api/admin/ifox/categories/settings",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          categorySlug: z.string().min(1),
+          autoPublish: z.boolean().optional(),
+          requireReview: z.boolean().optional(),
+          aiEnhancement: z.boolean().optional(),
+          seoOptimization: z.boolean().optional(),
+          socialSharing: z.boolean().optional(),
+          settings: z.record(z.any()).optional(),
+        });
+
+        const data = bodySchema.parse(req.body);
+        const setting = await storage.upsertIFoxCategorySettings({
+          ...data,
+          updatedBy: req.user.id,
+        } as any);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'update',
+          entityType: 'ifox_category_settings',
+          entityId: data.categorySlug,
+          newValue: data as any,
+        });
+
+        res.json({
+          message: "تم حفظ إعدادات الفئة بنجاح",
+          setting,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error updating iFox category settings:", error);
+        res.status(500).json({ message: "فشل في حفظ إعدادات الفئة" });
+      }
+    }
+  );
+
+  // ============================================================
+  // iFox Media - وسائط آي فوكس
+  // ============================================================
+
+  // GET /api/admin/ifox/media - List media files
+  app.get("/api/admin/ifox/media",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          type: z.enum(['image', 'video', 'audio', 'document']).optional(),
+          categorySlug: z.string().optional(),
+          page: z.coerce.number().int().positive().default(1),
+          limit: z.coerce.number().int().min(1).max(100).default(20),
+        });
+
+        const params = querySchema.parse(req.query);
+        const result = await storage.listIFoxMedia(params);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'list',
+          entityType: 'ifox_media',
+          entityId: 'all',
+          metadata: params as any,
+        });
+
+        res.json(result);
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox media:", error);
+        res.status(500).json({ message: "فشل في جلب الوسائط" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/media - Upload new media file
+  app.post("/api/admin/ifox/media",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    strictLimiter,
+    upload.single('file'),
+    async (req: any, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "لم يتم رفع أي ملف" });
+        }
+
+        const bodySchema = z.object({
+          type: z.enum(['image', 'video', 'audio', 'document']).optional(),
+          categorySlug: z.string().optional(),
+          title: z.string().optional(),
+          description: z.string().optional(),
+        });
+
+        const metadata = bodySchema.parse(req.body);
+
+        // Upload to Google Cloud Storage
+        const fileName = `ifox/${Date.now()}-${req.file.originalname}`;
+        const uploadResult = await objectStorageClient.uploadFile(
+          req.file.buffer,
+          fileName,
+          req.file.mimetype
+        );
+
+        // Save media record
+        const media = await storage.createIFoxMedia({
+          fileName: req.file.originalname,
+          fileUrl: uploadResult.url,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          type: metadata.type || 'document',
+          categorySlug: metadata.categorySlug,
+          title: metadata.title,
+          description: metadata.description,
+          uploadedBy: req.user.id,
+        } as any);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'upload',
+          entityType: 'ifox_media',
+          entityId: media.id.toString(),
+          metadata: {
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+          },
+        });
+
+        res.json({
+          message: "تم رفع الملف بنجاح",
+          media,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error uploading iFox media:", error);
+        res.status(500).json({ message: "فشل في رفع الملف" });
+      }
+    }
+  );
+
+  // DELETE /api/admin/ifox/media/:id - Delete media file
+  app.delete("/api/admin/ifox/media/:id",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "معرف غير صالح" });
+        }
+
+        await storage.deleteIFoxMedia(id);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'delete',
+          entityType: 'ifox_media',
+          entityId: id.toString(),
+        });
+
+        res.json({ message: "تم حذف الملف بنجاح" });
+      } catch (error: any) {
+        console.error("Error deleting iFox media:", error);
+        res.status(500).json({ message: "فشل في حذف الملف" });
+      }
+    }
+  );
+
+  // ============================================================
+  // iFox Schedule - جدولة آي فوكس
+  // ============================================================
+
+  // GET /api/admin/ifox/schedule - List scheduled articles
+  app.get("/api/admin/ifox/schedule",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          status: z.enum(['pending', 'published', 'failed', 'cancelled']).optional(),
+          fromDate: z.string().datetime().optional(),
+          toDate: z.string().datetime().optional(),
+        });
+
+        const params = querySchema.parse(req.query);
+        const schedules = await storage.listIFoxScheduled(params);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'list',
+          entityType: 'ifox_schedule',
+          entityId: 'all',
+          metadata: params as any,
+        });
+
+        res.json({ schedules });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox schedules:", error);
+        res.status(500).json({ message: "فشل في جلب الجدولة" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/schedule - Schedule article for publishing
+  app.post("/api/admin/ifox/schedule",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          articleId: z.string().min(1),
+          scheduledAt: z.string().datetime(),
+          publishSettings: z.object({
+            autoShare: z.boolean().optional(),
+            platforms: z.array(z.string()).optional(),
+            notifySubscribers: z.boolean().optional(),
+          }).optional(),
+        });
+
+        const data = bodySchema.parse(req.body);
+        const schedule = await storage.createIFoxSchedule({
+          articleId: data.articleId,
+          scheduledAt: data.scheduledAt,
+          status: 'pending',
+          publishSettings: data.publishSettings,
+          createdBy: req.user.id,
+        } as any);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'create',
+          entityType: 'ifox_schedule',
+          entityId: schedule.id.toString(),
+          metadata: data as any,
+        });
+
+        res.json({
+          message: "تم جدولة المقال بنجاح",
+          schedule,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error scheduling iFox article:", error);
+        res.status(500).json({ message: "فشل في جدولة المقال" });
+      }
+    }
+  );
+
+  // PATCH /api/admin/ifox/schedule/:id - Update schedule
+  app.patch("/api/admin/ifox/schedule/:id",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "معرف غير صالح" });
+        }
+
+        const bodySchema = z.object({
+          scheduledAt: z.string().datetime().optional(),
+          status: z.enum(['pending', 'published', 'failed', 'cancelled']).optional(),
+          publishSettings: z.object({
+            autoShare: z.boolean().optional(),
+            platforms: z.array(z.string()).optional(),
+            notifySubscribers: z.boolean().optional(),
+          }).optional(),
+        });
+
+        const data = bodySchema.parse(req.body);
+        const schedule = await storage.updateIFoxSchedule(id, data);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'update',
+          entityType: 'ifox_schedule',
+          entityId: id.toString(),
+          newValue: data as any,
+        });
+
+        res.json({
+          message: "تم تحديث الجدولة بنجاح",
+          schedule,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error updating iFox schedule:", error);
+        res.status(500).json({ message: "فشل في تحديث الجدولة" });
+      }
+    }
+  );
+
+  // DELETE /api/admin/ifox/schedule/:id - Cancel scheduled publishing
+  app.delete("/api/admin/ifox/schedule/:id",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "معرف غير صالح" });
+        }
+
+        await storage.deleteIFoxSchedule(id);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'cancel',
+          entityType: 'ifox_schedule',
+          entityId: id.toString(),
+        });
+
+        res.json({ message: "تم إلغاء الجدولة بنجاح" });
+      } catch (error: any) {
+        console.error("Error cancelling iFox schedule:", error);
+        res.status(500).json({ message: "فشل في إلغاء الجدولة" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/schedule/process - Manually trigger processing of scheduled articles
+  app.post("/api/admin/ifox/schedule/process",
+    requireAuth,
+    requireRole('admin'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const result = await storage.processScheduledPublishing();
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'process',
+          entityType: 'ifox_schedule',
+          entityId: 'manual',
+          metadata: { result },
+        });
+
+        res.json({
+          message: `تم معالجة ${result.published} مقال بنجاح${result.failed > 0 ? ` وفشل ${result.failed} مقال` : ''}`,
+          published: result.published,
+          failed: result.failed,
+        });
+      } catch (error: any) {
+        console.error("Error processing iFox schedules:", error);
+        res.status(500).json({ message: "فشل في معالجة المقالات المجدولة" });
+      }
+    }
+  );
+
+  // ============================================================
+  // iFox Analytics - تحليلات آي فوكس
+  // ============================================================
+
+  // GET /api/admin/ifox/analytics - Get analytics data
+  app.get("/api/admin/ifox/analytics",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          categorySlug: z.string().optional(),
+          fromDate: z.string().datetime(),
+          toDate: z.string().datetime(),
+          metrics: z.array(z.enum(['views', 'clicks', 'shares', 'comments', 'reactions'])).optional(),
+        });
+
+        const params = querySchema.parse(req.query);
+        const analytics = await storage.getIFoxAnalytics(params);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view',
+          entityType: 'ifox_analytics',
+          entityId: 'data',
+          metadata: params as any,
+        });
+
+        res.json({ analytics });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox analytics:", error);
+        res.status(500).json({ message: "فشل في جلب التحليلات" });
+      }
+    }
+  );
+
+  // GET /api/admin/ifox/analytics/summary - Get analytics summary
+  app.get("/api/admin/ifox/analytics/summary",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    ifoxLimiter,
+    async (req: any, res) => {
+      try {
+        const querySchema = z.object({
+          categorySlug: z.string().optional(),
+        });
+
+        const { categorySlug } = querySchema.parse(req.query);
+        const summary = await storage.getIFoxAnalyticsSummary(categorySlug);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'view',
+          entityType: 'ifox_analytics',
+          entityId: 'summary',
+          metadata: { categorySlug },
+        });
+
+        res.json(summary);
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error fetching iFox analytics summary:", error);
+        res.status(500).json({ message: "فشل في جلب ملخص التحليلات" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/analytics/record - Record analytics event (internal use)
+  app.post("/api/admin/ifox/analytics/record",
+    requireAuth,
+    requireRole('system'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          events: z.array(z.object({
+            categorySlug: z.string(),
+            articleId: z.string().optional(),
+            metric: z.enum(['views', 'clicks', 'shares', 'comments', 'reactions']),
+            value: z.number(),
+            date: z.string().datetime(),
+            metadata: z.record(z.any()).optional(),
+          })),
+        });
+
+        const { events } = bodySchema.parse(req.body);
+        await storage.recordIFoxAnalytics(events as any);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'record',
+          entityType: 'ifox_analytics',
+          entityId: 'events',
+          metadata: { count: events.length },
+        });
+
+        res.json({
+          message: `تم تسجيل ${events.length} حدث تحليلي`,
+          recorded: events.length,
+        });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error recording iFox analytics:", error);
+        res.status(500).json({ message: "فشل في تسجيل الأحداث التحليلية" });
+      }
+    }
+  );
+
   const httpServer = createServer(app);
   return httpServer;
 }
