@@ -4,7 +4,7 @@
  */
 
 import { GoogleGenAI, Modality } from "@google/genai";
-import { Storage } from "@google-cloud/storage";
+import { objectStorageClient } from "../objectStorage";
 import pRetry from "p-retry";
 
 // Validate required environment variables
@@ -23,10 +23,9 @@ const geminiClient = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || "missing-api-key",
 });
 
-// Initialize Google Cloud Storage
-const storage = new Storage();
+// Use Replit's configured object storage client
 const bucketName = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || "missing-bucket";
-const bucket = storage.bucket(bucketName);
+const bucket = objectStorageClient.bucket(bucketName);
 
 // Helper to check rate limit errors
 function isRateLimitError(error: any): boolean {
@@ -216,10 +215,11 @@ export async function uploadImageToStorage(
     // Convert base64 to buffer
     const imageBuffer = Buffer.from(imageBase64, 'base64');
     
-    // Upload to GCS
-    const filePath = `ai-generated/${fileName}`;
+    // Upload to public directory in GCS
+    const filePath = `public/ai-generated/${fileName}`;
     const file = bucket.file(filePath);
     
+    // Save file with proper metadata
     await file.save(imageBuffer, {
       metadata: {
         contentType: mimeType,
@@ -227,17 +227,17 @@ export async function uploadImageToStorage(
           source: "nano-banana-pro",
           generatedAt: new Date().toISOString()
         }
-      },
-      public: true
+      }
     });
     
+    // Generate public URL
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
     
     console.log(`[Nano Banana Pro] Image uploaded to: ${publicUrl}`);
     
     return {
       url: publicUrl,
-      thumbnailUrl: publicUrl // TODO: Generate thumbnail
+      thumbnailUrl: publicUrl // Same URL for now
     };
   } catch (error: any) {
     console.error(`[Nano Banana Pro] Upload failed:`, error);

@@ -1,0 +1,126 @@
+2025-11-22 00:03:40.83
+468391f1
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:03:40.88
+468391f1
+User
+10:03:40 PM [express] GET /api/nano-banana/generations 304 in 96ms :: {"generations":[{"id":"2a0f9ec5…
+2025-11-22 00:03:46.18
+468391f1
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:03:46.20
+468391f1
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:03:46.25
+468391f1
+User
+10:03:46 PM [express] GET /api/nano-banana/generations 304 in 96ms :: {"generations":[{"id":"2a0f9ec5…
+
+2025-11-22 00:03:51.56
+468391f1
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:03:51.60
+468391f1
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:03:51.66
+468391f1
+User
+10:03:51 PM [express] GET /api/nano-banana/generations 304 in 123ms :: {"generations":[{"id":"2a0f9ec…
+2025-11-22 00:03:55.35
+468391f1
+User
+[Nano Banana Pro] Image generated successfully in 53s
+2025-11-22 00:03:55.83
+468391f1
+User
+{
+2025-11-22 00:03:55.83
+468391f1
+User
+config: {
+2025-11-22 00:03:55.83
+468391f1
+User
+params: [Object],
+2025-11-22 00:03:55.83
+468391f1
+User
+body: '{"metadata":{"source":"nano-banana-pro","generatedAt":"2025-11-21T22:03:55.355Z"}}',
+2025-11-22 00:03:55.83
+468391f1
+User
+validateStatus: [Function (anonymous)],
+2025-11-22 00:03:55.83
+468391f1
+User
+paramsSerializer: [Function: paramsSerializer],
+2025-11-22 00:03:55.83
+468391f1
+User
+[Nano Banana Pro] Upload failed: GaxiosError: {
+2025-11-22 00:03:55.83
+468391f1
+User
+'Content-Type': 'application/json'
+2025-11-22 00:03:55.83
+468391f1
+User
+'X-Upload-Content-Type': 'image/png',
+2025-11-22 00:03:55.83
+468391f1
+User
+}
+2025-11-22 00:03:55.83
+468391f1
+User
+config: {
+2025-11-22 00:03:55.83
+468391f1
+User
+validateStatus: [Function (anonymous)],
+2025-11-22 00:03:55.83
+468391f1
+User
+url: 'https://storage.googleapis.com/upload/storage/v1/b/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/o?name=ai-generated%2Fadmin-sabq_1763762635350.png&uploadType=resumable&predefinedAcl=publicRead',
+2025-11-22 00:03:55.83
+468391f1
+User
+responseType: 'unknown',
+2025-11-22 00:03:55.83
+468391f1
+User
+responseType: 'unknown',
+2025-11-22 00:03:55.83
+468391f1
+User
+name: 'ai-generated/admin-sabq_1763762635350.png',
+2025-11-22 00:03:55.83
+468391f1
+User
+uploadType: 'resumable',
+2025-11-22 00:03:55.83
+468391f1
+User
+' {\n' +
+2025-11-22 00:03:55.83
+468391f1
+User
+' "reason": "forbidden"\n' +
+2025-11-22 00:03:55.83
+468391f1
+User
+predefinedAcl: 'publicRead'
+2025-11-22 00:03:55.83
+468391f1
+User
+at async Upload.makeRequest (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:727:21)
+2025-11-22 00:03:55.83
+468391f1
+User
+},
+
