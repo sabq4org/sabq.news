@@ -31,6 +31,7 @@ import {
   Calendar,
   Hash,
   EyeOff,
+  Image as ImageIcon,
 } from "lucide-react";
 import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -44,7 +45,9 @@ import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
+import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
+import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 
 export default function EnglishArticleEditor() {
@@ -107,6 +110,8 @@ export default function EnglishArticleEditor() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [showAIImageDialog, setShowAIImageDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -921,7 +926,7 @@ export default function EnglishArticleEditor() {
                     />
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     onClick={() => document.getElementById("image-upload-en")?.click()}
@@ -932,9 +937,27 @@ export default function EnglishArticleEditor() {
                     {isUploadingImage ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <ImagePlus className="h-4 w-4" />
+                      <Upload className="h-4 w-4" />
                     )}
-                    {imageUrl ? "Change Image" : "Upload Image"}
+                    Upload Image
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMediaPicker(true)}
+                    className="gap-2"
+                    data-testid="button-library-en"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Choose from Library
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAIImageDialog(true)}
+                    className="gap-2"
+                    data-testid="button-ai-generate-en"
+                  >
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Generate with AI
                   </Button>
                   <input
                     id="image-upload-en"
@@ -1392,6 +1415,36 @@ export default function EnglishArticleEditor() {
           </div>
         </div>
       </div>
+
+      {/* Media Library Picker Dialog */}
+      <MediaLibraryPicker
+        isOpen={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(media) => {
+          setImageUrl(media.url);
+          setShowMediaPicker(false);
+          toast({
+            title: "Image Selected",
+            description: "Image selected from library successfully",
+          });
+        }}
+        language="en"
+      />
+
+      {/* AI Image Generator Dialog */}
+      <AIImageGeneratorDialog
+        isOpen={showAIImageDialog}
+        onClose={() => setShowAIImageDialog(false)}
+        defaultPrompt={title ? `Professional featured image for article titled: ${title}` : "Professional featured image for news article"}
+        onImageGenerated={(url) => {
+          setImageUrl(url);
+          setShowAIImageDialog(false);
+          toast({
+            title: "Image Generated",
+            description: "AI-generated image created successfully",
+          });
+        }}
+      />
     </EnglishDashboardLayout>
   );
 }
