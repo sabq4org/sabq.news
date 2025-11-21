@@ -13,6 +13,7 @@ import {
   type ImageGenerationRequest 
 } from "../services/nanoBananaService";
 import { z } from "zod";
+import { requireAuth } from "../rbac";
 
 // Request body schema (excludes userId - taken from session)
 const generateImageRequestSchema = insertAiImageGenerationSchema.omit({ 
@@ -27,14 +28,6 @@ const generateImageRequestSchema = insertAiImageGenerationSchema.omit({
 });
 
 const router = Router();
-
-// Middleware for authentication (reuse from main routes)
-function requireAuth(req: Request, res: Response, next: any) {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  next();
-}
 
 // ============================================================
 // NANO BANANA PRO IMAGE GENERATION ROUTES
