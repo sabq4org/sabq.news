@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Link } from "wouter";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@shared/schema";
-import { useMemo } from "react";
 import { filterAICategories } from "@/utils/filterAICategories";
 
 export function NavigationBar() {
@@ -16,8 +16,8 @@ export function NavigationBar() {
       return await res.json();
     },
   });
-  
-  // Filter out AI categories from navigation
+
+  // Filter out AI categories from the main navigation
   const coreCategories = useMemo(() => filterAICategories(allCoreCategories), [allCoreCategories]);
 
   return (

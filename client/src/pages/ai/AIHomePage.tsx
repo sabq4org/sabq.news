@@ -187,7 +187,7 @@ export default function AIHomePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link href={`/ai/${category.slug}`}>
+                <Link href={`/ai/category/${category.slug}`}>
                   <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group">
                     <CardContent className="p-4 text-center">
                       <div 
