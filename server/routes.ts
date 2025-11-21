@@ -29220,6 +29220,120 @@ Allow: /
     }
   );
 
+  // ============================================================
+  // iFox AI Content Tools - أدوات الذكاء الاصطناعي لآي فوكس
+  // ============================================================
+
+  // POST /api/admin/ifox/ai/generate-title - Generate AI title for iFox article
+  app.post("/api/admin/ifox/ai/generate-title",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          content: z.string().min(50, "المحتوى قصير جداً"),
+          category: z.string().optional(),
+        });
+
+        const { content, category } = bodySchema.parse(req.body);
+        
+        const { generateIFoxTitle } = await import('./openai');
+        const result = await generateIFoxTitle(content, category);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'generate',
+          entityType: 'ifox_ai',
+          entityId: 'title',
+          metadata: { category },
+        });
+
+        res.json(result);
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error generating iFox title:", error);
+        res.status(500).json({ message: "فشل في توليد العنوان" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/ai/generate-suggestions - Generate content suggestions
+  app.post("/api/admin/ifox/ai/generate-suggestions",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          title: z.string().min(5, "العنوان قصير جداً"),
+          content: z.string().min(50, "المحتوى قصير جداً"),
+          category: z.string().optional(),
+        });
+
+        const { title, content, category } = bodySchema.parse(req.body);
+        
+        const { generateIFoxContentSuggestions } = await import('./openai');
+        const suggestions = await generateIFoxContentSuggestions(title, content, category);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'generate',
+          entityType: 'ifox_ai',
+          entityId: 'suggestions',
+          metadata: { category },
+        });
+
+        res.json({ suggestions });
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error generating iFox suggestions:", error);
+        res.status(500).json({ message: "فشل في توليد الاقتراحات" });
+      }
+    }
+  );
+
+  // POST /api/admin/ifox/ai/analyze-content - Analyze content quality
+  app.post("/api/admin/ifox/ai/analyze-content",
+    requireAuth,
+    requireRole('admin', 'editor'),
+    strictLimiter,
+    async (req: any, res) => {
+      try {
+        const bodySchema = z.object({
+          title: z.string().min(5, "العنوان قصير جداً"),
+          content: z.string().min(50, "المحتوى قصير جداً"),
+          category: z.string().optional(),
+        });
+
+        const { title, content, category } = bodySchema.parse(req.body);
+        
+        const { analyzeIFoxContent } = await import('./openai');
+        const analysis = await analyzeIFoxContent(title, content, category);
+
+        await logActivity({
+          userId: req.user.id,
+          action: 'analyze',
+          entityType: 'ifox_ai',
+          entityId: 'content',
+          metadata: { category, score: analysis.score },
+        });
+
+        res.json(analysis);
+      } catch (error: any) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
+        }
+        console.error("Error analyzing iFox content:", error);
+        res.status(500).json({ message: "فشل في تحليل المحتوى" });
+      }
+    }
+  );
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -760,3 +760,199 @@ export async function extractMediaKeywords(
     return fallbackKeywords;
   }
 }
+
+// ============================================
+// iFox AI Content Tools
+// ============================================
+
+export async function generateIFoxTitle(
+  content: string,
+  category?: string
+): Promise<{ title: string; titleEn?: string }> {
+  try {
+    console.log("[iFox AI] Generating iFox article title...");
+    
+    const cleanContent = stripHtml(content);
+    const categoryContext = category ? `التصنيف: ${category}\n\n` : '';
+    
+    const systemPrompt = `أنت مساعد ذكي متخصص في إنشاء عناوين جذابة للمقالات التقنية في آي فوكس (iFox). 
+آي فوكس هو قسم تقني متخصص يركز على الذكاء الاصطناعي، التقنية، الويب، التعليم، الألعاب، الصحة، والأعمال.
+
+قم بإنشاء عنوان:
+- جذاب ومثير للاهتمام
+- يتضمن كلمات مفتاحية تقنية
+- مناسب للقارئ العربي المهتم بالتقنية
+- لا يتجاوز 15 كلمة
+
+أعد النتيجة بصيغة JSON:
+{
+  "title": "العنوان بالعربية",
+  "titleEn": "English Title (optional)"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `${categoryContext}المحتوى:\n${cleanContent.substring(0, 1500)}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 512,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    console.log("[iFox AI] ✅ Title generated successfully");
+    
+    return {
+      title: result.title || "",
+      titleEn: result.titleEn,
+    };
+  } catch (error) {
+    console.error("[iFox AI] Error generating title:", error);
+    throw new Error("Failed to generate iFox title");
+  }
+}
+
+export async function generateIFoxContentSuggestions(
+  title: string,
+  content: string,
+  category?: string
+): Promise<string[]> {
+  try {
+    console.log("[iFox AI] Generating content suggestions...");
+    
+    const cleanContent = stripHtml(content);
+    const categoryContext = category ? `التصنيف: ${category}\n\n` : '';
+    
+    const systemPrompt = `أنت مساعد كتابة ذكي متخصص في المحتوى التقني لآي فوكس (iFox).
+
+مهمتك: تحليل المقال وتقديم اقتراحات لتحسين المحتوى.
+
+الاقتراحات يجب أن تشمل:
+1. نقاط إضافية يمكن تغطيتها
+2. أمثلة أو حالات استخدام
+3. إحصائيات أو بيانات داعمة
+4. روابط لمفاهيم ذات صلة
+5. أسئلة شائعة يمكن الإجابة عليها
+
+أعد 5-7 اقتراحات مفيدة في صيغة JSON:
+{
+  "suggestions": ["اقتراح 1", "اقتراح 2", ...]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `${categoryContext}العنوان: ${title}\n\nالمحتوى الحالي:\n${cleanContent.substring(0, 2000)}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1024,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    console.log("[iFox AI] ✅ Suggestions generated successfully");
+    
+    return result.suggestions || [];
+  } catch (error) {
+    console.error("[iFox AI] Error generating suggestions:", error);
+    throw new Error("Failed to generate content suggestions");
+  }
+}
+
+export async function analyzeIFoxContent(
+  title: string,
+  content: string,
+  category?: string
+): Promise<{
+  score: number;
+  sentiment: { positive: number; neutral: number; negative: number };
+  readability: number;
+  technicalDepth: number;
+  engagement: number;
+  suggestions: string[];
+}> {
+  try {
+    console.log("[iFox AI] Analyzing content quality...");
+    
+    const cleanContent = stripHtml(content);
+    const categoryContext = category ? `التصنيف: ${category}\n\n` : '';
+    
+    const systemPrompt = `أنت خبير تحليل محتوى تقني متخصص في آي فوكس (iFox).
+
+قم بتحليل المقال التقني وتقييمه بناءً على:
+
+1. **الجودة العامة** (score): 0-100
+   - وضوح المعلومات
+   - دقة المحتوى
+   - شمولية التغطية
+   - جودة الكتابة
+
+2. **المشاعر** (sentiment): توزيع نسب المشاعر
+   - positive: نسبة المحتوى الإيجابي (0-100)
+   - neutral: نسبة المحتوى المحايد (0-100)
+   - negative: نسبة المحتوى السلبي (0-100)
+
+3. **سهولة القراءة** (readability): 0-100
+   - بساطة اللغة
+   - وضوح الجمل
+   - تنظيم المحتوى
+
+4. **العمق التقني** (technicalDepth): 0-100
+   - مستوى التفاصيل التقنية
+   - استخدام المصطلحات
+   - الشمولية
+
+5. **التفاعل المتوقع** (engagement): 0-100
+   - جاذبية العنوان
+   - إثارة الاهتمام
+   - قابلية المشاركة
+
+6. **اقتراحات التحسين** (suggestions): قائمة 3-5 اقتراحات
+
+أعد النتيجة بصيغة JSON فقط.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `${categoryContext}العنوان: ${title}\n\nالمحتوى:\n${cleanContent.substring(0, 3000)}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1536,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    console.log("[iFox AI] ✅ Content analyzed successfully");
+    
+    return {
+      score: result.score || 0,
+      sentiment: result.sentiment || { positive: 33, neutral: 34, negative: 33 },
+      readability: result.readability || 0,
+      technicalDepth: result.technicalDepth || 0,
+      engagement: result.engagement || 0,
+      suggestions: result.suggestions || [],
+    };
+  } catch (error) {
+    console.error("[iFox AI] Error analyzing content:", error);
+    throw new Error("Failed to analyze content");
+  }
+}
