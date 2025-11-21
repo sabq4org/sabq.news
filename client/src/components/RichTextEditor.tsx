@@ -802,6 +802,13 @@ export function RichTextEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Image Generator Dialog */}
+      <AIImageGeneratorDialog
+        open={aiImageDialogOpen}
+        onClose={() => setAiImageDialogOpen(false)}
+        onImageGenerated={handleAIImageGenerated}
+      />
     </div>
   );
 }
