@@ -3,14 +3,51 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import mascotImage from "@assets/sabq_ai_mascot_1_1_1763712965053.png";
 
+const MASCOT_COOLDOWN_KEY = "ifox_mascot_last_shown";
+const COOLDOWN_MINUTES = 20;
+
 export default function HeaderMascot() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
+    // Check if mascot should be shown based on cooldown period
+    const checkCooldown = () => {
+      try {
+        const lastShown = localStorage.getItem(MASCOT_COOLDOWN_KEY);
+        
+        if (!lastShown) {
+          // First time - show the mascot
+          return true;
+        }
+        
+        const lastShownTime = parseInt(lastShown, 10);
+        const currentTime = Date.now();
+        const minutesPassed = (currentTime - lastShownTime) / (1000 * 60);
+        
+        // Show only if 20 minutes have passed
+        return minutesPassed >= COOLDOWN_MINUTES;
+      } catch (error) {
+        console.error("Error checking mascot cooldown:", error);
+        return false;
+      }
+    };
+
+    const shouldShow = checkCooldown();
+    
+    if (!shouldShow) {
+      return; // Don't show the mascot if cooldown hasn't passed
+    }
+
     // Show mascot after 1 second
     const showTimer = setTimeout(() => {
       setIsVisible(true);
+      // Save current timestamp to localStorage
+      try {
+        localStorage.setItem(MASCOT_COOLDOWN_KEY, Date.now().toString());
+      } catch (error) {
+        console.error("Error saving mascot timestamp:", error);
+      }
     }, 1000);
 
     // Hide mascot after 10 seconds (increased time for movement)

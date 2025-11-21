@@ -403,10 +403,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         </SheetContent>
       </Sheet>
 
-      {/* Animated Mascot - Desktop Only */}
-      <div className="hidden md:block">
-        <HeaderMascot />
-      </div>
+      {/* Animated Mascot - Desktop Only, Homepage Only */}
+      {location === "/" && (
+        <div className="hidden md:block">
+          <HeaderMascot />
+        </div>
+      )}
     </header>
   );
 }
