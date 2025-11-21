@@ -5,6 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { AccessibilitySettings } from "./AccessibilitySettings";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { AdSlot } from "./AdSlot";
+import HeaderMascot from "./HeaderMascot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -401,6 +402,11 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Animated Mascot - Desktop Only */}
+      <div className="hidden md:block">
+        <HeaderMascot />
+      </div>
     </header>
   );
 }
