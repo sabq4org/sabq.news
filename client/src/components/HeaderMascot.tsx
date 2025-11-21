@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import mascotImage from "@assets/sabq_ai_mascot_1_1_1763712965053.png";
 
 export default function HeaderMascot() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     // Show mascot after 1 second
@@ -11,10 +13,10 @@ export default function HeaderMascot() {
       setIsVisible(true);
     }, 1000);
 
-    // Hide mascot after 8 seconds
+    // Hide mascot after 10 seconds (increased time for movement)
     const hideTimer = setTimeout(() => {
       setIsVisible(false);
-    }, 8000);
+    }, 10000);
 
     return () => {
       clearTimeout(showTimer);
@@ -25,23 +27,36 @@ export default function HeaderMascot() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          className="fixed left-4 top-20 z-40 pointer-events-none"
-          initial={{ x: -200, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -200, opacity: 0 }}
-          transition={{ 
-            type: "spring",
-            stiffness: 100,
-            damping: 15,
-            duration: 0.8
-          }}
-        >
+        <Link href="/ai/ifox">
+          <motion.div
+            className="fixed left-4 top-20 z-40 cursor-pointer group"
+            initial={{ x: -200, opacity: 0 }}
+            animate={{ 
+              x: [0, 350, 350], // Move from left to center-right and stay
+              opacity: [0, 1, 1]
+            }}
+            exit={{ x: 800, opacity: 0 }} // Exit to the right
+            transition={{ 
+              x: {
+                duration: 9,
+                times: [0, 0.67, 1],
+                ease: "easeInOut"
+              },
+              opacity: {
+                duration: 0.8,
+                ease: "easeIn"
+              }
+            }}
+            onHoverStart={() => setIsHovered(true)}
+            onHoverEnd={() => setIsHovered(false)}
+            data-testid="mascot-ifox-link"
+          >
           <motion.div
             className="relative w-24 h-24"
             animate={{ 
               y: [0, -8, 0],
               rotate: [0, 5, -5, 0],
+              scale: isHovered ? 1.1 : 1,
             }}
             transition={{
               duration: 4,
@@ -175,6 +190,7 @@ export default function HeaderMascot() {
             />
           </motion.div>
         </motion.div>
+        </Link>
       )}
     </AnimatePresence>
   );
