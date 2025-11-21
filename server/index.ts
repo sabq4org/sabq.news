@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import nanoBananaRoutes from "./routes/nanoBananaRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
@@ -240,6 +241,10 @@ app.use((req, res, next) => {
 
     const server = await registerRoutes(app);
     console.log("[Server] ✅ Routes registered successfully");
+
+    // Register Nano Banana Pro routes
+    app.use("/api/nano-banana", nanoBananaRoutes);
+    console.log("[Server] ✅ Nano Banana Pro routes registered");
 
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags

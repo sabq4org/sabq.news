@@ -187,6 +187,7 @@ import IFoxSchedule from "@/pages/admin/ifox/IFoxSchedule";
 import IFoxCategory from "@/pages/admin/ifox/IFoxCategory";
 import IFoxAnalytics from "@/pages/admin/ifox/IFoxAnalytics";
 import IFoxSettings from "@/pages/admin/ifox/IFoxSettings";
+import ImageStudio from "@/pages/ifox/ImageStudio";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -424,6 +425,7 @@ function Router() {
       <Route path="/dashboard/admin/ifox/articles/edit/:id" component={IFoxArticleEditor} />
       <Route path="/dashboard/admin/ifox/categories/:slug" component={IFoxCategory} />
       <Route path="/dashboard/admin/ifox/media" component={IFoxMedia} />
+      <Route path="/dashboard/admin/ifox/image-studio" component={ImageStudio} />
       <Route path="/dashboard/admin/ifox/schedule" component={IFoxSchedule} />
       <Route path="/dashboard/admin/ifox/analytics" component={IFoxAnalytics} />
       <Route path="/dashboard/admin/ifox/settings" component={IFoxSettings} />
