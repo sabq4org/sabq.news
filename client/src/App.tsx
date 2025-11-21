@@ -180,8 +180,9 @@ import AICategoryPage from "@/pages/ai/AICategoryPage";
 import AIArticleDetail from "@/pages/ai/AIArticleDetail";
 // iFox Admin Dashboard imports
 import IFoxDashboard from "@/pages/admin/ifox/IFoxDashboard";
+import IFoxArticles from "@/pages/admin/ifox/IFoxArticles";
+import IFoxArticleEditor from "@/pages/admin/ifox/IFoxArticleEditor";
 // Placeholder imports for iFox pages (to be created later)
-const IFoxArticles = () => <div>iFox Articles Management</div>;
 const IFoxCategory = () => <div>iFox Category Page</div>;
 const IFoxMedia = () => <div>iFox Media Library</div>;
 const IFoxSchedule = () => <div>iFox Scheduling</div>;
@@ -414,6 +415,8 @@ function Router() {
       {/* iFox Admin Dashboard Routes */}
       <Route path="/dashboard/admin/ifox" component={IFoxDashboard} />
       <Route path="/dashboard/admin/ifox/articles" component={IFoxArticles} />
+      <Route path="/dashboard/admin/ifox/articles/new" component={IFoxArticleEditor} />
+      <Route path="/dashboard/admin/ifox/articles/edit/:id" component={IFoxArticleEditor} />
       <Route path="/dashboard/admin/ifox/categories/:slug" component={IFoxCategory} />
       <Route path="/dashboard/admin/ifox/media" component={IFoxMedia} />
       <Route path="/dashboard/admin/ifox/schedule" component={IFoxSchedule} />
