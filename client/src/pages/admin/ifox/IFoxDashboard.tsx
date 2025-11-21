@@ -13,6 +13,7 @@ import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import mascotImage from "@assets/sabq_ai_mascot_1_1_1763712965053.png";
 import {
   Brain,
   Plus,
@@ -139,18 +140,98 @@ export default function IFoxDashboard() {
               transition={{ duration: 0.5 }}
               className="space-y-2"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30">
-                  <Brain className="w-8 h-8 text-white" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {/* Animated AI Mascot */}
+                  <motion.div
+                    className="relative"
+                    animate={{
+                      y: [0, -8, 0],
+                      rotate: [0, 2, -2, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 rounded-full blur-xl opacity-60"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.4, 0.7, 0.4],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      style={{
+                        background: "radial-gradient(circle, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6))",
+                      }}
+                    />
+                    <img 
+                      src={mascotImage} 
+                      alt="iFox AI Mascot" 
+                      className="w-20 h-20 relative z-10 drop-shadow-2xl"
+                    />
+                    {/* Eyes Glow Effect */}
+                    <motion.div
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full"
+                      animate={{
+                        boxShadow: [
+                          "0 0 10px rgba(34, 197, 94, 0.3)",
+                          "0 0 25px rgba(34, 197, 94, 0.6)",
+                          "0 0 10px rgba(34, 197, 94, 0.3)",
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  </motion.div>
+                  <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
+                      لوحة تحكم آي فوكس
+                    </h1>
+                    <p className="text-gray-300" data-testid="text-page-description">
+                      بوابة إدارة المحتوى الذكي
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
-                    لوحة تحكم آي فوكس
-                  </h1>
-                  <p className="text-gray-300" data-testid="text-page-description">
-                    بوابة إدارة المحتوى الذكي
-                  </p>
-                </div>
+                {/* AI Status Indicator */}
+                <motion.div
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30"
+                  animate={{
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-green-400"
+                    animate={{
+                      opacity: [0.5, 1, 0.5],
+                      boxShadow: [
+                        "0 0 5px rgba(34, 197, 94, 0.5)",
+                        "0 0 15px rgba(34, 197, 94, 1)",
+                        "0 0 5px rgba(34, 197, 94, 0.5)",
+                      ],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <span className="text-xs font-medium text-green-400">AI Online</span>
+                  <Sparkles className="w-3 h-3 text-green-400" />
+                </motion.div>
               </div>
 
               {/* Key Metrics Row */}
