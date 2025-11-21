@@ -1,0 +1,138 @@
+2025-11-21 23:57:02.74
+a8c8a036
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-21 23:57:02.79
+a8c8a036
+User
+9:57:02 PM [express] GET /api/nano-banana/generations 304 in 96ms :: {"generations":[],"count":0}
+2025-11-21 23:57:08.09
+a8c8a036
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-21 23:57:08.11
+a8c8a036
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-21 23:57:08.16
+a8c8a036
+User
+9:57:08 PM [express] GET /api/nano-banana/generations 304 in 89ms :: {"generations":[],"count":0}
+2025-11-21 23:57:13.47
+a8c8a036
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-21 23:57:13.49
+a8c8a036
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-21 23:57:13.54
+a8c8a036
+User
+9:57:13 PM [express] GET /api/nano-banana/generations 304 in 90ms :: {"generations":[],"count":0}
+2025-11-21 23:57:15.44
+a8c8a036
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-21 23:57:15.47
+a8c8a036
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at router (/home/runner/workspace/node_modules/express/lib/router/index.js:47:12)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+]
+2025-11-21 23:57:15.47
+a8c8a036
+User
+}
+2025-11-21 23:57:15.47
+a8c8a036
+User
+}
+2025-11-21 23:57:15.47
+a8c8a036
+User
+addIssues: [Function (anonymous)],
+2025-11-21 23:57:15.47
+a8c8a036
+User
+"message": "Required"
+2025-11-21 23:57:15.47
+a8c8a036
+User
+"path": [
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+"userId"
+2025-11-21 23:57:15.47
+a8c8a036
+User
+"expected": "string",
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/v3/types.js:114:22)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+}
+2025-11-21 23:57:15.47
+a8c8a036
+User
+errors: [
+2025-11-21 23:57:15.47
+a8c8a036
+User
+message: 'Required'
+2025-11-21 23:57:15.47
+a8c8a036
+User
+expected: 'string',
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at Function.handle (/home/runner/workspace/node_modules/express/lib/router/index.js:175:3)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+message: 'Required'
+2025-11-21 23:57:15.47
+a8c8a036
+User
+[API] Image generation error: ZodError: [
+2025-11-21 23:57:15.47
+a8c8a036
+User
+]
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+received: 'undefined',
+2025-11-21 23:57:15.47
+a8c8a036
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-21 23:57:15.47
+a8c8a036
+User
+],
+

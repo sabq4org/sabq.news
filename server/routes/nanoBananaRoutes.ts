@@ -12,6 +12,19 @@ import {
   generateAndUploadImage, 
   type ImageGenerationRequest 
 } from "../services/nanoBananaService";
+import { z } from "zod";
+
+// Request body schema (excludes userId - taken from session)
+const generateImageRequestSchema = insertAiImageGenerationSchema.omit({ 
+  userId: true,
+  status: true,
+  imageUrl: true,
+  thumbnailUrl: true,
+  generationTime: true,
+  cost: true,
+  errorMessage: true,
+  metadata: true,
+});
 
 const router = Router();
 
@@ -35,8 +48,8 @@ router.post("/generate", requireAuth, async (req: Request, res: Response) => {
   try {
     const user = req.user as any;
     
-    // Validate request
-    const validatedData = insertAiImageGenerationSchema.parse(req.body);
+    // Validate request body (userId comes from session)
+    const validatedData = generateImageRequestSchema.parse(req.body);
     
     console.log(`[API] Image generation request from user ${user.id}`);
     
