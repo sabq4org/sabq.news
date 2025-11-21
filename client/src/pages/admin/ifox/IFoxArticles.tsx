@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -248,18 +249,21 @@ export default function IFoxArticles() {
   const totalPages = Math.ceil(totalArticles / 20);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8" dir="rtl">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              آي فوكس - إدارة المحتوى
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              إدارة المحتوى التقني والذكاء الاصطناعي
-            </p>
-          </div>
+    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+      <IFoxSidebar className="hidden lg:block" />
+      <div className="flex-1 overflow-y-auto">
+        <ScrollArea className="h-full">
+          <div className="p-6 space-y-6" dir="rtl">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+                  آي فوكس - إدارة المحتوى
+                </h1>
+                <p className="text-white/60 mt-2">
+                  إدارة المحتوى التقني والذكاء الاصطناعي
+                </p>
+              </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -478,7 +482,9 @@ export default function IFoxArticles() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+          </div>
+        </ScrollArea>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

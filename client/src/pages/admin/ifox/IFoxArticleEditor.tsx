@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -336,17 +337,21 @@ export default function IFoxArticleEditor() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+        <IFoxSidebar className="hidden lg:block" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-6" dir="rtl">
+    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+      <IFoxSidebar className="hidden lg:block" />
+      <div className="flex-1 overflow-y-auto">
+        <ScrollArea className="h-full">
+          <div className="max-w-7xl mx-auto p-6 space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -829,7 +834,9 @@ export default function IFoxArticleEditor() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+          </div>
+        </ScrollArea>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
