@@ -220,11 +220,16 @@ export async function uploadImageToStorage(
       "public" // Make it public
     );
     
-    console.log(`[Nano Banana Pro] Image uploaded to: ${result.url}`);
+    console.log(`[Nano Banana Pro] Image uploaded to GCS:`, result.url);
+    
+    // Return URL through our public-objects endpoint instead of direct GCS URL
+    // This ensures proper access control and avoids CORS/permission issues
+    const publicUrl = `/public-objects/${filePath}`;
+    console.log(`[Nano Banana Pro] Public URL: ${publicUrl}`);
     
     return {
-      url: result.url,
-      thumbnailUrl: result.url // Same URL for now
+      url: publicUrl,
+      thumbnailUrl: publicUrl // Same URL for now
     };
   } catch (error: any) {
     console.error(`[Nano Banana Pro] Upload failed:`, error);

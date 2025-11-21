@@ -1,0 +1,130 @@
+2025-11-22 00:19:24.25
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:24.32
+e4717eb0
+User
+10:19:24 PM [express] GET /api/nano-banana/generations 304 in 111ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:19:29.68
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-22 00:19:29.71
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:29.78
+e4717eb0
+User
+10:19:29 PM [express] GET /api/nano-banana/generations 304 in 113ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:19:35.10
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:19:35.12
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:35.19
+e4717eb0
+User
+10:19:35 PM [express] GET /api/nano-banana/generations 304 in 114ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:19:40.45
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:19:40.47
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:40.52
+e4717eb0
+User
+10:19:40 PM [express] GET /api/nano-banana/generations 304 in 94ms :: {"generations":[{"id":"c78de86c…
+2025-11-22 00:19:45.84
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:19:45.86
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:45.91
+e4717eb0
+User
+10:19:45 PM [express] GET /api/nano-banana/generations 304 in 93ms :: {"generations":[{"id":"c78de86c…
+2025-11-22 00:19:51.27
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:19:51.30
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:51.40
+e4717eb0
+User
+10:19:51 PM [express] GET /api/nano-banana/generations 304 in 149ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:19:56.80
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:19:56.85
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:19:57.03
+e4717eb0
+User
+10:19:57 PM [express] GET /api/nano-banana/generations 304 in 300ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:20:00.05
+e4717eb0
+User
+[NotificationWorker] Starting queue processing...
+2025-11-22 00:20:00.06
+e4717eb0
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 00:20:00.23
+e4717eb0
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-22 00:20:00.23
+e4717eb0
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 00:20:00.23
+e4717eb0
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 00:20:02.27
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:20:02.30
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:20:02.38
+e4717eb0
+User
+10:20:02 PM [express] GET /api/nano-banana/generations 304 in 142ms :: {"generations":[{"id":"c78de86…
+2025-11-22 00:20:07.50
+e4717eb0
+User
+[Nano Banana Pro] Image generated successfully in 72s
+2025-11-22 00:20:07.78
+e4717eb0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:20:07.80
+e4717eb0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:20:07.87
+e4717eb0
+User
+10:20:07 PM [express] GET /api/nano-banana/generations 304 in 112ms :: {"generations":[{"id":"c78de86…
+
