@@ -1,0 +1,112 @@
+2025-11-22 00:11:33.31
+da2a66c5
+User
+"domain": "global",
+2025-11-22 00:11:33.31
+da2a66c5
+User
+url: 'https://storage.googleapis.com/upload/storage/v1/b/replit-objstore-b1f39c51-f362-497c-846b-74ce14cc0e52/o?name=public%2Fai-generated%2Fadmin-sabq_1763763092913.png&uploadType=resumable',
+2025-11-22 00:11:33.31
+da2a66c5
+User
+config: {
+2025-11-22 00:11:33.31
+da2a66c5
+User
+` "message": "heimdall-production@replit-user-deployments.iam.gserviceaccount.com does not have storage.objects.create access to the Google Cloud Storage object. Permission 'storage.objects.create' denied on resource (or it may not exist).",\n` +
+2025-11-22 00:11:33.31
+da2a66c5
+User
+at async AsyncRetry.retries (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:393:29)
+2025-11-22 00:11:33.31
+da2a66c5
+User
+errorRedactor: [Function: defaultErrorRedactor]
+2025-11-22 00:11:33.31
+da2a66c5
+User
+},
+2025-11-22 00:11:33.31
+da2a66c5
+User
+paramsSerializer: [Function: paramsSerializer],
+2025-11-22 00:11:33.31
+da2a66c5
+User
+' "domain": "global",\n' +
+2025-11-22 00:11:33.31
+da2a66c5
+User
+}
+2025-11-22 00:11:33.31
+da2a66c5
+User
+at async Upload.makeRequest (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/resumable-upload.js:727:21)
+2025-11-22 00:11:33.31
+da2a66c5
+User
+errorRedactor: [Function: defaultErrorRedactor]
+2025-11-22 00:11:33.31
+da2a66c5
+User
+{
+2025-11-22 00:11:33.31
+da2a66c5
+User
+responseType: 'unknown',
+2025-11-22 00:11:33.31
+da2a66c5
+User
+"error": {
+2025-11-22 00:11:33.31
+da2a66c5
+User
+response: {
+2025-11-22 00:11:33.31
+da2a66c5
+User
+data: [Object],
+2025-11-22 00:11:33.31
+da2a66c5
+User
+' "reason": "forbidden"\n' +
+2025-11-22 00:11:33.31
+da2a66c5
+User
+at Gaxios._request (/home/runner/workspace/node_modules/gaxios/build/src/gaxios.js:142:23)
+2025-11-22 00:11:33.31
+da2a66c5
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-22 00:11:33.31
+da2a66c5
+User
+[Nano Banana Pro] Upload failed: GaxiosError: {
+2025-11-22 00:11:33.31
+da2a66c5
+User
+config: {
+2025-11-22 00:11:33.31
+da2a66c5
+User
+},
+2025-11-22 00:11:38.91
+da2a66c5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:11:38.93
+da2a66c5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 00:11:38.98
+da2a66c5
+User
+10:11:38 PM [express] GET /api/nano-banana/generations 304 in 96ms :: {"generations":[{"id":"6453cfdd…
+2025-11-22 00:11:44.79
+da2a66c5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 00:11:44.81
+da2a66c5
+User
+✅ DeserializeUser: User found: admin@sabq.sa

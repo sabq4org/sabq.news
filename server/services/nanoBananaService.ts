@@ -4,7 +4,7 @@
  */
 
 import { GoogleGenAI, Modality } from "@google/genai";
-import { objectStorageClient } from "../objectStorage";
+import { ObjectStorageService } from "../objectStorage";
 import pRetry from "p-retry";
 
 // Validate required environment variables
@@ -13,19 +13,13 @@ if (!process.env.GEMINI_API_KEY) {
   console.error("[Nano Banana Pro] Image generation will fail without valid API key");
 }
 
-if (!process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID) {
-  console.error("[Nano Banana Pro] CRITICAL: DEFAULT_OBJECT_STORAGE_BUCKET_ID is not set!");
-  console.error("[Nano Banana Pro] Image uploads will fail without storage bucket");
-}
-
 // Initialize Gemini client with custom API key
 const geminiClient = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || "missing-api-key",
 });
 
-// Use Replit's configured object storage client
-const bucketName = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || "missing-bucket";
-const bucket = objectStorageClient.bucket(bucketName);
+// Initialize Object Storage Service
+const objectStorageService = new ObjectStorageService();
 
 // Helper to check rate limit errors
 function isRateLimitError(error: any): boolean {
@@ -204,7 +198,7 @@ export async function generateImage(
 }
 
 /**
- * Upload generated image to Google Cloud Storage
+ * Upload generated image to Google Cloud Storage using Replit's Object Storage
  */
 export async function uploadImageToStorage(
   imageBase64: string,
@@ -215,29 +209,22 @@ export async function uploadImageToStorage(
     // Convert base64 to buffer
     const imageBuffer = Buffer.from(imageBase64, 'base64');
     
-    // Upload to public directory in GCS
-    const filePath = `public/ai-generated/${fileName}`;
-    const file = bucket.file(filePath);
+    // Upload to public directory using ObjectStorageService
+    const filePath = `ai-generated/${fileName}`;
     
-    // Save file with proper metadata
-    await file.save(imageBuffer, {
-      metadata: {
-        contentType: mimeType,
-        metadata: {
-          source: "nano-banana-pro",
-          generatedAt: new Date().toISOString()
-        }
-      }
-    });
+    // Upload file as public
+    const result = await objectStorageService.uploadFile(
+      filePath,
+      imageBuffer,
+      mimeType,
+      "public" // Make it public
+    );
     
-    // Generate public URL
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-    
-    console.log(`[Nano Banana Pro] Image uploaded to: ${publicUrl}`);
+    console.log(`[Nano Banana Pro] Image uploaded to: ${result.url}`);
     
     return {
-      url: publicUrl,
-      thumbnailUrl: publicUrl // Same URL for now
+      url: result.url,
+      thumbnailUrl: result.url // Same URL for now
     };
   } catch (error: any) {
     console.error(`[Nano Banana Pro] Upload failed:`, error);
