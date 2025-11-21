@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -162,26 +168,122 @@ export function Footer() {
         })
       }} />
 
-      <div className="container mx-auto px-4 py-12">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 mb-12">
-          
-          {/* Brand Section - Takes more space */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="flex flex-col gap-4">
-              <Link href="/" data-testid="footer-logo" className="inline-block">
-                <img 
-                  src={sabqLogo} 
-                  alt="سبق الذكية - منصة إخبارية ذكية" 
-                  className="h-10 w-auto hover:opacity-80 transition-opacity"
-                  loading="lazy"
-                />
-              </Link>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-                منصة إخبارية عربية ذكية تقدم أخبار عالية الجودة بدعم الذكاء الاصطناعي. نسعى لتقديم محتوى موثوق ومتميز يواكب العصر الرقمي.
-              </p>
-            </div>
+      <div className="container mx-auto px-4 py-6 md:py-10 lg:py-12">
+        
+        {/* Brand Section - Simplified on mobile */}
+        <div className="mb-6 md:mb-12">
+          <div className="flex flex-col gap-3">
+            <Link href="/" data-testid="footer-logo" className="inline-block">
+              <img 
+                src={sabqLogo} 
+                alt="سبق الذكية - منصة إخبارية ذكية" 
+                className="h-10 w-auto hover:opacity-80 transition-opacity"
+                loading="lazy"
+              />
+            </Link>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm line-clamp-2 md:line-clamp-none">
+              منصة إخبارية عربية ذكية تقدم أخبار عالية الجودة بدعم الذكاء الاصطناعي. نسعى لتقديم محتوى موثوق ومتميز يواكب العصر الرقمي.
+            </p>
+          </div>
+        </div>
 
+        {/* Accordion for mobile only */}
+        <div className="md:hidden mb-6">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="contact">
+              <AccordionTrigger className="text-base font-semibold">تواصل معنا</AccordionTrigger>
+              <AccordionContent>
+                {/* Contact Info */}
+                <div className="space-y-3 mb-6">
+                  {contactInfo.map((contact, index) => (
+                    <a
+                      key={index}
+                      href={contact.href}
+                      className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                      data-testid={`footer-contact-${index}`}
+                      aria-label={contact.label}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 rounded-md bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <contact.icon className="h-4 w-4 group-hover:text-primary transition-colors" aria-hidden="true" />
+                      </div>
+                      <span className="group-hover:underline">{contact.text}</span>
+                    </a>
+                  ))}
+                </div>
+
+                {/* Social Links */}
+                <div>
+                  <h5 className="font-semibold text-foreground text-sm mb-3">تابعنا</h5>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {socialLinks.map((social) => (
+                      <a
+                        key={social.testId}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex items-center justify-center w-10 h-10 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 hover:scale-110 ${social.color}`}
+                        aria-label={`تابعنا على ${social.name}`}
+                        data-testid={`footer-social-${social.testId}`}
+                      >
+                        <social.icon className="h-4 w-4" aria-hidden="true" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="links">
+              <AccordionTrigger className="text-base font-semibold">روابط سريعة</AccordionTrigger>
+              <AccordionContent>
+                <nav aria-label="روابط سريعة">
+                  <ul className="space-y-2.5">
+                    {quickLinks.map((link, index) => (
+                      <li key={index}>
+                        <Link href={link.href}>
+                          <span 
+                            className="text-sm text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer inline-block" 
+                            data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                          >
+                            {link.label}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="services">
+              <AccordionTrigger className="text-base font-semibold">خدماتنا</AccordionTrigger>
+              <AccordionContent>
+                <nav aria-label="خدماتنا">
+                  <ul className="space-y-2.5">
+                    {servicesLinks.map((link, index) => (
+                      <li key={index}>
+                        <Link href={link.href}>
+                          <span 
+                            className="text-sm text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer inline-block" 
+                            data-testid={`footer-link-${link.label.replace(/\s+/g, '-')}`}
+                          >
+                            {link.label}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+
+        {/* Desktop Grid Layout - Hidden on mobile */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-8 lg:gap-12 mb-6 md:mb-12">
+          
+          {/* Brand Section - Desktop */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
             {/* Contact Info */}
             <div className="space-y-3">
               <h4 className="font-semibold text-foreground text-base mb-4">تواصل معنا</h4>
@@ -265,7 +367,7 @@ export function Footer() {
           </div>
 
           {/* Developers */}
-          <div className="lg:col-span-2 hidden md:block">
+          <div className="lg:col-span-2">
             <h4 className="font-semibold text-foreground text-base mb-4 after:content-[''] after:block after:w-12 after:h-0.5 after:bg-primary after:mt-2">للمطورين</h4>
             <nav aria-label="للمطورين">
               <ul className="space-y-2.5">
@@ -297,7 +399,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Newsletter Section */}
+          {/* Newsletter Section - Desktop */}
           <div className="lg:col-span-2">
             <h4 className="font-semibold text-foreground text-base mb-4 after:content-[''] after:block after:w-12 after:h-0.5 after:bg-primary after:mt-2">النشرة البريدية</h4>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -330,11 +432,39 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Newsletter Section - Mobile Compact */}
+        <div className="md:hidden mb-6">
+          <h4 className="font-semibold text-foreground text-base mb-3">النشرة البريدية</h4>
+          <form onSubmit={handleNewsletterSubmit} className="flex gap-2" data-testid="newsletter-form">
+            <Input
+              type="email"
+              placeholder="بريدك الإلكتروني"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pr-3 pl-3 h-10 bg-muted/50 border-border focus:border-primary flex-1"
+              disabled={isSubmitting}
+              data-testid="newsletter-email-input"
+              aria-label="البريد الإلكتروني للاشتراك في النشرة البريدية"
+              required
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="h-10 w-10 flex-shrink-0"
+              disabled={isSubmitting}
+              data-testid="newsletter-submit-button"
+              aria-label="اشترك في النشرة البريدية"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </form>
+        </div>
+
         {/* Bottom Section */}
-        <div className="pt-8 border-t border-border/50">
+        <div className="pt-4 md:pt-8 border-t border-border/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Legal Links */}
-            <nav aria-label="روابط قانونية" className="flex flex-wrap items-center justify-center gap-4 text-sm">
+            <nav aria-label="روابط قانونية" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
               {legalLinks.map((link, index) => (
                 <Link key={index} href={link.href}>
                   <span 
