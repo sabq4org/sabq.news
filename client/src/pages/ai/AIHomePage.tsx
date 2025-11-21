@@ -33,7 +33,7 @@ const categories = [
   { 
     slug: "ai-news", 
     icon: Newspaper, 
-    nameAr: "آي سبق", 
+    nameAr: "آي سبق - أخبار AI", 
     nameEn: "AI News",
     color: "#22C55E",
     description: "أخبار عاجلة وانفرادات حصرية"
@@ -41,7 +41,7 @@ const categories = [
   { 
     slug: "ai-insights", 
     icon: ChartBar, 
-    nameAr: "آي عمق", 
+    nameAr: "آي عمق - تحليلات", 
     nameEn: "AI Insights",
     color: "#8B5CF6",
     description: "تحليلات وتقارير استقصائية"
@@ -49,7 +49,7 @@ const categories = [
   { 
     slug: "ai-opinions", 
     icon: MessageSquare, 
-    nameAr: "آي رأي", 
+    nameAr: "آي رأي - آراء", 
     nameEn: "AI Opinions",
     color: "#F59E0B",
     description: "مقالات خبراء ونقاشات"
@@ -57,7 +57,7 @@ const categories = [
   { 
     slug: "ai-tools", 
     icon: Wrench, 
-    nameAr: "آي تطبيق", 
+    nameAr: "آي تطبيق - أدوات", 
     nameEn: "AI Tools",
     color: "#EF4444",
     description: "مراجعات أدوات وتطبيقات"
@@ -65,7 +65,7 @@ const categories = [
   { 
     slug: "ai-voice", 
     icon: Mic, 
-    nameAr: "آي صوت", 
+    nameAr: "آي صوت - بودكاست", 
     nameEn: "AI Voice",
     color: "#EC4899",
     description: "بودكاست وفيديوهات"
@@ -73,7 +73,7 @@ const categories = [
   { 
     slug: "ai-academy", 
     icon: GraduationCap, 
-    nameAr: "آي أكاديمي", 
+    nameAr: "آي أكاديمي - تعليم", 
     nameEn: "AI Academy",
     color: "#10B981",
     description: "دورات تعليمية مبسطة"
@@ -81,7 +81,7 @@ const categories = [
   { 
     slug: "ai-community", 
     icon: Users, 
-    nameAr: "آي تواصل", 
+    nameAr: "آي تواصل - مجتمع", 
     nameEn: "AI Community",
     color: "#6366F1",
     description: "مجتمع المبدعين"
@@ -101,7 +101,7 @@ export default function AIHomePage() {
   const trends: any[] = [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -264,35 +264,7 @@ export default function AIHomePage() {
                 <div className="space-y-6">
                   <AITrendsWidget trends={trends} />
                   
-                  {/* Quick Stats */}
-                  <Card className="bg-slate-900/50 border-slate-800">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-purple-500" />
-                        إحصائيات سريعة
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">مقالات اليوم</span>
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                          42
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">أدوات جديدة</span>
-                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                          7
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">تحليلات عميقة</span>
-                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                          15
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Stats removed - will be connected to real data in future */}
 
                   {/* Newsletter CTA */}
                   <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 border-slate-700">

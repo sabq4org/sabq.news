@@ -28,6 +28,7 @@ import AIHeader from "@/components/ai/AIHeader";
 import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
+import type { Article } from "@shared/schema";
 
 export default function AIArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -37,13 +38,13 @@ export default function AIArticleDetail() {
   const [bookmarked, setBookmarked] = useState(false);
 
   // Fetch article details
-  const { data: article, isLoading } = useQuery({
+  const { data: article, isLoading } = useQuery<Article>({
     queryKey: [`/api/articles/${params.slug}`],
     enabled: !!params.slug
   });
 
   // Fetch related articles
-  const { data: relatedArticles = [] } = useQuery({
+  const { data: relatedArticles = [] } = useQuery<Article[]>({
     queryKey: [`/api/articles/${params.slug}/related`],
     enabled: !!params.slug && !!article
   });
@@ -88,7 +89,7 @@ export default function AIArticleDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
         <AIHeader />
         <div className="container mx-auto max-w-4xl px-4 py-12">
           <div className="animate-pulse space-y-4">
@@ -104,7 +105,7 @@ export default function AIArticleDetail() {
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
         <AIHeader />
         <div className="container mx-auto max-w-4xl px-4 py-12">
           <Card className="bg-slate-900/50 border-slate-800">
@@ -126,7 +127,7 @@ export default function AIArticleDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Header */}
       <AIHeader />
 
@@ -155,9 +156,9 @@ export default function AIArticleDetail() {
               {article.title}
             </h1>
             
-            {article.summary && (
+            {article.excerpt && (
               <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                {article.summary}
+                {article.excerpt}
               </p>
             )}
 
@@ -165,12 +166,12 @@ export default function AIArticleDetail() {
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
               <div className="flex items-center gap-1">
                 <User className="w-4 h-4" />
-                <span>{article.author || (language === "ar" ? "فريق iFox" : "iFox Team")}</span>
+                <span>{language === "ar" ? "فريق iFox" : "iFox Team"}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 <span>
-                  {format(new Date(article.publishedAt || article.createdAt), "PPP", {
+                  {format(new Date(article.createdAt), "PPP", {
                     locale: language === "ar" ? ar : enUS
                   })}
                 </span>
@@ -181,7 +182,7 @@ export default function AIArticleDetail() {
               </div>
               <div className="flex items-center gap-1">
                 <MessageCircle className="w-4 h-4" />
-                <span>{article.commentsCount || 0} {language === "ar" ? "تعليق" : "comments"}</span>
+                <span>0 {language === "ar" ? "تعليق" : "comments"}</span>
               </div>
             </div>
           </header>
@@ -245,11 +246,10 @@ export default function AIArticleDetail() {
           {/* Featured Image */}
           {article.imageUrl && (
             <div className="mb-8 rounded-xl overflow-hidden">
-              <ImageWithCaption
+              <img
                 src={article.imageUrl}
                 alt={article.title}
-                caption={article.imageCaption}
-                className="w-full h-auto"
+                className="w-full h-auto rounded-xl"
               />
             </div>
           )}
@@ -260,20 +260,6 @@ export default function AIArticleDetail() {
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
-          {/* Tags */}
-          {article.tags && article.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
-              {article.tags.map((tag: string) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="bg-slate-800 hover:bg-slate-700"
-                >
-                  #{tag}
-                </Badge>
-              ))}
-            </div>
-          )}
 
           <Separator className="bg-slate-800 mb-8" />
 
@@ -285,8 +271,19 @@ export default function AIArticleDetail() {
                 <ChevronRight className="w-6 h-6" />
               </h2>
               <div className="grid gap-6">
-                {relatedArticles.slice(0, 3).map((relatedArticle: any) => (
-                  <AINewsCard key={relatedArticle.id} article={relatedArticle} />
+                {relatedArticles.slice(0, 3).map((relatedArticle) => (
+                  <AINewsCard 
+                    key={relatedArticle.id} 
+                    article={{
+                      ...relatedArticle,
+                      summary: relatedArticle.excerpt,
+                      viewCount: relatedArticle.views,
+                      commentCount: 0,
+                      createdAt: relatedArticle.createdAt instanceof Date ? relatedArticle.createdAt.toISOString() : relatedArticle.createdAt,
+                      featured: relatedArticle.isFeatured,
+                      trending: false
+                    }}
+                  />
                 ))}
               </div>
             </section>

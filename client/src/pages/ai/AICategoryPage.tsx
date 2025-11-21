@@ -46,35 +46,35 @@ const categoryInfo: Record<string, any> = {
   },
   "ai-opinions": { 
     icon: MessageSquare, 
-    nameAr: "آي رأي", 
+    nameAr: "آي رأي - آراء", 
     nameEn: "AI Opinions",
     color: "#F59E0B",
     description: "مقالات خبراء ونقاشات فلسفية"
   },
   "ai-tools": { 
     icon: Wrench, 
-    nameAr: "آي تطبيق", 
+    nameAr: "آي تطبيق - أدوات", 
     nameEn: "AI Tools",
     color: "#EF4444",
     description: "اختبارات ومراجعات للأدوات والتطبيقات"
   },
   "ai-voice": { 
     icon: Mic, 
-    nameAr: "آي صوت", 
+    nameAr: "آي صوت - بودكاست", 
     nameEn: "AI Voice",
     color: "#EC4899",
     description: "بودكاست وفيديوهات حوارية"
   },
   "ai-academy": { 
     icon: GraduationCap, 
-    nameAr: "آي أكاديمي", 
+    nameAr: "آي أكاديمي - تعليم", 
     nameEn: "AI Academy",
     color: "#10B981",
     description: "دورات تعليمية مبسطة بلغة عربية احترافية"
   },
   "ai-community": { 
     icon: Users, 
-    nameAr: "آي تواصل", 
+    nameAr: "آي تواصل - مجتمع", 
     nameEn: "AI Community",
     color: "#6366F1",
     description: "مجتمع خاص لمبدعي المحتوى والمتابعين"
@@ -98,7 +98,7 @@ export default function AICategoryPage() {
   const CategoryIcon = category.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Header */}
       <AIHeader />
 
