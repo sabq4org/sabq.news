@@ -259,8 +259,14 @@ function Router() {
         <Route path="/ar" component={Home} />
         <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
+      <Route path="/ar/terms" component={TermsPage} />
+      <Route path="/en/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/ar/privacy" component={PrivacyPage} />
+      <Route path="/en/privacy" component={PrivacyPage} />
       <Route path="/accessibility-statement" component={AccessibilityStatement} />
+      <Route path="/ar/accessibility-statement" component={AccessibilityStatement} />
+      <Route path="/en/accessibility-statement" component={AccessibilityStatement} />
       <Route path="/ai-publisher" component={AIPublisher} />
       <Route path="/ai-policy" component={AIPolicy} />
       <Route path="/news" component={NewsPage} />

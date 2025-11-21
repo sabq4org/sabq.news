@@ -112,10 +112,10 @@ export function Footer() {
   ];
 
   const legalLinks = [
-    { label: "الخصوصية", href: "/privacy" },
-    { label: "الشروط", href: "/terms" },
+    { label: "الخصوصية", href: "/ar/privacy" },
+    { label: "الشروط", href: "/ar/terms" },
     { label: "الملفات", href: "/cookies" },
-    { label: "إمكانية الوصول", href: "/accessibility-statement" },
+    { label: "إمكانية الوصول", href: "/ar/accessibility-statement" },
   ];
 
   const socialLinks = [
