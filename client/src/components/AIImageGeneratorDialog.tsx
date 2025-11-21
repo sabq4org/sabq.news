@@ -1,0 +1,353 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { apiRequest } from "@/lib/queryClient";
+import { Sparkles, Image, FileText, ChartBar, Loader2, Download, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface AIImageGeneratorDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onImageGenerated: (imageUrl: string, alt?: string) => void;
+  initialPrompt?: string;
+}
+
+// Pre-built templates for common news graphics
+const templates = {
+  infographic: {
+    name: "انفوجرافيك إحصائي",
+    icon: ChartBar,
+    prompt: "انفوجرافيك احترافي بتصميم عصري يعرض {data} بألوان متناسقة وأيقونات واضحة، خلفية بيضاء نظيفة، نمط flat design، عربي",
+    fields: ["data"],
+  },
+  featured: {
+    name: "صورة بارزة",
+    icon: Image,
+    prompt: "صورة صحفية احترافية عالية الجودة تُظهر {subject}، إضاءة طبيعية، تكوين متوازن، واقعية، بدقة عالية",
+    fields: ["subject"],
+  },
+  breaking: {
+    name: "عاجل",
+    icon: AlertCircle,
+    prompt: "خلفية خبر عاجل احترافية، ألوان حمراء وداكنة، تأثيرات ديناميكية، نص {headline} بخط عربي واضح وجريء",
+    fields: ["headline"],
+  },
+  comparison: {
+    name: "مقارنة",
+    icon: FileText,
+    prompt: "انفوجرافيك مقارنة بين {item1} و {item2}، تصميم جدول مقارنة احترافي، أيقونات توضيحية، ألوان متباينة",
+    fields: ["item1", "item2"],
+  },
+};
+
+export function AIImageGeneratorDialog({
+  open,
+  onClose,
+  onImageGenerated,
+  initialPrompt = "",
+}: AIImageGeneratorDialogProps) {
+  const [activeTab, setActiveTab] = useState("custom");
+  const [prompt, setPrompt] = useState(initialPrompt);
+  const [templateFields, setTemplateFields] = useState<Record<string, string>>({});
+  const [imageSize, setImageSize] = useState("2K");
+  const [aspectRatio, setAspectRatio] = useState("16:9");
+  const [enableThinking, setEnableThinking] = useState(true);
+  const [enableSearchGrounding, setEnableSearchGrounding] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<{url: string; alt?: string} | null>(null);
+  const { toast } = useToast();
+
+  const generateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("/api/nano-banana/generate", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (data) => {
+      if (data.success && data.imageUrl) {
+        setGeneratedImage({ 
+          url: data.imageUrl, 
+          alt: prompt || "صورة مولدة بالذكاء الاصطناعي" 
+        });
+        toast({
+          title: "تم توليد الصورة بنجاح",
+          description: "يمكنك الآن إدراج الصورة في المقال",
+        });
+      } else {
+        throw new Error(data.error || "فشل توليد الصورة");
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في التوليد",
+        description: error.message || "حدث خطأ أثناء توليد الصورة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleGenerate = () => {
+    let finalPrompt = prompt;
+
+    // If using template, build prompt from template
+    if (activeTab !== "custom") {
+      const template = templates[activeTab as keyof typeof templates];
+      if (template) {
+        finalPrompt = template.prompt;
+        template.fields.forEach((field) => {
+          finalPrompt = finalPrompt.replace(`{${field}}`, templateFields[field] || "");
+        });
+      }
+    }
+
+    if (!finalPrompt.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال وصف للصورة المطلوبة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    generateMutation.mutate({
+      prompt: finalPrompt,
+      imageSize,
+      aspectRatio,
+      enableThinking,
+      enableSearchGrounding,
+    });
+  };
+
+  const handleInsertImage = () => {
+    if (generatedImage) {
+      onImageGenerated(generatedImage.url, generatedImage.alt);
+      handleClose();
+    }
+  };
+
+  const handleClose = () => {
+    setPrompt("");
+    setTemplateFields({});
+    setGeneratedImage(null);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            مولد الصور الذكي - Nano Banana Pro
+          </DialogTitle>
+          <DialogDescription>
+            قم بتوليد صور احترافية وانفوجرافيك لمقالك باستخدام الذكاء الاصطناعي
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {!generatedImage ? (
+            <>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="custom">مخصص</TabsTrigger>
+                  {Object.entries(templates).map(([key, template]) => (
+                    <TabsTrigger key={key} value={key}>
+                      <template.icon className="w-4 h-4 ml-1" />
+                      {template.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <TabsContent value="custom" className="space-y-4">
+                  <div>
+                    <Label htmlFor="prompt">وصف الصورة</Label>
+                    <Textarea
+                      id="prompt"
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="صف الصورة التي تريد توليدها بالتفصيل..."
+                      className="mt-2 min-h-[120px]"
+                      dir="rtl"
+                    />
+                  </div>
+                </TabsContent>
+
+                {Object.entries(templates).map(([key, template]) => (
+                  <TabsContent key={key} value={key} className="space-y-4">
+                    <Alert>
+                      <template.icon className="h-4 w-4" />
+                      <AlertDescription>
+                        قالب {template.name} - املأ الحقول المطلوبة
+                      </AlertDescription>
+                    </Alert>
+                    {template.fields.map((field) => (
+                      <div key={field}>
+                        <Label htmlFor={field}>
+                          {field === "data" && "البيانات الإحصائية"}
+                          {field === "subject" && "موضوع الصورة"}
+                          {field === "headline" && "العنوان العاجل"}
+                          {field === "item1" && "العنصر الأول"}
+                          {field === "item2" && "العنصر الثاني"}
+                        </Label>
+                        <Input
+                          id={field}
+                          value={templateFields[field] || ""}
+                          onChange={(e) =>
+                            setTemplateFields({ ...templateFields, [field]: e.target.value })
+                          }
+                          className="mt-2"
+                          dir="rtl"
+                        />
+                      </div>
+                    ))}
+                  </TabsContent>
+                ))}
+              </Tabs>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="imageSize">حجم الصورة</Label>
+                  <Select value={imageSize} onValueChange={setImageSize}>
+                    <SelectTrigger id="imageSize">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1K">1K - سريع ($0.067)</SelectItem>
+                      <SelectItem value="2K">2K - متوسط ($0.134)</SelectItem>
+                      <SelectItem value="4K">4K - عالي الجودة ($0.24)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="aspectRatio">نسبة العرض</Label>
+                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                    <SelectTrigger id="aspectRatio">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1:1">1:1 - مربع</SelectItem>
+                      <SelectItem value="16:9">16:9 - عريض</SelectItem>
+                      <SelectItem value="4:3">4:3 - قياسي</SelectItem>
+                      <SelectItem value="3:4">3:4 - عمودي</SelectItem>
+                      <SelectItem value="9:16">9:16 - قصة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="thinking">التفكير الذكي</Label>
+                  <Switch
+                    id="thinking"
+                    checked={enableThinking}
+                    onCheckedChange={setEnableThinking}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="search">البحث التلقائي</Label>
+                  <Switch
+                    id="search"
+                    checked={enableSearchGrounding}
+                    onCheckedChange={setEnableSearchGrounding}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>الصورة المولدة</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <img
+                  src={generatedImage.url}
+                  alt={generatedImage.alt}
+                  className="w-full rounded-lg"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(generatedImage.url, "_blank")}
+                    className="flex-1"
+                  >
+                    <Download className="w-4 h-4 ml-2" />
+                    تحميل
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setGeneratedImage(null)}
+                    className="flex-1"
+                  >
+                    توليد صورة جديدة
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <DialogFooter>
+          {!generatedImage ? (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                إلغاء
+              </Button>
+              <Button 
+                onClick={handleGenerate} 
+                disabled={generateMutation.isPending}
+              >
+                {generateMutation.isPending ? (
+                  <>
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    جاري التوليد...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="ml-2 h-4 w-4" />
+                    توليد الصورة
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                إلغاء
+              </Button>
+              <Button onClick={handleInsertImage}>
+                <Image className="ml-2 h-4 w-4" />
+                إدراج في المقال
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

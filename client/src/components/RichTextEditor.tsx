@@ -38,6 +38,7 @@ import {
   Images,
   Youtube as YoutubeIcon,
   Video,
+  Sparkles,
 } from "lucide-react";
 import {
   Dialog,
@@ -57,6 +58,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { ImageUploadDialog } from "./ImageUploadDialog";
+import { AIImageGeneratorDialog } from "./AIImageGeneratorDialog";
 
 // Twitter widgets type declaration
 declare global {
@@ -94,6 +96,7 @@ export function RichTextEditor({
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [aiImageDialogOpen, setAiImageDialogOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -256,6 +259,17 @@ export function RichTextEditor({
   const handleImageUploaded = (url: string) => {
     if (editor) {
       editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  const handleAIImageGenerated = (url: string, alt?: string) => {
+    if (editor) {
+      // Insert the AI-generated image with alt text
+      editor.chain().focus().setImage({ 
+        src: url,
+        alt: alt || "صورة مولدة بالذكاء الاصطناعي",
+        title: alt || "صورة مولدة بالذكاء الاصطناعي"
+      }).run();
     }
   };
 
@@ -580,6 +594,14 @@ export function RichTextEditor({
           title="إضافة صورة"
         >
           <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={() => setAiImageDialogOpen(true)}
+          title="توليد صورة بالذكاء الاصطناعي"
+          className="text-primary hover:bg-primary/10"
+        >
+          <Sparkles className="h-4 w-4" />
         </ToolbarButton>
 
         <ToolbarButton
