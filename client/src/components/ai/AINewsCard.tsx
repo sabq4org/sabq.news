@@ -58,14 +58,15 @@ export default function AINewsCard({ article }: AINewsCardProps) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
+      data-testid={`card-news-${article.id}`}
     >
       <Link href={`/ai/article/${article.slug}`}>
         <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group overflow-hidden">
           <CardContent className="p-0">
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               {/* Image Section */}
               {article.imageUrl && (
-                <div className="relative w-48 h-32 flex-shrink-0 overflow-hidden">
+                <div className="relative w-full md:w-48 aspect-video md:aspect-auto md:h-32 flex-shrink-0 overflow-hidden bg-slate-800/50">
                   <img
                     src={article.imageUrl}
                     alt={article.title}
@@ -94,7 +95,7 @@ export default function AINewsCard({ article }: AINewsCardProps) {
               )}
 
               {/* Content Section */}
-              <div className="flex-1 p-4">
+              <div className="flex-1 p-4 md:py-4 md:pr-4 md:pl-0">
                 {/* Category Badge */}
                 {categoryKey && (
                   <div className="mb-2">
@@ -129,7 +130,7 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                 )}
 
                 {/* Meta Info */}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     <span>

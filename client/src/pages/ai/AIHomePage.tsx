@@ -224,7 +224,8 @@ export default function AIHomePage() {
 
             <TabsContent value="latest" className="mt-6">
               <div className="grid md:grid-cols-3 gap-6" dir="rtl">
-                <div className="md:col-span-2 order-2 md:order-1">
+                {/* News Section - Always First */}
+                <div className="md:col-span-2">
                   <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2" dir="rtl">
                     آخر الأخبار والتطورات
                     <Activity className="w-6 h-6 text-blue-500" />
@@ -260,8 +261,8 @@ export default function AIHomePage() {
                   </div>
                 </div>
 
-                {/* Sidebar */}
-                <div className="space-y-6 order-1 md:order-2">
+                {/* Sidebar - Always Second */}
+                <div className="space-y-6 md:col-span-1">
                   <AITrendsWidget trends={trends} />
                   
                   {/* Stats removed - will be connected to real data in future */}
@@ -275,7 +276,10 @@ export default function AIHomePage() {
                       <p className="text-sm text-gray-400 mb-4">
                         احصل على ملخص يومي لأهم تطورات الذكاء الاصطناعي
                       </p>
-                      <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        data-testid="button-newsletter-subscribe"
+                      >
                         اشترك الآن
                         <ArrowRight className="w-4 h-4 mr-2" />
                       </Button>
