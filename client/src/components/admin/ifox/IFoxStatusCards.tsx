@@ -21,40 +21,40 @@ const statusConfigs = {
     icon: Brain,
     label: "مقالات منشورة",
     labelEn: "Published Articles",
-    gradient: "from-violet-600 via-purple-500 to-indigo-600",
-    bgGradient: "from-violet-500/20 via-purple-500/10 to-indigo-500/20",
-    iconBg: "bg-violet-500/20 dark:bg-violet-400/20",
-    iconColor: "text-violet-400 dark:text-violet-300",
+    gradient: "from-violet-400 via-purple-400 to-indigo-400",
+    bgGradient: "from-violet-500/30 via-purple-500/20 to-indigo-500/30",
+    iconBg: "bg-violet-500/30 dark:bg-violet-400/30",
+    iconColor: "text-violet-300 dark:text-violet-200",
     glowColor: "shadow-violet-500/50",
   },
   scheduled: {
     icon: Clock,
     label: "مقالات مجدولة",
     labelEn: "Scheduled Articles",
-    gradient: "from-cyan-600 via-blue-500 to-indigo-600",
-    bgGradient: "from-cyan-500/20 via-blue-500/10 to-indigo-500/20",
-    iconBg: "bg-cyan-500/20 dark:bg-cyan-400/20",
-    iconColor: "text-cyan-400 dark:text-cyan-300",
+    gradient: "from-cyan-400 via-blue-400 to-indigo-400",
+    bgGradient: "from-cyan-500/30 via-blue-500/20 to-indigo-500/30",
+    iconBg: "bg-cyan-500/30 dark:bg-cyan-400/30",
+    iconColor: "text-cyan-300 dark:text-cyan-200",
     glowColor: "shadow-cyan-500/50",
   },
   draft: {
     icon: FileEdit,
     label: "مسودات",
     labelEn: "Drafts",
-    gradient: "from-amber-600 via-orange-500 to-pink-600",
-    bgGradient: "from-amber-500/20 via-orange-500/10 to-pink-500/20",
-    iconBg: "bg-amber-500/20 dark:bg-amber-400/20",
-    iconColor: "text-amber-400 dark:text-amber-300",
+    gradient: "from-amber-400 via-orange-400 to-pink-400",
+    bgGradient: "from-amber-500/30 via-orange-500/20 to-pink-500/30",
+    iconBg: "bg-amber-500/30 dark:bg-amber-400/30",
+    iconColor: "text-amber-300 dark:text-amber-200",
     glowColor: "shadow-amber-500/50",
   },
   archived: {
     icon: Archive,
     label: "مؤرشفة",
     labelEn: "Archived",
-    gradient: "from-slate-600 via-gray-500 to-zinc-600",
-    bgGradient: "from-slate-500/20 via-gray-500/10 to-zinc-500/20",
-    iconBg: "bg-slate-500/20 dark:bg-slate-400/20",
-    iconColor: "text-slate-400 dark:text-slate-300",
+    gradient: "from-slate-400 via-gray-400 to-zinc-400",
+    bgGradient: "from-slate-500/30 via-gray-500/20 to-zinc-500/30",
+    iconBg: "bg-slate-500/30 dark:bg-slate-400/30",
+    iconColor: "text-slate-300 dark:text-slate-200",
     glowColor: "shadow-slate-500/50",
   },
 };
@@ -132,8 +132,8 @@ export function IFoxStatusCards({ metrics, activeStatus, onSelect, loading = fal
               className={`
                 relative p-6 cursor-pointer transition-all duration-300 overflow-hidden
                 bg-gradient-to-br ${config.bgGradient}
-                backdrop-blur-lg border-white/10
-                dark:border-white/5
+                backdrop-blur-lg border-white/20
+                dark:border-white/10
                 ${isActive ? "ring-2 ring-white/30 shadow-2xl " + config.glowColor : ""}
                 hover:shadow-lg hover:shadow-white/10
               `}
@@ -153,16 +153,16 @@ export function IFoxStatusCards({ metrics, activeStatus, onSelect, loading = fal
                       animate={{ scale: 1 }}
                       transition={{ type: "spring" }}
                     >
-                      <Sparkles className="w-5 h-5 text-white/60" />
+                      <Sparkles className="w-5 h-5 text-gray-300" />
                     </motion.div>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-white/60 dark:text-white/50">
+                  <p className="text-sm font-medium text-gray-200 dark:text-gray-100">
                     {config.label}
                   </p>
-                  <p className="text-xs text-white/40 dark:text-white/30">
+                  <p className="text-xs text-gray-300 dark:text-gray-200">
                     {config.labelEn}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export function IFoxStatusCards({ metrics, activeStatus, onSelect, loading = fal
                   <span className="text-xs text-green-400">
                     +{Math.floor(Math.random() * 20 + 5)}%
                   </span>
-                  <span className="text-xs text-white/40">هذا الأسبوع</span>
+                  <span className="text-xs text-gray-300">هذا الأسبوع</span>
                 </motion.div>
               </div>
 

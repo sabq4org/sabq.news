@@ -144,10 +144,10 @@ export default function IFoxDashboard() {
                   <Brain className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent" data-testid="text-page-title">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                     لوحة تحكم آي فوكس
                   </h1>
-                  <p className="text-white/60" data-testid="text-page-description">
+                  <p className="text-gray-300" data-testid="text-page-description">
                     بوابة إدارة المحتوى الذكي
                   </p>
                 </div>
@@ -155,16 +155,16 @@ export default function IFoxDashboard() {
 
               {/* Key Metrics Row */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-                <Card className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-violet-500/30 to-purple-500/20 border-violet-400/20 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">المشاهدات اليوم</p>
+                        <p className="text-sm text-gray-200">المشاهدات اليوم</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.todayViews.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Eye className="w-8 h-8 text-violet-400 opacity-50" />
+                      <Eye className="w-8 h-8 text-violet-300 opacity-60" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                       <TrendingUp className="w-4 h-4 text-green-400" />
@@ -173,16 +173,16 @@ export default function IFoxDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-blue-500/30 to-cyan-500/20 border-cyan-400/20 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">التفاعل الكلي</p>
+                        <p className="text-sm text-gray-200">التفاعل الكلي</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.totalEngagement.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Activity className="w-8 h-8 text-blue-400 opacity-50" />
+                      <Activity className="w-8 h-8 text-cyan-300 opacity-60" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                       <TrendingUp className="w-4 h-4 text-green-400" />
@@ -191,16 +191,16 @@ export default function IFoxDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-amber-500/30 to-orange-500/20 border-orange-400/20 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">متوسط وقت القراءة</p>
+                        <p className="text-sm text-gray-200">متوسط وقت القراءة</p>
                         <p className="text-2xl font-bold text-white">
                           {stats?.averageReadTime || '0:00'}
                         </p>
                       </div>
-                      <Clock className="w-8 h-8 text-amber-400 opacity-50" />
+                      <Clock className="w-8 h-8 text-amber-300 opacity-60" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                       <TrendingUp className="w-4 h-4 text-green-400" />
@@ -209,18 +209,18 @@ export default function IFoxDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-green-500/30 to-emerald-500/20 border-emerald-400/20 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">AI Score</p>
+                        <p className="text-sm text-gray-200">AI Score</p>
                         <p className="text-2xl font-bold text-white">92</p>
                       </div>
-                      <Cpu className="w-8 h-8 text-green-400 opacity-50" />
+                      <Cpu className="w-8 h-8 text-emerald-300 opacity-60" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                       <Sparkles className="w-4 h-4 text-yellow-400" />
-                      <span className="text-xs text-white/60">ممتاز</span>
+                      <span className="text-xs text-gray-300">ممتاز</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -266,7 +266,7 @@ export default function IFoxDashboard() {
                   >
                     <Link href={action.href}>
                       <Card 
-                        className="cursor-pointer bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg hover:from-white/15 hover:to-white/10 transition-all duration-300"
+                        className="cursor-pointer bg-gradient-to-br from-slate-800/60 to-slate-900/40 border-white/20 backdrop-blur-lg hover:from-slate-800/80 hover:to-slate-900/60 transition-all duration-300"
                         data-testid={`quick-action-${action.title}`}
                       >
                         <CardContent className="p-4">
@@ -274,10 +274,10 @@ export default function IFoxDashboard() {
                             <div className={`p-3 rounded-xl bg-gradient-to-br ${action.color} shadow-lg`}>
                               <Icon className="w-5 h-5 text-white" />
                             </div>
-                            <ArrowUpRight className="w-4 h-4 text-white/40" />
+                            <ArrowUpRight className="w-4 h-4 text-gray-400" />
                           </div>
                           <h3 className="font-semibold text-white mb-1">{action.title}</h3>
-                          <p className="text-xs text-white/60">{action.description}</p>
+                          <p className="text-xs text-gray-300">{action.description}</p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -294,13 +294,13 @@ export default function IFoxDashboard() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+                <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border-white/20 backdrop-blur-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white">
                       <Activity className="w-5 h-5 text-violet-400" />
                       نشاط النشر آخر 7 أيام
                     </CardTitle>
-                    <CardDescription className="text-white/60">
+                    <CardDescription className="text-gray-300">
                       عدد المقالات المنشورة والمشاهدات
                     </CardDescription>
                   </CardHeader>
@@ -363,7 +363,7 @@ export default function IFoxDashboard() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+                <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border-white/20 backdrop-blur-lg">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2 text-white">
@@ -371,7 +371,7 @@ export default function IFoxDashboard() {
                         آخر المقالات المنشورة
                       </CardTitle>
                       <Link href="/dashboard/admin/ifox/articles">
-                        <Button variant="ghost" size="sm" className="text-white/60 hover:text-white">
+                        <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
                           عرض الكل
                           <ArrowUpRight className="w-4 h-4 mr-1" />
                         </Button>
@@ -381,13 +381,13 @@ export default function IFoxDashboard() {
                   <CardContent>
                     <div className="space-y-3">
                       {articlesLoading ? (
-                        <div className="text-center py-8 text-white/60">جاري التحميل...</div>
+                        <div className="text-center py-8 text-gray-300">جاري التحميل...</div>
                       ) : recentArticles?.map((article) => (
                         <motion.div
                           key={article.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 cursor-pointer"
+                          className="p-3 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-all duration-200 cursor-pointer border border-white/10"
                           data-testid={`recent-article-${article.id}`}
                         >
                           <div className="flex items-start justify-between mb-2">
@@ -395,7 +395,7 @@ export default function IFoxDashboard() {
                               <h4 className="text-sm font-medium text-white mb-1 line-clamp-1">
                                 {article.title}
                               </h4>
-                              <div className="flex items-center gap-3 text-xs text-white/60">
+                              <div className="flex items-center gap-3 text-xs text-gray-300">
                                 <span>{article.author}</span>
                                 <span>•</span>
                                 <span>{format(new Date(article.publishedAt), 'dd MMM', { locale: ar })}</span>
@@ -419,10 +419,10 @@ export default function IFoxDashboard() {
                             </Badge>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-xs text-violet-400 border-violet-400/30">
+                            <Badge variant="outline" className="text-xs text-violet-300 border-violet-400/40">
                               {article.category}
                             </Badge>
-                            <div className="flex items-center gap-1 text-xs text-white/40">
+                            <div className="flex items-center gap-1 text-xs text-gray-400">
                               <Activity className="w-3 h-3" />
                               <span>{article.engagement}%</span>
                             </div>
@@ -444,15 +444,15 @@ export default function IFoxDashboard() {
             >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-white/60">AI Performance: 92%</span>
+                <span className="text-sm text-gray-200">AI Performance: 92%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-violet-400" />
-                <span className="text-sm text-white/60">Neural Network: Active</span>
+                <span className="text-sm text-gray-200">Neural Network: Active</span>
               </div>
               <div className="flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-cyan-400" />
-                <span className="text-sm text-white/60">Processing: Optimal</span>
+                <span className="text-sm text-gray-200">Processing: Optimal</span>
               </div>
             </motion.div>
           </div>
