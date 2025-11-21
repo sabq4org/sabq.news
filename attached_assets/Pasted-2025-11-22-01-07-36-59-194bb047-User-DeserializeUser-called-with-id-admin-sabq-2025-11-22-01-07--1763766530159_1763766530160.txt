@@ -1,0 +1,81 @@
+2025-11-22 01:07:36.59
+194bb047
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 01:07:36.70
+194bb047
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 01:07:36.70
+194bb047
+User
+[API] Image generation request from user admin-sabq
+
+2025-11-22 01:07:36.73
+194bb047
+User
+[Nano Banana Pro] Generating image with prompt: "انفوجرافيك احترافي بتصميم عصري يعرض Arabic minimalist infographic design, vertical layout (9:16), c..."
+2025-11-22 01:08:00.03
+194bb047
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 01:08:00.04
+194bb047
+User
+[NotificationWorker] Starting queue processing...
+2025-11-22 01:08:00.15
+194bb047
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 01:08:00.15
+194bb047
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 01:08:00.15
+194bb047
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-22 01:08:03.21
+194bb047
+User
+11:08:03 PM [express] GET /api/ads/slot/sidebar 204 in 56ms
+2025-11-22 01:08:05.40
+194bb047
+User
+[Nano Banana Pro] Image generated successfully in 29s
+2025-11-22 01:08:05.81
+194bb047
+User
+[Nano Banana Pro] Image uploaded to GCS: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/ai-generated/admin-sabq_1763766485404.png
+2025-11-22 01:08:05.81
+194bb047
+User
+[Nano Banana Pro] Public URL: /public-objects/ai-generated/admin-sabq_1763766485404.png
+2025-11-22 01:08:06.01
+194bb047
+User
+11:08:06 PM [express] POST /api/nano-banana/generate 200 in 29594ms :: {"message":"تم توليد الصورة بن…
+2025-11-22 01:08:06.34
+194bb047
+User
+11:08:06 PM [express] GET /api/articles/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8…
+2025-11-22 01:08:06.41
+194bb047
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 01:08:06.43
+194bb047
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 01:08:06.48
+194bb047
+User
+11:08:06 PM [express] POST /api/accessibility/track 200 in 94ms :: {"success":true,"eventId":"719545c…
+2025-11-22 01:08:06.48
+194bb047
+User
+11:08:06 PM [express] POST /api/accessibility/track 200 in 94ms :: {"success":true,"eventId":"719545c…
+2025-11-22 01:08:06.48
+194bb047
+User
+11:08:06 PM [express] POST /api/accessibility/track 200 in 94ms :: {"success":true,"eventId":"719545c…
