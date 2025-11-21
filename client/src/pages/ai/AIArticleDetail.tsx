@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import AIHeader from "@/components/ai/AIHeader";
 import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ImageWithCaption from "@/components/ImageWithCaption";
+import { ImageWithCaption } from "@/components/ImageWithCaption";
 
 export default function AIArticleDetail() {
   const params = useParams<{ slug: string }>();

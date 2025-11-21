@@ -25,6 +25,7 @@ interface AINewsCardProps {
     commentCount?: number | null;
     createdAt: string;
     categoryId?: string | null;
+    categorySlug?: string | null;
     aiClassification?: string | null;
     featured?: boolean;
     trending?: boolean;
@@ -45,8 +46,10 @@ export default function AINewsCard({ article }: AINewsCardProps) {
   const { language } = useLanguage();
   const locale = language === "ar" ? ar : enUS;
   
-  const categoryStyle = article.categoryId 
-    ? categoryColors[article.categoryId] || categoryColors["ai-news"]
+  // Use categorySlug if available, fallback to parsing categoryId if needed
+  const categoryKey = article.categorySlug || article.categoryId;
+  const categoryStyle = categoryKey 
+    ? categoryColors[categoryKey] || categoryColors["ai-news"]
     : categoryColors["ai-news"];
 
   return (
@@ -93,11 +96,11 @@ export default function AINewsCard({ article }: AINewsCardProps) {
               {/* Content Section */}
               <div className="flex-1 p-4">
                 {/* Category Badge */}
-                {article.categoryId && (
+                {categoryKey && (
                   <div className="mb-2">
                     <Badge className={`${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border} text-xs`}>
                       <Sparkles className="w-3 h-3 mr-1" />
-                      {article.categoryId.replace("ai-", "").replace("-", " ").toUpperCase()}
+                      {categoryKey.replace("ai-", "").replace("-", " ").toUpperCase()}
                     </Badge>
                   </div>
                 )}

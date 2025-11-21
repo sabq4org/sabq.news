@@ -3449,7 +3449,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json(articlesList);
+      // Add categorySlug to each article for frontend use
+      const articlesWithCategorySlug = articlesList.map(article => ({
+        ...article,
+        categorySlug: category.slug
+      }));
+
+      res.json(articlesWithCategorySlug);
     } catch (error) {
       console.error("Error fetching category articles:", error);
       res.status(500).json({ message: "Failed to fetch articles" });

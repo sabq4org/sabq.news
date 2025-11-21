@@ -27,7 +27,7 @@ import AIHeader from "@/components/ai/AIHeader";
 import AIAnimatedLogo from "@/components/ai/AIAnimatedLogo";
 import AINewsCard from "@/components/ai/AINewsCard";
 import AITrendsWidget from "@/components/ai/AITrendsWidget";
-import { Article } from "@/../../shared/schema";
+import type { Article } from "@shared/schema";
 
 const categories = [
   { 
@@ -236,7 +236,18 @@ export default function AIHomePage() {
                       </div>
                     ) : articles.length > 0 ? (
                       articles.slice(0, 5).map((article) => (
-                        <AINewsCard key={article.id} article={article} />
+                        <AINewsCard 
+                          key={article.id} 
+                          article={{
+                            ...article,
+                            summary: article.excerpt,
+                            viewCount: article.views,
+                            commentCount: 0,
+                            createdAt: article.createdAt instanceof Date ? article.createdAt.toISOString() : article.createdAt,
+                            featured: article.isFeatured,
+                            trending: false
+                          }} 
+                        />
                       ))
                     ) : (
                       <Card className="bg-slate-900/50 border-slate-800">
