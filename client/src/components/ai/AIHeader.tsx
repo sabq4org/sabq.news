@@ -40,13 +40,13 @@ export default function AIHeader() {
   }, []);
 
   const navItems = [
-    { href: "/ai/ai-news", label: language === "ar" ? "آي سبق - أخبار AI" : "AI News" },
-    { href: "/ai/ai-insights", label: language === "ar" ? "آي عمق - تحليلات" : "AI Insights" },
-    { href: "/ai/ai-opinions", label: language === "ar" ? "آي رأي - آراء" : "AI Opinions" },
-    { href: "/ai/ai-tools", label: language === "ar" ? "آي تطبيق - أدوات" : "AI Tools" },
-    { href: "/ai/ai-voice", label: language === "ar" ? "آي صوت - بودكاست" : "AI Voice" },
-    { href: "/ai/ai-academy", label: language === "ar" ? "آي أكاديمي - تعليم" : "AI Academy" },
-    { href: "/ai/ai-community", label: language === "ar" ? "آي تواصل - مجتمع" : "AI Community" },
+    { href: "/ai/category/ai-news", label: language === "ar" ? "آي سبق - أخبار AI" : "AI News" },
+    { href: "/ai/category/ai-insights", label: language === "ar" ? "آي عمق - تحليلات" : "AI Insights" },
+    { href: "/ai/category/ai-opinions", label: language === "ar" ? "آي رأي - آراء" : "AI Opinions" },
+    { href: "/ai/category/ai-tools", label: language === "ar" ? "آي تطبيق - أدوات" : "AI Tools" },
+    { href: "/ai/category/ai-voice", label: language === "ar" ? "آي صوت - بودكاست" : "AI Voice" },
+    { href: "/ai/category/ai-academy", label: language === "ar" ? "آي أكاديمي - تعليم" : "AI Academy" },
+    { href: "/ai/category/ai-community", label: language === "ar" ? "آي تواصل - مجتمع" : "AI Community" },
   ];
 
   return (
