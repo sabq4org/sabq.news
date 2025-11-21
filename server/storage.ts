@@ -317,6 +317,22 @@ import {
   type InsertPublisherCredit,
   type PublisherCreditLog,
   type InsertPublisherCreditLog,
+  // iFox imports
+  ifoxSettings,
+  ifoxMedia,
+  ifoxAnalytics,
+  ifoxSchedule,
+  ifoxCategorySettings,
+  type IfoxSettings,
+  type InsertIfoxSettings,
+  type IfoxMedia,
+  type InsertIfoxMedia,
+  type IfoxAnalytics,
+  type InsertIfoxAnalytics,
+  type IfoxSchedule,
+  type InsertIfoxSchedule,
+  type IfoxCategorySettings,
+  type InsertIfoxCategorySettings,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1537,6 +1553,71 @@ export interface IStorage {
   }): Promise<{ articles: ArticleWithDetails[]; total: number }>;
   approvePublisherArticle(articleId: string, publisherId: string, performedBy: string): Promise<Article>;
   updatePublisherArticle(articleId: string, publisherId: string, authorId: string, updates: Partial<InsertArticle>): Promise<Article>;
+  
+  // ============================================
+  // iFox Operations - عمليات آي فوكس
+  // ============================================
+  
+  // iFox Articles Management
+  listIFoxArticles(params: {
+    categorySlug?: string;
+    status?: 'draft' | 'published' | 'scheduled' | 'archived';
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<{ articles: Article[], total: number }>;
+  
+  getIFoxArticleStats(): Promise<{
+    byCategory: Record<string, number>;
+    byStatus: Record<string, number>;
+    scheduled: number;
+    total: number;
+  }>;
+  
+  // iFox Settings
+  getIFoxSettings(keys?: string[]): Promise<IfoxSettings[]>;
+  upsertIFoxSetting(key: string, value: any, description?: string, userId?: string): Promise<IfoxSettings>;
+  deleteIFoxSetting(key: string): Promise<void>;
+  
+  // Category Settings
+  getIFoxCategorySettings(categorySlug?: string): Promise<IfoxCategorySettings[]>;
+  upsertIFoxCategorySettings(data: InsertIfoxCategorySettings): Promise<IfoxCategorySettings>;
+  
+  // iFox Media
+  createIFoxMedia(data: InsertIfoxMedia): Promise<IfoxMedia>;
+  listIFoxMedia(params: {
+    type?: string;
+    categorySlug?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ media: IfoxMedia[], total: number }>;
+  deleteIFoxMedia(id: number): Promise<void>;
+  
+  // iFox Schedule
+  createIFoxSchedule(data: InsertIfoxSchedule): Promise<IfoxSchedule>;
+  updateIFoxSchedule(id: number, data: Partial<InsertIfoxSchedule>): Promise<IfoxSchedule>;
+  listIFoxScheduled(params: {
+    status?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  }): Promise<IfoxSchedule[]>;
+  deleteIFoxSchedule(id: number): Promise<void>;
+  processScheduledPublishing(): Promise<{ published: number; failed: number }>;
+  
+  // iFox Analytics
+  recordIFoxAnalytics(data: InsertIfoxAnalytics[]): Promise<void>;
+  getIFoxAnalytics(params: {
+    categorySlug?: string;
+    fromDate: Date;
+    toDate: Date;
+    metrics?: string[];
+  }): Promise<IfoxAnalytics[]>;
+  getIFoxAnalyticsSummary(categorySlug?: string): Promise<{
+    totalViews: number;
+    totalEngagement: number;
+    topCategories: { slug: string; views: number }[];
+    trend: 'up' | 'down' | 'stable';
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -13607,6 +13688,483 @@ export class DatabaseStorage implements IStorage {
     }
 
     return result[0];
+  }
+
+  // ============================================
+  // iFox Operations - عمليات آي فوكس
+  // ============================================
+
+  // iFox Articles Management
+  async listIFoxArticles(params: {
+    categorySlug?: string;
+    status?: 'draft' | 'published' | 'scheduled' | 'archived';
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<{ articles: Article[], total: number }> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 10;
+    const offset = (page - 1) * limit;
+    
+    const conditions = [];
+    
+    // Filter by iFox category
+    conditions.push(eq(articles.categorySlug, 'ifox'));
+    
+    if (params.categorySlug) {
+      conditions.push(eq(articles.categorySlug, params.categorySlug));
+    }
+    
+    if (params.status) {
+      conditions.push(eq(articles.status, params.status));
+    }
+    
+    if (params.search) {
+      conditions.push(
+        or(
+          sql`${articles.title} ILIKE ${`%${params.search}%`}`,
+          sql`${articles.content} ILIKE ${`%${params.search}%`}`
+        )
+      );
+    }
+    
+    const [totalCountResult, articlesList] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(conditions.length > 0 ? and(...conditions) : undefined),
+      db
+        .select()
+        .from(articles)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(articles.createdAt))
+        .limit(limit)
+        .offset(offset)
+    ]);
+    
+    return {
+      articles: articlesList,
+      total: totalCountResult[0]?.count ?? 0
+    };
+  }
+
+  async getIFoxArticleStats(): Promise<{
+    byCategory: Record<string, number>;
+    byStatus: Record<string, number>;
+    scheduled: number;
+    total: number;
+  }> {
+    // Get stats for iFox articles
+    const [categoryStats, statusStats, scheduledCount, totalCount] = await Promise.all([
+      // By category
+      db
+        .select({
+          categorySlug: articles.categorySlug,
+          count: sql<number>`count(*)::int`
+        })
+        .from(articles)
+        .where(eq(articles.categorySlug, 'ifox'))
+        .groupBy(articles.categorySlug),
+      
+      // By status
+      db
+        .select({
+          status: articles.status,
+          count: sql<number>`count(*)::int`
+        })
+        .from(articles)
+        .where(eq(articles.categorySlug, 'ifox'))
+        .groupBy(articles.status),
+      
+      // Scheduled count
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(
+          and(
+            eq(articles.categorySlug, 'ifox'),
+            eq(articles.status, 'scheduled')
+          )
+        ),
+      
+      // Total count
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(articles)
+        .where(eq(articles.categorySlug, 'ifox'))
+    ]);
+    
+    const byCategory: Record<string, number> = {};
+    categoryStats.forEach(stat => {
+      byCategory[stat.categorySlug] = stat.count;
+    });
+    
+    const byStatus: Record<string, number> = {};
+    statusStats.forEach(stat => {
+      byStatus[stat.status] = stat.count;
+    });
+    
+    return {
+      byCategory,
+      byStatus,
+      scheduled: scheduledCount[0]?.count ?? 0,
+      total: totalCount[0]?.count ?? 0
+    };
+  }
+
+  // iFox Settings
+  async getIFoxSettings(keys?: string[]): Promise<IfoxSettings[]> {
+    if (keys && keys.length > 0) {
+      return db
+        .select()
+        .from(ifoxSettings)
+        .where(inArray(ifoxSettings.key, keys));
+    }
+    return db.select().from(ifoxSettings);
+  }
+
+  async upsertIFoxSetting(
+    key: string,
+    value: any,
+    description?: string,
+    userId?: string
+  ): Promise<IfoxSettings> {
+    const [setting] = await db
+      .insert(ifoxSettings)
+      .values({
+        key,
+        value: JSON.stringify(value),
+        description,
+        updatedBy: userId
+      })
+      .onConflictDoUpdate({
+        target: ifoxSettings.key,
+        set: {
+          value: JSON.stringify(value),
+          description,
+          updatedBy: userId,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    
+    return setting;
+  }
+
+  async deleteIFoxSetting(key: string): Promise<void> {
+    await db.delete(ifoxSettings).where(eq(ifoxSettings.key, key));
+  }
+
+  // Category Settings
+  async getIFoxCategorySettings(categorySlug?: string): Promise<IfoxCategorySettings[]> {
+    if (categorySlug) {
+      return db
+        .select()
+        .from(ifoxCategorySettings)
+        .where(eq(ifoxCategorySettings.categorySlug, categorySlug));
+    }
+    return db.select().from(ifoxCategorySettings);
+  }
+
+  async upsertIFoxCategorySettings(data: InsertIfoxCategorySettings): Promise<IfoxCategorySettings> {
+    const [settings] = await db
+      .insert(ifoxCategorySettings)
+      .values(data)
+      .onConflictDoUpdate({
+        target: ifoxCategorySettings.categorySlug,
+        set: {
+          ...data,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    
+    return settings;
+  }
+
+  // iFox Media
+  async createIFoxMedia(data: InsertIfoxMedia): Promise<IfoxMedia> {
+    const [media] = await db
+      .insert(ifoxMedia)
+      .values(data)
+      .returning();
+    
+    return media;
+  }
+
+  async listIFoxMedia(params: {
+    type?: string;
+    categorySlug?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ media: IfoxMedia[], total: number }> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 10;
+    const offset = (page - 1) * limit;
+    
+    const conditions = [];
+    
+    if (params.type) {
+      conditions.push(eq(ifoxMedia.type, params.type));
+    }
+    
+    if (params.categorySlug) {
+      conditions.push(eq(ifoxMedia.categorySlug, params.categorySlug));
+    }
+    
+    const [totalCountResult, mediaList] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(ifoxMedia)
+        .where(conditions.length > 0 ? and(...conditions) : undefined),
+      db
+        .select()
+        .from(ifoxMedia)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(ifoxMedia.createdAt))
+        .limit(limit)
+        .offset(offset)
+    ]);
+    
+    return {
+      media: mediaList,
+      total: totalCountResult[0]?.count ?? 0
+    };
+  }
+
+  async deleteIFoxMedia(id: number): Promise<void> {
+    await db.delete(ifoxMedia).where(eq(ifoxMedia.id, id));
+  }
+
+  // iFox Schedule
+  async createIFoxSchedule(data: InsertIfoxSchedule): Promise<IfoxSchedule> {
+    const [schedule] = await db
+      .insert(ifoxSchedule)
+      .values(data)
+      .returning();
+    
+    return schedule;
+  }
+
+  async updateIFoxSchedule(id: number, data: Partial<InsertIfoxSchedule>): Promise<IfoxSchedule> {
+    const [schedule] = await db
+      .update(ifoxSchedule)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(ifoxSchedule.id, id))
+      .returning();
+    
+    if (!schedule) {
+      throw new Error('لم يتم العثور على الجدولة');
+    }
+    
+    return schedule;
+  }
+
+  async listIFoxScheduled(params: {
+    status?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  }): Promise<IfoxSchedule[]> {
+    const conditions = [];
+    
+    if (params.status) {
+      conditions.push(eq(ifoxSchedule.status, params.status));
+    }
+    
+    if (params.fromDate) {
+      conditions.push(gte(ifoxSchedule.scheduledAt, params.fromDate));
+    }
+    
+    if (params.toDate) {
+      conditions.push(lte(ifoxSchedule.scheduledAt, params.toDate));
+    }
+    
+    return db
+      .select()
+      .from(ifoxSchedule)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(ifoxSchedule.scheduledAt));
+  }
+
+  async deleteIFoxSchedule(id: number): Promise<void> {
+    await db.delete(ifoxSchedule).where(eq(ifoxSchedule.id, id));
+  }
+
+  async processScheduledPublishing(): Promise<{ published: number; failed: number }> {
+    const now = new Date();
+    let published = 0;
+    let failed = 0;
+    
+    // Get all pending scheduled items that are due
+    const dueSchedules = await db
+      .select()
+      .from(ifoxSchedule)
+      .where(
+        and(
+          eq(ifoxSchedule.status, 'pending'),
+          lte(ifoxSchedule.scheduledAt, now)
+        )
+      );
+    
+    for (const schedule of dueSchedules) {
+      try {
+        // Update the related article status to published
+        await db
+          .update(articles)
+          .set({
+            status: 'published',
+            publishedAt: now,
+            updatedAt: now
+          })
+          .where(eq(articles.id, schedule.articleId));
+        
+        // Update schedule status to completed
+        await db
+          .update(ifoxSchedule)
+          .set({
+            status: 'completed',
+            executedAt: now,
+            updatedAt: now
+          })
+          .where(eq(ifoxSchedule.id, schedule.id));
+        
+        published++;
+      } catch (error) {
+        // Update schedule status to failed
+        await db
+          .update(ifoxSchedule)
+          .set({
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+            updatedAt: now
+          })
+          .where(eq(ifoxSchedule.id, schedule.id));
+        
+        failed++;
+      }
+    }
+    
+    return { published, failed };
+  }
+
+  // iFox Analytics
+  async recordIFoxAnalytics(data: InsertIfoxAnalytics[]): Promise<void> {
+    if (data.length === 0) return;
+    
+    await db.insert(ifoxAnalytics).values(data);
+  }
+
+  async getIFoxAnalytics(params: {
+    categorySlug?: string;
+    fromDate: Date;
+    toDate: Date;
+    metrics?: string[];
+  }): Promise<IfoxAnalytics[]> {
+    const conditions = [];
+    
+    if (params.categorySlug) {
+      conditions.push(eq(ifoxAnalytics.categorySlug, params.categorySlug));
+    }
+    
+    conditions.push(gte(ifoxAnalytics.date, params.fromDate));
+    conditions.push(lte(ifoxAnalytics.date, params.toDate));
+    
+    if (params.metrics && params.metrics.length > 0) {
+      conditions.push(inArray(ifoxAnalytics.metric, params.metrics));
+    }
+    
+    return db
+      .select()
+      .from(ifoxAnalytics)
+      .where(and(...conditions))
+      .orderBy(desc(ifoxAnalytics.date));
+  }
+
+  async getIFoxAnalyticsSummary(categorySlug?: string): Promise<{
+    totalViews: number;
+    totalEngagement: number;
+    topCategories: { slug: string; views: number }[];
+    trend: 'up' | 'down' | 'stable';
+  }> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    
+    const conditions = [];
+    if (categorySlug) {
+      conditions.push(eq(ifoxAnalytics.categorySlug, categorySlug));
+    }
+    
+    // Get current period stats
+    const currentPeriodConditions = [
+      ...conditions,
+      gte(ifoxAnalytics.date, thirtyDaysAgo)
+    ];
+    
+    const currentStats = await db
+      .select({
+        metric: ifoxAnalytics.metric,
+        total: sql<number>`sum(value)::int`
+      })
+      .from(ifoxAnalytics)
+      .where(and(...currentPeriodConditions))
+      .groupBy(ifoxAnalytics.metric);
+    
+    // Get previous period stats for trend
+    const previousPeriodConditions = [
+      ...conditions,
+      gte(ifoxAnalytics.date, sixtyDaysAgo),
+      lt(ifoxAnalytics.date, thirtyDaysAgo)
+    ];
+    
+    const previousStats = await db
+      .select({
+        metric: ifoxAnalytics.metric,
+        total: sql<number>`sum(value)::int`
+      })
+      .from(ifoxAnalytics)
+      .where(and(...previousPeriodConditions))
+      .groupBy(ifoxAnalytics.metric);
+    
+    // Get top categories by views
+    const topCategoriesResult = await db
+      .select({
+        slug: ifoxAnalytics.categorySlug,
+        views: sql<number>`sum(value)::int`
+      })
+      .from(ifoxAnalytics)
+      .where(
+        and(
+          eq(ifoxAnalytics.metric, 'views'),
+          gte(ifoxAnalytics.date, thirtyDaysAgo)
+        )
+      )
+      .groupBy(ifoxAnalytics.categorySlug)
+      .orderBy(desc(sql`sum(value)`))
+      .limit(5);
+    
+    const currentViews = currentStats.find(s => s.metric === 'views')?.total || 0;
+    const currentEngagement = currentStats.find(s => s.metric === 'engagement')?.total || 0;
+    const previousViews = previousStats.find(s => s.metric === 'views')?.total || 0;
+    
+    let trend: 'up' | 'down' | 'stable' = 'stable';
+    if (previousViews > 0) {
+      const changePercentage = ((currentViews - previousViews) / previousViews) * 100;
+      if (changePercentage > 10) trend = 'up';
+      else if (changePercentage < -10) trend = 'down';
+    }
+    
+    return {
+      totalViews: currentViews,
+      totalEngagement: currentEngagement,
+      topCategories: topCategoriesResult,
+      trend
+    };
   }
 }
 
