@@ -31,6 +31,7 @@ import {
   Calendar,
   Hash,
   EyeOff,
+  Image as ImageIcon,
 } from "lucide-react";
 import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -44,10 +45,12 @@ import { ReporterSelect } from "@/components/ReporterSelect";
 import { OpinionAuthorSelect } from "@/components/OpinionAuthorSelect";
 import { ImageFocalPointPicker } from "@/components/ImageFocalPointPicker";
 import { SmartLinksPanel } from "@/components/SmartLinksPanel";
+import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
+import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 
-export default function EnglishArticleEditor() {
+export default function UrduArticleEditor() {
   const params = useParams<{ id: string }>();
   const [location, navigate] = useLocation();
   
@@ -62,12 +65,12 @@ export default function EnglishArticleEditor() {
   const queryParams = new URLSearchParams(location.split('?')[1] || '');
   const typeParam = queryParams.get('type') as "news" | "opinion" | "analysis" | "column" | null;
   
-  console.log('[EnglishArticleEditor] params:', params);
-  console.log('[EnglishArticleEditor] location:', location);
-  console.log('[EnglishArticleEditor] pathname:', pathname);
-  console.log('[EnglishArticleEditor] extracted id:', id);
-  console.log('[EnglishArticleEditor] isNewArticle:', isNewArticle);
-  console.log('[EnglishArticleEditor] type query param:', typeParam);
+  console.log('[UrduArticleEditor] params:', params);
+  console.log('[UrduArticleEditor] location:', location);
+  console.log('[UrduArticleEditor] pathname:', pathname);
+  console.log('[UrduArticleEditor] extracted id:', id);
+  console.log('[UrduArticleEditor] isNewArticle:', isNewArticle);
+  console.log('[UrduArticleEditor] type query param:', typeParam);
 
   // Article fields (single language - English only)
   const [title, setTitle] = useState("");
@@ -84,7 +87,7 @@ export default function EnglishArticleEditor() {
   
   // Debug: Track reporterId changes
   useEffect(() => {
-    console.log('[EnglishArticleEditor] reporterId state changed to:', reporterId);
+    console.log('[UrduArticleEditor] reporterId state changed to:', reporterId);
   }, [reporterId]);
   
   const [imageUrl, setImageUrl] = useState("");
@@ -107,6 +110,8 @@ export default function EnglishArticleEditor() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [showAIImageDialog, setShowAIImageDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -122,9 +127,9 @@ export default function EnglishArticleEditor() {
   // Show all categories for Urdu version (no filtering needed)
   const categories = allCategories;
 
-  // Fetch article - using English endpoint
+  // Fetch article - using Urdu endpoint
   const { data: article } = useQuery<ArticleWithDetails>({
-    queryKey: isNewArticle ? ["en-article-editor-new"] : ["/api/ur/dashboard/articles", id],
+    queryKey: isNewArticle ? ["ur-article-editor-new"] : ["/api/ur/dashboard/articles", id],
     enabled: !isNewArticle && !!user,
     refetchOnMount: true, // Always fetch fresh data when opening editor
     staleTime: 0, // Consider data stale immediately to ensure fresh data
@@ -133,7 +138,7 @@ export default function EnglishArticleEditor() {
   // Load article data when editing
   useEffect(() => {
     if (article && !isNewArticle) {
-      console.log('[EnglishArticleEditor] Loading article data:', {
+      console.log('[UrduArticleEditor] Loading article data:', {
         articleId: article.id,
         reporterId: article.reporterId,
         reporterIdType: typeof article.reporterId,
@@ -149,7 +154,7 @@ export default function EnglishArticleEditor() {
       
       // Use reporterId as is - system supports various ID formats (nanoid, UUID, etc.)
       const validReporterId = article.reporterId || null;
-      console.log('[EnglishArticleEditor] Setting reporterId:', {
+      console.log('[UrduArticleEditor] Setting reporterId:', {
         original: article.reporterId,
         validated: validReporterId,
       });
@@ -892,7 +897,7 @@ export default function EnglishArticleEditor() {
                     onChange={(e) => setSubtitle(e.target.value)}
                     placeholder="Subtitle (optional)..."
                     maxLength={120}
-                    data-testid="input-subtitle-en"
+                    data-testid="input-subtitle-ur"
                   />
                   <p className="text-xs text-muted-foreground mt-2">
                     {(subtitle || "").length}/120 characters
@@ -907,7 +912,7 @@ export default function EnglishArticleEditor() {
             {/* Featured Image */}
             <Card>
               <CardHeader>
-                <CardTitle>Featured Image</CardTitle>
+                <CardTitle>نمایاں تصویر</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {imageUrl && (
@@ -916,32 +921,52 @@ export default function EnglishArticleEditor() {
                       src={imageUrl}
                       alt="Preview"
                       className="h-full w-full object-cover"
-                      data-testid="img-preview-en"
+                      data-testid="img-preview-ur"
                     />
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => document.getElementById("image-upload-en")?.click()}
+                    onClick={() => document.getElementById("image-upload-ur")?.click()}
                     disabled={isUploadingImage}
                     className="gap-2"
-                    data-testid="button-upload-image-en"
+                    data-testid="button-upload-image-ur"
                   >
                     {isUploadingImage ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <ImagePlus className="h-4 w-4" />
+                      <Upload className="h-4 w-4" />
                     )}
-                    {imageUrl ? "Change Image" : "Upload Image"}
+                    {imageUrl ? "تصویر تبدیل کریں" : "تصویر اپ لوڈ کریں"}
                   </Button>
                   <input
-                    id="image-upload-en"
+                    id="image-upload-ur"
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
                     className="hidden"
                   />
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMediaPicker(true)}
+                    className="gap-2"
+                    data-testid="button-choose-from-library-ur"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    لائبریری سے منتخب کریں
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAIImageDialog(true)}
+                    className="gap-2 text-primary hover:text-primary"
+                    data-testid="button-generate-with-ai-ur"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    AI سے تیار کریں
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -966,7 +991,7 @@ export default function EnglishArticleEditor() {
                     onClick={handleGenerateSmartContent}
                     disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
                     className="gap-2"
-                    data-testid="button-smart-generate-en"
+                    data-testid="button-smart-generate-ur"
                     title="Auto-generate all editorial elements"
                   >
                     {generateSmartContentMutation.isPending ? (
@@ -1000,7 +1025,7 @@ export default function EnglishArticleEditor() {
                     onClick={handleGenerateSummary}
                     disabled={isGeneratingAI || !content || typeof content !== 'string' || !content.trim()}
                     className="gap-2"
-                    data-testid="button-ai-summary-en"
+                    data-testid="button-ai-summary-ur"
                   >
                     <Sparkles className="h-4 w-4" />
                     Auto Generate
@@ -1018,13 +1043,13 @@ export default function EnglishArticleEditor() {
                   }}
                   placeholder="Short summary of the article..."
                   rows={4}
-                  data-testid="textarea-excerpt-en"
+                  data-testid="textarea-excerpt-ur"
                 />
               </CardContent>
             </Card>
 
             {/* Smart Links Panel */}
-            <div className="h-[600px]" data-testid="smart-links-container-en">
+            <div className="h-[600px]" data-testid="smart-links-container-ur">
               <SmartLinksPanel
                 articleContent={content}
                 articleId={isNewArticle ? undefined : id}
@@ -1045,7 +1070,7 @@ export default function EnglishArticleEditor() {
               </CardHeader>
               <CardContent>
                 <Select value={articleType} onValueChange={(value: any) => setArticleType(value)}>
-                  <SelectTrigger data-testid="select-article-type-en">
+                  <SelectTrigger data-testid="select-article-type-ur">
                     <SelectValue placeholder="Select content type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1070,20 +1095,20 @@ export default function EnglishArticleEditor() {
                 <CardContent>
                   <RadioGroup value={newsType} onValueChange={(value: any) => setNewsType(value)}>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="breaking" id="breaking-en" />
-                      <Label htmlFor="breaking-en" className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="breaking" id="breaking-ur" />
+                      <Label htmlFor="breaking-ur" className="flex items-center gap-2 cursor-pointer">
                         Breaking News
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="featured" id="featured-en" />
-                      <Label htmlFor="featured-en" className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="featured" id="featured-ur" />
+                      <Label htmlFor="featured-ur" className="flex items-center gap-2 cursor-pointer">
                         Featured
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="regular" id="regular-en" />
-                      <Label htmlFor="regular-en" className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="regular" id="regular-ur" />
+                      <Label htmlFor="regular-ur" className="flex items-center gap-2 cursor-pointer">
                         Regular
                       </Label>
                     </div>
@@ -1093,12 +1118,12 @@ export default function EnglishArticleEditor() {
                   <div className="pt-4 border-t mt-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
-                        id="hideFromHomepage-en"
+                        id="hideFromHomepage-ur"
                         checked={hideFromHomepage}
                         onCheckedChange={(checked) => setHideFromHomepage(checked as boolean)}
-                        data-testid="checkbox-hide-from-homepage-en"
+                        data-testid="checkbox-hide-from-homepage-ur"
                       />
-                      <Label htmlFor="hideFromHomepage-en" className="flex items-center gap-2 cursor-pointer text-sm">
+                      <Label htmlFor="hideFromHomepage-ur" className="flex items-center gap-2 cursor-pointer text-sm">
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <div className="font-medium">Hide from Homepage</div>
@@ -1227,9 +1252,9 @@ export default function EnglishArticleEditor() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="publish-type-en">Schedule Publishing</Label>
+                  <Label htmlFor="publish-type-ur">Schedule Publishing</Label>
                   <Switch
-                    id="publish-type-en"
+                    id="publish-type-ur"
                     checked={publishType === "scheduled"}
                     onCheckedChange={(checked) => setPublishType(checked ? "scheduled" : "instant")}
                   />
@@ -1243,7 +1268,7 @@ export default function EnglishArticleEditor() {
                       value={scheduledAt}
                       onChange={(e) => setScheduledAt(e.target.value)}
                       className="w-full"
-                      data-testid="input-scheduled-at-en"
+                      data-testid="input-scheduled-at-ur"
                     />
                   </div>
                 )}
@@ -1259,14 +1284,14 @@ export default function EnglishArticleEditor() {
                 {!isNewArticle && article?.status === "published" && (
                   <div className="space-y-2 pt-2 border-t">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="republish-en" className="cursor-pointer">
+                      <Label htmlFor="republish-ur" className="cursor-pointer">
                         Republish with Current Time
                       </Label>
                       <Switch
-                        id="republish-en"
+                        id="republish-ur"
                         checked={republish}
                         onCheckedChange={setRepublish}
-                        data-testid="switch-republish-en"
+                        data-testid="switch-republish-ur"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -1327,7 +1352,7 @@ export default function EnglishArticleEditor() {
                           onClick={() => analyzeSEOMutation.mutate()}
                           disabled={isAnalyzingSEO}
                           className="gap-2"
-                          data-testid="button-analyze-seo-en"
+                          data-testid="button-analyze-seo-ur"
                         >
                           {isAnalyzingSEO ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1346,7 +1371,7 @@ export default function EnglishArticleEditor() {
                         onChange={(e) => setMetaTitle(e.target.value)}
                         placeholder="SEO title (max 70 chars)"
                         maxLength={70}
-                        data-testid="input-meta-title-en"
+                        data-testid="input-meta-title-ur"
                       />
                       <p className="text-xs text-muted-foreground">
                         {(metaTitle || "").length}/70 characters
@@ -1361,7 +1386,7 @@ export default function EnglishArticleEditor() {
                         placeholder="SEO description (max 160 chars)"
                         maxLength={160}
                         rows={3}
-                        data-testid="textarea-meta-description-en"
+                        data-testid="textarea-meta-description-ur"
                       />
                       <p className="text-xs text-muted-foreground">
                         {(metaDescription || "").length}/160 characters
@@ -1374,7 +1399,7 @@ export default function EnglishArticleEditor() {
                         tags={keywords}
                         onTagsChange={setKeywords}
                         placeholder="Add keywords..."
-                        testId="input-keywords-en"
+                        testId="input-keywords-ur"
                       />
                     </div>
                   </TabsContent>
@@ -1392,6 +1417,35 @@ export default function EnglishArticleEditor() {
           </div>
         </div>
       </div>
+      
+      {/* Media Library Picker Dialog */}
+      <MediaLibraryPicker
+        open={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(media) => {
+          setImageUrl(media.url);
+          setShowMediaPicker(false);
+          toast({
+            title: "تصویر منتخب ہوئی",
+            description: "لائبریری سے تصویر کامیابی سے منتخب کی گئی",
+          });
+        }}
+      />
+      
+      {/* AI Image Generator Dialog */}
+      <AIImageGeneratorDialog
+        open={showAIImageDialog}
+        onClose={() => setShowAIImageDialog(false)}
+        defaultPrompt={title ? `مضمون کے لیے نمایاں تصویر: ${title}` : "مضمون کے لیے نمایاں تصویر"}
+        onImageGenerated={(url) => {
+          setImageUrl(url);
+          setShowAIImageDialog(false);
+          toast({
+            title: "تصویر تیار ہوئی",
+            description: "AI نے کامیابی سے تصویر تیار کی",
+          });
+        }}
+      />
     </UrduDashboardLayout>
   );
 }
