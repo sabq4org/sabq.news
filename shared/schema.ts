@@ -7284,6 +7284,96 @@ export type IfoxCategorySettings = typeof ifoxCategorySettings.$inferSelect;
 export type InsertIfoxCategorySettings = z.infer<typeof insertIfoxCategorySettingsSchema>;
 
 // ============================================
+// AI IMAGE GENERATIONS (NANO BANANA PRO)
+// ============================================
+
+export const aiImageGenerations = pgTable("ai_image_generations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  articleId: varchar("article_id").references(() => articles.id), // Optional: link to article
+  
+  // Prompt & generation details
+  prompt: text("prompt").notNull(),
+  negativePrompt: text("negative_prompt"),
+  model: varchar("model", { length: 100 }).notNull().default("gemini-3-pro-image-preview"), // Nano Banana Pro
+  
+  // Image configuration
+  aspectRatio: varchar("aspect_ratio", { length: 20 }).default("16:9"), // 16:9, 1:1, 4:3, 9:16, 21:9
+  imageSize: varchar("image_size", { length: 10 }).default("2K"), // 1K, 2K, 4K
+  numImages: integer("num_images").default(1), // Max 4
+  
+  // Generation metadata
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, completed, failed
+  imageUrl: text("image_url"), // GCS URL of generated image
+  thumbnailUrl: text("thumbnail_url"), // Smaller preview
+  
+  // Advanced features
+  referenceImages: jsonb("reference_images"), // Array of reference image URLs (max 14)
+  enableSearchGrounding: boolean("enable_search_grounding").default(false), // Use Google Search for facts
+  enableThinking: boolean("enable_thinking").default(true), // Use reasoning process
+  
+  // Brand customization
+  brandingConfig: jsonb("branding_config"), // Logo, colors, watermark settings
+  
+  // Result metadata
+  generationTime: integer("generation_time"), // Time in seconds
+  cost: real("cost"), // Cost in USD
+  metadata: jsonb("metadata"), // Raw response, thinking process, etc.
+  
+  // Error handling
+  errorMessage: text("error_message"),
+  retryCount: integer("retry_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ai_image_gen_user_idx").on(table.userId),
+  index("ai_image_gen_article_idx").on(table.articleId),
+  index("ai_image_gen_status_idx").on(table.status),
+  index("ai_image_gen_created_idx").on(table.createdAt),
+]);
+
+// Relations
+export const aiImageGenerationsRelations = relations(aiImageGenerations, ({ one }) => ({
+  user: one(users, {
+    fields: [aiImageGenerations.userId],
+    references: [users.id],
+  }),
+  article: one(articles, {
+    fields: [aiImageGenerations.articleId],
+    references: [articles.id],
+  }),
+}));
+
+// Insert schema
+export const insertAiImageGenerationSchema = createInsertSchema(aiImageGenerations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  prompt: z.string().min(1, "البرومبت مطلوب").max(5000, "البرومبت طويل جداً"),
+  negativePrompt: z.string().max(2000).optional(),
+  model: z.string().default("gemini-3-pro-image-preview"),
+  aspectRatio: z.enum(["1:1", "16:9", "4:3", "9:16", "21:9", "3:4"]).default("16:9"),
+  imageSize: z.enum(["1K", "2K", "4K"]).default("2K"),
+  numImages: z.number().int().min(1).max(4).default(1),
+  articleId: z.string().optional(),
+  referenceImages: z.array(z.string().url()).max(14).optional(),
+  enableSearchGrounding: z.boolean().default(false),
+  enableThinking: z.boolean().default(true),
+  brandingConfig: z.object({
+    logoUrl: z.string().url().optional(),
+    watermarkText: z.string().max(100).optional(),
+    primaryColor: z.string().optional(),
+    secondaryColor: z.string().optional(),
+  }).optional(),
+});
+
+// Select types
+export type AiImageGeneration = typeof aiImageGenerations.$inferSelect;
+export type InsertAiImageGeneration = z.infer<typeof insertAiImageGenerationSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
