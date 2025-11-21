@@ -27,7 +27,7 @@ export default function HeaderMascot() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <Link href="/ai/ifox">
+        <Link href="/ai">
           <motion.div
             className="fixed left-4 top-20 z-40 cursor-pointer group"
             initial={{ x: -200, opacity: 0 }}
@@ -49,7 +49,7 @@ export default function HeaderMascot() {
             }}
             onHoverStart={() => setIsHovered(true)}
             onHoverEnd={() => setIsHovered(false)}
-            data-testid="mascot-ifox-link"
+            data-testid="mascot-ai-link"
           >
           <motion.div
             className="relative w-24 h-24"
