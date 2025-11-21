@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { Eye, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { isAICategory } from "@/utils/filterAICategories";
 
 // Icon mapper
 const getIcon = (iconName: string) => {
@@ -345,11 +346,20 @@ export function QuadCategoriesBlock() {
     queryKey: ["/api/blocks/quad-categories"],
   });
 
+  // Filter out AI categories from the quad block
+  const filteredData = useMemo(() => {
+    if (!data) return null;
+    return {
+      ...data,
+      items: data.items.filter(item => !isAICategory({ id: '', slug: item.category.slug }))
+    };
+  }, [data]);
+
   if (isLoading) {
     return <QuadCategoriesSkeleton />;
   }
 
-  if (!data || data.items.length === 0) {
+  if (!filteredData || filteredData.items.length === 0) {
     return null;
   }
 
@@ -357,25 +367,25 @@ export function QuadCategoriesBlock() {
     <div 
       data-testid="quad-categories-block"
       className="w-full"
-      style={data.backgroundColor ? { backgroundColor: data.backgroundColor } : undefined}
+      style={filteredData.backgroundColor ? { backgroundColor: filteredData.backgroundColor } : undefined}
     >
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-6">
           {/* Mobile View: Compact List (always on mobile) */}
           <div className="lg:hidden">
-            <MobileCompactList items={data.items} />
+            <MobileCompactList items={filteredData.items} />
           </div>
 
           {/* Tablet View: 2 columns */}
           <div className="hidden lg:grid xl:hidden grid-cols-2 gap-4">
-            {data.items.map((item, index) => (
+            {filteredData.items.map((item, index) => (
               <CategoryColumn key={item.category.slug} data={item} index={index} />
             ))}
           </div>
 
           {/* Desktop View: 4 columns */}
           <div className="hidden xl:grid grid-cols-4 gap-4">
-            {data.items.map((item, index) => (
+            {filteredData.items.map((item, index) => (
               <CategoryColumn key={item.category.slug} data={item} index={index} />
             ))}
           </div>

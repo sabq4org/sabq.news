@@ -3,9 +3,11 @@ import { Link } from "wouter";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@shared/schema";
+import { useMemo } from "react";
+import { filterAICategories } from "@/utils/filterAICategories";
 
 export function NavigationBar() {
-  const { data: coreCategories = [] } = useQuery<Category[]>({
+  const { data: allCoreCategories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories/smart", "core", "active"],
     queryFn: async () => {
       const params = new URLSearchParams({ type: "core", status: "active" });
@@ -14,6 +16,9 @@ export function NavigationBar() {
       return await res.json();
     },
   });
+  
+  // Filter out AI categories from navigation
+  const coreCategories = useMemo(() => filterAICategories(allCoreCategories), [allCoreCategories]);
 
   return (
     <div className="w-full border-b bg-background hidden md:block">

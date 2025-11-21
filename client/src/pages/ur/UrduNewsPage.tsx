@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UrduLayout } from "@/components/ur/UrduLayout";
 import { UrduNewsAnalyticsHero } from "@/components/ur/UrduNewsAnalyticsHero";
@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import type { EnArticle, EnCategory } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
+import { filterAICategories } from "@/utils/filterAICategories";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -44,10 +45,13 @@ export default function UrduNewsPage() {
     queryKey: ["/api/ur/news/analytics"],
   });
 
-  // Fetch categories for filter
-  const { data: categories = [] } = useQuery<EnCategory[]>({
+  // Fetch categories for filter (excluding AI categories)
+  const { data: allCategories = [] } = useQuery<EnCategory[]>({
     queryKey: ["/api/ur/categories"],
   });
+  
+  // Filter out AI categories from main site
+  const categories = useMemo(() => filterAICategories(allCategories), [allCategories]);
 
   // Fetch articles
   const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { EnglishLayout } from "@/components/en/EnglishLayout";
 import { EnglishNewsAnalyticsHero } from "@/components/en/EnglishNewsAnalyticsHero";
@@ -10,8 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, ChevronLeft, Clock, Eye, Zap, Flame, MessageSquare, Sparkles } from "lucide-react";
 import { Link } from "wouter";
-import type { EnArticle, EnCategory } from "@shared/schema";
+import { type EnArticle, EnCategory } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+import { filterAICategories } from "@/utils/filterAICategories";
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -43,10 +44,13 @@ export default function EnglishNewsPage() {
     queryKey: ["/api/en/news/analytics"],
   });
 
-  // Fetch categories for filter
-  const { data: categories = [] } = useQuery<EnCategory[]>({
+  // Fetch categories for filter (excluding AI categories)
+  const { data: allCategories = [] } = useQuery<EnCategory[]>({
     queryKey: ["/api/en/categories"],
   });
+  
+  // Filter out AI categories from main site
+  const categories = useMemo(() => filterAICategories(allCategories), [allCategories]);
 
   // Fetch articles
   const { data: articles = [], isLoading: articlesLoading } = useQuery<EnArticle[]>({

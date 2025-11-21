@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import type { ArticleWithDetails, Category } from "@shared/schema";
+import { filterAICategories } from "@/utils/filterAICategories";
 
 type TimeRange = 'today' | 'week' | 'month' | 'all';
 type Mood = 'all' | 'trending' | 'calm' | 'hot';
@@ -47,10 +48,13 @@ export default function NewsPage() {
     queryKey: ["/api/news/analytics"],
   });
 
-  // Fetch categories for filter
-  const { data: categories = [] } = useQuery<Category[]>({
+  // Fetch categories for filter (excluding AI categories)
+  const { data: allCategories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+  
+  // Filter out AI categories from main site
+  const categories = useMemo(() => filterAICategories(allCategories), [allCategories]);
 
   // Fetch articles
   const { data: articles = [], isLoading: articlesLoading } = useQuery<ArticleWithDetails[]>({
