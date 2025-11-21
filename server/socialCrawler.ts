@@ -77,6 +77,7 @@ function generateArticleHTML(article: any, baseUrl: string): string {
     baseUrl,
     publishedTime: article.published_at ? new Date(article.published_at).toISOString() : undefined,
     modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
+    twitterSite: '@sabq',
   });
 }
 
@@ -102,6 +103,7 @@ function generateCategoryHTML(category: any, baseUrl: string): string {
     image: safeSeoImage,
     type: 'website',
     baseUrl,
+    twitterSite: '@sabq',
   });
 }
 
@@ -130,6 +132,7 @@ function generateReporterHTML(user: any, baseUrl: string): string {
     image: safeSeoImage,
     type: 'profile',
     baseUrl,
+    twitterSite: '@sabq',
   });
 }
 
@@ -158,6 +161,7 @@ function generateWriterHTML(user: any, baseUrl: string): string {
     image: safeSeoImage,
     type: 'profile',
     baseUrl,
+    twitterSite: '@sabq',
   });
 }
 
@@ -185,6 +189,7 @@ function generateOmqHTML(article: any, baseUrl: string): string {
     type: 'article',
     baseUrl,
     publishedTime: article.published_at ? new Date(article.published_at).toISOString() : undefined,
+    twitterSite: '@sabq',
   });
 }
 
@@ -209,6 +214,7 @@ function generateIFoxHTML(baseUrl: string): string {
     image: safeSeoImage,
     type: 'website',
     baseUrl,
+    twitterSite: '@sabq',
   });
 }
 
@@ -224,10 +230,12 @@ interface MetaHTMLOptions {
   baseUrl: string;
   publishedTime?: string;
   modifiedTime?: string;
+  twitterSite?: string;
+  twitterCreator?: string;
 }
 
 function generateMetaHTML(options: MetaHTMLOptions): string {
-  const { title, description, url, image, type, baseUrl, publishedTime, modifiedTime } = options;
+  const { title, description, url, image, type, baseUrl, publishedTime, modifiedTime, twitterSite, twitterCreator } = options;
   
   // Note: title, description, url, and image are already escaped by the calling functions
   // We use them directly without double-escaping
@@ -254,8 +262,10 @@ function generateMetaHTML(options: MetaHTMLOptions): string {
   ${publishedTime ? `<meta property="article:published_time" content="${publishedTime}">` : ''}
   ${modifiedTime ? `<meta property="article:modified_time" content="${modifiedTime}">` : ''}
   
-  <!-- Twitter -->
+  <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
+  ${twitterSite ? `<meta name="twitter:site" content="${escapeHtml(twitterSite)}">` : ''}
+  ${twitterCreator ? `<meta name="twitter:creator" content="${escapeHtml(twitterCreator)}">` : ''}
   <meta name="twitter:url" content="${url}">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
