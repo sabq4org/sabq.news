@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isPast, isFuture } from "date-fns";
 import { ar } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
 import { IFoxCalendar } from "@/components/admin/ifox/IFoxCalendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
