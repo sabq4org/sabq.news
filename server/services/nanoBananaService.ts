@@ -7,15 +7,18 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { ObjectStorageService } from "../objectStorage";
 import pRetry from "p-retry";
 
-// Validate required environment variables
-if (!process.env.GEMINI_API_KEY) {
-  console.error("[Nano Banana Pro] CRITICAL: GEMINI_API_KEY is not set!");
+// Validate required environment variables - Try both possible key names
+const apiKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+if (!apiKey) {
+  console.error("[Nano Banana Pro] CRITICAL: GEMINI_API_KEY or AI_INTEGRATIONS_GEMINI_API_KEY is not set!");
   console.error("[Nano Banana Pro] Image generation will fail without valid API key");
+} else {
+  console.log("[Nano Banana Pro] API key configured successfully");
 }
 
 // Initialize Gemini client with custom API key
 const geminiClient = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || "missing-api-key",
+  apiKey: apiKey || "missing-api-key",
 });
 
 // Initialize Object Storage Service
@@ -155,11 +158,30 @@ export async function generateImage(
     
     const generationTime = Math.round((Date.now() - startTime) / 1000);
     
+    // Log full response for debugging
+    console.log(`[Nano Banana Pro] Full response structure:`, JSON.stringify({
+      hasResponse: !!response,
+      hasCandidates: !!response.candidates,
+      candidatesLength: response.candidates?.length,
+      firstCandidate: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null,
+      hasContent: !!response.candidates?.[0]?.content,
+      hasParts: !!response.candidates?.[0]?.content?.parts,
+      partsLength: response.candidates?.[0]?.content?.parts?.length
+    }, null, 2));
+    
     // Extract image data
     const candidate = response.candidates?.[0];
     const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
     
+    console.log(`[Nano Banana Pro] Image part found:`, {
+      hasImagePart: !!imagePart,
+      hasInlineData: !!imagePart?.inlineData,
+      hasData: !!imagePart?.inlineData?.data,
+      dataLength: imagePart?.inlineData?.data?.length
+    });
+    
     if (!imagePart?.inlineData?.data) {
+      console.error(`[Nano Banana Pro] No image data in response. Full response:`, JSON.stringify(response, null, 2));
       throw new Error("No image data in response");
     }
     
