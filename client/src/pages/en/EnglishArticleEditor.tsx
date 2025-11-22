@@ -32,6 +32,7 @@ import {
   Hash,
   EyeOff,
   Image as ImageIcon,
+  LayoutGrid,
 } from "lucide-react";
 import { EnglishDashboardLayout } from "@/components/en/EnglishDashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -48,6 +49,7 @@ import { SmartLinksPanel } from "@/components/SmartLinksPanel";
 import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
+import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 
 export default function EnglishArticleEditor() {
@@ -112,6 +114,7 @@ export default function EnglishArticleEditor() {
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
+  const [showInfographicDialog, setShowInfographicDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -959,6 +962,15 @@ export default function EnglishArticleEditor() {
                     <Sparkles className="h-4 w-4 text-primary" />
                     Generate with AI
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowInfographicDialog(true)}
+                    className="gap-2"
+                    data-testid="button-generate-infographic-en"
+                  >
+                    <LayoutGrid className="h-4 w-4 text-primary" />
+                    Infographic
+                  </Button>
                   <input
                     id="image-upload-en"
                     type="file"
@@ -1442,6 +1454,26 @@ export default function EnglishArticleEditor() {
           toast({
             title: "Image Generated",
             description: "AI-generated image created successfully",
+          });
+        }}
+      />
+
+      {/* Infographic Generator Dialog */}
+      <InfographicGeneratorDialog
+        isOpen={showInfographicDialog}
+        onClose={() => setShowInfographicDialog(false)}
+        language="en"
+        initialContent={(() => {
+          // Extract first 500 characters and remove HTML tags
+          const plainText = content.replace(/<[^>]*>/g, '');
+          return plainText.substring(0, 500);
+        })()}
+        onImageGenerated={(url) => {
+          setImageUrl(url);
+          setShowInfographicDialog(false);
+          toast({
+            title: "Infographic Generated",
+            description: "Infographic created and set as featured image",
           });
         }}
       />
