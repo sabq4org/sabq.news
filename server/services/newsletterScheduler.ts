@@ -6,14 +6,14 @@ import {
   audioNewsletters,
   audioNewsletterArticles,
   users,
-  notifications,
+  notificationsInbox,
   type Article,
   type InsertAudioNewsletter,
-  type InsertNotification,
+  type NotificationInbox,
 } from '@shared/schema';
 import { nanoid } from 'nanoid';
 import { audioNewsletterService, NewsletterTemplate, ARABIC_VOICES } from './audioNewsletterService';
-import { sendEmailNotification } from '../utils/email';
+import { sendEmailNotification } from './email';
 import { addDays, subHours, subDays, startOfDay, endOfDay, format } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
@@ -321,12 +321,12 @@ class NewsletterScheduler {
       
       // Create notifications for all admins
       const notificationPromises = adminUsers.map(admin =>
-        db.insert(notifications).values({
+        db.insert(notificationsInbox).values({
           id: nanoid(),
           userId: admin.id,
-          type: status === 'success' ? 'newsletter_created' : 'system_alert',
+          type: status === 'success' ? 'info' : 'alert',
           title: notificationTitle,
-          body: notificationBody,
+          message: notificationBody,
           metadata: {
             newsletterId,
             scheduleType,
@@ -334,9 +334,9 @@ class NewsletterScheduler {
             error: error?.message,
             timestamp: new Date().toISOString()
           },
-          read: false,
-          createdAt: new Date().toISOString()
-        } as InsertNotification)
+          isRead: false,
+          createdAt: new Date()
+        })
       );
       
       await Promise.all(notificationPromises);

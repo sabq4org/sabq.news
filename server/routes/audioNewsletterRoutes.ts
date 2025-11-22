@@ -857,4 +857,656 @@ router.get('/jobs/:jobId/stream', requireAuth, async (req, res) => {
   req.on('close', cleanup);
 });
 
+// ================ ANALYTICS ENDPOINTS ================
+
+// Get analytics overview - summary metrics
+router.get('/analytics/overview', requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    // Build date conditions
+    const dateConditions = [];
+    if (startDate) {
+      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+    }
+    if (endDate) {
+      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+    }
+    const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
+    
+    // Get total newsletters
+    const [{ totalNewsletters }] = await db
+      .select({ totalNewsletters: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.status, 'published'));
+    
+    // Get total listens and unique listeners
+    const listensData = await db
+      .select({
+        totalListens: db.sql`count(*)`,
+        uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+        totalDuration: db.sql`sum(${audioNewsletterListens.duration})`,
+        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+      })
+      .from(audioNewsletterListens)
+      .where(dateClause);
+    
+    // Get active listeners (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const [{ activeListeners }] = await db
+      .select({
+        activeListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`
+      })
+      .from(audioNewsletterListens)
+      .where(gte(audioNewsletterListens.listenedAt, thirtyDaysAgo.toISOString()));
+    
+    // Get scheduled newsletters count
+    const [{ scheduledCount }] = await db
+      .select({ scheduledCount: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.status, 'scheduled'));
+    
+    // Get today's published count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [{ publishedToday }] = await db
+      .select({ publishedToday: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(
+        and(
+          eq(audioNewsletters.status, 'published'),
+          gte(audioNewsletters.publishedAt, today.toISOString())
+        )
+      );
+    
+    // Calculate weekly growth
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const [{ thisWeekListens }] = await db
+      .select({ thisWeekListens: db.sql`count(*)` })
+      .from(audioNewsletterListens)
+      .where(gte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString()));
+    
+    const [{ lastWeekListens }] = await db
+      .select({ lastWeekListens: db.sql`count(*)` })
+      .from(audioNewsletterListens)
+      .where(
+        and(
+          gte(audioNewsletterListens.listenedAt, twoWeeksAgo.toISOString()),
+          lte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString())
+        )
+      );
+    
+    const weeklyGrowth = lastWeekListens ? 
+      ((Number(thisWeekListens) - Number(lastWeekListens)) / Number(lastWeekListens)) * 100 : 0;
+    
+    // Get top newsletter
+    const topNewsletter = await db
+      .select({
+        title: audioNewsletters.title,
+        listens: db.sql`count(${audioNewsletterListens.id})`
+      })
+      .from(audioNewsletters)
+      .leftJoin(
+        audioNewsletterListens,
+        eq(audioNewsletters.id, audioNewsletterListens.newsletterId)
+      )
+      .where(eq(audioNewsletters.status, 'published'))
+      .groupBy(audioNewsletters.id, audioNewsletters.title)
+      .orderBy(db.sql`count(${audioNewsletterListens.id}) desc`)
+      .limit(1);
+    
+    res.json({
+      totalNewsletters: Number(totalNewsletters) || 0,
+      totalListens: Number(listensData[0]?.totalListens) || 0,
+      uniqueListeners: Number(listensData[0]?.uniqueListeners) || 0,
+      averageCompletion: Number(listensData[0]?.avgCompletion) || 0,
+      totalHoursListened: Math.round(Number(listensData[0]?.totalDuration || 0) / 3600),
+      activeListeners: Number(activeListeners) || 0,
+      scheduledCount: Number(scheduledCount) || 0,
+      publishedToday: Number(publishedToday) || 0,
+      weeklyGrowth,
+      topNewsletter: topNewsletter[0] || null
+    });
+  } catch (error) {
+    console.error('Error fetching analytics overview:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics overview' });
+  }
+});
+
+// Get trends data for charts
+router.get('/analytics/trends', requireAdmin, async (req, res) => {
+  try {
+    const { 
+      period = 'daily', // daily, weekly, monthly
+      startDate,
+      endDate,
+      metric = 'listens' // listens, completion, duration, unique_users
+    } = req.query;
+    
+    // Build date conditions
+    const dateConditions = [];
+    if (startDate) {
+      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+    }
+    if (endDate) {
+      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+    } else {
+      // Default to last 30 days if no end date
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateConditions.push(gte(audioNewsletterListens.listenedAt, thirtyDaysAgo.toISOString()));
+    }
+    const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
+    
+    // Determine grouping based on period
+    let dateFormat: string;
+    let groupByExpression: any;
+    
+    switch (period) {
+      case 'hourly':
+        dateFormat = 'YYYY-MM-DD HH24:00';
+        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-MM-DD HH24:00')`;
+        break;
+      case 'weekly':
+        dateFormat = 'YYYY-WW';
+        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-WW')`;
+        break;
+      case 'monthly':
+        dateFormat = 'YYYY-MM';
+        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-MM')`;
+        break;
+      default: // daily
+        dateFormat = 'YYYY-MM-DD';
+        groupByExpression = db.sql`date(${audioNewsletterListens.listenedAt})`;
+    }
+    
+    // Get trends data based on metric
+    let trendsQuery;
+    
+    switch (metric) {
+      case 'completion':
+        trendsQuery = db
+          .select({
+            date: groupByExpression,
+            value: db.sql`avg(${audioNewsletterListens.completionRate})`,
+            count: db.sql`count(*)`
+          })
+          .from(audioNewsletterListens)
+          .where(dateClause)
+          .groupBy(groupByExpression)
+          .orderBy(groupByExpression);
+        break;
+      
+      case 'duration':
+        trendsQuery = db
+          .select({
+            date: groupByExpression,
+            value: db.sql`avg(${audioNewsletterListens.duration})`,
+            total: db.sql`sum(${audioNewsletterListens.duration})`,
+            count: db.sql`count(*)`
+          })
+          .from(audioNewsletterListens)
+          .where(dateClause)
+          .groupBy(groupByExpression)
+          .orderBy(groupByExpression);
+        break;
+      
+      case 'unique_users':
+        trendsQuery = db
+          .select({
+            date: groupByExpression,
+            value: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+            count: db.sql`count(*)`
+          })
+          .from(audioNewsletterListens)
+          .where(dateClause)
+          .groupBy(groupByExpression)
+          .orderBy(groupByExpression);
+        break;
+      
+      default: // listens
+        trendsQuery = db
+          .select({
+            date: groupByExpression,
+            value: db.sql`count(*)`,
+            uniqueUsers: db.sql`count(distinct ${audioNewsletterListens.userId})`
+          })
+          .from(audioNewsletterListens)
+          .where(dateClause)
+          .groupBy(groupByExpression)
+          .orderBy(groupByExpression);
+    }
+    
+    const trends = await trendsQuery;
+    
+    // Get peak listening hours (for heatmap)
+    const hoursData = await db
+      .select({
+        hour: db.sql`extract(hour from ${audioNewsletterListens.listenedAt}::timestamp)`,
+        dayOfWeek: db.sql`extract(dow from ${audioNewsletterListens.listenedAt}::timestamp)`,
+        count: db.sql`count(*)`
+      })
+      .from(audioNewsletterListens)
+      .where(dateClause)
+      .groupBy(
+        db.sql`extract(hour from ${audioNewsletterListens.listenedAt}::timestamp)`,
+        db.sql`extract(dow from ${audioNewsletterListens.listenedAt}::timestamp)`
+      );
+    
+    // Get device type distribution
+    const deviceData = await db
+      .select({
+        deviceType: audioNewsletterListens.deviceType,
+        count: db.sql`count(*)`,
+        percentage: db.sql`count(*)::float / (select count(*) from ${audioNewsletterListens} where ${dateClause}) * 100`
+      })
+      .from(audioNewsletterListens)
+      .where(dateClause)
+      .groupBy(audioNewsletterListens.deviceType);
+    
+    res.json({
+      trends: trends.map(t => ({
+        date: t.date,
+        value: Number(t.value) || 0,
+        ...t
+      })),
+      peakHours: hoursData.map(h => ({
+        hour: Number(h.hour),
+        dayOfWeek: Number(h.dayOfWeek),
+        count: Number(h.count)
+      })),
+      deviceDistribution: deviceData.map(d => ({
+        type: d.deviceType || 'unknown',
+        count: Number(d.count),
+        percentage: Number(d.percentage) || 0
+      })),
+      period,
+      metric
+    });
+  } catch (error) {
+    console.error('Error fetching analytics trends:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics trends' });
+  }
+});
+
+// Get top performing newsletters
+router.get('/analytics/top-newsletters', requireAdmin, async (req, res) => {
+  try {
+    const {
+      limit = '10',
+      sortBy = 'listens', // listens, completion, duration
+      startDate,
+      endDate
+    } = req.query;
+    
+    // Build date conditions
+    const dateConditions = [];
+    if (startDate) {
+      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+    }
+    if (endDate) {
+      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+    }
+    const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
+    
+    // Get top newsletters based on sort criteria
+    let orderByExpression;
+    switch (sortBy) {
+      case 'completion':
+        orderByExpression = db.sql`avg(${audioNewsletterListens.completionRate}) desc`;
+        break;
+      case 'duration':
+        orderByExpression = db.sql`avg(${audioNewsletterListens.duration}) desc`;
+        break;
+      default: // listens
+        orderByExpression = db.sql`count(${audioNewsletterListens.id}) desc`;
+    }
+    
+    const topNewsletters = await db
+      .select({
+        id: audioNewsletters.id,
+        title: audioNewsletters.title,
+        template: audioNewsletters.template,
+        publishedAt: audioNewsletters.publishedAt,
+        duration: audioNewsletters.duration,
+        totalListens: db.sql`count(${audioNewsletterListens.id})`,
+        uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`,
+        avgDuration: db.sql`avg(${audioNewsletterListens.duration})`,
+        totalDuration: db.sql`sum(${audioNewsletterListens.duration})`
+      })
+      .from(audioNewsletters)
+      .leftJoin(
+        audioNewsletterListens,
+        eq(audioNewsletters.id, audioNewsletterListens.newsletterId)
+      )
+      .where(
+        and(
+          eq(audioNewsletters.status, 'published'),
+          dateClause
+        )
+      )
+      .groupBy(
+        audioNewsletters.id,
+        audioNewsletters.title,
+        audioNewsletters.template,
+        audioNewsletters.publishedAt,
+        audioNewsletters.duration
+      )
+      .orderBy(orderByExpression)
+      .limit(parseInt(limit as string));
+    
+    res.json({
+      newsletters: topNewsletters.map(n => ({
+        ...n,
+        totalListens: Number(n.totalListens) || 0,
+        uniqueListeners: Number(n.uniqueListeners) || 0,
+        avgCompletion: Number(n.avgCompletion) || 0,
+        avgDuration: Number(n.avgDuration) || 0,
+        totalHours: Math.round(Number(n.totalDuration || 0) / 3600)
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching top newsletters:', error);
+    res.status(500).json({ error: 'Failed to fetch top newsletters' });
+  }
+});
+
+// Export analytics data as CSV
+router.get('/analytics/export', requireAdmin, async (req, res) => {
+  try {
+    const {
+      type = 'overview', // overview, newsletters, listens
+      startDate,
+      endDate
+    } = req.query;
+    
+    // Build date conditions
+    const dateConditions = [];
+    if (startDate) {
+      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+    }
+    if (endDate) {
+      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+    }
+    const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
+    
+    let csvData = '';
+    let filename = '';
+    
+    switch (type) {
+      case 'newsletters':
+        // Export newsletter details
+        const newsletters = await db
+          .select({
+            id: audioNewsletters.id,
+            title: audioNewsletters.title,
+            template: audioNewsletters.template,
+            status: audioNewsletters.status,
+            duration: audioNewsletters.duration,
+            publishedAt: audioNewsletters.publishedAt,
+            createdAt: audioNewsletters.createdAt,
+            totalListens: db.sql`count(${audioNewsletterListens.id})`,
+            uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+            avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+          })
+          .from(audioNewsletters)
+          .leftJoin(
+            audioNewsletterListens,
+            eq(audioNewsletters.id, audioNewsletterListens.newsletterId)
+          )
+          .where(dateClause ? and(eq(audioNewsletters.status, 'published'), dateClause) : eq(audioNewsletters.status, 'published'))
+          .groupBy(
+            audioNewsletters.id,
+            audioNewsletters.title,
+            audioNewsletters.template,
+            audioNewsletters.status,
+            audioNewsletters.duration,
+            audioNewsletters.publishedAt,
+            audioNewsletters.createdAt
+          );
+        
+        // Create CSV
+        csvData = 'ID,Title,Template,Status,Duration (seconds),Published At,Created At,Total Listens,Unique Listeners,Avg Completion (%)\n';
+        csvData += newsletters.map(n => 
+          `"${n.id}","${n.title}","${n.template}","${n.status}",${n.duration || 0},"${n.publishedAt || ''}","${n.createdAt}",${n.totalListens || 0},${n.uniqueListeners || 0},${Number(n.avgCompletion || 0).toFixed(2)}`
+        ).join('\n');
+        
+        filename = `newsletters-${new Date().toISOString().split('T')[0]}.csv`;
+        break;
+      
+      case 'listens':
+        // Export listen events
+        const listens = await db
+          .select({
+            newsletterTitle: audioNewsletters.title,
+            userId: audioNewsletterListens.userId,
+            listenedAt: audioNewsletterListens.listenedAt,
+            duration: audioNewsletterListens.duration,
+            completionRate: audioNewsletterListens.completionRate,
+            deviceType: audioNewsletterListens.deviceType,
+            userAgent: audioNewsletterListens.userAgent
+          })
+          .from(audioNewsletterListens)
+          .leftJoin(
+            audioNewsletters,
+            eq(audioNewsletterListens.newsletterId, audioNewsletters.id)
+          )
+          .where(dateClause)
+          .orderBy(desc(audioNewsletterListens.listenedAt));
+        
+        // Create CSV
+        csvData = 'Newsletter,User ID,Listened At,Duration (seconds),Completion (%),Device Type,User Agent\n';
+        csvData += listens.map(l => 
+          `"${l.newsletterTitle}","${l.userId || 'anonymous'}","${l.listenedAt}",${l.duration || 0},${l.completionRate || 0},"${l.deviceType || 'unknown'}","${l.userAgent || ''}"`
+        ).join('\n');
+        
+        filename = `listen-events-${new Date().toISOString().split('T')[0]}.csv`;
+        break;
+      
+      default: // overview
+        // Export summary statistics
+        const stats = await db
+          .select({
+            date: db.sql`date(${audioNewsletterListens.listenedAt})`,
+            listens: db.sql`count(*)`,
+            uniqueUsers: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+            avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`,
+            avgDuration: db.sql`avg(${audioNewsletterListens.duration})`,
+            totalDuration: db.sql`sum(${audioNewsletterListens.duration})`
+          })
+          .from(audioNewsletterListens)
+          .where(dateClause)
+          .groupBy(db.sql`date(${audioNewsletterListens.listenedAt})`)
+          .orderBy(db.sql`date(${audioNewsletterListens.listenedAt})`);
+        
+        // Create CSV
+        csvData = 'Date,Total Listens,Unique Users,Avg Completion (%),Avg Duration (seconds),Total Hours\n';
+        csvData += stats.map(s => 
+          `"${s.date}",${s.listens || 0},${s.uniqueUsers || 0},${Number(s.avgCompletion || 0).toFixed(2)},${Number(s.avgDuration || 0).toFixed(0)},${(Number(s.totalDuration || 0) / 3600).toFixed(2)}`
+        ).join('\n');
+        
+        filename = `analytics-overview-${new Date().toISOString().split('T')[0]}.csv`;
+    }
+    
+    // Set response headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvData);
+  } catch (error) {
+    console.error('Error exporting analytics:', error);
+    res.status(500).json({ error: 'Failed to export analytics' });
+  }
+});
+
+// Enhanced listen tracking with device detection
+router.post('/newsletters/:id/track', async (req, res) => {
+  try {
+    const {
+      duration = 0,
+      completionRate = 0,
+      dropOffPoint = null
+    } = req.body;
+    
+    // Extract device type from user agent
+    const userAgent = req.headers['user-agent'] || '';
+    let deviceType = 'desktop';
+    
+    if (/mobile/i.test(userAgent)) {
+      deviceType = 'mobile';
+    } else if (/tablet|ipad/i.test(userAgent)) {
+      deviceType = 'tablet';
+    }
+    
+    // Create listen record
+    const listenId = nanoid();
+    await db.insert(audioNewsletterListens).values({
+      id: listenId,
+      newsletterId: req.params.id,
+      userId: req.session?.userId || null,
+      listenedAt: new Date().toISOString(),
+      duration,
+      completionRate,
+      deviceType,
+      userAgent,
+      metadata: dropOffPoint ? { dropOffPoint } : null
+    });
+    
+    // Update newsletter listen count
+    await db
+      .update(audioNewsletters)
+      .set({
+        listenCount: db.sql`${audioNewsletters.listenCount} + 1`
+      })
+      .where(eq(audioNewsletters.id, req.params.id));
+    
+    res.json({ success: true, listenId });
+  } catch (error) {
+    console.error('Error tracking listen:', error);
+    res.status(500).json({ error: 'Failed to track listen' });
+  }
+});
+
+// Get admin newsletters list (existing endpoint enhanced)
+router.get('/admin', requireAdmin, async (req, res) => {
+  try {
+    const newsletters = await db
+      .select({
+        id: audioNewsletters.id,
+        title: audioNewsletters.title,
+        description: audioNewsletters.description,
+        template: audioNewsletters.template,
+        status: audioNewsletters.status,
+        duration: audioNewsletters.duration,
+        publishedAt: audioNewsletters.publishedAt,
+        createdAt: audioNewsletters.createdAt,
+        totalListens: audioNewsletters.listenCount,
+        averageCompletion: db.sql`(
+          select avg(completion_rate) 
+          from ${audioNewsletterListens} 
+          where newsletter_id = ${audioNewsletters.id}
+        )`,
+        articlesCount: db.sql`(
+          select count(*) 
+          from ${audioNewsletterArticles} 
+          where newsletter_id = ${audioNewsletters.id}
+        )`,
+        templateId: audioNewsletters.template,
+        templateName: audioNewsletters.template,
+        schedule: audioNewsletters.metadata
+      })
+      .from(audioNewsletters)
+      .orderBy(desc(audioNewsletters.createdAt));
+    
+    res.json(newsletters);
+  } catch (error) {
+    console.error('Error fetching admin newsletters:', error);
+    res.status(500).json({ error: 'Failed to fetch newsletters' });
+  }
+});
+
+// Get analytics summary (simpler endpoint for dashboard)
+router.get('/analytics', requireAdmin, async (req, res) => {
+  try {
+    // Get totals
+    const [totals] = await db
+      .select({
+        totalNewsletters: db.sql`count(distinct ${audioNewsletters.id})`,
+        totalListens: db.sql`count(${audioNewsletterListens.id})`,
+        activeListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
+        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+      })
+      .from(audioNewsletters)
+      .leftJoin(
+        audioNewsletterListens,
+        eq(audioNewsletters.id, audioNewsletterListens.newsletterId)
+      )
+      .where(eq(audioNewsletters.status, 'published'));
+    
+    // Get scheduled count
+    const [{ scheduledCount }] = await db
+      .select({ scheduledCount: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.status, 'scheduled'));
+    
+    // Get today's count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [{ publishedToday }] = await db
+      .select({ publishedToday: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(
+        and(
+          eq(audioNewsletters.status, 'published'),
+          gte(audioNewsletters.publishedAt, today.toISOString())
+        )
+      );
+    
+    // Calculate weekly growth
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const [{ thisWeek }] = await db
+      .select({ thisWeek: db.sql`count(*)` })
+      .from(audioNewsletterListens)
+      .where(gte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString()));
+    
+    const [{ lastWeek }] = await db
+      .select({ lastWeek: db.sql`count(*)` })
+      .from(audioNewsletterListens)
+      .where(
+        and(
+          gte(audioNewsletterListens.listenedAt, twoWeeksAgo.toISOString()),
+          lte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString())
+        )
+      );
+    
+    const weeklyGrowth = Number(lastWeek) > 0 ? 
+      ((Number(thisWeek) - Number(lastWeek)) / Number(lastWeek)) * 100 : 0;
+    
+    res.json({
+      totalNewsletters: Number(totals.totalNewsletters) || 0,
+      totalListens: Number(totals.totalListens) || 0,
+      averageCompletion: Number(totals.avgCompletion) || 0,
+      activeListeners: Number(totals.activeListeners) || 0,
+      scheduledCount: Number(scheduledCount) || 0,
+      publishedToday: Number(publishedToday) || 0,
+      weeklyGrowth
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
 export default router;

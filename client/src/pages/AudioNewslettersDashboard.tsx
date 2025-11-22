@@ -432,6 +432,12 @@ export default function AudioNewslettersDashboard() {
                 القوالب
               </Link>
             </Button>
+            <Button variant="outline" asChild data-testid="button-view-analytics">
+              <Link href="/dashboard/audio-newsletters/analytics">
+                <BarChart className="h-4 w-4 ml-2" />
+                التحليلات
+              </Link>
+            </Button>
             <Button asChild data-testid="button-create-newsletter">
               <Link href="/dashboard/audio-newsletters/create">
                 <Plus className="h-4 w-4 ml-2" />

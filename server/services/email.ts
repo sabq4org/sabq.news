@@ -45,6 +45,40 @@ function generateToken(): string {
 }
 
 /**
+ * Send a generic email notification
+ */
+export async function sendEmailNotification(options: {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!SENDGRID_API_KEY) {
+      console.warn('Email not sent - SendGrid not configured');
+      return { success: false, error: 'SendGrid API key not configured' };
+    }
+
+    const msg = {
+      to: options.to,
+      from: FROM_EMAIL,
+      subject: options.subject,
+      text: options.text,
+      html: options.html || options.text,
+    };
+
+    await sgMail.send(msg);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send email' 
+    };
+  }
+}
+
+/**
  * Send email verification to user
  */
 export async function sendVerificationEmail(userId: string, email: string): Promise<{ success: boolean; error?: string }> {

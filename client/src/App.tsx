@@ -99,6 +99,7 @@ import AudioNewsletterEditor from "@/pages/AudioNewsletterEditor";
 import AudioNewslettersArchive from "@/pages/AudioNewslettersArchive";
 import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
 import AudioNewslettersPublic from "@/pages/AudioNewslettersPublic";
+import AudioNewsletterAnalytics from "@/pages/AudioNewsletterAnalytics";
 import AudioBriefsDashboard from "@/pages/AudioBriefsDashboard";
 import AudioBriefEditor from "@/pages/AudioBriefEditor";
 import AnnouncementsList from "@/pages/AnnouncementsList";
@@ -354,6 +355,7 @@ function Router() {
       
       {/* Audio Newsletters dashboard */}
       <Route path="/dashboard/audio-newsletters" component={AudioNewslettersDashboard} />
+      <Route path="/dashboard/audio-newsletters/analytics" component={AudioNewsletterAnalytics} />
       <Route path="/dashboard/audio-newsletters/create" component={AudioNewsletterEditor} />
       <Route path="/dashboard/audio-newsletters/:id/edit" component={AudioNewsletterEditor} />
       
