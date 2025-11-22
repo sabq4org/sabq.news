@@ -79,10 +79,10 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                 {/* Mobile: Vertical Layout */}
                 <div className="md:hidden relative cursor-pointer group">
                   {/* Image */}
-                  {article.imageUrl && (
+                  {(article.thumbnailUrl ?? article.imageUrl) && (
                     <div className="relative h-48 overflow-hidden rounded-t-lg">
                       <img
-                        src={article.imageUrl}
+                        src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
                         className="w-full h-full object-cover"
                         style={{ objectPosition: getObjectPosition(article) }}
@@ -160,9 +160,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   <div className="flex flex-row h-full">
                     {/* Image - 50% of width */}
                     <div className="w-1/2 h-full relative overflow-hidden">
-                      {article.imageUrl ? (
+                      {(article.thumbnailUrl ?? article.imageUrl) ? (
                         <img
-                          src={article.imageUrl}
+                          src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                           alt={article.title}
                           className="w-full h-full object-cover"
                           style={{ objectPosition: getObjectPosition(article) }}
@@ -256,9 +256,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
               onClick={() => emblaApi?.scrollTo(index)}
               data-testid={`button-carousel-thumbnail-${index}`}
             >
-              {article.imageUrl ? (
+              {(article.thumbnailUrl ?? article.imageUrl) ? (
                 <img
-                  src={article.imageUrl}
+                  src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                   alt={article.title}
                   className="w-full h-full object-cover"
                   style={{ objectPosition: getObjectPosition(article) }}
