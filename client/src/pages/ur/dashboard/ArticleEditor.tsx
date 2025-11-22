@@ -32,6 +32,7 @@ import {
   Hash,
   EyeOff,
   Image as ImageIcon,
+  LayoutGrid,
 } from "lucide-react";
 import { UrduDashboardLayout } from "@/components/ur/UrduDashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -48,6 +49,7 @@ import { SmartLinksPanel } from "@/components/SmartLinksPanel";
 import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
+import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 
 export default function UrduArticleEditor() {
@@ -112,6 +114,7 @@ export default function UrduArticleEditor() {
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
+  const [showInfographicDialog, setShowInfographicDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -967,6 +970,16 @@ export default function UrduArticleEditor() {
                     <Sparkles className="h-4 w-4" />
                     AI سے تیار کریں
                   </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowInfographicDialog(true)}
+                    className="gap-2 text-primary hover:text-primary"
+                    data-testid="button-generate-infographic-ur"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    انفوگرافک
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -1420,7 +1433,7 @@ export default function UrduArticleEditor() {
       
       {/* Media Library Picker Dialog */}
       <MediaLibraryPicker
-        open={showMediaPicker}
+        isOpen={showMediaPicker}
         onClose={() => setShowMediaPicker(false)}
         onSelect={(media) => {
           setImageUrl(media.url);
@@ -1436,13 +1449,29 @@ export default function UrduArticleEditor() {
       <AIImageGeneratorDialog
         open={showAIImageDialog}
         onClose={() => setShowAIImageDialog(false)}
-        defaultPrompt={title ? `مضمون کے لیے نمایاں تصویر: ${title}` : "مضمون کے لیے نمایاں تصویر"}
+        initialPrompt={title ? `مضمون کے لیے نمایاں تصویر: ${title}` : "مضمون کے لیے نمایاں تصویر"}
         onImageGenerated={(url) => {
           setImageUrl(url);
           setShowAIImageDialog(false);
           toast({
             title: "تصویر تیار ہوئی",
             description: "AI نے کامیابی سے تصویر تیار کی",
+          });
+        }}
+      />
+      
+      {/* Infographic Generator Dialog */}
+      <InfographicGeneratorDialog
+        open={showInfographicDialog}
+        onClose={() => setShowInfographicDialog(false)}
+        language="ur"
+        initialContent={content ? content.replace(/<[^>]*>/g, '').substring(0, 500) : ''}
+        onImageGenerated={(url) => {
+          setImageUrl(url);
+          setShowInfographicDialog(false);
+          toast({
+            title: "انفوگرافک تیار ہوا",
+            description: "انفوگرافک کامیابی سے تیار کر کے نمایاں تصویر کے طور پر سیٹ کیا گیا",
           });
         }}
       />
