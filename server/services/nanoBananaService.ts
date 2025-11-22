@@ -158,37 +158,66 @@ export async function generateImage(
     
     const generationTime = Math.round((Date.now() - startTime) / 1000);
     
-    // Log full response for debugging
-    console.log(`[Nano Banana Pro] Full response structure:`, JSON.stringify({
+    // Log full response structure for debugging
+    console.log(`[Nano Banana Pro] Response structure:`, JSON.stringify({
       hasResponse: !!response,
       hasCandidates: !!response.candidates,
       candidatesLength: response.candidates?.length,
-      firstCandidate: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null,
-      hasContent: !!response.candidates?.[0]?.content,
-      hasParts: !!response.candidates?.[0]?.content?.parts,
-      partsLength: response.candidates?.[0]?.content?.parts?.length
+      responseKeys: Object.keys(response || {}),
+      candidateKeys: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null
     }, null, 2));
     
-    // Extract image data
+    // Try multiple extraction methods
+    let imageBase64: string | null = null;
+    let mimeType = "image/png";
+    
+    // Method 1: Check candidates[0].content.parts for inlineData
     const candidate = response.candidates?.[0];
-    const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
-    
-    console.log(`[Nano Banana Pro] Image part found:`, {
-      hasImagePart: !!imagePart,
-      hasInlineData: !!imagePart?.inlineData,
-      hasData: !!imagePart?.inlineData?.data,
-      dataLength: imagePart?.inlineData?.data?.length
-    });
-    
-    if (!imagePart?.inlineData?.data) {
-      console.error(`[Nano Banana Pro] No image data in response. Full response:`, JSON.stringify(response, null, 2));
-      throw new Error("No image data in response");
+    if (candidate?.content?.parts) {
+      const imagePart = candidate.content.parts.find((part: any) => part.inlineData);
+      if (imagePart?.inlineData?.data) {
+        console.log(`[Nano Banana Pro] ✅ Found image in candidates[0].content.parts.inlineData`);
+        imageBase64 = imagePart.inlineData.data;
+        mimeType = imagePart.inlineData.mimeType || "image/png";
+      }
     }
     
-    const imageBase64 = imagePart.inlineData.data;
-    const mimeType = imagePart.inlineData.mimeType || "image/png";
+    // Method 2: Check direct parts array
+    if (!imageBase64 && (response as any).parts) {
+      const imagePart = (response as any).parts.find((part: any) => part.inlineData);
+      if (imagePart?.inlineData?.data) {
+        console.log(`[Nano Banana Pro] ✅ Found image in response.parts.inlineData`);
+        imageBase64 = imagePart.inlineData.data;
+        mimeType = imagePart.inlineData.mimeType || "image/png";
+      }
+    }
     
-    console.log(`[Nano Banana Pro] Image generated successfully in ${generationTime}s`);
+    // Method 3: Check if response itself has image data
+    if (!imageBase64 && (response as any).data) {
+      console.log(`[Nano Banana Pro] ✅ Found image in response.data`);
+      imageBase64 = (response as any).data;
+    }
+    
+    // Method 4: Check text response for base64 (sometimes models return it as text)
+    if (!imageBase64 && candidate?.content?.parts) {
+      const textPart = candidate.content.parts.find((part: any) => part.text);
+      if (textPart?.text && textPart.text.includes('base64')) {
+        console.log(`[Nano Banana Pro] ⚠️ Found potential base64 in text response`);
+        // Try to extract base64 from text
+        const base64Match = textPart.text.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+        if (base64Match) {
+          imageBase64 = base64Match[1];
+          console.log(`[Nano Banana Pro] ✅ Extracted base64 from text response`);
+        }
+      }
+    }
+    
+    if (!imageBase64) {
+      console.error(`[Nano Banana Pro] ❌ No image data found. Full response:`, JSON.stringify(response, null, 2).substring(0, 2000));
+      throw new Error("No image data in response - the model may not support image generation or the response format has changed");
+    }
+    
+    console.log(`[Nano Banana Pro] ✅ Image generated successfully in ${generationTime}s (${imageBase64.length} bytes)`);
     
     // Calculate estimated cost (based on Nov 2025 pricing)
     const costPerImage = request.imageSize === "4K" ? 0.24 : 0.134;

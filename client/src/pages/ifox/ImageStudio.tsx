@@ -74,6 +74,10 @@ export default function ImageStudio() {
   const [notebookLmOrientation, setNotebookLmOrientation] = useState<"square" | "portrait" | "landscape">("landscape");
   const [notebookLmLanguage, setNotebookLmLanguage] = useState("ar"); // Arabic default
   
+  // Loading states
+  const [isGeneratingNotebookLm, setIsGeneratingNotebookLm] = useState(false);
+  const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
+  
   // Comparison mode state with error tracking
   const [comparisonResults, setComparisonResults] = useState<{
     nanoBanana?: { imageUrl?: string, generationTime?: number, error?: string },
@@ -192,6 +196,7 @@ export default function ImageStudio() {
 
     if (selectedModel === "both") {
       // Comparison mode - generate from both models
+      setIsGeneratingComparison(true);
       setComparisonResults({});
       toast({
         title: "جاري المقارنة",
@@ -333,6 +338,8 @@ export default function ImageStudio() {
             description: error.message || "حدث خطأ أثناء المقارنة",
           });
         }
+      } finally {
+        setIsGeneratingComparison(false);
       }
     } else if (selectedModel === "nano-banana") {
       generateMutation.mutate({
@@ -345,6 +352,13 @@ export default function ImageStudio() {
       });
     } else {
       // NotebookLM generation
+      setIsGeneratingNotebookLm(true);
+      
+      toast({
+        title: "جاري التوليد",
+        description: "يتم الآن توليد الإنفوجرافيك باستخدام NotebookLM...",
+      });
+      
       try {
         const result = await apiRequest("/api/notebooklm/generate", {
           method: "POST",
@@ -358,10 +372,11 @@ export default function ImageStudio() {
         
         if (result.success) {
           toast({
-            title: "تم التوليد",
+            title: "تم التوليد بنجاح",
             description: "تم توليد الإنفوجرافيك بنجاح",
           });
           queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
+          setPrompt("");
         }
       } catch (error: any) {
         // Check if it's an auth error
@@ -379,6 +394,8 @@ export default function ImageStudio() {
             description: error.message || "حدث خطأ أثناء توليد الإنفوجرافيك",
           });
         }
+      } finally {
+        setIsGeneratingNotebookLm(false);
       }
     }
   };
@@ -697,19 +714,28 @@ export default function ImageStudio() {
             <Button
               data-testid="button-generate"
               onClick={handleGenerate}
-              disabled={generateMutation.isPending || !prompt.trim()}
+              disabled={
+                generateMutation.isPending || 
+                isGeneratingNotebookLm || 
+                isGeneratingComparison || 
+                !prompt.trim()
+              }
               className="w-full"
               size="lg"
             >
-              {generateMutation.isPending ? (
+              {(generateMutation.isPending || isGeneratingNotebookLm || isGeneratingComparison) ? (
                 <>
                   <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  جاري التوليد...
+                  {selectedModel === "both" ? "جاري المقارنة..." : 
+                   selectedModel === "notebooklm" ? "جاري توليد الإنفوجرافيك..." : 
+                   "جاري التوليد..."}
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 ml-2" />
-                  توليد الصورة
+                  {selectedModel === "both" ? "مقارنة النموذجين" : 
+                   selectedModel === "notebooklm" ? "توليد إنفوجرافيك" : 
+                   "توليد الصورة"}
                 </>
               )}
             </Button>
