@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -75,11 +75,11 @@ export function ThumbnailGenerator({
   };
 
   // Auto-generate thumbnail when image changes
-  useState(() => {
+  useEffect(() => {
     if (autoGenerate && imageUrl && !currentThumbnail && articleId) {
       generateThumbnail();
     }
-  });
+  }, [imageUrl, articleId]); // Re-run when image or article changes
 
   if (!imageUrl) {
     return null;

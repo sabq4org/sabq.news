@@ -26,6 +26,44 @@ const DEFAULT_OPTIONS: ThumbnailOptions = {
 };
 
 /**
+ * Validate URL for security (prevent SSRF)
+ */
+function isValidImageUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    
+    // Allow only HTTPS protocol
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return false;
+    }
+    
+    // Allow trusted domains only
+    const trustedDomains = [
+      'storage.googleapis.com',
+      'localhost',
+      '127.0.0.1',
+      process.env.DOMAIN || 'sabq.sa',
+      // Add other trusted domains as needed
+    ];
+    
+    const hostname = parsedUrl.hostname.toLowerCase();
+    
+    // Check if hostname is in trusted domains
+    const isTrusted = trustedDomains.some(domain => 
+      hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+    
+    if (!isTrusted) {
+      console.warn(`[Thumbnail Service] Untrusted domain: ${hostname}`);
+    }
+    
+    return isTrusted;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Generate thumbnail from image URL
  * يقوم بتوليد صورة مصغرة من رابط الصورة
  */
@@ -35,16 +73,49 @@ export async function generateThumbnail(
 ): Promise<string> {
   const config = { ...DEFAULT_OPTIONS, ...options };
   
+  // Validate URL for security
+  if (!isValidImageUrl(imageUrl)) {
+    throw new Error('Invalid or untrusted image URL');
+  }
+  
   try {
     console.log(`[Thumbnail Service] Generating thumbnail for: ${imageUrl}`);
     
-    // Download the image
-    const response = await fetch(imageUrl);
+    // Download the image with timeout and size limits
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(imageUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Sabq-Thumbnail-Service/1.0'
+      }
+    });
+    
+    clearTimeout(timeout);
+    
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
     
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      throw new Error('Invalid content type: must be an image');
+    }
+    
+    // Check content length (max 10MB)
+    const contentLength = response.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      throw new Error('Image too large: maximum size is 10MB');
+    }
+    
     const buffer = await response.buffer();
+    
+    // Additional size check after download
+    if (buffer.length > 10 * 1024 * 1024) {
+      throw new Error('Image too large: maximum size is 10MB');
+    }
     
     // Process image with sharp to create thumbnail
     const thumbnail = await sharp(buffer)
@@ -167,35 +238,63 @@ export async function generateArticleThumbnail(
 /**
  * Batch generate thumbnails for articles without them
  */
-export async function generateMissingThumbnails(): Promise<void> {
+export async function generateMissingThumbnails(limit: number = 10): Promise<void> {
   try {
-    // Find articles with images but no thumbnails
+    // Use SQL to filter articles that need thumbnails directly in the database
+    // This avoids loading all articles into memory
+    const { and, isNotNull, isNull, sql } = await import('drizzle-orm');
+    
+    // Find articles with images but no thumbnails, limited to batch size
     const articlesNeedingThumbnails = await db
       .select()
       .from(articles)
       .where(
-        eq(articles.status, 'published')
-      );
+        and(
+          eq(articles.status, 'published'),
+          isNotNull(articles.imageUrl),
+          isNull(articles.thumbnailUrl)
+        )
+      )
+      .limit(limit);
     
-    const missingThumbnails = articlesNeedingThumbnails.filter(
-      article => article.imageUrl && !article.thumbnailUrl
+    console.log(`[Thumbnail Service] Processing batch of ${articlesNeedingThumbnails.length} articles needing thumbnails`);
+    
+    // Process thumbnails in parallel with concurrency limit
+    const pLimit = (await import('p-limit')).default;
+    const concurrencyLimit = pLimit(3); // Process 3 at a time
+    
+    const promises = articlesNeedingThumbnails.map(article => 
+      concurrencyLimit(async () => {
+        if (article.imageUrl) {
+          try {
+            await generateArticleThumbnail(article.id, article.imageUrl);
+            console.log(`[Thumbnail Service] Generated thumbnail for article: ${article.id}`);
+          } catch (error) {
+            console.error(`[Thumbnail Service] Failed for article ${article.id}:`, error);
+          }
+        }
+      })
     );
     
-    console.log(`[Thumbnail Service] Found ${missingThumbnails.length} articles needing thumbnails`);
-    
-    // Generate thumbnails in batches
-    for (const article of missingThumbnails) {
-      if (article.imageUrl) {
-        try {
-          await generateArticleThumbnail(article.id, article.imageUrl);
-          console.log(`[Thumbnail Service] Generated thumbnail for article: ${article.id}`);
-        } catch (error) {
-          console.error(`[Thumbnail Service] Failed for article ${article.id}:`, error);
-        }
-      }
-    }
+    await Promise.all(promises);
     
     console.log('[Thumbnail Service] Batch thumbnail generation completed');
+    
+    // Check if there are more articles to process
+    const remainingCount = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.status, 'published'),
+          isNotNull(articles.imageUrl),
+          isNull(articles.thumbnailUrl)
+        )
+      );
+    
+    if (remainingCount[0]?.count > 0) {
+      console.log(`[Thumbnail Service] ${remainingCount[0].count} articles still need thumbnails`);
+    }
     
   } catch (error: any) {
     console.error('[Thumbnail Service] Batch generation failed:', error);
