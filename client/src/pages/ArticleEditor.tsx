@@ -33,6 +33,7 @@ import {
   EyeOff,
   Image as ImageIcon,
   LayoutGrid,
+  Share2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -113,6 +114,7 @@ export default function ArticleEditor() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [isClassifying, setIsClassifying] = useState(false);
+  const [isGeneratingSocialCards, setIsGeneratingSocialCards] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
@@ -939,6 +941,52 @@ export default function ArticleEditor() {
       toast({
         title: "خطأ في تحليل SEO",
         description: error.message || "فشل في تحليل SEO",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Generate Social Media Cards mutation
+  const generateSocialCardsMutation = useMutation({
+    mutationFn: async () => {
+      if (!id || isNewArticle) {
+        throw new Error("يجب حفظ المقال أولاً قبل توليد البطاقات");
+      }
+      setIsGeneratingSocialCards(true);
+      return await apiRequest(`/api/visual-ai/generate-social-cards`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: title,
+          description: excerpt || metaDescription || subtitle,
+          imageUrl: imageUrl,
+          category: categories.find(c => c.id === categoryId)?.nameAr,
+          author: article?.author?.firstName || ""
+        }),
+      });
+    },
+    onSuccess: (data: {
+      cards: {
+        twitter?: string;
+        instagram?: string;
+        facebook?: string;
+        whatsapp?: string;
+      };
+      message: string;
+    }) => {
+      setIsGeneratingSocialCards(false);
+      
+      const generatedPlatforms = Object.keys(data.cards).filter(key => data.cards[key as keyof typeof data.cards]);
+      
+      toast({
+        title: "تم توليد بطاقات السوشال ميديا",
+        description: `تم توليد ${generatedPlatforms.length} بطاقات بنجاح للمنصات: ${generatedPlatforms.join(', ')}`,
+      });
+    },
+    onError: (error: Error) => {
+      setIsGeneratingSocialCards(false);
+      toast({
+        title: "خطأ في توليد البطاقات",
+        description: error.message || "فشل في توليد بطاقات السوشال ميديا",
         variant: "destructive",
       });
     },
@@ -1852,6 +1900,37 @@ const generateSlug = (text: string) => {
                             <>
                               <Sparkles className="h-4 w-4 ml-2" />
                               تحليل SEO
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Social Media Cards Generation Button */}
+                    {!isNewArticle && (
+                      <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">توليد بطاقات السوشال ميديا</p>
+                          <p className="text-xs text-muted-foreground">
+                            إنشاء بطاقات مُحسّنة لـ Twitter, Instagram, Facebook و WhatsApp
+                          </p>
+                        </div>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => generateSocialCardsMutation.mutate()}
+                          disabled={isGeneratingSocialCards || !id}
+                          data-testid="button-generate-social-cards"
+                        >
+                          {isGeneratingSocialCards ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                              جاري التوليد...
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="h-4 w-4 ml-2" />
+                              توليد البطاقات
                             </>
                           )}
                         </Button>
