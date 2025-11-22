@@ -46,7 +46,7 @@ interface Stats {
 
 export default function ImageStudio() {
   const { toast } = useToast();
-  const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm">("nano-banana");
+  const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm" | "both">("nano-banana");
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
@@ -58,6 +58,12 @@ export default function ImageStudio() {
   const [notebookLmDetail, setNotebookLmDetail] = useState<"concise" | "standard" | "detailed">("standard");
   const [notebookLmOrientation, setNotebookLmOrientation] = useState<"square" | "portrait" | "landscape">("landscape");
   const [notebookLmLanguage, setNotebookLmLanguage] = useState("ar"); // Arabic default
+  
+  // Comparison mode state
+  const [comparisonResults, setComparisonResults] = useState<{
+    nanoBanana?: { imageUrl: string, generationTime?: number },
+    notebookLm?: { imageUrl: string, generationTime?: number }
+  }>({});
 
   // Fetch generations
   const { data: generationsData, isLoading } = useQuery<{ generations: Generation[] }>({
@@ -116,19 +122,88 @@ export default function ImageStudio() {
     },
   });
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast({
         variant: "destructive",
-        title: selectedModel === "nano-banana" ? "البرومبت مطلوب" : "المحتوى مطلوب",
-        description: selectedModel === "nano-banana" 
-          ? "يرجى إدخال وصف للصورة المراد توليدها"
-          : "يرجى إدخال المحتوى المراد تحويله إلى إنفوجرافيك",
+        title: "المحتوى مطلوب",
+        description: "يرجى إدخال وصف للصورة أو المحتوى المراد توليده",
       });
       return;
     }
 
-    if (selectedModel === "nano-banana") {
+    if (selectedModel === "both") {
+      // Comparison mode - generate from both models
+      setComparisonResults({});
+      toast({
+        title: "جاري المقارنة",
+        description: "يتم توليد الصور من كلا النموذجين للمقارنة",
+      });
+
+      try {
+        // Generate with Nano Banana
+        const nanoBananaPromise = apiRequest("/api/nano-banana/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            prompt,
+            negativePrompt: negativePrompt || undefined,
+            aspectRatio,
+            imageSize,
+            enableSearchGrounding,
+            enableThinking,
+          }),
+        });
+
+        // Generate with NotebookLM
+        const notebookLmPromise = apiRequest("/api/notebooklm/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            prompt,
+            detail: notebookLmDetail,
+            orientation: notebookLmOrientation,
+            language: notebookLmLanguage,
+          }),
+        });
+
+        // Wait for both results
+        const [nanoBananaResult, notebookLmResult] = await Promise.allSettled([
+          nanoBananaPromise,
+          notebookLmPromise,
+        ]);
+
+        const results: any = {};
+
+        if (nanoBananaResult.status === "fulfilled") {
+          results.nanoBanana = {
+            imageUrl: nanoBananaResult.value.imageUrl,
+            generationTime: nanoBananaResult.value.generationTime,
+          };
+        }
+
+        if (notebookLmResult.status === "fulfilled") {
+          results.notebookLm = {
+            imageUrl: notebookLmResult.value.imageUrl,
+            generationTime: notebookLmResult.value.generationTime,
+          };
+        }
+
+        setComparisonResults(results);
+        
+        toast({
+          title: "اكتملت المقارنة",
+          description: "تمت مقارنة النموذجين بنجاح",
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "فشلت المقارنة",
+          description: error.message || "حدث خطأ أثناء المقارنة",
+        });
+      }
+    } else if (selectedModel === "nano-banana") {
       generateMutation.mutate({
         prompt,
         negativePrompt: negativePrompt || undefined,
@@ -139,13 +214,23 @@ export default function ImageStudio() {
       });
     } else {
       // NotebookLM generation
-      generateMutation.mutate({
-        model: "notebooklm",
-        prompt,
-        detail: notebookLmDetail,
-        orientation: notebookLmOrientation,
-        language: notebookLmLanguage,
+      const result = await apiRequest("/api/notebooklm/generate", {
+        method: "POST",
+        body: JSON.stringify({
+          prompt,
+          detail: notebookLmDetail,
+          orientation: notebookLmOrientation,
+          language: notebookLmLanguage,
+        }),
       });
+      
+      if (result.success) {
+        toast({
+          title: "تم التوليد",
+          description: "تم توليد الإنفوجرافيك بنجاح",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
+      }
     }
   };
 
@@ -222,7 +307,7 @@ export default function ImageStudio() {
             {/* Model Selection */}
             <div className="space-y-2">
               <Label>اختر النموذج</Label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <Card 
                   className={`cursor-pointer transition-all ${
                     selectedModel === "nano-banana" 
@@ -270,6 +355,33 @@ export default function ImageStudio() {
                       </div>
                       <Badge variant={selectedModel === "notebooklm" ? "default" : "outline"}>
                         {selectedModel === "notebooklm" ? "مُختار" : "اختر"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Comparison Mode Card */}
+                <Card 
+                  className={`cursor-pointer transition-all col-span-1 ${
+                    selectedModel === "both" 
+                      ? "ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20" 
+                      : "hover:shadow-md"
+                  }`}
+                  onClick={() => setSelectedModel("both")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          مقارنة النموذجين
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          قارن بين النتائج
+                        </p>
+                      </div>
+                      <Badge variant={selectedModel === "both" ? "default" : "outline"}>
+                        {selectedModel === "both" ? "مُختار" : "اختر"}
                       </Badge>
                     </div>
                   </CardContent>
@@ -454,6 +566,79 @@ export default function ImageStudio() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Comparison Results */}
+        {selectedModel === "both" && (Object.keys(comparisonResults).length > 0) && (
+          <Card className="col-span-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                نتائج المقارنة
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nano Banana Result */}
+                {comparisonResults.nanoBanana && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">Nano Banana Pro</h3>
+                      {comparisonResults.nanoBanana.generationTime && (
+                        <Badge variant="outline">
+                          <Clock className="w-3 h-3 ml-1" />
+                          {comparisonResults.nanoBanana.generationTime}s
+                        </Badge>
+                      )}
+                    </div>
+                    <img 
+                      src={comparisonResults.nanoBanana.imageUrl}
+                      alt="Nano Banana Result"
+                      className="w-full rounded-lg"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => window.open(comparisonResults.nanoBanana?.imageUrl, "_blank")}
+                    >
+                      <Download className="w-4 h-4 ml-1" />
+                      تحميل الصورة
+                    </Button>
+                  </div>
+                )}
+                
+                {/* NotebookLM Result */}
+                {comparisonResults.notebookLm && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">NotebookLM</h3>
+                      {comparisonResults.notebookLm.generationTime && (
+                        <Badge variant="outline">
+                          <Clock className="w-3 h-3 ml-1" />
+                          {comparisonResults.notebookLm.generationTime}s
+                        </Badge>
+                      )}
+                    </div>
+                    <img 
+                      src={comparisonResults.notebookLm.imageUrl}
+                      alt="NotebookLM Result"
+                      className="w-full rounded-lg"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => window.open(comparisonResults.notebookLm?.imageUrl, "_blank")}
+                    >
+                      <Download className="w-4 h-4 ml-1" />
+                      تحميل الإنفوجرافيك
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Generations */}
         <Card>
