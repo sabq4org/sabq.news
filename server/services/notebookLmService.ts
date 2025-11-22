@@ -161,17 +161,27 @@ DESIGN SPECIFICATIONS:
 - High contrast text on colored backgrounds
 - Creative typography mixing Arabic/English fonts
 - Visual metaphors and creative representations
-- Sabq News branding: trustworthy yet innovative
 - Publication-ready for social media (Instagram, Twitter, LinkedIn)
 
+CRITICAL BRANDING RULES - DO NOT INCLUDE:
+❌ NO "Sabq" branding, logo, or text watermarks
+❌ NO "سبق" text or Arabic branding anywhere
+❌ NO decorative patterns/motifs that could be mistaken for logos
+❌ NO company-specific branding elements
+✅ Create a clean, neutral, professional infographic
+✅ Focus on content visualization without publisher branding
+✅ Use generic design elements that work for any publication
+
 AVOID:
+- Any text or branding related to "Sabq" or "سبق"
+- Decorative patterns that could be confused with logos
 - Single flat colors without gradients
 - Stock photos or clipart
 - Cluttered or busy designs
 - Low contrast color combinations
 - Generic or boring layouts
 
-Create a stunning, eye-catching infographic that stands out in social media feeds and captures attention immediately.
+Create a stunning, eye-catching, brand-neutral infographic that stands out in social media feeds and captures attention immediately.
       `.trim();
 
       // Build the generation request
