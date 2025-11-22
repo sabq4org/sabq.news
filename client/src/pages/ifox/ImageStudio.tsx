@@ -141,11 +141,25 @@ export default function ImageStudio() {
       setNegativePrompt("");
     },
     onError: (error: any) => {
-      toast({
-        variant: "destructive",
-        title: "فشل التوليد",
-        description: error.message || "حدث خطأ أثناء توليد الصورة",
-      });
+      // Check if it's an auth error
+      if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+        toast({
+          variant: "destructive",
+          title: "غير مصرح",
+          description: "يجب تسجيل الدخول للوصول إلى هذه الميزة",
+          action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
+        });
+        // Redirect after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 3000);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "فشل التوليد",
+          description: error.message || "حدث خطأ أثناء توليد الصورة",
+        });
+      }
     },
   });
 
@@ -218,6 +232,7 @@ export default function ImageStudio() {
         const results: any = {};
         let successCount = 0;
         let errorMessages: string[] = [];
+        let hasAuthError = false;
 
         // Handle Nano Banana result
         if (nanoBananaResult.status === "fulfilled") {
@@ -227,10 +242,20 @@ export default function ImageStudio() {
           };
           successCount++;
         } else {
-          results.nanoBanana = {
-            error: nanoBananaResult.reason?.message || "فشل توليد صورة Nano Banana",
-          };
-          errorMessages.push(`Nano Banana: ${results.nanoBanana.error}`);
+          const errorMsg = nanoBananaResult.reason?.message || "فشل توليد صورة Nano Banana";
+          // Check if it's an auth error
+          if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
+            hasAuthError = true;
+            results.nanoBanana = {
+              error: "يجب تسجيل الدخول أولاً",
+            };
+            errorMessages.push(`Nano Banana: يجب تسجيل الدخول`);
+          } else {
+            results.nanoBanana = {
+              error: errorMsg,
+            };
+            errorMessages.push(`Nano Banana: ${errorMsg}`);
+          }
         }
 
         // Handle NotebookLM result
@@ -241,16 +266,37 @@ export default function ImageStudio() {
           };
           successCount++;
         } else {
-          results.notebookLm = {
-            error: notebookLmResult.reason?.message || "فشل توليد إنفوجرافيك NotebookLM",
-          };
-          errorMessages.push(`NotebookLM: ${results.notebookLm.error}`);
+          const errorMsg = notebookLmResult.reason?.message || "فشل توليد إنفوجرافيك NotebookLM";
+          // Check if it's an auth error
+          if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
+            hasAuthError = true;
+            results.notebookLm = {
+              error: "يجب تسجيل الدخول أولاً",
+            };
+            errorMessages.push(`NotebookLM: يجب تسجيل الدخول`);
+          } else {
+            results.notebookLm = {
+              error: errorMsg,
+            };
+            errorMessages.push(`NotebookLM: ${errorMsg}`);
+          }
         }
 
         setComparisonResults(results);
         
         // Show appropriate toast based on results
-        if (successCount === 2) {
+        if (hasAuthError) {
+          toast({
+            variant: "destructive",
+            title: "غير مصرح",
+            description: "يجب تسجيل الدخول للوصول إلى هذه الميزة. سيتم توجيهك لصفحة تسجيل الدخول...",
+            action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
+          });
+          // Redirect after 3 seconds
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 3000);
+        } else if (successCount === 2) {
           toast({
             title: "اكتملت المقارنة بنجاح",
             description: "تم توليد الصور من كلا النموذجين",
@@ -272,11 +318,21 @@ export default function ImageStudio() {
         queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
         queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
       } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "فشلت المقارنة",
-          description: error.message || "حدث خطأ أثناء المقارنة",
-        });
+        // Check if it's an auth error
+        if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+          toast({
+            variant: "destructive",
+            title: "غير مصرح",
+            description: "يجب تسجيل الدخول للوصول إلى هذه الميزة",
+            action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "فشلت المقارنة",
+            description: error.message || "حدث خطأ أثناء المقارنة",
+          });
+        }
       }
     } else if (selectedModel === "nano-banana") {
       generateMutation.mutate({
@@ -289,22 +345,40 @@ export default function ImageStudio() {
       });
     } else {
       // NotebookLM generation
-      const result = await apiRequest("/api/notebooklm/generate", {
-        method: "POST",
-        body: JSON.stringify({
-          prompt,
-          detail: notebookLmDetail,
-          orientation: notebookLmOrientation,
-          language: notebookLmLanguage,
-        }),
-      });
-      
-      if (result.success) {
-        toast({
-          title: "تم التوليد",
-          description: "تم توليد الإنفوجرافيك بنجاح",
+      try {
+        const result = await apiRequest("/api/notebooklm/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            prompt,
+            detail: notebookLmDetail,
+            orientation: notebookLmOrientation,
+            language: notebookLmLanguage,
+          }),
         });
-        queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
+        
+        if (result.success) {
+          toast({
+            title: "تم التوليد",
+            description: "تم توليد الإنفوجرافيك بنجاح",
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
+        }
+      } catch (error: any) {
+        // Check if it's an auth error
+        if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+          toast({
+            variant: "destructive",
+            title: "غير مصرح",
+            description: "يجب تسجيل الدخول للوصول إلى هذه الميزة",
+            action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "فشل التوليد",
+            description: error.message || "حدث خطأ أثناء توليد الإنفوجرافيك",
+          });
+        }
       }
     }
   };
