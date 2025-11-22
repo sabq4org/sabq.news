@@ -706,7 +706,7 @@ export const articles = pgTable("articles", {
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
-  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column, infographic
   newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
   scheduledAt: timestamp("scheduled_at"),
@@ -2141,7 +2141,7 @@ export const updateArticleSchema = z.object({
     z.string().min(1, "معرف المراسل غير صحيح"),
     z.null()
   ]).optional(),
-  articleType: z.enum(["news", "opinion", "analysis", "column"]).optional(),
+  articleType: z.enum(["news", "opinion", "analysis", "column", "infographic"]).optional(),
   newsType: z.enum(["breaking", "featured", "regular"]).optional(),
   publishType: z.enum(["instant", "scheduled"]).optional(),
   scheduledAt: z.union([
@@ -2173,7 +2173,7 @@ export const updateArticleSchema = z.object({
 
 export const adminArticleFiltersSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived", "all"]).optional(),
-  articleType: z.enum(["news", "opinion", "analysis", "column", "all"]).optional(),
+  articleType: z.enum(["news", "opinion", "analysis", "column", "infographic", "all"]).optional(),
   categoryId: z.string().uuid().optional(),
   authorId: z.string().optional(),
   search: z.string().optional(),
@@ -4422,7 +4422,7 @@ export const enArticles = pgTable("en_articles", {
   categoryId: varchar("category_id").references(() => enCategories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
-  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column, infographic
   newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
   scheduledAt: timestamp("scheduled_at"),
@@ -4627,7 +4627,7 @@ export const urArticles = pgTable("ur_articles", {
   categoryId: varchar("category_id").references(() => urCategories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
-  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column
+  articleType: text("article_type").default("news").notNull(), // news, opinion, analysis, column, infographic
   newsType: text("news_type").default("regular").notNull(), // breaking, featured, regular
   publishType: text("publish_type").default("instant").notNull(), // instant, scheduled
   scheduledAt: timestamp("scheduled_at"),
