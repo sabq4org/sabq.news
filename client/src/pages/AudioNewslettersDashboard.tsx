@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { 
   Plus, Edit, Trash, PlayCircle, Eye, BarChart, Radio, Clock, Calendar,
   TrendingUp, Headphones, CheckCircle, AlertCircle, Filter, CalendarDays,
-  Loader2, Sparkles, Timer
+  Loader2, Sparkles, Timer, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
