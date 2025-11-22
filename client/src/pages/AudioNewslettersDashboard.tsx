@@ -247,7 +247,7 @@ export default function AudioNewslettersDashboard() {
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
     refetchInterval: (data) => {
       // Refetch every 3 seconds if any newsletter is processing
-      return data?.some(n => n.status === "processing") ? 3000 : false;
+      return Array.isArray(data) && data.some(n => n.status === "processing") ? 3000 : false;
     },
   });
 

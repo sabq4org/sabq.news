@@ -79,9 +79,13 @@ export function HomeAudioWidget() {
     queryKey: ['/api/audio-newsletters/public'],
     queryFn: async () => {
       const res = await fetch('/api/audio-newsletters/public?limit=5&status=published');
-      if (!res.ok) throw new Error('Failed to fetch newsletters');
+      if (!res.ok) {
+        // Return empty array if endpoint doesn't exist or has error
+        return [];
+      }
       const data = await res.json();
-      return data.newsletters || [];
+      // Ensure we always return an array
+      return Array.isArray(data.newsletters) ? data.newsletters : [];
     }
   });
 
