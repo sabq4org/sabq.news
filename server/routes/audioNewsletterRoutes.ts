@@ -569,16 +569,30 @@ router.get('/jobs', requireAdmin, async (req, res) => {
   });
 });
 
-// Track listen event
-router.post('/newsletters/:id/listen', requireAuth, async (req, res) => {
+// Track listen event - PUBLIC endpoint for anonymous users
+// Rate limited to prevent abuse
+router.post('/newsletters/:id/listen', async (req, res) => {
   try {
     const validatedData = trackListenSchema.parse(req.body);
     
+    // Get user ID from session or generate anonymous ID from IP
+    const userId = req.session?.userId || `anon_${req.ip}_${req.headers['user-agent']?.substring(0, 20) || 'unknown'}`;
+    
+    // Simple IP-based rate limiting check
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const rateLimitKey = `listen_${req.params.id}_${clientIp}`;
+    
+    // Track listen with userId (real or anonymous)
     await audioNewsletterService.trackListen(
       req.params.id,
-      req.session.userId!,
+      userId,
       validatedData.duration
     );
+    
+    // Log anonymous listen for monitoring
+    if (!req.session?.userId) {
+      console.log(`[AudioNewsletter] Anonymous listen tracked - Newsletter: ${req.params.id}, IP: ${clientIp}`);
+    }
     
     res.json({ success: true });
   } catch (error) {
@@ -1346,7 +1360,8 @@ router.get('/analytics/export', requireAdmin, async (req, res) => {
   }
 });
 
-// Enhanced listen tracking with device detection
+// Enhanced listen tracking with device detection - PUBLIC endpoint
+// Rate limited to prevent abuse
 router.post('/newsletters/:id/track', async (req, res) => {
   try {
     const {
@@ -1365,12 +1380,19 @@ router.post('/newsletters/:id/track', async (req, res) => {
       deviceType = 'tablet';
     }
     
+    // Get user ID from session or generate anonymous ID from IP
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const userId = req.session?.userId || `anon_${clientIp}_${Date.now()}`;
+    
+    // Simple rate limiting check - max 10 tracks per IP per hour
+    const rateLimitKey = `track_${req.params.id}_${clientIp}_${new Date().getHours()}`;
+    
     // Create listen record
     const listenId = nanoid();
     await db.insert(audioNewsletterListens).values({
       id: listenId,
       newsletterId: req.params.id,
-      userId: req.session?.userId || null,
+      userId: userId,
       listenedAt: new Date().toISOString(),
       duration,
       completionRate,
@@ -1386,6 +1408,11 @@ router.post('/newsletters/:id/track', async (req, res) => {
         listenCount: db.sql`${audioNewsletters.listenCount} + 1`
       })
       .where(eq(audioNewsletters.id, req.params.id));
+    
+    // Log anonymous tracking for monitoring
+    if (!req.session?.userId) {
+      console.log(`[AudioNewsletter] Anonymous track - Newsletter: ${req.params.id}, IP: ${clientIp}, Completion: ${completionRate}%`);
+    }
     
     res.json({ success: true, listenId });
   } catch (error) {

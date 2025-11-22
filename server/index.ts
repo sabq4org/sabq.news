@@ -545,13 +545,28 @@ app.use((req, res, next) => {
       }
 
       // Start Newsletter Scheduler (automated cron-based newsletter generation)
-      if (enableBackgroundWorkers && process.env.ENABLE_NEWSLETTER_SCHEDULER === 'true') {
+      // Enable scheduler by default unless explicitly disabled
+      const enableNewsletterScheduler = process.env.ENABLE_NEWSLETTER_SCHEDULER !== 'false';
+      
+      if (enableBackgroundWorkers && enableNewsletterScheduler) {
         setImmediate(() => {
           try {
+            // Start the newsletter scheduler with Saudi Arabia timezone (UTC+3)
             newsletterScheduler.start();
-            console.log("[Server] ✅ Newsletter scheduler started");
+            console.log("[Server] ✅ Newsletter scheduler started successfully");
+            console.log("[Server] 📅 Scheduler timezone: UTC+3 (Saudi Arabia)");
+            
+            // Log scheduled newsletter details
             const status = newsletterScheduler.getStatus();
-            console.log("[Server] Scheduled newsletters:", status.schedules.map(s => `${s.type} at ${s.cronSchedule}`));
+            if (status.schedules.length > 0) {
+              console.log("[Server] 📰 Active newsletter schedules:");
+              status.schedules.forEach(schedule => {
+                console.log(`[Server]   - ${schedule.type}: ${schedule.cronSchedule} (${schedule.description || 'No description'})`);
+              });
+              console.log(`[Server] 🔄 Scheduler is ${status.isRunning ? 'RUNNING' : 'STOPPED'}`);
+            } else {
+              console.log("[Server] ⚠️  No newsletter schedules configured yet");
+            }
           } catch (error) {
             console.error("[Server] ⚠️  Error starting newsletter scheduler:", error);
             console.error("[Server] Server will continue running without newsletter scheduler");

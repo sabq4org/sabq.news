@@ -20,47 +20,52 @@ import type { ElevenLabsService, TTSOptions } from './elevenlabs';
 import { EventEmitter } from 'events';
 
 // Voice configurations for different narrators
+// Using ElevenLabs Flash v2.5 model for Arabic optimization
 export const ARABIC_VOICES = {
-  // Male voices with Saudi accent preference
+  // Male voices with Arabic language support
   MALE_NEWS: {
-    id: 'pNInz6obpgDQGcFmaJgB', // Adam - multilingual
-    name: 'Adam - News Anchor',
+    id: 'onwK4e9ZLuTAKqWW03F9', // Ali - Arabic male voice
+    name: 'Ali - News Anchor',
+    model_id: 'eleven_flash_v2_5', // Flash v2.5 for low latency
     settings: {
-      stability: 0.45,
-      similarity_boost: 0.75,
-      style: 0.60,
-      use_speaker_boost: true
+      stability: 0.5, // Balanced for news content
+      similarity_boost: 0.75, // Natural sounding
+      style: 0.0, // Neutral for news
+      use_speaker_boost: true // For clarity
     }
   },
   MALE_ANALYSIS: {
-    id: '21m00Tcm4TlvDq8ikWAM', // Rachel - can be replaced with Arabic male voice
-    name: 'Faisal - Deep Analysis',
+    id: 'pqHfZKP75CvOlQylNhV4', // Omar - Arabic male voice
+    name: 'Omar - Deep Analysis',
+    model_id: 'eleven_flash_v2_5', // Flash v2.5 for low latency
     settings: {
-      stability: 0.50,
-      similarity_boost: 0.70,
-      style: 0.70,
-      use_speaker_boost: true
+      stability: 0.5, // Balanced for news content
+      similarity_boost: 0.75, // Natural sounding
+      style: 0.0, // Neutral for news
+      use_speaker_boost: true // For clarity
     }
   },
-  // Female voices with Saudi accent preference
+  // Female voices with Arabic language support
   FEMALE_NEWS: {
-    id: 'EXAVITQu4vr4xnSDxMaL', // Sarah - multilingual
-    name: 'Sarah - News Anchor',
+    id: 'XB0fDUnXU5powFXDhCwa', // Amira - Arabic female voice
+    name: 'Amira - News Anchor',
+    model_id: 'eleven_flash_v2_5', // Flash v2.5 for low latency
     settings: {
-      stability: 0.40,
-      similarity_boost: 0.75,
-      style: 0.65,
-      use_speaker_boost: true
+      stability: 0.5, // Balanced for news content
+      similarity_boost: 0.75, // Natural sounding
+      style: 0.0, // Neutral for news
+      use_speaker_boost: true // For clarity
     }
   },
   FEMALE_CONVERSATIONAL: {
-    id: 'MF3mGyEYCl7XYWbV9V6O', // Emily - can be replaced with Arabic female voice
-    name: 'Noura - Conversational',
+    id: 'LcfcDJNUP1GQjkzn1xUU', // Leila - Arabic female voice
+    name: 'Leila - Conversational',
+    model_id: 'eleven_flash_v2_5', // Flash v2.5 for low latency
     settings: {
-      stability: 0.35,
-      similarity_boost: 0.80,
-      style: 0.75,
-      use_speaker_boost: true
+      stability: 0.5, // Balanced for news content
+      similarity_boost: 0.75, // Natural sounding
+      style: 0.0, // Neutral for news
+      use_speaker_boost: true // For clarity
     }
   }
 };
@@ -402,8 +407,13 @@ export class AudioNewsletterService extends EventEmitter {
       
       // Generate audio for each chunk
       const audioBuffers: Buffer[] = [];
-      const voiceId = newsletter.metadata?.voiceId || ARABIC_VOICES.MALE_NEWS.id;
-      const voiceSettings = newsletter.metadata?.voiceSettings || ARABIC_VOICES.MALE_NEWS.settings;
+      
+      // Get voice configuration based on preset or custom settings
+      const voicePreset = newsletter.metadata?.voicePreset || 'MALE_NEWS';
+      const voiceConfig = ARABIC_VOICES[voicePreset as keyof typeof ARABIC_VOICES] || ARABIC_VOICES.MALE_NEWS;
+      const voiceId = newsletter.metadata?.voiceId || voiceConfig.id;
+      const voiceSettings = newsletter.metadata?.voiceSettings || voiceConfig.settings;
+      const modelId = voiceConfig.model_id || 'eleven_flash_v2_5'; // Use Flash v2.5 for low latency
       
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -414,7 +424,7 @@ export class AudioNewsletterService extends EventEmitter {
             text: chunk,
             voiceId,
             voiceSettings,
-            model: 'eleven_multilingual_v2'
+            model: modelId // Use Flash v2.5 model for Arabic optimization
           }, 30000); // 30 second timeout per chunk
           
           audioBuffers.push(audioBuffer);
