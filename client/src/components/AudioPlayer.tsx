@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw } from "lucide-react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, Download, Share2, BarChart2, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,9 +8,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface AudioPlayerProps {
   newsletterId: string;
@@ -18,10 +20,13 @@ interface AudioPlayerProps {
   title: string;
   duration?: number;
   autoPlay?: boolean;
+  showWaveform?: boolean;
+  showDownload?: boolean;
+  showShare?: boolean;
   className?: string;
 }
 
-const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
 export function AudioPlayer({
   newsletterId,
@@ -29,17 +34,26 @@ export function AudioPlayer({
   title,
   duration: propDuration,
   autoPlay = false,
+  showWaveform = true,
+  showDownload = true,
+  showShare = true,
   className,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
+  const { toast } = useToast();
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(propDuration || 0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [isLoading, setIsLoading] = useState(!propDuration); // Only loading if no duration provided
+  const [isLoading, setIsLoading] = useState(!propDuration);
   const [hasTrackedListen, setHasTrackedListen] = useState(false);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
 
   // Format time in MM:SS
   const formatTime = (seconds: number) => {
@@ -48,6 +62,76 @@ export function AudioPlayer({
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Initialize audio context and analyser for waveform
+  useEffect(() => {
+    if (showWaveform && audioRef.current && !audioContext) {
+      const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const analyserNode = context.createAnalyser();
+      analyserNode.fftSize = 256;
+      
+      const source = context.createMediaElementSource(audioRef.current);
+      source.connect(analyserNode);
+      analyserNode.connect(context.destination);
+      
+      setAudioContext(context);
+      setAnalyser(analyserNode);
+    }
+
+    return () => {
+      if (audioContext) {
+        audioContext.close();
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [showWaveform]);
+
+  // Draw waveform visualization
+  const drawWaveform = useCallback(() => {
+    if (!canvasRef.current || !analyser) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.fillStyle = "rgb(0, 0, 0, 0)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+      
+      // Use primary color with opacity
+      const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+      gradient.addColorStop(0, "hsl(var(--primary) / 0.8)");
+      gradient.addColorStop(1, "hsl(var(--primary) / 0.3)");
+      ctx.fillStyle = gradient;
+      
+      ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+      x += barWidth + 1;
+    }
+
+    if (isPlaying) {
+      animationRef.current = requestAnimationFrame(drawWaveform);
+    }
+  }, [analyser, isPlaying]);
+
+  useEffect(() => {
+    if (isPlaying && showWaveform) {
+      drawWaveform();
+    } else if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+  }, [isPlaying, drawWaveform, showWaveform]);
 
   // Track listen event after 5 seconds of playback
   useEffect(() => {
@@ -88,7 +172,6 @@ export function AudioPlayer({
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
-      // Track completion
       trackListenEvent();
     };
 
@@ -127,6 +210,10 @@ export function AudioPlayer({
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    if (audioContext?.state === "suspended") {
+      audioContext.resume();
+    }
 
     if (isPlaying) {
       audio.pause();
@@ -185,6 +272,43 @@ export function AudioPlayer({
     audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + seconds));
   };
 
+  const handleDownload = () => {
+    const link = document.createElement("a");
+    link.href = audioUrl;
+    link.download = `${title}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "جاري التحميل",
+      description: "سيبدأ تحميل الملف الصوتي قريباً",
+    });
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `استمع إلى: ${title}`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error("Share failed:", error);
+        }
+      }
+    } else {
+      // Fallback: copy link
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "تم النسخ",
+        description: "تم نسخ الرابط إلى الحافظة",
+      });
+    }
+  };
+
   if (isLoading && !duration) {
     return (
       <div className={cn("w-full space-y-4 p-4 border rounded-lg", className)} dir="rtl">
@@ -210,10 +334,56 @@ export function AudioPlayer({
     >
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
-      {/* Title */}
-      <div className="text-sm font-medium truncate" data-testid="text-audio-title">
-        {title}
+      {/* Title and Action Buttons */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm font-medium truncate flex-1" data-testid="text-audio-title">
+          {title}
+        </div>
+        <div className="flex items-center gap-1">
+          {showDownload && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleDownload}
+              className="h-8 w-8"
+              data-testid="button-download"
+              aria-label="تحميل"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
+          {showShare && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleShare}
+              className="h-8 w-8"
+              data-testid="button-share"
+              aria-label="مشاركة"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Waveform Visualization */}
+      {showWaveform && (
+        <div className="relative h-16 bg-muted/30 rounded-lg overflow-hidden">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={64}
+            className="absolute inset-0 w-full h-full"
+            data-testid="canvas-waveform"
+          />
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Activity className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="space-y-2">
@@ -292,14 +462,22 @@ export function AudioPlayer({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
+            <div className="px-2 py-1.5 text-sm font-semibold">سرعة التشغيل</div>
+            <DropdownMenuSeparator />
             {PLAYBACK_SPEEDS.map((speed) => (
               <DropdownMenuItem
                 key={speed}
                 onClick={() => changePlaybackSpeed(speed)}
                 data-testid={`menuitem-speed-${speed}`}
-                className={playbackSpeed === speed ? "bg-accent" : ""}
+                className={cn(
+                  "cursor-pointer",
+                  playbackSpeed === speed && "bg-accent"
+                )}
               >
-                {speed}x
+                <span className="flex items-center justify-between w-full">
+                  {speed}x
+                  {speed === 1 && <span className="text-xs text-muted-foreground mr-2">عادي</span>}
+                </span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

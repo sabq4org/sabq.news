@@ -1,21 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useRoute, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, ArrowLeft, Save, Radio, PlayCircle, Search, X, GripVertical } from "lucide-react";
+import { 
+  Loader2, ArrowLeft, Save, Radio, PlayCircle, Search, X, GripVertical,
+  Filter, Clock, Calendar, Mic, Eye, Settings, ChevronDown, ChevronUp,
+  FileText, Hash, Sparkles, Timer, CalendarClock, Plus
+} from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -40,21 +54,33 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { NewsletterTemplates, NewsletterTemplate } from "@/components/NewsletterTemplates";
 import { useAuth, hasRole } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const newsletterSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
   description: z.string().optional(),
   coverImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  templateId: z.string().optional(),
+  intro: z.string().optional(),
+  outro: z.string().optional(),
   voiceId: z.string().min(1, "يجب اختيار صوت"),
   voiceSettings: z.object({
     stability: z.number().min(0).max(1),
     similarityBoost: z.number().min(0).max(1),
   }),
+  schedule: z.object({
+    enabled: z.boolean(),
+    type: z.enum(["once", "daily", "weekly", "monthly"]).optional(),
+    time: z.string().optional(),
+    date: z.string().optional(),
+    days: z.array(z.number()).optional(),
+  }).optional(),
 });
 
 type NewsletterFormData = z.infer<typeof newsletterSchema>;
