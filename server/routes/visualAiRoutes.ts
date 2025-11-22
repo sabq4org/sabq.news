@@ -188,9 +188,9 @@ router.post("/generate-news-image", isAuthenticated, async (req: Request, res: R
       mood
     });
 
-    if (!generationResult.success) {
+    if (!generationResult.success || !generationResult.imageUrl) {
       return res.status(500).json({ 
-        error: generationResult.error || "Generation failed" 
+        error: generationResult.error || "Generation failed - no image URL" 
       });
     }
 
@@ -202,8 +202,8 @@ router.post("/generate-news-image", isAuthenticated, async (req: Request, res: R
       cardType: "standard",
       template: "news_image",
       language,
-      imageUrl: generationResult.imageUrl!,
-      thumbnailUrl: generationResult.thumbnailUrl,
+      imageUrl: generationResult.imageUrl,
+      thumbnailUrl: generationResult.thumbnailUrl || generationResult.imageUrl,
       headline: articleTitle,
       generationTime: generationResult.generationTime,
       cost: generationResult.cost,
