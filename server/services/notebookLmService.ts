@@ -35,6 +35,7 @@ interface NotebookLMGenerationOptions {
   detail: 'concise' | 'standard' | 'detailed';
   orientation: 'square' | 'portrait' | 'landscape';
   language: string;
+  colorStyle?: 'auto' | 'vibrant' | 'professional' | 'elegant' | 'modern';
 }
 
 // Helper to check rate limit errors
@@ -96,20 +97,48 @@ class NotebookLMService {
         'detailed': 'Include comprehensive information with statistics and examples.',
       };
 
-      // Creative color palettes for variety
-      const colorPalettes = [
-        'vibrant gradient (orange to purple) with yellow accents',
-        'professional blue-green gradient with coral highlights',
-        'modern pink-purple gradient with mint green accents',
-        'elegant teal-cyan with golden yellow highlights',
-        'bold red-orange gradient with deep blue accents',
-        'fresh green-lime gradient with sky blue highlights',
-        'sophisticated navy-purple with rose gold accents',
-        'energetic yellow-orange with turquoise highlights'
-      ];
+      // Define color palettes for different styles
+      const colorPalettes: Record<string, string[]> = {
+        vibrant: [
+          'vibrant gradient (orange to purple) with yellow accents',
+          'bold red-orange gradient with deep blue accents',
+          'energetic yellow-orange with turquoise highlights',
+          'bright magenta-cyan gradient with lime green highlights'
+        ],
+        professional: [
+          'professional blue-green gradient with coral highlights',
+          'corporate navy-teal with silver accents',
+          'business gray-blue with gold highlights',
+          'classic royal blue with charcoal and white accents'
+        ],
+        elegant: [
+          'elegant teal-cyan with golden yellow highlights',
+          'sophisticated navy-purple with rose gold accents',
+          'luxurious emerald-sapphire with pearl accents',
+          'refined burgundy-gold with cream highlights'
+        ],
+        modern: [
+          'modern pink-purple gradient with mint green accents',
+          'fresh green-lime gradient with sky blue highlights',
+          'contemporary coral-turquoise with yellow highlights',
+          'trendy neon gradient with dark background'
+        ],
+        auto: [
+          'vibrant gradient (orange to purple) with yellow accents',
+          'professional blue-green gradient with coral highlights',
+          'modern pink-purple gradient with mint green accents',
+          'elegant teal-cyan with golden yellow highlights',
+          'bold red-orange gradient with deep blue accents',
+          'fresh green-lime gradient with sky blue highlights',
+          'sophisticated navy-purple with rose gold accents',
+          'energetic yellow-orange with turquoise highlights'
+        ]
+      };
       
-      // Randomly select a color palette for variety
-      const selectedPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+      // Select palette based on user preference or random
+      const stylePreference = options.colorStyle || 'auto';
+      const availablePalettes = colorPalettes[stylePreference] || colorPalettes.auto;
+      const selectedPalette = availablePalettes[Math.floor(Math.random() * availablePalettes.length)];
       
       const enhancedPrompt = `
 ${languageInstructions[options.language as keyof typeof languageInstructions] || languageInstructions['ar']}
@@ -296,6 +325,14 @@ Create a stunning, eye-catching infographic that stands out in social media feed
     const capabilities = this.getCapabilities();
     if (!capabilities.languages.includes(options.language)) {
       errors.push('Unsupported language');
+    }
+
+    // Validate color style if provided
+    if (options.colorStyle) {
+      const validColorStyles = ['auto', 'vibrant', 'professional', 'elegant', 'modern'];
+      if (!validColorStyles.includes(options.colorStyle)) {
+        errors.push('Invalid color style');
+      }
     }
 
     return {
