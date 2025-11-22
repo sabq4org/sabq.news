@@ -91,6 +91,128 @@ const requireAdmin = async (req: express.Request, res: express.Response, next: e
   next();
 };
 
+// Get public newsletters (no auth required)
+router.get('/public', async (req, res) => {
+  try {
+    const {
+      page = '1',
+      limit = '20',
+      status = 'published',
+      template,
+      search,
+      startDate,
+      endDate,
+      orderBy = 'createdAt'
+    } = req.query;
+    
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const offset = (pageNum - 1) * limitNum;
+    
+    // Build where conditions - only published newsletters
+    const whereConditions = [eq(audioNewsletters.status, 'published')];
+    
+    if (template) {
+      whereConditions.push(eq(audioNewsletters.template, template as string));
+    }
+    
+    if (search) {
+      whereConditions.push(
+        or(
+          ilike(audioNewsletters.title, `%${search}%`),
+          ilike(audioNewsletters.description, `%${search}%`)
+        )
+      );
+    }
+    
+    if (startDate) {
+      whereConditions.push(gte(audioNewsletters.createdAt, startDate as string));
+    }
+    
+    if (endDate) {
+      whereConditions.push(lte(audioNewsletters.createdAt, endDate as string));
+    }
+    
+    const whereClause = and(...whereConditions);
+    
+    // Get newsletters
+    const newsletters = await db.query.audioNewsletters.findMany({
+      where: whereClause,
+      orderBy: orderBy === 'listenCount' 
+        ? [desc(audioNewsletters.listenCount)]
+        : orderBy === 'duration'
+        ? [desc(audioNewsletters.duration)]
+        : [desc(audioNewsletters.createdAt)],
+      limit: limitNum,
+      offset
+    });
+    
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: db.sql`count(*)` })
+      .from(audioNewsletters)
+      .where(whereClause);
+    
+    // Get template distribution
+    const categories = await db
+      .select({
+        template: audioNewsletters.template,
+        count: db.sql`count(*)`
+      })
+      .from(audioNewsletters)
+      .where(eq(audioNewsletters.status, 'published'))
+      .groupBy(audioNewsletters.template);
+    
+    res.json({
+      newsletters,
+      total: Number(count),
+      categories,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: Number(count),
+        totalPages: Math.ceil(Number(count) / limitNum)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public newsletters:', error);
+    res.status(500).json({ error: 'Failed to fetch newsletters' });
+  }
+});
+
+// Get single public newsletter (no auth required)
+router.get('/public/:id', async (req, res) => {
+  try {
+    const newsletter = await db.query.audioNewsletters.findFirst({
+      where: and(
+        eq(audioNewsletters.id, req.params.id),
+        eq(audioNewsletters.status, 'published')
+      ),
+      with: {
+        articles: {
+          with: {
+            article: {
+              with: {
+                category: true
+              }
+            }
+          },
+          orderBy: (articles, { asc }) => [asc(articles.orderIndex)]
+        }
+      }
+    });
+    
+    if (!newsletter) {
+      return res.status(404).json({ error: 'Newsletter not found' });
+    }
+    
+    res.json(newsletter);
+  } catch (error) {
+    console.error('Error fetching public newsletter:', error);
+    res.status(500).json({ error: 'Failed to fetch newsletter' });
+  }
+});
+
 // Get all newsletters with pagination and filters
 router.get('/newsletters', requireAuth, async (req, res) => {
   try {

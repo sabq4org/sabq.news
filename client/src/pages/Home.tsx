@@ -23,9 +23,117 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AudioPlayer } from "@/components/AudioPlayer";
-import { Play, Headphones, Newspaper, Eye, TrendingUp, MessageSquare } from "lucide-react";
-import type { ArticleWithDetails, SmartBlock, AudioNewsBrief } from "@shared/schema";
+import { HomeAudioWidget } from "@/components/HomeAudioWidget";
+import { Play, Headphones, Newspaper, Eye, TrendingUp, MessageSquare, Rss } from "lucide-react";
+import { Link } from "wouter";
+import type { ArticleWithDetails, SmartBlock, AudioNewsBrief, AudioNewsletter } from "@shared/schema";
 import type { User } from "@/hooks/useAuth";
+
+// New Audio Newsletter Section
+function AudioNewsletterSection() {
+  const [selectedNewsletter, setSelectedNewsletter] = useState<AudioNewsletter | null>(null);
+  
+  const { data: newsletters } = useQuery<AudioNewsletter[]>({
+    queryKey: ['/api/audio-newsletters/public'],
+    queryFn: async () => {
+      const res = await fetch('/api/audio-newsletters/public?limit=3&status=published');
+      if (!res.ok) throw new Error('Failed to fetch newsletters');
+      const data = await res.json();
+      return data.newsletters || [];
+    }
+  });
+  
+  if (!newsletters || newsletters.length === 0) return null;
+  
+  return (
+    <section className="py-8 bg-gradient-to-l from-primary/5 to-accent/5" dir="rtl">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Headphones className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">النشرات الصوتية</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/audio-newsletters">
+              <Button variant="outline" size="sm" data-testid="button-view-all-newsletters">
+                عرض الكل
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open('/api/rss/audio-newsletters', '_blank')}
+              data-testid="button-podcast-rss"
+            >
+              <Rss className="h-4 w-4 ml-2" />
+              Podcast RSS
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {newsletters.map((newsletter) => (
+            <div
+              key={newsletter.id}
+              className="p-4 bg-card border rounded-lg hover-elevate cursor-pointer"
+              onClick={() => setSelectedNewsletter(newsletter)}
+              data-testid={`audio-newsletter-${newsletter.id}`}
+            >
+              <div className="flex items-start gap-3">
+                <Button
+                  size="icon"
+                  variant="default"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedNewsletter(newsletter);
+                  }}
+                  data-testid={`button-play-${newsletter.id}`}
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold line-clamp-2 mb-1">{newsletter.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {newsletter.description}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                    {newsletter.duration && (
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {Math.floor(newsletter.duration / 60)}:{(newsletter.duration % 60).toString().padStart(2, '0')}
+                      </span>
+                    )}
+                    {newsletter.listenCount > 0 && (
+                      <span>{newsletter.listenCount} استماع</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {selectedNewsletter && (
+        <Dialog open={!!selectedNewsletter} onOpenChange={() => setSelectedNewsletter(null)}>
+          <DialogContent className="max-w-2xl" dir="rtl">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">{selectedNewsletter.title}</h2>
+              <p className="text-muted-foreground">{selectedNewsletter.description}</p>
+              <AudioPlayer
+                newsletterId={selectedNewsletter.id}
+                audioUrl={selectedNewsletter.audioUrl!}
+                title={selectedNewsletter.title}
+                duration={selectedNewsletter.duration || undefined}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </section>
+  );
+}
 
 function AudioBriefsSection() {
   const [selectedBrief, setSelectedBrief] = useState<AudioNewsBrief | null>(null);
@@ -320,6 +428,9 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Audio Newsletter Section */}
+        <AudioNewsletterSection />
+
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
           {/* Smart Blocks: above_all_news */}
           {blocksAboveAllNews && blocksAboveAllNews.map((block) => (
@@ -393,6 +504,9 @@ export default function Home() {
       </main>
       
       <Footer />
+
+      {/* Floating Audio Widget */}
+      <HomeAudioWidget />
     </div>
   );
 }

@@ -5,11 +5,13 @@ import nanoBananaRoutes from "./routes/nanoBananaRoutes";
 import visualAiRoutes from "./routes/visualAiRoutes";
 import autoImageRoutes from "./routes/autoImageRoutes";
 import notebookLmRoutes from "./routes/notebookLmRoutes";
+import rssFeedRoutes from "./routes/rssFeedRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
+import { newsletterScheduler } from "./services/newsletterScheduler";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -285,6 +287,10 @@ app.use((req, res, next) => {
     app.use("/api/audio-newsletters", audioNewsletterRoutes.default);
     console.log("[Server] ✅ Audio Newsletter routes registered");
 
+    // Register RSS Feed routes
+    app.use("/api/rss", rssFeedRoutes);
+    console.log("[Server] ✅ RSS Feed routes registered");
+
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags
     const { socialCrawlerMiddleware } = await import("./socialCrawler");
@@ -536,6 +542,25 @@ app.use((req, res, next) => {
             console.error("[Server] Server will continue running without audio newsletter automation");
           }
         });
+      }
+
+      // Start Newsletter Scheduler (automated cron-based newsletter generation)
+      if (enableBackgroundWorkers && process.env.ENABLE_NEWSLETTER_SCHEDULER === 'true') {
+        setImmediate(() => {
+          try {
+            newsletterScheduler.start();
+            console.log("[Server] ✅ Newsletter scheduler started");
+            const status = newsletterScheduler.getStatus();
+            console.log("[Server] Scheduled newsletters:", status.schedules.map(s => `${s.type} at ${s.cronSchedule}`));
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting newsletter scheduler:", error);
+            console.error("[Server] Server will continue running without newsletter scheduler");
+          }
+        });
+      } else if (!enableBackgroundWorkers) {
+        console.log("[Server] Newsletter scheduler skipped (background workers disabled)");
+      } else {
+        console.log("[Server] Newsletter scheduler disabled (set ENABLE_NEWSLETTER_SCHEDULER=true to enable)");
       }
     });
 

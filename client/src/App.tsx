@@ -98,6 +98,7 @@ import AudioNewslettersDashboard from "@/pages/AudioNewslettersDashboard";
 import AudioNewsletterEditor from "@/pages/AudioNewsletterEditor";
 import AudioNewslettersArchive from "@/pages/AudioNewslettersArchive";
 import AudioNewsletterDetail from "@/pages/AudioNewsletterDetail";
+import AudioNewslettersPublic from "@/pages/AudioNewslettersPublic";
 import AudioBriefsDashboard from "@/pages/AudioBriefsDashboard";
 import AudioBriefEditor from "@/pages/AudioBriefEditor";
 import AnnouncementsList from "@/pages/AnnouncementsList";
@@ -334,8 +335,8 @@ function Router() {
       <Route path="/entity/:slug" component={EntityDetail} />
       
       {/* Audio Newsletters public pages */}
-      <Route path="/audio-newsletters" component={AudioNewslettersArchive} />
-      <Route path="/audio-newsletters/:slug" component={AudioNewsletterDetail} />
+      <Route path="/audio-newsletters" component={AudioNewslettersPublic} />
+      <Route path="/audio-newsletters/:id" component={AudioNewsletterDetail} />
       
       {/* Mirqab dashboard */}
       <Route path="/dashboard/mirqab" component={MirqabDashboard} />

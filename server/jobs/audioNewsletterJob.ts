@@ -123,12 +123,16 @@ async function processScheduledNewsletters() {
     const now = new Date();
     
     // Find newsletters that are scheduled for now or earlier
+    const conditions = [eq(audioNewsletters.status, 'scheduled')];
+    
+    // Only add date comparison if the field exists
+    if (audioNewsletters.scheduledFor) {
+      conditions.push(lte(audioNewsletters.scheduledFor, now.toISOString()));
+    }
+    
     const scheduledNewsletters = await db.select()
       .from(audioNewsletters)
-      .where(and(
-        eq(audioNewsletters.status, 'scheduled'),
-        lte(audioNewsletters.scheduledFor, now.toISOString())
-      ));
+      .where(conditions.length > 1 ? and(...conditions) : conditions[0]);
     
     console.log(`Found ${scheduledNewsletters.length} scheduled newsletters to process`);
     
