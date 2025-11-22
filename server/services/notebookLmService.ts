@@ -96,25 +96,53 @@ class NotebookLMService {
         'detailed': 'Include comprehensive information with statistics and examples.',
       };
 
+      // Creative color palettes for variety
+      const colorPalettes = [
+        'vibrant gradient (orange to purple) with yellow accents',
+        'professional blue-green gradient with coral highlights',
+        'modern pink-purple gradient with mint green accents',
+        'elegant teal-cyan with golden yellow highlights',
+        'bold red-orange gradient with deep blue accents',
+        'fresh green-lime gradient with sky blue highlights',
+        'sophisticated navy-purple with rose gold accents',
+        'energetic yellow-orange with turquoise highlights'
+      ];
+      
+      // Randomly select a color palette for variety
+      const selectedPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+      
       const enhancedPrompt = `
 ${languageInstructions[options.language as keyof typeof languageInstructions] || languageInstructions['ar']}
 
-CONTENT:
+CONTENT TO VISUALIZE:
 ${options.prompt}
 
-DESIGN REQUIREMENTS:
-- Modern, professional infographic design
+DESIGN SPECIFICATIONS:
+- Creative infographic design with ${selectedPalette}
 - ${detailInstructions[options.detail]}
-- Clear visual hierarchy with icons and graphics
-- Professional color scheme (blues, teals, grays)
-- High contrast for readability
-- Clean typography
-- Visual elements: icons, charts, or diagrams where appropriate
-- Sabq News branding style (professional, trustworthy, modern)
-- No stock photos - use vector graphics and icons
-- Optimized for social media sharing
+- Use 3-4 complementary colors maximum for visual harmony
+- Apply gradients and modern color transitions
+- Include decorative geometric shapes and patterns
+- Clear visual hierarchy with varied font sizes and weights
+- Professional icons, illustrations, and vector graphics
+- Charts, diagrams, or data visualizations where appropriate
+- White space for breathing room and clean look
+- Rounded corners and soft shadows for depth
+- Modern, magazine-quality layout
+- High contrast text on colored backgrounds
+- Creative typography mixing Arabic/English fonts
+- Visual metaphors and creative representations
+- Sabq News branding: trustworthy yet innovative
+- Publication-ready for social media (Instagram, Twitter, LinkedIn)
 
-Create a publication-ready infographic that is visually appealing and informative.
+AVOID:
+- Single flat colors without gradients
+- Stock photos or clipart
+- Cluttered or busy designs
+- Low contrast color combinations
+- Generic or boring layouts
+
+Create a stunning, eye-catching infographic that stands out in social media feeds and captures attention immediately.
       `.trim();
 
       // Build the generation request

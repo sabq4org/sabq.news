@@ -73,6 +73,7 @@ export default function ImageStudio() {
   const [notebookLmDetail, setNotebookLmDetail] = useState<"concise" | "standard" | "detailed">("standard");
   const [notebookLmOrientation, setNotebookLmOrientation] = useState<"square" | "portrait" | "landscape">("landscape");
   const [notebookLmLanguage, setNotebookLmLanguage] = useState("ar"); // Arabic default
+  const [notebookLmColorStyle, setNotebookLmColorStyle] = useState<"auto" | "vibrant" | "professional" | "elegant" | "modern">("auto");
   
   // Loading states
   const [isGeneratingNotebookLm, setIsGeneratingNotebookLm] = useState(false);
@@ -225,6 +226,7 @@ export default function ImageStudio() {
             detail: notebookLmDetail,
             orientation: notebookLmOrientation,
             language: notebookLmLanguage,
+            colorStyle: notebookLmColorStyle,
           }),
         });
 
@@ -367,6 +369,7 @@ export default function ImageStudio() {
             detail: notebookLmDetail,
             orientation: notebookLmOrientation,
             language: notebookLmLanguage,
+            colorStyle: notebookLmColorStyle,
           }),
         });
         
@@ -695,6 +698,25 @@ export default function ImageStudio() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="color-style">نمط الألوان 🎨</Label>
+                  <Select value={notebookLmColorStyle} onValueChange={setNotebookLmColorStyle as any}>
+                    <SelectTrigger id="color-style" data-testid="select-color-style">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">🎲 تلقائي (متنوع)</SelectItem>
+                      <SelectItem value="vibrant">🌈 زاهي ونابض</SelectItem>
+                      <SelectItem value="professional">💼 احترافي وأنيق</SelectItem>
+                      <SelectItem value="elegant">✨ راقي وفاخر</SelectItem>
+                      <SelectItem value="modern">🚀 عصري وجريء</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    اختر نمط الألوان المناسب لإنفوجرافيكك
+                  </p>
                 </div>
 
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">

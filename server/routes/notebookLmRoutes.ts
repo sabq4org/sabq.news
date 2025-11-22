@@ -18,7 +18,7 @@ const router = Router();
  */
 router.post("/generate", isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { prompt, detail, orientation, language } = req.body;
+    const { prompt, detail, orientation, language, colorStyle } = req.body;
     const userId = (req.user as any)?.id;
 
     // Validate input
@@ -34,6 +34,7 @@ router.post("/generate", isAuthenticated, async (req: Request, res: Response) =>
       detail: detail || 'standard',
       orientation: orientation || 'landscape',
       language: language || 'ar',
+      colorStyle: colorStyle || 'auto',
     });
 
     if (!validation.valid) {
@@ -51,6 +52,7 @@ router.post("/generate", isAuthenticated, async (req: Request, res: Response) =>
       detail: detail || 'standard',
       orientation: orientation || 'landscape',
       language: language || 'ar',
+      colorStyle: colorStyle || 'auto',
     });
 
     if (!result.success) {
