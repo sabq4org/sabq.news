@@ -46,12 +46,18 @@ interface Stats {
 
 export default function ImageStudio() {
   const { toast } = useToast();
+  const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm">("nano-banana");
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [imageSize, setImageSize] = useState("2K");
   const [enableSearchGrounding, setEnableSearchGrounding] = useState(false);
   const [enableThinking, setEnableThinking] = useState(true);
+  
+  // NotebookLM specific options
+  const [notebookLmDetail, setNotebookLmDetail] = useState<"concise" | "standard" | "detailed">("standard");
+  const [notebookLmOrientation, setNotebookLmOrientation] = useState<"square" | "portrait" | "landscape">("landscape");
+  const [notebookLmLanguage, setNotebookLmLanguage] = useState("ar"); // Arabic default
 
   // Fetch generations
   const { data: generationsData, isLoading } = useQuery<{ generations: Generation[] }>({
@@ -114,20 +120,33 @@ export default function ImageStudio() {
     if (!prompt.trim()) {
       toast({
         variant: "destructive",
-        title: "البرومبت مطلوب",
-        description: "يرجى إدخال وصف للصورة المراد توليدها",
+        title: selectedModel === "nano-banana" ? "البرومبت مطلوب" : "المحتوى مطلوب",
+        description: selectedModel === "nano-banana" 
+          ? "يرجى إدخال وصف للصورة المراد توليدها"
+          : "يرجى إدخال المحتوى المراد تحويله إلى إنفوجرافيك",
       });
       return;
     }
 
-    generateMutation.mutate({
-      prompt,
-      negativePrompt: negativePrompt || undefined,
-      aspectRatio,
-      imageSize,
-      enableSearchGrounding,
-      enableThinking,
-    });
+    if (selectedModel === "nano-banana") {
+      generateMutation.mutate({
+        prompt,
+        negativePrompt: negativePrompt || undefined,
+        aspectRatio,
+        imageSize,
+        enableSearchGrounding,
+        enableThinking,
+      });
+    } else {
+      // NotebookLM generation
+      generateMutation.mutate({
+        model: "notebooklm",
+        prompt,
+        detail: notebookLmDetail,
+        orientation: notebookLmOrientation,
+        language: notebookLmLanguage,
+      });
+    }
   };
 
   return (
@@ -196,16 +215,80 @@ export default function ImageStudio() {
               توليد صورة جديدة
             </CardTitle>
             <CardDescription>
-              استخدم Nano Banana Pro لتوليد صور احترافية عالية الجودة
+              اختر النموذج المناسب لتوليد صور احترافية عالية الجودة
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Model Selection */}
+            <div className="space-y-2">
+              <Label>اختر النموذج</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Card 
+                  className={`cursor-pointer transition-all ${
+                    selectedModel === "nano-banana" 
+                      ? "ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20" 
+                      : "hover:shadow-md"
+                  }`}
+                  onClick={() => setSelectedModel("nano-banana")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          Nano Banana Pro
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Google Gemini 3 - توليد صور احترافية
+                        </p>
+                      </div>
+                      <Badge variant={selectedModel === "nano-banana" ? "default" : "outline"}>
+                        {selectedModel === "nano-banana" ? "مُختار" : "اختر"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card 
+                  className={`cursor-pointer transition-all ${
+                    selectedModel === "notebooklm" 
+                      ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                      : "hover:shadow-md"
+                  }`}
+                  onClick={() => setSelectedModel("notebooklm")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          NotebookLM
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Google AI - إنفوجرافيك ذكي
+                        </p>
+                      </div>
+                      <Badge variant={selectedModel === "notebooklm" ? "default" : "outline"}>
+                        {selectedModel === "notebooklm" ? "مُختار" : "اختر"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="prompt">البرومبت (الوصف)</Label>
+              <Label htmlFor="prompt">
+                {selectedModel === "nano-banana" ? "البرومبت (الوصف)" : "المحتوى أو الموضوع"}
+              </Label>
               <Textarea
                 id="prompt"
                 data-testid="input-prompt"
-                placeholder="اكتب وصفاً تفصيلياً للصورة المراد توليدها..."
+                placeholder={
+                  selectedModel === "nano-banana" 
+                    ? "اكتب وصفاً تفصيلياً للصورة المراد توليدها..."
+                    : "اكتب المحتوى أو المعلومات المراد تحويلها إلى إنفوجرافيك..."
+                }
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={4}
@@ -213,70 +296,142 @@ export default function ImageStudio() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="negative-prompt">البرومبت السلبي (اختياري)</Label>
-              <Textarea
-                id="negative-prompt"
-                data-testid="input-negative-prompt"
-                placeholder="ما الذي تريد تجنبه في الصورة..."
-                value={negativePrompt}
-                onChange={(e) => setNegativePrompt(e.target.value)}
-                rows={2}
-                className="resize-none"
-              />
-            </div>
+            {/* Model-specific options */}
+            {selectedModel === "nano-banana" ? (
+              <>
+                <div>
+                  <Label htmlFor="negative-prompt">البرومبت السلبي (اختياري)</Label>
+                  <Textarea
+                    id="negative-prompt"
+                    data-testid="input-negative-prompt"
+                    placeholder="ما الذي تريد تجنبه في الصورة..."
+                    value={negativePrompt}
+                    onChange={(e) => setNegativePrompt(e.target.value)}
+                    rows={2}
+                    className="resize-none"
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>نسبة العرض إلى الارتفاع</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                  <SelectTrigger data-testid="select-aspect-ratio">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="16:9">16:9 (أفقي)</SelectItem>
-                    <SelectItem value="1:1">1:1 (مربع)</SelectItem>
-                    <SelectItem value="4:3">4:3</SelectItem>
-                    <SelectItem value="9:16">9:16 (عمودي)</SelectItem>
-                    <SelectItem value="21:9">21:9 (سينمائي)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="aspect-ratio">نسبة العرض</Label>
+                    <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                      <SelectTrigger id="aspect-ratio" data-testid="select-aspect-ratio">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1:1">1:1 (مربع)</SelectItem>
+                        <SelectItem value="3:4">3:4 (عمودي)</SelectItem>
+                        <SelectItem value="4:3">4:3 (أفقي)</SelectItem>
+                        <SelectItem value="9:16">9:16 (هاتف)</SelectItem>
+                        <SelectItem value="16:9">16:9 (شاشة عريضة)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <Label>الجودة</Label>
-                <Select value={imageSize} onValueChange={setImageSize}>
-                  <SelectTrigger data-testid="select-image-size">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1K">1K (سريع)</SelectItem>
-                    <SelectItem value="2K">2K (موصى به)</SelectItem>
-                    <SelectItem value="4K">4K (عالي الجودة)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                  <div>
+                    <Label htmlFor="image-size">حجم الصورة</Label>
+                    <Select value={imageSize} onValueChange={setImageSize}>
+                      <SelectTrigger id="image-size" data-testid="select-image-size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2K">2K (2048x2048)</SelectItem>
+                        <SelectItem value="4K">4K (4096x4096)</SelectItem>
+                        <SelectItem value="8K">8K (8192x8192)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="thinking">تفعيل التفكير المتقدم</Label>
-              <Switch
-                id="thinking"
-                data-testid="switch-thinking"
-                checked={enableThinking}
-                onCheckedChange={setEnableThinking}
-              />
-            </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="search-grounding">البحث الأرضي</Label>
+                    <Switch
+                      id="search-grounding"
+                      checked={enableSearchGrounding}
+                      onCheckedChange={setEnableSearchGrounding}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    استخدام بحث Google للحصول على صور أكثر دقة
+                  </p>
+                </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="search">استخدام بحث Google</Label>
-              <Switch
-                id="search"
-                data-testid="switch-search"
-                checked={enableSearchGrounding}
-                onCheckedChange={setEnableSearchGrounding}
-              />
-            </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="thinking">التفكير العميق</Label>
+                    <Switch
+                      id="thinking"
+                      checked={enableThinking}
+                      onCheckedChange={setEnableThinking}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    السماح للذكاء الاصطناعي بالتفكير قبل التوليد
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* NotebookLM specific options */}
+                <div>
+                  <Label htmlFor="detail-level">مستوى التفصيل</Label>
+                  <Select value={notebookLmDetail} onValueChange={setNotebookLmDetail as any}>
+                    <SelectTrigger id="detail-level" data-testid="select-detail-level">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="concise">مختصر</SelectItem>
+                      <SelectItem value="standard">قياسي</SelectItem>
+                      <SelectItem value="detailed">مفصّل</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="orientation">الاتجاه</Label>
+                    <Select value={notebookLmOrientation} onValueChange={setNotebookLmOrientation as any}>
+                      <SelectTrigger id="orientation" data-testid="select-orientation">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="square">مربع</SelectItem>
+                        <SelectItem value="portrait">عمودي</SelectItem>
+                        <SelectItem value="landscape">أفقي</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="language">اللغة</Label>
+                    <Select value={notebookLmLanguage} onValueChange={setNotebookLmLanguage}>
+                      <SelectTrigger id="language" data-testid="select-language">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ar">العربية</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="ur">اردو</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <strong>💡 ميزات NotebookLM:</strong>
+                    <br />
+                    • تحويل المحتوى النصي إلى إنفوجرافيك ذكي
+                    <br />
+                    • تحليل البيانات وإنشاء رسوم بيانية
+                    <br />
+                    • إنشاء خرائط مفاهيمية وملخصات بصرية
+                  </p>
+                </div>
+              </>
+            )}
 
             <Button
               data-testid="button-generate"

@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import nanoBananaRoutes from "./routes/nanoBananaRoutes";
 import visualAiRoutes from "./routes/visualAiRoutes";
 import autoImageRoutes from "./routes/autoImageRoutes";
+import notebookLmRoutes from "./routes/notebookLmRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
@@ -247,6 +248,10 @@ app.use((req, res, next) => {
     // Register Nano Banana Pro routes
     app.use("/api/nano-banana", nanoBananaRoutes);
     console.log("[Server] ✅ Nano Banana Pro routes registered");
+    
+    // Register NotebookLM routes
+    app.use("/api/notebooklm", notebookLmRoutes);
+    console.log("[Server] ✅ NotebookLM routes registered");
     
     // Register Visual AI routes
     app.use("/api/visual-ai", visualAiRoutes);
