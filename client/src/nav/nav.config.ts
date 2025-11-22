@@ -574,6 +574,14 @@ export const navConfig: NavItem[] = [
         roles: ["admin"],
       },
       {
+        id: "auto_image_settings",
+        labelKey: "nav.auto_image_settings",
+        labelAr: "التوليد التلقائي للصور",
+        path: "/dashboard/auto-image-settings",
+        icon: Wand2,
+        roles: ["admin"],
+      },
+      {
         id: "communications",
         labelKey: "nav.communications",
         labelAr: "قنوات الاتصال",

@@ -4,6 +4,7 @@
 
 import { Router, Request, Response } from "express";
 import { isAuthenticated } from "../auth";
+import { requireRole } from "../rbac";
 import {
   autoGenerateImage,
   shouldAutoGenerateImage,
@@ -108,11 +109,46 @@ router.get("/settings", isAuthenticated, async (req: Request, res: Response) => 
  * PUT /api/auto-image/settings
  * Update auto generation settings (admin only)
  */
-router.put("/settings", isAuthenticated, async (req: Request, res: Response) => {
+router.put("/settings", isAuthenticated, requireRole("admin"), async (req: Request, res: Response) => {
   try {
     const updates = req.body;
 
-    updateAutoGenerationSettings(updates);
+    // Validate settings payload
+    const validKeys = [
+      "enabled",
+      "articleTypes", 
+      "skipCategories",
+      "defaultStyle",
+      "provider",
+      "autoPublish",
+      "generateOnSave",
+      "imagePromptTemplate",
+      "maxMonthlyGenerations"
+    ];
+
+    // Only allow valid keys
+    const sanitizedUpdates: Record<string, any> = {};
+    for (const key of validKeys) {
+      if (key in updates) {
+        // Additional validation for specific fields
+        if (key === "enabled" || key === "autoPublish" || key === "generateOnSave") {
+          sanitizedUpdates[key] = Boolean(updates[key]);
+        } else if (key === "articleTypes" || key === "skipCategories") {
+          if (Array.isArray(updates[key])) {
+            sanitizedUpdates[key] = updates[key].filter((item: any) => typeof item === "string");
+          }
+        } else if (key === "maxMonthlyGenerations") {
+          const value = parseInt(updates[key]);
+          if (!isNaN(value) && value >= 0) {
+            sanitizedUpdates[key] = value;
+          }
+        } else if (typeof updates[key] === "string") {
+          sanitizedUpdates[key] = updates[key];
+        }
+      }
+    }
+
+    updateAutoGenerationSettings(sanitizedUpdates);
 
     res.json({
       success: true,
