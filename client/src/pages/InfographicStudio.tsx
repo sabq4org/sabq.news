@@ -140,7 +140,7 @@ export default function InfographicStudio() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-7xl" dir="rtl">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary/10 rounded-lg">
@@ -154,13 +154,13 @@ export default function InfographicStudio() {
             </div>
           </div>
           <Badge variant="secondary" className="text-lg px-4 py-2">
-            <Sparkles className="h-4 w-4 mr-2" />
+            <Sparkles className="h-4 w-4 ml-2" />
             Gemini 3 Pro
           </Badge>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mr-auto">
             <TabsTrigger value="create" className="gap-2">
               <Palette className="h-4 w-4" />
               إنشاء جديد
@@ -302,14 +302,14 @@ export default function InfographicStudio() {
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                       جاري التوليد...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-5 w-5 mr-2" />
+                      <Sparkles className="h-5 w-5 ml-2" />
                       توليد الإنفوجرافيك
-                      <ArrowRight className="h-5 w-5 ml-2" />
+                      <ArrowRight className="h-5 w-5 mr-2 rotate-180" />
                     </>
                   )}
                 </Button>
@@ -317,10 +317,10 @@ export default function InfographicStudio() {
                 <Card className="bg-primary/5 border-primary/20">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                      <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                       <div className="space-y-2">
                         <p className="text-sm font-medium">نصائح للحصول على أفضل النتائج:</p>
-                        <ul className="text-sm text-muted-foreground space-y-1">
+                        <ul className="text-sm text-muted-foreground space-y-1 list-none">
                           <li>• استخدم نقاط واضحة ومختصرة</li>
                           <li>• اختر الشكل المناسب للمحتوى</li>
                           <li>• جرب أنواع تصميم مختلفة</li>
