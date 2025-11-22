@@ -312,6 +312,20 @@ function Router() {
       <Route path="/ai/category/:category" component={AICategoryPage} />
       <Route path="/ai/article/:slug" component={AIArticleDetail} />
       
+      {/* iFox Admin Dashboard Routes */}
+      <Route path="/admin" component={IFoxDashboard} />
+      <Route path="/admin/ai/infographic/studio" component={InfographicStudio} />
+      <Route path="/admin/ifox/dashboard" component={IFoxDashboard} />
+      <Route path="/admin/ifox/articles" component={IFoxArticles} />
+      <Route path="/admin/ifox/articles/new" component={IFoxArticleEditor} />
+      <Route path="/admin/ifox/articles/:id/edit" component={IFoxArticleEditor} />
+      <Route path="/admin/ifox/media" component={IFoxMedia} />
+      <Route path="/admin/ifox/schedule" component={IFoxSchedule} />
+      <Route path="/admin/ifox/categories" component={IFoxCategory} />
+      <Route path="/admin/ifox/analytics" component={IFoxAnalytics} />
+      <Route path="/admin/ifox/settings" component={IFoxSettings} />
+      <Route path="/admin/ifox/image-studio" component={ImageStudio} />
+      
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
       {/* Smart Links pages */}
