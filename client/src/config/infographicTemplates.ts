@@ -7,6 +7,7 @@ export interface InfographicShape {
   description: string;
   descriptionEn: string;
   prompt: string;
+  icon: string;
 }
 
 export interface InfographicStyle {
@@ -16,17 +17,19 @@ export interface InfographicStyle {
   description: string;
   descriptionEn: string;
   prompt: string;
+  color: string;
 }
 
 // Infographic Shapes (التصميمات)
-export const infographicShapes: InfographicShape[] = [
+const infographicShapesArray: InfographicShape[] = [
   {
     id: 'basic-info',
     name: 'إنفوجرافيك معلومات أساسية',
     nameEn: 'Basic Information',
     description: 'ستايل بسيط جدًا، مربعات واضحة، تقسيم مباشر، يناسب ملخصات البيانات أو التقارير',
     descriptionEn: 'Simple style with clear boxes, direct layout, suitable for data summaries',
-    prompt: 'Arabic minimalist infographic design, vertical layout (9:16), unified Arabic font, no ornaments, clean boxes, soft neutral background, clear headers, small icons, structured sections'
+    prompt: 'Arabic minimalist infographic design, vertical layout (9:16), unified Arabic font, no ornaments, clean boxes, soft neutral background, clear headers, small icons, structured sections',
+    icon: '📊'
   },
   {
     id: 'four-sections',
@@ -34,7 +37,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: '4-Section Layout',
     description: 'تقسيم رباعي واضح لأربع محاور رئيسية — مثالي للمقارنات أو عرض جوانب متعددة',
     descriptionEn: 'Clear quadruple division for comparisons or multiple aspects',
-    prompt: 'Arabic infographic design with four equal vertical or horizontal sections, clean layout, 9:16 ratio, unified Arabic font, flat icons, soft gradients, modern minimal style'
+    prompt: 'Arabic infographic design with four equal vertical or horizontal sections, clean layout, 9:16 ratio, unified Arabic font, flat icons, soft gradients, modern minimal style',
+    icon: '⊞'
   },
   {
     id: 'timeline',
@@ -42,7 +46,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Timeline',
     description: 'مناسب لعرض تطور، مراحل، أو خطوات عملية',
     descriptionEn: 'Suitable for showing evolution, phases, or process steps',
-    prompt: 'Arabic vertical timeline infographic, 9:16 layout, minimal clean lines, unified Arabic font, step-by-step structure, circle markers, soft color palette, no ornaments'
+    prompt: 'Arabic vertical timeline infographic, 9:16 layout, minimal clean lines, unified Arabic font, step-by-step structure, circle markers, soft color palette, no ornaments',
+    icon: '📈'
   },
   {
     id: 'comparison',
@@ -50,7 +55,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Two-Way Comparison',
     description: 'مثالي لعقد مقارنة واضحة بين خيارين أو جهتين أو سوقين',
     descriptionEn: 'Ideal for comparing two options, entities, or markets',
-    prompt: 'Arabic comparison infographic split into two columns, balanced clean layout, minimal flat icons, unified Arabic font, neutral colors, clear labels, 9:16 vertical format'
+    prompt: 'Arabic comparison infographic split into two columns, balanced clean layout, minimal flat icons, unified Arabic font, neutral colors, clear labels, 9:16 vertical format',
+    icon: '⚖️'
   },
   {
     id: 'radial',
@@ -58,7 +64,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Central Radial',
     description: 'يناسب موضوع يكون له عنصر رئيسي في المنتصف وينتشر منه 6 نقاط',
     descriptionEn: 'Suitable for a central topic with 6 surrounding points',
-    prompt: 'Arabic radial infographic with central circle and six surrounding elements, clean minimal design, unified Arabic font, flat line icons, soft shadows, vertical 9:16 format, no ornaments'
+    prompt: 'Arabic radial infographic with central circle and six surrounding elements, clean minimal design, unified Arabic font, flat line icons, soft shadows, vertical 9:16 format, no ornaments',
+    icon: '🎯'
   },
   {
     id: 'pyramid',
@@ -66,7 +73,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Pyramid/Hierarchical',
     description: 'للعناصر التي تعتمد على طبقات أو مستويات',
     descriptionEn: 'For elements based on layers or levels',
-    prompt: 'Arabic pyramid/stacked infographic, vertical 9:16 layout, minimal shapes, unified Arabic font, subtle gradients, clear layers, modern business style, no decorative elements'
+    prompt: 'Arabic pyramid/stacked infographic, vertical 9:16 layout, minimal shapes, unified Arabic font, subtle gradients, clear layers, modern business style, no decorative elements',
+    icon: '▲'
   },
   {
     id: 'process',
@@ -74,7 +82,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Process Steps',
     description: 'مثالي لعرض 3–6 خطوات بطريقة انسيابية',
     descriptionEn: 'Ideal for showing 3-6 steps in a flowing manner',
-    prompt: 'Arabic process infographic with flowing arrows and numbered steps, 9:16 vertical layout, unified Arabic font, minimal color palette, flat iconography, clean professional structure'
+    prompt: 'Arabic process infographic with flowing arrows and numbered steps, 9:16 vertical layout, unified Arabic font, minimal color palette, flat iconography, clean professional structure',
+    icon: '➜'
   },
   {
     id: 'statistics',
@@ -82,7 +91,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Statistics & Data',
     description: 'مناسب للإحصائيات – النسب – المؤشرات – الرسوم الخطية البسيطة',
     descriptionEn: 'Suitable for statistics, percentages, indicators, simple charts',
-    prompt: 'Arabic data-driven infographic with percentage charts, number highlights, clean grids, unified Arabic font, minimal style, 9:16 vertical layout, no ornaments'
+    prompt: 'Arabic data-driven infographic with percentage charts, number highlights, clean grids, unified Arabic font, minimal style, 9:16 vertical layout, no ornaments',
+    icon: '📉'
   },
   {
     id: 'roadmap',
@@ -90,7 +100,8 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Roadmap',
     description: 'ممتاز لخطط مستقبلية أو مراحل تطور مشروع',
     descriptionEn: 'Excellent for future plans or project development phases',
-    prompt: 'Arabic roadmap infographic, curved path with milestones, 9:16 minimal vertical layout, unified Arabic font, flat icons, soft color gradients, clean modern business aesthetic'
+    prompt: 'Arabic roadmap infographic, curved path with milestones, 9:16 minimal vertical layout, unified Arabic font, flat icons, soft color gradients, clean modern business aesthetic',
+    icon: '🗺️'
   },
   {
     id: 'main-details',
@@ -98,19 +109,27 @@ export const infographicShapes: InfographicShape[] = [
     nameEn: 'Main Elements + Details',
     description: 'عنصر رئيسي كبير، وتحته نقاط مفصلة',
     descriptionEn: 'Large main element with detailed sub-points',
-    prompt: 'Arabic infographic with main header block and multiple detailed sub-points, 9:16 vertical format, unified Arabic font, simple separators, minimal icons, clean aesthetic, no ornamental graphics'
+    prompt: 'Arabic infographic with main header block and multiple detailed sub-points, 9:16 vertical format, unified Arabic font, simple separators, minimal icons, clean aesthetic, no ornamental graphics',
+    icon: '📋'
   }
 ];
 
+// Convert array to object indexed by id
+export const infographicShapes: Record<string, InfographicShape> = infographicShapesArray.reduce(
+  (acc, shape) => ({ ...acc, [shape.id]: shape }),
+  {}
+);
+
 // Infographic Styles (الأنواع)
-export const infographicStyles: InfographicStyle[] = [
+const infographicStylesArray: InfographicStyle[] = [
   {
     id: 'minimal-flat',
     name: 'إنفوجرافيك بسيط فلات',
     nameEn: 'Minimal Flat',
     description: 'بدون زخارف، ألوان هادئة، أيقونات خطية',
     descriptionEn: 'No ornaments, soft colors, line icons',
-    prompt: 'Arabic minimalist flat infographic, 9:16 vertical layout, unified Arabic font, flat icons, soft colors, clean grid layout, no ornaments'
+    prompt: 'Arabic minimalist flat infographic, 9:16 vertical layout, unified Arabic font, flat icons, soft colors, clean grid layout, no ornaments',
+    color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   },
   {
     id: 'corporate-clean',
@@ -118,7 +137,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Corporate Clean',
     description: 'ألوان رسمية، خطوط واضحة، مساحات بيضاء',
     descriptionEn: 'Formal colors, clear lines, white spaces',
-    prompt: 'Arabic corporate infographic, professional layout, 9:16 vertical, unified Arabic font, blue/gray palette, clean sections, sharp icons, business aesthetic'
+    prompt: 'Arabic corporate infographic, professional layout, 9:16 vertical, unified Arabic font, blue/gray palette, clean sections, sharp icons, business aesthetic',
+    color: 'linear-gradient(135deg, #2196F3 0%, #21CBF3 100%)'
   },
   {
     id: 'premium-gradient',
@@ -126,7 +146,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Premium Gradient',
     description: 'تدرجات ناعمة، لمسات راقية',
     descriptionEn: 'Soft gradients, refined touches',
-    prompt: 'Arabic premium infographic with soft gradients, 9:16 vertical, elegant Arabic font, subtle shadows, refined icons, high-end color palette, modern luxurious style'
+    prompt: 'Arabic premium infographic with soft gradients, 9:16 vertical, elegant Arabic font, subtle shadows, refined icons, high-end color palette, modern luxurious style',
+    color: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
   },
   {
     id: 'soft-2.5d',
@@ -134,7 +155,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: '2.5D Soft Illustrations',
     description: 'عناصر ظليّة، عمق خفيف، واقعية بسيطة',
     descriptionEn: 'Shadow elements, light depth, simple realism',
-    prompt: 'Arabic infographic with 2.5D soft illustrations, semi-realistic elements, 9:16 vertical layout, clean typography, soft shadows, minimal depth, unified Arabic font'
+    prompt: 'Arabic infographic with 2.5D soft illustrations, semi-realistic elements, 9:16 vertical layout, clean typography, soft shadows, minimal depth, unified Arabic font',
+    color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
   },
   {
     id: 'line-icon',
@@ -142,7 +164,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Line-Icon Style',
     description: 'أنيق، خفيف جداً، يعتمد على الخطوط',
     descriptionEn: 'Elegant, very light, based on lines',
-    prompt: 'Arabic line-icon infographic, 9:16 vertical, thin outlined icons, monochromatic palette, unified Arabic font, minimal separators, ultra-clean layout'
+    prompt: 'Arabic line-icon infographic, 9:16 vertical, thin outlined icons, monochromatic palette, unified Arabic font, minimal separators, ultra-clean layout',
+    color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
   },
   {
     id: 'bold-blocks',
@@ -150,7 +173,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Bold Blocks',
     description: 'مربعات بارزة، عناوين قوية، ألوان صريحة',
     descriptionEn: 'Prominent blocks, strong headers, explicit colors',
-    prompt: 'Arabic bold-blocks infographic, 9:16 vertical, strong headers, clear color blocks, unified Arabic font, bold contrasts, clean modern UI look'
+    prompt: 'Arabic bold-blocks infographic, 9:16 vertical, strong headers, clear color blocks, unified Arabic font, bold contrasts, clean modern UI look',
+    color: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)'
   },
   {
     id: 'monochrome',
@@ -158,7 +182,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Monochrome',
     description: 'أسود وأبيض / لون واحد — رسمي، نظيف جدًا',
     descriptionEn: 'Black & white / one color — formal, very clean',
-    prompt: 'Arabic monochrome infographic, one-color palette, 9:16 vertical, unified Arabic font, minimal shapes, clean contrast, strict grid layout'
+    prompt: 'Arabic monochrome infographic, one-color palette, 9:16 vertical, unified Arabic font, minimal shapes, clean contrast, strict grid layout',
+    color: 'linear-gradient(135deg, #434343 0%, #000000 100%)'
   },
   {
     id: 'cards',
@@ -166,7 +191,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Infographic Cards',
     description: 'كل قسم داخل كارد منفصل',
     descriptionEn: 'Each section in a separate card',
-    prompt: 'Arabic card-based infographic, 9:16 layout, soft card shadows, unified Arabic font, minimal spacing, icons per card, clean business style'
+    prompt: 'Arabic card-based infographic, 9:16 layout, soft card shadows, unified Arabic font, minimal spacing, icons per card, clean business style',
+    color: 'linear-gradient(135deg, #3498db 0%, #8e44ad 100%)'
   },
   {
     id: 'illustration-mix',
@@ -174,7 +200,8 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Illustration Mix',
     description: 'رسومات بسيطة مع فلات',
     descriptionEn: 'Simple illustrations with flat design',
-    prompt: 'Arabic infographic with flat illustrations, modern minimal style, soft colors, unified Arabic font, balanced visuals, 9:16 vertical'
+    prompt: 'Arabic infographic with flat illustrations, modern minimal style, soft colors, unified Arabic font, balanced visuals, 9:16 vertical',
+    color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
   },
   {
     id: 'neutral-white',
@@ -182,9 +209,16 @@ export const infographicStyles: InfographicStyle[] = [
     nameEn: 'Neutral White',
     description: 'خلفية بيضاء، عناصر دقيقة، مظهر نظيف جداً',
     descriptionEn: 'White background, delicate elements, very clean look',
-    prompt: 'Arabic white-minimal infographic, pure white background, thin lines, unified Arabic font, simple icons, 9:16 vertical, ultra-clean aesthetic'
+    prompt: 'Arabic white-minimal infographic, pure white background, thin lines, unified Arabic font, simple icons, 9:16 vertical, ultra-clean aesthetic',
+    color: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
   }
 ];
+
+// Convert array to object indexed by id
+export const infographicStyles: Record<string, InfographicStyle> = infographicStylesArray.reduce(
+  (acc, style) => ({ ...acc, [style.id]: style }),
+  {}
+);
 
 // Helper function to combine shape and style prompts
 export function combineInfographicPrompts(

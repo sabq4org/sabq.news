@@ -188,6 +188,7 @@ import IFoxCategory from "@/pages/admin/ifox/IFoxCategory";
 import IFoxAnalytics from "@/pages/admin/ifox/IFoxAnalytics";
 import IFoxSettings from "@/pages/admin/ifox/IFoxSettings";
 import ImageStudio from "@/pages/ifox/ImageStudio";
+import InfographicStudio from "@/pages/InfographicStudio";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -381,6 +382,7 @@ function Router() {
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/media-library" component={MediaLibrary} />
       <Route path="/dashboard/ai-tools" component={AITools} />
+      <Route path="/dashboard/infographic-studio" component={InfographicStudio} />
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       
