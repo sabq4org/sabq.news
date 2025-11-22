@@ -61,7 +61,7 @@ interface Stats {
 
 export default function ImageStudio() {
   const { toast } = useToast();
-  const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm" | "both">("nano-banana");
+  const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm">("nano-banana");
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
@@ -77,13 +77,6 @@ export default function ImageStudio() {
   
   // Loading states
   const [isGeneratingNotebookLm, setIsGeneratingNotebookLm] = useState(false);
-  const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
-  
-  // Comparison mode state with error tracking
-  const [comparisonResults, setComparisonResults] = useState<{
-    nanoBanana?: { imageUrl?: string, generationTime?: number, error?: string },
-    notebookLm?: { imageUrl?: string, generationTime?: number, error?: string }
-  }>({});
 
   // Fetch Nano Banana generations
   const { data: nanoBananaData, isLoading: isLoadingNanoBanana } = useQuery<{ generations: Generation[] }>({
@@ -195,155 +188,7 @@ export default function ImageStudio() {
       return;
     }
 
-    if (selectedModel === "both") {
-      // Comparison mode - generate from both models
-      setIsGeneratingComparison(true);
-      setComparisonResults({});
-      toast({
-        title: "جاري المقارنة",
-        description: "يتم توليد الصور من كلا النموذجين للمقارنة",
-      });
-
-      try {
-        // Generate with Nano Banana
-        const nanoBananaPromise = apiRequest("/api/nano-banana/generate", {
-          method: "POST",
-          body: JSON.stringify({
-            prompt,
-            negativePrompt: negativePrompt || undefined,
-            aspectRatio,
-            imageSize,
-            enableSearchGrounding,
-            enableThinking,
-          }),
-        });
-
-        // Generate with NotebookLM
-        const notebookLmPromise = apiRequest("/api/notebooklm/generate", {
-          method: "POST",
-          body: JSON.stringify({
-            prompt,
-            detail: notebookLmDetail,
-            orientation: notebookLmOrientation,
-            language: notebookLmLanguage,
-            colorStyle: notebookLmColorStyle,
-          }),
-        });
-
-        // Wait for both results with error handling for partial success
-        const [nanoBananaResult, notebookLmResult] = await Promise.allSettled([
-          nanoBananaPromise,
-          notebookLmPromise,
-        ]);
-
-        const results: any = {};
-        let successCount = 0;
-        let errorMessages: string[] = [];
-        let hasAuthError = false;
-
-        // Handle Nano Banana result
-        if (nanoBananaResult.status === "fulfilled") {
-          results.nanoBanana = {
-            imageUrl: nanoBananaResult.value.imageUrl,
-            generationTime: nanoBananaResult.value.generationTime,
-          };
-          successCount++;
-        } else {
-          const errorMsg = nanoBananaResult.reason?.message || "فشل توليد صورة Nano Banana";
-          // Check if it's an auth error
-          if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
-            hasAuthError = true;
-            results.nanoBanana = {
-              error: "يجب تسجيل الدخول أولاً",
-            };
-            errorMessages.push(`Nano Banana: يجب تسجيل الدخول`);
-          } else {
-            results.nanoBanana = {
-              error: errorMsg,
-            };
-            errorMessages.push(`Nano Banana: ${errorMsg}`);
-          }
-        }
-
-        // Handle NotebookLM result
-        if (notebookLmResult.status === "fulfilled") {
-          results.notebookLm = {
-            imageUrl: notebookLmResult.value.imageUrl,
-            generationTime: notebookLmResult.value.generationTime,
-          };
-          successCount++;
-        } else {
-          const errorMsg = notebookLmResult.reason?.message || "فشل توليد إنفوجرافيك NotebookLM";
-          // Check if it's an auth error
-          if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
-            hasAuthError = true;
-            results.notebookLm = {
-              error: "يجب تسجيل الدخول أولاً",
-            };
-            errorMessages.push(`NotebookLM: يجب تسجيل الدخول`);
-          } else {
-            results.notebookLm = {
-              error: errorMsg,
-            };
-            errorMessages.push(`NotebookLM: ${errorMsg}`);
-          }
-        }
-
-        setComparisonResults(results);
-        
-        // Show appropriate toast based on results
-        if (hasAuthError) {
-          toast({
-            variant: "destructive",
-            title: "غير مصرح",
-            description: "يجب تسجيل الدخول للوصول إلى هذه الميزة. سيتم توجيهك لصفحة تسجيل الدخول...",
-            action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
-          });
-          // Redirect after 3 seconds
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 3000);
-        } else if (successCount === 2) {
-          toast({
-            title: "اكتملت المقارنة بنجاح",
-            description: "تم توليد الصور من كلا النموذجين",
-          });
-        } else if (successCount === 1) {
-          toast({
-            title: "اكتملت المقارنة جزئياً",
-            description: `نجح نموذج واحد فقط. ${errorMessages.join(", ")}`,
-            variant: "default",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "فشلت المقارنة",
-            description: errorMessages.join(". "),
-          });
-        }
-        
-        queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
-      } catch (error: any) {
-        // Check if it's an auth error
-        if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
-          toast({
-            variant: "destructive",
-            title: "غير مصرح",
-            description: "يجب تسجيل الدخول للوصول إلى هذه الميزة",
-            action: <Button onClick={() => window.location.href = '/login'}>تسجيل الدخول</Button>,
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "فشلت المقارنة",
-            description: error.message || "حدث خطأ أثناء المقارنة",
-          });
-        }
-      } finally {
-        setIsGeneratingComparison(false);
-      }
-    } else if (selectedModel === "nano-banana") {
+    if (selectedModel === "nano-banana") {
       generateMutation.mutate({
         prompt,
         negativePrompt: negativePrompt || undefined,
@@ -476,7 +321,7 @@ export default function ImageStudio() {
             {/* Model Selection */}
             <div className="space-y-2">
               <Label>اختر النموذج</Label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <Card 
                   className={`cursor-pointer transition-all ${
                     selectedModel === "nano-banana" 
@@ -524,33 +369,6 @@ export default function ImageStudio() {
                       </div>
                       <Badge variant={selectedModel === "notebooklm" ? "default" : "outline"}>
                         {selectedModel === "notebooklm" ? "مُختار" : "اختر"}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Comparison Mode Card */}
-                <Card 
-                  className={`cursor-pointer transition-all col-span-1 ${
-                    selectedModel === "both" 
-                      ? "ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20" 
-                      : "hover:shadow-md"
-                  }`}
-                  onClick={() => setSelectedModel("both")}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" />
-                          مقارنة النموذجين
-                        </h4>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          قارن بين النتائج
-                        </p>
-                      </div>
-                      <Badge variant={selectedModel === "both" ? "default" : "outline"}>
-                        {selectedModel === "both" ? "مُختار" : "اختر"}
                       </Badge>
                     </div>
                   </CardContent>
@@ -739,125 +557,27 @@ export default function ImageStudio() {
               disabled={
                 generateMutation.isPending || 
                 isGeneratingNotebookLm || 
-                isGeneratingComparison || 
                 !prompt.trim()
               }
               className="w-full"
               size="lg"
             >
-              {(generateMutation.isPending || isGeneratingNotebookLm || isGeneratingComparison) ? (
+              {(generateMutation.isPending || isGeneratingNotebookLm) ? (
                 <>
                   <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  {selectedModel === "both" ? "جاري المقارنة..." : 
-                   selectedModel === "notebooklm" ? "جاري توليد الإنفوجرافيك..." : 
+                  {selectedModel === "notebooklm" ? "جاري توليد الإنفوجرافيك..." : 
                    "جاري التوليد..."}
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 ml-2" />
-                  {selectedModel === "both" ? "مقارنة النموذجين" : 
-                   selectedModel === "notebooklm" ? "توليد إنفوجرافيك" : 
+                  {selectedModel === "notebooklm" ? "توليد إنفوجرافيك" : 
                    "توليد الصورة"}
                 </>
               )}
             </Button>
           </CardContent>
         </Card>
-
-        {/* Comparison Results */}
-        {selectedModel === "both" && (Object.keys(comparisonResults).length > 0) && (
-          <Card className="col-span-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                نتائج المقارنة
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Nano Banana Result */}
-                {comparisonResults.nanoBanana && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">Nano Banana Pro</h3>
-                      {comparisonResults.nanoBanana.generationTime && (
-                        <Badge variant="outline">
-                          <Clock className="w-3 h-3 ml-1" />
-                          {comparisonResults.nanoBanana.generationTime}s
-                        </Badge>
-                      )}
-                    </div>
-                    {comparisonResults.nanoBanana.imageUrl ? (
-                      <>
-                        <img 
-                          src={comparisonResults.nanoBanana.imageUrl}
-                          alt="Nano Banana Result"
-                          className="w-full rounded-lg"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => window.open(comparisonResults.nanoBanana?.imageUrl, "_blank")}
-                        >
-                          <Download className="w-4 h-4 ml-1" />
-                          تحميل الصورة
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="p-8 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-                        <p className="text-red-600 dark:text-red-400 font-medium mb-2">فشل التوليد</p>
-                        <p className="text-sm text-red-500 dark:text-red-300">
-                          {comparisonResults.nanoBanana.error || "حدث خطأ غير متوقع"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* NotebookLM Result */}
-                {comparisonResults.notebookLm && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">NotebookLM</h3>
-                      {comparisonResults.notebookLm.generationTime && (
-                        <Badge variant="outline">
-                          <Clock className="w-3 h-3 ml-1" />
-                          {comparisonResults.notebookLm.generationTime}s
-                        </Badge>
-                      )}
-                    </div>
-                    {comparisonResults.notebookLm.imageUrl ? (
-                      <>
-                        <img 
-                          src={comparisonResults.notebookLm.imageUrl}
-                          alt="NotebookLM Result"
-                          className="w-full rounded-lg"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => window.open(comparisonResults.notebookLm?.imageUrl, "_blank")}
-                        >
-                          <Download className="w-4 h-4 ml-1" />
-                          تحميل الإنفوجرافيك
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="p-8 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-                        <p className="text-red-600 dark:text-red-400 font-medium mb-2">فشل التوليد</p>
-                        <p className="text-sm text-red-500 dark:text-red-300">
-                          {comparisonResults.notebookLm.error || "حدث خطأ غير متوقع"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Recent Generations */}
         <Card>
@@ -866,15 +586,8 @@ export default function ImageStudio() {
               <ImageIcon className="w-5 h-5" />
               {selectedModel === "notebooklm" 
                 ? "الإنفوجرافيك المولد بـ NotebookLM"
-                : selectedModel === "nano-banana"
-                ? "الصور المولدة بـ Nano Banana Pro"
-                : "جميع الأجيال"}
+                : "الصور المولدة بـ Nano Banana Pro"}
             </CardTitle>
-            {selectedModel === "both" && (
-              <CardDescription>
-                عرض نتائج من كلا النموذجين: Nano Banana Pro و NotebookLM
-              </CardDescription>
-            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
