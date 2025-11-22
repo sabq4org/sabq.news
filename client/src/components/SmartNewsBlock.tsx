@@ -238,8 +238,10 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
           return (
             <Link key={article.id} href={`/article/${article.slug}`}>
-              <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border ${
-                article.newsType === "breaking" ? "bg-destructive/5" : ""
+              <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group ${
+                article.newsType === "breaking" 
+                  ? "bg-gradient-to-r from-destructive/10 to-destructive/5 dark:from-destructive/20 dark:to-destructive/10 border-2 border-destructive/50 dark:border-destructive/30 shadow-destructive/10 shadow-lg" 
+                  : "border-0 dark:border dark:border-card-border"
               }`} data-testid={`card-smart-article-${article.id}`}>
                 {(article.thumbnailUrl ?? article.imageUrl) && (
                   <div className="relative aspect-[16/9] overflow-hidden">
