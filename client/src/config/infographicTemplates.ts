@@ -227,8 +227,8 @@ export function combineInfographicPrompts(
   content: string,
   language: 'ar' | 'en' | 'ur' = 'ar'
 ): string {
-  const shape = infographicShapes.find(s => s.id === shapeId);
-  const style = infographicStyles.find(s => s.id === styleId);
+  const shape = infographicShapesArray.find(s => s.id === shapeId);
+  const style = infographicStylesArray.find(s => s.id === styleId);
   
   if (!shape || !style) {
     throw new Error('Invalid shape or style ID');
@@ -331,11 +331,11 @@ export function combineInfographicPrompts(
 
 // Get display names for UI
 export function getShapeDisplayName(shapeId: string, language: 'ar' | 'en' = 'ar'): string {
-  const shape = infographicShapes.find(s => s.id === shapeId);
+  const shape = infographicShapesArray.find(s => s.id === shapeId);
   return shape ? (language === 'ar' ? shape.name : shape.nameEn) : '';
 }
 
 export function getStyleDisplayName(styleId: string, language: 'ar' | 'en' = 'ar'): string {
-  const style = infographicStyles.find(s => s.id === styleId);
+  const style = infographicStylesArray.find(s => s.id === styleId);
   return style ? (language === 'ar' ? style.name : style.nameEn) : '';
 }

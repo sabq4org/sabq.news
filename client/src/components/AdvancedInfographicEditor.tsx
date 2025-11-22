@@ -228,14 +228,14 @@ ${elements.filter(el => el.visible).map(el =>
         model: string;
       }>("/api/nano-banana/generate", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           prompt: advancedPrompt,
           aspectRatio: settings.aspectRatio,
           imageSize: "2K",
           numImages: 1,
           enableSearchGrounding: true,
           enableThinking: true,
-        },
+        }),
       });
 
       setGeneratedImageUrl(response.imageUrl);
@@ -279,12 +279,12 @@ ${elements.filter(el => el.visible).map(el =>
           "/api/nano-banana/generate",
           {
             method: "POST",
-            body: {
+            body: JSON.stringify({
               prompt: variationPrompt,
               aspectRatio: settings.aspectRatio,
               imageSize: "2K",
               numImages: 1,
-            },
+            }),
           }
         );
         
