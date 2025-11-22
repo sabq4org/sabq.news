@@ -36,10 +36,17 @@ function normalizeImageUrl(url: string): string {
   
   // If it's a relative path starting with /, convert to absolute URL
   if (url.startsWith('/')) {
-    // Use localhost for development, or configured domain for production
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.DOMAIN || 'sabq.sa'}`
-      : 'http://localhost:5000';
+    // Use FRONTEND_URL or REPLIT_DEV_DOMAIN for Replit environment
+    // Fallback to localhost for local development
+    let baseUrl = 'http://localhost:5000';
+    
+    if (process.env.FRONTEND_URL) {
+      baseUrl = process.env.FRONTEND_URL;
+    } else if (process.env.REPLIT_DEV_DOMAIN) {
+      baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+    } else if (process.env.NODE_ENV === 'production' && process.env.DOMAIN) {
+      baseUrl = `https://${process.env.DOMAIN}`;
+    }
     
     return `${baseUrl}${url}`;
   }
@@ -64,21 +71,30 @@ function isValidImageUrl(url: string): boolean {
       return false;
     }
     
-    // Allow trusted domains only
+    // Build list of trusted domains dynamically
     const trustedDomains = [
       'storage.googleapis.com',
       'localhost',
       '127.0.0.1',
       '0.0.0.0',
-      process.env.DOMAIN || 'sabq.sa',
-      'sabq.life',
-      'sabq.news',
-      // Add other trusted domains as needed
+      'replit.dev', // Replit domains
+      'repl.co',
     ];
+    
+    // Add configured domains
+    if (process.env.DOMAIN) {
+      trustedDomains.push(process.env.DOMAIN);
+    }
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      trustedDomains.push(process.env.REPLIT_DEV_DOMAIN);
+    }
+    
+    // Add additional trusted domains
+    trustedDomains.push('sabq.life', 'sabq.news');
     
     const hostname = parsedUrl.hostname.toLowerCase();
     
-    // Check if hostname is in trusted domains
+    // Check if hostname is in trusted domains or is a subdomain
     const isTrusted = trustedDomains.some(domain => 
       hostname === domain || hostname.endsWith(`.${domain}`)
     );
