@@ -24,6 +24,7 @@ interface ArticleResult {
   slug: string;
   publishedAt: string | null;
   imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   excerpt?: string | null;
   newsType?: string | null;
   views?: number;
@@ -143,9 +144,9 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       <div className="flex gap-3">
                         {/* Image */}
                         {(article.thumbnailUrl ?? article.imageUrl) && (
-                          <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                          <div className="relative flex-shrink-0 w-32 aspect-[16/9] rounded-lg overflow-hidden">
                             <OptimizedImage
-                              src={article.thumbnailUrl ?? article.imageUrl}
+                              src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                               alt={article.title}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               priority={false}
@@ -241,9 +242,9 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                 article.newsType === "breaking" ? "bg-destructive/5" : ""
               }`} data-testid={`card-smart-article-${article.id}`}>
                 {(article.thumbnailUrl ?? article.imageUrl) && (
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative aspect-[16/9] overflow-hidden">
                     <OptimizedImage
-                      src={article.thumbnailUrl ?? article.imageUrl}
+                      src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       priority={false}
@@ -336,9 +337,9 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row gap-0">
                   {(article.thumbnailUrl ?? article.imageUrl) && (
-                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 h-56 md:h-64 overflow-hidden">
+                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 aspect-[16/9] overflow-hidden">
                       <OptimizedImage
-                        src={article.thumbnailUrl ?? article.imageUrl}
+                        src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         priority={false}
@@ -456,10 +457,10 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                 className="group cursor-pointer overflow-hidden hover-elevate active-elevate-2 relative border-0"
                 data-testid={`card-smart-article-featured-${article.id}`}
               >
-                <div className="relative aspect-[4/3] md:aspect-auto md:h-48 lg:h-[11.5rem] overflow-hidden bg-muted">
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                   {(article.thumbnailUrl ?? article.imageUrl) ? (
                     <OptimizedImage
-                      src={article.thumbnailUrl ?? article.imageUrl}
+                      src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       priority={false}

@@ -80,7 +80,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                 <div className="md:hidden relative cursor-pointer group">
                   {/* Image */}
                   {(article.thumbnailUrl ?? article.imageUrl) && (
-                    <div className="relative h-48 overflow-hidden rounded-t-lg">
+                    <div className="relative aspect-[16/9] overflow-hidden rounded-t-lg">
                       <img
                         src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
