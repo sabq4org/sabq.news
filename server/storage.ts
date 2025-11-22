@@ -8544,6 +8544,10 @@ export class DatabaseStorage implements IStorage {
         slug: articles.slug,
         publishedAt: articles.publishedAt,
         imageUrl: articles.imageUrl,
+        thumbnailUrl: articles.thumbnailUrl,
+        newsType: articles.newsType,
+        views: articles.views,
+        excerpt: articles.excerpt,
         categoryId: categories.id,
         category: {
           nameAr: categories.nameAr,
@@ -8561,7 +8565,7 @@ export class DatabaseStorage implements IStorage {
     
     // Log each result
     results.forEach((article, index) => {
-      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." [Image: ${article.imageUrl ? '✓' : '✗'}]`);
+      console.log(`   ${index + 1}. "${article.title.substring(0, 50)}..." [Image: ${article.imageUrl ? '✓' : '✗'}] [Thumbnail: ${article.thumbnailUrl ? '✓' : '✗'}] [Type: ${article.newsType || 'regular'}]`);
     });
 
     return results;
