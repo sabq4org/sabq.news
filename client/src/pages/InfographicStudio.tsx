@@ -62,17 +62,26 @@ export default function InfographicStudio() {
       
       const combinedPrompt = `${selectedShape.prompt}. ${selectedType.prompt}. Content: ${content}`;
 
-      const response = await apiRequest("/api/nano-banana/generate-image", {
+      const response = await apiRequest("/api/nano-banana/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt: combinedPrompt,
-          isInfographic: true 
+          model: "gemini-3-pro-image-preview",
+          aspectRatio: "16:9",
+          imageSize: "2K",
+          numImages: 1,
+          enableSearchGrounding: false,
+          enableThinking: true
         }),
       });
 
       if (response.error) {
         throw new Error(response.error);
+      }
+
+      if (!response.imageUrl) {
+        throw new Error("لم يتم إرجاع رابط الصورة من الخادم");
       }
 
       const newImage = {
@@ -89,6 +98,7 @@ export default function InfographicStudio() {
         description: "تم إنشاء الإنفوجرافيك بنجاح",
       });
     } catch (error) {
+      console.error("Infographic generation error:", error);
       toast({
         title: "خطأ في التوليد",
         description: error instanceof Error ? error.message : "حدث خطأ أثناء توليد الإنفوجرافيك",
