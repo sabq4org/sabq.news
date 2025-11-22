@@ -25,9 +25,11 @@ import {
   Palette,
   Image,
   Type,
-  ArrowRight
+  ArrowRight,
+  Wand2
 } from "lucide-react";
 import { infographicShapes, infographicStyles } from "@/config/infographicTemplates";
+import { AdvancedInfographicEditor } from "@/components/AdvancedInfographicEditor";
 
 export default function InfographicStudio() {
   const { toast } = useToast();
@@ -41,6 +43,7 @@ export default function InfographicStudio() {
     timestamp: Date;
   }>>([]);
   const [activeTab, setActiveTab] = useState("create");
+  const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
 
   const handleGenerate = async () => {
     if (!content) {
@@ -314,6 +317,18 @@ export default function InfographicStudio() {
                   )}
                 </Button>
 
+                <Button 
+                  onClick={() => setShowAdvancedEditor(true)}
+                  variant="outline"
+                  className="w-full h-12 text-lg"
+                  size="lg"
+                  data-testid="button-advanced-editor"
+                >
+                  <Wand2 className="h-5 w-5 ml-2" />
+                  المحرر المتقدم
+                  <Badge className="mr-2" variant="secondary">جديد</Badge>
+                </Button>
+
                 <Card className="bg-primary/5 border-primary/20">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
@@ -402,6 +417,34 @@ export default function InfographicStudio() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Advanced Infographic Editor */}
+        <AdvancedInfographicEditor
+          open={showAdvancedEditor}
+          onClose={() => setShowAdvancedEditor(false)}
+          onSave={(data) => {
+            // Add generated image to gallery
+            setGeneratedImages((prev) => [{
+              url: data.imageUrl,
+              prompt: data.content,
+              timestamp: new Date()
+            }, ...prev]);
+            
+            toast({
+              title: "تم حفظ الإنفوجرافيك",
+              description: "تم إضافة التصميم إلى المعرض بنجاح"
+            });
+            
+            setShowAdvancedEditor(false);
+            setActiveTab("gallery");
+          }}
+          initialData={{
+            content,
+            template: shape,
+            style: type
+          }}
+          language="ar"
+        />
       </div>
     </DashboardLayout>
   );
