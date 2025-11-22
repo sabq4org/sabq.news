@@ -122,22 +122,22 @@ export function InfographicGeneratorDialog({
   };
 
   const getShapeName = (shapeId: string): string => {
-    const shape = infographicShapes.find(s => s.id === shapeId);
+    const shape = infographicShapes[shapeId];
     return shape ? (language === 'ar' ? shape.name : shape.nameEn) : '';
   };
 
   const getStyleName = (styleId: string): string => {
-    const style = infographicStyles.find(s => s.id === styleId);
+    const style = infographicStyles[styleId];
     return style ? (language === 'ar' ? style.name : style.nameEn) : '';
   };
 
   const getShapeDescription = (shapeId: string): string => {
-    const shape = infographicShapes.find(s => s.id === shapeId);
+    const shape = infographicShapes[shapeId];
     return shape ? (language === 'ar' ? shape.description : shape.descriptionEn) : '';
   };
 
   const getStyleDescription = (styleId: string): string => {
-    const style = infographicStyles.find(s => s.id === styleId);
+    const style = infographicStyles[styleId];
     return style ? (language === 'ar' ? style.description : style.descriptionEn) : '';
   };
 
@@ -181,7 +181,7 @@ export function InfographicGeneratorDialog({
                 <ScrollArea className="h-[300px] pr-4">
                   <RadioGroup value={selectedShape} onValueChange={setSelectedShape}>
                     <div className="space-y-3">
-                      {infographicShapes.map((shape) => (
+                      {Object.values(infographicShapes).map((shape) => (
                         <Card
                           key={shape.id}
                           className={`cursor-pointer transition-all ${
@@ -213,7 +213,7 @@ export function InfographicGeneratorDialog({
                 <ScrollArea className="h-[300px] pr-4">
                   <RadioGroup value={selectedStyle} onValueChange={setSelectedStyle}>
                     <div className="space-y-3">
-                      {infographicStyles.map((style) => (
+                      {Object.values(infographicStyles).map((style) => (
                         <Card
                           key={style.id}
                           className={`cursor-pointer transition-all ${
