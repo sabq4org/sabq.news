@@ -7323,6 +7323,7 @@ export const aiImageGenerations = pgTable("ai_image_generations", {
   status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, completed, failed
   imageUrl: text("image_url"), // GCS URL of generated image
   thumbnailUrl: text("thumbnail_url"), // Smaller preview
+  mediaFileId: varchar("media_file_id").references(() => mediaFiles.id), // Link to media library when saved
   
   // Advanced features
   referenceImages: jsonb("reference_images"), // Array of reference image URLs (max 14)

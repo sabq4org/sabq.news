@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Image as ImageIcon, Download, Trash2, Clock, DollarSign, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sparkles, Image as ImageIcon, Download, Trash2, Clock, DollarSign, Loader2, FolderOpen, CheckCircle2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -32,6 +33,7 @@ interface Generation {
   generationTime?: number;
   cost?: number;
   errorMessage?: string;
+  mediaFileId?: string;
   createdAt: string;
 }
 
@@ -175,6 +177,29 @@ export default function ImageStudio() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/stats"] });
+    },
+  });
+
+  // Save to media library mutation
+  const saveToLibraryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest(`/api/nano-banana/generations/${id}/save-to-library`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: "تم حفظ الصورة في مكتبة الوسائط بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "فشل الحفظ",
+        description: error.message || "حدث خطأ أثناء حفظ الصورة",
+      });
     },
   });
 
@@ -603,22 +628,30 @@ export default function ImageStudio() {
                     data-testid={`generation-${gen.id}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium line-clamp-2">{gen.prompt}</p>
-                      <Badge
-                        variant={
-                          gen.status === "completed"
-                            ? "default"
+                      <p className="text-sm font-medium line-clamp-2 flex-1">{gen.prompt}</p>
+                      <div className="flex gap-2 flex-wrap justify-end">
+                        <Badge
+                          variant={
+                            gen.status === "completed"
+                              ? "default"
+                              : gen.status === "failed"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {gen.status === "completed"
+                            ? "مكتمل"
                             : gen.status === "failed"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {gen.status === "completed"
-                          ? "مكتمل"
-                          : gen.status === "failed"
-                          ? "فشل"
-                          : "جاري المعالجة"}
-                      </Badge>
+                            ? "فشل"
+                            : "جاري المعالجة"}
+                        </Badge>
+                        {gen.mediaFileId && (
+                          <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                            <CheckCircle2 className="w-3 h-3 ml-1" />
+                            محفوظ في المكتبة
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     {gen.imageUrl && (
@@ -644,6 +677,38 @@ export default function ImageStudio() {
 
                     {gen.status === "completed" && gen.imageUrl && (
                       <div className="flex gap-2">
+                        {selectedModel === "nano-banana" && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex-1">
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => saveToLibraryMutation.mutate(gen.id)}
+                                    disabled={saveToLibraryMutation.isPending || !!gen.mediaFileId}
+                                    className="w-full"
+                                    data-testid={`button-save-${gen.id}`}
+                                  >
+                                    {saveToLibraryMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                    ) : gen.mediaFileId ? (
+                                      <CheckCircle2 className="w-4 h-4 ml-2" />
+                                    ) : (
+                                      <FolderOpen className="w-4 h-4 ml-2" />
+                                    )}
+                                    {gen.mediaFileId ? "محفوظة" : "حفظ في المكتبة"}
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              {gen.mediaFileId && (
+                                <TooltipContent>
+                                  <p>تم حفظ هذه الصورة في مكتبة الوسائط مسبقاً</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"

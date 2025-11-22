@@ -6,7 +6,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { db } from "../db";
-import { aiImageGenerations, insertAiImageGenerationSchema } from "../../shared/schema";
+import { aiImageGenerations, insertAiImageGenerationSchema, mediaFiles } from "../../shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { 
   generateAndUploadImage, 
@@ -292,6 +292,109 @@ router.get("/stats", requireAuth, async (req: Request, res: Response) => {
     console.error("[API] Get stats error:", error);
     res.status(500).json({
       message: "خطأ في جلب الإحصائيات",
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/nano-banana/generations/:id/save-to-library
+ * Save AI generated image to media library
+ */
+router.post("/generations/:id/save-to-library", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as any;
+    const { id } = req.params;
+    
+    // Check if generation exists and belongs to user
+    const [generation] = await db
+      .select()
+      .from(aiImageGenerations)
+      .where(
+        and(
+          eq(aiImageGenerations.id, id),
+          eq(aiImageGenerations.userId, user.id)
+        )
+      )
+      .limit(1);
+    
+    if (!generation) {
+      return res.status(404).json({ message: "الصورة غير موجودة" });
+    }
+    
+    // Check if generation is completed
+    if (generation.status !== "completed") {
+      return res.status(400).json({ 
+        message: "لا يمكن حفظ صورة غير مكتملة",
+        status: generation.status,
+      });
+    }
+    
+    // Check if imageUrl exists
+    if (!generation.imageUrl) {
+      return res.status(400).json({ message: "رابط الصورة غير موجود" });
+    }
+    
+    // Check if already saved to media library using mediaFileId
+    if (generation.mediaFileId) {
+      return res.status(400).json({ 
+        message: "الصورة موجودة بالفعل في مكتبة الوسائط",
+        mediaFileId: generation.mediaFileId,
+      });
+    }
+    
+    // Extract filename from URL
+    const urlParts = generation.imageUrl.split("/");
+    const fileName = urlParts[urlParts.length - 1] || `ai-generated-${id}.png`;
+    
+    // Create title from prompt (first 100 chars)
+    const title = generation.prompt.length > 100 
+      ? generation.prompt.substring(0, 100) + "..."
+      : generation.prompt;
+    
+    // Save to media library
+    const [mediaFile] = await db
+      .insert(mediaFiles)
+      .values({
+        fileName: fileName,
+        originalName: `AI Generated - ${new Date().toISOString().split('T')[0]}`,
+        url: generation.imageUrl,
+        thumbnailUrl: generation.thumbnailUrl || generation.imageUrl,
+        type: "image",
+        mimeType: "image/png",
+        size: 0, // We don't have size info from AI generation
+        title: title,
+        description: generation.prompt,
+        altText: title,
+        keywords: [], // Could be extracted from prompt if needed
+        isAiGenerated: true,
+        aiGenerationModel: generation.model,
+        aiGenerationPrompt: generation.prompt,
+        category: "ai-generated",
+        uploadedBy: user.id,
+      })
+      .returning();
+    
+    // Update aiImageGenerations record with mediaFileId
+    await db
+      .update(aiImageGenerations)
+      .set({
+        mediaFileId: mediaFile.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(aiImageGenerations.id, id));
+    
+    console.log(`[API] Saved AI image ${id} to media library as ${mediaFile.id}`);
+    
+    res.json({
+      message: "تم حفظ الصورة في مكتبة الوسائط بنجاح",
+      mediaFileId: mediaFile.id,
+      mediaFile: mediaFile,
+    });
+  } catch (error: any) {
+    console.error("[API] Save to library error:", error);
+    res.status(500).json({
+      message: "خطأ في حفظ الصورة إلى مكتبة الوسائط",
       error: error.message,
     });
   }
