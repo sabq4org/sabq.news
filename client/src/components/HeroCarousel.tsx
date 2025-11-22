@@ -94,7 +94,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   {/* Content */}
                   <div className={`p-4 rounded-b-lg ${
                     article.newsType === "breaking" 
-                      ? "bg-gradient-to-r from-destructive/15 to-destructive/10 dark:from-destructive/25 dark:to-destructive/15 border-t-2 border-destructive/50" 
+                      ? "bg-destructive/10" 
                       : "bg-card"
                   }`}>
                     <div className="space-y-3">
@@ -176,7 +176,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                     {/* Content - 50% of width */}
                     <div className={`w-1/2 h-full flex flex-col justify-center p-8 lg:p-12 ${
                       article.newsType === "breaking" 
-                        ? "bg-gradient-to-r from-destructive/15 to-destructive/10 dark:from-destructive/25 dark:to-destructive/15 border-l-4 border-destructive/50" 
+                        ? "bg-destructive/10" 
                         : "bg-card"
                     }`}>
                       <div className="space-y-4">
