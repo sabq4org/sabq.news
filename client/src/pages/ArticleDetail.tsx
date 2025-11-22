@@ -13,6 +13,7 @@ import { AiArticleStats } from "@/components/AiArticleStats";
 import { AdSlot } from "@/components/AdSlot";
 import { SocialShareBar } from "@/components/SocialShareBar";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
+import { InfographicDetail } from "@/components/InfographicDetail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -835,6 +836,73 @@ export default function ArticleDetail() {
   };
 
   const readingTime = article.content ? estimateReadingTime(article.content) : 1;
+
+  // Check if this is an infographic article and render custom component
+  if (article.articleType === 'infographic') {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Header user={user} />
+        <InfographicDetail 
+          article={article}
+          onReact={handleReact}
+          onBookmark={handleBookmark}
+          hasReacted={article.hasReacted}
+          isBookmarked={article.isBookmarked}
+          shortLink={shortLink}
+        />
+        
+        {/* Comments Section */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          <Separator className="mb-8" />
+          <CommentSection
+            articleId={article.id}
+            comments={comments}
+            currentUser={user}
+            onSubmitComment={handleComment}
+          />
+        </div>
+        
+        {/* Related Articles */}
+        {relatedArticles.length > 0 && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <h2 className="text-2xl font-bold mb-6">مقالات ذات صلة</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedArticles.slice(0, 3).map((relatedArticle) => (
+                <Link
+                  key={relatedArticle.id}
+                  href={`/article/${relatedArticle.slug}`}
+                  className="block group"
+                  data-testid={`link-related-article-${relatedArticle.id}`}
+                >
+                  <div className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    {relatedArticle.imageUrl && (
+                      <div className="aspect-[16/9] overflow-hidden">
+                        <img
+                          src={relatedArticle.imageUrl}
+                          alt={relatedArticle.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                        {relatedArticle.title}
+                      </h3>
+                      {relatedArticle.excerpt && (
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                          {relatedArticle.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
