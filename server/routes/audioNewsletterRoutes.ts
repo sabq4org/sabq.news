@@ -36,7 +36,9 @@ const createNewsletterSchema = z.object({
     style: z.number().min(0).max(1).optional(),
     use_speaker_boost: z.boolean().optional()
   }).optional(),
-  articleIds: z.array(z.string()).min(1).max(50),
+  customContent: z.string().optional(),
+  articleIds: z.array(z.string()).max(50).optional(),
+  publishImmediately: z.boolean().optional(),
   scheduledFor: z.string().datetime().optional(),
   recurringSchedule: z.object({
     type: z.enum(['daily', 'weekly', 'custom']),
@@ -46,6 +48,10 @@ const createNewsletterSchema = z.object({
     enabled: z.boolean()
   }).optional(),
   metadata: z.record(z.any()).optional()
+}).refine((data) => {
+  return (data.customContent && data.customContent.trim().length > 0) || (data.articleIds && data.articleIds.length > 0);
+}, {
+  message: "يجب إدخال محتوى نصي أو اختيار مقالة واحدة على الأقل"
 });
 
 const updateNewsletterSchema = z.object({
@@ -397,23 +403,33 @@ router.post('/newsletters', requireAdmin, async (req, res) => {
       voiceSettings = ARABIC_VOICES.MALE_NEWS.settings;
     }
     
+    // If customContent is provided, clear articleIds
+    const articleIds = validatedData.customContent && validatedData.customContent.trim().length > 0 
+      ? [] 
+      : (validatedData.articleIds || []);
+    
     // Create newsletter
     const newsletter = await audioNewsletterService.createNewsletter({
       title: validatedData.title,
       description: validatedData.description,
+      customContent: validatedData.customContent,
       template: validatedData.template,
       voiceId,
       voiceSettings,
-      articleIds: validatedData.articleIds,
+      articleIds,
       generatedBy: req.session.userId!,
       scheduledFor: validatedData.scheduledFor ? new Date(validatedData.scheduledFor) : undefined,
       recurringSchedule: validatedData.recurringSchedule as RecurringSchedule,
-      metadata: validatedData.metadata
+      metadata: validatedData.metadata,
+      publishImmediately: validatedData.publishImmediately
     });
     
     // If not scheduled, start generation immediately
     if (!validatedData.scheduledFor) {
-      const job = await audioNewsletterService.generateAudio(newsletter.id);
+      const job = await audioNewsletterService.generateAudio(
+        newsletter.id,
+        { publishImmediately: validatedData.publishImmediately }
+      );
       
       res.json({
         newsletter,

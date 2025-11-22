@@ -293,6 +293,7 @@ export class AudioNewsletterService extends EventEmitter {
   async createNewsletter(data: {
     title: string;
     description?: string;
+    customContent?: string;
     template: NewsletterTemplate;
     voiceId?: string;
     voiceSettings?: any;
@@ -301,6 +302,7 @@ export class AudioNewsletterService extends EventEmitter {
     scheduledFor?: Date;
     recurringSchedule?: RecurringSchedule;
     metadata?: Record<string, any>;
+    publishImmediately?: boolean;
   }): Promise<AudioNewsletter> {
     const newsletterId = nanoid();
     
@@ -309,6 +311,7 @@ export class AudioNewsletterService extends EventEmitter {
       id: newsletterId,
       title: data.title,
       description: data.description,
+      customContent: data.customContent,
       template: data.template,
       status: 'pending',
       generatedBy: data.generatedBy,
@@ -317,11 +320,12 @@ export class AudioNewsletterService extends EventEmitter {
         ...data.metadata,
         voiceId: data.voiceId || ARABIC_VOICES.MALE_NEWS.id,
         voiceSettings: data.voiceSettings || ARABIC_VOICES.MALE_NEWS.settings,
-        recurringSchedule: data.recurringSchedule
+        recurringSchedule: data.recurringSchedule,
+        publishImmediately: data.publishImmediately
       }
     }).returning();
     
-    // Add articles to newsletter
+    // Add articles to newsletter (only if not using custom content)
     if (data.articleIds.length > 0) {
       const articleLinks = data.articleIds.map((articleId, index) => ({
         id: nanoid(),
@@ -340,6 +344,7 @@ export class AudioNewsletterService extends EventEmitter {
   async generateAudio(newsletterId: string, options?: {
     webhookUrl?: string;
     priority?: 'high' | 'normal' | 'low';
+    publishImmediately?: boolean;
   }): Promise<AudioGenerationJob> {
     const job: AudioGenerationJob = {
       id: nanoid(),
@@ -349,7 +354,10 @@ export class AudioNewsletterService extends EventEmitter {
       retryCount: 0,
       maxRetries: 3,
       webhookUrl: options?.webhookUrl,
-      metadata: { priority: options?.priority || 'normal' }
+      metadata: { 
+        priority: options?.priority || 'normal',
+        publishImmediately: options?.publishImmediately
+      }
     };
     
     this.activeJobs.set(job.id, job);
@@ -459,13 +467,25 @@ export class AudioNewsletterService extends EventEmitter {
       // Update newsletter with audio URL and duration
       const duration = await this.calculateAudioDuration(combinedAudio);
       
+      // Check if should publish immediately
+      const publishImmediately = job.metadata?.publishImmediately || newsletter.metadata?.publishImmediately;
+      
+      const updateData: any = {
+        audioUrl,
+        duration,
+        fileSize: combinedAudio.length,
+        generationStatus: 'completed'
+      };
+      
+      if (publishImmediately) {
+        updateData.status = 'published';
+        updateData.publishedAt = new Date().toISOString();
+      } else {
+        updateData.status = 'draft';
+      }
+      
       await db.update(audioNewsletters)
-        .set({
-          audioUrl,
-          duration,
-          status: 'published',
-          publishedAt: new Date().toISOString()
-        })
+        .set(updateData)
         .where(eq(audioNewsletters.id, job.newsletterId));
       
       job.status = GenerationStatus.COMPLETED;
@@ -513,6 +533,14 @@ export class AudioNewsletterService extends EventEmitter {
   
   // Build script from template
   private async buildScript(newsletter: any): Promise<string> {
+    // If custom content is provided, use it directly
+    if (newsletter.customContent && newsletter.customContent.trim().length > 0) {
+      // Format custom content for audio reading
+      const formattedContent = this.formatCustomContentForAudio(newsletter.customContent);
+      return formattedContent;
+    }
+    
+    // Otherwise, build from articles using template
     const template = SCRIPT_TEMPLATES[newsletter.template as NewsletterTemplate] || SCRIPT_TEMPLATES[NewsletterTemplate.CUSTOM];
     const scriptParts: string[] = [];
     
@@ -575,6 +603,26 @@ export class AudioNewsletterService extends EventEmitter {
     scriptParts.push(template.conclusion(conclusionData));
     
     return scriptParts.join('\n\n').trim();
+  }
+  
+  // Format custom content for audio reading
+  private formatCustomContentForAudio(content: string): string {
+    // Clean up the content
+    let formatted = content.trim();
+    
+    // Ensure proper spacing between paragraphs
+    formatted = formatted.replace(/\n\n+/g, '\n\n');
+    
+    // Add slight pauses for better readability (using punctuation)
+    formatted = formatted.replace(/([.!?])\s+/g, '$1 ');
+    
+    // Remove markdown-style formatting that doesn't translate well to audio
+    formatted = formatted.replace(/[*_`#]/g, '');
+    
+    // Remove URLs that would sound awkward
+    formatted = formatted.replace(/https?:\/\/[^\s]+/g, '');
+    
+    return formatted;
   }
   
   // Group articles by category for better flow

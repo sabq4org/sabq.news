@@ -3274,6 +3274,7 @@ export const audioNewsletters = pgTable("audio_newsletters", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(), // عنوان النشرة
   description: text("description"), // وصف النشرة
+  customContent: text("custom_content"), // محتوى نصي مباشر (بديل عن المقالات)
   slug: text("slug").notNull().unique(),
   
   // Audio file information

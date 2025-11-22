@@ -74,6 +74,7 @@ import { cn } from "@/lib/utils";
 const newsletterSchema = z.object({
   title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
   description: z.string().optional(),
+  customContent: z.string().optional(),
   template: z.enum([
     "morning_brief",
     "evening_digest",
@@ -100,6 +101,7 @@ const newsletterSchema = z.object({
     timezone: z.string(),
     enabled: z.boolean(),
   }).optional(),
+  publishImmediately: z.boolean().optional(),
   metadata: z.object({
     autoIntro: z.boolean().optional(),
     autoOutro: z.boolean().optional(),
@@ -395,6 +397,7 @@ export default function AudioNewsletterEditor() {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState("template");
   const [showAdvancedVoice, setShowAdvancedVoice] = useState(false);
+  const [contentSource, setContentSource] = useState<"articles" | "custom">("articles");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -408,6 +411,7 @@ export default function AudioNewsletterEditor() {
     defaultValues: {
       title: "",
       description: "",
+      customContent: "",
       template: "morning_brief",
       voicePreset: "MALE_NEWS",
       customVoiceSettings: {
@@ -422,6 +426,7 @@ export default function AudioNewsletterEditor() {
         timezone: "Asia/Riyadh",
         enabled: false,
       },
+      publishImmediately: false,
       metadata: {
         autoIntro: true,
         autoOutro: true,
@@ -583,19 +588,35 @@ export default function AudioNewsletterEditor() {
   }, [toast, queryClient]);
 
   const onSubmit = (data: NewsletterFormData) => {
-    if (selectedArticles.length === 0) {
-      toast({
-        title: "خطأ",
-        description: "يجب اختيار مقالة واحدة على الأقل",
-        variant: "destructive",
-      });
-      return;
+    // Validate based on content source
+    if (contentSource === "articles") {
+      if (selectedArticles.length === 0) {
+        toast({
+          title: "خطأ",
+          description: "يجب اختيار مقالة واحدة على الأقل",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else if (contentSource === "custom") {
+      if (!data.customContent || !data.customContent.trim()) {
+        toast({
+          title: "خطأ",
+          description: "يجب إدخال محتوى نصي",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
-    saveMutation.mutate({
+    // Prepare submission data based on content source
+    const submissionData: any = {
       ...data,
-      articleIds: selectedArticles.map((a) => a.id),
-    });
+      articleIds: contentSource === "articles" ? selectedArticles.map((a) => a.id) : [],
+      customContent: contentSource === "custom" ? data.customContent : undefined,
+    };
+
+    saveMutation.mutate(submissionData);
   };
 
   const handleDragEnd = (event: any) => {
@@ -1085,22 +1106,67 @@ export default function AudioNewsletterEditor() {
 
               {/* Articles */}
               <TabsContent value="articles" className="space-y-4">
+                {/* Content Source Selection */}
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <CardTitle>المقالات ({selectedArticles.length})</CardTitle>
-                        <CardDescription className="mt-1">
-                          اختر المقالات ورتبها بالترتيب المطلوب
-                        </CardDescription>
+                    <CardTitle>مصدر المحتوى</CardTitle>
+                    <CardDescription>
+                      اختر كيف تريد إنشاء محتوى النشرة الإخبارية
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RadioGroup
+                      value={contentSource}
+                      onValueChange={(value: "articles" | "custom") => {
+                        setContentSource(value);
+                        if (value === "custom") {
+                          setSelectedArticles([]);
+                        } else {
+                          form.setValue("customContent", "");
+                        }
+                      }}
+                      data-testid="radio-group-content-source"
+                    >
+                      <div className="flex items-center space-x-reverse space-x-2 p-3 border rounded-lg hover-elevate cursor-pointer">
+                        <RadioGroupItem value="articles" id="source-articles" data-testid="radio-source-articles" />
+                        <Label htmlFor="source-articles" className="flex-1 cursor-pointer">
+                          <div>
+                            <p className="font-medium">من المقالات</p>
+                            <p className="text-sm text-muted-foreground">اختر مقالات موجودة لتجميعها في نشرة إخبارية</p>
+                          </div>
+                        </Label>
                       </div>
-                      <Dialog open={isArticleDialogOpen} onOpenChange={setIsArticleDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" data-testid="button-add-articles">
-                            <Plus className="h-4 w-4 ml-2" />
-                            إضافة مقالات
-                          </Button>
-                        </DialogTrigger>
+                      <div className="flex items-center space-x-reverse space-x-2 p-3 border rounded-lg hover-elevate cursor-pointer">
+                        <RadioGroupItem value="custom" id="source-custom" data-testid="radio-source-custom" />
+                        <Label htmlFor="source-custom" className="flex-1 cursor-pointer">
+                          <div>
+                            <p className="font-medium">نص مباشر</p>
+                            <p className="text-sm text-muted-foreground">اكتب المحتوى الذي تريد قراءته صوتياً مباشرة</p>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+
+                {/* Articles Selection (shown when contentSource is "articles") */}
+                {contentSource === "articles" && (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <CardTitle>المقالات ({selectedArticles.length})</CardTitle>
+                          <CardDescription className="mt-1">
+                            اختر المقالات ورتبها بالترتيب المطلوب
+                          </CardDescription>
+                        </div>
+                        <Dialog open={isArticleDialogOpen} onOpenChange={setIsArticleDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" data-testid="button-add-articles">
+                              <Plus className="h-4 w-4 ml-2" />
+                              إضافة مقالات
+                            </Button>
+                          </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[80vh]" dir="rtl">
                           <DialogHeader>
                             <DialogTitle>اختيار المقالات</DialogTitle>
@@ -1193,6 +1259,48 @@ export default function AudioNewsletterEditor() {
                     )}
                   </CardContent>
                 </Card>
+                )}
+
+                {/* Custom Content Input (shown when contentSource is "custom") */}
+                {contentSource === "custom" && (
+                  <FormField
+                    control={form.control}
+                    name="customContent"
+                    render={({ field }) => {
+                      const charCount = field.value?.length || 0;
+                      return (
+                        <FormItem>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>المحتوى النصي</CardTitle>
+                              <CardDescription>
+                                اكتب المحتوى الذي تريد قراءته صوتياً
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  placeholder="اكتب النشرة الإخبارية هنا... يمكنك كتابة أي محتوى تريد قراءته صوتياً"
+                                  rows={12}
+                                  className="resize-none"
+                                  data-testid="textarea-custom-content"
+                                />
+                              </FormControl>
+                              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <p>سيتم قراءة هذا النص صوتياً باستخدام الصوت المختار</p>
+                                <p data-testid="text-char-count">
+                                  {charCount.toLocaleString('ar-SA')} حرف
+                                </p>
+                              </div>
+                              <FormMessage />
+                            </CardContent>
+                          </Card>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                )}
 
                 <div className="flex justify-between">
                   <Button
@@ -1206,7 +1314,11 @@ export default function AudioNewsletterEditor() {
                   <Button
                     type="button"
                     onClick={() => setActiveTab("schedule")}
-                    disabled={selectedArticles.length === 0}
+                    disabled={
+                      contentSource === "articles" 
+                        ? selectedArticles.length === 0 
+                        : !form.watch("customContent")?.trim()
+                    }
                     data-testid="button-next-to-schedule"
                   >
                     التالي: الجدولة
@@ -1378,6 +1490,35 @@ export default function AudioNewsletterEditor() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Publish Immediately Option */}
+                <FormField
+                  control={form.control}
+                  name="publishImmediately"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel>نشر فوري بعد التوليد</FormLabel>
+                              <FormDescription>
+                                نشر النشرة تلقائياً فور انتهاء توليد الصوت
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                data-testid="switch-publish-immediately"
+                              />
+                            </FormControl>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </FormItem>
+                  )}
+                />
 
                 <div className="flex justify-between">
                   <Button
