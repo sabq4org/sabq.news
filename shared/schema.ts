@@ -7374,6 +7374,301 @@ export type AiImageGeneration = typeof aiImageGenerations.$inferSelect;
 export type InsertAiImageGeneration = z.infer<typeof insertAiImageGenerationSchema>;
 
 // ============================================
+// VISUAL AI SYSTEM (Gemini 3 Pro Image Analysis & Generation)
+// ============================================
+
+// Image Analysis: Quality checks, content detection, Alt text generation
+export const imageAnalysis = pgTable("image_analysis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  imageUrl: text("image_url").notNull(),
+  articleId: varchar("article_id").references(() => articles.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Analysis results
+  qualityScore: real("quality_score"), // 0-100 quality rating
+  qualityMetrics: jsonb("quality_metrics"), // resolution, sharpness, lighting, composition
+  contentDescription: jsonb("content_description"), // {ar: string, en: string, ur: string}
+  detectedObjects: jsonb("detected_objects"), // Array of detected objects/people/places
+  dominantColors: jsonb("dominant_colors"), // Array of hex colors
+  tags: jsonb("tags"), // Auto-generated tags
+  
+  // Multilingual Alt Text (auto-generated)
+  altTextAr: text("alt_text_ar"),
+  altTextEn: text("alt_text_en"),
+  altTextUr: text("alt_text_ur"),
+  
+  // Content warnings
+  hasAdultContent: boolean("has_adult_content").default(false),
+  hasSensitiveContent: boolean("has_sensitive_content").default(false),
+  contentWarnings: jsonb("content_warnings"), // Array of warning types
+  
+  // Image-to-article matching
+  relevanceScore: real("relevance_score"), // How well image matches article (0-100)
+  matchingSuggestions: jsonb("matching_suggestions"), // Better image suggestions
+  
+  // Processing metadata
+  model: varchar("model", { length: 100 }).default("gemini-3-pro-image-preview"),
+  processingTime: integer("processing_time"), // milliseconds
+  cost: real("cost"),
+  status: varchar("status", { length: 50 }).default("pending"), // pending, completed, failed
+  errorMessage: text("error_message"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("image_analysis_article_idx").on(table.articleId),
+  index("image_analysis_user_idx").on(table.userId),
+  index("image_analysis_status_idx").on(table.status),
+]);
+
+// Social Media Cards: Auto-generated cards for Twitter/Instagram/Facebook/WhatsApp
+export const socialMediaCards = pgTable("social_media_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull().references(() => articles.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Platform-specific variants
+  platform: varchar("platform", { length: 50 }).notNull(), // twitter, instagram, facebook, whatsapp, all
+  cardType: varchar("card_type", { length: 50 }).notNull(), // standard, story, post, status
+  
+  // Design configuration
+  template: varchar("template", { length: 100 }).notNull(), // breaking_news, analysis, sports, etc.
+  language: varchar("language", { length: 5 }).notNull(), // ar, en, ur
+  
+  // Generated content
+  imageUrl: text("image_url").notNull(), // GCS URL
+  thumbnailUrl: text("thumbnail_url"),
+  dimensions: jsonb("dimensions"), // {width: number, height: number}
+  
+  // Card content
+  headline: text("headline"),
+  subheadline: text("subheadline"),
+  categoryBadge: varchar("category_badge", { length: 100 }),
+  brandElements: jsonb("brand_elements"), // logo, watermark, colors
+  
+  // Performance tracking
+  downloadCount: integer("download_count").default(0),
+  shareCount: integer("share_count").default(0),
+  engagementScore: real("engagement_score"), // Based on usage
+  
+  // Generation metadata
+  generationPrompt: text("generation_prompt"),
+  model: varchar("model", { length: 100 }).default("gemini-3-pro-image-preview"),
+  generationTime: integer("generation_time"),
+  cost: real("cost"),
+  status: varchar("status", { length: 50 }).default("pending"),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("social_cards_article_idx").on(table.articleId),
+  index("social_cards_platform_idx").on(table.platform),
+  index("social_cards_status_idx").on(table.status),
+]);
+
+// Visual Recommendations: Smart suggestions for visual content
+export const visualRecommendations = pgTable("visual_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull().references(() => articles.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Recommendation type
+  recommendationType: varchar("recommendation_type", { length: 100 }).notNull(), 
+  // Types: add_infographic, add_image, improve_image_quality, add_social_cards, 
+  // add_story_cards, change_layout, add_comparison_chart, add_timeline
+  
+  // Recommendation details
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, critical
+  confidence: real("confidence"), // AI confidence score 0-100
+  
+  // Suggestion content
+  title: jsonb("title"), // {ar: string, en: string, ur: string}
+  description: jsonb("description"), // Detailed explanation in 3 languages
+  reasoning: jsonb("reasoning"), // Why this recommendation
+  
+  // Actionable items
+  suggestedTemplates: jsonb("suggested_templates"), // Array of template IDs
+  suggestedPrompts: jsonb("suggested_prompts"), // Ready-to-use prompts
+  estimatedImpact: jsonb("estimated_impact"), // {engagement: "+20%", readability: "+15%"}
+  
+  // Context analysis
+  currentVisualScore: real("current_visual_score"), // Before applying recommendation
+  projectedVisualScore: real("projected_visual_score"), // After applying
+  categoryBenchmark: real("category_benchmark"), // Category average
+  
+  // User interaction
+  status: varchar("status", { length: 50 }).default("pending"), // pending, accepted, rejected, auto_applied
+  appliedAt: timestamp("applied_at"),
+  rejectedReason: text("rejected_reason"),
+  
+  // AI metadata
+  model: varchar("model", { length: 100 }).default("gemini-3-pro-image-preview"),
+  analysisData: jsonb("analysis_data"), // Raw AI analysis
+  
+  expiresAt: timestamp("expires_at"), // Recommendations expire after time
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("visual_rec_article_idx").on(table.articleId),
+  index("visual_rec_type_idx").on(table.recommendationType),
+  index("visual_rec_priority_idx").on(table.priority),
+  index("visual_rec_status_idx").on(table.status),
+]);
+
+// Story Cards: Multi-slide visual stories for social media
+export const storyCards = pgTable("story_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull().references(() => articles.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Story configuration
+  title: text("title").notNull(),
+  language: varchar("language", { length: 5 }).notNull(), // ar, en, ur
+  slideCount: integer("slide_count").notNull().default(5), // Number of slides (3-10)
+  
+  // Slides data
+  slides: jsonb("slides").notNull(), // Array of slide objects
+  // Each slide: {order: number, imageUrl: string, headline: string, content: string, template: string}
+  
+  // Visual theme
+  template: varchar("template", { length: 100 }).notNull(), // news_story, analysis_thread, quick_facts
+  colorScheme: varchar("color_scheme", { length: 50 }).default("brand"), // brand, dark, light, custom
+  brandElements: jsonb("brand_elements"), // Logo placement, watermark
+  
+  // Export formats
+  instagramStoryUrl: text("instagram_story_url"), // 9:16 format
+  facebookStoryUrl: text("facebook_story_url"),
+  whatsappStatusUrl: text("whatsapp_status_url"),
+  twitterThreadImages: jsonb("twitter_thread_images"), // Array of URLs
+  
+  // Performance tracking
+  viewCount: integer("view_count").default(0),
+  completionRate: real("completion_rate"), // % who viewed all slides
+  shareCount: integer("share_count").default(0),
+  
+  // Generation metadata
+  generationPrompt: text("generation_prompt"),
+  model: varchar("model", { length: 100 }).default("gemini-3-pro-image-preview"),
+  totalGenerationTime: integer("total_generation_time"),
+  totalCost: real("total_cost"),
+  status: varchar("status", { length: 50 }).default("draft"), // draft, processing, completed, failed
+  
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("story_cards_article_idx").on(table.articleId),
+  index("story_cards_status_idx").on(table.status),
+  index("story_cards_published_idx").on(table.isPublished),
+]);
+
+// Relations for Visual AI tables
+export const imageAnalysisRelations = relations(imageAnalysis, ({ one }) => ({
+  article: one(articles, {
+    fields: [imageAnalysis.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [imageAnalysis.userId],
+    references: [users.id],
+  }),
+}));
+
+export const socialMediaCardsRelations = relations(socialMediaCards, ({ one }) => ({
+  article: one(articles, {
+    fields: [socialMediaCards.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [socialMediaCards.userId],
+    references: [users.id],
+  }),
+}));
+
+export const visualRecommendationsRelations = relations(visualRecommendations, ({ one }) => ({
+  article: one(articles, {
+    fields: [visualRecommendations.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [visualRecommendations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const storyCardsRelations = relations(storyCards, ({ one }) => ({
+  article: one(articles, {
+    fields: [storyCards.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [storyCards.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for Visual AI tables
+export const insertImageAnalysisSchema = createInsertSchema(imageAnalysis).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialMediaCardSchema = createInsertSchema(socialMediaCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  platform: z.enum(["twitter", "instagram", "facebook", "whatsapp", "all"]),
+  cardType: z.enum(["standard", "story", "post", "status"]),
+  language: z.enum(["ar", "en", "ur"]),
+});
+
+export const insertVisualRecommendationSchema = createInsertSchema(visualRecommendations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  recommendationType: z.enum([
+    "add_infographic", "add_image", "improve_image_quality", "add_social_cards",
+    "add_story_cards", "change_layout", "add_comparison_chart", "add_timeline"
+  ]),
+  priority: z.enum(["low", "medium", "high", "critical"]),
+});
+
+export const insertStoryCardSchema = createInsertSchema(storyCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1).max(200),
+  language: z.enum(["ar", "en", "ur"]),
+  slideCount: z.number().int().min(3).max(10),
+  slides: z.array(z.object({
+    order: z.number().int(),
+    imageUrl: z.string().url(),
+    headline: z.string(),
+    content: z.string(),
+    template: z.string(),
+  })),
+});
+
+// Select types for Visual AI tables
+export type ImageAnalysis = typeof imageAnalysis.$inferSelect;
+export type InsertImageAnalysis = z.infer<typeof insertImageAnalysisSchema>;
+
+export type SocialMediaCard = typeof socialMediaCards.$inferSelect;
+export type InsertSocialMediaCard = z.infer<typeof insertSocialMediaCardSchema>;
+
+export type VisualRecommendation = typeof visualRecommendations.$inferSelect;
+export type InsertVisualRecommendation = z.infer<typeof insertVisualRecommendationSchema>;
+
+export type StoryCard = typeof storyCards.$inferSelect;
+export type InsertStoryCard = z.infer<typeof insertStoryCardSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
