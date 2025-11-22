@@ -960,11 +960,12 @@ export default function ArticleEditor() {
       return await apiRequest(`/api/visual-ai/generate-social-cards`, {
         method: "POST",
         body: JSON.stringify({
-          title: title,
-          description: excerpt || metaDescription || subtitle,
-          imageUrl: imageUrl,
-          category: categories.find(c => c.id === categoryId)?.nameAr,
-          author: article?.author?.firstName || ""
+          articleId: id || article?.id || "temp-" + Date.now(),
+          articleTitle: title,
+          articleSummary: excerpt || metaDescription || subtitle,
+          category: categories.find(c => c.id === categoryId)?.nameAr || "أخبار",
+          language: "ar",
+          platform: "all"
         }),
       });
     },
