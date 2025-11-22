@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { InfographicBadge } from "../InfographicBadge";
 
 interface AINewsCardProps {
   article: {
@@ -27,6 +28,7 @@ interface AINewsCardProps {
     categoryId?: string | null;
     categorySlug?: string | null;
     aiClassification?: string | null;
+    articleType?: string | null;
     featured?: boolean;
     trending?: boolean;
   };
@@ -78,6 +80,12 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                   
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
+                    {article.articleType === 'infographic' && (
+                      <InfographicBadge 
+                        size="sm" 
+                        dataTestId={`badge-infographic-${article.id}`}
+                      />
+                    )}
                     {article.featured && (
                       <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
                         <Zap className="w-3 h-3 mr-1" />

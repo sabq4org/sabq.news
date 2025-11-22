@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import FollowStoryButton from "./FollowStoryButton";
 import { OptimizedImage } from "./OptimizedImage";
+import { InfographicBadge, InfographicBadgeIcon } from "./InfographicBadge";
 
 interface ArticleCardProps {
   article: ArticleWithDetails;
@@ -100,6 +101,12 @@ export function ArticleCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
             
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
+              {article.articleType === 'infographic' && (
+                <InfographicBadge 
+                  size="md" 
+                  dataTestId={`badge-infographic-${article.id}`}
+                />
+              )}
               {article.category && (
                 <Badge 
                   className="bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-sm text-gray-700 dark:text-gray-200 border-0 text-xs sm:text-sm shadow-md" 
@@ -157,6 +164,11 @@ export function ArticleCard({
         <Card className="group overflow-hidden rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 !border-0 !bg-transparent">
           <CardContent className="p-3">
             <div className="flex items-start gap-2 mb-2">
+              {article.articleType === 'infographic' && (
+                <InfographicBadgeIcon 
+                  dataTestId={`badge-infographic-${article.id}`}
+                />
+              )}
               {article.category && (
                 <Badge 
                   variant="outline" 
@@ -233,6 +245,12 @@ export function ArticleCard({
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2 mb-2">
+                {article.articleType === 'infographic' && (
+                  <InfographicBadge 
+                    size="sm" 
+                    dataTestId={`badge-infographic-${article.id}`}
+                  />
+                )}
                 {aiInsight && (
                   <TooltipProvider>
                     <Tooltip>
@@ -335,6 +353,12 @@ export function ArticleCard({
             )}
             
             <div className="absolute top-3 right-3 flex flex-wrap gap-2">
+              {article.articleType === 'infographic' && (
+                <InfographicBadge 
+                  size="sm" 
+                  dataTestId={`badge-infographic-${article.id}`}
+                />
+              )}
               {article.category && (
                 <Badge 
                   className="bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-sm text-gray-700 dark:text-gray-200 border-0 text-xs shadow-md"

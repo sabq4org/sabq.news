@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails } from "@shared/schema";
 import { useState } from "react";
+import { InfographicBadge, InfographicBadgeIcon } from "./InfographicBadge";
 
 type ViewMode = 'grid' | 'list' | 'compact';
 
@@ -84,6 +85,12 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 />
                 
                 <div className="absolute top-3 right-3 flex gap-2">
+                  {article.articleType === 'infographic' && (
+                    <InfographicBadge 
+                      size="md" 
+                      dataTestId={`badge-infographic-${article.id}`}
+                    />
+                  )}
                   {article.newsType === "breaking" ? (
                     <Badge variant="destructive" className="gap-1">
                       <Zap className="h-3 w-3" aria-hidden="true" />
@@ -224,6 +231,12 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
 
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2">
+                    {article.articleType === 'infographic' && (
+                      <InfographicBadge 
+                        size="md" 
+                        dataTestId={`badge-infographic-${article.id}`}
+                      />
+                    )}
                     {article.newsType === "breaking" ? (
                       <Badge variant="destructive" className="gap-1">
                         <Zap className="h-3 w-3" aria-hidden="true" />
@@ -336,21 +349,28 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
               )}
 
               <div className="flex-1 min-w-0 space-y-2">
-                {article.newsType === "breaking" ? (
-                  <Badge variant="destructive" className="text-xs h-5 gap-1">
-                    <Zap className="h-3 w-3" aria-hidden="true" />
-                    عاجل
-                  </Badge>
-                ) : isNewArticle(article.publishedAt) ? (
-                  <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                    <Flame className="h-3 w-3" aria-hidden="true" />
-                    جديد
-                  </Badge>
-                ) : article.category ? (
-                  <Badge className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0">
-                    {article.category.nameAr}
-                  </Badge>
-                ) : null}
+                <div className="flex items-center gap-2">
+                  {article.articleType === 'infographic' && (
+                    <InfographicBadgeIcon 
+                      dataTestId={`badge-infographic-${article.id}`}
+                    />
+                  )}
+                  {article.newsType === "breaking" ? (
+                    <Badge variant="destructive" className="text-xs h-5 gap-1">
+                      <Zap className="h-3 w-3" aria-hidden="true" />
+                      عاجل
+                    </Badge>
+                  ) : isNewArticle(article.publishedAt) ? (
+                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
+                      <Flame className="h-3 w-3" aria-hidden="true" />
+                      جديد
+                    </Badge>
+                  ) : article.category ? (
+                    <Badge className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0">
+                      {article.category.nameAr}
+                    </Badge>
+                  ) : null}
+                </div>
 
                 <h4
                   className={`font-bold text-sm line-clamp-2 leading-snug ${

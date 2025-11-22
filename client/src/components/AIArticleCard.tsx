@@ -19,6 +19,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import FollowStoryButton from "./FollowStoryButton";
 import { motion } from "framer-motion";
+import { InfographicBadge } from "./InfographicBadge";
 
 interface AIArticleCardProps {
   article: ArticleWithDetails;
@@ -96,6 +97,12 @@ export function AIArticleCard({
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
               
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-wrap gap-2">
+                {article.articleType === 'infographic' && (
+                  <InfographicBadge 
+                    size="md" 
+                    dataTestId={`badge-infographic-${article.id}`}
+                  />
+                )}
                 {/* AI Badge */}
                 <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 gap-1.5 text-xs sm:text-sm shadow-lg" data-testid={`badge-ai-${article.id}`}>
                   <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -165,25 +172,32 @@ export function AIArticleCard({
             />
             
             {/* Simple Smart Selection Badge */}
-            {reasonBadge && (
-              <Badge 
-                className={`absolute top-2 sm:top-3 right-2 sm:right-3 ${reasonBadge.color} shadow-md text-xs px-2`}
-                data-testid={`badge-reason-${article.id}`}
-              >
-                {reasonBadge.icon}
-                <span className="mr-1">{reasonBadge.label}</span>
-              </Badge>
-            )}
-
-            {article.category && !reasonBadge && (
-              <Badge 
-                variant="default" 
-                className="absolute top-2 sm:top-3 right-2 sm:right-3 shadow-md text-xs px-2" 
-                data-testid={`badge-category-${article.id}`}
-              >
-                {article.category.icon} {article.category.nameAr}
-              </Badge>
-            )}
+            <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-2">
+              {article.articleType === 'infographic' && (
+                <InfographicBadge 
+                  size="sm" 
+                  dataTestId={`badge-infographic-${article.id}`}
+                />
+              )}
+              {reasonBadge && (
+                <Badge 
+                  className={`${reasonBadge.color} shadow-md text-xs px-2`}
+                  data-testid={`badge-reason-${article.id}`}
+                >
+                  {reasonBadge.icon}
+                  <span className="mr-1">{reasonBadge.label}</span>
+                </Badge>
+              )}
+              {article.category && !reasonBadge && (
+                <Badge 
+                  variant="default" 
+                  className="shadow-md text-xs px-2" 
+                  data-testid={`badge-category-${article.id}`}
+                >
+                  {article.category.icon} {article.category.nameAr}
+                </Badge>
+              )}
+            </div>
           </div>
         )}
 
