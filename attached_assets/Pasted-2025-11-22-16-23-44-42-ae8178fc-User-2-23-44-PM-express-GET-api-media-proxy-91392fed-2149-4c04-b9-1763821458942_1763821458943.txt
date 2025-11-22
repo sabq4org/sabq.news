@@ -1,0 +1,128 @@
+2025-11-22 16:23:44.42
+ae8178fc
+User
+2:23:44 PM [express] GET /api/media/proxy/91392fed-2149-4c04-b947-cc6f897ae05c 302 in 242ms
+2025-11-22 16:23:55.49
+ae8178fc
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:23:55.49
+ae8178fc
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:23:55.51
+ae8178fc
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:23:55.51
+ae8178fc
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:23:55.51
+ae8178fc
+User
+[Thumbnail Service] Generating thumbnail for: https://sabq.sa/public-objects/ai-generated/admin-sabq_1763811655600.png
+2025-11-22 16:23:55.51
+ae8178fc
+User
+[Thumbnail API] Generating thumbnail for article: new
+2025-11-22 16:23:55.51
+ae8178fc
+User
+[Thumbnail Service] Normalized URL: https://sabq.sa/public-objects/ai-generated/admin-sabq_1763811655600.png
+2025-11-22 16:23:55.51
+ae8178fc
+User
+[Thumbnail Service] Original URL: /public-objects/ai-generated/admin-sabq_1763811655600.png
+2025-11-22 16:23:55.56
+ae8178fc
+User
+2:23:55 PM [express] POST /api/accessibility/track 200 in 95ms :: {"success":true,"eventId":"6737631…
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at TLSSocket.emit (node:events:524:28)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+errno: 'ENOTFOUND',
+2025-11-22 16:23:55.70
+ae8178fc
+User
+code: 'ENOTFOUND',
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at async file:///home/runner/workspace/dist/index.js:18992:30
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at emitErrorEvent (node:_http_client:101:11)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+[Thumbnail Service] Error generating thumbnail: FetchError: request to https://sabq.sa/public-objects/ai-generated/admin-sabq_1763811655600.png failed, reason: getaddrinfo ENOTFOUND sabq.sa
+2025-11-22 16:23:55.70
+ae8178fc
+User
+[Thumbnail Service] Failed to generate article thumbnail: Error: Thumbnail generation failed: request to https://sabq.sa/public-objects/ai-generated/admin-sabq_1763811655600.png failed, reason: getaddrinfo ENOTFOUND sabq.sa
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at ClientRequest. (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:108:11)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+erroredSysCall: 'getaddrinfo'
+2025-11-22 16:23:55.70
+ae8178fc
+User
+type: 'system',
+2025-11-22 16:23:55.70
+ae8178fc
+User
+}
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at ClientRequest.emit (node:events:524:28)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at generateThumbnail (file:///home/runner/workspace/dist/index.js:18844:11)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at generateThumbnail (file:///home/runner/workspace/dist/index.js:18844:11)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at async file:///home/runner/workspace/dist/index.js:18992:30
+2025-11-22 16:23:55.70
+ae8178fc
+User
+[Thumbnail API] Generation error: Error: Thumbnail generation failed: request to https://sabq.sa/public-objects/ai-generated/admin-sabq_1763811655600.png failed, reason: getaddrinfo ENOTFOUND sabq.sa
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at async generateArticleThumbnail (file:///home/runner/workspace/dist/index.js:18883:26)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at TLSSocket.socketErrorListener (node:_http_client:504:5)
+2025-11-22 16:23:55.70
+ae8178fc
+User
+at async generateArticleThumbnail (file:///home/runner/workspace/dist/index.js:18883:26)
