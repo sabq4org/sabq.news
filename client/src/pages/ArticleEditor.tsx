@@ -54,6 +54,7 @@ import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
+import { InfographicAiDialog } from "@/components/InfographicAiDialog";
 import { StoryCardsGenerator } from "@/components/StoryCardsGenerator";
 import { AutoImageGenerator } from "@/components/AutoImageGenerator";
 import { ThumbnailGenerator } from "@/components/ThumbnailGenerator";
@@ -1135,6 +1136,32 @@ const generateSlug = (text: string) => {
     generateTitlesMutation.mutate();
   };
 
+  const handleApplyInfographicSuggestions = (suggestions: any) => {
+    // Apply title and subtitle
+    if (suggestions.title) {
+      setTitle(suggestions.title);
+    }
+    
+    if (suggestions.subtitle) {
+      setSubtitle(suggestions.subtitle);
+    }
+    
+    // Apply keywords
+    if (suggestions.keywords && Array.isArray(suggestions.keywords)) {
+      setKeywords(suggestions.keywords);
+    }
+    
+    // Apply description or bullet points to content or excerpt
+    if (suggestions.description) {
+      // If content is empty, set it, otherwise append to excerpt
+      if (!content || content.trim() === '') {
+        setContent(suggestions.description);
+      } else {
+        setExcerpt(suggestions.description);
+      }
+    }
+  };
+
   const handleGenerateSmartContent = async () => {
     if (!content || typeof content !== 'string' || !content.trim()) {
       toast({
@@ -1421,7 +1448,17 @@ const generateSlug = (text: string) => {
             {/* Title with AI */}
             <Card>
               <CardHeader>
-                <CardTitle>العنوان الرئيسي</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>العنوان الرئيسي</CardTitle>
+                  {isInfographic && (
+                    <InfographicAiDialog
+                      content={content}
+                      title={title}
+                      category={categories?.find(c => c.id === categoryId)?.name}
+                      onApplySuggestions={handleApplyInfographicSuggestions}
+                    />
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">

@@ -9,6 +9,7 @@ import journalistAgentRoutes from './journalist-agent-routes';
 import emailAgentRoutes from './routes/emailAgent';
 import whatsappAgentRoutes from './routes/whatsappAgent';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
+import { registerInfographicAiRoutes } from "./routes/infographicAi";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
@@ -25259,6 +25260,8 @@ Allow: /
   // ============================================================
   registerDataStoryRoutes(app, storage);
 
+  // INFOGRAPHIC AI - مولد اقتراحات الإنفوجرافيك
+  registerInfographicAiRoutes(app);
   // ============================================================
   // SMART JOURNALIST AGENT - وكيل الصحفي الذكي
   // ============================================================
