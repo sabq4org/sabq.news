@@ -1596,6 +1596,30 @@ const generateSlug = (text: string) => {
                     className="hidden"
                   />
                 </div>
+                {/* Delete Image Button - Show only when there's an image */}
+                {imageUrl && (
+                  <div className="flex justify-end mt-3">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setImageUrl("");
+                        setThumbnailUrl("");
+                        setHeroImageMediaId(null);
+                        setImageFocalPoint(null);
+                        toast({
+                          title: "تم حذف الصورة",
+                          description: "تم حذف الصورة البارزة بنجاح",
+                        });
+                      }}
+                      className="gap-2"
+                      data-testid="button-delete-image"
+                    >
+                      <X className="h-4 w-4" />
+                      حذف الصورة
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
