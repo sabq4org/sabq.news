@@ -67,10 +67,10 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
       >
         <Link href={`/article/${article.slug}`}>
           <div className="block">
-            {article.imageUrl && (
+            {(article.imageUrl || (article as any).thumbnailUrl) && (
               <div className="relative h-56 overflow-hidden">
                 <img
-                  src={article.imageUrl}
+                  src={(article as any).thumbnailUrl || article.imageUrl}
                   alt={article.title}
                   className={`w-full h-full object-cover transition-transform duration-500 ${
                     isHovered ? 'scale-110' : 'scale-100'
@@ -198,10 +198,10 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
           <div className="block">
             <CardContent className="p-0">
               <div className="flex gap-5 p-5">
-                {article.imageUrl && (
+                {(article.imageUrl || (article as any).thumbnailUrl) && (
                   <div className="relative flex-shrink-0 w-64 h-40 rounded-lg overflow-hidden">
                     <img
-                      src={article.imageUrl}
+                      src={(article as any).thumbnailUrl || article.imageUrl}
                       alt={article.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -319,10 +319,10 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
         <Link href={`/article/${article.slug}`}>
           <div className="block p-4">
             <div className="flex gap-3">
-              {article.imageUrl && (
+              {(article.imageUrl || (article as any).thumbnailUrl) && (
                 <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
                   <img
-                    src={article.imageUrl}
+                    src={(article as any).thumbnailUrl || article.imageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover"
                     loading="lazy"

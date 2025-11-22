@@ -255,6 +255,11 @@ app.use((req, res, next) => {
     app.use("/api/auto-image", autoImageRoutes);
     console.log("[Server] ✅ Auto Image Generation routes registered");
     
+    // Register Thumbnail routes
+    const thumbnailRoutes = await import("./routes/thumbnailRoutes");
+    app.use("/api/thumbnails", thumbnailRoutes.default);
+    console.log("[Server] ✅ Thumbnail routes registered");
+    
     // Register Story Cards routes
     const { storyCardsRouter } = await import("./routes/storyCardsRoutes");
     app.post("/api/story-cards/generate", storyCardsRouter.post["/generate"]);

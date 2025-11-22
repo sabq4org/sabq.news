@@ -687,6 +687,7 @@ export const articles = pgTable("articles", {
   content: text("content").notNull(),
   excerpt: text("excerpt"),
   imageUrl: text("image_url"),
+  thumbnailUrl: text("thumbnail_url"), // صورة الغلاف المصغرة 16:9 للعرض في القوائم
   imageFocalPoint: jsonb("image_focal_point").$type<{
     x: number; // percentage 0-100 from left
     y: number; // percentage 0-100 from top

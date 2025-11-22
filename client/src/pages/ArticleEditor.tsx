@@ -55,6 +55,7 @@ import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
 import { StoryCardsGenerator } from "@/components/StoryCardsGenerator";
 import { AutoImageGenerator } from "@/components/AutoImageGenerator";
+import { ThumbnailGenerator } from "@/components/ThumbnailGenerator";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -98,6 +99,7 @@ export default function ArticleEditor() {
     console.log('[ArticleEditor] reporterId state changed to:', reporterId);
   }, [reporterId]);
   const [imageUrl, setImageUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [heroImageMediaId, setHeroImageMediaId] = useState<string | null>(null);
   const [imageFocalPoint, setImageFocalPoint] = useState<{ x: number; y: number } | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -188,6 +190,11 @@ export default function ArticleEditor() {
         article.imageUrl.match(/^https?:\/\/.+/) || article.imageUrl.startsWith('/')
       ) ? article.imageUrl : "";
       setImageUrl(validImageUrl);
+      // Set thumbnailUrl if available
+      const validThumbnailUrl = (article as any).thumbnailUrl && (
+        (article as any).thumbnailUrl.match(/^https?:\/\/.+/) || (article as any).thumbnailUrl.startsWith('/')
+      ) ? (article as any).thumbnailUrl : "";
+      setThumbnailUrl(validThumbnailUrl);
       setImageFocalPoint((article as any).imageFocalPoint || null);
       setArticleType((article.articleType as any) || "news");
       setNewsType((article.newsType as any) || "regular");
@@ -422,6 +429,7 @@ export default function ArticleEditor() {
         excerpt,
         categoryId: categoryId || null,
         imageUrl: imageUrl || "",
+        thumbnailUrl: thumbnailUrl || "",
         imageFocalPoint: imageFocalPoint || null,
         articleType,
         publishType,
@@ -1565,6 +1573,19 @@ const generateSlug = (text: string) => {
                 });
               }}
             />
+            
+            {/* Thumbnail Generation */}
+            {imageUrl && (
+              <ThumbnailGenerator
+                articleId={id}
+                imageUrl={imageUrl}
+                thumbnailUrl={thumbnailUrl}
+                onThumbnailGenerated={(url) => {
+                  setThumbnailUrl(url);
+                }}
+                autoGenerate={true}
+              />
+            )}
 
             {/* Content Editor */}
             <Card>
