@@ -108,8 +108,8 @@ export function InfographicDetail({
     : '';
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div>
+      <div className="py-8">
         {/* Header Section */}
         <div className="text-center space-y-6 mb-10">
           {/* Category Badge */}

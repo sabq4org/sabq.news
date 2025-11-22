@@ -14,6 +14,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { SocialShareBar } from "@/components/SocialShareBar";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
 import { InfographicDetail } from "@/components/InfographicDetail";
+import { RelatedInfographics } from "@/components/RelatedInfographics";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -842,14 +843,26 @@ export default function ArticleDetail() {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
         <Header user={user} />
-        <InfographicDetail 
-          article={article}
-          onReact={handleReact}
-          onBookmark={handleBookmark}
-          hasReacted={article.hasReacted}
-          isBookmarked={article.isBookmarked}
-          shortLink={shortLink}
-        />
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-8 relative">
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              <InfographicDetail 
+                article={article}
+                onReact={handleReact}
+                onBookmark={handleBookmark}
+                hasReacted={article.hasReacted}
+                isBookmarked={article.isBookmarked}
+                shortLink={shortLink}
+              />
+            </div>
+            
+            {/* Sidebar - Related Infographics */}
+            <aside className="lg:w-96 lg:sticky lg:top-20 lg:h-fit">
+              <RelatedInfographics currentSlug={slug} />
+            </aside>
+          </div>
+        </div>
         
         {/* Comments Section */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">

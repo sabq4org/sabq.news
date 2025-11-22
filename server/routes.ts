@@ -8560,6 +8560,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get AI-powered smart recommendations for an article
+  app.get("/api/articles/:slug/related-infographics", cacheControl(CACHE_DURATIONS.SHORT), async (req: any, res) => {
+    try {
+      const { slug } = req.params;
+      const limit = parseInt(req.query.limit as string) || 6;
+
+      // First get the current article to exclude it
+      const [currentArticle] = await db
+        .select({ id: articles.id })
+        .from(articles)
+        .where(eq(articles.slug, slug))
+        .limit(1);
+
+      if (!currentArticle) {
+        return res.status(404).json({ message: "المقال غير موجود" });
+      }
+
+      // Fetch related infographics, excluding current article
+      const relatedInfographics = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+          imageUrl: articles.imageUrl,
+          publishedAt: articles.publishedAt,
+          views: articles.views,
+          excerpt: articles.excerpt,
+          category: {
+            id: categories.id,
+            nameAr: categories.nameAr,
+            icon: categories.icon
+          }
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .where(
+          and(
+            ne(articles.id, currentArticle.id),
+            eq(articles.articleType, "infographic"),
+            eq(articles.status, "published")
+          )
+        )
+        .orderBy(desc(articles.publishedAt))
+        .limit(limit);
+
+      res.json(relatedInfographics);
+    } catch (error) {
+      console.error("Error fetching related infographics:", error);
+      res.status(500).json({ message: "خطأ في جلب الإنفوجرافيك ذات الصلة" });
+    }
+  });
+
+
   app.get("/api/articles/:slug/ai-recommendations", async (req: any, res) => {
     try {
       const userId = req.user?.id;
