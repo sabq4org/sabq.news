@@ -1859,7 +1859,29 @@ export class DatabaseStorage implements IStorage {
     // Get users with stats
     const userResults = await db
       .select({
-        user: users,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_phoneNumber: users.phoneNumber,
+        user_role: users.role,
+        user_status: users.status,
+        user_emailVerified: users.emailVerified,
+        user_phoneVerified: users.phoneVerified,
+        user_verificationBadge: users.verificationBadge,
+        user_hasRejectedComments: users.hasRejectedComments,
+        user_suspendedAt: users.suspendedAt,
+        user_suspensionReason: users.suspensionReason,
+        user_suspensionDuration: users.suspensionDuration,
+        user_bannedAt: users.bannedAt,
+        user_banReason: users.banReason,
+        user_banIsPermanent: users.banIsPermanent,
+        user_banDuration: users.banDuration,
+        user_deletedAt: users.deletedAt,
+        user_lastSeenAt: users.lastSeenAt,
+        user_createdAt: users.createdAt,
+        user_updatedAt: users.updatedAt,
         commentCount: sql<number>`count(distinct ${comments.id})`,
         articleCount: sql<number>`count(distinct ${articles.id})`,
         totalPoints: sql<number>`coalesce(${userPointsTotal.totalPoints}, 0)`,
@@ -1875,7 +1897,29 @@ export class DatabaseStorage implements IStorage {
       .offset(offset);
 
     const usersWithStats = userResults.map((r) => ({
-      ...r.user,
+      id: r.user_id,
+      email: r.user_email,
+      firstName: r.user_firstName,
+      lastName: r.user_lastName,
+      profileImageUrl: r.user_profileImageUrl,
+      phoneNumber: r.user_phoneNumber,
+      role: r.user_role,
+      status: r.user_status,
+      emailVerified: r.user_emailVerified,
+      phoneVerified: r.user_phoneVerified,
+      verificationBadge: r.user_verificationBadge,
+      hasRejectedComments: r.user_hasRejectedComments,
+      suspendedAt: r.user_suspendedAt,
+      suspensionReason: r.user_suspensionReason,
+      suspensionDuration: r.user_suspensionDuration,
+      bannedAt: r.user_bannedAt,
+      banReason: r.user_banReason,
+      banIsPermanent: r.user_banIsPermanent,
+      banDuration: r.user_banDuration,
+      deletedAt: r.user_deletedAt,
+      lastSeenAt: r.user_lastSeenAt,
+      createdAt: r.user_createdAt,
+      updatedAt: r.user_updatedAt,
       commentCount: Number(r.commentCount),
       articleCount: Number(r.articleCount),
       totalPoints: Number(r.totalPoints),
@@ -2339,7 +2383,7 @@ export class DatabaseStorage implements IStorage {
     const results = await db
       .select({
         id: categories.id,
-        name: categories.name,
+        name: categories.nameAr,
         nameAr: categories.nameAr,
         slug: categories.slug,
         description: categories.description,
@@ -2548,22 +2592,24 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_nameAr: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         // Author fields
         author_id: users.id,
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         // Reporter fields
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -2635,7 +2681,7 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id || r.author_id ? {
         id: r.reporter_id || r.author_id,
-        name: r.reporter_name || r.author_name,
+        name: [r.reporter_firstName || r.author_firstName, r.reporter_lastName || r.author_lastName].filter(Boolean).join(' '),
         email: r.reporter_email || r.author_email,
         image: r.reporter_image || r.author_image,
         role: r.author_role,
@@ -2649,10 +2695,65 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
+        // Staff member fields
         staffMember: {
           id: staff.id,
           nameAr: staff.nameAr,
@@ -2679,7 +2780,44 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
-    const article = result.article;
+    const article = {
+      id: result.id,
+      title: result.title,
+      titleAr: result.titleAr,
+      subtitle: result.subtitle,
+      subtitleAr: result.subtitleAr,
+      content: result.content,
+      contentAr: result.contentAr,
+      excerpt: result.excerpt,
+      excerptAr: result.excerptAr,
+      slug: result.slug,
+      imageUrl: result.imageUrl,
+      imageCaption: result.imageCaption,
+      imageCaptionAr: result.imageCaptionAr,
+      categoryId: result.categoryId,
+      authorId: result.authorId,
+      reporterId: result.reporterId,
+      status: result.status,
+      articleType: result.articleType,
+      featured: result.featured,
+      breaking: result.breaking,
+      views: result.views,
+      readTime: result.readTime,
+      tags: result.tags,
+      source: result.source,
+      sourceMetadata: result.sourceMetadata,
+      sourceUrl: result.sourceUrl,
+      verifiedBy: result.verifiedBy,
+      verifiedAt: result.verifiedAt,
+      isPublisherNews: result.isPublisherNews,
+      publisherId: result.publisherId,
+      publisherCreditDeducted: result.publisherCreditDeducted,
+      publisherSubmittedAt: result.publisherSubmittedAt,
+      publisherApprovedAt: result.publisherApprovedAt,
+      publishedAt: result.publishedAt,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
 
     // Security: Prevent access to archived articles for non-admin/editor users
     if (article.status === 'archived') {
@@ -2718,9 +2856,30 @@ export class DatabaseStorage implements IStorage {
 
     return {
       ...article,
-      category: result.category || undefined,
-      author: result.reporter || result.author || undefined,
-      opinionAuthor: article.articleType === 'opinion' ? result.author : undefined,
+      category: result.category_id ? {
+        id: result.category_id,
+        name: result.category_name!,
+        nameAr: result.category_nameAr!,
+        slug: result.category_slug!,
+        icon: result.category_icon,
+        color: result.category_color,
+      } : undefined,
+      author: result.reporter_id || result.author_id ? {
+        id: result.reporter_id || result.author_id,
+        email: result.reporter_email || result.author_email,
+        firstName: result.reporter_firstName || result.author_firstName,
+        lastName: result.reporter_lastName || result.author_lastName,
+        profileImageUrl: result.reporter_profileImageUrl || result.author_profileImageUrl,
+        role: result.reporter_role || result.author_role,
+      } : undefined,
+      opinionAuthor: article.articleType === 'opinion' && result.author_id ? {
+        id: result.author_id,
+        email: result.author_email,
+        firstName: result.author_firstName,
+        lastName: result.author_lastName,
+        profileImageUrl: result.author_profileImageUrl,
+        role: result.author_role,
+      } : undefined,
       staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
       isBookmarked,
       hasReacted,
@@ -2735,10 +2894,65 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
+        // Staff member fields
         staffMember: {
           id: staff.id,
           nameAr: staff.nameAr,
@@ -2765,7 +2979,44 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
-    const article = result.article;
+    const article = {
+      id: result.id,
+      title: result.title,
+      titleAr: result.titleAr,
+      subtitle: result.subtitle,
+      subtitleAr: result.subtitleAr,
+      content: result.content,
+      contentAr: result.contentAr,
+      excerpt: result.excerpt,
+      excerptAr: result.excerptAr,
+      slug: result.slug,
+      imageUrl: result.imageUrl,
+      imageCaption: result.imageCaption,
+      imageCaptionAr: result.imageCaptionAr,
+      categoryId: result.categoryId,
+      authorId: result.authorId,
+      reporterId: result.reporterId,
+      status: result.status,
+      articleType: result.articleType,
+      featured: result.featured,
+      breaking: result.breaking,
+      views: result.views,
+      readTime: result.readTime,
+      tags: result.tags,
+      source: result.source,
+      sourceMetadata: result.sourceMetadata,
+      sourceUrl: result.sourceUrl,
+      verifiedBy: result.verifiedBy,
+      verifiedAt: result.verifiedAt,
+      isPublisherNews: result.isPublisherNews,
+      publisherId: result.publisherId,
+      publisherCreditDeducted: result.publisherCreditDeducted,
+      publisherSubmittedAt: result.publisherSubmittedAt,
+      publisherApprovedAt: result.publisherApprovedAt,
+      publishedAt: result.publishedAt,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
 
     // Run all queries in parallel for better performance
     const [
@@ -2795,9 +3046,30 @@ export class DatabaseStorage implements IStorage {
 
     return {
       ...article,
-      category: result.category || undefined,
-      author: result.reporter || result.author || undefined,
-      opinionAuthor: article.articleType === 'opinion' ? result.author : undefined,
+      category: result.category_id ? {
+        id: result.category_id,
+        name: result.category_name!,
+        nameAr: result.category_nameAr!,
+        slug: result.category_slug!,
+        icon: result.category_icon,
+        color: result.category_color,
+      } : undefined,
+      author: result.reporter_id || result.author_id ? {
+        id: result.reporter_id || result.author_id,
+        email: result.reporter_email || result.author_email,
+        firstName: result.reporter_firstName || result.author_firstName,
+        lastName: result.reporter_lastName || result.author_lastName,
+        profileImageUrl: result.reporter_profileImageUrl || result.author_profileImageUrl,
+        role: result.reporter_role || result.author_role,
+      } : undefined,
+      opinionAuthor: article.articleType === 'opinion' && result.author_id ? {
+        id: result.author_id,
+        email: result.author_email,
+        firstName: result.author_firstName,
+        lastName: result.author_lastName,
+        profileImageUrl: result.author_profileImageUrl,
+        role: result.author_role,
+      } : undefined,
       staff: result.reporterStaffMember?.id ? result.reporterStaffMember : (result.staffMember?.id ? result.staffMember : undefined),
       isBookmarked,
       hasReacted,
@@ -2932,22 +3204,24 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_nameAr: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         // Author fields
         author_id: users.id,
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         // Reporter fields
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -3104,22 +3378,24 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_nameAr: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         // Author fields
         author_id: users.id,
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         // Reporter fields
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -3192,7 +3468,7 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id || r.author_id ? {
         id: r.reporter_id || r.author_id,
-        name: r.reporter_name || r.author_name,
+        name: [r.reporter_firstName || r.author_firstName, r.reporter_lastName || r.author_lastName].filter(Boolean).join(' '),
         email: r.reporter_email || r.author_email,
         image: r.reporter_image || r.author_image,
         role: r.author_role,
@@ -3499,8 +3775,23 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        comment: comments,
-        user: users,
+        comment_id: comments.id,
+        comment_userId: comments.userId,
+        comment_articleId: comments.articleId,
+        comment_parentId: comments.parentId,
+        comment_content: comments.content,
+        comment_status: comments.status,
+        comment_moderatedBy: comments.moderatedBy,
+        comment_moderatedAt: comments.moderatedAt,
+        comment_moderationReason: comments.moderationReason,
+        comment_createdAt: comments.createdAt,
+        comment_updatedAt: comments.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
@@ -3508,8 +3799,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(comments.createdAt);
 
     const allComments = results.map((r) => ({
-      ...r.comment,
-      user: r.user!,
+      id: r.comment_id,
+      userId: r.comment_userId,
+      articleId: r.comment_articleId,
+      parentId: r.comment_parentId,
+      content: r.comment_content,
+      status: r.comment_status,
+      moderatedBy: r.comment_moderatedBy,
+      moderatedAt: r.comment_moderatedAt,
+      moderationReason: r.comment_moderationReason,
+      createdAt: r.comment_createdAt,
+      updatedAt: r.comment_updatedAt,
+      user: r.user_id ? {
+        id: r.user_id,
+        email: r.user_email!,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        role: r.user_role!,
+      } : null!,
       replies: [] as CommentWithUser[],
     }));
 
@@ -3557,8 +3865,23 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        comment: comments,
-        user: users,
+        comment_id: comments.id,
+        comment_userId: comments.userId,
+        comment_articleId: comments.articleId,
+        comment_parentId: comments.parentId,
+        comment_content: comments.content,
+        comment_status: comments.status,
+        comment_moderatedBy: comments.moderatedBy,
+        comment_moderatedAt: comments.moderatedAt,
+        comment_moderationReason: comments.moderationReason,
+        comment_createdAt: comments.createdAt,
+        comment_updatedAt: comments.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
@@ -3566,8 +3889,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(comments.createdAt));
 
     return results.map((r) => ({
-      ...r.comment,
-      user: r.user!,
+      id: r.comment_id,
+      userId: r.comment_userId,
+      articleId: r.comment_articleId,
+      parentId: r.comment_parentId,
+      content: r.comment_content,
+      status: r.comment_status,
+      moderatedBy: r.comment_moderatedBy,
+      moderatedAt: r.comment_moderatedAt,
+      moderationReason: r.comment_moderationReason,
+      createdAt: r.comment_createdAt,
+      updatedAt: r.comment_updatedAt,
+      user: r.user_id ? {
+        id: r.user_id,
+        email: r.user_email!,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        role: r.user_role!,
+      } : null!,
     }));
   }
 
@@ -3678,10 +4018,64 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
       })
       .from(bookmarks)
       .innerJoin(articles, eq(bookmarks.articleId, articles.id))
@@ -3692,9 +4086,58 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(bookmarks.createdAt));
 
     return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.reporter_id || r.author_id ? {
+        id: r.reporter_id || r.author_id,
+        email: r.reporter_email || r.author_email,
+        firstName: r.reporter_firstName || r.author_firstName,
+        lastName: r.reporter_lastName || r.author_lastName,
+        profileImageUrl: r.reporter_profileImageUrl || r.author_profileImageUrl,
+        role: r.reporter_role || r.author_role,
+      } : undefined,
       isBookmarked: true,
     }));
   }
@@ -3704,10 +4147,64 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
       })
       .from(reactions)
       .innerJoin(articles, eq(reactions.articleId, articles.id))
@@ -3718,9 +4215,58 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(reactions.createdAt));
 
     return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.reporter_id || r.author_id ? {
+        id: r.reporter_id || r.author_id,
+        email: r.reporter_email || r.author_email,
+        firstName: r.reporter_firstName || r.author_firstName,
+        lastName: r.reporter_lastName || r.author_lastName,
+        profileImageUrl: r.reporter_profileImageUrl || r.author_profileImageUrl,
+        role: r.reporter_role || r.author_role,
+      } : undefined,
       hasReacted: true,
     }));
   }
@@ -3739,10 +4285,64 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
       })
       .from(readingHistory)
       .innerJoin(articles, eq(readingHistory.articleId, articles.id))
@@ -3754,9 +4354,58 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
 
     return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.reporter_id || r.author_id ? {
+        id: r.reporter_id || r.author_id,
+        email: r.reporter_email || r.author_email,
+        firstName: r.reporter_firstName || r.author_firstName,
+        lastName: r.reporter_lastName || r.author_lastName,
+        profileImageUrl: r.reporter_profileImageUrl || r.author_profileImageUrl,
+        role: r.reporter_role || r.author_role,
+      } : undefined,
     }));
   }
 
@@ -3788,10 +4437,64 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
+        reporter_role: reporterAlias.role,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -3811,9 +4514,58 @@ export class DatabaseStorage implements IStorage {
       .limit(6);
 
     return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.reporter_id || r.author_id ? {
+        id: r.reporter_id || r.author_id,
+        email: r.reporter_email || r.author_email,
+        firstName: r.reporter_firstName || r.author_firstName,
+        lastName: r.reporter_lastName || r.author_lastName,
+        profileImageUrl: r.reporter_profileImageUrl || r.author_profileImageUrl,
+        role: r.reporter_role || r.author_role,
+      } : undefined,
     }));
   }
 
@@ -4453,27 +5205,28 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         
         // Author fields
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         
         // Reporter fields (if exists)
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
         
         // Story fields (if exists)
         story_id: stories.id,
         story_title: stories.title,
-        story_publishedAt: stories.publishedAt,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -4560,13 +5313,13 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id ? {
         id: r.reporter_id,
-        name: r.reporter_name!,
+        name: [r.reporter_firstName, r.reporter_lastName].filter(Boolean).join(' '),
         email: r.reporter_email!,
         image: r.reporter_image,
         role: 'reporter' as const,
-      } : r.author_name ? {
+      } : (r.author_firstName || r.author_lastName) ? {
         id: r.authorId!,
-        name: r.author_name,
+        name: [r.author_firstName, r.author_lastName].filter(Boolean).join(' '),
         email: r.author_email!,
         image: r.author_image,
         role: r.author_role as any,
@@ -4635,27 +5388,28 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         
         // Author fields
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         
         // Reporter fields (if exists)
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
         
         // Story fields (if exists)
         story_id: stories.id,
         story_title: stories.title,
-        story_publishedAt: stories.publishedAt,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -4738,13 +5492,13 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id ? {
         id: r.reporter_id,
-        name: r.reporter_name!,
+        name: [r.reporter_firstName, r.reporter_lastName].filter(Boolean).join(' '),
         email: r.reporter_email!,
         image: r.reporter_image,
         role: 'reporter' as const,
-      } : r.author_name ? {
+      } : (r.author_firstName || r.author_lastName) ? {
         id: r.authorId!,
-        name: r.author_name,
+        name: [r.author_firstName, r.author_lastName].filter(Boolean).join(' '),
         email: r.author_email!,
         image: r.author_image,
         role: r.author_role as any,
@@ -4813,27 +5567,28 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         
         // Author fields
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         
         // Reporter fields (if exists)
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
         
         // Story fields (if exists)
         story_id: stories.id,
         story_title: stories.title,
-        story_publishedAt: stories.publishedAt,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -4917,13 +5672,13 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id ? {
         id: r.reporter_id,
-        name: r.reporter_name!,
+        name: [r.reporter_firstName, r.reporter_lastName].filter(Boolean).join(' '),
         email: r.reporter_email!,
         image: r.reporter_image,
         role: 'reporter' as const,
-      } : r.author_name ? {
+      } : (r.author_firstName || r.author_lastName) ? {
         id: r.authorId!,
-        name: r.author_name,
+        name: [r.author_firstName, r.author_lastName].filter(Boolean).join(' '),
         email: r.author_email!,
         image: r.author_image,
         role: r.author_role as any,
@@ -4992,27 +5747,28 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         
         // Author fields
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         
         // Reporter fields (if exists)
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
         
         // Story fields (if exists)
         story_id: stories.id,
         story_title: stories.title,
-        story_publishedAt: stories.publishedAt,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -5095,13 +5851,13 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id ? {
         id: r.reporter_id,
-        name: r.reporter_name!,
+        name: [r.reporter_firstName, r.reporter_lastName].filter(Boolean).join(' '),
         email: r.reporter_email!,
         image: r.reporter_image,
         role: 'reporter' as const,
-      } : r.author_name ? {
+      } : (r.author_firstName || r.author_lastName) ? {
         id: r.authorId!,
-        name: r.author_name,
+        name: [r.author_firstName, r.author_lastName].filter(Boolean).join(' '),
         email: r.author_email!,
         image: r.author_image,
         role: r.author_role as any,
@@ -5170,27 +5926,28 @@ export class DatabaseStorage implements IStorage {
         updatedAt: articles.updatedAt,
         // Category fields
         category_id: categories.id,
-        category_name: categories.name,
+        category_name: categories.nameAr,
         category_slug: categories.slug,
         category_icon: categories.icon,
         category_color: categories.color,
         
         // Author fields
-        author_name: users.name,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
         author_email: users.email,
-        author_image: users.image,
+        author_image: users.profileImageUrl,
         author_role: users.role,
         
         // Reporter fields (if exists)
         reporter_id: reporterAlias.id,
-        reporter_name: reporterAlias.name,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
         reporter_email: reporterAlias.email,
-        reporter_image: reporterAlias.image,
+        reporter_image: reporterAlias.profileImageUrl,
         
         // Story fields (if exists)
         story_id: stories.id,
         story_title: stories.title,
-        story_publishedAt: stories.publishedAt,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -5272,13 +6029,13 @@ export class DatabaseStorage implements IStorage {
       } : undefined,
       author: r.reporter_id ? {
         id: r.reporter_id,
-        name: r.reporter_name!,
+        name: [r.reporter_firstName, r.reporter_lastName].filter(Boolean).join(' '),
         email: r.reporter_email!,
         image: r.reporter_image,
         role: 'reporter' as const,
-      } : r.author_name ? {
+      } : (r.author_firstName || r.author_lastName) ? {
         id: r.authorId!,
-        name: r.author_name,
+        name: [r.author_firstName, r.author_lastName].filter(Boolean).join(' '),
         email: r.author_email!,
         image: r.author_image,
         role: r.author_role as any,
@@ -5482,9 +6239,60 @@ export class DatabaseStorage implements IStorage {
     // Get recent articles (latest 5)
     const recentArticlesData = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        credibilityScore: articles.credibilityScore,
+        credibilityAnalysis: articles.credibilityAnalysis,
+        credibilityLastUpdated: articles.credibilityLastUpdated,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -5493,19 +6301,83 @@ export class DatabaseStorage implements IStorage {
       .limit(5);
 
     const recentArticles: ArticleWithDetails[] = recentArticlesData.map((r) => ({
-      ...r.article,
-      credibilityScore: r.article.credibilityScore || null,
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
-      category: r.category || undefined,
-      author: r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      credibilityScore: r.credibilityScore || null,
+      credibilityAnalysis: r.credibilityAnalysis || null,
+      credibilityLastUpdated: r.credibilityLastUpdated || null,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.author_id ? {
+        id: r.author_id,
+        email: r.author_email!,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+        role: r.author_role!,
+      } : undefined,
     }));
 
     // Get recent comments (latest 5)
     const recentCommentsData = await db
       .select({
-        comment: comments,
-        user: users,
+        comment_id: comments.id,
+        comment_userId: comments.userId,
+        comment_articleId: comments.articleId,
+        comment_parentId: comments.parentId,
+        comment_content: comments.content,
+        comment_status: comments.status,
+        comment_moderatedBy: comments.moderatedBy,
+        comment_moderatedAt: comments.moderatedAt,
+        comment_moderationReason: comments.moderationReason,
+        comment_createdAt: comments.createdAt,
+        comment_updatedAt: comments.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -5513,16 +6385,84 @@ export class DatabaseStorage implements IStorage {
       .limit(5);
 
     const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
-      ...r.comment,
-      user: r.user,
+      id: r.comment_id,
+      userId: r.comment_userId,
+      articleId: r.comment_articleId,
+      parentId: r.comment_parentId,
+      content: r.comment_content,
+      status: r.comment_status,
+      moderatedBy: r.comment_moderatedBy,
+      moderatedAt: r.comment_moderatedAt,
+      moderationReason: r.comment_moderationReason,
+      createdAt: r.comment_createdAt,
+      updatedAt: r.comment_updatedAt,
+      user: {
+        id: r.user_id,
+        email: r.user_email,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        role: r.user_role,
+      },
     }));
 
     // Get top articles (most viewed, top 5)
     const topArticlesData = await db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
+        // Article fields
+        id: articles.id,
+        title: articles.title,
+        titleAr: articles.titleAr,
+        subtitle: articles.subtitle,
+        subtitleAr: articles.subtitleAr,
+        content: articles.content,
+        contentAr: articles.contentAr,
+        excerpt: articles.excerpt,
+        excerptAr: articles.excerptAr,
+        slug: articles.slug,
+        imageUrl: articles.imageUrl,
+        imageCaption: articles.imageCaption,
+        imageCaptionAr: articles.imageCaptionAr,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        reporterId: articles.reporterId,
+        status: articles.status,
+        articleType: articles.articleType,
+        featured: articles.featured,
+        breaking: articles.breaking,
+        views: articles.views,
+        readTime: articles.readTime,
+        tags: articles.tags,
+        source: articles.source,
+        sourceMetadata: articles.sourceMetadata,
+        sourceUrl: articles.sourceUrl,
+        verifiedBy: articles.verifiedBy,
+        verifiedAt: articles.verifiedAt,
+        isPublisherNews: articles.isPublisherNews,
+        publisherId: articles.publisherId,
+        publisherCreditDeducted: articles.publisherCreditDeducted,
+        publisherSubmittedAt: articles.publisherSubmittedAt,
+        publisherApprovedAt: articles.publisherApprovedAt,
+        publishedAt: articles.publishedAt,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        credibilityScore: articles.credibilityScore,
+        credibilityAnalysis: articles.credibilityAnalysis,
+        credibilityLastUpdated: articles.credibilityLastUpdated,
+        // Category fields
+        category_id: categories.id,
+        category_name: categories.nameAr,
+        category_nameAr: categories.nameAr,
+        category_slug: categories.slug,
+        category_icon: categories.icon,
+        category_color: categories.color,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        author_role: users.role,
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -5532,12 +6472,61 @@ export class DatabaseStorage implements IStorage {
       .limit(5);
 
     const topArticles: ArticleWithDetails[] = topArticlesData.map((r) => ({
-      ...r.article,
-      credibilityScore: r.article.credibilityScore || null,
-      credibilityAnalysis: r.article.credibilityAnalysis || null,
-      credibilityLastUpdated: r.article.credibilityLastUpdated || null,
-      category: r.category || undefined,
-      author: r.author || undefined,
+      id: r.id,
+      title: r.title,
+      titleAr: r.titleAr,
+      subtitle: r.subtitle,
+      subtitleAr: r.subtitleAr,
+      content: r.content,
+      contentAr: r.contentAr,
+      excerpt: r.excerpt,
+      excerptAr: r.excerptAr,
+      slug: r.slug,
+      imageUrl: r.imageUrl,
+      imageCaption: r.imageCaption,
+      imageCaptionAr: r.imageCaptionAr,
+      categoryId: r.categoryId,
+      authorId: r.authorId,
+      reporterId: r.reporterId,
+      status: r.status,
+      articleType: r.articleType,
+      featured: r.featured,
+      breaking: r.breaking,
+      views: r.views,
+      readTime: r.readTime,
+      tags: r.tags,
+      source: r.source,
+      sourceMetadata: r.sourceMetadata,
+      sourceUrl: r.sourceUrl,
+      verifiedBy: r.verifiedBy,
+      verifiedAt: r.verifiedAt,
+      isPublisherNews: r.isPublisherNews,
+      publisherId: r.publisherId,
+      publisherCreditDeducted: r.publisherCreditDeducted,
+      publisherSubmittedAt: r.publisherSubmittedAt,
+      publisherApprovedAt: r.publisherApprovedAt,
+      publishedAt: r.publishedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      credibilityScore: r.credibilityScore || null,
+      credibilityAnalysis: r.credibilityAnalysis || null,
+      credibilityLastUpdated: r.credibilityLastUpdated || null,
+      category: r.category_id ? {
+        id: r.category_id,
+        name: r.category_name!,
+        nameAr: r.category_nameAr!,
+        slug: r.category_slug!,
+        icon: r.category_icon,
+        color: r.category_color,
+      } : undefined,
+      author: r.author_id ? {
+        id: r.author_id,
+        email: r.author_email!,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+        role: r.author_role!,
+      } : undefined,
     }));
 
     return {
@@ -5714,9 +6703,21 @@ export class DatabaseStorage implements IStorage {
     // Get recent articles (latest 5)
     const recentArticlesData = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
       })
       .from(enArticles)
       .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
@@ -5724,17 +6725,56 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(enArticles.createdAt))
       .limit(5);
 
-    const recentArticles = recentArticlesData.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.author || undefined,
-    }));
+    const recentArticles = recentArticlesData.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
 
     // Get recent comments (latest 5)
     const recentCommentsData = await db
       .select({
-        comment: enComments,
-        user: users,
+        comment_id: enComments.id,
+        comment_userId: enComments.userId,
+        comment_articleId: enComments.articleId,
+        comment_parentId: enComments.parentId,
+        comment_content: enComments.content,
+        comment_status: enComments.status,
+        comment_moderatedBy: enComments.moderatedBy,
+        comment_moderatedAt: enComments.moderatedAt,
+        comment_moderationReason: enComments.moderationReason,
+        comment_createdAt: enComments.createdAt,
+        comment_updatedAt: enComments.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(enComments)
       .innerJoin(users, eq(enComments.userId, users.id))
@@ -5742,16 +6782,45 @@ export class DatabaseStorage implements IStorage {
       .limit(5);
 
     const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
-      ...r.comment,
-      user: r.user,
+      id: r.comment_id,
+      userId: r.comment_userId,
+      articleId: r.comment_articleId,
+      parentId: r.comment_parentId,
+      content: r.comment_content,
+      status: r.comment_status,
+      moderatedBy: r.comment_moderatedBy,
+      moderatedAt: r.comment_moderatedAt,
+      moderationReason: r.comment_moderationReason,
+      createdAt: r.comment_createdAt,
+      updatedAt: r.comment_updatedAt,
+      user: {
+        id: r.user_id,
+        email: r.user_email,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        role: r.user_role,
+      },
     }));
 
     // Get top articles (most viewed, top 5)
     const topArticlesData = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
       })
       .from(enArticles)
       .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
@@ -5760,11 +6829,35 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(enArticles.views))
       .limit(5);
 
-    const topArticles = topArticlesData.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.author || undefined,
-    }));
+    const topArticles = topArticlesData.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
 
     return {
       articles: {
@@ -6653,8 +7746,37 @@ export class DatabaseStorage implements IStorage {
   async getTopUsers(limit: number = 100): Promise<Array<UserPointsTotal & { user: User }>> {
     const results = await db
       .select({
-        points: userPointsTotal,
-        user: users,
+        points_id: userPointsTotal.id,
+        points_userId: userPointsTotal.userId,
+        points_totalPoints: userPointsTotal.totalPoints,
+        points_currentRank: userPointsTotal.currentRank,
+        points_highestRank: userPointsTotal.highestRank,
+        points_lastRankChange: userPointsTotal.lastRankChange,
+        points_createdAt: userPointsTotal.createdAt,
+        points_updatedAt: userPointsTotal.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_phoneNumber: users.phoneNumber,
+        user_role: users.role,
+        user_status: users.status,
+        user_emailVerified: users.emailVerified,
+        user_phoneVerified: users.phoneVerified,
+        user_verificationBadge: users.verificationBadge,
+        user_hasRejectedComments: users.hasRejectedComments,
+        user_suspendedAt: users.suspendedAt,
+        user_suspensionReason: users.suspensionReason,
+        user_suspensionDuration: users.suspensionDuration,
+        user_bannedAt: users.bannedAt,
+        user_banReason: users.banReason,
+        user_banIsPermanent: users.banIsPermanent,
+        user_banDuration: users.banDuration,
+        user_deletedAt: users.deletedAt,
+        user_lastSeenAt: users.lastSeenAt,
+        user_createdAt: users.createdAt,
+        user_updatedAt: users.updatedAt,
       })
       .from(userPointsTotal)
       .leftJoin(users, eq(userPointsTotal.userId, users.id))
@@ -6662,8 +7784,39 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
 
     return results.map((r) => ({
-      ...r.points,
-      user: r.user!,
+      id: r.points_id,
+      userId: r.points_userId,
+      totalPoints: r.points_totalPoints,
+      currentRank: r.points_currentRank,
+      highestRank: r.points_highestRank,
+      lastRankChange: r.points_lastRankChange,
+      createdAt: r.points_createdAt,
+      updatedAt: r.points_updatedAt,
+      user: r.user_id ? {
+        id: r.user_id,
+        email: r.user_email,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        phoneNumber: r.user_phoneNumber,
+        role: r.user_role,
+        status: r.user_status,
+        emailVerified: r.user_emailVerified,
+        phoneVerified: r.user_phoneVerified,
+        verificationBadge: r.user_verificationBadge,
+        hasRejectedComments: r.user_hasRejectedComments,
+        suspendedAt: r.user_suspendedAt,
+        suspensionReason: r.user_suspensionReason,
+        suspensionDuration: r.user_suspensionDuration,
+        bannedAt: r.user_bannedAt,
+        banReason: r.user_banReason,
+        banIsPermanent: r.user_banIsPermanent,
+        banDuration: r.user_banDuration,
+        deletedAt: r.user_deletedAt,
+        lastSeenAt: r.user_lastSeenAt,
+        createdAt: r.user_createdAt,
+        updatedAt: r.user_updatedAt,
+      } : null!,
     }));
   }
 
@@ -7022,10 +8175,28 @@ export class DatabaseStorage implements IStorage {
     // Build query to get articles by angle
     let query = db
       .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(articles),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(articleAngles)
       .innerJoin(articles, eq(articleAngles.articleId, articles.id))
@@ -7050,11 +8221,48 @@ export class DatabaseStorage implements IStorage {
 
     const results = await query;
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      const category: any = {};
+      const author: any = {};
+      
+      // Map article fields
+      Object.keys(getTableColumns(articles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      // Map category fields
+      if (r.category_id) {
+        category.id = r.category_id;
+        category.nameAr = r.category_nameAr;
+        category.nameEn = r.category_nameEn;
+        category.slug = r.category_slug;
+        category.description = r.category_description;
+        category.color = r.category_color;
+        category.icon = r.category_icon;
+      }
+      
+      // Map author (prefer reporter over author)
+      if (r.reporter_id) {
+        author.id = r.reporter_id;
+        author.email = r.reporter_email;
+        author.firstName = r.reporter_firstName;
+        author.lastName = r.reporter_lastName;
+        author.profileImageUrl = r.reporter_profileImageUrl;
+      } else if (r.author_id) {
+        author.id = r.author_id;
+        author.email = r.author_email;
+        author.firstName = r.author_firstName;
+        author.lastName = r.author_lastName;
+        author.profileImageUrl = r.author_profileImageUrl;
+      }
+      
+      return {
+        ...article,
+        category: r.category_id ? category : undefined,
+        author: (r.reporter_id || r.author_id) ? author : undefined,
+      };
+    });
   }
 
   async linkArticleToAngle(articleId: string, angleId: string): Promise<void> {
@@ -7111,8 +8319,20 @@ export class DatabaseStorage implements IStorage {
   async getStoryBySlug(slug: string): Promise<StoryWithDetails | undefined> {
     const results = await db
       .select({
-        story: stories,
-        rootArticle: articles,
+        // Story fields
+        ...getTableColumns(stories),
+        // Root article fields
+        rootArticle_id: articles.id,
+        rootArticle_title: articles.title,
+        rootArticle_subtitle: articles.subtitle,
+        rootArticle_slug: articles.slug,
+        rootArticle_content: articles.content,
+        rootArticle_excerpt: articles.excerpt,
+        rootArticle_imageUrl: articles.imageUrl,
+        rootArticle_categoryId: articles.categoryId,
+        rootArticle_status: articles.status,
+        rootArticle_publishedAt: articles.publishedAt,
+        rootArticle_views: articles.views,
       })
       .from(stories)
       .leftJoin(articles, eq(stories.rootArticleId, articles.id))
@@ -7121,25 +8341,46 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
+    
+    // Reconstruct the story object
+    const story: any = {};
+    Object.keys(getTableColumns(stories)).forEach(key => {
+      story[key] = result[key];
+    });
+    
+    // Reconstruct the rootArticle object
+    const rootArticle = result.rootArticle_id ? {
+      id: result.rootArticle_id,
+      title: result.rootArticle_title,
+      subtitle: result.rootArticle_subtitle,
+      slug: result.rootArticle_slug,
+      content: result.rootArticle_content,
+      excerpt: result.rootArticle_excerpt,
+      imageUrl: result.rootArticle_imageUrl,
+      categoryId: result.rootArticle_categoryId,
+      status: result.rootArticle_status,
+      publishedAt: result.rootArticle_publishedAt,
+      views: result.rootArticle_views,
+    } : undefined;
 
     // Get articles count
     const [{ count: articlesCount }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(storyLinks)
-      .where(eq(storyLinks.storyId, result.story.id));
+      .where(eq(storyLinks.storyId, story.id));
 
     // Get followers count
     const [{ count: followersCount }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(storyFollows)
       .where(and(
-        eq(storyFollows.storyId, result.story.id),
+        eq(storyFollows.storyId, story.id),
         eq(storyFollows.isActive, true)
       ));
 
     return {
-      ...result.story,
-      rootArticle: result.rootArticle || undefined,
+      ...story,
+      rootArticle,
       articlesCount: Number(articlesCount),
       followersCount: Number(followersCount),
     };
@@ -7154,8 +8395,20 @@ export class DatabaseStorage implements IStorage {
 
     const results = await db
       .select({
-        story: stories,
-        rootArticle: articles,
+        // Story fields
+        ...getTableColumns(stories),
+        // Root article fields
+        rootArticle_id: articles.id,
+        rootArticle_title: articles.title,
+        rootArticle_subtitle: articles.subtitle,
+        rootArticle_slug: articles.slug,
+        rootArticle_content: articles.content,
+        rootArticle_excerpt: articles.excerpt,
+        rootArticle_imageUrl: articles.imageUrl,
+        rootArticle_categoryId: articles.categoryId,
+        rootArticle_status: articles.status,
+        rootArticle_publishedAt: articles.publishedAt,
+        rootArticle_views: articles.views,
       })
       .from(stories)
       .leftJoin(articles, eq(stories.rootArticleId, articles.id))
@@ -7165,22 +8418,43 @@ export class DatabaseStorage implements IStorage {
     // Get counts for each story
     const storiesWithDetails = await Promise.all(
       results.map(async (result) => {
+        // Reconstruct the story object
+        const story: any = {};
+        Object.keys(getTableColumns(stories)).forEach(key => {
+          story[key] = result[key];
+        });
+        
+        // Reconstruct the rootArticle object
+        const rootArticle = result.rootArticle_id ? {
+          id: result.rootArticle_id,
+          title: result.rootArticle_title,
+          subtitle: result.rootArticle_subtitle,
+          slug: result.rootArticle_slug,
+          content: result.rootArticle_content,
+          excerpt: result.rootArticle_excerpt,
+          imageUrl: result.rootArticle_imageUrl,
+          categoryId: result.rootArticle_categoryId,
+          status: result.rootArticle_status,
+          publishedAt: result.rootArticle_publishedAt,
+          views: result.rootArticle_views,
+        } : undefined;
+        
         const [{ count: articlesCount }] = await db
           .select({ count: sql<number>`count(*)` })
           .from(storyLinks)
-          .where(eq(storyLinks.storyId, result.story.id));
+          .where(eq(storyLinks.storyId, story.id));
 
         const [{ count: followersCount }] = await db
           .select({ count: sql<number>`count(*)` })
           .from(storyFollows)
           .where(and(
-            eq(storyFollows.storyId, result.story.id),
+            eq(storyFollows.storyId, story.id),
             eq(storyFollows.isActive, true)
           ));
 
         return {
-          ...result.story,
-          rootArticle: result.rootArticle || undefined,
+          ...story,
+          rootArticle,
           articlesCount: Number(articlesCount),
           followersCount: Number(followersCount),
         };
@@ -7217,11 +8491,41 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        storyLink: storyLinks,
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
+        // StoryLink fields
+        ...getTableColumns(storyLinks),
+        // Article fields
+        article_id: articles.id,
+        article_title: articles.title,
+        article_subtitle: articles.subtitle,
+        article_slug: articles.slug,
+        article_content: articles.content,
+        article_excerpt: articles.excerpt,
+        article_imageUrl: articles.imageUrl,
+        article_categoryId: articles.categoryId,
+        article_authorId: articles.authorId,
+        article_reporterId: articles.reporterId,
+        article_status: articles.status,
+        article_publishedAt: articles.publishedAt,
+        article_views: articles.views,
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(storyLinks)
       .leftJoin(articles, eq(storyLinks.articleId, articles.id))
@@ -7231,14 +8535,56 @@ export class DatabaseStorage implements IStorage {
       .where(eq(storyLinks.storyId, storyId))
       .orderBy(desc(storyLinks.createdAt));
 
-    return results.map((r) => ({
-      ...r.storyLink,
-      article: r.article ? {
-        ...r.article,
-        category: r.category || undefined,
-        author: r.reporter || r.author || undefined,
-      } : undefined,
-    }));
+    return results.map((r) => {
+      // Reconstruct storyLink
+      const storyLink: any = {};
+      Object.keys(getTableColumns(storyLinks)).forEach(key => {
+        storyLink[key] = r[key];
+      });
+      
+      // Reconstruct article
+      const article = r.article_id ? {
+        id: r.article_id,
+        title: r.article_title,
+        subtitle: r.article_subtitle,
+        slug: r.article_slug,
+        content: r.article_content,
+        excerpt: r.article_excerpt,
+        imageUrl: r.article_imageUrl,
+        categoryId: r.article_categoryId,
+        authorId: r.article_authorId,
+        reporterId: r.article_reporterId,
+        status: r.article_status,
+        publishedAt: r.article_publishedAt,
+        views: r.article_views,
+        category: r.category_id ? {
+          id: r.category_id,
+          nameAr: r.category_nameAr,
+          nameEn: r.category_nameEn,
+          slug: r.category_slug,
+          color: r.category_color,
+          icon: r.category_icon,
+        } : undefined,
+        author: r.reporter_id ? {
+          id: r.reporter_id,
+          email: r.reporter_email,
+          firstName: r.reporter_firstName,
+          lastName: r.reporter_lastName,
+          profileImageUrl: r.reporter_profileImageUrl,
+        } : r.author_id ? {
+          id: r.author_id,
+          email: r.author_email,
+          firstName: r.author_firstName,
+          lastName: r.author_lastName,
+          profileImageUrl: r.author_profileImageUrl,
+        } : undefined,
+      } : undefined;
+      
+      return {
+        ...storyLink,
+        article,
+      };
+    });
   }
 
   async deleteStoryLink(id: string): Promise<void> {
@@ -7266,9 +8612,29 @@ export class DatabaseStorage implements IStorage {
   async getStoryFollows(userId: string): Promise<(StoryFollow & { story: StoryWithDetails })[]> {
     const results = await db
       .select({
-        storyFollow: storyFollows,
-        story: stories,
-        rootArticle: articles,
+        // StoryFollow fields
+        ...getTableColumns(storyFollows),
+        // Story fields
+        story_id: stories.id,
+        story_slug: stories.slug,
+        story_title: stories.title,
+        story_rootArticleId: stories.rootArticleId,
+        story_entities: stories.entities,
+        story_tags: stories.tags,
+        story_status: stories.status,
+        story_createdAt: stories.createdAt,
+        // Root article fields
+        rootArticle_id: articles.id,
+        rootArticle_title: articles.title,
+        rootArticle_subtitle: articles.subtitle,
+        rootArticle_slug: articles.slug,
+        rootArticle_content: articles.content,
+        rootArticle_excerpt: articles.excerpt,
+        rootArticle_imageUrl: articles.imageUrl,
+        rootArticle_categoryId: articles.categoryId,
+        rootArticle_status: articles.status,
+        rootArticle_publishedAt: articles.publishedAt,
+        rootArticle_views: articles.views,
       })
       .from(storyFollows)
       .innerJoin(stories, eq(storyFollows.storyId, stories.id))
@@ -7282,24 +8648,57 @@ export class DatabaseStorage implements IStorage {
     // Get counts for each story
     const followsWithDetails = await Promise.all(
       results.map(async (result) => {
+        // Reconstruct storyFollow
+        const storyFollow: any = {};
+        Object.keys(getTableColumns(storyFollows)).forEach(key => {
+          storyFollow[key] = result[key];
+        });
+        
+        // Reconstruct story
+        const story: any = {
+          id: result.story_id,
+          slug: result.story_slug,
+          title: result.story_title,
+          rootArticleId: result.story_rootArticleId,
+          entities: result.story_entities,
+          tags: result.story_tags,
+          status: result.story_status,
+          createdAt: result.story_createdAt,
+        };
+        
+        // Reconstruct rootArticle
+        const rootArticle = result.rootArticle_id ? {
+          id: result.rootArticle_id,
+          title: result.rootArticle_title,
+          subtitle: result.rootArticle_subtitle,
+          slug: result.rootArticle_slug,
+          content: result.rootArticle_content,
+          excerpt: result.rootArticle_excerpt,
+          imageUrl: result.rootArticle_imageUrl,
+          categoryId: result.rootArticle_categoryId,
+          status: result.rootArticle_status,
+          publishedAt: result.rootArticle_publishedAt,
+          views: result.rootArticle_views,
+        } : undefined;
+        
         const [{ count: articlesCount }] = await db
           .select({ count: sql<number>`count(*)` })
           .from(storyLinks)
-          .where(eq(storyLinks.storyId, result.story.id));
+          .where(eq(storyLinks.storyId, story.id));
 
         const [{ count: followersCount }] = await db
           .select({ count: sql<number>`count(*)` })
           .from(storyFollows)
           .where(and(
-            eq(storyFollows.storyId, result.story.id),
+            eq(storyFollows.storyId, story.id),
             eq(storyFollows.isActive, true)
           ));
 
         return {
-          ...result.storyFollow,
+          ...storyFollow,
           story: {
-            ...result.story,
-            rootArticle: result.rootArticle || undefined,
+            ...story,
+            rootArticle,
             articlesCount: Number(articlesCount),
             followersCount: Number(followersCount),
           },
@@ -10215,9 +11614,22 @@ export class DatabaseStorage implements IStorage {
     // Get shorts with relations
     const results = await db
       .select({
-        short: shorts,
-        category: categories,
-        reporter: users,
+        // Short fields
+        ...getTableColumns(shorts),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Reporter fields
+        reporter_id: users.id,
+        reporter_email: users.email,
+        reporter_firstName: users.firstName,
+        reporter_lastName: users.lastName,
+        reporter_profileImageUrl: users.profileImageUrl,
       })
       .from(shorts)
       .leftJoin(categories, eq(shorts.categoryId, categories.id))
@@ -10227,11 +11639,39 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset);
 
-    const shortsWithDetails: ShortWithDetails[] = results.map(r => ({
-      ...r.short,
-      category: r.category || undefined,
-      reporter: r.reporter || undefined,
-    }));
+    const shortsWithDetails: ShortWithDetails[] = results.map(r => {
+      // Reconstruct short
+      const short: any = {};
+      Object.keys(getTableColumns(shorts)).forEach(key => {
+        short[key] = r[key];
+      });
+      
+      // Reconstruct category
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        description: r.category_description,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      // Reconstruct reporter
+      const reporter = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...short,
+        category,
+        reporter,
+      };
+    });
 
     return {
       shorts: shortsWithDetails,
@@ -10245,9 +11685,22 @@ export class DatabaseStorage implements IStorage {
   async getShortById(id: string): Promise<ShortWithDetails | undefined> {
     const [result] = await db
       .select({
-        short: shorts,
-        category: categories,
-        reporter: users,
+        // Short fields
+        ...getTableColumns(shorts),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Reporter fields
+        reporter_id: users.id,
+        reporter_email: users.email,
+        reporter_firstName: users.firstName,
+        reporter_lastName: users.lastName,
+        reporter_profileImageUrl: users.profileImageUrl,
       })
       .from(shorts)
       .leftJoin(categories, eq(shorts.categoryId, categories.id))
@@ -10256,19 +11709,58 @@ export class DatabaseStorage implements IStorage {
 
     if (!result) return undefined;
 
+    // Reconstruct short
+    const short: any = {};
+    Object.keys(getTableColumns(shorts)).forEach(key => {
+      short[key] = result[key];
+    });
+    
+    // Reconstruct category
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      description: result.category_description,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : undefined;
+    
+    // Reconstruct reporter
+    const reporter = result.reporter_id ? {
+      id: result.reporter_id,
+      email: result.reporter_email,
+      firstName: result.reporter_firstName,
+      lastName: result.reporter_lastName,
+      profileImageUrl: result.reporter_profileImageUrl,
+    } : undefined;
+
     return {
-      ...result.short,
-      category: result.category || undefined,
-      reporter: result.reporter || undefined,
+      ...short,
+      category,
+      reporter,
     };
   }
 
   async getShortBySlug(slug: string): Promise<ShortWithDetails | undefined> {
     const [result] = await db
       .select({
-        short: shorts,
-        category: categories,
-        reporter: users,
+        // Short fields
+        ...getTableColumns(shorts),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Reporter fields
+        reporter_id: users.id,
+        reporter_email: users.email,
+        reporter_firstName: users.firstName,
+        reporter_lastName: users.lastName,
+        reporter_profileImageUrl: users.profileImageUrl,
       })
       .from(shorts)
       .leftJoin(categories, eq(shorts.categoryId, categories.id))
@@ -10282,10 +11774,36 @@ export class DatabaseStorage implements IStorage {
 
     if (!result) return undefined;
 
+    // Reconstruct short
+    const short: any = {};
+    Object.keys(getTableColumns(shorts)).forEach(key => {
+      short[key] = result[key];
+    });
+    
+    // Reconstruct category
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      description: result.category_description,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : undefined;
+    
+    // Reconstruct reporter
+    const reporter = result.reporter_id ? {
+      id: result.reporter_id,
+      email: result.reporter_email,
+      firstName: result.reporter_firstName,
+      lastName: result.reporter_lastName,
+      profileImageUrl: result.reporter_profileImageUrl,
+    } : undefined;
+
     return {
-      ...result.short,
-      category: result.category || undefined,
-      reporter: result.reporter || undefined,
+      ...short,
+      category,
+      reporter,
     };
   }
 
@@ -10493,9 +12011,22 @@ export class DatabaseStorage implements IStorage {
   async getFeaturedShorts(limit: number = 10): Promise<ShortWithDetails[]> {
     const results = await db
       .select({
-        short: shorts,
-        category: categories,
-        reporter: users,
+        // Short fields
+        ...getTableColumns(shorts),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Reporter fields
+        reporter_id: users.id,
+        reporter_email: users.email,
+        reporter_firstName: users.firstName,
+        reporter_lastName: users.lastName,
+        reporter_profileImageUrl: users.profileImageUrl,
       })
       .from(shorts)
       .leftJoin(categories, eq(shorts.categoryId, categories.id))
@@ -10509,11 +12040,39 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(shorts.displayOrder), desc(shorts.publishedAt))
       .limit(limit);
 
-    return results.map(r => ({
-      ...r.short,
-      category: r.category || undefined,
-      reporter: r.reporter || undefined,
-    }));
+    return results.map(r => {
+      // Reconstruct short
+      const short: any = {};
+      Object.keys(getTableColumns(shorts)).forEach(key => {
+        short[key] = r[key];
+      });
+      
+      // Reconstruct category
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        description: r.category_description,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      // Reconstruct reporter
+      const reporter = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...short,
+        category,
+        reporter,
+      };
+    });
   }
 
   // ============================================
@@ -10580,9 +12139,22 @@ export class DatabaseStorage implements IStorage {
 
     const results = await db
       .select({
-        event: calendarEvents,
-        category: categories,
-        createdBy: users,
+        // Calendar event fields
+        ...getTableColumns(calendarEvents),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Creator fields
+        createdBy_id: users.id,
+        createdBy_email: users.email,
+        createdBy_firstName: users.firstName,
+        createdBy_lastName: users.lastName,
+        createdBy_profileImageUrl: users.profileImageUrl,
       })
       .from(calendarEvents)
       .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
@@ -10592,11 +12164,39 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset);
 
-    const events = results.map(r => ({
-      ...r.event,
-      category: r.category,
-      createdBy: r.createdBy,
-    }));
+    const events = results.map(r => {
+      // Reconstruct event
+      const event: any = {};
+      Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+        event[key] = r[key];
+      });
+      
+      // Reconstruct category
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        description: r.category_description,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : null;
+      
+      // Reconstruct createdBy
+      const createdBy = r.createdBy_id ? {
+        id: r.createdBy_id,
+        email: r.createdBy_email,
+        firstName: r.createdBy_firstName,
+        lastName: r.createdBy_lastName,
+        profileImageUrl: r.createdBy_profileImageUrl,
+      } : null;
+      
+      return {
+        ...event,
+        category,
+        createdBy,
+      };
+    });
 
     return {
       events,
@@ -10610,9 +12210,22 @@ export class DatabaseStorage implements IStorage {
   async getCalendarEventById(id: string): Promise<(CalendarEvent & { category?: Category | null; createdBy?: User | null }) | undefined> {
     const [result] = await db
       .select({
-        event: calendarEvents,
-        category: categories,
-        createdBy: users,
+        // Calendar event fields
+        ...getTableColumns(calendarEvents),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Creator fields
+        createdBy_id: users.id,
+        createdBy_email: users.email,
+        createdBy_firstName: users.firstName,
+        createdBy_lastName: users.lastName,
+        createdBy_profileImageUrl: users.profileImageUrl,
       })
       .from(calendarEvents)
       .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
@@ -10622,19 +12235,58 @@ export class DatabaseStorage implements IStorage {
 
     if (!result) return undefined;
 
+    // Reconstruct event
+    const event: any = {};
+    Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+      event[key] = result[key];
+    });
+    
+    // Reconstruct category
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      description: result.category_description,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : null;
+    
+    // Reconstruct createdBy
+    const createdBy = result.createdBy_id ? {
+      id: result.createdBy_id,
+      email: result.createdBy_email,
+      firstName: result.createdBy_firstName,
+      lastName: result.createdBy_lastName,
+      profileImageUrl: result.createdBy_profileImageUrl,
+    } : null;
+
     return {
-      ...result.event,
-      category: result.category,
-      createdBy: result.createdBy,
+      ...event,
+      category,
+      createdBy,
     };
   }
 
   async getCalendarEventBySlug(slug: string): Promise<(CalendarEvent & { category?: Category | null; createdBy?: User | null }) | undefined> {
     const [result] = await db
       .select({
-        event: calendarEvents,
-        category: categories,
-        createdBy: users,
+        // Calendar event fields
+        ...getTableColumns(calendarEvents),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
+        // Creator fields
+        createdBy_id: users.id,
+        createdBy_email: users.email,
+        createdBy_firstName: users.firstName,
+        createdBy_lastName: users.lastName,
+        createdBy_profileImageUrl: users.profileImageUrl,
       })
       .from(calendarEvents)
       .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
@@ -10644,10 +12296,36 @@ export class DatabaseStorage implements IStorage {
 
     if (!result) return undefined;
 
+    // Reconstruct event
+    const event: any = {};
+    Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+      event[key] = result[key];
+    });
+    
+    // Reconstruct category
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      description: result.category_description,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : null;
+    
+    // Reconstruct createdBy
+    const createdBy = result.createdBy_id ? {
+      id: result.createdBy_id,
+      email: result.createdBy_email,
+      firstName: result.createdBy_firstName,
+      lastName: result.createdBy_lastName,
+      profileImageUrl: result.createdBy_profileImageUrl,
+    } : null;
+
     return {
-      ...result.event,
-      category: result.category,
-      createdBy: result.createdBy,
+      ...event,
+      category,
+      createdBy,
     };
   }
 
@@ -10699,8 +12377,16 @@ export class DatabaseStorage implements IStorage {
 
     const results = await db
       .select({
-        event: calendarEvents,
-        category: categories,
+        // Calendar event fields
+        ...getTableColumns(calendarEvents),
+        // Category fields
+        category_id: categories.id,
+        category_nameAr: categories.nameAr,
+        category_nameEn: categories.nameEn,
+        category_slug: categories.slug,
+        category_description: categories.description,
+        category_color: categories.color,
+        category_icon: categories.icon,
       })
       .from(calendarEvents)
       .leftJoin(categories, eq(calendarEvents.categoryId, categories.id))
@@ -10712,10 +12398,29 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(asc(calendarEvents.dateStart));
 
-    return results.map(r => ({
-      ...r.event,
-      category: r.category,
-    }));
+    return results.map(r => {
+      // Reconstruct event
+      const event: any = {};
+      Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+        event[key] = r[key];
+      });
+      
+      // Reconstruct category
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        description: r.category_description,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : null;
+      
+      return {
+        ...event,
+        category,
+      };
+    });
   }
 
   async getCalendarReminders(eventId: string): Promise<CalendarReminder[]> {
@@ -10750,8 +12455,10 @@ export class DatabaseStorage implements IStorage {
   async getRemindersToFire(date: Date): Promise<Array<CalendarReminder & { event: CalendarEvent }>> {
     const results = await db
       .select({
-        reminder: calendarReminders,
-        event: calendarEvents,
+        // Reminder fields
+        ...getTableColumns(calendarReminders),
+        // Event fields
+        ...getTableColumns(calendarEvents),
       })
       .from(calendarReminders)
       .innerJoin(calendarEvents, eq(calendarReminders.eventId, calendarEvents.id))
@@ -10762,10 +12469,24 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    return results.map(r => ({
-      ...r.reminder,
-      event: r.event,
-    }));
+    return results.map(r => {
+      // Reconstruct reminder
+      const reminder: any = {};
+      Object.keys(getTableColumns(calendarReminders)).forEach(key => {
+        reminder[key] = r[key];
+      });
+      
+      // Reconstruct event
+      const event: any = {};
+      Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+        event[key] = r[key];
+      });
+      
+      return {
+        ...reminder,
+        event,
+      };
+    });
   }
 
   async getUpcomingReminders(days: number = 7): Promise<Array<any>> {
@@ -10775,8 +12496,10 @@ export class DatabaseStorage implements IStorage {
 
     const results = await db
       .select({
-        reminder: calendarReminders,
-        event: calendarEvents,
+        // Reminder fields
+        ...getTableColumns(calendarReminders),
+        // Event fields
+        ...getTableColumns(calendarEvents),
       })
       .from(calendarReminders)
       .innerJoin(calendarEvents, eq(calendarReminders.eventId, calendarEvents.id))
@@ -10803,19 +12526,31 @@ export class DatabaseStorage implements IStorage {
 
     // تحويل البيانات للشكل المتوقع في Frontend
     return results.map(r => {
+      // Reconstruct reminder
+      const reminder: any = {};
+      Object.keys(getTableColumns(calendarReminders)).forEach(key => {
+        reminder[key] = r[key];
+      });
+      
+      // Reconstruct event
+      const event: any = {};
+      Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+        event[key] = r[key];
+      });
+      
       // حساب وقت التذكير الفعلي
-      const eventDate = new Date(r.event.dateStart);
+      const eventDate = new Date(event.dateStart);
       const reminderDate = new Date(eventDate);
-      reminderDate.setDate(eventDate.getDate() - r.reminder.fireWhen);
+      reminderDate.setDate(eventDate.getDate() - reminder.fireWhen);
 
       return {
-        id: r.reminder.id,
-        eventId: r.reminder.eventId,
-        eventTitle: r.event.title,
+        id: reminder.id,
+        eventId: reminder.eventId,
+        eventTitle: event.title,
         reminderTime: reminderDate.toISOString(),
-        channelType: r.reminder.channel,
-        fireWhen: r.reminder.fireWhen,
-        enabled: r.reminder.enabled,
+        channelType: reminder.channel,
+        fireWhen: reminder.fireWhen,
+        enabled: reminder.enabled,
       };
     });
   }
@@ -10869,10 +12604,22 @@ export class DatabaseStorage implements IStorage {
 
     const results = await db
       .select({
-        assignment: calendarAssignments,
-        event: calendarEvents,
-        user: users,
-        assignedByUser,
+        // Assignment fields
+        ...getTableColumns(calendarAssignments),
+        // Event fields
+        ...getTableColumns(calendarEvents),
+        // User fields
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        // AssignedByUser fields
+        assignedByUser_id: assignedByUser.id,
+        assignedByUser_email: assignedByUser.email,
+        assignedByUser_firstName: assignedByUser.firstName,
+        assignedByUser_lastName: assignedByUser.lastName,
+        assignedByUser_profileImageUrl: assignedByUser.profileImageUrl,
       })
       .from(calendarAssignments)
       .leftJoin(calendarEvents, eq(calendarAssignments.eventId, calendarEvents.id))
@@ -10882,19 +12629,51 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(calendarAssignments.assignedAt));
 
     // تحويل البيانات للشكل المتوقع في Frontend
-    return results.map(r => ({
-      id: r.assignment.id,
-      eventId: r.assignment.eventId,
-      eventTitle: r.event?.title || 'مناسبة غير معروفة',
-      role: r.assignment.role,
-      status: r.assignment.status,
-      userId: r.assignment.userId,
-      assignedBy: r.assignment.assignedBy,
-      assignedAt: r.assignment.assignedAt?.toISOString(),
-      event: r.event || undefined,
-      user: r.user || undefined,
-      assignedByUser: r.assignedByUser || undefined,
-    }));
+    return results.map(r => {
+      // Reconstruct assignment
+      const assignment: any = {};
+      Object.keys(getTableColumns(calendarAssignments)).forEach(key => {
+        assignment[key] = r[key];
+      });
+      
+      // Reconstruct event
+      const event: any = {};
+      Object.keys(getTableColumns(calendarEvents)).forEach(key => {
+        event[key] = r[key];
+      });
+      
+      // Reconstruct user
+      const user = r.user_id ? {
+        id: r.user_id,
+        email: r.user_email,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+      } : undefined;
+      
+      // Reconstruct assignedByUser  
+      const assignedByUserObj = r.assignedByUser_id ? {
+        id: r.assignedByUser_id,
+        email: r.assignedByUser_email,
+        firstName: r.assignedByUser_firstName,
+        lastName: r.assignedByUser_lastName,
+        profileImageUrl: r.assignedByUser_profileImageUrl,
+      } : undefined;
+      
+      return {
+        id: assignment.id,
+        eventId: assignment.eventId,
+        eventTitle: event?.title || 'مناسبة غير معروفة',
+        role: assignment.role,
+        status: assignment.status,
+        userId: assignment.userId,
+        assignedBy: assignment.assignedBy,
+        assignedAt: assignment.assignedAt?.toISOString(),
+        event: event || undefined,
+        user: user || undefined,
+        assignedByUser: assignedByUserObj || undefined,
+      };
+    });
   }
 
   async createCalendarAssignment(assignment: InsertCalendarAssignment): Promise<CalendarAssignment> {
@@ -11019,10 +12798,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(enBookmarks)
       .innerJoin(enArticles, eq(enBookmarks.articleId, enArticles.id))
@@ -11032,12 +12828,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(enBookmarks.userId, userId))
       .orderBy(desc(enBookmarks.createdAt));
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-      isBookmarked: true,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+        isBookmarked: true,
+      };
+    });
   }
 
   async getEnUserLikedArticles(userId: string): Promise<EnArticleWithDetails[]> {
@@ -11045,10 +12871,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(enReactions)
       .innerJoin(enArticles, eq(enReactions.articleId, enArticles.id))
@@ -11058,12 +12901,42 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(enReactions.userId, userId), eq(enArticles.status, "published")))
       .orderBy(desc(enReactions.createdAt));
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-      hasReacted: true,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+        hasReacted: true,
+      };
+    });
   }
 
   async getEnUserReadingHistory(userId: string, limit: number = 20): Promise<EnArticleWithDetails[]> {
@@ -11071,10 +12944,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(enReadingHistory)
       .innerJoin(enArticles, eq(enReadingHistory.articleId, enArticles.id))
@@ -11085,11 +12975,41 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(enReadingHistory.readAt))
       .limit(limit);
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
   }
 
   async getEnArticleById(id: string, userId?: string): Promise<EnArticleWithDetails | undefined> {
@@ -11097,10 +13017,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(enArticles)
       .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
@@ -11111,7 +13048,37 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
-    const article = result.article;
+    
+    // Reconstruct article
+    const article: any = {};
+    Object.keys(getTableColumns(enArticles)).forEach(key => {
+      article[key] = result[key];
+    });
+    
+    // Reconstruct category
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : undefined;
+    
+    // Reconstruct author (prefer reporter over author)
+    const author = result.reporter_id ? {
+      id: result.reporter_id,
+      email: result.reporter_email,
+      firstName: result.reporter_firstName,
+      lastName: result.reporter_lastName,
+      profileImageUrl: result.reporter_profileImageUrl,
+    } : result.author_id ? {
+      id: result.author_id,
+      email: result.author_email,
+      firstName: result.author_firstName,
+      lastName: result.author_lastName,
+      profileImageUrl: result.author_profileImageUrl,
+    } : undefined;
 
     // Run all queries in parallel for better performance
     const [
@@ -11141,8 +13108,8 @@ export class DatabaseStorage implements IStorage {
 
     return {
       ...article,
-      category: result.category || undefined,
-      author: result.reporter || result.author || undefined,
+      category,
+      author,
       isBookmarked,
       hasReacted,
       reactionsCount,
@@ -11164,10 +13131,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: enArticles,
-        category: enCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(enArticles),
+        // Category fields
+        category_id: enCategories.id,
+        category_nameAr: enCategories.nameAr,
+        category_nameEn: enCategories.nameEn,
+        category_slug: enCategories.slug,
+        category_color: enCategories.color,
+        category_icon: enCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(enArticles)
       .leftJoin(enCategories, eq(enArticles.categoryId, enCategories.id))
@@ -11177,11 +13161,41 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(enArticles.publishedAt))
       .limit(5);
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(enArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
   }
 
   // =====================================================
@@ -11263,10 +13277,27 @@ export class DatabaseStorage implements IStorage {
     
     let query = db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urArticles)
       .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
@@ -11288,11 +13319,41 @@ export class DatabaseStorage implements IStorage {
 
     const results = await query;
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(urArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
   }
 
   async getUrArticleBySlug(slug: string): Promise<UrArticleWithDetails | undefined> {
@@ -11300,10 +13361,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urArticles)
       .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
@@ -11314,10 +13392,38 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
+    const article: any = {};
+    Object.keys(getTableColumns(urArticles)).forEach(key => {
+      article[key] = result[key];
+    });
+    
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : undefined;
+    
+    const author = result.reporter_id ? {
+      id: result.reporter_id,
+      email: result.reporter_email,
+      firstName: result.reporter_firstName,
+      lastName: result.reporter_lastName,
+      profileImageUrl: result.reporter_profileImageUrl,
+    } : result.author_id ? {
+      id: result.author_id,
+      email: result.author_email,
+      firstName: result.author_firstName,
+      lastName: result.author_lastName,
+      profileImageUrl: result.author_profileImageUrl,
+    } : undefined;
+    
     return {
-      ...result.article,
-      category: result.category || undefined,
-      author: result.reporter || result.author || undefined,
+      ...article,
+      category,
+      author,
     };
   }
 
@@ -11326,10 +13432,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urArticles)
       .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
@@ -11340,10 +13463,38 @@ export class DatabaseStorage implements IStorage {
     if (results.length === 0) return undefined;
 
     const result = results[0];
+    const article: any = {};
+    Object.keys(getTableColumns(urArticles)).forEach(key => {
+      article[key] = result[key];
+    });
+    
+    const category = result.category_id ? {
+      id: result.category_id,
+      nameAr: result.category_nameAr,
+      nameEn: result.category_nameEn,
+      slug: result.category_slug,
+      color: result.category_color,
+      icon: result.category_icon,
+    } : undefined;
+    
+    const author = result.reporter_id ? {
+      id: result.reporter_id,
+      email: result.reporter_email,
+      firstName: result.reporter_firstName,
+      lastName: result.reporter_lastName,
+      profileImageUrl: result.reporter_profileImageUrl,
+    } : result.author_id ? {
+      id: result.author_id,
+      email: result.author_email,
+      firstName: result.author_firstName,
+      lastName: result.author_lastName,
+      profileImageUrl: result.author_profileImageUrl,
+    } : undefined;
+    
     return {
-      ...result.article,
-      category: result.category || undefined,
-      author: result.reporter || result.author || undefined,
+      ...article,
+      category,
+      author,
     };
   }
 
@@ -11376,8 +13527,23 @@ export class DatabaseStorage implements IStorage {
   async getUrArticleComments(articleId: string): Promise<UrCommentWithUser[]> {
     const results = await db
       .select({
-        comment: urComments,
-        user: users,
+        comment_id: urComments.id,
+        comment_userId: urComments.userId,
+        comment_articleId: urComments.articleId,
+        comment_parentId: urComments.parentId,
+        comment_content: urComments.content,
+        comment_status: urComments.status,
+        comment_moderatedBy: urComments.moderatedBy,
+        comment_moderatedAt: urComments.moderatedAt,
+        comment_moderationReason: urComments.moderationReason,
+        comment_createdAt: urComments.createdAt,
+        comment_updatedAt: urComments.updatedAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(urComments)
       .leftJoin(users, eq(urComments.userId, users.id))
@@ -11385,8 +13551,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(urComments.createdAt));
 
     return results.map((r) => ({
-      ...r.comment,
-      user: r.user!,
+      id: r.comment_id,
+      userId: r.comment_userId,
+      articleId: r.comment_articleId,
+      parentId: r.comment_parentId,
+      content: r.comment_content,
+      status: r.comment_status,
+      moderatedBy: r.comment_moderatedBy,
+      moderatedAt: r.comment_moderatedAt,
+      moderationReason: r.comment_moderationReason,
+      createdAt: r.comment_createdAt,
+      updatedAt: r.comment_updatedAt,
+      user: r.user_id ? {
+        id: r.user_id,
+        email: r.user_email!,
+        firstName: r.user_firstName,
+        lastName: r.user_lastName,
+        profileImageUrl: r.user_profileImageUrl,
+        role: r.user_role!,
+      } : null!,
     }));
   }
 
@@ -11436,10 +13619,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urBookmarks)
       .innerJoin(urArticles, eq(urBookmarks.articleId, urArticles.id))
@@ -11449,12 +13649,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(urBookmarks.userId, userId))
       .orderBy(desc(urBookmarks.createdAt));
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-      isBookmarked: true,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(urArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+        isBookmarked: true,
+      };
+    });
   }
 
   async getUserUrBookmark(articleId: string, userId: string): Promise<UrBookmark | undefined> {
@@ -11480,10 +13710,27 @@ export class DatabaseStorage implements IStorage {
     
     const results = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urReadingHistory)
       .innerJoin(urArticles, eq(urReadingHistory.articleId, urArticles.id))
@@ -11494,11 +13741,41 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(urReadingHistory.readAt))
       .limit(limit);
 
-    return results.map((r) => ({
-      ...r.article,
-      category: r.category || undefined,
-      author: r.reporter || r.author || undefined,
-    }));
+    return results.map((r) => {
+      const article: any = {};
+      Object.keys(getTableColumns(urArticles)).forEach(key => {
+        article[key] = r[key];
+      });
+      
+      const category = r.category_id ? {
+        id: r.category_id,
+        nameAr: r.category_nameAr,
+        nameEn: r.category_nameEn,
+        slug: r.category_slug,
+        color: r.category_color,
+        icon: r.category_icon,
+      } : undefined;
+      
+      const author = r.reporter_id ? {
+        id: r.reporter_id,
+        email: r.reporter_email,
+        firstName: r.reporter_firstName,
+        lastName: r.reporter_lastName,
+        profileImageUrl: r.reporter_profileImageUrl,
+      } : r.author_id ? {
+        id: r.author_id,
+        email: r.author_email,
+        firstName: r.author_firstName,
+        lastName: r.author_lastName,
+        profileImageUrl: r.author_profileImageUrl,
+      } : undefined;
+      
+      return {
+        ...article,
+        category,
+        author,
+      };
+    });
   }
 
   async createUrReadingHistory(history: InsertUrReadingHistory): Promise<UrReadingHistory> {
@@ -11586,10 +13863,27 @@ export class DatabaseStorage implements IStorage {
     
     const recentArticles = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urArticles)
       .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
@@ -11600,10 +13894,27 @@ export class DatabaseStorage implements IStorage {
 
     const topArticles = await db
       .select({
-        article: urArticles,
-        category: urCategories,
-        author: users,
-        reporter: reporterAlias,
+        // Article fields
+        ...getTableColumns(urArticles),
+        // Category fields
+        category_id: urCategories.id,
+        category_nameAr: urCategories.nameAr,
+        category_nameEn: urCategories.nameEn,
+        category_slug: urCategories.slug,
+        category_color: urCategories.color,
+        category_icon: urCategories.icon,
+        // Author fields
+        author_id: users.id,
+        author_email: users.email,
+        author_firstName: users.firstName,
+        author_lastName: users.lastName,
+        author_profileImageUrl: users.profileImageUrl,
+        // Reporter fields
+        reporter_id: reporterAlias.id,
+        reporter_email: reporterAlias.email,
+        reporter_firstName: reporterAlias.firstName,
+        reporter_lastName: reporterAlias.lastName,
+        reporter_profileImageUrl: reporterAlias.profileImageUrl,
       })
       .from(urArticles)
       .leftJoin(urCategories, eq(urArticles.categoryId, urCategories.id))
@@ -11625,16 +13936,76 @@ export class DatabaseStorage implements IStorage {
         total: Number(categoriesStats.total),
         active: Number(categoriesStats.active),
       },
-      recentArticles: recentArticles.map((r) => ({
-        ...r.article,
-        category: r.category || undefined,
-        author: r.reporter || r.author || undefined,
-      })),
-      topArticles: topArticles.map((r) => ({
-        ...r.article,
-        category: r.category || undefined,
-        author: r.reporter || r.author || undefined,
-      })),
+      recentArticles: recentArticles.map((r) => {
+        const article: any = {};
+        Object.keys(getTableColumns(urArticles)).forEach(key => {
+          article[key] = r[key];
+        });
+        
+        const category = r.category_id ? {
+          id: r.category_id,
+          nameAr: r.category_nameAr,
+          nameEn: r.category_nameEn,
+          slug: r.category_slug,
+          color: r.category_color,
+          icon: r.category_icon,
+        } : undefined;
+        
+        const author = r.reporter_id ? {
+          id: r.reporter_id,
+          email: r.reporter_email,
+          firstName: r.reporter_firstName,
+          lastName: r.reporter_lastName,
+          profileImageUrl: r.reporter_profileImageUrl,
+        } : r.author_id ? {
+          id: r.author_id,
+          email: r.author_email,
+          firstName: r.author_firstName,
+          lastName: r.author_lastName,
+          profileImageUrl: r.author_profileImageUrl,
+        } : undefined;
+        
+        return {
+          ...article,
+          category,
+          author,
+        };
+      }),
+      topArticles: topArticles.map((r) => {
+        const article: any = {};
+        Object.keys(getTableColumns(urArticles)).forEach(key => {
+          article[key] = r[key];
+        });
+        
+        const category = r.category_id ? {
+          id: r.category_id,
+          nameAr: r.category_nameAr,
+          nameEn: r.category_nameEn,
+          slug: r.category_slug,
+          color: r.category_color,
+          icon: r.category_icon,
+        } : undefined;
+        
+        const author = r.reporter_id ? {
+          id: r.reporter_id,
+          email: r.reporter_email,
+          firstName: r.reporter_firstName,
+          lastName: r.reporter_lastName,
+          profileImageUrl: r.reporter_profileImageUrl,
+        } : r.author_id ? {
+          id: r.author_id,
+          email: r.author_email,
+          firstName: r.author_firstName,
+          lastName: r.author_lastName,
+          profileImageUrl: r.author_profileImageUrl,
+        } : undefined;
+        
+        return {
+          ...article,
+          category,
+          author,
+        };
+      }),
     };
   }
   
@@ -12644,8 +15015,17 @@ export class DatabaseStorage implements IStorage {
 
     const commentsData = await db
       .select({
-        comment: taskComments,
-        user: users,
+        comment_id: taskComments.id,
+        comment_taskId: taskComments.taskId,
+        comment_userId: taskComments.userId,
+        comment_content: taskComments.content,
+        comment_createdAt: taskComments.createdAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_role: users.role,
       })
       .from(taskComments)
       .leftJoin(users, eq(taskComments.userId, users.id))
@@ -12664,8 +15044,19 @@ export class DatabaseStorage implements IStorage {
       assignedTo: taskWithUsers.assignedTo || null,
       subtasks: taskSubtasks,
       comments: commentsData.map(row => ({
-        ...row.comment,
-        user: row.user!,
+        id: row.comment_id,
+        taskId: row.comment_taskId,
+        userId: row.comment_userId,
+        content: row.comment_content,
+        createdAt: row.comment_createdAt,
+        user: row.user_id ? {
+          id: row.user_id,
+          email: row.user_email!,
+          firstName: row.user_firstName,
+          lastName: row.user_lastName,
+          profileImageUrl: row.user_profileImageUrl,
+          role: row.user_role!,
+        } : null!,
       })),
       attachments: attachmentsData,
     };
@@ -12936,8 +15327,34 @@ export class DatabaseStorage implements IStorage {
   async getTaskComments(taskId: string): Promise<(TaskComment & { user: User })[]> {
     const commentsData = await db
       .select({
-        comment: taskComments,
-        user: users,
+        comment_id: taskComments.id,
+        comment_taskId: taskComments.taskId,
+        comment_userId: taskComments.userId,
+        comment_content: taskComments.content,
+        comment_createdAt: taskComments.createdAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_phoneNumber: users.phoneNumber,
+        user_role: users.role,
+        user_status: users.status,
+        user_emailVerified: users.emailVerified,
+        user_phoneVerified: users.phoneVerified,
+        user_verificationBadge: users.verificationBadge,
+        user_hasRejectedComments: users.hasRejectedComments,
+        user_suspendedAt: users.suspendedAt,
+        user_suspensionReason: users.suspensionReason,
+        user_suspensionDuration: users.suspensionDuration,
+        user_bannedAt: users.bannedAt,
+        user_banReason: users.banReason,
+        user_banIsPermanent: users.banIsPermanent,
+        user_banDuration: users.banDuration,
+        user_deletedAt: users.deletedAt,
+        user_lastSeenAt: users.lastSeenAt,
+        user_createdAt: users.createdAt,
+        user_updatedAt: users.updatedAt,
       })
       .from(taskComments)
       .leftJoin(users, eq(taskComments.userId, users.id))
@@ -12945,8 +15362,36 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(taskComments.createdAt));
 
     return commentsData.map(row => ({
-      ...row.comment,
-      user: row.user!,
+      id: row.comment_id,
+      taskId: row.comment_taskId,
+      userId: row.comment_userId,
+      content: row.comment_content,
+      createdAt: row.comment_createdAt,
+      user: row.user_id ? {
+        id: row.user_id,
+        email: row.user_email!,
+        firstName: row.user_firstName,
+        lastName: row.user_lastName,
+        profileImageUrl: row.user_profileImageUrl,
+        phoneNumber: row.user_phoneNumber,
+        role: row.user_role!,
+        status: row.user_status,
+        emailVerified: row.user_emailVerified,
+        phoneVerified: row.user_phoneVerified,
+        verificationBadge: row.user_verificationBadge,
+        hasRejectedComments: row.user_hasRejectedComments,
+        suspendedAt: row.user_suspendedAt,
+        suspensionReason: row.user_suspensionReason,
+        suspensionDuration: row.user_suspensionDuration,
+        bannedAt: row.user_bannedAt,
+        banReason: row.user_banReason,
+        banIsPermanent: row.user_banIsPermanent,
+        banDuration: row.user_banDuration,
+        deletedAt: row.user_deletedAt,
+        lastSeenAt: row.user_lastSeenAt,
+        createdAt: row.user_createdAt,
+        updatedAt: row.user_updatedAt,
+      } : null!,
     }));
   }
 
@@ -13082,8 +15527,35 @@ export class DatabaseStorage implements IStorage {
   async getTaskActivity(taskId: string): Promise<(TaskActivityLogEntry & { user: User })[]> {
     const activityData = await db
       .select({
-        activity: taskActivityLog,
-        user: users,
+        activity_id: taskActivityLog.id,
+        activity_taskId: taskActivityLog.taskId,
+        activity_userId: taskActivityLog.userId,
+        activity_action: taskActivityLog.action,
+        activity_changes: taskActivityLog.changes,
+        activity_createdAt: taskActivityLog.createdAt,
+        user_id: users.id,
+        user_email: users.email,
+        user_firstName: users.firstName,
+        user_lastName: users.lastName,
+        user_profileImageUrl: users.profileImageUrl,
+        user_phoneNumber: users.phoneNumber,
+        user_role: users.role,
+        user_status: users.status,
+        user_emailVerified: users.emailVerified,
+        user_phoneVerified: users.phoneVerified,
+        user_verificationBadge: users.verificationBadge,
+        user_hasRejectedComments: users.hasRejectedComments,
+        user_suspendedAt: users.suspendedAt,
+        user_suspensionReason: users.suspensionReason,
+        user_suspensionDuration: users.suspensionDuration,
+        user_bannedAt: users.bannedAt,
+        user_banReason: users.banReason,
+        user_banIsPermanent: users.banIsPermanent,
+        user_banDuration: users.banDuration,
+        user_deletedAt: users.deletedAt,
+        user_lastSeenAt: users.lastSeenAt,
+        user_createdAt: users.createdAt,
+        user_updatedAt: users.updatedAt,
       })
       .from(taskActivityLog)
       .leftJoin(users, eq(taskActivityLog.userId, users.id))
@@ -13091,8 +15563,37 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(taskActivityLog.createdAt));
 
     return activityData.map(row => ({
-      ...row.activity,
-      user: row.user!,
+      id: row.activity_id,
+      taskId: row.activity_taskId,
+      userId: row.activity_userId,
+      action: row.activity_action,
+      changes: row.activity_changes,
+      createdAt: row.activity_createdAt,
+      user: row.user_id ? {
+        id: row.user_id,
+        email: row.user_email!,
+        firstName: row.user_firstName,
+        lastName: row.user_lastName,
+        profileImageUrl: row.user_profileImageUrl,
+        phoneNumber: row.user_phoneNumber,
+        role: row.user_role!,
+        status: row.user_status,
+        emailVerified: row.user_emailVerified,
+        phoneVerified: row.user_phoneVerified,
+        verificationBadge: row.user_verificationBadge,
+        hasRejectedComments: row.user_hasRejectedComments,
+        suspendedAt: row.user_suspendedAt,
+        suspensionReason: row.user_suspensionReason,
+        suspensionDuration: row.user_suspensionDuration,
+        bannedAt: row.user_bannedAt,
+        banReason: row.user_banReason,
+        banIsPermanent: row.user_banIsPermanent,
+        banDuration: row.user_banDuration,
+        deletedAt: row.user_deletedAt,
+        lastSeenAt: row.user_lastSeenAt,
+        createdAt: row.user_createdAt,
+        updatedAt: row.user_updatedAt,
+      } : null!,
     }));
   }
 
@@ -14176,7 +16677,7 @@ export class DatabaseStorage implements IStorage {
         ...getTableColumns(articles),
         category: {
           id: categories.id,
-          name: categories.name,
+          name: categories.nameAr,
           slug: categories.slug,
           description: categories.description,
           imageUrl: categories.imageUrl,
