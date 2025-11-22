@@ -20,7 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 interface InfographicSuggestions {
   title: string;
   subtitle?: string;
-  bulletPoints: string[];
+  bulletPoints: Array<{
+    icon?: string;
+    text: string;
+    highlight?: string;
+  }>;
   keywords: string[];
   description: string;
   visualDesign?: {
@@ -97,7 +101,10 @@ export function InfographicAiDialog({
   const handleApplyBulletPoints = () => {
     if (suggestions?.bulletPoints) {
       const bulletContent = suggestions.bulletPoints
-        .map((point) => `• ${point}`)
+        .map((point) => {
+          const highlight = point.highlight ? `**${point.highlight}** - ` : "";
+          return `• ${highlight}${point.text}`;
+        })
         .join("\n\n");
       onApplySuggestions({ description: bulletContent });
       toast({
@@ -130,7 +137,10 @@ export function InfographicAiDialog({
   const handleApplyAll = () => {
     if (suggestions) {
       const bulletContent = suggestions.bulletPoints
-        .map((point) => `• ${point}`)
+        .map((point) => {
+          const highlight = point.highlight ? `**${point.highlight}** - ` : "";
+          return `• ${highlight}${point.text}`;
+        })
         .join("\n\n");
       
       onApplySuggestions({
@@ -234,8 +244,15 @@ export function InfographicAiDialog({
                     <ul className="space-y-2">
                       {suggestions.bulletPoints.map((point, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <span className="text-primary font-bold mt-1">•</span>
-                          <span>{point}</span>
+                          <span className="text-primary font-bold mt-1">
+                            {point.icon || "•"}
+                          </span>
+                          <div className="flex-1">
+                            {point.highlight && (
+                              <span className="font-semibold text-primary">{point.highlight}: </span>
+                            )}
+                            <span>{point.text}</span>
+                          </div>
                         </li>
                       ))}
                     </ul>

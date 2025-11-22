@@ -28,7 +28,7 @@ interface RelatedInfographicsProps {
 
 export function RelatedInfographics({ currentSlug }: RelatedInfographicsProps) {
   const { data: infographics, isLoading } = useQuery<RelatedInfographic[]>({
-    queryKey: [`/api/articles/${currentSlug}/related-infographics`],
+    queryKey: [`/api/articles/${currentSlug}/infographics`],
     enabled: !!currentSlug,
   });
 
