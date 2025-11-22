@@ -1,0 +1,114 @@
+2025-11-22 18:31:13.75
+246d632b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 18:31:13.75
+246d632b
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-22 18:31:13.77
+246d632b
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+
+2025-11-22 18:31:13.78
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:13.83
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:13.83
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:13.83
+246d632b
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-22 18:31:13.83
+246d632b
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-22 18:31:13.86
+246d632b
+User
+4:31:13 PM [express] GET /api/announcements/active 304 in 306ms :: []
+2025-11-22 18:31:13.87
+246d632b
+User
+4:31:13 PM [express] GET /api/admin/articles/metrics 304 in 323ms :: {"published":62,"scheduled":0,"…
+2025-11-22 18:31:13.94
+246d632b
+User
+4:31:13 PM [express] GET /api/notifications 304 in 387ms :: {"notifications":[{"id":"y8BI1NwccGL0d43…
+2025-11-22 18:31:13.95
+246d632b
+User
+4:31:13 PM [express] GET /api/admin/articles 200 in 382ms :: [{"id":"oaNbTlWIr-PiBPs0_ZXLe","title":…
+2025-11-22 18:31:14.92
+246d632b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 18:31:14.94
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:14.97
+246d632b
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-22 18:31:14.97
+246d632b
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-22 18:31:14.97
+246d632b
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-22 18:31:14.97
+246d632b
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-22 18:31:14.97
+246d632b
+User
+4:31:14 PM [express] GET /api/auto-image/settings 304 in 70ms :: {"enabled":true,"defaultStyle":"pho…
+2025-11-22 18:31:15.00
+246d632b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 18:31:15.01
+246d632b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 18:31:15.02
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:15.04
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 18:31:15.04
+246d632b
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-22 18:31:15.04
+246d632b
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-22 18:31:15.04
+246d632b
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-22 18:31:15.10
+246d632b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 18:31:15.14
+246d632b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+

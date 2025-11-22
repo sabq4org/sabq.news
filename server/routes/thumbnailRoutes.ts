@@ -21,11 +21,11 @@ const router = Router();
  */
 router.post("/generate", isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { articleId, imageUrl, method = 'crop', style } = req.body;
+    const { articleId, imageUrl, method = 'crop', style, title, excerpt } = req.body;
     
-    if (!articleId || !imageUrl) {
+    if (!imageUrl) {
       return res.status(400).json({
-        error: "articleId and imageUrl are required"
+        error: "imageUrl is required"
       });
     }
     
@@ -47,18 +47,30 @@ router.post("/generate", isAuthenticated, async (req: Request, res: Response) =>
       }
     }
     
-    console.log(`[Thumbnail API] Generating thumbnail for article: ${articleId} using method: ${method}`);
+    console.log(`[Thumbnail API] Generating thumbnail using method: ${method}, articleId: ${articleId || 'unsaved'}`);
     
     let thumbnailUrl: string;
     
     // Choose generation method
     if (method === 'ai-smart') {
       // AI Smart Thumbnail - regenerate image professionally
+      if (!articleId) {
+        return res.status(400).json({
+          error: "articleId is required"
+        });
+      }
       thumbnailUrl = await generateArticleSmartThumbnail(articleId, imageUrl, {
+        title,
+        excerpt,
         style: style || 'news'
       });
     } else {
       // Traditional methods (crop, contain)
+      if (!articleId) {
+        return res.status(400).json({
+          error: "articleId is required for crop method"
+        });
+      }
       thumbnailUrl = await generateArticleThumbnail(articleId, imageUrl);
     }
     

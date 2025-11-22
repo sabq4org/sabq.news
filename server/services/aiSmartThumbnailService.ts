@@ -365,51 +365,83 @@ Create a compelling thumbnail that captures attention while maintaining journali
 
 /**
  * Generate smart thumbnail for an article
+ * Supports both saved articles (via articleId) and unsaved articles (via direct title/excerpt)
+ * 
+ * @param articleId - Article ID (required for backward compatibility)
+ * @param imageUrl - Source image URL
+ * @param options - Optional parameters including title, excerpt, style
  */
 export async function generateArticleSmartThumbnail(
   articleId: string,
   imageUrl: string,
-  options: Partial<SmartThumbnailOptions> = {}
+  options: {
+    title?: string;
+    excerpt?: string;
+    style?: 'professional' | 'vibrant' | 'minimal' | 'news' | 'modern';
+    aspectRatio?: '16:9' | '4:3' | '1:1';
+    imageSize?: '2K' | '4K';
+  } = {}
 ): Promise<string> {
   try {
-    // Get article details
-    const article = await db
-      .select()
-      .from(articles)
-      .where(eq(articles.id, articleId))
-      .limit(1);
+    const { title: optionTitle, excerpt: optionExcerpt, ...thumbnailOptions } = options;
     
-    if (!article || article.length === 0) {
-      throw new Error('Article not found');
+    let title = optionTitle;
+    let excerpt = optionExcerpt;
+    
+    // If title not provided (undefined or null), fetch from database
+    // Empty strings are considered valid data
+    if ((title === undefined || title === null) && articleId) {
+      console.log(`[AI Smart Thumbnail] Fetching article details for ID: ${articleId}`);
+      const article = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId))
+        .limit(1);
+      
+      if (!article || article.length === 0) {
+        throw new Error('Article not found');
+      }
+      
+      const articleData = article[0];
+      title = articleData.title;
+      // Only use DB excerpt if excerpt was not provided (undefined/null)
+      // If excerpt is empty string, keep it (drafts can have empty excerpts)
+      if (excerpt === undefined || excerpt === null) {
+        excerpt = articleData.excerpt || undefined;
+      }
     }
     
-    const articleData = article[0];
+    console.log(`[AI Smart Thumbnail] Generating thumbnail with title: "${title?.substring(0, 50)}..."`);
     
     // Generate smart thumbnail
     const result = await generateSmartThumbnail({
       imageUrl,
-      articleTitle: articleData.title,
-      articleExcerpt: articleData.excerpt || undefined,
-      ...options
+      articleTitle: title,
+      articleExcerpt: excerpt,
+      ...thumbnailOptions
     });
     
-    // Update article with AI-generated thumbnail
-    await db
-      .update(articles)
-      .set({
-        thumbnailUrl: result.thumbnailUrl,
-        isAiGeneratedThumbnail: true,
-        aiThumbnailModel: result.model,
-        aiThumbnailPrompt: result.prompt
-      })
-      .where(eq(articles.id, articleId));
-    
-    console.log(`[AI Smart Thumbnail] Article ${articleId} updated with smart thumbnail`);
+    // Update article in database only if articleId is provided
+    if (articleId) {
+      await db
+        .update(articles)
+        .set({
+          thumbnailUrl: result.thumbnailUrl,
+          isAiGeneratedThumbnail: true,
+          aiThumbnailModel: result.model,
+          aiThumbnailPrompt: result.prompt
+        })
+        .where(eq(articles.id, articleId));
+      
+      console.log(`[AI Smart Thumbnail] Article ${articleId} updated with smart thumbnail`);
+    } else {
+      console.log(`[AI Smart Thumbnail] Generated thumbnail for unsaved article (no database update)`);
+    }
     
     return result.thumbnailUrl;
     
   } catch (error: any) {
-    console.error(`[AI Smart Thumbnail] Failed for article ${articleId}:`, error);
+    console.error(`[AI Smart Thumbnail] Failed:`, error);
     throw error;
   }
 }

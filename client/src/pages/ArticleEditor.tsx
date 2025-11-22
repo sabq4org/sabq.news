@@ -1580,6 +1580,8 @@ const generateSlug = (text: string) => {
                 articleId={id}
                 imageUrl={imageUrl}
                 thumbnailUrl={thumbnailUrl}
+                articleTitle={title}
+                articleExcerpt={excerpt}
                 onThumbnailGenerated={(url) => {
                   setThumbnailUrl(url);
                 }}

@@ -13,6 +13,8 @@ interface ThumbnailGeneratorProps {
   articleId?: string;
   imageUrl?: string;
   thumbnailUrl?: string;
+  articleTitle?: string;
+  articleExcerpt?: string;
   onThumbnailGenerated?: (thumbnailUrl: string) => void;
   autoGenerate?: boolean;
 }
@@ -24,6 +26,8 @@ export function ThumbnailGenerator({
   articleId,
   imageUrl,
   thumbnailUrl,
+  articleTitle,
+  articleExcerpt,
   onThumbnailGenerated,
   autoGenerate = true
 }: ThumbnailGeneratorProps) {
@@ -59,7 +63,9 @@ export function ThumbnailGenerator({
           articleId,
           imageUrl,
           method: useMethod,
-          style: useMethod === 'ai-smart' ? style : undefined
+          style: useMethod === 'ai-smart' ? style : undefined,
+          title: articleTitle,
+          excerpt: articleExcerpt
         })
       });
 
