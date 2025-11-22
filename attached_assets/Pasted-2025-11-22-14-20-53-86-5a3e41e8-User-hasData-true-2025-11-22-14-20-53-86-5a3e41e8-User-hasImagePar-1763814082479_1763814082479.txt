@@ -1,0 +1,130 @@
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+hasData: true,
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+hasImagePart: true,
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+[Nano Banana Pro] Image generated successfully in 28s
+
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+hasInlineData: true,
+
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+}
+2025-11-22 14:20:53.86
+5a3e41e8
+User
+[Nano Banana Pro] Image part found: {
+2025-11-22 14:20:54.24
+5a3e41e8
+User
+[Nano Banana Pro] Public URL: /public-objects/ai-generated/news-1763814053862-b9w9p5.png
+2025-11-22 14:20:54.24
+5a3e41e8
+User
+[Nano Banana Pro] Image uploaded to GCS: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/ai-generated/news-1763814053862-b9w9p5.png
+2025-11-22 14:20:54.24
+5a3e41e8
+User
+[Visual AI] News image generated in 28265ms
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+dataType: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+hint: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+schema: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+file: 'parse_target.c',
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+code: '42703',
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+routine: 'checkInsertTargets'
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+table: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+detail: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+constraint: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+internalQuery: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+severity: 'ERROR',
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+}
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+at async autoGenerateImage (file:///home/runner/workspace/dist/index.js:51083:26)
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+[Auto Image] Generation failed: error: column "is_ai_generated" of relation "media_files" does not exist
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+length: 140,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+internalPosition: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+where: undefined,
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+position: '208',
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+at async file:///home/runner/workspace/dist/index.js:51240:20 {
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+line: '1066',
+2025-11-22 14:20:54.26
+5a3e41e8
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
