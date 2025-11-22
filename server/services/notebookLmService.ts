@@ -1,7 +1,29 @@
 /**
  * NotebookLM Service
- * Integration with Google NotebookLM for infographic generation
+ * Integration with Google Gemini for professional infographic generation
+ * Uses Gemini 3 Pro Image for high-quality Arabic infographics
  */
+
+import { GoogleGenAI, Modality } from "@google/genai";
+import { ObjectStorageService } from "../objectStorage";
+import pRetry from "p-retry";
+
+// Validate required environment variables
+const apiKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+if (!apiKey) {
+  console.error("[NotebookLM] CRITICAL: GEMINI_API_KEY or AI_INTEGRATIONS_GEMINI_API_KEY is not set!");
+  console.error("[NotebookLM] Image generation will fail without valid API key");
+} else {
+  console.log("[NotebookLM] API key configured successfully");
+}
+
+// Initialize Gemini client
+const geminiClient = new GoogleGenAI({
+  apiKey: apiKey || "missing-api-key",
+});
+
+// Initialize Object Storage Service
+const objectStorageService = new ObjectStorageService();
 
 interface NotebookLMConfig {
   apiKey?: string;
@@ -15,45 +37,178 @@ interface NotebookLMGenerationOptions {
   language: string;
 }
 
+// Helper to check rate limit errors
+function isRateLimitError(error: any): boolean {
+  const errorMsg = error?.message || String(error);
+  return (
+    errorMsg.includes("429") ||
+    errorMsg.includes("RATELIMIT_EXCEEDED") ||
+    errorMsg.toLowerCase().includes("quota") ||
+    errorMsg.toLowerCase().includes("rate limit")
+  );
+}
+
+// Map orientations to aspect ratios
+function getAspectRatio(orientation: string): "1:1" | "16:9" | "9:16" {
+  switch (orientation) {
+    case 'square': return '1:1';
+    case 'landscape': return '16:9';
+    case 'portrait': return '9:16';
+    default: return '16:9';
+  }
+}
+
 class NotebookLMService {
   private config: NotebookLMConfig;
 
   constructor(config?: NotebookLMConfig) {
     this.config = {
-      apiKey: config?.apiKey || process.env.NOTEBOOKLM_API_KEY,
-      baseUrl: config?.baseUrl || 'https://notebooklm.google.com/api'
+      apiKey: config?.apiKey || apiKey,
+      baseUrl: config?.baseUrl || 'https://generativelanguage.googleapis.com'
     };
   }
 
   /**
-   * Generate infographic using NotebookLM
-   * Note: This is a mock implementation as NotebookLM API is not publicly available
-   * In production, this would integrate with the actual NotebookLM API
+   * Generate infographic using Gemini 3 Pro Image
    */
   async generateInfographic(options: NotebookLMGenerationOptions): Promise<{
     success: boolean;
     imageUrl?: string;
+    imageData?: string; // Base64
     error?: string;
   }> {
+    const startTime = Date.now();
+    
     try {
-      console.log('[NotebookLM] Generating infographic with options:', options);
-
-      // Mock implementation for demonstration
-      // In production, replace with actual NotebookLM API call
+      console.log('[NotebookLM] Generating infographic with Gemini 3 Pro Image');
+      console.log(`[NotebookLM] Prompt: "${options.prompt.substring(0, 100)}..."`);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Build enhanced prompt for infographic generation
+      const languageInstructions = {
+        'ar': 'Create a professional Arabic infographic. Use right-to-left text layout. Include clear Arabic typography.',
+        'en': 'Create a professional English infographic. Use clear typography and modern design.',
+        'ur': 'Create a professional Urdu infographic. Use right-to-left text layout. Include clear Urdu typography.',
+      };
 
-      // For now, return a mock response
-      // In production, this would call the actual NotebookLM API
-      const mockImageUrl = `https://storage.googleapis.com/notebooklm-mock/infographic-${Date.now()}.png`;
+      const detailInstructions = {
+        'concise': 'Keep it simple with key points only.',
+        'standard': 'Include main points with supporting details.',
+        'detailed': 'Include comprehensive information with statistics and examples.',
+      };
+
+      const enhancedPrompt = `
+${languageInstructions[options.language as keyof typeof languageInstructions] || languageInstructions['ar']}
+
+CONTENT:
+${options.prompt}
+
+DESIGN REQUIREMENTS:
+- Modern, professional infographic design
+- ${detailInstructions[options.detail]}
+- Clear visual hierarchy with icons and graphics
+- Professional color scheme (blues, teals, grays)
+- High contrast for readability
+- Clean typography
+- Visual elements: icons, charts, or diagrams where appropriate
+- Sabq News branding style (professional, trustworthy, modern)
+- No stock photos - use vector graphics and icons
+- Optimized for social media sharing
+
+Create a publication-ready infographic that is visually appealing and informative.
+      `.trim();
+
+      // Build the generation request
+      const contents: any[] = [{
+        role: "user",
+        parts: [{ text: enhancedPrompt }]
+      }];
+      
+      // Configure generation settings
+      const aspectRatio = getAspectRatio(options.orientation);
+      const config: any = {
+        responseModalities: [Modality.IMAGE],
+        imageConfig: {
+          aspectRatio: aspectRatio,
+          imageSize: "2K", // High quality for infographics
+          numImages: 1
+        }
+      };
+      
+      console.log(`[NotebookLM] Generating with aspect ratio: ${aspectRatio}`);
+      
+      // Generate with retry logic
+      const response = await pRetry(
+        async () => {
+          try {
+            return await geminiClient.models.generateContent({
+              model: "gemini-3-pro-image-preview",
+              contents,
+              config
+            });
+          } catch (error: any) {
+            console.error(`[NotebookLM] Generation error:`, error);
+            if (isRateLimitError(error)) {
+              throw error; // Retry
+            }
+            // Don't retry non-rate-limit errors
+            const abortError: any = new Error(error.message);
+            abortError.name = 'AbortError';
+            throw abortError;
+          }
+        },
+        {
+          retries: 5,
+          minTimeout: 3000,
+          maxTimeout: 30000,
+          factor: 2,
+          onFailedAttempt: (error) => {
+            console.log(`[NotebookLM] Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
+          }
+        }
+      );
+      
+      const generationTime = Math.round((Date.now() - startTime) / 1000);
+      console.log(`[NotebookLM] Generation completed in ${generationTime}s`);
+      
+      // Extract image data
+      const candidate = response.candidates?.[0];
+      const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
+      
+      if (!imagePart?.inlineData?.data) {
+        throw new Error('No image data in response');
+      }
+
+      const imageBase64 = imagePart.inlineData.data;
+      console.log(`[NotebookLM] Image data received (${Math.round(imageBase64.length / 1024)}KB)`);
+
+      // Upload to Google Cloud Storage
+      const timestamp = Date.now();
+      const fileName = `notebooklm_infographic_${timestamp}.png`;
+      const filePath = `ai-generated/${fileName}`;
+      
+      const imageBuffer = Buffer.from(imageBase64, 'base64');
+      
+      const uploadResult = await objectStorageService.uploadFile(
+        filePath,
+        imageBuffer,
+        "image/png",
+        "public"
+      );
+      
+      console.log(`[NotebookLM] Image uploaded to GCS:`, uploadResult.url);
+      
+      // Return URL through our public-objects endpoint
+      const publicUrl = `/public-objects/${filePath}`;
+      console.log(`[NotebookLM] Public URL: ${publicUrl}`);
 
       return {
         success: true,
-        imageUrl: mockImageUrl,
+        imageUrl: publicUrl,
+        imageData: imageBase64,
       };
     } catch (error: any) {
-      console.error('[NotebookLM] Error generating infographic:', error);
+      const generationTime = Math.round((Date.now() - startTime) / 1000);
+      console.error(`[NotebookLM] Generation failed after ${generationTime}s:`, error);
       return {
         success: false,
         error: error.message || 'Failed to generate infographic',

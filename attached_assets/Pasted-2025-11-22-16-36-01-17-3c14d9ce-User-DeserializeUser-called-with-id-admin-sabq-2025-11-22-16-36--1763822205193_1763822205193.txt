@@ -1,0 +1,96 @@
+2025-11-22 16:36:01.17
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:01.17
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:01.20
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:01.20
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:01.23
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:01.23
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:01.25
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:01.26
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:01.27
+3c14d9ce
+User
+2:36:01 PM [express] GET /api/notebooklm/generations 304 in 120ms :: {"generations":[{"id":"470a9d81…
+2025-11-22 16:36:01.28
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:01.33
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:01.37
+3c14d9ce
+User
+2:36:01 PM [express] GET /api/nano-banana/generations 304 in 134ms :: {"generations":[{"id":"8fb1f31…
+2025-11-22 16:36:01.42
+3c14d9ce
+User
+2:36:01 PM [express] GET /api/nano-banana/stats 304 in 278ms :: {"total":31,"completed":25,"failed":…
+2025-11-22 16:36:06.99
+3c14d9ce
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+[NotebookLM API] Generating infographic for user admin-sabq
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+[NotebookLM] Generating infographic with options: {
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+'– العادة 1: التدخين — يزيد مخاطر التهاب البنكرياس، والنيكوتين يسبب اضطرابات في خلايا البنكرياس، والإقلاع يقلل الخطر تدريجيًا.\n' +
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+'– مقدمة مختصرة: البنكرياس عضو أساسي في الهضم وتنظيم سكر الدم، وإجهاده يؤدي لمشاكل خطيرة مثل الالتهاب والسكري وربما السرطان.\n' +
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+}
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+'– العادة 3: السمنة — تسبب تدهن البنكرياس وتضعف خلاياه وترفع خطر الالتهابات والأمراض.\n' +
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+prompt: '– العنوان: 4 عادات تُرهق البنكرياس وتزيد خطر الأمراض\n' +
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+'– التوصيات: 150 دقيقة نشاط أسبوعيًا، تمارين قوة مرتين، غذاء متوازن، الامتناع عن التدخين.\n' +
+2025-11-22 16:36:07.01
+3c14d9ce
+User
+orientation: 'landscape',
