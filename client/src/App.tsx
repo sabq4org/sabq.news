@@ -70,6 +70,7 @@ import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
 import StoryAdmin from "@/pages/StoryAdmin";
 import SystemSettings from "@/pages/SystemSettings";
+import AutoImageSettings from "@/pages/AutoImageSettings";
 import ABTestsManagement from "@/pages/ABTestsManagement";
 import ABTestDetail from "@/pages/ABTestDetail";
 import ReporterProfile from "@/pages/ReporterProfile";
@@ -492,6 +493,7 @@ function Router() {
       <Route path="/my-keywords" component={MyKeywords} />
       <Route path="/dashboard/story-admin" component={StoryAdmin} />
       <Route path="/dashboard/system-settings" component={SystemSettings} />
+      <Route path="/dashboard/auto-image-settings" component={AutoImageSettings} />
       <Route path="/dashboard/communications" component={CommunicationsManagement} />
       
       {/* Legacy redirects */}
