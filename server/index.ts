@@ -279,6 +279,11 @@ app.use((req, res, next) => {
     app.patch("/api/story-cards/:cardId", storyCardsRouter.patch["/:cardId"]);
     app.delete("/api/story-cards/:cardId", storyCardsRouter.delete["/:cardId"]);
     console.log("[Server] ✅ Story Cards routes registered");
+    
+    // Register Audio Newsletter routes
+    const audioNewsletterRoutes = await import("./routes/audioNewsletterRoutes");
+    app.use("/api/audio-newsletters", audioNewsletterRoutes.default);
+    console.log("[Server] ✅ Audio Newsletter routes registered");
 
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags
@@ -515,6 +520,20 @@ app.use((req, res, next) => {
           } catch (error) {
             console.error("[Server] ⚠️  Error starting campaign daily reset job:", error);
             console.error("[Server] Server will continue running without campaign daily reset automation");
+          }
+        });
+      }
+      
+      // Start Audio Newsletter Jobs (scheduled generation and retries)
+      if (enableBackgroundWorkers) {
+        setImmediate(async () => {
+          try {
+            const { initializeAudioNewsletterJobs } = await import("./jobs/audioNewsletterJob");
+            initializeAudioNewsletterJobs();
+            console.log("[Server] ✅ Audio newsletter jobs started successfully");
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting audio newsletter jobs:", error);
+            console.error("[Server] Server will continue running without audio newsletter automation");
           }
         });
       }
