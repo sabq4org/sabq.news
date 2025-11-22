@@ -32,6 +32,7 @@ import {
   Hash,
   EyeOff,
   Image as ImageIcon,
+  LayoutGrid,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -48,6 +49,7 @@ import { SmartLinksPanel } from "@/components/SmartLinksPanel";
 import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
+import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -114,6 +116,7 @@ export default function ArticleEditor() {
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
+  const [showInfographicDialog, setShowInfographicDialog] = useState(false);
   
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
@@ -1422,6 +1425,15 @@ const generateSlug = (text: string) => {
                     <Sparkles className="h-4 w-4 text-primary" />
                     توليد بالذكاء الاصطناعي
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowInfographicDialog(true)}
+                    className="gap-2"
+                    data-testid="button-generate-infographic"
+                  >
+                    <LayoutGrid className="h-4 w-4 text-primary" />
+                    إنفوجرافيك
+                  </Button>
                   <input
                     id="image-upload"
                     type="file"
@@ -2006,6 +2018,29 @@ const generateSlug = (text: string) => {
           });
         }}
         initialPrompt={title ? `صورة بارزة احترافية لمقال بعنوان: ${title}` : ""}
+      />
+
+      {/* Infographic Generator Dialog */}
+      <InfographicGeneratorDialog
+        open={showInfographicDialog}
+        onClose={() => setShowInfographicDialog(false)}
+        onImageGenerated={(generatedUrl, altText) => {
+          // Set the generated infographic as the featured image
+          setImageUrl(generatedUrl);
+          setShowInfographicDialog(false);
+          toast({
+            title: "تم توليد الإنفوجرافيك!",
+            description: "تم إضافة الإنفوجرافيك كصورة بارزة للمقال",
+          });
+        }}
+        initialContent={content ? 
+          // Extract key points from article content for infographic
+          content
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .substring(0, 500) // Take first 500 chars
+          : title || ""
+        }
+        language="ar"
       />
     </DashboardLayout>
   );
