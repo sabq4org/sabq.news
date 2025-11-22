@@ -58,20 +58,43 @@ router.post("/generate", isAuthenticated, async (req: Request, res: Response) =>
     }
 
     // Save to media files
+    const timestamp = Date.now();
+    const fileName = `infographic_${timestamp}.png`;
+    
+    // Estimate size based on typical infographic dimensions (1920x1080 PNG)
+    // Average PNG infographic is around 500KB-2MB
+    const estimatedSize = 1024 * 1024; // 1MB as reasonable estimate
+    
     const mediaFile = await db.insert(mediaFiles).values({
-      fileName: `infographic_${Date.now()}.png`,
-      originalName: `infographic_${Date.now()}.png`,
+      fileName,
+      originalName: fileName,
       type: 'image' as const,
       mimeType: 'image/png',
-      size: 0, // Will be updated when actual file is available
+      size: estimatedSize, // Using reasonable estimate instead of 0
       url: result.imageUrl!,
       thumbnailUrl: result.imageUrl,
-      keywords: ['infographic', 'notebooklm', language],
+      
+      // Metadata fields
+      title: `NotebookLM Infographic - ${new Date(timestamp).toLocaleDateString('ar-SA')}`,
+      description: prompt.substring(0, 500), // First 500 chars of prompt
+      altText: `إنفوجرافيك: ${prompt.substring(0, 100)}`,
+      category: 'infographic',
+      
+      // AI Generation tracking  
+      keywords: ['infographic', 'notebooklm', language, detail || 'standard', orientation || 'landscape'],
       isAiGenerated: true,
       aiGenerationModel: 'notebooklm',
       aiGenerationPrompt: prompt,
+      
+      // Usage tracking
       uploadedBy: userId,
       usedIn: ['infographic'],
+      usageCount: 0,
+      isFavorite: false,
+      
+      // Image dimensions based on orientation
+      width: orientation === 'portrait' ? 1080 : orientation === 'square' ? 1080 : 1920,
+      height: orientation === 'portrait' ? 1920 : orientation === 'square' ? 1080 : 1080,
     }).returning();
 
     res.json({

@@ -35,6 +35,21 @@ interface Generation {
   createdAt: string;
 }
 
+interface NotebookLMGeneration {
+  id: string;
+  fileName: string;
+  originalName: string;
+  url: string;
+  thumbnailUrl?: string;
+  title?: string;
+  description?: string;
+  aiGenerationPrompt?: string;
+  keywords?: string[];
+  createdAt: string;
+  width?: number;
+  height?: number;
+}
+
 interface Stats {
   total: number;
   completed: number;
@@ -59,23 +74,52 @@ export default function ImageStudio() {
   const [notebookLmOrientation, setNotebookLmOrientation] = useState<"square" | "portrait" | "landscape">("landscape");
   const [notebookLmLanguage, setNotebookLmLanguage] = useState("ar"); // Arabic default
   
-  // Comparison mode state
+  // Comparison mode state with error tracking
   const [comparisonResults, setComparisonResults] = useState<{
-    nanoBanana?: { imageUrl: string, generationTime?: number },
-    notebookLm?: { imageUrl: string, generationTime?: number }
+    nanoBanana?: { imageUrl?: string, generationTime?: number, error?: string },
+    notebookLm?: { imageUrl?: string, generationTime?: number, error?: string }
   }>({});
 
-  // Fetch generations
-  const { data: generationsData, isLoading } = useQuery<{ generations: Generation[] }>({
+  // Fetch Nano Banana generations
+  const { data: nanoBananaData, isLoading: isLoadingNanoBanana } = useQuery<{ generations: Generation[] }>({
     queryKey: ["/api/nano-banana/generations"],
-    refetchInterval: 5000, // Auto-refresh every 5s
+    refetchInterval: selectedModel === "nano-banana" ? 5000 : false, // Auto-refresh only when selected
   });
   
-  const generations = generationsData?.generations || [];
+  const nanoBananaGenerations = nanoBananaData?.generations || [];
 
-  // Fetch stats
+  // Fetch NotebookLM generations
+  const { data: notebookLmData, isLoading: isLoadingNotebookLm } = useQuery<{ 
+    generations: NotebookLMGeneration[], 
+    total: number 
+  }>({
+    queryKey: ["/api/notebooklm/generations"],
+    refetchInterval: selectedModel === "notebooklm" ? 5000 : false, // Auto-refresh only when selected
+  });
+  
+  const notebookLmGenerations = notebookLmData?.generations || [];
+
+  // Combine generations based on selected model
+  const generations = selectedModel === "notebooklm" 
+    ? notebookLmGenerations.map(gen => ({
+        id: gen.id,
+        prompt: gen.aiGenerationPrompt || gen.title || "",
+        model: "notebooklm",
+        aspectRatio: "",
+        imageSize: "",
+        status: "completed",
+        imageUrl: gen.url,
+        thumbnailUrl: gen.thumbnailUrl,
+        createdAt: gen.createdAt,
+      } as Generation))
+    : nanoBananaGenerations;
+
+  const isLoading = selectedModel === "notebooklm" ? isLoadingNotebookLm : isLoadingNanoBanana;
+
+  // Fetch stats (only for Nano Banana)
   const { data: stats } = useQuery<Stats>({
     queryKey: ["/api/nano-banana/stats"],
+    enabled: selectedModel !== "notebooklm", // Only fetch when not using NotebookLM
   });
 
   // Generate mutation
@@ -165,34 +209,65 @@ export default function ImageStudio() {
           }),
         });
 
-        // Wait for both results
+        // Wait for both results with error handling for partial success
         const [nanoBananaResult, notebookLmResult] = await Promise.allSettled([
           nanoBananaPromise,
           notebookLmPromise,
         ]);
 
         const results: any = {};
+        let successCount = 0;
+        let errorMessages: string[] = [];
 
+        // Handle Nano Banana result
         if (nanoBananaResult.status === "fulfilled") {
           results.nanoBanana = {
             imageUrl: nanoBananaResult.value.imageUrl,
             generationTime: nanoBananaResult.value.generationTime,
           };
+          successCount++;
+        } else {
+          results.nanoBanana = {
+            error: nanoBananaResult.reason?.message || "فشل توليد صورة Nano Banana",
+          };
+          errorMessages.push(`Nano Banana: ${results.nanoBanana.error}`);
         }
 
+        // Handle NotebookLM result
         if (notebookLmResult.status === "fulfilled") {
           results.notebookLm = {
             imageUrl: notebookLmResult.value.imageUrl,
             generationTime: notebookLmResult.value.generationTime,
           };
+          successCount++;
+        } else {
+          results.notebookLm = {
+            error: notebookLmResult.reason?.message || "فشل توليد إنفوجرافيك NotebookLM",
+          };
+          errorMessages.push(`NotebookLM: ${results.notebookLm.error}`);
         }
 
         setComparisonResults(results);
         
-        toast({
-          title: "اكتملت المقارنة",
-          description: "تمت مقارنة النموذجين بنجاح",
-        });
+        // Show appropriate toast based on results
+        if (successCount === 2) {
+          toast({
+            title: "اكتملت المقارنة بنجاح",
+            description: "تم توليد الصور من كلا النموذجين",
+          });
+        } else if (successCount === 1) {
+          toast({
+            title: "اكتملت المقارنة جزئياً",
+            description: `نجح نموذج واحد فقط. ${errorMessages.join(", ")}`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "فشلت المقارنة",
+            description: errorMessages.join(". "),
+          });
+        }
         
         queryClient.invalidateQueries({ queryKey: ["/api/nano-banana/generations"] });
         queryClient.invalidateQueries({ queryKey: ["/api/notebooklm/generations"] });
@@ -590,20 +665,31 @@ export default function ImageStudio() {
                         </Badge>
                       )}
                     </div>
-                    <img 
-                      src={comparisonResults.nanoBanana.imageUrl}
-                      alt="Nano Banana Result"
-                      className="w-full rounded-lg"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => window.open(comparisonResults.nanoBanana?.imageUrl, "_blank")}
-                    >
-                      <Download className="w-4 h-4 ml-1" />
-                      تحميل الصورة
-                    </Button>
+                    {comparisonResults.nanoBanana.imageUrl ? (
+                      <>
+                        <img 
+                          src={comparisonResults.nanoBanana.imageUrl}
+                          alt="Nano Banana Result"
+                          className="w-full rounded-lg"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => window.open(comparisonResults.nanoBanana?.imageUrl, "_blank")}
+                        >
+                          <Download className="w-4 h-4 ml-1" />
+                          تحميل الصورة
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="p-8 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                        <p className="text-red-600 dark:text-red-400 font-medium mb-2">فشل التوليد</p>
+                        <p className="text-sm text-red-500 dark:text-red-300">
+                          {comparisonResults.nanoBanana.error || "حدث خطأ غير متوقع"}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
                 
@@ -619,20 +705,31 @@ export default function ImageStudio() {
                         </Badge>
                       )}
                     </div>
-                    <img 
-                      src={comparisonResults.notebookLm.imageUrl}
-                      alt="NotebookLM Result"
-                      className="w-full rounded-lg"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => window.open(comparisonResults.notebookLm?.imageUrl, "_blank")}
-                    >
-                      <Download className="w-4 h-4 ml-1" />
-                      تحميل الإنفوجرافيك
-                    </Button>
+                    {comparisonResults.notebookLm.imageUrl ? (
+                      <>
+                        <img 
+                          src={comparisonResults.notebookLm.imageUrl}
+                          alt="NotebookLM Result"
+                          className="w-full rounded-lg"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => window.open(comparisonResults.notebookLm?.imageUrl, "_blank")}
+                        >
+                          <Download className="w-4 h-4 ml-1" />
+                          تحميل الإنفوجرافيك
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="p-8 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                        <p className="text-red-600 dark:text-red-400 font-medium mb-2">فشل التوليد</p>
+                        <p className="text-sm text-red-500 dark:text-red-300">
+                          {comparisonResults.notebookLm.error || "حدث خطأ غير متوقع"}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -645,8 +742,17 @@ export default function ImageStudio() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="w-5 h-5" />
-              الصور المولدة
+              {selectedModel === "notebooklm" 
+                ? "الإنفوجرافيك المولد بـ NotebookLM"
+                : selectedModel === "nano-banana"
+                ? "الصور المولدة بـ Nano Banana Pro"
+                : "جميع الأجيال"}
             </CardTitle>
+            {selectedModel === "both" && (
+              <CardDescription>
+                عرض نتائج من كلا النموذجين: Nano Banana Pro و NotebookLM
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
