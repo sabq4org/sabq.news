@@ -36,6 +36,7 @@ import {
   Share2,
   Layers,
   X,
+  BarChart3,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -72,7 +73,7 @@ export default function ArticleEditor() {
   
   // Extract query parameters from URL
   const queryParams = new URLSearchParams(location.split('?')[1] || '');
-  const typeParam = queryParams.get('type') as "news" | "opinion" | "analysis" | "column" | null;
+  const typeParam = queryParams.get('type') as "news" | "opinion" | "analysis" | "column" | "infographic" | null;
   
   console.log('[ArticleEditor] params:', params);
   console.log('[ArticleEditor] location:', location);
@@ -90,14 +91,21 @@ export default function ArticleEditor() {
   const [categoryId, setCategoryId] = useState("");
   const [reporterId, setReporterId] = useState<string | null>(null);
   const [opinionAuthorId, setOpinionAuthorId] = useState<string | null>(null);
-  const [articleType, setArticleType] = useState<"news" | "opinion" | "analysis" | "column">(
+  const [articleType, setArticleType] = useState<"news" | "opinion" | "analysis" | "column" | "infographic">(
     typeParam || "news"
   );
+  const [previousArticleType, setPreviousArticleType] = useState<"news" | "opinion" | "analysis" | "column">("news");
+  const [isInfographic, setIsInfographic] = useState(false);
   
   // Debug: Track reporterId changes
   useEffect(() => {
     console.log('[ArticleEditor] reporterId state changed to:', reporterId);
   }, [reporterId]);
+  
+  // Sync infographic state with articleType
+  useEffect(() => {
+    setIsInfographic(articleType === "infographic");
+  }, [articleType]);
   const [imageUrl, setImageUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [heroImageMediaId, setHeroImageMediaId] = useState<string | null>(null);
@@ -196,7 +204,16 @@ export default function ArticleEditor() {
       ) ? (article as any).thumbnailUrl : "";
       setThumbnailUrl(validThumbnailUrl);
       setImageFocalPoint((article as any).imageFocalPoint || null);
-      setArticleType((article.articleType as any) || "news");
+      const loadedArticleType = (article.articleType as any) || "news";
+      setArticleType(loadedArticleType);
+      // Handle infographic type
+      if (loadedArticleType === "infographic") {
+        setIsInfographic(true);
+        setPreviousArticleType("news"); // Default fallback
+      } else {
+        setIsInfographic(false);
+        setPreviousArticleType(loadedArticleType);
+      }
       setNewsType((article.newsType as any) || "regular");
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
@@ -1693,8 +1710,15 @@ const generateSlug = (text: string) => {
                   نوع المحتوى
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Select value={articleType} onValueChange={(value: any) => setArticleType(value)}>
+              <CardContent className="space-y-4">
+                <Select 
+                  value={isInfographic ? previousArticleType : articleType} 
+                  onValueChange={(value: any) => {
+                    setArticleType(value);
+                    setPreviousArticleType(value);
+                  }}
+                  disabled={isInfographic}
+                >
                   <SelectTrigger data-testid="select-article-type">
                     <SelectValue placeholder="اختر نوع المحتوى" />
                   </SelectTrigger>
@@ -1705,6 +1729,37 @@ const generateSlug = (text: string) => {
                     <SelectItem value="column">عمود</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {/* Infographic Toggle */}
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    <Label htmlFor="infographic-toggle" className="cursor-pointer">
+                      <div className="font-medium">إنفوجرافيك</div>
+                      <div className="text-xs text-muted-foreground">
+                        تصنيف المحتوى كإنفوجرافيك مصور
+                      </div>
+                    </Label>
+                  </div>
+                  <Switch
+                    id="infographic-toggle"
+                    checked={isInfographic}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        // Save current type before switching to infographic
+                        if (articleType !== "infographic") {
+                          setPreviousArticleType(articleType as "news" | "opinion" | "analysis" | "column");
+                        }
+                        setArticleType("infographic");
+                      } else {
+                        // Restore previous type when unchecked
+                        setArticleType(previousArticleType);
+                      }
+                      setIsInfographic(checked);
+                    }}
+                    data-testid="switch-infographic"
+                  />
+                </div>
               </CardContent>
             </Card>
 
