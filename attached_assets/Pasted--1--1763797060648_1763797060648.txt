@@ -1,0 +1,240 @@
+شكل التصميم
+
+🎯 1) تصميم: “إنفوجرافيك معلومات أساسية”
+
+الوصف:
+
+ستايل بسيط جدًا، مربعات واضحة، تقسيم مباشر، يناسب ملخصات البيانات أو التقارير.
+
+البرومبت:
+
+Arabic minimalist infographic design, vertical layout (9:16), unified Arabic font, no ornaments, clean boxes, soft neutral background, clear headers, small icons, structured sections. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 2) تصميم: “إنفوجرافيك مقسم إلى 4 محاور”
+
+الوصف:
+
+تقسيم رباعي واضح لأربع محاور رئيسية — مثالي للمقارنات أو عرض جوانب متعددة.
+
+البرومبت:
+
+Arabic infographic design with four equal vertical or horizontal sections, clean layout, 9:16 ratio, unified Arabic font, flat icons, soft gradients, modern minimal style. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 3) تصميم: “إنفوجرافيك خط زمني (Timeline)”
+
+الوصف:
+
+مناسب لعرض تطور، مراحل، أو خطوات عملية.
+
+البرومبت:
+
+Arabic vertical timeline infographic, 9:16 layout, minimal clean lines, unified Arabic font, step-by-step structure, circle markers, soft color palette, no ornaments. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 4) تصميم: “إنفوجرافيك مقارنة بين جهتين”
+
+الوصف:
+
+مثالي لعقد مقارنة واضحة بين خيارين أو جهتين أو سوقين.
+
+البرومبت:
+
+Arabic comparison infographic split into two columns, balanced clean layout, minimal flat icons, unified Arabic font, neutral colors, clear labels, 9:16 vertical format. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 5) تصميم: “إنفوجرافيك دائرة مركزية + عناصر حولها”
+
+الوصف:
+
+يناسب موضوع يكون له عنصر رئيسي في المنتصف وينتشر منه 6 نقاط.
+
+البرومبت:
+
+Arabic radial infographic with central circle and six surrounding elements, clean minimal design, unified Arabic font, flat line icons, soft shadows, vertical 9:16 format, no ornaments. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 6) تصميم: “إنفوجرافيك هرمي/تدرّجي”
+
+الوصف:
+
+للعناصر التي تعتمد على طبقات أو مستويات.
+
+البرومبت:
+
+Arabic pyramid/stacked infographic, vertical 9:16 layout, minimal shapes, unified Arabic font, subtle gradients, clear layers, modern business style, no decorative elements. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 7) تصميم: “إنفوجرافيك خطوات عملية (Process)”
+
+الوصف:
+
+مثالي لعرض 3–6 خطوات بطريقة انسيابية.
+
+البرومبت:
+
+Arabic process infographic with flowing arrows and numbered steps, 9:16 vertical layout, unified Arabic font, minimal color palette, flat iconography, clean professional structure. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 8) تصميم: “إنفوجرافيك بيانات وأرقام (Statistics)”
+
+الوصف:
+
+مناسب للإحصائيات – النسب – المؤشرات – الرسوم الخطية البسيطة.
+
+البرومبت:
+
+Arabic data-driven infographic with percentage charts, number highlights, clean grids, unified Arabic font, minimal style, 9:16 vertical layout, no ornaments. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 9) تصميم: “إنفوجرافيك خريطة طريق (Roadmap)”
+
+الوصف:
+
+ممتاز لخطط مستقبلية أو مراحل تطور مشروع.
+
+البرومبت:
+
+Arabic roadmap infographic, curved path with milestones, 9:16 minimal vertical layout, unified Arabic font, flat icons, soft color gradients, clean modern business aesthetic. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+🎯 10) تصميم: “إنفوجرافيك عناصر رئيسية + تفاصيل فرعية”
+
+الوصف:
+
+عنصر رئيسي كبير، وتحته نقاط مفصلة.
+
+البرومبت:
+
+Arabic infographic with main header block and multiple detailed sub-points, 9:16 vertical format, unified Arabic font, simple separators, minimal icons, clean aesthetic, no ornamental graphics. Add the following Arabic content: [ضع المحتوى هنا]
+
+⸻
+
+
+نوع التصميم  🎨 1) تصميم Minimal Flat — “إنفوجرافيك بسيط فلات”
+
+نوعية التصميم:
+
+Flat Minimalist — بدون زخارف، ألوان هادئة، أيقونات خطية.
+
+البرومبت:
+
+Arabic minimalist flat infographic, 9:16 vertical layout, unified Arabic font, flat icons, soft colors, clean grid layout, no ornaments. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 2) تصميم Corporate Clean — “تصميم شركات احترافي”
+
+نوعية التصميم:
+
+Corporate / Business Style — ألوان رسمية، خطوط واضحة، مساحات بيضاء.
+
+البرومبت:
+
+Arabic corporate infographic, professional layout, 9:16 vertical, unified Arabic font, blue/gray palette, clean sections, sharp icons, business aesthetic. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 3) تصميم Premium Gradient — “إنفوجرافيك فاخر”
+
+نوعية التصميم:
+
+Premium Soft Gradient — تدرجات ناعمة، لمسات راقية.
+
+البرومبت:
+
+Arabic premium infographic with soft gradients, 9:16 vertical, elegant Arabic font, subtle shadows, refined icons, high-end color palette, modern luxurious style. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 4) تصميم 2.5D Soft Illustrations — “تصميم شبه ثلاثي أبعاد”
+
+نوعية التصميم:
+
+2.5D Illustrations — عناصر ظليّة، عمق خفيف، واقعية بسيطة.
+
+البرومبت:
+
+Arabic infographic with 2.5D soft illustrations, semi-realistic elements, 9:16 vertical layout, clean typography, soft shadows, minimal depth, unified Arabic font. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 5) تصميم Line-Icon Style — “أيقونات خطية فقط”
+
+نوعية التصميم:
+
+Outlined / Line Icons — أنيق، خفيف جداً، يعتمد على الخطوط.
+
+البرومبت:
+
+Arabic line-icon infographic, 9:16 vertical, thin outlined icons, monochromatic palette, unified Arabic font, minimal separators, ultra-clean layout. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 6) تصميم Bold Blocks — “تصميم جريء بمربعات”
+
+نوعية التصميم:
+
+Bold UI — مربعات بارزة، عناوين قوية، ألوان صريحة.
+
+البرومبت:
+
+Arabic bold-blocks infographic, 9:16 vertical, strong headers, clear color blocks, unified Arabic font, bold contrasts, clean modern UI look. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 7) تصميم Monochrome — “أحادي اللون”
+
+نوعية التصميم:
+
+Black & White / One-Color — رسمي، نظيف جدًا.
+
+البرومبت:
+
+Arabic monochrome infographic, one-color palette, 9:16 vertical, unified Arabic font, minimal shapes, clean contrast, strict grid layout. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 8) تصميم Infographic Cards — “بطاقات معلومات”
+
+نوعية التصميم:
+
+Card-Based — كل قسم داخل كارد منفصل.
+
+البرومبت:
+
+Arabic card-based infographic, 9:16 layout, soft card shadows, unified Arabic font, minimal spacing, icons per card, clean business style. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 9) تصميم Illustration Mix — “مزيج رسومي لطيف”
+
+نوعية التصميم:
+
+Flat + Illustrations — رسومات بسيطة مع فلات.
+
+البرومبت:
+
+Arabic infographic with flat illustrations, modern minimal style, soft colors, unified Arabic font, balanced visuals, 9:16 vertical. Add the following Arabic content: [ضع المحتوى]
+
+⸻
+
+🎨 10) تصميم Neutral White — “إنفوجرافيك أبيض نقي”
+
+نوعية التصميم:
+
+White Minimalist — خلفية بيضاء، عناصر دقيقة، مظهر نظيف جداً.
+
+البرومبت:
+
+Arabic white-minimal infographic, pure white background, thin lines, unified Arabic font, simple icons, 9:16 vertical, ultra-clean aesthetic. Add the following Arabic content: [ضع المحتوى]
