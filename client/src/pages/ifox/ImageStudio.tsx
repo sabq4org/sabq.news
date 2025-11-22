@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sparkles, Image as ImageIcon, Download, Trash2, Clock, DollarSign, Loader2, FolderOpen, CheckCircle2 } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Download, Trash2, Clock, DollarSign, Loader2, FolderOpen, CheckCircle2, Palette, Shuffle, Briefcase, Rocket, Lightbulb } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -61,9 +61,56 @@ interface Stats {
   avgGenerationTime: number;
 }
 
+// Infographic styles constant
+const INFOGRAPHIC_STYLES = [
+  { 
+    id: "none", 
+    name: "بدون نمط محدد", 
+    nameEn: "No Specific Style",
+    description: "استخدام البرومبت فقط", 
+    prompt: "" 
+  },
+  {
+    id: "illustration-mix",
+    name: "Illustration Mix",
+    nameEn: "Illustration Mix",
+    description: "رسومات فلات + تدرجات خفيفة",
+    prompt: "Arabic infographic with main header block and multiple detailed sub-points, 9:16 vertical format, unified Arabic font, soft illustration mix style, flat-illustration elements, balanced soft colors, clean layout with icons for each point, friendly aesthetic, no heavy ornaments."
+  },
+  {
+    id: "premium-gradient",
+    name: "Premium Gradient",
+    nameEn: "Premium Gradient",
+    description: "ألوان ذهبية ناعمة وتدرجات ممتازة",
+    prompt: "Arabic infographic with main header block and multiple detailed sub-points, 9:16 vertical layout, Premium Gradient luxury style, elegant soft Arabic typography, warm beige background, subtle golden gradients, refined icons, smooth soft shadows, high-end illustrated elements, clean section dividers, rich decorative touches without clutter."
+  },
+  {
+    id: "premium-gradient-2",
+    name: "Premium Gradient 2",
+    nameEn: "Premium Gradient 2",
+    description: "تدرجات ذهبية واضحة وراقية + أيقونات 2.5D",
+    prompt: "Arabic infographic with main header and central numeric highlight, premium gradient style, 9:16 vertical layout, elegant Arabic font, gold and teal luxury color palette, semi-3D 2.5D illustrated buildings, soft shadows, clean geometric background lines, refined icons for each section, high-end corporate feel, modern business aesthetic, no clutter."
+  },
+  {
+    id: "corporate-clean",
+    name: "Corporate Clean",
+    nameEn: "Corporate Clean",
+    description: "ألوان هادئة وأيقونات بسيطة للأعمال",
+    prompt: "Arabic corporate infographic, 9:16 vertical layout, clean business style, unified Arabic font, blue-gray professional palette, flat minimal icons, structured boxes for key numbers, subtle geometric background lines, clear hierarchy for sections (market summary, rising companies, declining companies), no decorative elements."
+  },
+  {
+    id: "2.5d-soft",
+    name: "2.5D Soft Illustrations",
+    nameEn: "2.5D Soft Illustrations",
+    description: "رسومات ناعمة شبه ثلاثية الأبعاد",
+    prompt: "Arabic process infographic with a flowing curved path and numbered steps (1–8), 9:16 vertical layout, 2.5D soft illustration style, clean soft gradients, unified Arabic font, pastel color palette, semi-3D illustrated icons, smooth shadows, friendly aesthetic, organized step-by-step layout with clear titles and short descriptions."
+  }
+];
+
 export default function ImageStudio() {
   const { toast } = useToast();
   const [selectedModel, setSelectedModel] = useState<"nano-banana" | "notebooklm">("nano-banana");
+  const [selectedStyle, setSelectedStyle] = useState<string>("none");
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
@@ -213,9 +260,18 @@ export default function ImageStudio() {
       return;
     }
 
+    // Get the selected style prompt
+    const selectedStyleData = INFOGRAPHIC_STYLES.find(s => s.id === selectedStyle);
+    const stylePrompt = selectedStyleData?.prompt || "";
+    
+    // Merge style prompt with user prompt
+    const finalPrompt = stylePrompt 
+      ? `${stylePrompt}\n\nUser request: ${prompt}`
+      : prompt;
+
     if (selectedModel === "nano-banana") {
       generateMutation.mutate({
-        prompt,
+        prompt: finalPrompt,
         negativePrompt: negativePrompt || undefined,
         aspectRatio,
         imageSize,
@@ -235,7 +291,7 @@ export default function ImageStudio() {
         const result = await apiRequest("/api/notebooklm/generate", {
           method: "POST",
           body: JSON.stringify({
-            prompt,
+            prompt: finalPrompt,
             detail: notebookLmDetail,
             orientation: notebookLmOrientation,
             language: notebookLmLanguage,
@@ -401,6 +457,72 @@ export default function ImageStudio() {
               </div>
             </div>
 
+            {/* Style Selection - Shows for both Nano Banana and NotebookLM */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                اختر النمط الاحترافي
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                اختر نمطاً احترافياً لإنفوجرافيكك، أو اترك "بدون نمط" لاستخدام البرومبت فقط
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {INFOGRAPHIC_STYLES.map((style) => (
+                  <Card
+                    key={style.id}
+                    className={`cursor-pointer transition-all ${
+                      selectedStyle === style.id
+                        ? "ring-2 ring-primary bg-primary/5"
+                        : "hover-elevate"
+                    }`}
+                    onClick={() => setSelectedStyle(style.id)}
+                    data-testid={`style-card-${style.id}`}
+                  >
+                    <CardContent className="p-3">
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">
+                              {style.name}
+                            </h4>
+                            {style.nameEn !== style.name && (
+                              <p className="text-xs text-muted-foreground">
+                                {style.nameEn}
+                              </p>
+                            )}
+                          </div>
+                          <Badge 
+                            variant={selectedStyle === style.id ? "default" : "outline"}
+                            className="shrink-0"
+                          >
+                            {selectedStyle === style.id ? "مُختار" : "اختر"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {style.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {selectedStyle !== "none" && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-green-700 dark:text-green-300 flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>تم اختيار النمط:</strong>{" "}
+                      {INFOGRAPHIC_STYLES.find(s => s.id === selectedStyle)?.name}
+                      <br />
+                      <span className="text-xs">
+                        سيتم دمج هذا النمط مع برومبتك تلقائياً
+                      </span>
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="prompt">
                 {selectedModel === "nano-banana" ? "البرومبت (الوصف)" : "المحتوى أو الموضوع"}
@@ -544,17 +666,45 @@ export default function ImageStudio() {
                 </div>
 
                 <div>
-                  <Label htmlFor="color-style">نمط الألوان 🎨</Label>
+                  <Label htmlFor="color-style" className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    نمط الألوان
+                  </Label>
                   <Select value={notebookLmColorStyle} onValueChange={setNotebookLmColorStyle as any}>
                     <SelectTrigger id="color-style" data-testid="select-color-style">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="auto">🎲 تلقائي (متنوع)</SelectItem>
-                      <SelectItem value="vibrant">🌈 زاهي ونابض</SelectItem>
-                      <SelectItem value="professional">💼 احترافي وأنيق</SelectItem>
-                      <SelectItem value="elegant">✨ راقي وفاخر</SelectItem>
-                      <SelectItem value="modern">🚀 عصري وجريء</SelectItem>
+                      <SelectItem value="auto">
+                        <span className="flex items-center gap-2">
+                          <Shuffle className="w-4 h-4" />
+                          تلقائي (متنوع)
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="vibrant">
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          زاهي ونابض
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="professional">
+                        <span className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4" />
+                          احترافي وأنيق
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="elegant">
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          راقي وفاخر
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="modern">
+                        <span className="flex items-center gap-2">
+                          <Rocket className="w-4 h-4" />
+                          عصري وجريء
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -564,7 +714,10 @@ export default function ImageStudio() {
 
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    <strong>💡 ميزات NotebookLM:</strong>
+                    <strong className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />
+                      ميزات NotebookLM:
+                    </strong>
                     <br />
                     • تحويل المحتوى النصي إلى إنفوجرافيك ذكي
                     <br />
