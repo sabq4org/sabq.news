@@ -250,6 +250,16 @@ app.use((req, res, next) => {
     // Register Visual AI routes
     app.use("/api/visual-ai", visualAiRoutes);
     console.log("[Server] ✅ Visual AI routes registered");
+    
+    // Register Story Cards routes
+    const { storyCardsRouter } = await import("./routes/storyCardsRoutes");
+    app.post("/api/story-cards/generate", storyCardsRouter.post["/generate"]);
+    app.post("/api/story-cards/instagram-carousel", storyCardsRouter.post["/instagram-carousel"]);
+    app.post("/api/story-cards/linkedin-document", storyCardsRouter.post["/linkedin-document"]);
+    app.get("/api/story-cards/article/:articleId", storyCardsRouter.get["/article/:articleId"]);
+    app.patch("/api/story-cards/:cardId", storyCardsRouter.patch["/:cardId"]);
+    app.delete("/api/story-cards/:cardId", storyCardsRouter.delete["/:cardId"]);
+    console.log("[Server] ✅ Story Cards routes registered");
 
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags

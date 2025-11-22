@@ -34,6 +34,8 @@ import {
   Image as ImageIcon,
   LayoutGrid,
   Share2,
+  Layers,
+  X,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
@@ -51,6 +53,7 @@ import { MediaLibraryPicker } from "@/components/dashboard/MediaLibraryPicker";
 import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestions";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
+import { StoryCardsGenerator } from "@/components/StoryCardsGenerator";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -119,6 +122,7 @@ export default function ArticleEditor() {
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
   const [showInfographicDialog, setShowInfographicDialog] = useState(false);
+  const [showStoryCardsDialog, setShowStoryCardsDialog] = useState(false);
   
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
@@ -1482,6 +1486,15 @@ const generateSlug = (text: string) => {
                     <LayoutGrid className="h-4 w-4 text-primary" />
                     إنفوجرافيك
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowStoryCardsDialog(true)}
+                    className="gap-2"
+                    data-testid="button-generate-story-cards"
+                  >
+                    <Layers className="h-4 w-4 text-primary" />
+                    قصص مصورة
+                  </Button>
                   <input
                     id="image-upload"
                     type="file"
@@ -2121,6 +2134,46 @@ const generateSlug = (text: string) => {
         }
         language="ar"
       />
+
+      {/* Story Cards Generator Dialog */}
+      {showStoryCardsDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">إنشاء القصص المصورة</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowStoryCardsDialog(false)}
+                data-testid="button-close-story-cards"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <StoryCardsGenerator
+              articleId={article?.id || "new"}
+              articleTitle={title}
+              articleContent={content}
+              articleCategory={
+                categories.find(c => c.id === categoryId)?.nameAr || "أخبار"
+              }
+              articleImage={imageUrl}
+              articleAuthor={
+                reporterId || 
+                opinionAuthorId || 
+                "سبق"
+              }
+              onComplete={() => {
+                setShowStoryCardsDialog(false);
+                toast({
+                  title: "تم إنشاء القصص المصورة",
+                  description: "تمت إضافة القصص المصورة للمقال بنجاح",
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
