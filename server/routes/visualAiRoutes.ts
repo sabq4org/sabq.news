@@ -16,6 +16,11 @@ import {
   type ImageAnalysisRequest,
   type NewsImageGenerationRequest 
 } from "../services/visualAiService";
+import { 
+  generateSocialMediaCards,
+  trackCardPerformance,
+  type SocialCardRequest
+} from "../services/socialMediaCardsService";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { isAuthenticated } from "../auth";
 
@@ -227,6 +232,63 @@ router.post("/generate-news-image", isAuthenticated, async (req: Request, res: R
 // ============================================
 // SOCIAL MEDIA CARDS
 // ============================================
+
+/**
+ * POST /api/visual-ai/generate-social-cards
+ * Generate optimized social media cards for all platforms
+ */
+router.post("/generate-social-cards", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)?.id;
+    const {
+      articleId,
+      articleTitle,
+      articleSummary,
+      category,
+      language,
+      platform = "all",
+      template
+    }: SocialCardRequest = req.body;
+
+    if (!articleId || !articleTitle || !category || !language) {
+      return res.status(400).json({ 
+        error: "articleId, articleTitle, category, and language are required" 
+      });
+    }
+
+    console.log(`[Visual AI API] Generating social cards for: ${articleTitle}`);
+
+    // Generate cards for specified platforms
+    const result = await generateSocialMediaCards({
+      articleId,
+      articleTitle,
+      articleSummary,
+      category,
+      language,
+      platform,
+      template
+    }, userId);
+
+    if (!result.success) {
+      return res.status(500).json({ 
+        error: result.error || "Social cards generation failed" 
+      });
+    }
+
+    console.log(`[Visual AI API] Generated ${result.cards?.length} social cards`);
+
+    res.json({
+      success: true,
+      cards: result.cards,
+      processingTime: result.processingTime,
+      cost: result.cost
+    });
+
+  } catch (error: any) {
+    console.error("[Visual AI API] Social cards generation error:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
+  }
+});
 
 /**
  * GET /api/visual-ai/social-cards/article/:articleId
