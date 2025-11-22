@@ -1,0 +1,137 @@
+2025-11-22 14:24:25.32
+5a3e41e8
+User
+[SocialCrawler] ✅ Serving article: نادي رؤية 2030 بجامعة الملك سعود يطلق برنامج "قروش" لبناء جيل من المستثمرين
+2025-11-22 14:24:25.35
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/categories 304 in 121ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55…
+2025-11-22 14:24:25.37
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/themes/active 304 in 127ms
+
+2025-11-22 14:24:25.40
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/articles/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8…
+2025-11-22 14:24:25.41
+5a3e41e8
+User
+[SocialCrawler] Path: /article/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8%D8%AC%D8%A7%D9%85%D8%B9%D8%A9-%D8%A7%D9%84%D9%85%D9%84%D9%83-%D8%B3%D8%B9%D9%88%D8%AF-%D9%8A%D8%B7%D9%84%D9%82-%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC-%D9%82%D8%B1%D9%88%D8%B4-%D9%84%D8%A8%D9%86%D8%A7%D8%A1-%D8%AC%D9%8A%D9%84-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D8%B3%D8%AA%D8%AB%D9%85%D8%B1%D9%8A%D9%86-1763744833954
+2025-11-22 14:24:25.41
+5a3e41e8
+User
+[SocialCrawler] Handling article: نادي-رؤية-2030-بجامعة-الملك-سعود-يطلق-برنامج-قروش-لبناء-جيل-من-المستثمرين-1763744833954
+2025-11-22 14:24:25.41
+5a3e41e8
+User
+[SocialCrawler] Normalized path: /article/نادي-رؤية-2030-بجامعة-الملك-سعود-يطلق-برنامج-قروش-لبناء-جيل-من-المستثمرين-1763744833954
+2025-11-22 14:24:25.41
+5a3e41e8
+User
+[SocialCrawler] Detected crawler: Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+2025-11-22 14:24:25.42
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/articles/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8…
+2025-11-22 14:24:25.43
+5a3e41e8
+User
+[SocialCrawler] ✅ Serving article: نادي رؤية 2030 بجامعة الملك سعود يطلق برنامج "قروش" لبناء جيل من المستثمرين
+2025-11-22 14:24:25.44
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/articles/%D9%86%D8%A7%D8%AF%D9%8A-%D8%B1%D8%A4%D9%8A%D8%A9-2030-%D8%A8…
+2025-11-22 14:24:25.70
+5a3e41e8
+User
+12:24:25 PM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 200 in 2…
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+at async file:///home/runner/workspace/dist/index.js:34855:22 {
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+column: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+position: '1196',
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+constraint: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+file: 'parse_relation.c',
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+Error fetching media assets: error: column media_files.is_ai_generated does not exist
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+}
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+length: 127,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+dataType: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+internalQuery: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+line: '3722',
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+schema: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+code: '42703',
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+at async DatabaseStorage.getArticleMediaAssetWithDetails (file:///home/runner/workspace/dist/index.js:13661:25)
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+hint: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+where: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+detail: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+internalPosition: undefined,
+2025-11-22 14:24:25.71
+5a3e41e8
+User
+table: undefined,
