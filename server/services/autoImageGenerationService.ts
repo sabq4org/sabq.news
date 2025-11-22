@@ -144,10 +144,13 @@ export async function autoGenerateImage(
       uploadedBy: userId
     }).returning();
     
-    // Update article with generated image
+    // Update article with generated image and AI metadata
     await db.update(articles)
       .set({ 
         imageUrl: generationResult.imageUrl,
+        isAiGeneratedImage: true,
+        aiImageModel: AUTO_GENERATION_CONFIG.defaultModel,
+        aiImagePrompt: smartPrompt,
         updatedAt: new Date()
       })
       .where(eq(articles.id, request.articleId));

@@ -692,6 +692,12 @@ export const articles = pgTable("articles", {
     x: number; // percentage 0-100 from left
     y: number; // percentage 0-100 from top
   }>(),
+  
+  // AI Image Generation tracking (for featured image)
+  isAiGeneratedImage: boolean("is_ai_generated_image").default(false).notNull(),
+  aiImageModel: text("ai_image_model"), // Model used (nano-banana-pro, gemini-3-pro, etc.)
+  aiImagePrompt: text("ai_image_prompt"), // Prompt used for generation
+  
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),

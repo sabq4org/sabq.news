@@ -1031,6 +1031,8 @@ export default function ArticleDetail() {
                   captionPlain={heroImageAsset?.captionPlain}
                   sourceName={heroImageAsset?.sourceName}
                   sourceUrl={heroImageAsset?.sourceUrl}
+                  isAiGenerated={(article as any).isAiGeneratedImage || false}
+                  aiModel={(article as any).aiImageModel}
                   relatedArticleSlugs={heroImageAsset?.relatedArticleSlugs}
                   keywordTags={heroImageAsset?.keywordTags}
                   className=""

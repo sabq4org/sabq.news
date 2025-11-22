@@ -1,4 +1,4 @@
-import { Camera, ExternalLink } from "lucide-react";
+import { Camera, ExternalLink, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import DOMPurify from "isomorphic-dompurify";
@@ -13,6 +13,8 @@ interface ImageWithCaptionProps {
   relatedArticleSlugs?: string[];
   keywordTags?: string[];
   className?: string;
+  isAiGenerated?: boolean; // Whether the image is AI-generated
+  aiModel?: string; // AI model used (if applicable)
 }
 
 export function ImageWithCaption({
@@ -25,20 +27,41 @@ export function ImageWithCaption({
   relatedArticleSlugs,
   keywordTags,
   className = "",
+  isAiGenerated = false,
+  aiModel,
 }: ImageWithCaptionProps) {
   // Sanitize HTML caption
   const sanitizedCaption = captionHtml ? DOMPurify.sanitize(captionHtml) : null;
   
   return (
     <figure className={`my-6 ${className}`} data-testid="figure-image-with-caption">
-      {/* Image */}
-      <img
-        src={imageUrl}
-        alt={altText}
-        loading="lazy"
-        className="w-full rounded-md"
-        data-testid="img-article-image"
-      />
+      {/* Image with AI Badge Overlay */}
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt={altText}
+          loading="lazy"
+          className="w-full rounded-md"
+          data-testid="img-article-image"
+        />
+        
+        {/* AI-Generated Badge Overlay */}
+        {isAiGenerated && (
+          <div className="absolute top-3 left-3">
+            <Badge 
+              variant="secondary" 
+              className="bg-primary/90 text-primary-foreground backdrop-blur-sm border border-primary-foreground/20 gap-1.5 shadow-lg"
+              data-testid="badge-ai-generated"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="font-medium">مولدة بالذكاء الاصطناعي</span>
+              {aiModel && (
+                <span className="text-xs opacity-90">({aiModel})</span>
+              )}
+            </Badge>
+          </div>
+        )}
+      </div>
       
       {/* Caption */}
       {(sanitizedCaption || captionPlain) && (
