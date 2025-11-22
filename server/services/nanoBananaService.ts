@@ -164,8 +164,16 @@ export async function generateImage(
       hasCandidates: !!response.candidates,
       candidatesLength: response.candidates?.length,
       responseKeys: Object.keys(response || {}),
-      candidateKeys: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null
+      candidateKeys: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null,
+      candidateContentKeys: response.candidates?.[0]?.content ? Object.keys(response.candidates[0].content) : null,
+      partsCount: response.candidates?.[0]?.content?.parts?.length,
+      firstPartKeys: response.candidates?.[0]?.content?.parts?.[0] ? Object.keys(response.candidates[0].content.parts[0]) : null
     }, null, 2));
+    
+    // Log candidate content structure
+    if (response.candidates?.[0]?.content) {
+      console.log(`[Nano Banana Pro] Candidate content:`, JSON.stringify(response.candidates[0].content, null, 2).substring(0, 1000));
+    }
     
     // Try multiple extraction methods
     let imageBase64: string | null = null;
@@ -212,8 +220,55 @@ export async function generateImage(
       }
     }
     
+    // Method 5: Check if image is in candidate.content.image
+    if (!imageBase64 && candidate && (candidate.content as any)?.image) {
+      console.log(`[Nano Banana Pro] ✅ Found image in candidate.content.image`);
+      const contentImage = (candidate.content as any).image;
+      if (typeof contentImage === 'string') {
+        imageBase64 = contentImage;
+      } else if (contentImage.data) {
+        imageBase64 = contentImage.data;
+        mimeType = contentImage.mimeType || "image/png";
+      }
+    }
+    
+    // Method 6: Check all parts for any image-related data
+    if (!imageBase64 && candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
+        const anyPart = part as any;
+        // Check for any property that might contain image data
+        if (anyPart.image || anyPart.imageData || anyPart.generatedImage) {
+          const imageField = anyPart.image || anyPart.imageData || anyPart.generatedImage;
+          if (typeof imageField === 'string') {
+            console.log(`[Nano Banana Pro] ✅ Found image in part.image/imageData/generatedImage`);
+            imageBase64 = imageField;
+            break;
+          } else if (imageField.data) {
+            console.log(`[Nano Banana Pro] ✅ Found image in part.image.data`);
+            imageBase64 = imageField.data;
+            mimeType = imageField.mimeType || "image/png";
+            break;
+          }
+        }
+      }
+    }
+    
     if (!imageBase64) {
-      console.error(`[Nano Banana Pro] ❌ No image data found. Full response:`, JSON.stringify(response, null, 2).substring(0, 2000));
+      console.error(`[Nano Banana Pro] ❌ No image data found after all extraction methods.`);
+      console.error(`[Nano Banana Pro] Full response (first 3000 chars):`, JSON.stringify(response, null, 2).substring(0, 3000));
+      
+      // Print all parts for debugging
+      if (candidate?.content?.parts) {
+        console.error(`[Nano Banana Pro] Parts details:`, candidate.content.parts.map((part: any, idx: number) => ({
+          index: idx,
+          keys: Object.keys(part),
+          hasInlineData: !!part.inlineData,
+          hasText: !!part.text,
+          hasImage: !!(part.image || part.imageData || part.generatedImage),
+          partPreview: JSON.stringify(part).substring(0, 200)
+        })));
+      }
+      
       throw new Error("No image data in response - the model may not support image generation or the response format has changed");
     }
     
