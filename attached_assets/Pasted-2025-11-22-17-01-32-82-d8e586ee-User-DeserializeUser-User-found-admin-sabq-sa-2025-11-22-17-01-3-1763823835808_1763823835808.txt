@@ -1,0 +1,186 @@
+2025-11-22 17:01:32.82
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:32.82
+d8e586ee
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-22 17:01:32.82
+d8e586ee
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-22 17:01:32.85
+d8e586ee
+User
+3:01:32 PM [express] GET /api/admin/users 200 in 336ms :: {"items":[{"id":"bkIhDx7BM8quPu2W1tB6Z","n…
+2025-11-22 17:01:35.68
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:35.68
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:35.72
+d8e586ee
+User
+3:01:35 PM [express] GET /api/media/proxy/4c66bfe4-b151-4022-8a35-50e83420f228 302 in 121ms
+2025-11-22 17:01:35.73
+d8e586ee
+User
+3:01:35 PM [express] GET /api/media/proxy/c470fb14-492b-4c94-a913-4df2fc38f8a4 302 in 137ms
+2025-11-22 17:01:35.77
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:35.80
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:35.81
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:38.52
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:38.53
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:38.58
+d8e586ee
+User
+[NotebookLM] Generation completed in 113s
+2025-11-22 17:01:38.58
+d8e586ee
+User
+[NotebookLM] Image data received (3344KB)
+2025-11-22 17:01:38.63
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:38.64
+d8e586ee
+User
+[Thumbnail API] Generating thumbnail for article: new
+2025-11-22 17:01:38.64
+d8e586ee
+User
+[Thumbnail Service] Original URL: /public-objects/ai-generated/notebooklm_infographic_1763823132216.png
+2025-11-22 17:01:38.64
+d8e586ee
+User
+[Thumbnail Service] Generating thumbnail for: https://sabq.news/public-objects/ai-generated/notebooklm_infographic_1763823132216.png
+2025-11-22 17:01:38.64
+d8e586ee
+User
+[Thumbnail Service] Normalized URL: https://sabq.news/public-objects/ai-generated/notebooklm_infographic_1763823132216.png
+2025-11-22 17:01:38.65
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:38.70
+d8e586ee
+User
+3:01:38 PM [express] POST /api/accessibility/track 200 in 196ms :: {"success":true,"eventId":"832c4c…
+2025-11-22 17:01:38.79
+d8e586ee
+User
+[NotebookLM] Image uploaded to GCS: https://storage.googleapis.com/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/public/ai-generated/notebooklm_infographic_1763823698582.png
+2025-11-22 17:01:38.79
+d8e586ee
+User
+[NotebookLM] Public URL: /public-objects/ai-generated/notebooklm_infographic_1763823698582.png
+
+2025-11-22 17:01:39.03
+d8e586ee
+User
+(node:21) [node-fetch#buffer] DeprecationWarning: Please use 'response.arrayBuffer()' instead of 'response.buffer()'
+2025-11-22 17:01:39.03
+d8e586ee
+User
+(Use `node --trace-deprecation ...` to show where the warning was created)
+2025-11-22 17:01:39.14
+d8e586ee
+User
+[Thumbnail Service] Thumbnail generated successfully: /uploads/thumbnails/thumbnail_1763823699142_640x360.jpeg
+2025-11-22 17:01:39.17
+d8e586ee
+User
+[Thumbnail Service] Article new thumbnail updated
+2025-11-22 17:01:39.19
+d8e586ee
+User
+3:01:39 PM [express] POST /api/thumbnails/generate 200 in 686ms :: {"success":true,"thumbnailUrl":"/…
+2025-11-22 17:01:39.54
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:39.56
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:39.57
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:01:39.59
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:01:39.64
+d8e586ee
+User
+3:01:39 PM [express] POST /api/accessibility/track 200 in 92ms :: {"success":true,"eventId":"8f4af34…
+2025-11-22 17:02:00.02
+d8e586ee
+User
+[NotificationWorker] Starting queue processing...
+2025-11-22 17:02:00.03
+d8e586ee
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 17:02:00.13
+d8e586ee
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-22 17:02:00.13
+d8e586ee
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 17:02:00.13
+d8e586ee
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 17:02:04.64
+d8e586ee
+User
+3:02:04 PM [express] GET /api/ads/slot/sidebar 204 in 59ms
+2025-11-22 17:02:04.72
+d8e586ee
+User
+3:02:04 PM [express] GET /api/articles/%D8%A7%D8%B3%D8%AA%D8%AF%D8%B9%D8%A7%D8%A1-516-%D9%85%D8%B1%D…
+2025-11-22 17:02:24.44
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:02:24.46
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:02:24.81
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 17:02:24.84
+d8e586ee
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 17:02:24.96
+d8e586ee
+User
+🔸 DeserializeUser called with id: admin-sabq
+

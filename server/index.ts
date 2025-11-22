@@ -118,6 +118,11 @@ app.use(compression({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Serve static files from uploads directory (for thumbnails)
+const uploadsDir = path.join(process.cwd(), 'uploads');
+app.use('/uploads', express.static(uploadsDir));
+console.log(`[Server] ✅ Static uploads directory configured: ${uploadsDir}`);
+
 // Rate limiting configurations
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

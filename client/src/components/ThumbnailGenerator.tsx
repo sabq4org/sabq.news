@@ -22,7 +22,9 @@ export function ThumbnailGenerator({
   autoGenerate = true
 }: ThumbnailGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [currentThumbnail, setCurrentThumbnail] = useState(thumbnailUrl);
+  const [currentThumbnail, setCurrentThumbnail] = useState(
+    thumbnailUrl ? `${thumbnailUrl}?t=${Date.now()}` : undefined
+  );
 
   const generateThumbnail = async () => {
     if (!imageUrl) {
@@ -50,7 +52,9 @@ export function ThumbnailGenerator({
       });
 
       if (response.success && response.thumbnailUrl) {
-        setCurrentThumbnail(response.thumbnailUrl);
+        // Add timestamp to prevent caching
+        const thumbnailWithTimestamp = `${response.thumbnailUrl}?t=${Date.now()}`;
+        setCurrentThumbnail(thumbnailWithTimestamp);
         
         if (onThumbnailGenerated) {
           onThumbnailGenerated(response.thumbnailUrl);
