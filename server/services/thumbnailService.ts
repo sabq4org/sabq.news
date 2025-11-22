@@ -26,13 +26,40 @@ const DEFAULT_OPTIONS: ThumbnailOptions = {
 };
 
 /**
+ * Convert relative paths to absolute URLs
+ */
+function normalizeImageUrl(url: string): string {
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If it's a relative path starting with /, convert to absolute URL
+  if (url.startsWith('/')) {
+    // Use localhost for development, or configured domain for production
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.DOMAIN || 'sabq.sa'}`
+      : 'http://localhost:5000';
+    
+    return `${baseUrl}${url}`;
+  }
+  
+  // If it's a gs:// URL, we can't fetch it directly - it should have been converted already
+  if (url.startsWith('gs://')) {
+    throw new Error('gs:// URLs must be converted to public URLs before thumbnail generation');
+  }
+  
+  return url;
+}
+
+/**
  * Validate URL for security (prevent SSRF)
  */
 function isValidImageUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
     
-    // Allow only HTTPS protocol
+    // Allow only HTTPS and HTTP protocols
     if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
       return false;
     }
@@ -42,7 +69,10 @@ function isValidImageUrl(url: string): boolean {
       'storage.googleapis.com',
       'localhost',
       '127.0.0.1',
+      '0.0.0.0',
       process.env.DOMAIN || 'sabq.sa',
+      'sabq.life',
+      'sabq.news',
       // Add other trusted domains as needed
     ];
     
@@ -73,19 +103,24 @@ export async function generateThumbnail(
 ): Promise<string> {
   const config = { ...DEFAULT_OPTIONS, ...options };
   
+  // Normalize URL (convert relative paths to absolute URLs)
+  const normalizedUrl = normalizeImageUrl(imageUrl);
+  console.log(`[Thumbnail Service] Original URL: ${imageUrl}`);
+  console.log(`[Thumbnail Service] Normalized URL: ${normalizedUrl}`);
+  
   // Validate URL for security
-  if (!isValidImageUrl(imageUrl)) {
+  if (!isValidImageUrl(normalizedUrl)) {
     throw new Error('Invalid or untrusted image URL');
   }
   
   try {
-    console.log(`[Thumbnail Service] Generating thumbnail for: ${imageUrl}`);
+    console.log(`[Thumbnail Service] Generating thumbnail for: ${normalizedUrl}`);
     
     // Download the image with timeout and size limits
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
-    const response = await fetch(imageUrl, {
+    const response = await fetch(normalizedUrl, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Sabq-Thumbnail-Service/1.0'

@@ -1,0 +1,149 @@
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at Function.handle (/home/runner/workspace/node_modules/express/lib/router/index.js:175:3)
+2025-11-22 14:57:58.33
+0edddc0f
+User
+[Thumbnail API] Generating thumbnail for article: new
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at router (/home/runner/workspace/node_modules/express/lib/router/index.js:47:12)
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-22 14:57:58.33
+0edddc0f
+User
+[Thumbnail Service] Failed to generate article thumbnail: Error: Invalid or untrusted image URL
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at generateThumbnail (file:///home/runner/workspace/dist/index.js:18786:11)
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-22 14:57:58.33
+0edddc0f
+User
+at file:///home/runner/workspace/dist/index.js:18973:36
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at generateThumbnail (file:///home/runner/workspace/dist/index.js:18786:11)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+[Thumbnail API] Generation error: Error: Invalid or untrusted image URL
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at isAuthenticated (file:///home/runner/workspace/dist/index.js:14658:16)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at router (/home/runner/workspace/node_modules/express/lib/router/index.js:47:12)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Function.handle (/home/runner/workspace/node_modules/express/lib/router/index.js:175:3)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at file:///home/runner/workspace/dist/index.js:18973:36
+2025-11-22 14:57:58.34
+0edddc0f
+User
+at generateArticleThumbnail (file:///home/runner/workspace/dist/index.js:18864:32)
+2025-11-22 14:57:58.36
+0edddc0f
+User
+12:57:58 PM [express] POST /api/thumbnails/generate 500 in 343ms :: {"error":"Invalid or untrusted im…
+2025-11-22 14:57:58.68
+0edddc0f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-22 14:57:58.71
+0edddc0f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-22 14:57:58.75
+0edddc0f
+User
+12:57:58 PM [express] POST /api/accessibility/track 200 in 92ms :: {"success":true,"eventId":"d1ba64e…
+2025-11-22 14:58:00.02
+0edddc0f
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-22 14:58:00.02
+0edddc0f
+User
+[NotificationWorker] Starting queue processing...
+2025-11-22 14:58:00.05
+0edddc0f
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-22 14:58:00.12
+0edddc0f
+User
+[NotificationWorker] Queue processing completed
+2025-11-22 14:58:00.12
+0edddc0f
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 14:58:00.12
+0edddc0f
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-22 14:58:00.12
+0edddc0f
+User
+[NotificationWorker] Queue processing completed
+
