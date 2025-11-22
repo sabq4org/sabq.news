@@ -10,16 +10,18 @@ import {
   generateResponsiveThumbnails,
   generateMissingThumbnails
 } from "../services/thumbnailService";
+import { generateArticleSmartThumbnail } from "../services/aiSmartThumbnailService";
 
 const router = Router();
 
 /**
  * POST /api/thumbnails/generate
  * Generate thumbnail for specific article
+ * Supports multiple methods: crop (default), contain, ai-smart, ai-crop
  */
 router.post("/generate", isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { articleId, imageUrl } = req.body;
+    const { articleId, imageUrl, method = 'crop', style } = req.body;
     
     if (!articleId || !imageUrl) {
       return res.status(400).json({
@@ -27,13 +29,43 @@ router.post("/generate", isAuthenticated, async (req: Request, res: Response) =>
       });
     }
     
-    console.log(`[Thumbnail API] Generating thumbnail for article: ${articleId}`);
+    // Validate method
+    const validMethods = ['crop', 'ai-smart'];
+    if (!validMethods.includes(method)) {
+      return res.status(400).json({
+        error: `Invalid method. Must be one of: ${validMethods.join(', ')}`
+      });
+    }
     
-    const thumbnailUrl = await generateArticleThumbnail(articleId, imageUrl);
+    // Validate style (if AI Smart method)
+    if (method === 'ai-smart' && style) {
+      const validStyles = ['news', 'professional', 'vibrant', 'minimal', 'modern'];
+      if (!validStyles.includes(style)) {
+        return res.status(400).json({
+          error: `Invalid style. Must be one of: ${validStyles.join(', ')}`
+        });
+      }
+    }
+    
+    console.log(`[Thumbnail API] Generating thumbnail for article: ${articleId} using method: ${method}`);
+    
+    let thumbnailUrl: string;
+    
+    // Choose generation method
+    if (method === 'ai-smart') {
+      // AI Smart Thumbnail - regenerate image professionally
+      thumbnailUrl = await generateArticleSmartThumbnail(articleId, imageUrl, {
+        style: style || 'news'
+      });
+    } else {
+      // Traditional methods (crop, contain)
+      thumbnailUrl = await generateArticleThumbnail(articleId, imageUrl);
+    }
     
     res.json({
       success: true,
       thumbnailUrl,
+      method,
       message: "Thumbnail generated successfully"
     });
     

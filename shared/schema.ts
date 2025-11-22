@@ -698,6 +698,11 @@ export const articles = pgTable("articles", {
   aiImageModel: text("ai_image_model"), // Model used (nano-banana-pro, gemini-3-pro, etc.)
   aiImagePrompt: text("ai_image_prompt"), // Prompt used for generation
   
+  // AI Thumbnail Generation tracking
+  isAiGeneratedThumbnail: boolean("is_ai_generated_thumbnail").default(false).notNull(),
+  aiThumbnailModel: text("ai_thumbnail_model"), // Model used for thumbnail (gemini-3-pro-image, etc.)
+  aiThumbnailPrompt: text("ai_thumbnail_prompt"), // Prompt used for thumbnail generation
+  
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   authorId: varchar("author_id").references(() => users.id).notNull(),
   reporterId: varchar("reporter_id").references(() => users.id),
