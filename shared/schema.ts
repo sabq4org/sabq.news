@@ -4875,6 +4875,11 @@ export const mediaFiles = pgTable("media_files", {
   caption: text("caption"),
   keywords: text("keywords").array().default(sql`ARRAY[]::text[]`),
   
+  // AI Generation tracking
+  isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
+  aiGenerationModel: text("ai_generation_model"), // gemini-3-pro, nano-banana-pro, etc.
+  aiGenerationPrompt: text("ai_generation_prompt"), // The prompt used to generate the image
+  
   // Organization
   isFavorite: boolean("is_favorite").default(false).notNull(),
   category: text("category"), // articles, logos, reporters, banners, general

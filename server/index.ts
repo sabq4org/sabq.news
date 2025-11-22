@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import nanoBananaRoutes from "./routes/nanoBananaRoutes";
 import visualAiRoutes from "./routes/visualAiRoutes";
+import autoImageRoutes from "./routes/autoImageRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
@@ -250,6 +251,9 @@ app.use((req, res, next) => {
     // Register Visual AI routes
     app.use("/api/visual-ai", visualAiRoutes);
     console.log("[Server] ✅ Visual AI routes registered");
+    
+    app.use("/api/auto-image", autoImageRoutes);
+    console.log("[Server] ✅ Auto Image Generation routes registered");
     
     // Register Story Cards routes
     const { storyCardsRouter } = await import("./routes/storyCardsRoutes");

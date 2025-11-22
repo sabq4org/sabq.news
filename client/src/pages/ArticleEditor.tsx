@@ -54,6 +54,7 @@ import { InlineHeadlineSuggestions } from "@/components/InlineHeadlineSuggestion
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 import { InfographicGeneratorDialog } from "@/components/InfographicGeneratorDialog";
 import { StoryCardsGenerator } from "@/components/StoryCardsGenerator";
+import { AutoImageGenerator } from "@/components/AutoImageGenerator";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -1544,6 +1545,26 @@ const generateSlug = (text: string) => {
                 onFocalPointChange={(point) => setImageFocalPoint(point)}
               />
             )}
+            
+            {/* Auto Image Generation */}
+            <AutoImageGenerator
+              articleId={id}
+              title={title}
+              content={content}
+              excerpt={excerpt}
+              category={categories.find(c => c.id === categoryId)?.nameAr}
+              language="ar"
+              articleType={articleType}
+              hasImage={!!imageUrl}
+              onImageGenerated={(url, altText) => {
+                setImageUrl(url);
+                // Update alt text in SEO if needed
+                toast({
+                  title: "تم توليد الصورة بنجاح",
+                  description: `${altText}`,
+                });
+              }}
+            />
 
             {/* Content Editor */}
             <Card>
