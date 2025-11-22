@@ -1454,7 +1454,7 @@ const generateSlug = (text: string) => {
                     <InfographicAiDialog
                       content={content}
                       title={title}
-                      category={categories?.find(c => c.id === categoryId)?.name}
+                      category={categories?.find(c => c.id === categoryId)?.nameAr}
                       onApplySuggestions={handleApplyInfographicSuggestions}
                     />
                   )}
