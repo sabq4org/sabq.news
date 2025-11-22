@@ -237,8 +237,8 @@ export async function generateSocialMediaCards(
         template
       });
       
-      // Generate image using Visual AI
-      const result = await generateNewsImage({
+      // Generate image using Visual AI with timeout
+      const imageGenerationPromise = generateNewsImage({
         articleTitle: request.articleTitle,
         articleSummary: createPlatformOptimizedText(
           request.articleSummary || request.articleTitle,
@@ -249,6 +249,19 @@ export async function generateSocialMediaCards(
         style: getStyleForTemplate(template),
         mood: getMoodForCategory(request.category)
       });
+      
+      // Add 30 second timeout for each platform
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => reject(new Error(`Timeout generating ${platform} card`)), 30000);
+      });
+      
+      let result;
+      try {
+        result = await Promise.race([imageGenerationPromise, timeoutPromise]);
+      } catch (timeoutError) {
+        console.error(`[Social Cards] Timeout or error for ${platform}:`, timeoutError);
+        continue; // Skip this platform and try the next one
+      }
       
       if (result.success && result.imageUrl) {
         // Save to database
@@ -288,11 +301,21 @@ export async function generateSocialMediaCards(
     const processingTime = Date.now() - startTime;
     console.log(`[Social Cards] Generated ${generatedCards.length} cards in ${processingTime}ms`);
     
+    // Return success if at least one card was generated
+    if (generatedCards.length > 0) {
+      return {
+        success: true,
+        cards: generatedCards,
+        processingTime,
+        cost: totalCost
+      };
+    }
+    
+    // If no cards were generated, return error
     return {
-      success: true,
-      cards: generatedCards,
+      success: false,
       processingTime,
-      cost: totalCost
+      error: `Failed to generate cards for all platforms. Please try again.`
     };
     
   } catch (error: any) {

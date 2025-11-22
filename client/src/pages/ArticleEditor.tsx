@@ -956,38 +956,63 @@ export default function ArticleEditor() {
       if (!id || isNewArticle) {
         throw new Error("يجب حفظ المقال أولاً قبل توليد البطاقات");
       }
+      
+      console.log('[Social Cards] Starting generation for article:', id);
       setIsGeneratingSocialCards(true);
-      return await apiRequest(`/api/visual-ai/generate-social-cards`, {
-        method: "POST",
-        body: JSON.stringify({
-          articleId: id || article?.id || "temp-" + Date.now(),
-          articleTitle: title,
-          articleSummary: excerpt || metaDescription || subtitle,
-          category: categories.find(c => c.id === categoryId)?.nameAr || "أخبار",
-          language: "ar",
-          platform: "all"
-        }),
-      });
+      
+      const requestBody = {
+        articleId: id,
+        articleTitle: title || "عنوان المقال",
+        articleSummary: excerpt || metaDescription || subtitle || "ملخص المقال",
+        category: categories.find(c => c.id === categoryId)?.nameAr || "أخبار",
+        language: "ar",
+        platform: "all"
+      };
+      
+      console.log('[Social Cards] Request body:', requestBody);
+      
+      try {
+        const response = await apiRequest(`/api/visual-ai/generate-social-cards`, {
+          method: "POST",
+          body: JSON.stringify(requestBody),
+        });
+        
+        console.log('[Social Cards] Response:', response);
+        return response;
+      } catch (error) {
+        console.error('[Social Cards] API Error:', error);
+        setIsGeneratingSocialCards(false);
+        throw error;
+      }
     },
     onSuccess: (data: {
-      cards: {
+      cards?: {
         twitter?: string;
         instagram?: string;
         facebook?: string;
         whatsapp?: string;
       };
-      message: string;
+      message?: string;
     }) => {
+      console.log('[Social Cards] Success:', data);
       setIsGeneratingSocialCards(false);
       
-      const generatedPlatforms = Object.keys(data.cards).filter(key => data.cards[key as keyof typeof data.cards]);
-      
-      toast({
-        title: "تم توليد بطاقات السوشال ميديا",
-        description: `تم توليد ${generatedPlatforms.length} بطاقات بنجاح للمنصات: ${generatedPlatforms.join(', ')}`,
-      });
+      if (data.cards) {
+        const generatedPlatforms = Object.keys(data.cards).filter(key => data.cards![key as keyof typeof data.cards]);
+        
+        toast({
+          title: "تم توليد بطاقات السوشال ميديا",
+          description: `تم توليد ${generatedPlatforms.length} بطاقات بنجاح للمنصات: ${generatedPlatforms.join(', ')}`,
+        });
+      } else {
+        toast({
+          title: "تم بدء عملية التوليد",
+          description: data.message || "جاري معالجة الطلب...",
+        });
+      }
     },
     onError: (error: Error) => {
+      console.error('[Social Cards] Mutation Error:', error);
       setIsGeneratingSocialCards(false);
       toast({
         title: "خطأ في توليد البطاقات",
@@ -995,6 +1020,10 @@ export default function ArticleEditor() {
         variant: "destructive",
       });
     },
+    onSettled: () => {
+      // Ensure loading state is always reset
+      setIsGeneratingSocialCards(false);
+    }
   });
 
   const generateSmartContentMutation = useMutation({
