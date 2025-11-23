@@ -3298,8 +3298,18 @@ export const audioNewsletters = pgTable("audio_newsletters", {
   }>(),
   
   // Publishing
-  status: text("status").default("draft").notNull(), // draft, published, archived
+  status: text("status").default("draft").notNull(), // draft, scheduled, published, archived, failed
   publishedAt: timestamp("published_at"),
+  scheduledFor: timestamp("scheduled_for"), // موعد النشر المجدول
+  
+  // Additional metadata (retry count, recurrence settings, etc)
+  metadata: jsonb("metadata").$type<{
+    retryCount?: number;
+    lastRetryAt?: string;
+    isRecurring?: boolean;
+    recurrencePattern?: string; // cron pattern
+    nextRecurrenceDate?: string;
+  }>(),
   
   // Analytics
   totalListens: integer("total_listens").default(0).notNull(),
@@ -3317,6 +3327,7 @@ export const audioNewsletters = pgTable("audio_newsletters", {
 }, (table) => [
   index("idx_audio_newsletters_status").on(table.status),
   index("idx_audio_newsletters_published").on(table.publishedAt),
+  index("idx_audio_newsletters_scheduled").on(table.scheduledFor),
   index("idx_audio_newsletters_generated_by").on(table.generatedBy),
 ]);
 
