@@ -47,6 +47,7 @@ interface ScheduledTask {
   topicIdea: string | null;
   plannedContentType: string | null;
   scheduledDate: string;
+  actualPublishedAt?: string | null;
   status: string;
   createdAt: string;
 }
@@ -115,6 +116,21 @@ export default function IFoxContentGenerator() {
     createTaskMutation.mutate(data);
   };
 
+  // Helper function to format date in Riyadh timezone (UTC+3)
+  // Uses browser's timezone-aware toLocaleString instead of manual offset math
+  const formatRiyadhTime = (utcDate: string) => {
+    const date = new Date(utcDate);
+    return date.toLocaleString('ar-SA', {
+      timeZone: 'Asia/Riyadh',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' (الرياض)';
+  };
+
   const contentTypeIcons = {
     news: Newspaper,
     article: FileText,
@@ -127,6 +143,10 @@ export default function IFoxContentGenerator() {
     medium: "from-amber-500 to-orange-500",
     high: "from-red-500 to-pink-500",
   };
+
+  // Filter tasks by status
+  const plannedTasks = scheduledTasks.filter(task => task.status === 'planned' || task.status === 'in_progress');
+  const completedTasks = scheduledTasks.filter(task => task.status === 'completed');
 
   return (
     <IFoxLayout>
@@ -420,7 +440,7 @@ export default function IFoxContentGenerator() {
                       المهام المجدولة
                     </CardTitle>
                     <CardDescription className="text-gray-100">
-                      {scheduledTasks.length} مهمة في الانتظار
+                      {plannedTasks.length} مهمة في الانتظار
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -431,14 +451,14 @@ export default function IFoxContentGenerator() {
                             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
                             جاري التحميل...
                           </div>
-                        ) : scheduledTasks.length === 0 ? (
+                        ) : plannedTasks.length === 0 ? (
                           <div className="text-center py-12">
                             <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                             <p className="text-gray-300">لا توجد مهام مجدولة حالياً</p>
                             <p className="text-gray-400 text-sm mt-1">ابدأ بإنشاء مهمة جديدة من النموذج</p>
                           </div>
                         ) : (
-                          scheduledTasks.map((task, index) => {
+                          plannedTasks.map((task, index) => {
                             const ContentIcon = contentTypeIcons[task.plannedContentType as keyof typeof contentTypeIcons] || FileText;
                             const statusColors = {
                               planned: "from-blue-500 to-cyan-500",
@@ -468,10 +488,7 @@ export default function IFoxContentGenerator() {
                                       <div className="flex items-center gap-3 text-xs text-gray-300">
                                         <span className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
-                                          {new Date(task.scheduledDate).toLocaleString('ar-SA', {
-                                            dateStyle: 'short',
-                                            timeStyle: 'short',
-                                          })}
+                                          {formatRiyadhTime(task.scheduledDate)}
                                         </span>
                                       </div>
                                     </div>
@@ -520,6 +537,68 @@ export default function IFoxContentGenerator() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Completed Tasks Section */}
+            {completedTasks.length > 0 && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-400/30 backdrop-blur-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white font-bold">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      المهام المكتملة
+                    </CardTitle>
+                    <CardDescription className="text-gray-100">
+                      {completedTasks.length} مهمة تم إنجازها بنجاح
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px]">
+                      <div className="space-y-3">
+                        {completedTasks.map((task, index) => {
+                          const ContentIcon = contentTypeIcons[task.plannedContentType as keyof typeof contentTypeIcons] || FileText;
+                          
+                          return (
+                            <motion.div
+                              key={task.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="p-4 rounded-lg bg-green-500/5 border border-green-400/20 hover:border-green-400/40 transition-all"
+                              data-testid={`completed-task-${task.id}`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500">
+                                  <ContentIcon className="w-4 h-4 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="text-white font-semibold mb-1 line-clamp-2">
+                                    {task.topicIdea || 'محتوى جديد'}
+                                  </h4>
+                                  <div className="flex items-center gap-3 text-xs text-gray-300">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {task.actualPublishedAt 
+                                        ? `تم النشر: ${formatRiyadhTime(task.actualPublishedAt)}`
+                                        : `مجدول: ${formatRiyadhTime(task.scheduledDate)}`
+                                      }
+                                    </span>
+                                  </div>
+                                </div>
+                                <CheckCircle className="w-5 h-5 text-green-400" />
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </div>
         </ScrollArea>
     </IFoxLayout>

@@ -21,6 +21,35 @@ import {
 
 const router = Router();
 
+/**
+ * Helper function to normalize dates to ISO UTC strings
+ * Converts all Date objects in an object to ISO 8601 UTC strings
+ * This ensures consistent timezone handling across the frontend
+ */
+function normalizeDates<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (obj instanceof Date) {
+    return obj.toISOString() as any;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => normalizeDates(item)) as any;
+  }
+
+  if (typeof obj === 'object') {
+    const normalized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      normalized[key] = normalizeDates(value);
+    }
+    return normalized;
+  }
+
+  return obj;
+}
+
 // Middleware: All routes require authentication and editor+ role
 router.use(isAuthenticated, requireRole("editor", "admin", "superadmin"));
 
@@ -560,7 +589,7 @@ router.get("/calendar", async (req, res) => {
     };
 
     const entries = await ifoxCalendarService.listEntries(filters);
-    res.json(entries);
+    res.json(normalizeDates(entries));
   } catch (error) {
     console.error("List calendar error:", error);
     res.status(500).json({ error: "Failed to list calendar entries" });
@@ -587,7 +616,7 @@ router.post("/calendar", async (req, res) => {
     });
 
     const entry = await ifoxCalendarService.createEntry(data);
-    res.json(entry);
+    res.json(normalizeDates(entry));
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -610,7 +639,7 @@ router.get("/calendar/:id", async (req, res) => {
     if (!entry) {
       return res.status(404).json({ error: "Calendar entry not found" });
     }
-    res.json(entry);
+    res.json(normalizeDates(entry));
   } catch (error) {
     console.error("Get calendar entry error:", error);
     res.status(500).json({ error: "Failed to get calendar entry" });
@@ -635,7 +664,7 @@ router.patch("/calendar/:id", async (req, res) => {
         : req.body.scheduledDate,
     });
     const entry = await ifoxCalendarService.updateEntry(req.params.id, data, userId);
-    res.json(entry);
+    res.json(normalizeDates(entry));
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -675,7 +704,7 @@ router.patch("/calendar/:id/complete", async (req, res) => {
     }
 
     const entry = await ifoxCalendarService.markAsCompleted(req.params.id, articleId);
-    res.json(entry);
+    res.json(normalizeDates(entry));
   } catch (error) {
     console.error("Complete calendar entry error:", error);
     res.status(500).json({ error: "Failed to complete calendar entry" });

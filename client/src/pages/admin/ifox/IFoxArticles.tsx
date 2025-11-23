@@ -51,6 +51,11 @@ interface IFoxArticle {
   updatedAt: string;
 }
 
+interface ArticlesResponse {
+  articles: IFoxArticle[];
+  total: number;
+}
+
 type StatusKey = "published" | "scheduled" | "draft" | "archived";
 
 const defaultFilters: FilterValues = {
@@ -77,7 +82,7 @@ export default function IFoxArticles() {
   }>({ open: false, action: null });
 
   // Fetch articles with filters
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery<ArticlesResponse>({
     queryKey: ["/api/admin/ifox/articles", { 
       page, 
       limit: 20,

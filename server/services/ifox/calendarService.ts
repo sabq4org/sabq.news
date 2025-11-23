@@ -8,12 +8,41 @@
 import { storage } from "../../storage";
 import type { InsertIfoxEditorialCalendar, IfoxEditorialCalendar } from "@shared/schema";
 
+/**
+ * Helper function to normalize dates to ISO UTC strings
+ * Converts all Date objects in an object to ISO 8601 UTC strings
+ */
+function normalizeDates<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (obj instanceof Date) {
+    return obj.toISOString() as any;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => normalizeDates(item)) as any;
+  }
+
+  if (typeof obj === 'object') {
+    const normalized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      normalized[key] = normalizeDates(value);
+    }
+    return normalized;
+  }
+
+  return obj;
+}
+
 export class IfoxCalendarService {
   /**
    * Create new calendar entry
    */
   async createEntry(data: InsertIfoxEditorialCalendar): Promise<IfoxEditorialCalendar> {
-    return await storage.createIfoxEditorialCalendarEntry(data);
+    const entry = await storage.createIfoxEditorialCalendarEntry(data);
+    return normalizeDates(entry);
   }
 
   /**
@@ -29,7 +58,7 @@ export class IfoxCalendarService {
     limit?: number;
   }): Promise<IfoxEditorialCalendar[]> {
     const result = await storage.listIfoxEditorialCalendar(filters);
-    return result.entries;
+    return normalizeDates(result.entries);
   }
 
   /**
@@ -37,17 +66,18 @@ export class IfoxCalendarService {
    */
   async getEntry(id: string): Promise<IfoxEditorialCalendar | null> {
     const entry = await storage.getIfoxEditorialCalendarEntry(id);
-    return entry || null;
+    return entry ? normalizeDates(entry) : null;
   }
 
   /**
    * Update entry
    */
   async updateEntry(id: string, data: Partial<InsertIfoxEditorialCalendar>, userId: string): Promise<IfoxEditorialCalendar> {
-    return await storage.updateIfoxEditorialCalendarEntry(id, {
+    const entry = await storage.updateIfoxEditorialCalendarEntry(id, {
       ...data,
       updatedBy: userId,
     });
+    return normalizeDates(entry);
   }
 
   /**
@@ -61,7 +91,8 @@ export class IfoxCalendarService {
    * Update entry status and link to published article
    */
   async markAsCompleted(id: string, articleId: string): Promise<IfoxEditorialCalendar> {
-    return await storage.updateIfoxEditorialCalendarStatus(id, "completed", articleId);
+    const entry = await storage.updateIfoxEditorialCalendarStatus(id, "completed", articleId);
+    return normalizeDates(entry);
   }
 
   /**
@@ -72,7 +103,7 @@ export class IfoxCalendarService {
       scheduledDateFrom,
       scheduledDateTo,
     });
-    return result.entries;
+    return normalizeDates(result.entries);
   }
 
   /**
@@ -90,7 +121,7 @@ export class IfoxCalendarService {
       status: "planned",
     });
 
-    return result.entries;
+    return normalizeDates(result.entries);
   }
 }
 
