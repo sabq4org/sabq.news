@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { IFoxUploader } from "@/components/admin/ifox/IFoxUploader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
