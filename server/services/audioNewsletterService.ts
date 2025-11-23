@@ -18,6 +18,7 @@ import { nanoid } from 'nanoid';
 import { getElevenLabsService } from './elevenlabs';
 import type { ElevenLabsService, TTSOptions } from './elevenlabs';
 import { EventEmitter } from 'events';
+import { ObjectStorageService } from '../objectStorage';
 
 // Voice configurations for different narrators
 // Using ElevenLabs Flash v2.5 model for Arabic optimization
@@ -715,14 +716,26 @@ export class AudioNewsletterService extends EventEmitter {
   
   // Upload audio to storage
   private async uploadAudio(audioBuffer: Buffer, newsletterId: string): Promise<string> {
-    // Implement your storage logic here
-    // This is a placeholder - you should integrate with your actual storage service
-    
-    const fileName = `newsletters/audio_${newsletterId}_${Date.now()}.mp3`;
-    
-    // For now, return a mock URL
-    // In production, upload to S3, GCS, or your preferred storage
-    return `/api/audio/${fileName}`;
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const filePath = `newsletters/audio_${newsletterId}_${Date.now()}.mp3`;
+      
+      // Upload to object storage (public for streaming)
+      const result = await objectStorageService.uploadFile(
+        filePath,
+        audioBuffer,
+        'audio/mpeg',
+        'public'
+      );
+      
+      // Return the public object endpoint URL
+      return `/public-objects/${filePath}`;
+    } catch (error) {
+      console.error('Failed to upload audio to storage:', error);
+      // Fallback to local serving endpoint
+      const fileName = `newsletters/audio_${newsletterId}_${Date.now()}.mp3`;
+      return `/api/audio/${fileName}`;
+    }
   }
   
   // Calculate audio duration
