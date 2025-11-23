@@ -728,9 +728,14 @@ export class AudioNewsletterService extends EventEmitter {
         'public'
       );
       
-      // Return the public media endpoint URL using the full path returned by uploadFile
-      // This includes the bucket name and directory structure needed by /api/public-media/
-      return `/api/public-media/${result.path}`;
+      // Extract object path from full path (remove bucket name)
+      // result.path format: /sabq-production-bucket/public/newsletters/audio_xxx.mp3
+      // We need: public/newsletters/audio_xxx.mp3
+      const pathParts = result.path.split('/').filter(part => part);
+      const objectPath = pathParts.slice(1).join('/'); // Skip bucket name, keep rest
+      
+      // Return the public media endpoint URL
+      return `/api/public-media/${objectPath}`;
     } catch (error) {
       console.error('Failed to upload audio to storage:', error);
       throw error; // Let the caller handle the error
