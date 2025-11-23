@@ -22,7 +22,8 @@ import {
   Eye,
   BookOpen,
   Zap,
-  Layers
+  Layers,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -127,6 +128,13 @@ const navigationItems: NavItem[] = [
     href: "/dashboard/admin/ifox/analytics",
     icon: BarChart3,
     gradient: "from-green-500 to-emerald-500",
+  },
+  {
+    title: "غرفة الأخبار الذكية",
+    titleEn: "AI Newsroom",
+    href: "/dashboard/admin/ifox/ai-tasks",
+    icon: Bot,
+    gradient: "from-violet-500 to-fuchsia-500",
   },
   {
     title: "الإعدادات",

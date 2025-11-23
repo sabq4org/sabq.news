@@ -190,6 +190,7 @@ import IFoxSchedule from "@/pages/admin/ifox/IFoxSchedule";
 import IFoxCategory from "@/pages/admin/ifox/IFoxCategory";
 import IFoxAnalytics from "@/pages/admin/ifox/IFoxAnalytics";
 import IFoxSettings from "@/pages/admin/ifox/IFoxSettings";
+import IFoxAITasks from "@/pages/admin/ifox/IFoxAITasks";
 import ImageStudio from "@/pages/ifox/ImageStudio";
 import InfographicStudio from "@/pages/InfographicStudio";
 import NotFound from "@/pages/not-found";
@@ -328,6 +329,7 @@ function Router() {
       <Route path="/admin/ifox/analytics" component={IFoxAnalytics} />
       <Route path="/admin/ifox/settings" component={IFoxSettings} />
       <Route path="/admin/ifox/image-studio" component={ImageStudio} />
+      <Route path="/admin/ifox/ai-tasks" component={IFoxAITasks} />
       
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
