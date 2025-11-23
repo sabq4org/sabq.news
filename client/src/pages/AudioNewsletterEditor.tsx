@@ -567,6 +567,10 @@ export default function AudioNewsletterEditor() {
             description: "تم توليد الملف الصوتي بنجاح",
           });
           queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/newsletters", id] });
+          // Redirect to newsletters list after generation completes
+          setTimeout(() => {
+            navigate("/dashboard/audio-newsletters");
+          }, 1500);
         } else if (newsletter.status === "failed") {
           setIsGenerating(false);
           clearInterval(interval);
@@ -585,7 +589,7 @@ export default function AudioNewsletterEditor() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [toast, queryClient]);
+  }, [toast, queryClient, navigate]);
 
   const onSubmit = (data: NewsletterFormData) => {
     // Validate based on content source
