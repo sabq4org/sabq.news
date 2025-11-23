@@ -1,0 +1,116 @@
+2025-11-23 08:00:00.22
+9650c08a
+User
+[Seasonal Categories Job] ✅ Update complete: { activated: 0, deactivated: 0, timestamp: '2025-11-23T06:00:00.227Z' }
+2025-11-23 08:00:00.22
+9650c08a
+User
+[Dynamic Categories] ✅ Update cycle complete
+2025-11-23 08:00:00.22
+9650c08a
+User
+[Dynamic Categories] ⚠️ "الآن" category not found
+2025-11-23 08:00:00.23
+9650c08a
+User
+⏸️ [DIGEST] Skipping user admin-sabq - not their digest time yet (12:00)
+2025-11-23 08:00:00.23
+9650c08a
+User
+📰 [DIGEST] Found 1 users with daily digest enabled
+2025-11-23 08:00:00.23
+9650c08a
+User
+✅ [DIGEST] Daily digest processing completed: 0 sent, 0 failed
+2025-11-23 08:00:00.45
+9650c08a
+User
+⏸️ [REC NOTIFICATION] Cannot send to user admin-sabq: Quiet hours active
+2025-11-23 08:00:00.52
+9650c08a
+User
+⏸️ [REC ENGINE] No recommendations could be generated for user admin-sabq
+2025-11-23 08:00:00.52
+9650c08a
+User
+✅ [REC WORKER] Processed 1 users, 1 successful
+2025-11-23 08:00:00.52
+9650c08a
+User
+⏸️ [REC NOTIFICATION] Cannot send to user admin-sabq: Quiet hours active
+2025-11-23 08:00:54.25
+9650c08a
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:00:54.35
+9650c08a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:00:54.37
+9650c08a
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 08:00:54.40
+9650c08a
+User
+Error creating newsletter: error: null value in column "slug" of relation "audio_newsletters" violates not-null constraint
+2025-11-23 08:00:54.40
+9650c08a
+User
+'ونقدّم لكم النشرة الإخ...).',
+2025-11-23 08:00:54.40
+9650c08a
+User
+line: '2021',
+2025-11-23 08:00:54.40
+9650c08a
+User
+schema: 'public',
+2025-11-23 08:00:54.40
+9650c08a
+User
+where: undefined,
+2025-11-23 08:00:54.40
+9650c08a
+User
+constraint: undefined,
+2025-11-23 08:00:54.40
+9650c08a
+User
+table: 'audio_newsletters',
+2025-11-23 08:00:54.40
+9650c08a
+User
+length: 599,
+2025-11-23 08:00:54.40
+9650c08a
+User
+at async file:///home/runner/workspace/dist/index.js:21175:28 {
+2025-11-23 08:00:54.40
+9650c08a
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-23 08:00:54.40
+9650c08a
+User
+detail: 'Failing row contains (Vvn9dkmiUdwUaQnF1NxBS, نشرة الصباح, نشرة تأتيكم في السادسة صباح كل يوم, null, null, null, null, admin-sabq, pending, null, null, eleven_multilingual_v2, null, pending, null, 0, 0, 0, null, سبق الذكية, أخبار, null, 2025-11-23 06:00:54.396178, 2025-11-23 06:00:54.396178, صباح الخير…\n' +
+2025-11-23 08:00:54.40
+9650c08a
+User
+column: 'slug',
+2025-11-23 08:00:54.40
+9650c08a
+User
+position: undefined,
+2025-11-23 08:00:54.40
+9650c08a
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-23 08:00:54.40
+9650c08a
+User
+code: '23502',
+2025-11-23 08:00:54.40
+9650c08a
+User
+}

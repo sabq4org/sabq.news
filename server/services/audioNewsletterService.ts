@@ -306,32 +306,38 @@ export class AudioNewsletterService extends EventEmitter {
   }): Promise<AudioNewsletter> {
     const newsletterId = nanoid();
     
+    // Generate slug from title
+    const baseSlug = data.title
+      .toLowerCase()
+      .replace(/[\s\u0600-\u06FF]+/g, '-') // Replace spaces and Arabic chars with hyphens
+      .replace(/[^\w\-]+/g, '') // Remove special characters
+      .replace(/\-\-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-+/, '') // Trim hyphens from start
+      .replace(/-+$/, ''); // Trim hyphens from end
+    
+    // Make slug unique by adding timestamp
+    const slug = `${baseSlug || 'newsletter'}-${Date.now()}`;
+    
     // Create newsletter record
     const [newsletter] = await db.insert(audioNewsletters).values({
-      id: newsletterId,
       title: data.title,
       description: data.description,
+      slug: slug,
       customContent: data.customContent,
-      template: data.template,
-      status: 'pending',
       generatedBy: data.generatedBy,
-      scheduledFor: data.scheduledFor?.toISOString(),
-      metadata: {
-        ...data.metadata,
-        voiceId: data.voiceId || ARABIC_VOICES.MALE_NEWS.id,
-        voiceSettings: data.voiceSettings || ARABIC_VOICES.MALE_NEWS.settings,
-        recurringSchedule: data.recurringSchedule,
-        publishImmediately: data.publishImmediately
-      }
+      status: 'draft',
+      publishedAt: null,
+      voiceId: data.voiceId || ARABIC_VOICES.MALE_NEWS.id,
+      voiceModel: 'eleven_multilingual_v2',
+      voiceSettings: data.voiceSettings || ARABIC_VOICES.MALE_NEWS.settings
     }).returning();
     
     // Add articles to newsletter (only if not using custom content)
     if (data.articleIds.length > 0) {
       const articleLinks = data.articleIds.map((articleId, index) => ({
-        id: nanoid(),
-        newsletterId,
+        newsletterId: newsletter.id,
         articleId,
-        orderIndex: index
+        order: index
       }));
       
       await db.insert(audioNewsletterArticles).values(articleLinks);
