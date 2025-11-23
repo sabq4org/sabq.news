@@ -47,8 +47,7 @@ const createNewsletterSchema = z.object({
     daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
     timezone: z.string().default('Asia/Riyadh'),
     enabled: z.boolean()
-  }).optional(),
-  metadata: z.record(z.any()).optional()
+  }).optional()
 }).refine((data) => {
   return (data.customContent && data.customContent.trim().length > 0) || (data.articleIds && data.articleIds.length > 0);
 }, {
@@ -59,8 +58,7 @@ const updateNewsletterSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().optional(),
   status: z.enum(['draft', 'scheduled', 'processing', 'published', 'failed', 'cancelled']).optional(),
-  scheduledFor: z.string().datetime().optional(),
-  metadata: z.record(z.any()).optional()
+  scheduledFor: z.string().datetime().optional()
 });
 
 const generateAudioSchema = z.object({
@@ -96,8 +94,9 @@ router.get('/public', async (req, res) => {
     // Build where conditions - only published newsletters
     const whereConditions = [eq(audioNewsletters.status, 'published')];
     
+    // Note: template field doesn't exist in schema, using voiceModel for filtering
     if (template) {
-      whereConditions.push(eq(audioNewsletters.template, template as string));
+      whereConditions.push(eq(audioNewsletters.voiceModel, template as string));
     }
     
     if (search) {
@@ -123,7 +122,7 @@ router.get('/public', async (req, res) => {
     const newsletters = await db.query.audioNewsletters.findMany({
       where: whereClause,
       orderBy: orderBy === 'listenCount' 
-        ? [desc(audioNewsletters.listenCount)]
+        ? [desc(audioNewsletters.totalListens)]
         : orderBy === 'duration'
         ? [desc(audioNewsletters.duration)]
         : [desc(audioNewsletters.createdAt)],
@@ -137,15 +136,15 @@ router.get('/public', async (req, res) => {
       .from(audioNewsletters)
       .where(whereClause);
     
-    // Get template distribution
+    // Get voice model distribution (template field doesn't exist in schema)
     const categories = await db
       .select({
-        template: audioNewsletters.template,
+        voiceModel: audioNewsletters.voiceModel,
         count: sql`count(*)`
       })
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'published'))
-      .groupBy(audioNewsletters.template);
+      .groupBy(audioNewsletters.voiceModel);
     
     res.json({
       newsletters,
@@ -181,7 +180,7 @@ router.get('/public/:id', async (req, res) => {
               }
             }
           },
-          orderBy: (articles, { asc }) => [asc(articles.orderIndex)]
+          orderBy: (articles, { asc }) => [asc(articles.order)]
         }
       }
     });
@@ -221,8 +220,9 @@ router.get('/newsletters', rbacRequireAuth, async (req, res) => {
       whereConditions.push(eq(audioNewsletters.status, status as string));
     }
     
+    // Note: template field doesn't exist in schema, using voiceModel for filtering
     if (template) {
-      whereConditions.push(eq(audioNewsletters.template, template as string));
+      whereConditions.push(eq(audioNewsletters.voiceModel, template as string));
     }
     
     if (search) {
@@ -248,7 +248,7 @@ router.get('/newsletters', rbacRequireAuth, async (req, res) => {
     const newsletters = await db.query.audioNewsletters.findMany({
       where: whereClause,
       with: {
-        generatedByUser: {
+        generator: {
           columns: {
             id: true,
             firstName: true,
@@ -308,7 +308,7 @@ router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
     const newsletter = await db.query.audioNewsletters.findFirst({
       where: eq(audioNewsletters.id, req.params.id),
       with: {
-        generatedByUser: {
+        generator: {
           columns: {
             id: true,
             firstName: true,
@@ -324,7 +324,7 @@ router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
               }
             }
           },
-          orderBy: (articles, { asc }) => [asc(articles.orderIndex)]
+          orderBy: (articles, { asc }) => [asc(articles.order)]
         },
         listens: {
           with: {
@@ -336,7 +336,7 @@ router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
               }
             }
           },
-          orderBy: (listens, { desc }) => [desc(listens.listenedAt)],
+          orderBy: (listens, { desc }) => [desc(listens.startedAt)],
           limit: 10
         }
       }
@@ -398,7 +398,6 @@ router.post('/newsletters', requirePermission("articles.create"), async (req, re
       generatedBy: (req as any).user?.id!,
       scheduledFor: validatedData.scheduledFor ? new Date(validatedData.scheduledFor) : undefined,
       recurringSchedule: validatedData.recurringSchedule as RecurringSchedule,
-      metadata: validatedData.metadata,
       publishImmediately: validatedData.publishImmediately
     });
     
@@ -658,7 +657,7 @@ router.get('/rss', async (req, res) => {
       orderBy: [desc(audioNewsletters.publishedAt)],
       limit: 20,
       with: {
-        generatedByUser: {
+        generator: {
           columns: {
             firstName: true,
             lastName: true
@@ -688,7 +687,7 @@ router.get('/public/:slug', async (req, res) => {
         eq(audioNewsletters.status, 'published')
       ),
       with: {
-        generatedByUser: {
+        generator: {
           columns: {
             firstName: true,
             lastName: true
@@ -718,8 +717,8 @@ router.get('/public/:slug', async (req, res) => {
         audioUrl: newsletter.audioUrl,
         duration: newsletter.duration,
         publishedAt: newsletter.publishedAt,
-        author: newsletter.generatedByUser ? 
-          `${newsletter.generatedByUser.firstName} ${newsletter.generatedByUser.lastName}` : 
+        author: newsletter.generator ? 
+          `${newsletter.generator.firstName} ${newsletter.generator.lastName}` : 
           'سبق'
       }
     });
@@ -1203,7 +1202,7 @@ router.get('/analytics/top-newsletters', requirePermission("analytics.view"), as
       .groupBy(
         audioNewsletters.id,
         audioNewsletters.title,
-        audioNewsletters.template,
+        audioNewsletters.voiceModel,
         audioNewsletters.publishedAt,
         audioNewsletters.duration
       )
@@ -1255,7 +1254,7 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
           .select({
             id: audioNewsletters.id,
             title: audioNewsletters.title,
-            template: audioNewsletters.template,
+            voiceModel: audioNewsletters.voiceModel,
             status: audioNewsletters.status,
             duration: audioNewsletters.duration,
             publishedAt: audioNewsletters.publishedAt,
@@ -1273,7 +1272,7 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
           .groupBy(
             audioNewsletters.id,
             audioNewsletters.title,
-            audioNewsletters.template,
+            audioNewsletters.voiceModel,
             audioNewsletters.status,
             audioNewsletters.duration,
             audioNewsletters.publishedAt,
@@ -1281,9 +1280,9 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
           );
         
         // Create CSV
-        csvData = 'ID,Title,Template,Status,Duration (seconds),Published At,Created At,Total Listens,Unique Listeners,Avg Completion (%)\n';
+        csvData = 'ID,Title,Voice Model,Status,Duration (seconds),Published At,Created At,Total Listens,Unique Listeners,Avg Completion (%)\n';
         csvData += newsletters.map(n => 
-          `"${n.id}","${n.title}","${n.template}","${n.status}",${n.duration || 0},"${n.publishedAt || ''}","${n.createdAt}",${n.totalListens || 0},${n.uniqueListeners || 0},${Number(n.avgCompletion || 0).toFixed(2)}`
+          `"${n.id}","${n.title}","${n.voiceModel || 'default'}","${n.status}",${n.duration || 0},"${n.publishedAt || ''}","${n.createdAt}",${n.totalListens || 0},${n.uniqueListeners || 0},${Number(n.avgCompletion || 0).toFixed(2)}`
         ).join('\n');
         
         filename = `newsletters-${new Date().toISOString().split('T')[0]}.csv`;
@@ -1386,19 +1385,18 @@ router.post('/newsletters/:id/track', async (req, res) => {
       id: listenId,
       newsletterId: req.params.id,
       userId: userId,
-      listenedAt: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
       duration,
-      completionRate,
+      completionPercentage: completionRate,
       deviceType,
-      userAgent,
-      metadata: dropOffPoint ? { dropOffPoint } : null
+      userAgent
     });
     
     // Update newsletter listen count
     await db
       .update(audioNewsletters)
       .set({
-        listenCount: sql`${audioNewsletters.listenCount} + 1`
+        totalListens: sql`${audioNewsletters.totalListens} + 1`
       })
       .where(eq(audioNewsletters.id, req.params.id));
     
@@ -1422,25 +1420,24 @@ router.get('/admin', requirePermission("articles.create"), async (req, res) => {
         id: audioNewsletters.id,
         title: audioNewsletters.title,
         description: audioNewsletters.description,
-        template: audioNewsletters.template,
         status: audioNewsletters.status,
         duration: audioNewsletters.duration,
         publishedAt: audioNewsletters.publishedAt,
         createdAt: audioNewsletters.createdAt,
-        totalListens: audioNewsletters.listenCount,
-        averageCompletion: sql`(
-          select avg(completion_rate) 
+        totalListens: audioNewsletters.totalListens,
+        averageCompletion: sql<number>`COALESCE((
+          select avg(completion_percentage) 
           from ${audioNewsletterListens} 
           where newsletter_id = ${audioNewsletters.id}
-        )`,
-        articlesCount: sql`(
+        ), 0)`,
+        articlesCount: sql<number>`(
           select count(*) 
           from ${audioNewsletterArticles} 
           where newsletter_id = ${audioNewsletters.id}
         )`,
-        templateId: audioNewsletters.template,
-        templateName: audioNewsletters.template,
-        schedule: audioNewsletters.metadata
+        templateId: sql<string>`null`,
+        templateName: sql<string>`null`,
+        schedule: sql<any>`null`
       })
       .from(audioNewsletters)
       .orderBy(desc(audioNewsletters.createdAt));

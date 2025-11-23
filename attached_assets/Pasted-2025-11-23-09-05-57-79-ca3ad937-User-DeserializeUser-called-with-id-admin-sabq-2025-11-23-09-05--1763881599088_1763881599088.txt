@@ -1,0 +1,106 @@
+2025-11-23 09:05:57.79
+ca3ad937
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:05:57.80
+ca3ad937
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:05:57.80
+ca3ad937
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-23 09:05:57.80
+ca3ad937
+User
+7:05:57 AM [express] GET /api/announcements/active 304 in 272ms :: []
+2025-11-23 09:05:57.82
+ca3ad937
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:05:57.84
+ca3ad937
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 09:05:57.90
+ca3ad937
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:05:57.90
+ca3ad937
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:05:57.90
+ca3ad937
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:05:57.90
+ca3ad937
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 09:05:57.90
+ca3ad937
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 09:05:57.91
+ca3ad937
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 09:05:57.91
+ca3ad937
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 09:05:57.99
+ca3ad937
+User
+7:05:57 AM [express] GET /api/notifications 304 in 372ms :: {"notifications":[{"id":"eb8A_0DlVMmDYUJ…
+2025-11-23 09:05:58.03
+ca3ad937
+User
+7:05:58 AM [express] GET /api/audio-newsletters/admin 200 in 401ms :: [{"id":"734e4753-68e7-4000-882…
+2025-11-23 09:05:58.21
+ca3ad937
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:05:58.23
+ca3ad937
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at PgDialect.buildRelationalQueryWithoutPK (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/dialect.js:1006:36)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at QueryPromise._getQuery (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:84:25)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:114:19
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at normalizeRelation (file:///home/runner/workspace/node_modules/drizzle-orm/relations.js:212:75)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at QueryPromise._toSQL (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:99:24)
+2025-11-23 09:05:58.23
+ca3ad937
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:62:42
+2025-11-23 09:05:58.23
+ca3ad937
+User
+Error fetching newsletter: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+
