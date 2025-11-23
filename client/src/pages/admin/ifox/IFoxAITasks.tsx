@@ -416,8 +416,9 @@ export default function IFoxAITasks() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="formal">رسمي</SelectItem>
-                          <SelectItem value="casual">غير رسمي</SelectItem>
-                          <SelectItem value="professional">احترافي</SelectItem>
+                          <SelectItem value="urgent">عاجل</SelectItem>
+                          <SelectItem value="analytical">تحليلي</SelectItem>
+                          <SelectItem value="neutral">محايد</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

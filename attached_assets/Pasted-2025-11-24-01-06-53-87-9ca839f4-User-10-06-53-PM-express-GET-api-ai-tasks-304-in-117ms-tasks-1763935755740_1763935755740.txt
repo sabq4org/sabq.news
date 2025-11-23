@@ -1,0 +1,109 @@
+2025-11-24 01:06:53.87
+9ca839f4
+User
+10:06:53 PM [express] GET /api/ai-tasks 304 in 117ms :: {"tasks":[],"total":0}
+2025-11-24 01:06:53.88
+9ca839f4
+User
+10:06:53 PM [express] GET /api/auth/user 304 in 129ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-24 01:06:53.89
+9ca839f4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:06:53.89
+9ca839f4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:06:53.92
+9ca839f4
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,editor, user has: system_admin, admin
+2025-11-24 01:06:53.94
+9ca839f4
+User
+10:06:53 PM [express] GET /api/ai-tasks/stats 304 in 99ms :: {"total":0,"pending":0,"processing":0,"c…
+2025-11-24 01:06:53.99
+9ca839f4
+User
+10:06:53 PM [express] GET /api/admin/ifox/categories 200 in 155ms :: [{"id":"6ae21e93-14bc-486f-9f27-…
+2025-11-24 01:07:00.04
+9ca839f4
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 01:07:00.04
+9ca839f4
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 01:07:00.05
+9ca839f4
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 01:07:00.05
+9ca839f4
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 01:07:00.08
+9ca839f4
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 01:07:00.08
+9ca839f4
+User
+Found 0 scheduled newsletters to process
+2025-11-24 01:07:00.08
+9ca839f4
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 01:07:00.08
+9ca839f4
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 01:07:45.36
+9ca839f4
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:07:45.46
+9ca839f4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:07:45.46
+9ca839f4
+User
+tone: 'professional',
+2025-11-24 01:07:45.46
+9ca839f4
+User
+],
+2025-11-24 01:07:45.46
+9ca839f4
+User
+autoPublish: true
+2025-11-24 01:07:45.46
+9ca839f4
+User
+scheduledAtType: 'string',
+2025-11-24 01:07:45.46
+9ca839f4
+User
+contentType: 'analysis',
+2025-11-24 01:07:45.46
+9ca839f4
+User
+generateImage: true,
+2025-11-24 01:07:45.46
+9ca839f4
+User
+'إعلام، ذكاء اصطناعي، تقنيات حديثة، مستقبل الصحافة، أتمتة، غرف الأخبار، تحليل، صحافة رقمية'
+2025-11-24 01:07:45.46
+9ca839f4
+User
+'يشمل التقرير أمثلة، وإحصائيات، وتحليل موجز لفرص وتحديات الذكاء الاصطناعي في الصحافة العربية.',
+2025-11-24 01:07:45.46
+9ca839f4
+User
+scheduledAt: '2025-11-23T22:15:00.000Z',
+2025-11-24 01:07:45.46
+9ca839f4
+User
+},
+
