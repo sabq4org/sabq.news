@@ -480,7 +480,7 @@ export class AudioNewsletterService extends EventEmitter {
       
       if (publishImmediately) {
         updateData.status = 'published';
-        updateData.publishedAt = new Date().toISOString();
+        updateData.publishedAt = new Date();
       } else {
         updateData.status = 'draft';
       }
@@ -827,7 +827,8 @@ export class AudioNewsletterService extends EventEmitter {
     // Group listens by day
     const listensByDay: Record<string, number> = {};
     listens.forEach(listen => {
-      const day = new Date(listen.startedAt).toISOString().split('T')[0];
+      const startDate = listen.startedAt instanceof Date ? listen.startedAt : new Date(listen.startedAt);
+      const day = startDate.toISOString().split('T')[0];
       listensByDay[day] = (listensByDay[day] || 0) + 1;
     });
     

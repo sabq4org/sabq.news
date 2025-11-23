@@ -1,0 +1,134 @@
+2025-11-23 10:06:30.06
+2156d84a
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 10:07:00.03
+2156d84a
+User
+[NotificationWorker] Starting queue processing...
+2025-11-23 10:07:00.03
+2156d84a
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-23 10:07:00.04
+2156d84a
+User
+[ScheduledPublisher] Checking for scheduled articles...
+
+2025-11-23 10:07:00.17
+2156d84a
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-23 10:07:00.17
+2156d84a
+User
+Found 0 scheduled newsletters to process
+2025-11-23 10:07:00.17
+2156d84a
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-23 10:07:00.17
+2156d84a
+User
+[NotificationWorker] Queue processing completed
+2025-11-23 10:07:11.62
+2156d84a
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 10:07:11.64
+2156d84a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:07:11.66
+2156d84a
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 10:07:11.73
+2156d84a
+User
+8:07:11 AM [express] POST /api/audio-newsletters/newsletters 200 in 259ms :: {"newsletter":{"id":"74…
+2025-11-23 10:07:11.98
+2156d84a
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 10:07:12.00
+2156d84a
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:07:12.04
+2156d84a
+User
+8:07:12 AM [express] POST /api/accessibility/track 200 in 88ms :: {"success":true,"eventId":"d1c8be5…
+2025-11-23 10:07:13.64
+2156d84a
+User
+at QueryPromise.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/update.js:203:17)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-11-23 10:07:13.64
+2156d84a
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at Array.map ()
+2025-11-23 10:07:13.64
+2156d84a
+User
+at Array.map ()
+2025-11-23 10:07:13.64
+2156d84a
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-23 10:07:13.64
+2156d84a
+User
+at QueryPromise._prepare (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/update.js:189:58)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at PgDialect.sqlToQuery (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/dialect.js:418:17)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:52:26
+2025-11-23 10:07:13.64
+2156d84a
+User
+at SQL.toQuery (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:51:19)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-23 10:07:13.64
+2156d84a
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 10:07:13.64
+2156d84a
+User
+at Array.map ()
+2025-11-23 10:07:13.64
+2156d84a
+User
+Audio generation failed: TypeError: value.toISOString is not a function
+2025-11-23 10:07:13.95
+2156d84a
+User
+🔸 DeserializeUser called with id: admin-sabq
+

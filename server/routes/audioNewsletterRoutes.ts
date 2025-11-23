@@ -440,12 +440,19 @@ router.patch('/newsletters/:id', requirePermission("articles.create"), async (re
   try {
     const validatedData = updateNewsletterSchema.parse(req.body);
     
+    // Convert scheduledFor string to Date if present
+    const updatePayload: any = {
+      ...validatedData,
+      updatedAt: new Date()
+    };
+    
+    if (validatedData.scheduledFor) {
+      updatePayload.scheduledFor = parseValidDate(validatedData.scheduledFor);
+    }
+    
     const [updated] = await db
       .update(audioNewsletters)
-      .set({
-        ...validatedData,
-        updatedAt: new Date()
-      })
+      .set(updatePayload)
       .where(eq(audioNewsletters.id, req.params.id))
       .returning();
     
@@ -1388,10 +1395,9 @@ router.post('/newsletters/:id/track', async (req, res) => {
     // Create listen record
     const listenId = nanoid();
     await db.insert(audioNewsletterListens).values({
-      id: listenId,
       newsletterId: req.params.id,
       userId: userId,
-      startedAt: new Date().toISOString(),
+      startedAt: new Date(),
       duration,
       completionPercentage: completionRate,
       deviceType,
@@ -1489,7 +1495,7 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
       .where(
         and(
           eq(audioNewsletters.status, 'published'),
-          gte(audioNewsletters.publishedAt, today.toISOString())
+          gte(audioNewsletters.publishedAt, today)
         )
       );
     
@@ -1502,15 +1508,15 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
     const [{ thisWeek }] = await db
       .select({ thisWeek: sql`count(*)` })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString()));
+      .where(gte(audioNewsletterListens.startedAt, oneWeekAgo));
     
     const [{ lastWeek }] = await db
       .select({ lastWeek: sql`count(*)` })
       .from(audioNewsletterListens)
       .where(
         and(
-          gte(audioNewsletterListens.startedAt, twoWeeksAgo.toISOString()),
-          lte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString())
+          gte(audioNewsletterListens.startedAt, twoWeeksAgo),
+          lte(audioNewsletterListens.startedAt, oneWeekAgo)
         )
       );
     
