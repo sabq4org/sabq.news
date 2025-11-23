@@ -671,17 +671,17 @@ export default function AudioNewslettersDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <Table>
+                  <Table dir="rtl">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-right">العنوان</TableHead>
-                        <TableHead className="text-right">الحالة</TableHead>
-                        <TableHead className="text-right">القالب</TableHead>
-                        <TableHead className="text-right">المقالات</TableHead>
-                        <TableHead className="text-right">الاستماعات</TableHead>
-                        <TableHead className="text-right">معدل الإكمال</TableHead>
-                        <TableHead className="text-right">تاريخ النشر</TableHead>
-                        <TableHead className="text-right">الإجراءات</TableHead>
+                        <TableHead>العنوان</TableHead>
+                        <TableHead>الحالة</TableHead>
+                        <TableHead>القالب</TableHead>
+                        <TableHead>المقالات</TableHead>
+                        <TableHead>الاستماعات</TableHead>
+                        <TableHead>معدل الإكمال</TableHead>
+                        <TableHead>تاريخ النشر</TableHead>
+                        <TableHead>الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

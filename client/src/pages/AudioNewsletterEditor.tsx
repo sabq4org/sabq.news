@@ -190,41 +190,16 @@ const TEMPLATES = [
   }
 ];
 
-// Voice presets
-const VOICE_PRESETS = [
-  {
-    id: "MALE_NEWS",
-    nameAr: "صوت ذكوري إخباري",
-    description: "مناسب للأخبار الرسمية والتقارير",
-    gender: "male",
-    style: "news",
-    icon: Radio,
-  },
-  {
-    id: "MALE_ANALYSIS",
-    nameAr: "صوت ذكوري تحليلي",
-    description: "مثالي للتحليلات المعمقة والتعليقات",
-    gender: "male",
-    style: "analysis",
-    icon: MessageSquare,
-  },
-  {
-    id: "FEMALE_NEWS",
-    nameAr: "صوت أنثوي إخباري",
-    description: "نبرة احترافية للأخبار والتقارير",
-    gender: "female",
-    style: "news",
-    icon: Radio,
-  },
-  {
-    id: "FEMALE_CONVERSATIONAL",
-    nameAr: "صوت أنثوي حواري",
-    description: "أسلوب ودي مناسب للمحتوى التفاعلي",
-    gender: "female",
-    style: "conversational",
-    icon: MessageSquare,
-  }
-];
+// Voice interface from API
+interface Voice {
+  voice_id: string;
+  name: string;
+  gender?: string;
+  accent?: string;
+  age?: string;
+  use_case?: string;
+  description?: string;
+}
 
 interface SortableArticleProps {
   article: Article;
@@ -398,6 +373,11 @@ export default function AudioNewsletterEditor() {
   const [activeTab, setActiveTab] = useState("template");
   const [showAdvancedVoice, setShowAdvancedVoice] = useState(false);
   const [contentSource, setContentSource] = useState<"articles" | "custom">("articles");
+  const [voiceTab, setVoiceTab] = useState<"selection" | "parameters">("selection");
+  const [testingVoiceId, setTestingVoiceId] = useState<string | null>(null);
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string>("");
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -445,6 +425,42 @@ export default function AudioNewsletterEditor() {
   const { data: publishedArticles = [], isLoading: isArticlesLoading } = useQuery<Article[]>({
     queryKey: ["/api/articles", { status: "published" }],
     enabled: !!user,
+  });
+
+  // Fetch voices from API
+  const { data: voicesData, isLoading: isVoicesLoading } = useQuery<{ voices: Voice[] }>({
+    queryKey: ["/api/audio-newsletters/voices"],
+    enabled: !!user,
+  });
+
+  const voices = voicesData?.voices || [];
+
+  // Test voice mutation
+  const testVoiceMutation = useMutation({
+    mutationFn: async (voiceId: string) => {
+      return await apiRequest("/api/audio-newsletters/voices/test", {
+        method: "POST",
+        body: JSON.stringify({
+          voiceId,
+          sampleText: "مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار من سبق اليوم.",
+        }),
+      });
+    },
+    onSuccess: (data) => {
+      setPreviewAudioUrl(data.audio);
+      toast({
+        title: "جاهز للتشغيل",
+        description: "تم إنشاء معاينة الصوت بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل إنشاء معاينة الصوت",
+        variant: "destructive",
+      });
+      setTestingVoiceId(null);
+    },
   });
 
   useEffect(() => {
@@ -676,7 +692,6 @@ export default function AudioNewsletterEditor() {
   }
 
   const selectedTemplate = TEMPLATES.find(t => t.id === form.watch("template"));
-  const selectedVoicePreset = VOICE_PRESETS.find(v => v.id === form.watch("voicePreset"));
 
   return (
     <DashboardLayout>
@@ -885,207 +900,342 @@ export default function AudioNewsletterEditor() {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <Mic className="h-5 w-5" />
-                          اختيار الصوت
+                          إعدادات الصوت
                         </CardTitle>
                         <CardDescription className="mt-1">
-                          اختر الصوت المناسب لنشرتك الصوتية
+                          اختر الصوت وضبط المعاملات
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="gap-1">
                         <Zap className="h-3 w-3" />
-                        Flash v2.5
+                        ElevenLabs Flash v2.5
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="voicePreset"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>الأصوات المحترفة</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              className="grid grid-cols-2 gap-4"
-                            >
-                              {VOICE_PRESETS.map((voice) => {
-                                const Icon = voice.icon;
-                                const isSelected = field.value === voice.id;
+                  <CardContent>
+                    <TooltipProvider>
+                      <Tabs value={voiceTab} onValueChange={(v: any) => setVoiceTab(v)} dir="rtl">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="selection" data-testid="tab-voice-selection">
+                            <Volume2 className="h-4 w-4 ml-2" />
+                            اختيار الصوت
+                          </TabsTrigger>
+                          <TabsTrigger value="parameters" data-testid="tab-voice-parameters">
+                            <Sliders className="h-4 w-4 ml-2" />
+                            ضبط المعاملات
+                          </TabsTrigger>
+                        </TabsList>
+
+                        {/* Voice Selection Tab */}
+                        <TabsContent value="selection" className="space-y-4 mt-4">
+                          {isVoicesLoading ? (
+                            <div className="grid grid-cols-2 gap-4">
+                              {[...Array(8)].map((_, i) => (
+                                <Skeleton key={i} className="h-32" />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-4">
+                              {voices.map((voice) => {
+                                const isSelected = selectedVoiceId === voice.voice_id;
+                                const isTesting = testingVoiceId === voice.voice_id;
                                 return (
-                                  <label
-                                    key={voice.id}
+                                  <div
+                                    key={voice.voice_id}
                                     className={cn(
-                                      "relative flex flex-col gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all",
+                                      "relative flex flex-col gap-3 p-4 border-2 rounded-lg transition-all",
                                       isSelected
                                         ? "border-primary bg-primary/5"
-                                        : "border-border hover-elevate"
+                                        : "border-border"
                                     )}
-                                    data-testid={`voice-${voice.id}`}
+                                    data-testid={`voice-card-${voice.voice_id}`}
                                   >
-                                    <RadioGroupItem
-                                      value={voice.id}
-                                      className="sr-only"
-                                    />
-                                    {isSelected && (
-                                      <div className="absolute top-2 left-2">
-                                        <Badge variant="default">
-                                          <Check className="h-3 w-3" />
-                                        </Badge>
-                                      </div>
-                                    )}
-                                    <div className="flex items-center gap-3">
-                                      <Icon className="h-5 w-5 text-primary" />
-                                      <div className="flex-1">
-                                        <h4 className="font-semibold">{voice.nameAr}</h4>
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold truncate">{voice.name}</h4>
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                           {voice.description}
                                         </p>
                                       </div>
+                                      {isSelected && (
+                                        <Badge variant="default" className="shrink-0">
+                                          <Check className="h-3 w-3" />
+                                        </Badge>
+                                      )}
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs">
-                                      <Badge variant="outline" className="text-xs">
-                                        {voice.gender === "male" ? "ذكر" : "أنثى"}
-                                      </Badge>
-                                      <Badge variant="outline" className="text-xs">
-                                        {voice.style === "news" ? "إخباري" : voice.style === "analysis" ? "تحليلي" : "حواري"}
-                                      </Badge>
+                                    
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {voice.gender && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {voice.gender === "male" ? "رجالي" : "نسائي"}
+                                        </Badge>
+                                      )}
+                                      {voice.use_case && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {voice.use_case === "formal_news" ? "أخبار رسمية" :
+                                           voice.use_case === "sports_news" ? "رياضية" :
+                                           voice.use_case === "business_news" ? "اقتصادية" :
+                                           voice.use_case === "field_reports" ? "ميدانية" :
+                                           voice.use_case === "morning_shows" ? "صباحية" : voice.use_case}
+                                        </Badge>
+                                      )}
                                     </div>
-                                  </label>
+
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={isSelected ? "default" : "outline"}
+                                        className="flex-1"
+                                        onClick={() => {
+                                          setSelectedVoiceId(voice.voice_id);
+                                          form.setValue("customVoiceId", voice.voice_id);
+                                        }}
+                                        data-testid={`button-select-voice-${voice.voice_id}`}
+                                      >
+                                        {isSelected ? "محدد" : "اختيار"}
+                                      </Button>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="ghost"
+                                            disabled={isTesting}
+                                            onClick={() => {
+                                              setTestingVoiceId(voice.voice_id);
+                                              testVoiceMutation.mutate(voice.voice_id);
+                                            }}
+                                            data-testid={`button-test-voice-${voice.voice_id}`}
+                                          >
+                                            {isTesting ? (
+                                              <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <PlayCircle className="h-4 w-4" />
+                                            )}
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>اختبار الصوت</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </div>
+                                  </div>
                                 );
                               })}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator />
-
-                    <Collapsible open={showAdvancedVoice} onOpenChange={setShowAdvancedVoice}>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-between" data-testid="button-toggle-advanced-voice">
-                          <span className="flex items-center gap-2">
-                            <Sliders className="h-4 w-4" />
-                            إعدادات متقدمة
-                          </span>
-                          {showAdvancedVoice ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="customVoiceId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>معرف صوت مخصص (اختياري)</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="أدخل معرف الصوت من ElevenLabs" data-testid="input-custom-voice-id" />
-                              </FormControl>
-                              <FormDescription>
-                                استخدم صوتك المخصص من ElevenLabs
-                              </FormDescription>
-                            </FormItem>
+                            </div>
                           )}
-                        />
 
-                        <FormField
-                          control={form.control}
-                          name="customVoiceSettings.stability"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>الثبات (Stability): {field.value?.toFixed(2)}</FormLabel>
-                              <FormControl>
-                                <Slider
-                                  value={[field.value || 0.5]}
-                                  onValueChange={([value]) => field.onChange(value)}
-                                  min={0}
-                                  max={1}
-                                  step={0.01}
-                                  dir="ltr"
-                                  data-testid="slider-stability"
+                          {/* Voice Preview Player */}
+                          {previewAudioUrl && (
+                            <Card className="mt-4">
+                              <CardHeader>
+                                <CardTitle className="text-sm">معاينة الصوت</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <audio
+                                  controls
+                                  src={previewAudioUrl}
+                                  className="w-full"
+                                  onEnded={() => setTestingVoiceId(null)}
+                                  data-testid="audio-voice-preview"
                                 />
-                              </FormControl>
-                              <FormDescription>
-                                مستوى ثبات الصوت (0 = متنوع، 1 = ثابت)
-                              </FormDescription>
-                            </FormItem>
+                              </CardContent>
+                            </Card>
                           )}
-                        />
+                        </TabsContent>
 
-                        <FormField
-                          control={form.control}
-                          name="customVoiceSettings.similarity_boost"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>تحسين التشابه: {field.value?.toFixed(2)}</FormLabel>
-                              <FormControl>
-                                <Slider
-                                  value={[field.value || 0.75]}
-                                  onValueChange={([value]) => field.onChange(value)}
-                                  min={0}
-                                  max={1}
-                                  step={0.01}
-                                  dir="ltr"
-                                  data-testid="slider-similarity"
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                مستوى تحسين التشابه مع الصوت الأصلي
-                              </FormDescription>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="customVoiceSettings.style"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>النمط (Style): {field.value?.toFixed(2)}</FormLabel>
-                              <FormControl>
-                                <Slider
-                                  value={[field.value || 0]}
-                                  onValueChange={([value]) => field.onChange(value)}
-                                  min={0}
-                                  max={1}
-                                  step={0.01}
-                                  dir="ltr"
-                                  data-testid="slider-style"
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                مستوى تعبير الصوت (0 = محايد، 1 = معبّر)
-                              </FormDescription>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="customVoiceSettings.use_speaker_boost"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel>تعزيز وضوح المتحدث</FormLabel>
+                        {/* Voice Parameters Tab */}
+                        <TabsContent value="parameters" className="space-y-4 mt-4">
+                          <FormField
+                            control={form.control}
+                            name="customVoiceSettings.stability"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between">
+                                  <FormLabel className="flex items-center gap-2">
+                                    الاستقرار (Stability): {field.value?.toFixed(2)}
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">
+                                          يتحكم في ثبات الصوت. القيم المنخفضة تجعل الصوت أكثر تعبيراً وتنوعاً، 
+                                          بينما القيم العالية تجعله أكثر ثباتاً واتساقاً.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </FormLabel>
+                                </div>
+                                <FormControl>
+                                  <Slider
+                                    value={[field.value || 0.5]}
+                                    onValueChange={([value]) => field.onChange(value)}
+                                    min={0}
+                                    max={1}
+                                    step={0.01}
+                                    dir="ltr"
+                                    className="mt-2"
+                                    data-testid="slider-stability"
+                                  />
+                                </FormControl>
                                 <FormDescription>
-                                  يحسن وضوح الصوت للمحتوى الطويل
+                                  القيمة الموصى بها: 0.4 - 0.6 للأخبار
                                 </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  data-testid="switch-speaker-boost"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </CollapsibleContent>
-                    </Collapsible>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="customVoiceSettings.similarity_boost"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between">
+                                  <FormLabel className="flex items-center gap-2">
+                                    تحسين التشابه (Similarity Boost): {field.value?.toFixed(2)}
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">
+                                          يحدد مدى قرب الصوت المولد من الصوت الأصلي. 
+                                          القيم العالية تجعل الصوت أكثر شبهاً بالأصل.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </FormLabel>
+                                </div>
+                                <FormControl>
+                                  <Slider
+                                    value={[field.value || 0.75]}
+                                    onValueChange={([value]) => field.onChange(value)}
+                                    min={0}
+                                    max={1}
+                                    step={0.01}
+                                    dir="ltr"
+                                    className="mt-2"
+                                    data-testid="slider-similarity"
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  القيمة الموصى بها: 0.7 - 0.85
+                                </FormDescription>
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="flex items-center gap-2">
+                                السرعة (Speed): {playbackSpeed.toFixed(1)}x
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="max-w-xs">
+                                      سرعة تشغيل الصوت. القيمة 1.0 هي السرعة الطبيعية.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </Label>
+                            </div>
+                            <Slider
+                              value={[playbackSpeed]}
+                              onValueChange={([value]) => setPlaybackSpeed(value)}
+                              min={0.5}
+                              max={2}
+                              step={0.1}
+                              dir="ltr"
+                              className="mt-2"
+                              data-testid="slider-speed"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              القيمة الموصى بها: 0.9 - 1.1
+                            </p>
+                          </div>
+
+                          <Separator />
+
+                          <Collapsible>
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" className="w-full justify-between" data-testid="button-toggle-advanced-parameters">
+                                <span className="flex items-center gap-2">
+                                  <Settings className="h-4 w-4" />
+                                  إعدادات إضافية
+                                </span>
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="space-y-4 pt-4">
+                              <FormField
+                                control={form.control}
+                                name="customVoiceSettings.style"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex items-center justify-between">
+                                      <FormLabel className="flex items-center gap-2">
+                                        النمط (Style): {field.value?.toFixed(2)}
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="max-w-xs">
+                                              مستوى التعبير في الصوت. القيم الأعلى تجعل الصوت أكثر تعبيراً ودرامية.
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </FormLabel>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        value={[field.value || 0]}
+                                        onValueChange={([value]) => field.onChange(value)}
+                                        min={0}
+                                        max={1}
+                                        step={0.01}
+                                        dir="ltr"
+                                        className="mt-2"
+                                        data-testid="slider-style"
+                                      />
+                                    </FormControl>
+                                    <FormDescription>
+                                      القيمة الموصى بها: 0.6 - 0.75 للبث الإخباري
+                                    </FormDescription>
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="customVoiceSettings.use_speaker_boost"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                      <FormLabel>تعزيز وضوح المتحدث</FormLabel>
+                                      <FormDescription>
+                                        يحسن وضوح الصوت ويقلل التشوهات في المحتوى الطويل
+                                      </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        data-testid="switch-speaker-boost"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </TabsContent>
+                      </Tabs>
+                    </TooltipProvider>
                   </CardContent>
                 </Card>
 
