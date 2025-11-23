@@ -333,6 +333,10 @@ import {
   type InsertIfoxSchedule,
   type IfoxCategorySettings,
   type InsertIfoxCategorySettings,
+  // AI Scheduled Tasks imports
+  aiScheduledTasks,
+  type AiScheduledTask,
+  type InsertAiScheduledTask,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1625,6 +1629,58 @@ export interface IStorage {
     totalEngagement: number;
     topCategories: { slug: string; views: number }[];
     trend: 'up' | 'down' | 'stable';
+  }>;
+  
+  // ============================================
+  // AI Scheduled Tasks Operations - مهام AI المجدولة
+  // ============================================
+  
+  // Create new AI task
+  createAiTask(task: InsertAiScheduledTask): Promise<AiScheduledTask>;
+  
+  // Get AI task by ID
+  getAiTask(id: string): Promise<AiScheduledTask | undefined>;
+  
+  // List AI tasks with filters
+  listAiTasks(params: {
+    status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+    page?: number;
+    limit?: number;
+    categoryId?: string;
+    createdBy?: string;
+  }): Promise<{ tasks: AiScheduledTask[]; total: number }>;
+  
+  // Update AI task
+  updateAiTask(id: string, updates: Partial<InsertAiScheduledTask>): Promise<AiScheduledTask>;
+  
+  // Update task status with execution results
+  updateAiTaskExecution(id: string, updates: {
+    status: 'processing' | 'completed' | 'failed' | 'cancelled';
+    executedAt?: Date;
+    generatedArticleId?: string;
+    generatedImageUrl?: string;
+    executionLogs?: any;
+    errorMessage?: string;
+    executionTimeMs?: number;
+    tokensUsed?: number;
+    generationCost?: number;
+  }): Promise<AiScheduledTask>;
+  
+  // Delete AI task
+  deleteAiTask(id: string): Promise<void>;
+  
+  // Get pending tasks for execution
+  getPendingAiTasks(): Promise<AiScheduledTask[]>;
+  
+  // Get task statistics
+  getAiTaskStats(): Promise<{
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    totalCost: number;
+    averageExecutionTime: number;
   }>;
 }
 
@@ -14215,6 +14271,145 @@ export class DatabaseStorage implements IStorage {
       totalEngagement: currentEngagement,
       topCategories: topCategoriesResult,
       trend
+    };
+  }
+  
+  // ============================================
+  // AI Scheduled Tasks Operations - مهام AI المجدولة
+  // ============================================
+  
+  async createAiTask(task: InsertAiScheduledTask): Promise<AiScheduledTask> {
+    const [created] = await db.insert(aiScheduledTasks).values(task).returning();
+    return created;
+  }
+  
+  async getAiTask(id: string): Promise<AiScheduledTask | undefined> {
+    const [task] = await db
+      .select()
+      .from(aiScheduledTasks)
+      .where(eq(aiScheduledTasks.id, id));
+    return task;
+  }
+  
+  async listAiTasks(params: {
+    status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+    page?: number;
+    limit?: number;
+    categoryId?: string;
+    createdBy?: string;
+  }): Promise<{ tasks: AiScheduledTask[]; total: number }> {
+    const conditions = [];
+    
+    if (params.status) {
+      conditions.push(eq(aiScheduledTasks.status, params.status));
+    }
+    
+    if (params.categoryId) {
+      conditions.push(eq(aiScheduledTasks.categoryId, params.categoryId));
+    }
+    
+    if (params.createdBy) {
+      conditions.push(eq(aiScheduledTasks.createdBy, params.createdBy));
+    }
+    
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(aiScheduledTasks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    const tasks = await db
+      .select()
+      .from(aiScheduledTasks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(aiScheduledTasks.scheduledAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      tasks,
+      total: totalCount || 0,
+    };
+  }
+  
+  async updateAiTask(id: string, updates: Partial<InsertAiScheduledTask>): Promise<AiScheduledTask> {
+    const [updated] = await db
+      .update(aiScheduledTasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(aiScheduledTasks.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async updateAiTaskExecution(id: string, updates: {
+    status: 'processing' | 'completed' | 'failed' | 'cancelled';
+    executedAt?: Date;
+    generatedArticleId?: string;
+    generatedImageUrl?: string;
+    executionLogs?: any;
+    errorMessage?: string;
+    executionTimeMs?: number;
+    tokensUsed?: number;
+    generationCost?: number;
+  }): Promise<AiScheduledTask> {
+    const [updated] = await db
+      .update(aiScheduledTasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(aiScheduledTasks.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteAiTask(id: string): Promise<void> {
+    await db.delete(aiScheduledTasks).where(eq(aiScheduledTasks.id, id));
+  }
+  
+  async getPendingAiTasks(): Promise<AiScheduledTask[]> {
+    const now = new Date();
+    return db
+      .select()
+      .from(aiScheduledTasks)
+      .where(
+        and(
+          eq(aiScheduledTasks.status, 'pending'),
+          lte(aiScheduledTasks.scheduledAt, now)
+        )
+      )
+      .orderBy(asc(aiScheduledTasks.scheduledAt));
+  }
+  
+  async getAiTaskStats(): Promise<{
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    totalCost: number;
+    averageExecutionTime: number;
+  }> {
+    const [stats] = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        pending: sql<number>`count(*) filter (where status = 'pending')::int`,
+        processing: sql<number>`count(*) filter (where status = 'processing')::int`,
+        completed: sql<number>`count(*) filter (where status = 'completed')::int`,
+        failed: sql<number>`count(*) filter (where status = 'failed')::int`,
+        totalCost: sql<number>`coalesce(sum(generation_cost), 0)::float`,
+        averageExecutionTime: sql<number>`coalesce(avg(execution_time_ms), 0)::int`,
+      })
+      .from(aiScheduledTasks);
+    
+    return {
+      total: stats?.total || 0,
+      pending: stats?.pending || 0,
+      processing: stats?.processing || 0,
+      completed: stats?.completed || 0,
+      failed: stats?.failed || 0,
+      totalCost: stats?.totalCost || 0,
+      averageExecutionTime: stats?.averageExecutionTime || 0,
     };
   }
 }

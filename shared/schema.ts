@@ -7300,6 +7300,128 @@ export const insertIfoxCategorySettingsSchema = createInsertSchema(ifoxCategoryS
   isActive: z.boolean().default(true),
 });
 
+// ============================================
+// AI SCHEDULED TASKS (AI AUTONOMOUS NEWSROOM)
+// ============================================
+
+export const aiScheduledTasks = pgTable("ai_scheduled_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Task identification
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  
+  // Scheduling
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  executedAt: timestamp("executed_at"),
+  
+  // Task configuration
+  contentType: varchar("content_type", { length: 50 }).notNull().default("news"),
+  locale: varchar("locale", { length: 5 }).notNull().default("ar"),
+  categoryId: varchar("category_id").references(() => categories.id),
+  
+  // Content specifications
+  topics: jsonb("topics"),
+  keywords: jsonb("keywords"),
+  sources: jsonb("sources"),
+  tone: varchar("tone", { length: 50 }).default("formal"),
+  
+  // AI generation settings
+  aiModel: varchar("ai_model", { length: 100 }).default("gpt-4"),
+  aiPrompt: text("ai_prompt"),
+  temperature: real("temperature").default(0.7),
+  maxTokens: integer("max_tokens").default(2000),
+  
+  // Image generation settings
+  generateImage: boolean("generate_image").default(true),
+  imagePrompt: text("image_prompt"),
+  imageModel: varchar("image_model", { length: 100 }).default("dall-e-3"),
+  
+  // Publishing settings
+  autoPublish: boolean("auto_publish").default(false),
+  publishStatus: varchar("publish_status", { length: 20 }).default("draft"),
+  
+  // Execution status
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  
+  // Results
+  generatedArticleId: varchar("generated_article_id").references(() => articles.id),
+  generatedImageUrl: text("generated_image_url"),
+  executionLogs: jsonb("execution_logs"),
+  errorMessage: text("error_message"),
+  
+  // Metrics
+  executionTimeMs: integer("execution_time_ms"),
+  tokensUsed: integer("tokens_used"),
+  generationCost: real("generation_cost"),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdBy: varchar("created_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ai_scheduled_tasks_scheduled_at_idx").on(table.scheduledAt),
+  index("ai_scheduled_tasks_status_idx").on(table.status),
+  index("ai_scheduled_tasks_created_by_idx").on(table.createdBy),
+  index("ai_scheduled_tasks_category_idx").on(table.categoryId),
+]);
+
+export const aiScheduledTasksRelations = relations(aiScheduledTasks, ({ one }) => ({
+  category: one(categories, {
+    fields: [aiScheduledTasks.categoryId],
+    references: [categories.id],
+  }),
+  generatedArticle: one(articles, {
+    fields: [aiScheduledTasks.generatedArticleId],
+    references: [articles.id],
+  }),
+  createdByUser: one(users, {
+    fields: [aiScheduledTasks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertAiScheduledTaskSchema = createInsertSchema(aiScheduledTasks).omit({
+  id: true,
+  executedAt: true,
+  generatedArticleId: true,
+  generatedImageUrl: true,
+  executionLogs: true,
+  executionTimeMs: true,
+  tokensUsed: true,
+  generationCost: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "عنوان المهمة مطلوب").max(255),
+  description: z.string().optional(),
+  scheduledAt: z.coerce.date({ message: "وقت التنفيذ مطلوب" }),
+  contentType: z.enum(["news", "report", "analysis", "opinion"]).default("news"),
+  locale: z.enum(["ar", "en", "ur"]).default("ar"),
+  categoryId: z.string().optional(),
+  topics: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
+  sources: z.array(z.object({
+    type: z.enum(["url", "text"]),
+    content: z.string(),
+  })).optional(),
+  tone: z.enum(["formal", "urgent", "analytical", "neutral"]).default("formal"),
+  aiModel: z.string().default("gpt-4"),
+  aiPrompt: z.string().optional(),
+  temperature: z.number().min(0).max(2).default(0.7),
+  maxTokens: z.number().int().min(100).max(4000).default(2000),
+  generateImage: z.boolean().default(true),
+  imagePrompt: z.string().optional(),
+  imageModel: z.string().default("dall-e-3"),
+  autoPublish: z.boolean().default(false),
+  publishStatus: z.enum(["draft", "published"]).default("draft"),
+  status: z.enum(["pending", "processing", "completed", "failed", "cancelled"]).default("pending"),
+  errorMessage: z.string().optional(),
+});
+
+export type AiScheduledTask = typeof aiScheduledTasks.$inferSelect;
+export type InsertAiScheduledTask = z.infer<typeof insertAiScheduledTaskSchema>;
+
 // Select types for iFox tables
 export type IfoxSettings = typeof ifoxSettings.$inferSelect;
 export type InsertIfoxSettings = z.infer<typeof insertIfoxSettingsSchema>;
