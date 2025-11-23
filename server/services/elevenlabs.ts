@@ -9,6 +9,7 @@ export interface TTSOptions {
     similarity_boost?: number;
     style?: number;
     use_speaker_boost?: boolean;
+    speed?: number;
   };
 }
 
@@ -185,11 +186,22 @@ export class ElevenLabsService {
   }
 
   // Test voice with sample text
-  async testVoice(voiceId: string, sampleText: string = 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار اليوم.'): Promise<Buffer> {
+  async testVoice(
+    voiceId: string, 
+    sampleText: string = 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار اليوم.',
+    voiceSettings?: {
+      stability?: number;
+      similarity_boost?: number;
+      style?: number;
+      use_speaker_boost?: boolean;
+      speed?: number;
+    }
+  ): Promise<Buffer> {
     return this.textToSpeech({
       text: sampleText,
       voiceId,
-      model: 'eleven_flash_v2_5' // Use Flash v2.5 for faster preview
+      model: 'eleven_flash_v2_5', // Use Flash v2.5 for faster preview
+      voiceSettings: voiceSettings || this.defaultVoiceSettings
     }, 15000); // 15 second timeout for preview
   }
 

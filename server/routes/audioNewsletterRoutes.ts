@@ -655,17 +655,19 @@ router.post('/voices/test', requirePermission("articles.create"), async (req, re
     
     const elevenLabsService = await import('../services/elevenlabs').then(m => m.getElevenLabsService());
     
-    // Create voice settings
+    // Create voice settings including speed parameter
     const settings = voiceSettings ? {
       stability: voiceSettings.stability ?? 0.5,
       similarity_boost: voiceSettings.similarityBoost ?? 0.75,
+      speed: voiceSettings.speed ?? 1.0,
       use_speaker_boost: true
     } : undefined;
     
-    // Generate test audio
+    // Generate test audio with voice settings
     const audioBuffer = await elevenLabsService.testVoice(
       voiceId,
-      sampleText || 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار من سبق اليوم.'
+      sampleText || 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار من سبق اليوم.',
+      settings
     );
     
     // Return audio as base64 for immediate playback

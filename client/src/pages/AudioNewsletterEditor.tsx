@@ -438,15 +438,25 @@ export default function AudioNewsletterEditor() {
   // Test voice mutation
   const testVoiceMutation = useMutation({
     mutationFn: async (voiceId: string) => {
+      // Get current voice settings from form including speed from playbackSpeed state
+      const currentSettings = form.getValues("customVoiceSettings");
+      
       return await apiRequest("/api/audio-newsletters/voices/test", {
         method: "POST",
         body: JSON.stringify({
           voiceId,
           sampleText: "مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار من سبق اليوم.",
+          voiceSettings: {
+            stability: currentSettings?.stability ?? 0.5,
+            similarityBoost: currentSettings?.similarity_boost ?? 0.75,
+            speed: playbackSpeed ?? 1.0,
+          },
         }),
       });
     },
     onSuccess: (data) => {
+      // Data URL is returned directly from backend - use it as-is
+      // HTML5 audio element can play data URLs directly without conversion
       setPreviewAudioUrl(data.audio);
       toast({
         title: "جاهز للتشغيل",
