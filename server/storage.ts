@@ -333,6 +333,31 @@ import {
   type InsertIfoxSchedule,
   type IfoxCategorySettings,
   type InsertIfoxCategorySettings,
+  // iFox AI Management System - Phase 2
+  ifoxAiPreferences,
+  ifoxContentTemplates,
+  ifoxWorkflowRules,
+  ifoxQualityChecks,
+  ifoxPerformanceMetrics,
+  ifoxBudgetTracking,
+  ifoxStrategyInsights,
+  ifoxEditorialCalendar,
+  type IfoxAiPreferences,
+  type InsertIfoxAiPreferences,
+  type IfoxContentTemplate,
+  type InsertIfoxContentTemplate,
+  type IfoxWorkflowRule,
+  type InsertIfoxWorkflowRule,
+  type IfoxQualityCheck,
+  type InsertIfoxQualityCheck,
+  type IfoxPerformanceMetric,
+  type InsertIfoxPerformanceMetric,
+  type IfoxBudgetTracking,
+  type InsertIfoxBudgetTracking,
+  type IfoxStrategyInsight,
+  type InsertIfoxStrategyInsight,
+  type IfoxEditorialCalendar,
+  type InsertIfoxEditorialCalendar,
   // AI Scheduled Tasks imports
   aiScheduledTasks,
   type AiScheduledTask,
@@ -1682,6 +1707,124 @@ export interface IStorage {
     totalCost: number;
     averageExecutionTime: number;
   }>;
+  
+  // ============================================
+  // iFox AI Management System - Phase 2
+  // Comprehensive AI-powered newsroom management
+  // ============================================
+  
+  // 1. AI Preferences & Settings - Central configuration for AI behavior
+  createOrUpdateIfoxAiPreferences(data: Partial<InsertIfoxAiPreferences>): Promise<IfoxAiPreferences>;
+  getIfoxAiPreferences(): Promise<IfoxAiPreferences | undefined>;
+  getActiveIfoxAiPreferences(): Promise<IfoxAiPreferences | undefined>;
+  
+  // 2. Content Templates Library - Reusable AI content templates
+  createIfoxContentTemplate(data: InsertIfoxContentTemplate): Promise<IfoxContentTemplate>;
+  listIfoxContentTemplates(filters?: {
+    templateType?: string;
+    language?: string;
+    isActive?: boolean;
+    createdBy?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ templates: IfoxContentTemplate[]; total: number }>;
+  getIfoxContentTemplate(id: string): Promise<IfoxContentTemplate | undefined>;
+  updateIfoxContentTemplate(id: string, data: Partial<InsertIfoxContentTemplate>): Promise<IfoxContentTemplate>;
+  deleteIfoxContentTemplate(id: string): Promise<void>;
+  incrementTemplateUsage(id: string): Promise<IfoxContentTemplate>;
+  
+  // 3. Automated Workflow Rules - Smart automation rules
+  createIfoxWorkflowRule(data: InsertIfoxWorkflowRule): Promise<IfoxWorkflowRule>;
+  listIfoxWorkflowRules(filters?: {
+    ruleType?: string;
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<{ rules: IfoxWorkflowRule[]; total: number }>;
+  getIfoxWorkflowRule(id: string): Promise<IfoxWorkflowRule | undefined>;
+  updateIfoxWorkflowRule(id: string, data: Partial<InsertIfoxWorkflowRule>): Promise<IfoxWorkflowRule>;
+  deleteIfoxWorkflowRule(id: string): Promise<void>;
+  updateIfoxWorkflowRuleExecution(id: string, success: boolean): Promise<IfoxWorkflowRule>;
+  
+  // 4. Quality Checks - AI-powered quality control logs
+  createIfoxQualityCheck(data: InsertIfoxQualityCheck): Promise<IfoxQualityCheck>;
+  listIfoxQualityChecks(filters?: {
+    articleId?: string;
+    taskId?: string;
+    passed?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<{ checks: IfoxQualityCheck[]; total: number }>;
+  getIfoxQualityCheck(id: string): Promise<IfoxQualityCheck | undefined>;
+  updateIfoxQualityCheckHumanReview(id: string, data: {
+    humanReviewStatus: 'pending' | 'approved' | 'rejected';
+    reviewedBy: string;
+    reviewNotes?: string;
+  }): Promise<IfoxQualityCheck>;
+  
+  // 5. Performance Metrics - Track AI content performance
+  createOrUpdateIfoxPerformanceMetric(articleId: string, data: Partial<InsertIfoxPerformanceMetric>): Promise<IfoxPerformanceMetric>;
+  getIfoxPerformanceMetric(articleId: string): Promise<IfoxPerformanceMetric | undefined>;
+  listIfoxPerformanceMetrics(filters?: {
+    isAiGenerated?: boolean;
+    publishedAtFrom?: Date;
+    publishedAtTo?: Date;
+    page?: number;
+    limit?: number;
+  }): Promise<{ metrics: IfoxPerformanceMetric[]; total: number }>;
+  getIfoxPerformanceStats(): Promise<{
+    totalArticles: number;
+    aiGeneratedArticles: number;
+    averageViewCount: number;
+    averageEngagement: number;
+    totalRevenue: number;
+    averageROI: number;
+  }>;
+  
+  // 6. Budget Tracking - Monitor API usage and costs
+  createOrUpdateIfoxBudgetTracking(period: string, data: Partial<InsertIfoxBudgetTracking>): Promise<IfoxBudgetTracking>;
+  getCurrentPeriodBudget(period: string): Promise<IfoxBudgetTracking | undefined>;
+  listIfoxBudgetTracking(filters?: {
+    period?: string;
+    fromDate?: Date;
+    toDate?: Date;
+    isOverBudget?: boolean;
+  }): Promise<IfoxBudgetTracking[]>;
+  updateBudgetUsage(updates: {
+    provider: 'openai' | 'anthropic' | 'gemini' | 'visual-ai';
+    apiCalls: number;
+    tokens?: number;
+    cost: number;
+  }): Promise<IfoxBudgetTracking>;
+  
+  // 7. Strategy Insights - AI-powered content strategy recommendations
+  createIfoxStrategyInsight(data: InsertIfoxStrategyInsight): Promise<IfoxStrategyInsight>;
+  listIfoxStrategyInsights(filters?: {
+    insightType?: string;
+    status?: string;
+    priority?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ insights: IfoxStrategyInsight[]; total: number }>;
+  getIfoxStrategyInsight(id: string): Promise<IfoxStrategyInsight | undefined>;
+  updateIfoxStrategyInsightStatus(id: string, status: string, implementedBy?: string): Promise<IfoxStrategyInsight>;
+  deleteIfoxStrategyInsight(id: string): Promise<void>;
+  
+  // 8. Editorial Calendar - Smart content planning
+  createIfoxEditorialCalendarEntry(data: InsertIfoxEditorialCalendar): Promise<IfoxEditorialCalendar>;
+  listIfoxEditorialCalendar(filters?: {
+    scheduledDateFrom?: Date;
+    scheduledDateTo?: Date;
+    status?: string;
+    assignmentType?: string;
+    assignedToUser?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ entries: IfoxEditorialCalendar[]; total: number }>;
+  getIfoxEditorialCalendarEntry(id: string): Promise<IfoxEditorialCalendar | undefined>;
+  updateIfoxEditorialCalendarEntry(id: string, data: Partial<InsertIfoxEditorialCalendar>): Promise<IfoxEditorialCalendar>;
+  deleteIfoxEditorialCalendarEntry(id: string): Promise<void>;
+  updateIfoxEditorialCalendarStatus(id: string, status: string, articleId?: string): Promise<IfoxEditorialCalendar>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -14411,6 +14554,909 @@ export class DatabaseStorage implements IStorage {
       totalCost: stats?.totalCost || 0,
       averageExecutionTime: stats?.averageExecutionTime || 0,
     };
+  }
+  
+  // ============================================
+  // iFox AI Management System - Phase 2
+  // Comprehensive AI-powered newsroom management
+  // ============================================
+  
+  // ============================================
+  // 1. AI Preferences & Settings - Central configuration for AI behavior
+  // ============================================
+  
+  /**
+   * Create or update AI preferences (singleton pattern - only one active preferences record)
+   */
+  async createOrUpdateIfoxAiPreferences(data: Partial<InsertIfoxAiPreferences>): Promise<IfoxAiPreferences> {
+    // Check if there's an existing active preference
+    const [existing] = await db
+      .select()
+      .from(ifoxAiPreferences)
+      .where(eq(ifoxAiPreferences.isActive, true))
+      .limit(1);
+    
+    if (existing) {
+      // Update existing preferences
+      const [updated] = await db
+        .update(ifoxAiPreferences)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(ifoxAiPreferences.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new preferences
+      const [created] = await db
+        .insert(ifoxAiPreferences)
+        .values({ ...data, isActive: true })
+        .returning();
+      return created;
+    }
+  }
+  
+  /**
+   * Get current AI preferences (regardless of active status)
+   */
+  async getIfoxAiPreferences(): Promise<IfoxAiPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(ifoxAiPreferences)
+      .orderBy(desc(ifoxAiPreferences.createdAt))
+      .limit(1);
+    return prefs;
+  }
+  
+  /**
+   * Get active AI preferences only
+   */
+  async getActiveIfoxAiPreferences(): Promise<IfoxAiPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(ifoxAiPreferences)
+      .where(eq(ifoxAiPreferences.isActive, true))
+      .limit(1);
+    return prefs;
+  }
+  
+  // ============================================
+  // 2. Content Templates Library - Reusable AI content templates
+  // ============================================
+  
+  /**
+   * Create a new content template
+   */
+  async createIfoxContentTemplate(data: InsertIfoxContentTemplate): Promise<IfoxContentTemplate> {
+    const [created] = await db
+      .insert(ifoxContentTemplates)
+      .values(data)
+      .returning();
+    return created;
+  }
+  
+  /**
+   * List content templates with filters and pagination
+   */
+  async listIfoxContentTemplates(filters?: {
+    templateType?: string;
+    language?: string;
+    isActive?: boolean;
+    createdBy?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ templates: IfoxContentTemplate[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.templateType) {
+      conditions.push(eq(ifoxContentTemplates.templateType, filters.templateType));
+    }
+    
+    if (filters?.language) {
+      conditions.push(eq(ifoxContentTemplates.language, filters.language));
+    }
+    
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(ifoxContentTemplates.isActive, filters.isActive));
+    }
+    
+    if (filters?.createdBy) {
+      conditions.push(eq(ifoxContentTemplates.createdBy, filters.createdBy));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxContentTemplates)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get templates
+    const templates = await db
+      .select()
+      .from(ifoxContentTemplates)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxContentTemplates.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      templates,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get a single content template by ID
+   */
+  async getIfoxContentTemplate(id: string): Promise<IfoxContentTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(ifoxContentTemplates)
+      .where(eq(ifoxContentTemplates.id, id));
+    return template;
+  }
+  
+  /**
+   * Update a content template
+   */
+  async updateIfoxContentTemplate(id: string, data: Partial<InsertIfoxContentTemplate>): Promise<IfoxContentTemplate> {
+    const [updated] = await db
+      .update(ifoxContentTemplates)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(ifoxContentTemplates.id, id))
+      .returning();
+    return updated;
+  }
+  
+  /**
+   * Delete a content template
+   */
+  async deleteIfoxContentTemplate(id: string): Promise<void> {
+    await db.delete(ifoxContentTemplates).where(eq(ifoxContentTemplates.id, id));
+  }
+  
+  /**
+   * Increment template usage counter
+   */
+  async incrementTemplateUsage(id: string): Promise<IfoxContentTemplate> {
+    const [updated] = await db
+      .update(ifoxContentTemplates)
+      .set({ 
+        usageCount: sql`${ifoxContentTemplates.usageCount} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(ifoxContentTemplates.id, id))
+      .returning();
+    return updated;
+  }
+  
+  // ============================================
+  // 3. Automated Workflow Rules - Smart automation rules
+  // ============================================
+  
+  /**
+   * Create a new workflow rule
+   */
+  async createIfoxWorkflowRule(data: InsertIfoxWorkflowRule): Promise<IfoxWorkflowRule> {
+    const [created] = await db
+      .insert(ifoxWorkflowRules)
+      .values(data)
+      .returning();
+    return created;
+  }
+  
+  /**
+   * List workflow rules with filters and pagination
+   */
+  async listIfoxWorkflowRules(filters?: {
+    ruleType?: string;
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<{ rules: IfoxWorkflowRule[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.ruleType) {
+      conditions.push(eq(ifoxWorkflowRules.ruleType, filters.ruleType));
+    }
+    
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(ifoxWorkflowRules.isActive, filters.isActive));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxWorkflowRules)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get rules
+    const rules = await db
+      .select()
+      .from(ifoxWorkflowRules)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxWorkflowRules.priority), desc(ifoxWorkflowRules.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      rules,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get a single workflow rule by ID
+   */
+  async getIfoxWorkflowRule(id: string): Promise<IfoxWorkflowRule | undefined> {
+    const [rule] = await db
+      .select()
+      .from(ifoxWorkflowRules)
+      .where(eq(ifoxWorkflowRules.id, id));
+    return rule;
+  }
+  
+  /**
+   * Update a workflow rule
+   */
+  async updateIfoxWorkflowRule(id: string, data: Partial<InsertIfoxWorkflowRule>): Promise<IfoxWorkflowRule> {
+    const [updated] = await db
+      .update(ifoxWorkflowRules)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(ifoxWorkflowRules.id, id))
+      .returning();
+    return updated;
+  }
+  
+  /**
+   * Delete a workflow rule
+   */
+  async deleteIfoxWorkflowRule(id: string): Promise<void> {
+    await db.delete(ifoxWorkflowRules).where(eq(ifoxWorkflowRules.id, id));
+  }
+  
+  /**
+   * Update workflow rule execution counters
+   */
+  async updateIfoxWorkflowRuleExecution(id: string, success: boolean): Promise<IfoxWorkflowRule> {
+    const [updated] = await db
+      .update(ifoxWorkflowRules)
+      .set({
+        executionCount: sql`${ifoxWorkflowRules.executionCount} + 1`,
+        successCount: success ? sql`${ifoxWorkflowRules.successCount} + 1` : undefined,
+        failureCount: !success ? sql`${ifoxWorkflowRules.failureCount} + 1` : undefined,
+        lastExecutedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(ifoxWorkflowRules.id, id))
+      .returning();
+    return updated;
+  }
+  
+  // ============================================
+  // 4. Quality Checks - AI-powered quality control logs
+  // ============================================
+  
+  /**
+   * Create a new quality check record
+   */
+  async createIfoxQualityCheck(data: InsertIfoxQualityCheck): Promise<IfoxQualityCheck> {
+    const [created] = await db
+      .insert(ifoxQualityChecks)
+      .values(data)
+      .returning();
+    return created;
+  }
+  
+  /**
+   * List quality checks with filters and pagination
+   */
+  async listIfoxQualityChecks(filters?: {
+    articleId?: string;
+    taskId?: string;
+    passed?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<{ checks: IfoxQualityCheck[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.articleId) {
+      conditions.push(eq(ifoxQualityChecks.articleId, filters.articleId));
+    }
+    
+    if (filters?.taskId) {
+      conditions.push(eq(ifoxQualityChecks.taskId, filters.taskId));
+    }
+    
+    if (filters?.passed !== undefined) {
+      conditions.push(eq(ifoxQualityChecks.passed, filters.passed));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxQualityChecks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get checks
+    const checks = await db
+      .select()
+      .from(ifoxQualityChecks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxQualityChecks.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      checks,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get a single quality check by ID
+   */
+  async getIfoxQualityCheck(id: string): Promise<IfoxQualityCheck | undefined> {
+    const [check] = await db
+      .select()
+      .from(ifoxQualityChecks)
+      .where(eq(ifoxQualityChecks.id, id));
+    return check;
+  }
+  
+  /**
+   * Update quality check with human review
+   */
+  async updateIfoxQualityCheckHumanReview(id: string, data: {
+    humanReviewStatus: 'pending' | 'approved' | 'rejected';
+    reviewedBy: string;
+    reviewNotes?: string;
+  }): Promise<IfoxQualityCheck> {
+    const [updated] = await db
+      .update(ifoxQualityChecks)
+      .set({
+        humanReviewStatus: data.humanReviewStatus,
+        reviewedBy: data.reviewedBy,
+        reviewedAt: new Date(),
+        reviewNotes: data.reviewNotes,
+      })
+      .where(eq(ifoxQualityChecks.id, id))
+      .returning();
+    return updated;
+  }
+  
+  // ============================================
+  // 5. Performance Metrics - Track AI content performance
+  // ============================================
+  
+  /**
+   * Create or update performance metric for an article
+   */
+  async createOrUpdateIfoxPerformanceMetric(articleId: string, data: Partial<InsertIfoxPerformanceMetric>): Promise<IfoxPerformanceMetric> {
+    // Check if metric exists for this article
+    const [existing] = await db
+      .select()
+      .from(ifoxPerformanceMetrics)
+      .where(eq(ifoxPerformanceMetrics.articleId, articleId))
+      .limit(1);
+    
+    if (existing) {
+      // Update existing metric
+      const [updated] = await db
+        .update(ifoxPerformanceMetrics)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(ifoxPerformanceMetrics.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new metric
+      const [created] = await db
+        .insert(ifoxPerformanceMetrics)
+        .values({ articleId, ...data } as InsertIfoxPerformanceMetric)
+        .returning();
+      return created;
+    }
+  }
+  
+  /**
+   * Get performance metric for a specific article
+   */
+  async getIfoxPerformanceMetric(articleId: string): Promise<IfoxPerformanceMetric | undefined> {
+    const [metric] = await db
+      .select()
+      .from(ifoxPerformanceMetrics)
+      .where(eq(ifoxPerformanceMetrics.articleId, articleId));
+    return metric;
+  }
+  
+  /**
+   * List performance metrics with filters and pagination
+   */
+  async listIfoxPerformanceMetrics(filters?: {
+    isAiGenerated?: boolean;
+    publishedAtFrom?: Date;
+    publishedAtTo?: Date;
+    page?: number;
+    limit?: number;
+  }): Promise<{ metrics: IfoxPerformanceMetric[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.isAiGenerated !== undefined) {
+      conditions.push(eq(ifoxPerformanceMetrics.isAiGenerated, filters.isAiGenerated));
+    }
+    
+    if (filters?.publishedAtFrom) {
+      conditions.push(gte(ifoxPerformanceMetrics.publishedAt, filters.publishedAtFrom));
+    }
+    
+    if (filters?.publishedAtTo) {
+      conditions.push(lte(ifoxPerformanceMetrics.publishedAt, filters.publishedAtTo));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxPerformanceMetrics)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get metrics
+    const metrics = await db
+      .select()
+      .from(ifoxPerformanceMetrics)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxPerformanceMetrics.publishedAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      metrics,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get overall performance statistics
+   */
+  async getIfoxPerformanceStats(): Promise<{
+    totalArticles: number;
+    aiGeneratedArticles: number;
+    averageViewCount: number;
+    averageEngagement: number;
+    totalRevenue: number;
+    averageROI: number;
+  }> {
+    const [stats] = await db
+      .select({
+        totalArticles: sql<number>`count(*)::int`,
+        aiGeneratedArticles: sql<number>`count(*) filter (where is_ai_generated = true)::int`,
+        averageViewCount: sql<number>`coalesce(avg(view_count), 0)::int`,
+        averageEngagement: sql<number>`coalesce(avg((share_count + comment_count + bookmark_count)::float), 0)::float`,
+        totalRevenue: sql<number>`coalesce(sum(estimated_revenue), 0)::float`,
+        averageROI: sql<number>`coalesce(avg(roi), 0)::float`,
+      })
+      .from(ifoxPerformanceMetrics);
+    
+    return {
+      totalArticles: stats?.totalArticles || 0,
+      aiGeneratedArticles: stats?.aiGeneratedArticles || 0,
+      averageViewCount: stats?.averageViewCount || 0,
+      averageEngagement: stats?.averageEngagement || 0,
+      totalRevenue: stats?.totalRevenue || 0,
+      averageROI: stats?.averageROI || 0,
+    };
+  }
+  
+  // ============================================
+  // 6. Budget Tracking - Monitor API usage and costs
+  // ============================================
+  
+  /**
+   * Create or update budget tracking for a period
+   */
+  async createOrUpdateIfoxBudgetTracking(period: string, data: Partial<InsertIfoxBudgetTracking>): Promise<IfoxBudgetTracking> {
+    // Check if budget exists for this period
+    const [existing] = await db
+      .select()
+      .from(ifoxBudgetTracking)
+      .where(eq(ifoxBudgetTracking.period, period))
+      .orderBy(desc(ifoxBudgetTracking.createdAt))
+      .limit(1);
+    
+    if (existing && existing.periodEnd && existing.periodEnd > new Date()) {
+      // Update existing budget if period is still active
+      const [updated] = await db
+        .update(ifoxBudgetTracking)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(ifoxBudgetTracking.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new budget period
+      const [created] = await db
+        .insert(ifoxBudgetTracking)
+        .values({ period, ...data } as InsertIfoxBudgetTracking)
+        .returning();
+      return created;
+    }
+  }
+  
+  /**
+   * Get current period budget
+   */
+  async getCurrentPeriodBudget(period: string): Promise<IfoxBudgetTracking | undefined> {
+    const now = new Date();
+    const [budget] = await db
+      .select()
+      .from(ifoxBudgetTracking)
+      .where(
+        and(
+          eq(ifoxBudgetTracking.period, period),
+          lte(ifoxBudgetTracking.periodStart, now),
+          gte(ifoxBudgetTracking.periodEnd, now)
+        )
+      )
+      .limit(1);
+    return budget;
+  }
+  
+  /**
+   * List budget tracking records with filters
+   */
+  async listIfoxBudgetTracking(filters?: {
+    period?: string;
+    fromDate?: Date;
+    toDate?: Date;
+    isOverBudget?: boolean;
+  }): Promise<IfoxBudgetTracking[]> {
+    const conditions = [];
+    
+    if (filters?.period) {
+      conditions.push(eq(ifoxBudgetTracking.period, filters.period));
+    }
+    
+    if (filters?.fromDate) {
+      conditions.push(gte(ifoxBudgetTracking.periodStart, filters.fromDate));
+    }
+    
+    if (filters?.toDate) {
+      conditions.push(lte(ifoxBudgetTracking.periodEnd, filters.toDate));
+    }
+    
+    if (filters?.isOverBudget !== undefined) {
+      conditions.push(eq(ifoxBudgetTracking.isOverBudget, filters.isOverBudget));
+    }
+    
+    return db
+      .select()
+      .from(ifoxBudgetTracking)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxBudgetTracking.periodStart));
+  }
+  
+  /**
+   * Update budget usage with new API call
+   */
+  async updateBudgetUsage(updates: {
+    provider: 'openai' | 'anthropic' | 'gemini' | 'visual-ai';
+    apiCalls: number;
+    tokens?: number;
+    cost: number;
+  }): Promise<IfoxBudgetTracking> {
+    // Get current monthly budget
+    const now = new Date();
+    const period = 'monthly';
+    
+    let [budget] = await db
+      .select()
+      .from(ifoxBudgetTracking)
+      .where(
+        and(
+          eq(ifoxBudgetTracking.period, period),
+          lte(ifoxBudgetTracking.periodStart, now),
+          gte(ifoxBudgetTracking.periodEnd, now)
+        )
+      )
+      .limit(1);
+    
+    // Create new period if doesn't exist
+    if (!budget) {
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      
+      [budget] = await db
+        .insert(ifoxBudgetTracking)
+        .values({
+          period,
+          periodStart,
+          periodEnd,
+        })
+        .returning();
+    }
+    
+    // Update based on provider
+    const updateData: any = {
+      totalApiCalls: sql`${ifoxBudgetTracking.totalApiCalls} + ${updates.apiCalls}`,
+      totalCost: sql`${ifoxBudgetTracking.totalCost} + ${updates.cost}`,
+      updatedAt: new Date(),
+    };
+    
+    if (updates.provider === 'openai') {
+      updateData.openaiCalls = sql`${ifoxBudgetTracking.openaiCalls} + ${updates.apiCalls}`;
+      updateData.openaiCost = sql`${ifoxBudgetTracking.openaiCost} + ${updates.cost}`;
+      if (updates.tokens) {
+        updateData.openaiTokens = sql`${ifoxBudgetTracking.openaiTokens} + ${updates.tokens}`;
+        updateData.totalTokens = sql`${ifoxBudgetTracking.totalTokens} + ${updates.tokens}`;
+      }
+    } else if (updates.provider === 'anthropic') {
+      updateData.anthropicCalls = sql`${ifoxBudgetTracking.anthropicCalls} + ${updates.apiCalls}`;
+      updateData.anthropicCost = sql`${ifoxBudgetTracking.anthropicCost} + ${updates.cost}`;
+      if (updates.tokens) {
+        updateData.anthropicTokens = sql`${ifoxBudgetTracking.anthropicTokens} + ${updates.tokens}`;
+        updateData.totalTokens = sql`${ifoxBudgetTracking.totalTokens} + ${updates.tokens}`;
+      }
+    } else if (updates.provider === 'gemini') {
+      updateData.geminiCalls = sql`${ifoxBudgetTracking.geminiCalls} + ${updates.apiCalls}`;
+      updateData.geminiCost = sql`${ifoxBudgetTracking.geminiCost} + ${updates.cost}`;
+      if (updates.tokens) {
+        updateData.geminiTokens = sql`${ifoxBudgetTracking.geminiTokens} + ${updates.tokens}`;
+        updateData.totalTokens = sql`${ifoxBudgetTracking.totalTokens} + ${updates.tokens}`;
+      }
+    } else if (updates.provider === 'visual-ai') {
+      updateData.visualAiCalls = sql`${ifoxBudgetTracking.visualAiCalls} + ${updates.apiCalls}`;
+      updateData.visualAiCost = sql`${ifoxBudgetTracking.visualAiCost} + ${updates.cost}`;
+    }
+    
+    const [updated] = await db
+      .update(ifoxBudgetTracking)
+      .set(updateData)
+      .where(eq(ifoxBudgetTracking.id, budget.id))
+      .returning();
+    
+    return updated;
+  }
+  
+  // ============================================
+  // 7. Strategy Insights - AI-powered content strategy recommendations
+  // ============================================
+  
+  /**
+   * Create a new strategy insight
+   */
+  async createIfoxStrategyInsight(data: InsertIfoxStrategyInsight): Promise<IfoxStrategyInsight> {
+    const [created] = await db
+      .insert(ifoxStrategyInsights)
+      .values(data)
+      .returning();
+    return created;
+  }
+  
+  /**
+   * List strategy insights with filters and pagination
+   */
+  async listIfoxStrategyInsights(filters?: {
+    insightType?: string;
+    status?: string;
+    priority?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ insights: IfoxStrategyInsight[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.insightType) {
+      conditions.push(eq(ifoxStrategyInsights.insightType, filters.insightType));
+    }
+    
+    if (filters?.status) {
+      conditions.push(eq(ifoxStrategyInsights.status, filters.status));
+    }
+    
+    if (filters?.priority) {
+      conditions.push(eq(ifoxStrategyInsights.priority, filters.priority));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxStrategyInsights)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get insights
+    const insights = await db
+      .select()
+      .from(ifoxStrategyInsights)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(ifoxStrategyInsights.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      insights,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get a single strategy insight by ID
+   */
+  async getIfoxStrategyInsight(id: string): Promise<IfoxStrategyInsight | undefined> {
+    const [insight] = await db
+      .select()
+      .from(ifoxStrategyInsights)
+      .where(eq(ifoxStrategyInsights.id, id));
+    return insight;
+  }
+  
+  /**
+   * Update strategy insight status
+   */
+  async updateIfoxStrategyInsightStatus(id: string, status: string, implementedBy?: string): Promise<IfoxStrategyInsight> {
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+    
+    if (status === 'implemented' && implementedBy) {
+      updateData.implementedBy = implementedBy;
+      updateData.implementedAt = new Date();
+    }
+    
+    const [updated] = await db
+      .update(ifoxStrategyInsights)
+      .set(updateData)
+      .where(eq(ifoxStrategyInsights.id, id))
+      .returning();
+    return updated;
+  }
+  
+  /**
+   * Delete a strategy insight
+   */
+  async deleteIfoxStrategyInsight(id: string): Promise<void> {
+    await db.delete(ifoxStrategyInsights).where(eq(ifoxStrategyInsights.id, id));
+  }
+  
+  // ============================================
+  // 8. Editorial Calendar - Smart content planning
+  // ============================================
+  
+  /**
+   * Create a new editorial calendar entry
+   */
+  async createIfoxEditorialCalendarEntry(data: InsertIfoxEditorialCalendar): Promise<IfoxEditorialCalendar> {
+    const [created] = await db
+      .insert(ifoxEditorialCalendar)
+      .values(data)
+      .returning();
+    return created;
+  }
+  
+  /**
+   * List editorial calendar entries with filters and pagination
+   */
+  async listIfoxEditorialCalendar(filters?: {
+    scheduledDateFrom?: Date;
+    scheduledDateTo?: Date;
+    status?: string;
+    assignmentType?: string;
+    assignedToUser?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ entries: IfoxEditorialCalendar[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.scheduledDateFrom) {
+      conditions.push(gte(ifoxEditorialCalendar.scheduledDate, filters.scheduledDateFrom));
+    }
+    
+    if (filters?.scheduledDateTo) {
+      conditions.push(lte(ifoxEditorialCalendar.scheduledDate, filters.scheduledDateTo));
+    }
+    
+    if (filters?.status) {
+      conditions.push(eq(ifoxEditorialCalendar.status, filters.status));
+    }
+    
+    if (filters?.assignmentType) {
+      conditions.push(eq(ifoxEditorialCalendar.assignmentType, filters.assignmentType));
+    }
+    
+    if (filters?.assignedToUser) {
+      conditions.push(eq(ifoxEditorialCalendar.assignedToUser, filters.assignedToUser));
+    }
+    
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ifoxEditorialCalendar)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    // Get entries
+    const entries = await db
+      .select()
+      .from(ifoxEditorialCalendar)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(ifoxEditorialCalendar.scheduledDate))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      entries,
+      total: totalCount || 0,
+    };
+  }
+  
+  /**
+   * Get a single editorial calendar entry by ID
+   */
+  async getIfoxEditorialCalendarEntry(id: string): Promise<IfoxEditorialCalendar | undefined> {
+    const [entry] = await db
+      .select()
+      .from(ifoxEditorialCalendar)
+      .where(eq(ifoxEditorialCalendar.id, id));
+    return entry;
+  }
+  
+  /**
+   * Update an editorial calendar entry
+   */
+  async updateIfoxEditorialCalendarEntry(id: string, data: Partial<InsertIfoxEditorialCalendar>): Promise<IfoxEditorialCalendar> {
+    const [updated] = await db
+      .update(ifoxEditorialCalendar)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(ifoxEditorialCalendar.id, id))
+      .returning();
+    return updated;
+  }
+  
+  /**
+   * Delete an editorial calendar entry
+   */
+  async deleteIfoxEditorialCalendarEntry(id: string): Promise<void> {
+    await db.delete(ifoxEditorialCalendar).where(eq(ifoxEditorialCalendar.id, id));
+  }
+  
+  /**
+   * Update editorial calendar entry status
+   */
+  async updateIfoxEditorialCalendarStatus(id: string, status: string, articleId?: string): Promise<IfoxEditorialCalendar> {
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+    
+    if (status === 'completed' && articleId) {
+      updateData.articleId = articleId;
+      updateData.actualPublishedAt = new Date();
+    }
+    
+    const [updated] = await db
+      .update(ifoxEditorialCalendar)
+      .set(updateData)
+      .where(eq(ifoxEditorialCalendar.id, id))
+      .returning();
+    return updated;
   }
 }
 
