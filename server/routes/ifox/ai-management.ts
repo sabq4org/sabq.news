@@ -581,6 +581,9 @@ router.post("/calendar", async (req, res) => {
     const data = insertIfoxEditorialCalendarSchema.parse({
       ...req.body,
       createdBy: userId,
+      scheduledDate: typeof req.body.scheduledDate === 'string' 
+        ? new Date(req.body.scheduledDate) 
+        : req.body.scheduledDate,
     });
 
     const entry = await ifoxCalendarService.createEntry(data);
@@ -625,7 +628,12 @@ router.patch("/calendar/:id", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const data = insertIfoxEditorialCalendarSchema.partial().parse(req.body);
+    const data = insertIfoxEditorialCalendarSchema.partial().parse({
+      ...req.body,
+      scheduledDate: req.body.scheduledDate && typeof req.body.scheduledDate === 'string'
+        ? new Date(req.body.scheduledDate)
+        : req.body.scheduledDate,
+    });
     const entry = await ifoxCalendarService.updateEntry(req.params.id, data, userId);
     res.json(entry);
   } catch (error) {

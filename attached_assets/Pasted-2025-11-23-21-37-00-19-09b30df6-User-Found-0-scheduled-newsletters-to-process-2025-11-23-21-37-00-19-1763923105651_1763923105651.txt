@@ -1,0 +1,140 @@
+2025-11-23 21:37:00.19
+09b30df6
+User
+Found 0 scheduled newsletters to process
+2025-11-23 21:37:00.19
+09b30df6
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-23 21:37:00.19
+09b30df6
+User
+[NotificationWorker] Queue processing completed
+2025-11-23 21:37:11.10
+09b30df6
+User
+6:37:11 PM [express] GET /api/ads/slot/header-banner 204 in 56ms
+2025-11-23 21:38:00.05
+09b30df6
+User
+[NotificationWorker] Starting queue processing...
+2025-11-23 21:38:00.05
+09b30df6
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-23 21:38:00.06
+09b30df6
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-23 21:38:00.06
+09b30df6
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-23 21:38:00.17
+09b30df6
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-23 21:38:00.18
+09b30df6
+User
+Found 0 scheduled newsletters to process
+2025-11-23 21:38:00.19
+09b30df6
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-23 21:38:00.19
+09b30df6
+User
+[NotificationWorker] Queue processing completed
+2025-11-23 21:38:06.73
+09b30df6
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 21:38:06.75
+09b30df6
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 21:38:06.78
+09b30df6
+User
+[RBAC] requireRole check - userId: admin-sabq, required: editor,admin,superadmin, user has: system_admin, admin
+2025-11-23 21:38:06.78
+09b30df6
+User
+at SQL.toQuery (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:51:19)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at Array.map ()
+2025-11-23 21:38:06.78
+09b30df6
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-11-23 21:38:06.78
+09b30df6
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2025-11-23 21:38:06.78
+09b30df6
+User
+at Array.map ()
+2025-11-23 21:38:06.78
+09b30df6
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:52:26
+2025-11-23 21:38:06.78
+09b30df6
+User
+at Array.map ()
+2025-11-23 21:38:06.78
+09b30df6
+User
+Create calendar entry error: TypeError: value.toISOString is not a function
+2025-11-23 21:38:06.78
+09b30df6
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-11-23 21:38:06.78
+09b30df6
+User
+at PgDialect.sqlToQuery (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/dialect.js:418:17)
+2025-11-23 21:38:06.78
+09b30df6
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/insert.js:164:53
+2025-11-23 21:38:06.81
+09b30df6
+User
+6:38:06 PM [express] POST /api/ifox/ai-management/calendar 500 in 255ms :: {"error":"Failed to creat…
+2025-11-23 21:38:07.15
+09b30df6
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 21:38:07.17
+09b30df6
+User
+✅ DeserializeUser: User found: admin@sabq.sa
