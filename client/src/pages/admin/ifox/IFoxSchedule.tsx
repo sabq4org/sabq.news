@@ -132,6 +132,11 @@ export default function IFoxSchedule() {
     queryKey: ["/api/admin/ifox/schedule/slots", selectedDate]
   });
 
+  // Ensure data is always an array
+  const safeScheduledArticles = Array.isArray(scheduledArticles) ? scheduledArticles : [];
+  const safeDraftArticles = Array.isArray(draftArticles) ? draftArticles : [];
+  const safePublishingSlots = Array.isArray(publishingSlots) ? publishingSlots : [];
+
   // Create/Update schedule mutation
   const scheduleArticleMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -233,19 +238,19 @@ export default function IFoxSchedule() {
     }
   };
 
-  const upcomingArticles = scheduledArticles
-    .filter(a => a.status === "scheduled" && isFuture(new Date(a.scheduledAt)))
+  const upcomingArticles = safeScheduledArticles
+    .filter(a => a?.status === "scheduled" && isFuture(new Date(a?.scheduledAt)))
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
     .slice(0, 5);
 
-  const publishedArticles = scheduledArticles
-    .filter(a => a.status === "published")
+  const publishedArticles = safeScheduledArticles
+    .filter(a => a?.status === "published")
     .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
     .slice(0, 10);
 
   const hasConflict = (date: Date) => {
     const hour = format(date, "HH:00");
-    const slot = publishingSlots.find(s => s.time === hour);
+    const slot = safePublishingSlots.find(s => s?.time === hour);
     return slot ? slot.currentArticles >= slot.maxArticles : false;
   };
 
@@ -310,8 +315,8 @@ export default function IFoxSchedule() {
                       <div>
                         <p className="text-sm text-white/60">مجدول اليوم</p>
                         <p className="text-2xl font-bold text-white">
-                          {scheduledArticles.filter(a => 
-                            isToday(new Date(a.scheduledAt)) && a.status === "scheduled"
+                          {safeScheduledArticles.filter(a => 
+                            a?.scheduledAt && isToday(new Date(a.scheduledAt)) && a.status === "scheduled"
                           ).length}
                         </p>
                       </div>
@@ -326,10 +331,10 @@ export default function IFoxSchedule() {
                       <div>
                         <p className="text-sm text-white/60">هذا الأسبوع</p>
                         <p className="text-2xl font-bold text-white">
-                          {scheduledArticles.filter(a => {
-                            const date = new Date(a.scheduledAt);
+                          {safeScheduledArticles.filter(a => {
+                            const date = new Date(a?.scheduledAt);
                             const now = new Date();
-                            return date >= startOfWeek(now) && date <= endOfWeek(now) && a.status === "scheduled";
+                            return date >= startOfWeek(now) && date <= endOfWeek(now) && a?.status === "scheduled";
                           }).length}
                         </p>
                       </div>
@@ -344,7 +349,7 @@ export default function IFoxSchedule() {
                       <div>
                         <p className="text-sm text-white/60">تم النشر</p>
                         <p className="text-2xl font-bold text-white">
-                          {scheduledArticles.filter(a => a.status === "published").length}
+                          {safeScheduledArticles.filter(a => a?.status === "published").length}
                         </p>
                       </div>
                       <CheckCircle className="w-8 h-8 text-green-400 opacity-50" />
@@ -357,7 +362,7 @@ export default function IFoxSchedule() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-white/60">مسودات متاحة</p>
-                        <p className="text-2xl font-bold text-white">{draftArticles.length}</p>
+                        <p className="text-2xl font-bold text-white">{safeDraftArticles.length}</p>
                       </div>
                       <FileText className="w-8 h-8 text-amber-400 opacity-50" />
                     </div>
@@ -385,7 +390,7 @@ export default function IFoxSchedule() {
                     </CardHeader>
                     <CardContent>
                       <IFoxCalendar
-                        events={scheduledArticles.map(article => ({
+                        events={safeScheduledArticles.map(article => ({
                           id: article.id,
                           title: article.title,
                           start: new Date(article.scheduledAt),
@@ -394,7 +399,7 @@ export default function IFoxSchedule() {
                           status: article.status,
                         }))}
                         onEventClick={(event) => {
-                          const article = scheduledArticles.find(a => a.id === event.id);
+                          const article = safeScheduledArticles.find(a => a.id === event.id);
                           if (article) openScheduleDialog(undefined, article);
                         }}
                         onDateClick={(date) => {
@@ -530,7 +535,7 @@ export default function IFoxSchedule() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {publishingSlots.map((slot) => (
+                    {safePublishingSlots.map((slot) => (
                       <div
                         key={slot.time}
                         className={cn(
@@ -579,7 +584,7 @@ export default function IFoxSchedule() {
                   <CardContent>
                     <ScrollArea className="h-[250px]">
                       <div className="space-y-2">
-                        {draftArticles.map((article) => (
+                        {safeDraftArticles.map((article) => (
                           <div
                             key={article.id}
                             className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors"

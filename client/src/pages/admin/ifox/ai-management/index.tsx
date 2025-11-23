@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { 
   Settings, 
   BookTemplate, 
@@ -31,7 +33,9 @@ export default function AIManagementDashboard() {
   const [activeTab, setActiveTab] = useState("preferences");
 
   return (
-    <div className="min-h-screen p-6 space-y-6" dir="rtl">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight" data-testid="heading-ai-management">
@@ -158,6 +162,8 @@ export default function AIManagementDashboard() {
           <BudgetManagerTab />
         </TabsContent>
       </Tabs>
-    </div>
+        </div>
+      </ScrollArea>
+    </IFoxLayout>
   );
 }
