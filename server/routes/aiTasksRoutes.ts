@@ -31,17 +31,27 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
   try {
     const userId = (req.user as any).id;
     
+    // Log incoming request for debugging
+    console.log('[AI Tasks API] 📥 Received POST request:', {
+      body: req.body,
+      scheduledAtType: typeof req.body.scheduledAt,
+      scheduledAtValue: req.body.scheduledAt,
+    });
+    
     // Validate request body
     const taskData = insertAiScheduledTaskSchema.parse({
       ...req.body,
       createdBy: userId,
     });
 
+    console.log('[AI Tasks API] ✅ Validation passed:', taskData);
+
     const task = await storage.createAiTask(taskData);
     
     res.status(201).json(task);
   } catch (error) {
     if (error instanceof ZodError) {
+      console.error('[AI Tasks API] ❌ Validation error:', JSON.stringify(error.errors, null, 2));
       return res.status(400).json({ 
         error: 'Validation error', 
         details: error.errors 

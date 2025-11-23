@@ -1,0 +1,89 @@
+2025-11-24 00:57:46.43
+f8515f85
+User
+9:57:46 PM [express] GET /api/ai-tasks/stats 304 in 168ms :: {"total":0,"pending":0,"processing":0,"…
+2025-11-24 00:57:46.43
+f8515f85
+User
+9:57:46 PM [express] GET /api/auth/user 304 in 202ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-24 00:57:46.43
+f8515f85
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:57:46.44
+f8515f85
+User
+9:57:46 PM [express] GET /api/ai-tasks 200 in 258ms :: {"tasks":[],"total":0}
+
+2025-11-24 00:57:46.46
+f8515f85
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:57:46.52
+f8515f85
+User
+9:57:46 PM [express] GET /api/admin/ifox/categories 200 in 249ms :: [{"id":"6ae21e93-14bc-486f-9f27-…
+2025-11-24 00:57:46.53
+f8515f85
+User
+9:57:46 PM [express] GET /api/themes/active 304 in 256ms
+2025-11-24 00:58:00.76
+f8515f85
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 00:58:00.76
+f8515f85
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 00:58:00.76
+f8515f85
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 00:58:00.76
+f8515f85
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 00:58:00.79
+f8515f85
+User
+Found 0 scheduled newsletters to process
+2025-11-24 00:58:00.79
+f8515f85
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 00:58:00.79
+f8515f85
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 00:58:00.79
+f8515f85
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 00:58:36.12
+f8515f85
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:58:36.21
+f8515f85
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:58:36.24
+f8515f85
+User
+9:58:36 PM [express] POST /api/ai-tasks 400 in 288ms :: {"error":"Validation error","details":[{"rec…
+2025-11-24 00:58:36.59
+f8515f85
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:58:36.62
+f8515f85
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:58:36.66
+f8515f85
+User
+9:58:36 PM [express] POST /api/accessibility/track 200 in 91ms :: {"success":true,"eventId":"e0ca4fb…
+2025-11-24 00:58:36.66
+f8515f85
+User
+9:58:36 PM [express] POST /api/accessibility/track 200 in 91ms :: {"success":true,"eventId":"e0ca4fb…
