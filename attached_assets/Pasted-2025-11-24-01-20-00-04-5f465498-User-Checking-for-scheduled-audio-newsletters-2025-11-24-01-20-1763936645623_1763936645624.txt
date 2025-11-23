@@ -1,0 +1,116 @@
+2025-11-24 01:20:00.04
+5f465498
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 01:20:00.05
+5f465498
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 01:20:00.06
+5f465498
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 01:20:00.07
+5f465498
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 01:20:00.18
+5f465498
+User
+[AI Task Executor] Found 1 pending task(s)
+2025-11-24 01:20:00.19
+5f465498
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 01:20:00.19
+5f465498
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 01:20:00.19
+5f465498
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 01:20:00.20
+5f465498
+User
+Found 0 scheduled newsletters to process
+2025-11-24 01:20:00.22
+5f465498
+User
+[AI Task Executor] Executing task 84efb403-e317-4a75-bd7e-a32f00114499: تقرير تحليلي عن مستقبل التقنيات الذكية في الإعلام
+2025-11-24 01:20:04.45
+5f465498
+User
+at async file:///home/runner/workspace/dist/index.js:59315:22
+2025-11-24 01:20:04.45
+5f465498
+User
+at async AITaskExecutor.executeTask (file:///home/runner/workspace/dist/index.js:58393:32)
+2025-11-24 01:20:04.45
+5f465498
+User
+at async pRetry (file:///home/runner/workspace/node_modules/p-retry/index.js:195:19)
+2025-11-24 01:20:04.45
+5f465498
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-24 01:20:04.45
+5f465498
+User
+at async AITaskExecutor.executePendingTasks (file:///home/runner/workspace/dist/index.js:58480:22)
+2025-11-24 01:20:04.45
+5f465498
+User
+at async AIArticleGenerator.generateArticle (file:///home/runner/workspace/dist/index.js:58197:22)
+2025-11-24 01:20:04.45
+5f465498
+User
+at async Timeout._onTimeout (/home/runner/workspace/node_modules/node-cron/dist/esm/scheduler/runner.js:70:44)
+2025-11-24 01:20:04.45
+5f465498
+User
+at pRetry.retries (file:///home/runner/workspace/dist/index.js:16821:21)
+2025-11-24 01:20:04.45
+5f465498
+User
+[AI Task Executor] Task 84efb403-e317-4a75-bd7e-a32f00114499 failed: Error: openai/gpt-5.1: 400 Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.
+2025-11-24 01:20:04.48
+5f465498
+User
+[AI Task Executor] Execution summary: 0 succeeded, 1 failed
+2025-11-24 01:20:04.48
+5f465498
+User
+🤖 [AI Tasks Scheduler] Execution complete: 0 succeeded, 1 failed
+2025-11-24 01:21:00.04
+5f465498
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 01:21:00.04
+5f465498
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 01:21:00.05
+5f465498
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 01:21:00.06
+5f465498
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 01:21:00.17
+5f465498
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 01:21:00.17
+5f465498
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 01:21:00.18
+5f465498
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 01:21:00.19
+5f465498
+User
+Found 0 scheduled newsletters to process

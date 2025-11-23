@@ -116,12 +116,21 @@ class AIManager {
     // Use gpt-5.1 for all OpenAI models unless specifically o3-mini
     const model = config.model === 'o3-mini' ? 'o3-mini' : 'gpt-5.1';
     
-    const response = await this.openai.chat.completions.create({
+    // GPT-5.1 uses max_completion_tokens instead of max_tokens
+    const completionParams: any = {
       model,
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: config.maxTokens || 500,
       temperature: config.temperature || 0.7,
-    });
+    };
+    
+    // Use max_completion_tokens for gpt-5.1, max_tokens for other models
+    if (model === 'gpt-5.1') {
+      completionParams.max_completion_tokens = config.maxTokens || 4000;
+    } else {
+      completionParams.max_tokens = config.maxTokens || 500;
+    }
+    
+    const response = await this.openai.chat.completions.create(completionParams);
 
     return {
       provider: 'openai',
