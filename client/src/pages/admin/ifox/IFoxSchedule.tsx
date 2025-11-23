@@ -250,14 +250,9 @@ export default function IFoxSchedule() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-blue-950/30 to-purple-950/20">
-      {/* Sidebar */}
-      <IFoxSidebar className="hidden lg:block" />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-6" dir="rtl">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -644,9 +639,8 @@ export default function IFoxSchedule() {
                 </Card>
               </div>
             </motion.div>
-          </div>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
 
       {/* Schedule Dialog */}
       <Dialog open={isScheduleDialogOpen} onOpenChange={(open) => {
@@ -840,6 +834,6 @@ export default function IFoxSchedule() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </IFoxLayout>
   );
 }

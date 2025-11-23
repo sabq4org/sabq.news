@@ -250,11 +250,9 @@ export default function IFoxArticles() {
   const totalPages = Math.ceil(totalArticles / 20);
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
-      <IFoxSidebar className="hidden lg:block" />
-      <div className="flex-1 overflow-y-auto">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-6" dir="rtl">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
@@ -483,9 +481,8 @@ export default function IFoxArticles() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
+        </div>
+      </ScrollArea>
+    </IFoxLayout>
   );
 }
