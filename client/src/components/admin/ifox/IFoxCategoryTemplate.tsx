@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { IFoxLayout } from "./IFoxLayout";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -58,7 +59,7 @@ export function IFoxCategoryTemplate({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+    <IFoxLayout>
       <div className="max-w-7xl mx-auto p-6 space-y-6" dir="rtl">
         {/* Header */}
         <motion.div
@@ -194,6 +195,6 @@ export function IFoxCategoryTemplate({
           {children}
         </motion.div>
       </div>
-    </div>
+    </IFoxLayout>
   );
 }

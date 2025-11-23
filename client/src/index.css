@@ -114,6 +114,14 @@
   --ai-background: 220 100% 97%;
   --ai-background-muted: 220 100% 99%;
 
+  /* iFox Semantic Color Tokens - WCAG Compliant */
+  --ifox-surface-primary: 258 45% 16%;
+  --ifox-surface-muted: 252 32% 20%;
+  --ifox-surface-overlay: 258 60% 22%;
+  --ifox-text-primary: 220 15% 94%;
+  --ifox-text-secondary: 220 12% 78%;
+  --ifox-accent: 266 87% 52%;
+
   --font-sans: 'Inter', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -256,6 +264,14 @@
   --ai-glow: 220 84% 60%;
   --ai-background: 220 25% 10%;
   --ai-background-muted: 220 20% 12%;
+
+  /* iFox Semantic Color Tokens - WCAG Compliant */
+  --ifox-surface-primary: 258 45% 16%;
+  --ifox-surface-muted: 252 32% 20%;
+  --ifox-surface-overlay: 258 60% 22%;
+  --ifox-text-primary: 220 15% 94%;
+  --ifox-text-secondary: 220 12% 78%;
+  --ifox-accent: 266 87% 52%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.15);
   --shadow-xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.20);

@@ -188,7 +188,8 @@ export default function IFoxSettings() {
   return (
     <IFoxLayout>
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6" dir="rtl">
+        <div className="flex h-full flex-col">
+          <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -867,6 +868,7 @@ export default function IFoxSettings() {
               </Tabs>
             </motion.div>
           </div>
+      </div>
       </ScrollArea>
     </IFoxLayout>
   );

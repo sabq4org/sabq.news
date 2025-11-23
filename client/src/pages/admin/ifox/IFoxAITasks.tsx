@@ -279,7 +279,8 @@ export default function IFoxAITasks() {
   return (
     <IFoxLayout>
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6" dir="rtl">
+        <div className="flex h-full flex-col">
+          <div className="p-6 space-y-6" dir="rtl">
         {/* Header with Mascot */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -446,7 +447,7 @@ export default function IFoxAITasks() {
                   </div>
                 </div>
                 
-                <div className="flex gap-2 justify-end">
+                <div className="flex flex-row-reverse gap-2 justify-start" dir="rtl">
                   <Button 
                     variant="outline" 
                     onClick={() => setIsCreateDialogOpen(false)}
@@ -635,6 +636,7 @@ export default function IFoxAITasks() {
           </CardContent>
         </Card>
         </div>
+      </div>
       </ScrollArea>
     </IFoxLayout>
   );
