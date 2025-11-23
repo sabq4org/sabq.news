@@ -1,0 +1,111 @@
+2025-11-23 09:25:06.11
+680e5642
+User
+🔍 /api/auth/user check: {
+2025-11-23 09:25:06.11
+680e5642
+User
+userId: 'admin-sabq',
+2025-11-23 09:25:06.18
+680e5642
+User
+7:25:06 AM [express] GET /api/auth/user 304 in 118ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-23 09:25:06.46
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:25:06.46
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:25:06.46
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-23 09:25:06.48
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:25:06.48
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:25:06.49
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:25:06.51
+680e5642
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 09:25:06.55
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:25:06.56
+680e5642
+User
+7:25:06 AM [express] GET /api/announcements/active 304 in 123ms :: []
+2025-11-23 09:25:06.57
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:25:06.57
+680e5642
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 09:25:06.57
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:25:06.59
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 09:25:06.59
+680e5642
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 09:25:06.59
+680e5642
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 09:25:06.59
+680e5642
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 09:25:06.59
+680e5642
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-23 09:25:06.59
+680e5642
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 09:25:06.59
+680e5642
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 09:25:06.64
+680e5642
+User
+at Array.map ()
+2025-11-23 09:25:06.64
+680e5642
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-11-23 09:25:06.64
+680e5642
+User
+at SQL.toQuery (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:51:19)
+2025-11-23 09:25:06.64
+680e5642
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+
+2025-11-23 09:25:06.64
+680e5642
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:685:50

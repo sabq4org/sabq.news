@@ -24,6 +24,17 @@ import { requireAuth as rbacRequireAuth, requirePermission } from '../rbac';
 
 const router = express.Router();
 
+// Helper function to safely parse dates and prevent Invalid Date crashes
+function parseValidDate(dateString: string | undefined): Date | undefined {
+  if (!dateString) return undefined;
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return undefined; // Invalid date
+  }
+  return date;
+}
+
 // Validation schemas
 const createNewsletterSchema = z.object({
   title: z.string().min(1).max(200),
@@ -104,16 +115,18 @@ router.get('/public', async (req, res) => {
         or(
           ilike(audioNewsletters.title, `%${search}%`),
           ilike(audioNewsletters.description, `%${search}%`)
-        )
+        )!
       );
     }
     
-    if (startDate) {
-      whereConditions.push(gte(audioNewsletters.createdAt, startDate as string));
+    const parsedStartDate = parseValidDate(startDate as string);
+    if (parsedStartDate) {
+      whereConditions.push(gte(audioNewsletters.createdAt, parsedStartDate));
     }
     
-    if (endDate) {
-      whereConditions.push(lte(audioNewsletters.createdAt, endDate as string));
+    const parsedEndDate = parseValidDate(endDate as string);
+    if (parsedEndDate) {
+      whereConditions.push(lte(audioNewsletters.createdAt, parsedEndDate));
     }
     
     const whereClause = and(...whereConditions);
@@ -174,11 +187,7 @@ router.get('/public/:id', async (req, res) => {
       with: {
         articles: {
           with: {
-            article: {
-              with: {
-                category: true
-              }
-            }
+            article: true
           },
           orderBy: (articles, { asc }) => [asc(articles.order)]
         }
@@ -230,16 +239,18 @@ router.get('/newsletters', rbacRequireAuth, async (req, res) => {
         or(
           ilike(audioNewsletters.title, `%${search}%`),
           ilike(audioNewsletters.description, `%${search}%`)
-        )
+        )!
       );
     }
     
-    if (startDate) {
-      whereConditions.push(gte(audioNewsletters.createdAt, startDate as string));
+    const parsedStartDate = parseValidDate(startDate as string);
+    if (parsedStartDate) {
+      whereConditions.push(gte(audioNewsletters.createdAt, parsedStartDate));
     }
     
-    if (endDate) {
-      whereConditions.push(lte(audioNewsletters.createdAt, endDate as string));
+    const parsedEndDate = parseValidDate(endDate as string);
+    if (parsedEndDate) {
+      whereConditions.push(lte(audioNewsletters.createdAt, parsedEndDate));
     }
     
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
@@ -318,11 +329,7 @@ router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
         },
         articles: {
           with: {
-            article: {
-              with: {
-                category: true
-              }
-            }
+            article: true
           },
           orderBy: (articles, { asc }) => [asc(articles.order)]
         },
@@ -437,7 +444,7 @@ router.patch('/newsletters/:id', requirePermission("articles.create"), async (re
       .update(audioNewsletters)
       .set({
         ...validatedData,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date()
       })
       .where(eq(audioNewsletters.id, req.params.id))
       .returning();
@@ -579,7 +586,7 @@ router.post('/newsletters/:id/listen', async (req, res) => {
     await audioNewsletterService.trackListen(
       req.params.id,
       userId,
-      validatedData.duration
+      validatedData.duration ?? 0
     );
     
     // Log anonymous listen for monitoring
@@ -874,10 +881,10 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} >= ${startDate as string}`);
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} <= ${endDate as string}`);
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -907,7 +914,7 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
         activeListeners: sql`count(distinct ${audioNewsletterListens.userId})`
       })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.startedAt, thirtyDaysAgo.toISOString()));
+      .where(sql`${audioNewsletterListens.startedAt} >= ${thirtyDaysAgo.toISOString()}`);
     
     // Get scheduled newsletters count
     const [{ scheduledCount }] = await db
@@ -925,7 +932,7 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
       .where(
         and(
           eq(audioNewsletters.status, 'published'),
-          gte(audioNewsletters.publishedAt, today.toISOString())
+          sql`${audioNewsletters.publishedAt} >= ${today.toISOString()}`
         )
       );
     
@@ -938,15 +945,15 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     const [{ thisWeekListens }] = await db
       .select({ thisWeekListens: sql`count(*)` })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString()));
+      .where(sql`${audioNewsletterListens.startedAt} >= ${oneWeekAgo.toISOString()}`);
     
     const [{ lastWeekListens }] = await db
       .select({ lastWeekListens: sql`count(*)` })
       .from(audioNewsletterListens)
       .where(
         and(
-          gte(audioNewsletterListens.startedAt, twoWeeksAgo.toISOString()),
-          lte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString())
+          sql`${audioNewsletterListens.startedAt} >= ${twoWeeksAgo.toISOString()}`,
+          sql`${audioNewsletterListens.startedAt} <= ${oneWeekAgo.toISOString()}`
         )
       );
     
@@ -1000,15 +1007,15 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} >= ${startDate as string}`);
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} <= ${endDate as string}`);
     } else {
       // Default to last 30 days if no end date
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      dateConditions.push(gte(audioNewsletterListens.startedAt, thirtyDaysAgo.toISOString()));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} >= ${thirtyDaysAgo.toISOString()}`);
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -1120,9 +1127,8 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
     
     res.json({
       trends: trends.map(t => ({
-        date: t.date,
-        value: Number(t.value) || 0,
-        ...t
+        ...t,
+        value: Number(t.value) || 0
       })),
       peakHours: hoursData.map(h => ({
         hour: Number(h.hour),
@@ -1156,10 +1162,10 @@ router.get('/analytics/top-newsletters', requirePermission("analytics.view"), as
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} >= ${startDate as string}`);
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} <= ${endDate as string}`);
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -1237,10 +1243,10 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} >= ${startDate as string}`);
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
+      dateConditions.push(sql`${audioNewsletterListens.startedAt} <= ${endDate as string}`);
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
