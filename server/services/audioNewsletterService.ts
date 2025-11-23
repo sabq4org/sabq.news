@@ -728,13 +728,12 @@ export class AudioNewsletterService extends EventEmitter {
         'public'
       );
       
-      // Return the public object endpoint URL
-      return `/public-objects/${filePath}`;
+      // Return the public media endpoint URL using the full path returned by uploadFile
+      // This includes the bucket name and directory structure needed by /api/public-media/
+      return `/api/public-media/${result.path}`;
     } catch (error) {
       console.error('Failed to upload audio to storage:', error);
-      // Fallback to local serving endpoint
-      const fileName = `newsletters/audio_${newsletterId}_${Date.now()}.mp3`;
-      return `/api/audio/${fileName}`;
+      throw error; // Let the caller handle the error
     }
   }
   

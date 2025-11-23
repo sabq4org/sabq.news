@@ -1,0 +1,125 @@
+2025-11-23 10:22:35.45
+260c24d9
+User
+🔑 Apple private key formatted (length: 257 )
+2025-11-23 10:22:35.45
+260c24d9
+User
+✅ Apple OAuth Strategy initialized
+2025-11-23 10:22:35.46
+260c24d9
+User
+✅ Infographic AI routes registered
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ Auto Image Generation routes registered
+
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ Visual AI routes registered
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ NotebookLM routes registered
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ Nano Banana Pro routes registered
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ Routes registered successfully
+2025-11-23 10:22:35.46
+260c24d9
+User
+[Server] ✅ Thumbnail routes registered
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] ✅ Story Cards routes registered
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] ✅ RSS Feed routes registered
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] Starting in PRODUCTION mode with static files
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] ✅ Audio Newsletter routes registered
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] ✅ Social crawler middleware registered
+2025-11-23 10:22:35.47
+260c24d9
+User
+[Server] ✅ Static files setup completed
+2025-11-23 10:22:35.48
+260c24d9
+User
+[Server] Ready check available at http://0.0.0.0:5000/ready
+2025-11-23 10:22:35.48
+260c24d9
+User
+[Server] ✅ Successfully started on port 5000
+2025-11-23 10:22:35.48
+260c24d9
+User
+[Server] Health check available at http://0.0.0.0:5000/health
+2025-11-23 10:22:35.99
+260c24d9
+User
+8:22:35 AM [express] serving on port 5000
+2025-11-23 10:22:35.99
+260c24d9
+User
+[NotificationWorker] Starting notification worker...
+2025-11-23 10:22:36.02
+260c24d9
+User
+[ScheduledPublisher] Scheduled article publisher started successfully
+2025-11-23 10:22:36.02
+260c24d9
+User
+[NotificationWorker] Starting queue processing...
+2025-11-23 10:22:36.02
+260c24d9
+User
+[REC WORKER] Smart recommendation worker started successfully
+2025-11-23 10:22:36.02
+260c24d9
+User
+[DigestWorker] Daily digest worker started successfully
+2025-11-23 10:22:36.02
+260c24d9
+User
+[AnnouncementScheduler] Announcement scheduler started successfully
+2025-11-23 10:22:36.02
+260c24d9
+User
+[NotificationWorker] Notification worker started successfully
+2025-11-23 10:22:36.02
+260c24d9
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-23 10:22:36.08
+260c24d9
+User
+[Server] ✅ Job queue handlers registered successfully
+2025-11-23 10:22:36.09
+260c24d9
+User
+[Seasonal Categories Job] ⏰ Seasonal categories job scheduled (every 6 hours)
+2025-11-23 10:22:36.09
+260c24d9
+User
+[Dynamic Categories Job] 🚀 Running initial update...
+2025-11-23 10:22:36.09
+260c24d9
+User
+[Dynamic Categories Job] ⏰ Job scheduled (every 60 minutes)
