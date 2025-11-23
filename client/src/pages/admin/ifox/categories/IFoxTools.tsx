@@ -380,7 +380,7 @@ export default function IFoxTools() {
                       </div>
                     </div>
                   </div>
-                  <p className="text-white/60 text-sm mt-3">
+                  <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mt-3">
                     {tool.shortDescription}
                   </p>
                 </CardHeader>
@@ -397,22 +397,22 @@ export default function IFoxTools() {
                               "h-4 w-4",
                               i < Math.floor(tool.rating)
                                 ? "fill-yellow-400 text-yellow-400"
-                                : "text-white/20"
+                                : "text-[hsl(var(--ifox-text-secondary))]"
                             )}
                           />
                         ))}
-                        <span className="text-white/60 text-sm mr-2">
+                        <span className="text-[hsl(var(--ifox-text-secondary))] text-sm mr-2">
                           {tool.rating}
                         </span>
                       </div>
-                      <span className="text-white/40 text-sm">
+                      <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
                         {(tool.users / 1000000).toFixed(1)}M مستخدم
                       </span>
                     </div>
 
                     {/* Category Badge */}
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="border-white/20 text-white/60">
+                      <Badge variant="outline" className="border-white/20 text-[hsl(var(--ifox-text-secondary))]">
                         <CategoryIcon className="h-3 w-3 mr-1" />
                         {categoryData?.label}
                       </Badge>
@@ -466,7 +466,7 @@ export default function IFoxTools() {
         <DialogContent className="max-w-3xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة أداة AI جديدة</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               أضف أداة ذكاء اصطناعي جديدة إلى الدليل
             </DialogDescription>
           </DialogHeader>
@@ -491,7 +491,7 @@ export default function IFoxTools() {
                           <Input
                             {...field}
                             placeholder="مثال: ChatGPT"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -509,7 +509,7 @@ export default function IFoxTools() {
                           <Input
                             {...field}
                             placeholder="وصف قصير يظهر في البطاقة"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -528,7 +528,7 @@ export default function IFoxTools() {
                             {...field}
                             rows={4}
                             placeholder="شرح تفصيلي عن الأداة وإمكانياتها"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -598,10 +598,10 @@ export default function IFoxTools() {
                               {...field}
                               placeholder="مثال: $20/month"
                               dir="ltr"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
-                          <FormDescription className="text-white/60">
+                          <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                             اتركه فارغاً للأدوات المجانية
                           </FormDescription>
                           <FormMessage />
@@ -621,7 +621,7 @@ export default function IFoxTools() {
                               type="url"
                               placeholder="https://..."
                               dir="ltr"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
                           <FormMessage />
@@ -649,12 +649,12 @@ export default function IFoxTools() {
                                   "h-6 w-6 transition-colors",
                                   star <= field.value
                                     ? "fill-yellow-400 text-yellow-400"
-                                    : "text-white/20 hover:text-white/40"
+                                    : "text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-secondary))]"
                                 )}
                               />
                             </button>
                           ))}
-                          <span className="text-white/60 mr-2">{field.value}</span>
+                          <span className="text-[hsl(var(--ifox-text-secondary))] mr-2">{field.value}</span>
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -672,7 +672,7 @@ export default function IFoxTools() {
                         onChange={(e) => setProsInput(e.target.value)}
                         placeholder="أضف ميزة"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddPro())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
@@ -691,7 +691,7 @@ export default function IFoxTools() {
                           <button
                             type="button"
                             onClick={() => handleRemovePro(pro)}
-                            className="text-white/40 hover:text-red-400"
+                            className="text-[hsl(var(--ifox-text-secondary))] hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -709,7 +709,7 @@ export default function IFoxTools() {
                         onChange={(e) => setConsInput(e.target.value)}
                         placeholder="أضف عيباً"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCon())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
@@ -728,7 +728,7 @@ export default function IFoxTools() {
                           <button
                             type="button"
                             onClick={() => handleRemoveCon(con)}
-                            className="text-white/40 hover:text-red-400"
+                            className="text-[hsl(var(--ifox-text-secondary))] hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -744,7 +744,7 @@ export default function IFoxTools() {
                       <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
                         <div className="space-y-0.5">
                           <FormLabel>أداة مميزة</FormLabel>
-                          <FormDescription className="text-white/60">
+                          <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                             سيتم عرض الأداة في قسم المميزات
                           </FormDescription>
                         </div>
@@ -777,9 +777,9 @@ export default function IFoxTools() {
                         id="image-upload"
                       />
                       <label htmlFor="image-upload" className="cursor-pointer">
-                        <Upload className="h-12 w-12 mx-auto text-white/40 mb-3" />
-                        <p className="text-white/60">اضغط لرفع صور الواجهة</p>
-                        <p className="text-sm text-white/40 mt-1">PNG, JPG (حد أقصى 5MB)</p>
+                        <Upload className="h-12 w-12 mx-auto text-[hsl(var(--ifox-text-secondary))] mb-3" />
+                        <p className="text-[hsl(var(--ifox-text-secondary))]">اضغط لرفع صور الواجهة</p>
+                        <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-1">PNG, JPG (حد أقصى 5MB)</p>
                       </label>
                     </div>
                     {uploadedImages.length > 0 && (

@@ -390,7 +390,7 @@ export default function IFoxInsights() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-white/60">{metric.label}</p>
+                              <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{metric.label}</p>
                               <p className={cn("text-2xl font-bold", metric.color)}>
                                 {metric.value}
                               </p>
@@ -440,7 +440,7 @@ export default function IFoxInsights() {
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
                         <span className="text-white">{cat.name}</span>
                       </div>
-                      <span className="text-white/60">{cat.value}%</span>
+                      <span className="text-[hsl(var(--ifox-text-secondary))]">{cat.value}%</span>
                     </div>
                   ))}
                 </div>
@@ -472,7 +472,7 @@ export default function IFoxInsights() {
                       <span className="text-2xl font-bold text-white">#{index + 1}</span>
                       <div>
                         <p className="text-white font-medium">{tool.category}</p>
-                        <p className="text-xs text-white/60">{(tool.users / 1000000).toFixed(1)}M مستخدم</p>
+                        <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{(tool.users / 1000000).toFixed(1)}M مستخدم</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -509,7 +509,7 @@ export default function IFoxInsights() {
                               <TrendIcon className="h-6 w-6" />
                             </div>
                             <div className="flex-1">
-                              <p className="text-sm text-white/60">{trend.title}</p>
+                              <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{trend.title}</p>
                               <p className="text-xl font-bold text-white">{trend.trend}</p>
                             </div>
                           </div>
@@ -525,7 +525,7 @@ export default function IFoxInsights() {
                       <Zap className="h-5 w-5 text-blue-400" />
                       توقعات 2024
                     </h3>
-                    <ul className="space-y-2 text-white/80">
+                    <ul className="space-y-2 text-[hsl(var(--ifox-text-primary))]">
                       <li className="flex items-start gap-2">
                         <span className="text-blue-400 mt-1">•</span>
                         نمو متوقع بنسبة 300% في استخدام AI في المنطقة العربية
@@ -571,12 +571,12 @@ export default function IFoxInsights() {
                       {report.isPublished ? "منشور" : "مسودة"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-white/60 mt-2 line-clamp-2">
+                  <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-2 line-clamp-2">
                     {report.description}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-xs text-white/40 mb-4">
+                  <div className="flex items-center justify-between text-xs text-[hsl(var(--ifox-text-secondary))] mb-4">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {new Date(report.createdAt).toLocaleDateString("ar")}
@@ -589,7 +589,7 @@ export default function IFoxInsights() {
                   
                   <Badge 
                     variant="outline" 
-                    className="border-white/20 text-white/60 mb-3"
+                    className="border-white/20 text-[hsl(var(--ifox-text-secondary))] mb-3"
                   >
                     {report.type === "analysis" ? "تحليل" : 
                      report.type === "market" ? "سوق" :

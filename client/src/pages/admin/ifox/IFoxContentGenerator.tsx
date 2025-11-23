@@ -198,7 +198,7 @@ export default function IFoxContentGenerator() {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-300 to-pink-300 bg-clip-text text-transparent">
                     محرك المحتوى الذكي
                   </h1>
-                  <p className="text-gray-100 text-lg">
+                  <p className="text-[hsl(var(--ifox-text-primary))] text-lg">
                     أنشئ محتوى احترافي بالذكاء الاصطناعي - جدوله وانتظر النتيجة
                   </p>
                 </div>
@@ -244,7 +244,7 @@ export default function IFoxContentGenerator() {
                       <CheckCircle className="w-16 h-16 text-white mx-auto mb-4" />
                     </motion.div>
                     <h3 className="text-2xl font-bold text-white mb-2">تم بنجاح! ✨</h3>
-                    <p className="text-white/90">المهمة مجدولة وجاهزة للمعالجة</p>
+                    <p className="text-[hsl(var(--ifox-text-primary))]">المهمة مجدولة وجاهزة للمعالجة</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -264,7 +264,7 @@ export default function IFoxContentGenerator() {
                       <Wand2 className="w-5 h-5 text-fuchsia-400" />
                       طلب محتوى جديد
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       اكتب ما تريد والذكاء الاصطناعي سيقوم بالباقي
                     </CardDescription>
                   </CardHeader>
@@ -281,7 +281,7 @@ export default function IFoxContentGenerator() {
                               <FormControl>
                                 <Input
                                   placeholder="مثال: أحدث تطورات الذكاء الاصطناعي في 2024"
-                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-gray-400"
+                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                                   data-testid="input-topic"
                                   {...field}
                                 />
@@ -301,12 +301,12 @@ export default function IFoxContentGenerator() {
                               <FormControl>
                                 <Textarea
                                   placeholder="أضف أي تفاصيل أو توجيهات للذكاء الاصطناعي..."
-                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-gray-400 min-h-[100px]"
+                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))] min-h-[100px]"
                                   data-testid="input-description"
                                   {...field}
                                 />
                               </FormControl>
-                              <FormDescription className="text-gray-300 text-xs">
+                              <FormDescription className="text-[hsl(var(--ifox-text-primary))] text-xs">
                                 كلما كانت التفاصيل أكثر، كان المحتوى أفضل
                               </FormDescription>
                             </FormItem>
@@ -439,7 +439,7 @@ export default function IFoxContentGenerator() {
                       <Calendar className="w-5 h-5 text-fuchsia-400" />
                       المهام المجدولة
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       {plannedTasks.length} مهمة في الانتظار
                     </CardDescription>
                   </CardHeader>
@@ -447,15 +447,15 @@ export default function IFoxContentGenerator() {
                     <ScrollArea className="h-[500px]">
                       <div className="space-y-3">
                         {isLoading ? (
-                          <div className="text-center py-12 text-gray-300">
+                          <div className="text-center py-12 text-[hsl(var(--ifox-text-primary))]">
                             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
                             جاري التحميل...
                           </div>
                         ) : plannedTasks.length === 0 ? (
                           <div className="text-center py-12">
-                            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                            <p className="text-gray-300">لا توجد مهام مجدولة حالياً</p>
-                            <p className="text-gray-400 text-sm mt-1">ابدأ بإنشاء مهمة جديدة من النموذج</p>
+                            <AlertCircle className="w-12 h-12 text-[hsl(var(--ifox-text-secondary))] mx-auto mb-3" />
+                            <p className="text-[hsl(var(--ifox-text-primary))]">لا توجد مهام مجدولة حالياً</p>
+                            <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mt-1">ابدأ بإنشاء مهمة جديدة من النموذج</p>
                           </div>
                         ) : (
                           plannedTasks.map((task, index) => {
@@ -485,7 +485,7 @@ export default function IFoxContentGenerator() {
                                       <h4 className="text-white font-semibold mb-1 line-clamp-2">
                                         {task.topicIdea || 'محتوى جديد'}
                                       </h4>
-                                      <div className="flex items-center gap-3 text-xs text-gray-300">
+                                      <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
                                         <span className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
                                           {formatRiyadhTime(task.scheduledDate)}
@@ -517,7 +517,7 @@ export default function IFoxContentGenerator() {
                 <CardContent className="p-4 text-center">
                   <Brain className="w-8 h-8 text-cyan-300 mx-auto mb-2" />
                   <h3 className="font-bold text-white mb-1">ذكاء اصطناعي متقدم</h3>
-                  <p className="text-xs text-gray-200">محتوى احترافي بجودة عالية</p>
+                  <p className="text-xs text-[hsl(var(--ifox-text-primary))]">محتوى احترافي بجودة عالية</p>
                 </CardContent>
               </Card>
 
@@ -525,7 +525,7 @@ export default function IFoxContentGenerator() {
                 <CardContent className="p-4 text-center">
                   <Calendar className="w-8 h-8 text-fuchsia-300 mx-auto mb-2" />
                   <h3 className="font-bold text-white mb-1">جدولة تلقائية</h3>
-                  <p className="text-xs text-gray-200">حدد الوقت ودع النظام يعمل</p>
+                  <p className="text-xs text-[hsl(var(--ifox-text-primary))]">حدد الوقت ودع النظام يعمل</p>
                 </CardContent>
               </Card>
 
@@ -533,7 +533,7 @@ export default function IFoxContentGenerator() {
                 <CardContent className="p-4 text-center">
                   <Sparkles className="w-8 h-8 text-amber-300 mx-auto mb-2" />
                   <h3 className="font-bold text-white mb-1">نتائج فورية</h3>
-                  <p className="text-xs text-gray-200">محتوى جاهز للنشر مباشرة</p>
+                  <p className="text-xs text-[hsl(var(--ifox-text-primary))]">محتوى جاهز للنشر مباشرة</p>
                 </CardContent>
               </Card>
             </div>
@@ -551,7 +551,7 @@ export default function IFoxContentGenerator() {
                       <CheckCircle className="w-5 h-5 text-green-400" />
                       المهام المكتملة
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       {completedTasks.length} مهمة تم إنجازها بنجاح
                     </CardDescription>
                   </CardHeader>
@@ -578,7 +578,7 @@ export default function IFoxContentGenerator() {
                                   <h4 className="text-white font-semibold mb-1 line-clamp-2">
                                     {task.topicIdea || 'محتوى جديد'}
                                   </h4>
-                                  <div className="flex items-center gap-3 text-xs text-gray-300">
+                                  <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
                                     <span className="flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
                                       {task.actualPublishedAt 

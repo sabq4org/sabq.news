@@ -67,10 +67,10 @@ export function IFoxCategoryTemplate({
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-muted)/0.5)] to-[hsl(var(--ifox-surface-muted)/0.3)] border-[hsl(var(--ifox-surface-muted))] backdrop-blur-lg">
             <CardContent className="p-6">
               {/* Breadcrumb */}
-              <nav className="flex items-center gap-2 text-sm text-white/60 mb-4">
+              <nav className="flex items-center gap-2 text-sm text-[hsl(var(--ifox-text-secondary))] mb-4">
                 {defaultBreadcrumbs.map((crumb, index) => (
                   <div key={crumb.href} className="flex items-center gap-2">
                     {index > 0 && <ChevronRight className="h-4 w-4" />}
@@ -103,7 +103,7 @@ export function IFoxCategoryTemplate({
                   <div>
                     <h1 className="text-3xl font-bold text-white mb-2">{title}</h1>
                     {description && (
-                      <p className="text-white/60 text-lg">{description}</p>
+                      <p className="text-[hsl(var(--ifox-text-secondary))] text-lg">{description}</p>
                     )}
                   </div>
                 </div>
@@ -147,11 +147,11 @@ export function IFoxCategoryTemplate({
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.1 * index }}
                       >
-                        <Card className="bg-gradient-to-br from-white/5 to-white/10 border-white/10">
+                        <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-muted)/0.3)] to-[hsl(var(--ifox-surface-muted)/0.5)] border-[hsl(var(--ifox-surface-muted))]">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-sm text-white/60">{stat.label}</p>
+                                <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{stat.label}</p>
                                 <p className="text-2xl font-bold text-white mt-1">
                                   {stat.value}
                                 </p>

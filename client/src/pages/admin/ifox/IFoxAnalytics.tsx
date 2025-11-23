@@ -174,10 +174,10 @@ export default function IFoxAnalytics() {
           </div>
         </div>
         <div>
-          <p className="text-sm text-gray-100 mb-1">{title}</p>
+          <p className="text-sm text-[hsl(var(--ifox-text-primary))] mb-1">{title}</p>
           <p className="text-3xl font-bold text-white">
             {typeof value === 'number' ? value.toLocaleString('ar-SA') : value}
-            {suffix && <span className="text-lg text-gray-300 mr-1">{suffix}</span>}
+            {suffix && <span className="text-lg text-[hsl(var(--ifox-text-primary))] mr-1">{suffix}</span>}
           </p>
         </div>
       </CardContent>
@@ -234,7 +234,7 @@ export default function IFoxAnalytics() {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                     تحليلات آي فوكس
                   </h1>
-                  <p className="text-gray-100 text-lg" data-testid="text-page-description">
+                  <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
                     مقاييس الأداء والإحصائيات الذكية
                   </p>
                 </div>
@@ -343,7 +343,7 @@ export default function IFoxAnalytics() {
                       <Activity className="w-5 h-5 text-violet-300" />
                       الأداء عبر الزمن
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       المشاهدات والتفاعل خلال الفترة المحددة
                     </CardDescription>
                   </CardHeader>
@@ -412,7 +412,7 @@ export default function IFoxAnalytics() {
                       <Brain className="w-5 h-5 text-green-300" />
                       تطور AI Score
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       جودة المحتوى المدعوم بالذكاء الاصطناعي
                     </CardDescription>
                   </CardHeader>
@@ -467,7 +467,7 @@ export default function IFoxAnalytics() {
                       <Layers className="w-5 h-5 text-blue-300" />
                       أداء الفئات
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       مقارنة أداء فئات المحتوى المختلفة
                     </CardDescription>
                   </CardHeader>
@@ -515,7 +515,7 @@ export default function IFoxAnalytics() {
                       <Award className="w-5 h-5 text-yellow-300" />
                       أفضل المقالات
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       المقالات الأكثر أداءً خلال الفترة
                     </CardDescription>
                   </CardHeader>
@@ -535,7 +535,7 @@ export default function IFoxAnalytics() {
                               index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-900' :
                               index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-slate-900' :
                               index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
-                              'bg-slate-700/50 text-gray-300'
+                              'bg-slate-700/50 text-[hsl(var(--ifox-text-primary))]'
                             }`}>
                               {index + 1}
                             </div>
@@ -543,7 +543,7 @@ export default function IFoxAnalytics() {
                               <h4 className="text-sm font-semibold text-white mb-1 line-clamp-1">
                                 {article.title}
                               </h4>
-                              <div className="flex items-center gap-3 text-xs text-gray-100">
+                              <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
                                 <Badge variant="outline" className="text-xs text-violet-300 border-violet-400/40">
                                   {article.category}
                                 </Badge>
@@ -589,7 +589,7 @@ export default function IFoxAnalytics() {
                     <Target className="w-5 h-5 text-pink-300" />
                     تفصيل التفاعل
                   </CardTitle>
-                  <CardDescription className="text-gray-100">
+                  <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                     توزيع أنواع التفاعل مع المحتوى
                   </CardDescription>
                 </CardHeader>
@@ -601,7 +601,7 @@ export default function IFoxAnalytics() {
                           <Heart className="w-5 h-5 text-pink-300" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-100">الإعجابات</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">الإعجابات</p>
                           <p className="text-2xl font-bold text-white">
                             {engagementMetrics?.likes.toLocaleString('ar-SA') || '0'}
                           </p>
@@ -615,7 +615,7 @@ export default function IFoxAnalytics() {
                           <MessageSquare className="w-5 h-5 text-blue-300" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-100">التعليقات</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">التعليقات</p>
                           <p className="text-2xl font-bold text-white">
                             {engagementMetrics?.comments.toLocaleString('ar-SA') || '0'}
                           </p>
@@ -629,7 +629,7 @@ export default function IFoxAnalytics() {
                           <Share2 className="w-5 h-5 text-green-300" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-100">المشاركات</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">المشاركات</p>
                           <p className="text-2xl font-bold text-white">
                             {engagementMetrics?.shares.toLocaleString('ar-SA') || '0'}
                           </p>
@@ -643,7 +643,7 @@ export default function IFoxAnalytics() {
                           <FileText className="w-5 h-5 text-amber-300" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-100">الحفظ</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">الحفظ</p>
                           <p className="text-2xl font-bold text-white">
                             {engagementMetrics?.bookmarks.toLocaleString('ar-SA') || '0'}
                           </p>
@@ -664,15 +664,15 @@ export default function IFoxAnalytics() {
             >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-gray-200">Real-time Analytics</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Real-time Analytics</span>
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-violet-400" />
-                <span className="text-sm text-gray-200">AI-Powered Insights</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">AI-Powered Insights</span>
               </div>
               <div className="flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-cyan-400" />
-                <span className="text-sm text-gray-200">Advanced Metrics</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Advanced Metrics</span>
               </div>
             </motion.div>
         </div>

@@ -190,7 +190,7 @@ export default function IFoxCategory() {
                   {category.status === "active" ? (
                     <Eye className="w-4 h-4 text-green-300" />
                   ) : (
-                    <EyeOff className="w-4 h-4 text-gray-400" />
+                    <EyeOff className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
                   )}
                 </Button>
               </div>
@@ -198,24 +198,24 @@ export default function IFoxCategory() {
 
             <div className="mb-4">
               <h3 className="text-lg font-bold text-white mb-1">{category.nameAr}</h3>
-              <p className="text-sm text-gray-100">{category.nameEn}</p>
+              <p className="text-sm text-[hsl(var(--ifox-text-primary))]">{category.nameEn}</p>
               {category.description && (
-                <p className="text-xs text-gray-200 mt-2 line-clamp-2">{category.description}</p>
+                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mt-2 line-clamp-2">{category.description}</p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-3 rounded-lg bg-slate-800/50">
-                <p className="text-xs text-gray-100 mb-1">المقالات</p>
+                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mb-1">المقالات</p>
                 <p className="text-2xl font-bold text-white">{category.articlesCount.toLocaleString('ar-SA')}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs text-green-300">{category.publishedCount} منشور</span>
-                  <span className="text-xs text-gray-300">• {category.draftCount} مسودة</span>
+                  <span className="text-xs text-[hsl(var(--ifox-text-primary))]">• {category.draftCount} مسودة</span>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg bg-slate-800/50">
-                <p className="text-xs text-gray-100 mb-1">المشاهدات</p>
+                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mb-1">المشاهدات</p>
                 <p className="text-2xl font-bold text-white">{category.totalViews.toLocaleString('ar-SA')}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3 text-green-300" />
@@ -312,7 +312,7 @@ export default function IFoxCategory() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                       فئات آي فوكس
                     </h1>
-                    <p className="text-gray-100 text-lg" data-testid="text-page-description">
+                    <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
                       إدارة فئات المحتوى الذكي
                     </p>
                   </div>
@@ -415,7 +415,7 @@ export default function IFoxCategory() {
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-3">
                     <div className="flex-1 relative">
-                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
                       <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -460,14 +460,14 @@ export default function IFoxCategory() {
             >
               {isLoading ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-200">جاري التحميل...</p>
+                  <p className="text-[hsl(var(--ifox-text-primary))]">جاري التحميل...</p>
                 </div>
               ) : filteredCategories.length === 0 ? (
                 <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
                   <CardContent className="p-12 text-center">
-                    <Layers className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <Layers className="w-16 h-16 text-[hsl(var(--ifox-text-secondary))] mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white mb-2">لا توجد فئات</h3>
-                    <p className="text-gray-200">لم يتم العثور على فئات مطابقة للبحث</p>
+                    <p className="text-[hsl(var(--ifox-text-primary))]">لم يتم العثور على فئات مطابقة للبحث</p>
                   </CardContent>
                 </Card>
               ) : (

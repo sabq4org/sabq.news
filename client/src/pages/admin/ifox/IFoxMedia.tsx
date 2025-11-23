@@ -248,7 +248,7 @@ export default function IFoxMedia() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
                       مكتبة الوسائط
                     </h1>
-                    <p className="text-white/60">إدارة ملفات الوسائط المتعددة</p>
+                    <p className="text-[hsl(var(--ifox-text-secondary))]">إدارة ملفات الوسائط المتعددة</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -279,9 +279,9 @@ export default function IFoxMedia() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <HardDrive className="w-5 h-5 text-violet-400" />
-                        <span className="text-white/80">استخدام المساحة</span>
+                        <span className="text-[hsl(var(--ifox-text-primary))]">استخدام المساحة</span>
                       </div>
-                      <span className="text-white/60 text-sm">
+                      <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
                         {formatFileSize(storageInfo.used)} من {formatFileSize(storageInfo.total)}
                       </span>
                     </div>
@@ -300,12 +300,12 @@ export default function IFoxMedia() {
             >
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[300px] relative">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--ifox-text-secondary))]" />
                   <Input
                     placeholder="بحث بالاسم أو الكلمات المفتاحية..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                    className="pr-10 bg-white/5 border-white/10 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                   />
                 </div>
                 
@@ -353,7 +353,7 @@ export default function IFoxMedia() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="text-white/60 hover:text-white"
+                  className="text-[hsl(var(--ifox-text-secondary))] hover:text-white"
                 >
                   {sortOrder === "asc" ? <SortAsc /> : <SortDesc />}
                 </Button>
@@ -420,7 +420,7 @@ export default function IFoxMedia() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
-                              <Icon className="w-12 h-12 text-white/40" />
+                              <Icon className="w-12 h-12 text-[hsl(var(--ifox-text-secondary))]" />
                             </div>
                           )}
                           
@@ -429,9 +429,9 @@ export default function IFoxMedia() {
                             <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
                               <p className="text-white text-sm font-medium truncate">{file.name}</p>
                               <div className="flex items-center justify-between">
-                                <span className="text-white/60 text-xs">{formatFileSize(file.size)}</span>
+                                <span className="text-[hsl(var(--ifox-text-secondary))] text-xs">{formatFileSize(file.size)}</span>
                                 {CategoryIcon && (
-                                  <CategoryIcon className="w-4 h-4 text-white/60" />
+                                  <CategoryIcon className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
                                 )}
                               </div>
                             </div>
@@ -507,20 +507,20 @@ export default function IFoxMedia() {
                         />
                         
                         <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
-                          <Icon className="w-6 h-6 text-white/60" />
+                          <Icon className="w-6 h-6 text-[hsl(var(--ifox-text-secondary))]" />
                         </div>
                         
                         <div className="flex-1">
                           <p className="text-white font-medium">{file.name}</p>
                           <div className="flex items-center gap-4 mt-1">
-                            <span className="text-white/60 text-sm">{formatFileSize(file.size)}</span>
-                            <span className="text-white/60 text-sm">
+                            <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">{formatFileSize(file.size)}</span>
+                            <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
                               {format(new Date(file.uploadedAt), "d MMM yyyy", { locale: ar })}
                             </span>
                             {CategoryIcon && (
                               <div className="flex items-center gap-1">
-                                <CategoryIcon className="w-3 h-3 text-white/60" />
-                                <span className="text-white/60 text-sm">{file.category}</span>
+                                <CategoryIcon className="w-3 h-3 text-[hsl(var(--ifox-text-secondary))]" />
+                                <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">{file.category}</span>
                               </div>
                             )}
                             {file.usageCount > 0 && (
@@ -567,7 +567,7 @@ export default function IFoxMedia() {
         <DialogContent className="max-w-3xl bg-gradient-to-br from-slate-950 via-purple-950/50 to-violet-950/30 border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">رفع ملفات جديدة</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               اسحب وأفلت الملفات أو انقر للاختيار
             </DialogDescription>
           </DialogHeader>
@@ -603,7 +603,7 @@ export default function IFoxMedia() {
                     <div className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
                       {(() => {
                         const Icon = getFileIcon(selectedFile.type);
-                        return <Icon className="w-24 h-24 text-white/40" />;
+                        return <Icon className="w-24 h-24 text-[hsl(var(--ifox-text-secondary))]" />;
                       })()}
                     </div>
                   )}
@@ -612,42 +612,42 @@ export default function IFoxMedia() {
                 {/* Details */}
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-white/60">اسم الملف</Label>
+                    <Label className="text-[hsl(var(--ifox-text-secondary))]">اسم الملف</Label>
                     <p className="text-white mt-1">{selectedFile.name}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-white/60">الحجم</Label>
+                      <Label className="text-[hsl(var(--ifox-text-secondary))]">الحجم</Label>
                       <p className="text-white mt-1">{formatFileSize(selectedFile.size)}</p>
                     </div>
                     {selectedFile.width && selectedFile.height && (
                       <div>
-                        <Label className="text-white/60">الأبعاد</Label>
+                        <Label className="text-[hsl(var(--ifox-text-secondary))]">الأبعاد</Label>
                         <p className="text-white mt-1">{selectedFile.width} × {selectedFile.height}</p>
                       </div>
                     )}
                     {selectedFile.duration && (
                       <div>
-                        <Label className="text-white/60">المدة</Label>
+                        <Label className="text-[hsl(var(--ifox-text-secondary))]">المدة</Label>
                         <p className="text-white mt-1">{Math.floor(selectedFile.duration / 60)}:{(selectedFile.duration % 60).toString().padStart(2, '0')}</p>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <Label className="text-white/60">التصنيف</Label>
+                    <Label className="text-[hsl(var(--ifox-text-secondary))]">التصنيف</Label>
                     <div className="flex items-center gap-2 mt-1">
                       {(() => {
                         const CategoryIcon = categoryIcons[selectedFile.category as keyof typeof categoryIcons];
-                        return CategoryIcon ? <CategoryIcon className="w-4 h-4 text-white/60" /> : null;
+                        return CategoryIcon ? <CategoryIcon className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" /> : null;
                       })()}
                       <span className="text-white">{selectedFile.category}</span>
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-white/60">الكلمات المفتاحية</Label>
+                    <Label className="text-[hsl(var(--ifox-text-secondary))]">الكلمات المفتاحية</Label>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {selectedFile.tags.map((tag) => (
                         <Badge key={tag} variant="secondary" className="bg-white/10 text-white">
@@ -659,25 +659,25 @@ export default function IFoxMedia() {
 
                   {selectedFile.altText && (
                     <div>
-                      <Label className="text-white/60">النص البديل</Label>
+                      <Label className="text-[hsl(var(--ifox-text-secondary))]">النص البديل</Label>
                       <p className="text-white mt-1">{selectedFile.altText}</p>
                     </div>
                   )}
 
                   {selectedFile.caption && (
                     <div>
-                      <Label className="text-white/60">الوصف</Label>
+                      <Label className="text-[hsl(var(--ifox-text-secondary))]">الوصف</Label>
                       <p className="text-white mt-1">{selectedFile.caption}</p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-white/60">رفع بواسطة</Label>
+                      <Label className="text-[hsl(var(--ifox-text-secondary))]">رفع بواسطة</Label>
                       <p className="text-white mt-1">{selectedFile.uploadedBy}</p>
                     </div>
                     <div>
-                      <Label className="text-white/60">تاريخ الرفع</Label>
+                      <Label className="text-[hsl(var(--ifox-text-secondary))]">تاريخ الرفع</Label>
                       <p className="text-white mt-1">
                         {format(new Date(selectedFile.uploadedAt), "d MMM yyyy, h:mm a", { locale: ar })}
                       </p>
@@ -685,7 +685,7 @@ export default function IFoxMedia() {
                   </div>
 
                   <div>
-                    <Label className="text-white/60">رابط الملف</Label>
+                    <Label className="text-[hsl(var(--ifox-text-secondary))]">رابط الملف</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
                         value={selectedFile.url}
@@ -748,7 +748,7 @@ export default function IFoxMedia() {
               
               <div className="space-y-4">
                 <div>
-                  <Label className="text-white/60">اسم الملف</Label>
+                  <Label className="text-[hsl(var(--ifox-text-secondary))]">اسم الملف</Label>
                   <Input
                     value={editingFile.name}
                     onChange={(e) => setEditingFile({ ...editingFile, name: e.target.value })}
@@ -757,7 +757,7 @@ export default function IFoxMedia() {
                 </div>
 
                 <div>
-                  <Label className="text-white/60">التصنيف</Label>
+                  <Label className="text-[hsl(var(--ifox-text-secondary))]">التصنيف</Label>
                   <Select
                     value={editingFile.category}
                     onValueChange={(value) => setEditingFile({ ...editingFile, category: value })}
@@ -778,7 +778,7 @@ export default function IFoxMedia() {
                 </div>
 
                 <div>
-                  <Label className="text-white/60">الكلمات المفتاحية</Label>
+                  <Label className="text-[hsl(var(--ifox-text-secondary))]">الكلمات المفتاحية</Label>
                   <Input
                     value={editingFile.tags.join(", ")}
                     onChange={(e) => setEditingFile({
@@ -792,7 +792,7 @@ export default function IFoxMedia() {
 
                 {editingFile.type === "image" && (
                   <div>
-                    <Label className="text-white/60">النص البديل</Label>
+                    <Label className="text-[hsl(var(--ifox-text-secondary))]">النص البديل</Label>
                     <Input
                       value={editingFile.altText || ""}
                       onChange={(e) => setEditingFile({ ...editingFile, altText: e.target.value })}
@@ -802,7 +802,7 @@ export default function IFoxMedia() {
                 )}
 
                 <div>
-                  <Label className="text-white/60">الوصف</Label>
+                  <Label className="text-[hsl(var(--ifox-text-secondary))]">الوصف</Label>
                   <Textarea
                     value={editingFile.caption || ""}
                     onChange={(e) => setEditingFile({ ...editingFile, caption: e.target.value })}

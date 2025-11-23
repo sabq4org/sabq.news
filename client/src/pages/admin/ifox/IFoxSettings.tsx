@@ -178,7 +178,7 @@ export default function IFoxSettings() {
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
             <RefreshCw className="w-12 h-12 text-violet-300 animate-spin mx-auto mb-4" />
-            <p className="text-gray-200">جاري تحميل الإعدادات...</p>
+            <p className="text-[hsl(var(--ifox-text-primary))]">جاري تحميل الإعدادات...</p>
           </div>
         </div>
       </IFoxLayout>
@@ -236,7 +236,7 @@ export default function IFoxSettings() {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                     إعدادات آي فوكس
                   </h1>
-                  <p className="text-gray-100 text-lg" data-testid="text-page-description">
+                  <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
                     تخصيص وإدارة إعدادات النظام
                   </p>
                 </div>
@@ -318,7 +318,7 @@ export default function IFoxSettings() {
                           <Cpu className="w-5 h-5 text-violet-300" />
                           إعدادات الذكاء الاصطناعي
                         </CardTitle>
-                        <CardDescription className="text-gray-100">
+                        <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                           تخصيص سلوك AI في معالجة المحتوى
                         </CardDescription>
                       </CardHeader>
@@ -369,7 +369,7 @@ export default function IFoxSettings() {
                               step={0.1}
                               className="py-4"
                             />
-                            <p className="text-xs text-gray-200">
+                            <p className="text-xs text-[hsl(var(--ifox-text-primary))]">
                               قيم أعلى = محتوى أكثر إبداعاً، قيم أقل = محتوى أكثر دقة
                             </p>
                           </div>
@@ -402,7 +402,7 @@ export default function IFoxSettings() {
                             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                               <div>
                                 <Label className="text-white">التصنيف التلقائي</Label>
-                                <p className="text-xs text-gray-200">تصنيف المقالات تلقائياً بالذكاء الاصطناعي</p>
+                                <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تصنيف المقالات تلقائياً بالذكاء الاصطناعي</p>
                               </div>
                               <Switch
                                 checked={localSettings.ai.autoClassification}
@@ -414,7 +414,7 @@ export default function IFoxSettings() {
                             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                               <div>
                                 <Label className="text-white">SEO التلقائي</Label>
-                                <p className="text-xs text-gray-200">توليد بيانات SEO تلقائياً</p>
+                                <p className="text-xs text-[hsl(var(--ifox-text-primary))]">توليد بيانات SEO تلقائياً</p>
                               </div>
                               <Switch
                                 checked={localSettings.ai.autoSEO}
@@ -426,7 +426,7 @@ export default function IFoxSettings() {
                             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                               <div>
                                 <Label className="text-white">الملخص التلقائي</Label>
-                                <p className="text-xs text-gray-200">إنشاء ملخص تلقائي للمقالات</p>
+                                <p className="text-xs text-[hsl(var(--ifox-text-primary))]">إنشاء ملخص تلقائي للمقالات</p>
                               </div>
                               <Switch
                                 checked={localSettings.ai.autoSummary}
@@ -438,7 +438,7 @@ export default function IFoxSettings() {
                             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                               <div>
                                 <Label className="text-white">تحليل المحتوى</Label>
-                                <p className="text-xs text-gray-200">تحليل جودة المحتوى تلقائياً</p>
+                                <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تحليل جودة المحتوى تلقائياً</p>
                               </div>
                               <Switch
                                 checked={localSettings.ai.contentAnalysis}
@@ -461,7 +461,7 @@ export default function IFoxSettings() {
                         <FileText className="w-5 h-5 text-blue-300" />
                         إعدادات النشر
                       </CardTitle>
-                      <CardDescription className="text-gray-100">
+                      <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                         تحكم في عملية نشر المحتوى
                       </CardDescription>
                     </CardHeader>
@@ -469,7 +469,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">النشر التلقائي</Label>
-                          <p className="text-xs text-gray-200">نشر المقالات تلقائياً بعد الإنشاء</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">نشر المقالات تلقائياً بعد الإنشاء</p>
                         </div>
                         <Switch
                           checked={localSettings.publishing.autoPublish}
@@ -481,7 +481,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">المراجعة المطلوبة</Label>
-                          <p className="text-xs text-gray-200">يتطلب مراجعة قبل النشر</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">يتطلب مراجعة قبل النشر</p>
                         </div>
                         <Switch
                           checked={localSettings.publishing.requireReview}
@@ -510,7 +510,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">السماح بالجدولة</Label>
-                          <p className="text-xs text-gray-200">تمكين جدولة المقالات</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تمكين جدولة المقالات</p>
                         </div>
                         <Switch
                           checked={localSettings.publishing.allowScheduling}
@@ -533,7 +533,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">تمكين الإصدارات</Label>
-                          <p className="text-xs text-gray-200">حفظ إصدارات متعددة من المقالات</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">حفظ إصدارات متعددة من المقالات</p>
                         </div>
                         <Switch
                           checked={localSettings.publishing.enableVersioning}
@@ -553,7 +553,7 @@ export default function IFoxSettings() {
                         <Bell className="w-5 h-5 text-amber-300" />
                         إعدادات الإشعارات
                       </CardTitle>
-                      <CardDescription className="text-gray-100">
+                      <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                         تخصيص تلقي الإشعارات
                       </CardDescription>
                     </CardHeader>
@@ -561,7 +561,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">إشعارات البريد الإلكتروني</Label>
-                          <p className="text-xs text-gray-200">استلام إشعارات عبر البريد</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">استلام إشعارات عبر البريد</p>
                         </div>
                         <Switch
                           checked={localSettings.notifications.emailNotifications}
@@ -573,7 +573,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">الإشعارات الفورية</Label>
-                          <p className="text-xs text-gray-200">استلام إشعارات فورية في المتصفح</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">استلام إشعارات فورية في المتصفح</p>
                         </div>
                         <Switch
                           checked={localSettings.notifications.pushNotifications}
@@ -638,7 +638,7 @@ export default function IFoxSettings() {
                         <Palette className="w-5 h-5 text-pink-300" />
                         إعدادات المظهر
                       </CardTitle>
-                      <CardDescription className="text-gray-100">
+                      <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                         تخصيص شكل الواجهة
                       </CardDescription>
                     </CardHeader>
@@ -680,7 +680,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">دعم RTL</Label>
-                          <p className="text-xs text-gray-200">دعم الاتجاه من اليمين لليسار</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">دعم الاتجاه من اليمين لليسار</p>
                         </div>
                         <Switch
                           checked={localSettings.appearance.rtlSupport}
@@ -692,7 +692,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">إظهار الحركات</Label>
-                          <p className="text-xs text-gray-200">تفعيل الرسوم المتحركة</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تفعيل الرسوم المتحركة</p>
                         </div>
                         <Switch
                           checked={localSettings.appearance.showAnimations}
@@ -704,7 +704,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">الوضع المضغوط</Label>
-                          <p className="text-xs text-gray-200">عرض أكثر كثافة للمحتوى</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">عرض أكثر كثافة للمحتوى</p>
                         </div>
                         <Switch
                           checked={localSettings.appearance.compactMode}
@@ -724,7 +724,7 @@ export default function IFoxSettings() {
                         <Image className="w-5 h-5 text-green-300" />
                         إعدادات الوسائط
                       </CardTitle>
-                      <CardDescription className="text-gray-100">
+                      <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                         إدارة رفع ومعالجة الملفات
                       </CardDescription>
                     </CardHeader>
@@ -743,7 +743,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">التحسين التلقائي</Label>
-                          <p className="text-xs text-gray-200">ضغط وتحسين الصور تلقائياً</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">ضغط وتحسين الصور تلقائياً</p>
                         </div>
                         <Switch
                           checked={localSettings.media.autoOptimize}
@@ -755,7 +755,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">إنشاء الصور المصغرة</Label>
-                          <p className="text-xs text-gray-200">توليد نسخ مصغرة تلقائياً</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">توليد نسخ مصغرة تلقائياً</p>
                         </div>
                         <Switch
                           checked={localSettings.media.generateThumbnails}
@@ -767,7 +767,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">العلامة المائية</Label>
-                          <p className="text-xs text-gray-200">إضافة علامة مائية للصور</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">إضافة علامة مائية للصور</p>
                         </div>
                         <Switch
                           checked={localSettings.media.watermark}
@@ -800,7 +800,7 @@ export default function IFoxSettings() {
                         <Shield className="w-5 h-5 text-red-300" />
                         إعدادات الأمان
                       </CardTitle>
-                      <CardDescription className="text-gray-100">
+                      <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                         تأمين الحساب والوصول
                       </CardDescription>
                     </CardHeader>
@@ -808,7 +808,7 @@ export default function IFoxSettings() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
                         <div>
                           <Label className="text-white">المصادقة الثنائية</Label>
-                          <p className="text-xs text-gray-200">طبقة أمان إضافية لتسجيل الدخول</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">طبقة أمان إضافية لتسجيل الدخول</p>
                         </div>
                         <Switch
                           checked={localSettings.security.twoFactorAuth}
@@ -837,7 +837,7 @@ export default function IFoxSettings() {
                           className="bg-slate-800/50 border-white/20 text-white"
                           data-testid="input-login-attempts"
                         />
-                        <p className="text-xs text-gray-200">عدد المحاولات قبل الحظر</p>
+                        <p className="text-xs text-[hsl(var(--ifox-text-primary))]">عدد المحاولات قبل الحظر</p>
                       </div>
 
                       <div className="space-y-2">

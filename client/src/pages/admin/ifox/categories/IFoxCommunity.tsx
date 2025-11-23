@@ -381,7 +381,7 @@ export default function IFoxCommunity() {
       case "discussion": return "bg-purple-500/20 text-purple-400";
       case "event": return "bg-green-500/20 text-green-400";
       case "announcement": return "bg-amber-500/20 text-amber-400";
-      default: return "bg-gray-500/20 text-gray-400";
+      default: return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))]";
     }
   };
 
@@ -471,7 +471,7 @@ export default function IFoxCommunity() {
                                         </Badge>
                                       )}
                                     </h4>
-                                    <p className="text-sm text-white/60 mt-1">
+                                    <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-1">
                                       {topic.description}
                                     </p>
                                   </div>
@@ -482,7 +482,7 @@ export default function IFoxCommunity() {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-4 text-xs text-white/40">
+                                  <div className="flex items-center gap-4 text-xs text-[hsl(var(--ifox-text-secondary))]">
                                     <span className="flex items-center gap-1">
                                       {topic.author.name}
                                       {topic.author.badge && (
@@ -506,10 +506,10 @@ export default function IFoxCommunity() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-white">
+                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white">
                                       <Edit className="h-3 w-3" />
                                     </Button>
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400">
+                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-red-400">
                                       <Trash2 className="h-3 w-3" />
                                     </Button>
                                   </div>
@@ -547,7 +547,7 @@ export default function IFoxCommunity() {
                                       {topic.isPinned && <Pin className="h-4 w-4 text-amber-400" />}
                                       {topic.title}
                                     </h4>
-                                    <p className="text-sm text-white/60 mt-1">
+                                    <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-1">
                                       {topic.description}
                                     </p>
                                   </div>
@@ -557,7 +557,7 @@ export default function IFoxCommunity() {
                                   </Badge>
                                 </div>
 
-                                <div className="flex items-center gap-4 text-xs text-white/40">
+                                <div className="flex items-center gap-4 text-xs text-[hsl(var(--ifox-text-secondary))]">
                                   <span className="flex items-center gap-1">
                                     {topic.author.name}
                                   </span>
@@ -591,7 +591,7 @@ export default function IFoxCommunity() {
                               <div className="text-2xl font-bold text-white">
                                 {new Date(event.date).getDate()}
                               </div>
-                              <div className="text-xs text-white/60">
+                              <div className="text-xs text-[hsl(var(--ifox-text-secondary))]">
                                 {new Date(event.date).toLocaleDateString("ar", { month: "short" })}
                               </div>
                             </div>
@@ -600,7 +600,7 @@ export default function IFoxCommunity() {
                               <h4 className="font-semibold text-white mb-1">
                                 {event.title}
                               </h4>
-                              <div className="flex items-center gap-4 text-sm text-white/60">
+                              <div className="flex items-center gap-4 text-sm text-[hsl(var(--ifox-text-secondary))]">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
                                   {event.time}
@@ -669,11 +669,11 @@ export default function IFoxCommunity() {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-white">{expert.name}</h4>
-                      <p className="text-xs text-white/60">{expert.contributions} مساهمة</p>
+                      <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{expert.contributions} مساهمة</p>
                     </div>
                     <div className="flex items-center gap-1">
                       {index === 0 && <Trophy className="h-4 w-4 text-yellow-400" />}
-                      {index === 1 && <Trophy className="h-4 w-4 text-gray-400" />}
+                      {index === 1 && <Trophy className="h-4 w-4 text-[hsl(var(--ifox-text-secondary))]" />}
                       {index === 2 && <Trophy className="h-4 w-4 text-amber-600" />}
                     </div>
                   </div>
@@ -710,20 +710,20 @@ export default function IFoxCommunity() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/60">نمو المجتمع</span>
+                  <span className="text-sm text-[hsl(var(--ifox-text-secondary))]">نمو المجتمع</span>
                   <span className="text-2xl font-bold text-pink-400">+23%</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-white/60">أعضاء جدد اليوم</span>
+                    <span className="text-[hsl(var(--ifox-text-secondary))]">أعضاء جدد اليوم</span>
                     <span className="text-white">47</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-white/60">منشورات اليوم</span>
+                    <span className="text-[hsl(var(--ifox-text-secondary))]">منشورات اليوم</span>
                     <span className="text-white">123</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-white/60">تفاعلات اليوم</span>
+                    <span className="text-[hsl(var(--ifox-text-secondary))]">تفاعلات اليوم</span>
                     <span className="text-white">892</span>
                   </div>
                 </div>
@@ -738,7 +738,7 @@ export default function IFoxCommunity() {
         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة موضوع جديد</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               أنشئ موضوعاً جديداً في مجتمع AI
             </DialogDescription>
           </DialogHeader>
@@ -755,7 +755,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="عنوان الموضوع"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -774,7 +774,7 @@ export default function IFoxCommunity() {
                         {...field}
                         rows={4}
                         placeholder="اكتب وصفاً للموضوع"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -815,7 +815,7 @@ export default function IFoxCommunity() {
                     onChange={(e) => setTagInput(e.target.value)}
                     placeholder="أضف وسماً"
                     onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                   />
                   <Button
                     type="button"
@@ -873,7 +873,7 @@ export default function IFoxCommunity() {
         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة خبير جديد</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               أضف خبيراً جديداً إلى مجتمع AI
             </DialogDescription>
           </DialogHeader>
@@ -890,7 +890,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="الاسم الكامل"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -908,7 +908,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="مثال: خبير في معالجة اللغات الطبيعية"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -927,7 +927,7 @@ export default function IFoxCommunity() {
                         {...field}
                         rows={4}
                         placeholder="نبذة عن الخبير وخبراته"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -945,7 +945,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="مثال: NLP, Computer Vision, ML"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />

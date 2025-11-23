@@ -307,7 +307,7 @@ export default function IFoxVoice() {
                               <Input
                                 {...field}
                                 placeholder="أدخل عنوان الحلقة"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -326,7 +326,7 @@ export default function IFoxVoice() {
                                 {...field}
                                 rows={4}
                                 placeholder="اكتب وصفاً تفصيلياً للحلقة"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -346,10 +346,10 @@ export default function IFoxVoice() {
                                 type="url"
                                 placeholder="https://..."
                                 dir="ltr"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
-                            <FormDescription className="text-white/60">
+                            <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                               رابط النص المكتوب للحلقة (اختياري)
                             </FormDescription>
                             <FormMessage />
@@ -366,7 +366,7 @@ export default function IFoxVoice() {
                             onChange={(e) => setTagInput(e.target.value)}
                             placeholder="أضف كلمة مفتاحية"
                             onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                           <Button
                             type="button"
@@ -409,7 +409,7 @@ export default function IFoxVoice() {
                               <Input
                                 {...field}
                                 placeholder="أدخل اسم الضيف (إن وجد)"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -428,7 +428,7 @@ export default function IFoxVoice() {
                                 {...field}
                                 rows={4}
                                 placeholder="اكتب نبذة عن الضيف"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -445,9 +445,9 @@ export default function IFoxVoice() {
                           onClick={() => fileInputRef.current?.click()}
                           className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-white/5"
                         >
-                          <FileAudio className="h-12 w-12 mx-auto text-white/40 mb-3" />
-                          <p className="text-white/60">اضغط لرفع ملف صوتي</p>
-                          <p className="text-sm text-white/40 mt-1">MP3, WAV (حد أقصى 500MB)</p>
+                          <FileAudio className="h-12 w-12 mx-auto text-[hsl(var(--ifox-text-secondary))] mb-3" />
+                          <p className="text-[hsl(var(--ifox-text-secondary))]">اضغط لرفع ملف صوتي</p>
+                          <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-1">MP3, WAV (حد أقصى 500MB)</p>
                           {audioFile && (
                             <p className="text-violet-400 mt-2">{audioFile.name}</p>
                           )}
@@ -468,9 +468,9 @@ export default function IFoxVoice() {
                           onClick={() => imageInputRef.current?.click()}
                           className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-white/5"
                         >
-                          <ImagePlus className="h-12 w-12 mx-auto text-white/40 mb-3" />
-                          <p className="text-white/60">اضغط لرفع صورة الغلاف</p>
-                          <p className="text-sm text-white/40 mt-1">JPG, PNG (1:1 نسبة مفضلة)</p>
+                          <ImagePlus className="h-12 w-12 mx-auto text-[hsl(var(--ifox-text-secondary))] mb-3" />
+                          <p className="text-[hsl(var(--ifox-text-secondary))]">اضغط لرفع صورة الغلاف</p>
+                          <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mt-1">JPG, PNG (1:1 نسبة مفضلة)</p>
                           {coverImage && (
                             <p className="text-violet-400 mt-2">{coverImage.name}</p>
                           )}
@@ -517,7 +517,7 @@ export default function IFoxVoice() {
                                 value={(currentTime / duration) * 100 || 0}
                                 className="h-2 bg-white/20"
                               />
-                              <div className="flex justify-between text-xs text-white/60 mt-1">
+                              <div className="flex justify-between text-xs text-[hsl(var(--ifox-text-secondary))] mt-1">
                                 <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, "0")}</span>
                                 <span>{Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, "0")}</span>
                               </div>
@@ -597,10 +597,10 @@ export default function IFoxVoice() {
                               <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">
                                 {episode.title}
                               </h4>
-                              <p className="text-xs text-white/60 line-clamp-2 mb-2">
+                              <p className="text-xs text-[hsl(var(--ifox-text-secondary))] line-clamp-2 mb-2">
                                 {episode.description}
                               </p>
-                              <div className="flex items-center gap-3 text-xs text-white/40">
+                              <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]">
                                 {episode.guestName && (
                                   <span className="flex items-center gap-1">
                                     <Users className="h-3 w-3" />
@@ -632,21 +632,21 @@ export default function IFoxVoice() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-white/40 hover:text-white"
+                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white"
                                   >
                                     <Edit className="h-3 w-3" />
                                   </Button>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-white/40 hover:text-white"
+                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white"
                                   >
                                     <Eye className="h-3 w-3" />
                                   </Button>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-white/40 hover:text-red-400"
+                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-red-400"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>

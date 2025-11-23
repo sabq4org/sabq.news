@@ -264,7 +264,7 @@ export default function IFoxArticles() {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
                   آي فوكس - إدارة المحتوى
                 </h1>
-                <p className="text-white/60 mt-2">
+                <p className="text-[hsl(var(--ifox-text-secondary))] mt-2">
                   إدارة المحتوى التقني والذكاء الاصطناعي
                 </p>
               </div>

@@ -191,7 +191,7 @@ export default function IFoxDashboard() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
                       لوحة تحكم آي فوكس
                     </h1>
-                    <p className="text-gray-100 text-lg" data-testid="text-page-description">
+                    <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
                       بوابة إدارة المحتوى الذكي
                     </p>
                   </div>
@@ -350,10 +350,10 @@ export default function IFoxDashboard() {
                             <div className={`p-3 rounded-xl bg-gradient-to-br ${action.color} shadow-lg`}>
                               <Icon className="w-5 h-5 text-white" />
                             </div>
-                            <ArrowUpRight className="w-4 h-4 text-gray-200" />
+                            <ArrowUpRight className="w-4 h-4 text-[hsl(var(--ifox-text-primary))]" />
                           </div>
                           <h3 className="font-bold text-white mb-1">{action.title}</h3>
-                          <p className="text-xs text-gray-100">{action.description}</p>
+                          <p className="text-xs text-[hsl(var(--ifox-text-primary))]">{action.description}</p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -376,7 +376,7 @@ export default function IFoxDashboard() {
                       <Activity className="w-5 h-5 text-violet-300" />
                       نشاط النشر آخر 7 أيام
                     </CardTitle>
-                    <CardDescription className="text-gray-100">
+                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
                       عدد المقالات المنشورة والمشاهدات
                     </CardDescription>
                   </CardHeader>
@@ -447,7 +447,7 @@ export default function IFoxDashboard() {
                         آخر المقالات المنشورة
                       </CardTitle>
                       <Link href="/dashboard/admin/ifox/articles">
-                        <Button variant="ghost" size="sm" className="text-gray-100 hover:text-white">
+                        <Button variant="ghost" size="sm" className="text-[hsl(var(--ifox-text-primary))] hover:text-white">
                           عرض الكل
                           <ArrowUpRight className="w-4 h-4 mr-1" />
                         </Button>
@@ -457,13 +457,13 @@ export default function IFoxDashboard() {
                   <CardContent>
                     <div className="space-y-3">
                       {articlesLoading ? (
-                        <div className="text-center py-8 text-gray-100">جاري التحميل...</div>
+                        <div className="text-center py-8 text-[hsl(var(--ifox-text-primary))]">جاري التحميل...</div>
                       ) : recentArticles?.map((article) => (
                         <motion.div
                           key={article.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/70 transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/30"
+                          className="p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/70 transition-all duration-200 cursor-pointer border border-[hsl(var(--ifox-surface-overlay))] hover:border-white/30"
                           data-testid={`recent-article-${article.id}`}
                         >
                           <div className="flex items-start justify-between mb-2">
@@ -471,7 +471,7 @@ export default function IFoxDashboard() {
                               <h4 className="text-sm font-semibold text-white mb-1 line-clamp-1">
                                 {article.title}
                               </h4>
-                              <div className="flex items-center gap-3 text-xs text-gray-100">
+                              <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
                                 <span>{article.author}</span>
                                 <span>•</span>
                                 <span>{format(new Date(article.publishedAt), 'dd MMM', { locale: ar })}</span>
@@ -498,7 +498,7 @@ export default function IFoxDashboard() {
                             <Badge variant="outline" className="text-xs text-violet-300 border-violet-400/40">
                               {article.category}
                             </Badge>
-                            <div className="flex items-center gap-1 text-xs text-gray-100">
+                            <div className="flex items-center gap-1 text-xs text-[hsl(var(--ifox-text-primary))]">
                               <Activity className="w-3 h-3" />
                               <span>{article.engagement}%</span>
                             </div>
@@ -520,15 +520,15 @@ export default function IFoxDashboard() {
             >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-gray-200">AI Performance: 92%</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">AI Performance: 92%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-violet-400" />
-                <span className="text-sm text-gray-200">Neural Network: Active</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Neural Network: Active</span>
               </div>
               <div className="flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-cyan-400" />
-                <span className="text-sm text-gray-200">Processing: Optimal</span>
+                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Processing: Optimal</span>
               </div>
             </motion.div>
           </div>

@@ -233,8 +233,8 @@ export default function IFoxSchedule() {
       case "scheduled": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "published": return "bg-green-500/20 text-green-400 border-green-500/30";
       case "failed": return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "cancelled": return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      case "cancelled": return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))] border-gray-500/30";
+      default: return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))] border-gray-500/30";
     }
   };
 
@@ -273,7 +273,7 @@ export default function IFoxSchedule() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                       جدولة النشر
                     </h1>
-                    <p className="text-white/60">إدارة وجدولة نشر المقالات</p>
+                    <p className="text-[hsl(var(--ifox-text-secondary))]">إدارة وجدولة نشر المقالات</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -313,7 +313,7 @@ export default function IFoxSchedule() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">مجدول اليوم</p>
+                        <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">مجدول اليوم</p>
                         <p className="text-2xl font-bold text-white">
                           {safeScheduledArticles.filter(a => 
                             a?.scheduledAt && isToday(new Date(a.scheduledAt)) && a.status === "scheduled"
@@ -329,7 +329,7 @@ export default function IFoxSchedule() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">هذا الأسبوع</p>
+                        <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">هذا الأسبوع</p>
                         <p className="text-2xl font-bold text-white">
                           {safeScheduledArticles.filter(a => {
                             const date = new Date(a?.scheduledAt);
@@ -347,7 +347,7 @@ export default function IFoxSchedule() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">تم النشر</p>
+                        <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">تم النشر</p>
                         <p className="text-2xl font-bold text-white">
                           {safeScheduledArticles.filter(a => a?.status === "published").length}
                         </p>
@@ -361,7 +361,7 @@ export default function IFoxSchedule() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white/60">مسودات متاحة</p>
+                        <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">مسودات متاحة</p>
                         <p className="text-2xl font-bold text-white">{safeDraftArticles.length}</p>
                       </div>
                       <FileText className="w-8 h-8 text-amber-400 opacity-50" />
@@ -443,13 +443,13 @@ export default function IFoxSchedule() {
                                   <div className="flex items-start justify-between mb-2">
                                     <div>
                                       <h3 className="text-white font-medium">{article.title}</h3>
-                                      <p className="text-white/60 text-sm mt-1">{article.category}</p>
+                                      <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mt-1">{article.category}</p>
                                     </div>
                                     <Badge className={getStatusColor(article.status)}>
                                       {article.status === "scheduled" ? "مجدول" : article.status}
                                     </Badge>
                                   </div>
-                                  <div className="flex items-center gap-4 text-sm text-white/60">
+                                  <div className="flex items-center gap-4 text-sm text-[hsl(var(--ifox-text-secondary))]">
                                     <div className="flex items-center gap-1">
                                       <Calendar className="w-4 h-4" />
                                       {format(new Date(article.scheduledAt), "d MMM", { locale: ar })}
@@ -547,7 +547,7 @@ export default function IFoxSchedule() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-white/60" />
+                            <Clock className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
                             <span className="text-white font-medium">{slot.time}</span>
                             {slot.isOptimal && (
                               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
@@ -565,7 +565,7 @@ export default function IFoxSchedule() {
                             )}>
                               {slot.currentArticles}
                             </span>
-                            <span className="text-white/60"> / {slot.maxArticles}</span>
+                            <span className="text-[hsl(var(--ifox-text-secondary))]"> / {slot.maxArticles}</span>
                           </div>
                         </div>
                       </div>
@@ -593,7 +593,7 @@ export default function IFoxSchedule() {
                               {article.title}
                             </h4>
                             <div className="flex items-center justify-between">
-                              <span className="text-white/60 text-xs">{article.category}</span>
+                              <span className="text-[hsl(var(--ifox-text-secondary))] text-xs">{article.category}</span>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -630,7 +630,7 @@ export default function IFoxSchedule() {
                             <h4 className="text-white text-sm font-medium mb-1 line-clamp-1">
                               {article.title}
                             </h4>
-                            <div className="flex items-center gap-2 text-xs text-white/60">
+                            <div className="flex items-center gap-2 text-xs text-[hsl(var(--ifox-text-secondary))]">
                               <span>{format(new Date(article.scheduledAt), "d MMM, h:mm a", { locale: ar })}</span>
                               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                                 تم النشر
@@ -657,7 +657,7 @@ export default function IFoxSchedule() {
             <DialogTitle className="text-white">
               {editingSchedule ? "تعديل الجدولة" : "جدولة مقال جديد"}
             </DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               حدد وقت النشر وخيارات المشاركة
             </DialogDescription>
           </DialogHeader>
@@ -666,7 +666,7 @@ export default function IFoxSchedule() {
             {/* Article Selection */}
             {!editingSchedule && (
               <div>
-                <Label className="text-white/60">اختر المقال</Label>
+                <Label className="text-[hsl(var(--ifox-text-secondary))]">اختر المقال</Label>
                 <Select
                   value={scheduleForm.articleId}
                   onValueChange={(value) => {
@@ -698,7 +698,7 @@ export default function IFoxSchedule() {
             {/* Schedule Date & Time */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-white/60">التاريخ والوقت</Label>
+                <Label className="text-[hsl(var(--ifox-text-secondary))]">التاريخ والوقت</Label>
                 <Input
                   type="datetime-local"
                   value={scheduleForm.scheduledAt}
@@ -714,7 +714,7 @@ export default function IFoxSchedule() {
               </div>
 
               <div>
-                <Label className="text-white/60">التكرار</Label>
+                <Label className="text-[hsl(var(--ifox-text-secondary))]">التكرار</Label>
                 <Select
                   value={scheduleForm.recurrenceType}
                   onValueChange={(value: any) => setScheduleForm({ ...scheduleForm, recurrenceType: value })}
@@ -734,7 +734,7 @@ export default function IFoxSchedule() {
 
             {scheduleForm.recurrenceType !== "none" && (
               <div>
-                <Label className="text-white/60">تاريخ انتهاء التكرار (اختياري)</Label>
+                <Label className="text-[hsl(var(--ifox-text-secondary))]">تاريخ انتهاء التكرار (اختياري)</Label>
                 <Input
                   type="date"
                   value={scheduleForm.recurrenceEndDate}
@@ -746,7 +746,7 @@ export default function IFoxSchedule() {
 
             {/* Publishing Options */}
             <div className="space-y-3">
-              <Label className="text-white/60">خيارات النشر</Label>
+              <Label className="text-[hsl(var(--ifox-text-secondary))]">خيارات النشر</Label>
               
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -785,7 +785,7 @@ export default function IFoxSchedule() {
 
             {/* Social Media Sharing */}
             <div className="space-y-3">
-              <Label className="text-white/60">المشاركة على وسائل التواصل</Label>
+              <Label className="text-[hsl(var(--ifox-text-secondary))]">المشاركة على وسائل التواصل</Label>
               <div className="grid grid-cols-3 gap-2">
                 {socialPlatforms.map((platform) => {
                   const Icon = platform.icon;
@@ -811,7 +811,7 @@ export default function IFoxSchedule() {
                       )}
                     >
                       <Icon className={`w-5 h-5 mx-auto ${platform.color}`} />
-                      <span className="text-white/80 text-xs mt-1 block">{platform.label}</span>
+                      <span className="text-[hsl(var(--ifox-text-primary))] text-xs mt-1 block">{platform.label}</span>
                     </button>
                   );
                 })}

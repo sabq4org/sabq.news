@@ -214,7 +214,7 @@ export default function IFoxAITasks() {
       processing: { variant: "default" as const, icon: Loader2, color: "text-blue-500" },
       completed: { variant: "default" as const, icon: CheckCircle, color: "text-green-500" },
       failed: { variant: "destructive" as const, icon: AlertCircle, color: "text-red-500" },
-      cancelled: { variant: "outline" as const, icon: XCircle, color: "text-gray-500" },
+      cancelled: { variant: "outline" as const, icon: XCircle, color: "text-[hsl(var(--ifox-text-secondary))]" },
     };
     
     const config = variants[status];
@@ -294,10 +294,10 @@ export default function IFoxAITasks() {
                   <Bot className="w-8 h-8 text-violet-400" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-100">
+                  <h1 className="text-3xl font-bold text-[hsl(var(--ifox-text-primary))]">
                     🤖 غرفة الأخبار الذكية
                   </h1>
-                  <p className="text-gray-300 mt-1">
+                  <p className="text-[hsl(var(--ifox-text-primary))] mt-1">
                     إنشاء ونشر المحتوى تلقائياً باستخدام الذكاء الاصطناعي
                   </p>
                 </div>
@@ -498,9 +498,9 @@ export default function IFoxAITasks() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm text-gray-400">{stat.title}</p>
-                      <p className="text-3xl font-bold text-gray-100">{stat.value}</p>
-                      <p className="text-xs text-gray-500">{stat.description}</p>
+                      <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{stat.title}</p>
+                      <p className="text-3xl font-bold text-[hsl(var(--ifox-text-primary))]">{stat.value}</p>
+                      <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{stat.description}</p>
                     </div>
                     <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} opacity-20`}>
                       <stat.icon className="w-8 h-8 text-white" />
@@ -517,8 +517,8 @@ export default function IFoxAITasks() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-gray-100">المهام المجدولة</CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardTitle className="text-[hsl(var(--ifox-text-primary))]">المهام المجدولة</CardTitle>
+                <CardDescription className="text-[hsl(var(--ifox-text-secondary))]">
                   إدارة مهام إنشاء المحتوى التلقائي
                 </CardDescription>
               </div>
@@ -542,12 +542,12 @@ export default function IFoxAITasks() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-gray-800/50">
-                    <TableHead className="text-right text-gray-300">المهمة</TableHead>
-                    <TableHead className="text-right text-gray-300">القسم</TableHead>
-                    <TableHead className="text-right text-gray-300">الحالة</TableHead>
-                    <TableHead className="text-right text-gray-300">الأولوية</TableHead>
-                    <TableHead className="text-right text-gray-300">موعد التنفيذ</TableHead>
-                    <TableHead className="text-right text-gray-300">الإجراءات</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">المهمة</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">القسم</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">الحالة</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">الأولوية</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">موعد التنفيذ</TableHead>
+                    <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -559,23 +559,23 @@ export default function IFoxAITasks() {
                     </TableRow>
                   ) : tasksData?.tasks.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                      <TableCell colSpan={6} className="text-center py-8 text-[hsl(var(--ifox-text-secondary))]">
                         لا توجد مهام مجدولة
                       </TableCell>
                     </TableRow>
                   ) : (
                     tasksData?.tasks.map((task) => (
                       <TableRow key={task.id} className="border-gray-800/50 hover-elevate">
-                        <TableCell className="text-gray-200" data-testid={`text-task-name-${task.id}`}>
+                        <TableCell className="text-[hsl(var(--ifox-text-primary))]" data-testid={`text-task-name-${task.id}`}>
                           <div className="flex items-center gap-2">
                             <FileText className="w-4 h-4 text-violet-400" />
                             {task.taskName}
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-300">{task.categoryName || task.categoryId}</TableCell>
+                        <TableCell className="text-[hsl(var(--ifox-text-primary))]">{task.categoryName || task.categoryId}</TableCell>
                         <TableCell>{getStatusBadge(task.status)}</TableCell>
                         <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                        <TableCell className="text-gray-300" dir="ltr">
+                        <TableCell className="text-[hsl(var(--ifox-text-primary))]" dir="ltr">
                           {format(new Date(task.scheduledAt), 'dd/MM/yyyy HH:mm', { locale: ar })}
                         </TableCell>
                         <TableCell>

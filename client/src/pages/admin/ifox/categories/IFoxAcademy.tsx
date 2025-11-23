@@ -405,7 +405,7 @@ export default function IFoxAcademy() {
                             <h3 className="text-xl font-bold text-white mb-1">
                               {course.title}
                             </h3>
-                            <p className="text-white/60 text-sm mb-3">
+                            <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mb-3">
                               {course.description}
                             </p>
                           </div>
@@ -416,7 +416,7 @@ export default function IFoxAcademy() {
                         </div>
 
                         {/* Stats */}
-                        <div className="flex items-center gap-4 text-sm text-white/40 mb-4">
+                        <div className="flex items-center gap-4 text-sm text-[hsl(var(--ifox-text-secondary))] mb-4">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {course.duration}
@@ -435,7 +435,7 @@ export default function IFoxAcademy() {
                         {course.progress !== undefined && (
                           <div className="mb-4">
                             <div className="flex items-center justify-between text-sm mb-1">
-                              <span className="text-white/60">التقدم</span>
+                              <span className="text-[hsl(var(--ifox-text-secondary))]">التقدم</span>
                               <span className="text-amber-400">{course.progress}%</span>
                             </div>
                             <Progress value={course.progress} className="h-2 bg-white/20" />
@@ -477,22 +477,22 @@ export default function IFoxAcademy() {
                                             {lesson.completed ? (
                                               <CheckCircle className="h-4 w-4 text-green-400" />
                                             ) : (
-                                              <Circle className="h-4 w-4 text-white/30" />
+                                              <Circle className="h-4 w-4 text-[hsl(var(--ifox-text-secondary))]" />
                                             )}
-                                            <LessonIcon className="h-4 w-4 text-white/50" />
+                                            <LessonIcon className="h-4 w-4 text-[hsl(var(--ifox-text-secondary))]" />
                                             <span className={cn(
                                               "text-sm",
-                                              lesson.completed ? "text-white/60" : "text-white"
+                                              lesson.completed ? "text-[hsl(var(--ifox-text-secondary))]" : "text-white"
                                             )}>
                                               {lesson.title}
                                             </span>
                                           </div>
                                           <div className="flex items-center gap-2">
-                                            <span className="text-xs text-white/40">
+                                            <span className="text-xs text-[hsl(var(--ifox-text-secondary))]">
                                               {lesson.duration}
                                             </span>
                                             {lesson.isLocked ? (
-                                              <Lock className="h-3 w-3 text-white/30" />
+                                              <Lock className="h-3 w-3 text-[hsl(var(--ifox-text-secondary))]" />
                                             ) : (
                                               <Play className="h-3 w-3 text-amber-400" />
                                             )}
@@ -565,21 +565,21 @@ export default function IFoxAcademy() {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/60">الدروس المكتملة اليوم</span>
+                  <span className="text-sm text-[hsl(var(--ifox-text-secondary))]">الدروس المكتملة اليوم</span>
                   <span className="text-2xl font-bold text-amber-400">47</span>
                 </div>
                 <Progress value={65} className="h-2 bg-white/20" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/60">الشهادات الممنوحة</span>
+                  <span className="text-sm text-[hsl(var(--ifox-text-secondary))]">الشهادات الممنوحة</span>
                   <span className="text-2xl font-bold text-green-400">23</span>
                 </div>
                 <Progress value={80} className="h-2 bg-white/20" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/60">التمارين المنجزة</span>
+                  <span className="text-sm text-[hsl(var(--ifox-text-secondary))]">التمارين المنجزة</span>
                   <span className="text-2xl font-bold text-blue-400">156</span>
                 </div>
                 <Progress value={45} className="h-2 bg-white/20" />
@@ -610,7 +610,7 @@ export default function IFoxAcademy() {
                       className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <TopicIcon className="h-4 w-4 text-white/40" />
+                        <TopicIcon className="h-4 w-4 text-[hsl(var(--ifox-text-secondary))]" />
                         <span className="text-white text-sm">{topic.name}</span>
                       </div>
                       <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
@@ -629,7 +629,7 @@ export default function IFoxAcademy() {
               <div className="text-center">
                 <Award className="h-12 w-12 text-amber-400 mx-auto mb-3" />
                 <h3 className="text-white font-bold mb-2">إنجاز الأسبوع</h3>
-                <p className="text-white/60 text-sm mb-3">
+                <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mb-3">
                   تم إكمال 500+ درس هذا الأسبوع
                 </p>
                 <Button 
@@ -650,7 +650,7 @@ export default function IFoxAcademy() {
         <DialogContent className="max-w-3xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة دورة جديدة</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               أنشئ دورة تعليمية جديدة في أكاديمية AI
             </DialogDescription>
           </DialogHeader>
@@ -675,7 +675,7 @@ export default function IFoxAcademy() {
                           <Input
                             {...field}
                             placeholder="مثال: أساسيات ChatGPT للمبتدئين"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -694,7 +694,7 @@ export default function IFoxAcademy() {
                             {...field}
                             rows={4}
                             placeholder="وصف شامل للدورة وما سيتعلمه الطالب"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -738,7 +738,7 @@ export default function IFoxAcademy() {
                             <Input
                               {...field}
                               placeholder="مثال: 5 ساعات"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
                           <FormMessage />
@@ -758,7 +758,7 @@ export default function IFoxAcademy() {
                         onChange={(e) => setObjectiveInput(e.target.value)}
                         placeholder="أضف هدفاً للدورة"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddObjective())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
@@ -780,7 +780,7 @@ export default function IFoxAcademy() {
                               const current = courseForm.getValues("objectives");
                               courseForm.setValue("objectives", current.filter((_, i) => i !== index));
                             }}
-                            className="text-white/40 hover:text-red-400"
+                            className="text-[hsl(var(--ifox-text-secondary))] hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -798,7 +798,7 @@ export default function IFoxAcademy() {
                         onChange={(e) => setRequirementInput(e.target.value)}
                         placeholder="أضف متطلباً مسبقاً (اختياري)"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddRequirement())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
@@ -820,7 +820,7 @@ export default function IFoxAcademy() {
                               const current = courseForm.getValues("requirements") || [];
                               courseForm.setValue("requirements", current.filter((_, i) => i !== index));
                             }}
-                            className="text-white/40 hover:text-red-400"
+                            className="text-[hsl(var(--ifox-text-secondary))] hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -838,7 +838,7 @@ export default function IFoxAcademy() {
                       <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
                         <div className="space-y-0.5">
                           <FormLabel>دورة مجانية</FormLabel>
-                          <FormDescription className="text-white/60">
+                          <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                             هل هذه الدورة متاحة مجاناً للجميع؟
                           </FormDescription>
                         </div>
@@ -866,7 +866,7 @@ export default function IFoxAcademy() {
                               type="number"
                               placeholder="السعر بالريال"
                               onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
                           <FormMessage />
@@ -882,7 +882,7 @@ export default function IFoxAcademy() {
                       <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
                         <div className="space-y-0.5">
                           <FormLabel>شهادة إتمام</FormLabel>
-                          <FormDescription className="text-white/60">
+                          <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                             منح شهادة للطلاب عند إكمال الدورة
                           </FormDescription>
                         </div>
@@ -927,7 +927,7 @@ export default function IFoxAcademy() {
         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة درس جديد</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               أضف درساً جديداً إلى الدورة
             </DialogDescription>
           </DialogHeader>
@@ -944,7 +944,7 @@ export default function IFoxAcademy() {
                       <Input
                         {...field}
                         placeholder="مثال: مقدمة في ChatGPT"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -989,7 +989,7 @@ export default function IFoxAcademy() {
                           type="url"
                           placeholder="https://..."
                           dir="ltr"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -1009,7 +1009,7 @@ export default function IFoxAcademy() {
                         {...field}
                         rows={6}
                         placeholder="اكتب محتوى الدرس هنا"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -1024,7 +1024,7 @@ export default function IFoxAcademy() {
                   <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
                     <div className="space-y-0.5">
                       <FormLabel>درس مجاني للمعاينة</FormLabel>
-                      <FormDescription className="text-white/60">
+                      <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
                         السماح للزوار بمشاهدة هذا الدرس مجاناً
                       </FormDescription>
                     </div>

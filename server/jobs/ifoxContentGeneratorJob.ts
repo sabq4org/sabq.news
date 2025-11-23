@@ -1,6 +1,5 @@
 import cron from "node-cron";
 import { ifoxCalendarService } from "../services/ifox";
-import { createNotification } from "../notificationEngine";
 
 /**
  * iFox Content Generator Job
@@ -59,9 +58,11 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
         console.log(`[iFox Generator] 🚀 Processing task: ${topicIdea}`);
 
         // Update status to processing
+        // Use system user ID if creator is not available
+        const userId = entry.createdBy || 'system';
         await ifoxCalendarService.updateEntry(entry.id, {
           status: 'in_progress',
-        }, entry.createdBy);
+        }, userId);
 
         // Here you would call your AI content generation service
         // For now, we'll just mark it as completed
@@ -78,26 +79,13 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
         await ifoxCalendarService.updateEntry(entry.id, {
           status: 'completed',
           actualPublishedAt: new Date(),
-        }, entry.createdBy);
+        }, userId);
 
-        // Send notification to creator (using valid type)
-        try {
-          await createNotification({
-            type: 'NEW_ARTICLE',
-            title: 'مهمة AI مكتملة',
-            titleAr: 'مهمة AI مكتملة',
-            message: `تم إكمال مهمة "${topicIdea}" بنجاح`,
-            messageAr: `تم إكمال مهمة "${topicIdea}" بنجاح`,
-            userId: entry.createdBy,
-            link: `/dashboard/admin/ifox/content-generator`,
-            metadata: {
-              calendarEntryId: entry.id,
-              taskTopic: topicIdea,
-            }
-          });
-        } catch (notifError) {
-          console.error(`[iFox Generator] ⚠️ Could not send notification:`, notifError);
-        }
+        // TODO: When AI article generation is implemented:
+        // 1. Call AI service to generate content
+        // 2. Create article draft
+        // 3. Link article to calendar entry
+        // 4. Send notification to creator via createNotification()
 
         console.log(`[iFox Generator] ✅ Task completed: ${topicIdea}`);
       } catch (error) {
@@ -108,6 +96,9 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
         const currentRetryCount = entry.retryCount || 0;
         const newRetryCount = currentRetryCount + 1;
         
+        // Use system user ID for error handling if creator is not available
+        const errorUserId = entry.createdBy || 'system';
+        
         if (newRetryCount >= MAX_RETRY_ATTEMPTS) {
           // Move to failed status after max retries
           console.error(`[iFox Generator] 💀 Task ${entry.id} failed after ${MAX_RETRY_ATTEMPTS} attempts, moving to 'failed' status`);
@@ -117,7 +108,7 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
               retryCount: newRetryCount,
               lastErrorAt: new Date(),
               lastErrorReason: errorMessage,
-            }, entry.createdBy);
+            }, errorUserId);
           } catch (updateError) {
             console.error(`[iFox Generator] ❌ Failed to update task to failed status:`, updateError);
           }
@@ -130,7 +121,7 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
               retryCount: newRetryCount,
               lastErrorAt: new Date(),
               lastErrorReason: errorMessage,
-            }, entry.createdBy);
+            }, errorUserId);
           } catch (updateError) {
             console.error(`[iFox Generator] ❌ Failed to update task status:`, updateError);
           }

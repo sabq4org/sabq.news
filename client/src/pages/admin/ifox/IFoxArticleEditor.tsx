@@ -433,7 +433,7 @@ export default function IFoxArticleEditor() {
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">محايد</p>
-                    <p className="text-lg font-bold text-gray-600">{sentimentScore.neutral}%</p>
+                    <p className="text-lg font-bold text-[hsl(var(--ifox-text-secondary))]">{sentimentScore.neutral}%</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">سلبي</p>
