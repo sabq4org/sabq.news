@@ -191,6 +191,7 @@ import IFoxCategory from "@/pages/admin/ifox/IFoxCategory";
 import IFoxAnalytics from "@/pages/admin/ifox/IFoxAnalytics";
 import IFoxSettings from "@/pages/admin/ifox/IFoxSettings";
 import IFoxAITasks from "@/pages/admin/ifox/IFoxAITasks";
+import AIManagementDashboard from "@/pages/admin/ifox/ai-management";
 import ImageStudio from "@/pages/ifox/ImageStudio";
 import InfographicStudio from "@/pages/InfographicStudio";
 import NotFound from "@/pages/not-found";
@@ -330,6 +331,7 @@ function Router() {
       <Route path="/admin/ifox/settings" component={IFoxSettings} />
       <Route path="/admin/ifox/image-studio" component={ImageStudio} />
       <Route path="/admin/ifox/ai-tasks" component={IFoxAITasks} />
+      <Route path="/admin/ifox/ai-management" component={AIManagementDashboard} />
       
       <Route path="/reporter/:slug" component={ReporterProfile} />
       
@@ -451,6 +453,7 @@ function Router() {
       <Route path="/dashboard/admin/ifox/schedule" component={IFoxSchedule} />
       <Route path="/dashboard/admin/ifox/analytics" component={IFoxAnalytics} />
       <Route path="/dashboard/admin/ifox/settings" component={IFoxSettings} />
+      <Route path="/dashboard/admin/ifox/ai-management" component={AIManagementDashboard} />
       
       {/* Onboarding routes - Arabic */}
       <Route path="/ar/onboarding/welcome" component={Welcome} />

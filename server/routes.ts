@@ -8,6 +8,7 @@ import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
 import emailAgentRoutes from './routes/emailAgent';
 import whatsappAgentRoutes from './routes/whatsappAgent';
+import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { registerInfographicAiRoutes } from "./routes/infographicAi";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
@@ -27062,6 +27063,12 @@ Allow: /
 
   // Mount the WhatsApp agent webhook routes
   app.use("/api/whatsapp", whatsappAgentRoutes);
+  // ============================================================
+  // IFOX AI MANAGEMENT ROUTES
+  // ============================================================
+  
+  // Mount the iFox AI Management System routes
+  app.use("/api/ifox/ai-management", ifoxAiManagementRoutes);
 
   // GET /api/email-agent/senders - List trusted senders (admin only)
   app.get("/api/email-agent/senders", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
