@@ -737,6 +737,27 @@ router.get("/performance", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/ifox/ai-management/metrics
+ * Get aggregated performance analytics metrics
+ */
+router.get("/metrics", async (req, res) => {
+  try {
+    const { timeRange } = req.query;
+    
+    const validTimeRanges = ['today', 'week', 'month', 'all'];
+    const range = timeRange && validTimeRanges.includes(timeRange as string)
+      ? (timeRange as 'today' | 'week' | 'month' | 'all')
+      : 'all';
+
+    const metrics = await ifoxPerformanceService.getPerformanceMetrics(range);
+    res.json(metrics);
+  } catch (error) {
+    console.error("Get metrics error:", error);
+    res.status(500).json({ error: "Failed to get metrics" });
+  }
+});
+
 // ==================== BUDGET TRACKING ====================
 
 /**
