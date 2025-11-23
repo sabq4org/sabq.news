@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -277,10 +277,9 @@ export default function IFoxAITasks() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      <IFoxSidebar />
-      <div className="flex-1">
-        <div className="container mx-auto py-6 px-4 max-w-7xl">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
         {/* Header with Mascot */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -636,7 +635,7 @@ export default function IFoxAITasks() {
           </CardContent>
         </Card>
         </div>
-      </div>
-    </div>
+      </ScrollArea>
+    </IFoxLayout>
   );
 }

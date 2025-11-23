@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,24 +174,21 @@ export default function IFoxSettings() {
 
   if (isLoading || !localSettings) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-violet-300 animate-spin mx-auto mb-4" />
-          <p className="text-gray-200">جاري تحميل الإعدادات...</p>
+      <IFoxLayout>
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <RefreshCw className="w-12 h-12 text-violet-300 animate-spin mx-auto mb-4" />
+            <p className="text-gray-200">جاري تحميل الإعدادات...</p>
+          </div>
         </div>
-      </div>
+      </IFoxLayout>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
-      {/* Sidebar */}
-      <IFoxSidebar className="hidden lg:block" />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-6" dir="rtl">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -870,8 +867,7 @@ export default function IFoxSettings() {
               </Tabs>
             </motion.div>
           </div>
-        </ScrollArea>
-      </div>
-    </div>
+      </ScrollArea>
+    </IFoxLayout>
   );
 }
