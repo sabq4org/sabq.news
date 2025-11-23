@@ -759,7 +759,14 @@ export const articles = pgTable("articles", {
   verifiedBy: varchar("verified_by").references(() => users.id), // Staff/admin who verified the article
   verifiedAt: timestamp("verified_at"), // When the article was verified
   
-  // Publisher/Agency content sales fields
+  // OLD Publisher/Agency review fields (keep for backward compatibility with existing data)
+  isPublisherContent: boolean("is_publisher_content").default(false),
+  publisherStatus: text("publisher_status"), // 'pending', 'approved', 'rejected'
+  publisherReviewedBy: varchar("publisher_reviewed_by").references(() => users.id),
+  publisherReviewedAt: timestamp("publisher_reviewed_at"),
+  publisherReviewNotes: text("publisher_review_notes"),
+  
+  // NEW Publisher/Agency content sales fields
   isPublisherNews: boolean("is_publisher_news").default(false).notNull(),
   publisherId: varchar("publisher_id").references(() => publishers.id, { onDelete: "set null" }),
   publisherCreditDeducted: boolean("publisher_credit_deducted").default(false).notNull(), // Track if credit was already deducted

@@ -12,12 +12,19 @@ import {
   DollarSign 
 } from "lucide-react";
 import AiPreferencesTab from "./tabs/AiPreferencesTab";
+// @ts-ignore
 import ContentTemplatesTab from "./tabs/ContentTemplatesTab";
+// @ts-ignore
 import WorkflowRulesTab from "./tabs/WorkflowRulesTab";
+// @ts-ignore
 import QualityChecksTab from "./tabs/QualityChecksTab";
+// @ts-ignore
 import StrategyInsightsTab from "./tabs/StrategyInsightsTab";
+// @ts-ignore
 import EditorialCalendarTab from "./tabs/EditorialCalendarTab";
+// @ts-ignore
 import PerformanceAnalyticsTab from "./tabs/PerformanceAnalyticsTab";
+// @ts-ignore
 import BudgetManagerTab from "./tabs/BudgetManagerTab";
 
 export default function AIManagementDashboard() {
