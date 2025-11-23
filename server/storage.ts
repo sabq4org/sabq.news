@@ -1781,6 +1781,19 @@ export interface IStorage {
     averageROI: number;
   }>;
   
+  // Performance metrics from actual articles
+  getAiGeneratedArticlesMetrics(filters: {
+    publishedAtFrom?: Date;
+    publishedAtTo?: Date;
+  }): Promise<Array<{
+    id: string;
+    qualityScore: number | null;
+    bookmarkCount: number | null;
+    viewCount: number | null;
+    shareCount: number | null;
+    commentCount: number | null;
+  }>>;
+  
   // 6. Budget Tracking - Monitor API usage and costs
   createOrUpdateIfoxBudgetTracking(period: string, data: Partial<InsertIfoxBudgetTracking>): Promise<IfoxBudgetTracking>;
   getCurrentPeriodBudget(period: string): Promise<IfoxBudgetTracking | undefined>;
@@ -3767,11 +3780,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: row.source_url || null,
       verifiedBy: row.verified_by || null,
       verifiedAt: row.verified_at || null,
+      thumbnailUrl: row.thumbnail_url || null,
+      isAiGeneratedImage: row.is_ai_generated_image || false,
+      aiImageModel: row.ai_image_model || null,
+      aiImagePrompt: row.ai_image_prompt || null,
+      isAiGeneratedThumbnail: row.is_ai_generated_thumbnail || false,
+      aiThumbnailModel: row.ai_thumbnail_model || null,
+      aiThumbnailPrompt: row.ai_thumbnail_prompt || null,
+      isPublisherContent: row.is_publisher_content || false,
+      publisherStatus: row.publisher_status || null,
+      publisherReviewedBy: row.publisher_reviewed_by || null,
+      publisherReviewedAt: row.publisher_reviewed_at || null,
+      publisherReviewNotes: row.publisher_review_notes || null,
       isPublisherNews: row.is_publisher_news || false,
       publisherId: row.publisher_id || null,
       publisherCreditDeducted: row.publisher_credit_deducted || false,
       publisherSubmittedAt: row.publisher_submitted_at || null,
       publisherApprovedAt: row.publisher_approved_at || null,
+      publisherApprovedBy: row.publisher_approved_by || null,
       category: row.category_id ? {
         id: row.category_id,
         nameAr: row.category_name_ar,
@@ -4084,11 +4110,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: row.source_url || null,
       verifiedBy: row.verified_by || null,
       verifiedAt: row.verified_at || null,
+      thumbnailUrl: row.thumbnail_url || null,
+      isAiGeneratedImage: row.is_ai_generated_image || false,
+      aiImageModel: row.ai_image_model || null,
+      aiImagePrompt: row.ai_image_prompt || null,
+      isAiGeneratedThumbnail: row.is_ai_generated_thumbnail || false,
+      aiThumbnailModel: row.ai_thumbnail_model || null,
+      aiThumbnailPrompt: row.ai_thumbnail_prompt || null,
+      isPublisherContent: row.is_publisher_content || false,
+      publisherStatus: row.publisher_status || null,
+      publisherReviewedBy: row.publisher_reviewed_by || null,
+      publisherReviewedAt: row.publisher_reviewed_at || null,
+      publisherReviewNotes: row.publisher_review_notes || null,
       isPublisherNews: row.is_publisher_news || false,
       publisherId: row.publisher_id || null,
       publisherCreditDeducted: row.publisher_credit_deducted || false,
       publisherSubmittedAt: row.publisher_submitted_at || null,
       publisherApprovedAt: row.publisher_approved_at || null,
+      publisherApprovedBy: row.publisher_approved_by || null,
       category: row.category_id ? {
         id: row.category_id,
         nameAr: row.category_name_ar,
@@ -4217,11 +4256,24 @@ export class DatabaseStorage implements IStorage {
         sourceUrl: articles.sourceUrl,
         verifiedBy: articles.verifiedBy,
         verifiedAt: articles.verifiedAt,
+        thumbnailUrl: articles.thumbnailUrl,
+        isAiGeneratedImage: articles.isAiGeneratedImage,
+        aiImageModel: articles.aiImageModel,
+        aiImagePrompt: articles.aiImagePrompt,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
+        aiThumbnailModel: articles.aiThumbnailModel,
+        aiThumbnailPrompt: articles.aiThumbnailPrompt,
+        isPublisherContent: articles.isPublisherContent,
+        publisherStatus: articles.publisherStatus,
+        publisherReviewedBy: articles.publisherReviewedBy,
+        publisherReviewedAt: articles.publisherReviewedAt,
+        publisherReviewNotes: articles.publisherReviewNotes,
         isPublisherNews: articles.isPublisherNews,
         publisherId: articles.publisherId,
         publisherCreditDeducted: articles.publisherCreditDeducted,
         publisherSubmittedAt: articles.publisherSubmittedAt,
         publisherApprovedAt: articles.publisherApprovedAt,
+        publisherApprovedBy: articles.publisherApprovedBy,
         publishedAt: articles.publishedAt,
         createdAt: articles.createdAt,
         updatedAt: articles.updatedAt,
@@ -4291,11 +4343,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: r.sourceUrl || null,
       verifiedBy: r.verifiedBy || null,
       verifiedAt: r.verifiedAt || null,
+      thumbnailUrl: r.thumbnailUrl || null,
+      isAiGeneratedImage: r.isAiGeneratedImage || false,
+      aiImageModel: r.aiImageModel || null,
+      aiImagePrompt: r.aiImagePrompt || null,
+      isAiGeneratedThumbnail: r.isAiGeneratedThumbnail || false,
+      aiThumbnailModel: r.aiThumbnailModel || null,
+      aiThumbnailPrompt: r.aiThumbnailPrompt || null,
+      isPublisherContent: r.isPublisherContent || false,
+      publisherStatus: r.publisherStatus || null,
+      publisherReviewedBy: r.publisherReviewedBy || null,
+      publisherReviewedAt: r.publisherReviewedAt || null,
+      publisherReviewNotes: r.publisherReviewNotes || null,
       isPublisherNews: r.isPublisherNews || false,
       publisherId: r.publisherId || null,
       publisherCreditDeducted: r.publisherCreditDeducted || false,
       publisherSubmittedAt: r.publisherSubmittedAt || null,
       publisherApprovedAt: r.publisherApprovedAt || null,
+      publisherApprovedBy: r.publisherApprovedBy || null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4347,11 +4412,24 @@ export class DatabaseStorage implements IStorage {
         sourceUrl: articles.sourceUrl,
         verifiedBy: articles.verifiedBy,
         verifiedAt: articles.verifiedAt,
+        thumbnailUrl: articles.thumbnailUrl,
+        isAiGeneratedImage: articles.isAiGeneratedImage,
+        aiImageModel: articles.aiImageModel,
+        aiImagePrompt: articles.aiImagePrompt,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
+        aiThumbnailModel: articles.aiThumbnailModel,
+        aiThumbnailPrompt: articles.aiThumbnailPrompt,
+        isPublisherContent: articles.isPublisherContent,
+        publisherStatus: articles.publisherStatus,
+        publisherReviewedBy: articles.publisherReviewedBy,
+        publisherReviewedAt: articles.publisherReviewedAt,
+        publisherReviewNotes: articles.publisherReviewNotes,
         isPublisherNews: articles.isPublisherNews,
         publisherId: articles.publisherId,
         publisherCreditDeducted: articles.publisherCreditDeducted,
         publisherSubmittedAt: articles.publisherSubmittedAt,
         publisherApprovedAt: articles.publisherApprovedAt,
+        publisherApprovedBy: articles.publisherApprovedBy,
         publishedAt: articles.publishedAt,
         createdAt: articles.createdAt,
         updatedAt: articles.updatedAt,
@@ -4417,11 +4495,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: r.sourceUrl || null,
       verifiedBy: r.verifiedBy || null,
       verifiedAt: r.verifiedAt || null,
+      thumbnailUrl: r.thumbnailUrl || null,
+      isAiGeneratedImage: r.isAiGeneratedImage || false,
+      aiImageModel: r.aiImageModel || null,
+      aiImagePrompt: r.aiImagePrompt || null,
+      isAiGeneratedThumbnail: r.isAiGeneratedThumbnail || false,
+      aiThumbnailModel: r.aiThumbnailModel || null,
+      aiThumbnailPrompt: r.aiThumbnailPrompt || null,
+      isPublisherContent: r.isPublisherContent || false,
+      publisherStatus: r.publisherStatus || null,
+      publisherReviewedBy: r.publisherReviewedBy || null,
+      publisherReviewedAt: r.publisherReviewedAt || null,
+      publisherReviewNotes: r.publisherReviewNotes || null,
       isPublisherNews: r.isPublisherNews || false,
       publisherId: r.publisherId || null,
       publisherCreditDeducted: r.publisherCreditDeducted || false,
       publisherSubmittedAt: r.publisherSubmittedAt || null,
       publisherApprovedAt: r.publisherApprovedAt || null,
+      publisherApprovedBy: r.publisherApprovedBy || null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4473,11 +4564,24 @@ export class DatabaseStorage implements IStorage {
         sourceUrl: articles.sourceUrl,
         verifiedBy: articles.verifiedBy,
         verifiedAt: articles.verifiedAt,
+        thumbnailUrl: articles.thumbnailUrl,
+        isAiGeneratedImage: articles.isAiGeneratedImage,
+        aiImageModel: articles.aiImageModel,
+        aiImagePrompt: articles.aiImagePrompt,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
+        aiThumbnailModel: articles.aiThumbnailModel,
+        aiThumbnailPrompt: articles.aiThumbnailPrompt,
+        isPublisherContent: articles.isPublisherContent,
+        publisherStatus: articles.publisherStatus,
+        publisherReviewedBy: articles.publisherReviewedBy,
+        publisherReviewedAt: articles.publisherReviewedAt,
+        publisherReviewNotes: articles.publisherReviewNotes,
         isPublisherNews: articles.isPublisherNews,
         publisherId: articles.publisherId,
         publisherCreditDeducted: articles.publisherCreditDeducted,
         publisherSubmittedAt: articles.publisherSubmittedAt,
         publisherApprovedAt: articles.publisherApprovedAt,
+        publisherApprovedBy: articles.publisherApprovedBy,
         publishedAt: articles.publishedAt,
         createdAt: articles.createdAt,
         updatedAt: articles.updatedAt,
@@ -4544,11 +4648,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: r.sourceUrl || null,
       verifiedBy: r.verifiedBy || null,
       verifiedAt: r.verifiedAt || null,
+      thumbnailUrl: r.thumbnailUrl || null,
+      isAiGeneratedImage: r.isAiGeneratedImage || false,
+      aiImageModel: r.aiImageModel || null,
+      aiImagePrompt: r.aiImagePrompt || null,
+      isAiGeneratedThumbnail: r.isAiGeneratedThumbnail || false,
+      aiThumbnailModel: r.aiThumbnailModel || null,
+      aiThumbnailPrompt: r.aiThumbnailPrompt || null,
+      isPublisherContent: r.isPublisherContent || false,
+      publisherStatus: r.publisherStatus || null,
+      publisherReviewedBy: r.publisherReviewedBy || null,
+      publisherReviewedAt: r.publisherReviewedAt || null,
+      publisherReviewNotes: r.publisherReviewNotes || null,
       isPublisherNews: r.isPublisherNews || false,
       publisherId: r.publisherId || null,
       publisherCreditDeducted: r.publisherCreditDeducted || false,
       publisherSubmittedAt: r.publisherSubmittedAt || null,
       publisherApprovedAt: r.publisherApprovedAt || null,
+      publisherApprovedBy: r.publisherApprovedBy || null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4600,11 +4717,24 @@ export class DatabaseStorage implements IStorage {
         sourceUrl: articles.sourceUrl,
         verifiedBy: articles.verifiedBy,
         verifiedAt: articles.verifiedAt,
+        thumbnailUrl: articles.thumbnailUrl,
+        isAiGeneratedImage: articles.isAiGeneratedImage,
+        aiImageModel: articles.aiImageModel,
+        aiImagePrompt: articles.aiImagePrompt,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
+        aiThumbnailModel: articles.aiThumbnailModel,
+        aiThumbnailPrompt: articles.aiThumbnailPrompt,
+        isPublisherContent: articles.isPublisherContent,
+        publisherStatus: articles.publisherStatus,
+        publisherReviewedBy: articles.publisherReviewedBy,
+        publisherReviewedAt: articles.publisherReviewedAt,
+        publisherReviewNotes: articles.publisherReviewNotes,
         isPublisherNews: articles.isPublisherNews,
         publisherId: articles.publisherId,
         publisherCreditDeducted: articles.publisherCreditDeducted,
         publisherSubmittedAt: articles.publisherSubmittedAt,
         publisherApprovedAt: articles.publisherApprovedAt,
+        publisherApprovedBy: articles.publisherApprovedBy,
         publishedAt: articles.publishedAt,
         createdAt: articles.createdAt,
         updatedAt: articles.updatedAt,
@@ -4670,11 +4800,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: r.sourceUrl || null,
       verifiedBy: r.verifiedBy || null,
       verifiedAt: r.verifiedAt || null,
+      thumbnailUrl: r.thumbnailUrl || null,
+      isAiGeneratedImage: r.isAiGeneratedImage || false,
+      aiImageModel: r.aiImageModel || null,
+      aiImagePrompt: r.aiImagePrompt || null,
+      isAiGeneratedThumbnail: r.isAiGeneratedThumbnail || false,
+      aiThumbnailModel: r.aiThumbnailModel || null,
+      aiThumbnailPrompt: r.aiThumbnailPrompt || null,
+      isPublisherContent: r.isPublisherContent || false,
+      publisherStatus: r.publisherStatus || null,
+      publisherReviewedBy: r.publisherReviewedBy || null,
+      publisherReviewedAt: r.publisherReviewedAt || null,
+      publisherReviewNotes: r.publisherReviewNotes || null,
       isPublisherNews: r.isPublisherNews || false,
       publisherId: r.publisherId || null,
       publisherCreditDeducted: r.publisherCreditDeducted || false,
       publisherSubmittedAt: r.publisherSubmittedAt || null,
       publisherApprovedAt: r.publisherApprovedAt || null,
+      publisherApprovedBy: r.publisherApprovedBy || null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -4726,11 +4869,24 @@ export class DatabaseStorage implements IStorage {
         sourceUrl: articles.sourceUrl,
         verifiedBy: articles.verifiedBy,
         verifiedAt: articles.verifiedAt,
+        thumbnailUrl: articles.thumbnailUrl,
+        isAiGeneratedImage: articles.isAiGeneratedImage,
+        aiImageModel: articles.aiImageModel,
+        aiImagePrompt: articles.aiImagePrompt,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
+        aiThumbnailModel: articles.aiThumbnailModel,
+        aiThumbnailPrompt: articles.aiThumbnailPrompt,
+        isPublisherContent: articles.isPublisherContent,
+        publisherStatus: articles.publisherStatus,
+        publisherReviewedBy: articles.publisherReviewedBy,
+        publisherReviewedAt: articles.publisherReviewedAt,
+        publisherReviewNotes: articles.publisherReviewNotes,
         isPublisherNews: articles.isPublisherNews,
         publisherId: articles.publisherId,
         publisherCreditDeducted: articles.publisherCreditDeducted,
         publisherSubmittedAt: articles.publisherSubmittedAt,
         publisherApprovedAt: articles.publisherApprovedAt,
+        publisherApprovedBy: articles.publisherApprovedBy,
         publishedAt: articles.publishedAt,
         createdAt: articles.createdAt,
         updatedAt: articles.updatedAt,
@@ -4795,11 +4951,24 @@ export class DatabaseStorage implements IStorage {
       sourceUrl: r.sourceUrl || null,
       verifiedBy: r.verifiedBy || null,
       verifiedAt: r.verifiedAt || null,
+      thumbnailUrl: r.thumbnailUrl || null,
+      isAiGeneratedImage: r.isAiGeneratedImage || false,
+      aiImageModel: r.aiImageModel || null,
+      aiImagePrompt: r.aiImagePrompt || null,
+      isAiGeneratedThumbnail: r.isAiGeneratedThumbnail || false,
+      aiThumbnailModel: r.aiThumbnailModel || null,
+      aiThumbnailPrompt: r.aiThumbnailPrompt || null,
+      isPublisherContent: r.isPublisherContent || false,
+      publisherStatus: r.publisherStatus || null,
+      publisherReviewedBy: r.publisherReviewedBy || null,
+      publisherReviewedAt: r.publisherReviewedAt || null,
+      publisherReviewNotes: r.publisherReviewNotes || null,
       isPublisherNews: r.isPublisherNews || false,
       publisherId: r.publisherId || null,
       publisherCreditDeducted: r.publisherCreditDeducted || false,
       publisherSubmittedAt: r.publisherSubmittedAt || null,
       publisherApprovedAt: r.publisherApprovedAt || null,
+      publisherApprovedBy: r.publisherApprovedBy || null,
       publishedAt: r.publishedAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -5037,6 +5206,9 @@ export class DatabaseStorage implements IStorage {
     const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
       ...r.comment,
       user: r.user,
+      currentSentiment: null,
+      currentSentimentConfidence: null,
+      sentimentAnalyzedAt: null,
     }));
 
     // Get top articles (most viewed, top 5)
@@ -5250,6 +5422,32 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      thumbnailUrl: null,
+      isAiGeneratedImage: false,
+      aiImageModel: null,
+      aiImagePrompt: null,
+      isAiGeneratedThumbnail: false,
+      aiThumbnailModel: null,
+      aiThumbnailPrompt: null,
+      credibilityScore: null,
+      credibilityAnalysis: null,
+      credibilityLastUpdated: null,
+      source: 'manual',
+      sourceMetadata: null,
+      sourceUrl: null,
+      verifiedBy: null,
+      verifiedAt: null,
+      isPublisherContent: false,
+      publisherStatus: null,
+      publisherReviewedBy: null,
+      publisherReviewedAt: null,
+      publisherReviewNotes: null,
+      isPublisherNews: false,
+      publisherId: null,
+      publisherCreditDeducted: false,
+      publisherSubmittedAt: null,
+      publisherApprovedAt: null,
+      publisherApprovedBy: null,
     }));
 
     // Get recent comments (latest 5)
@@ -5266,6 +5464,9 @@ export class DatabaseStorage implements IStorage {
     const recentComments: CommentWithUser[] = recentCommentsData.map((r) => ({
       ...r.comment,
       user: r.user,
+      currentSentiment: null,
+      currentSentimentConfidence: null,
+      sentimentAnalyzedAt: null,
     }));
 
     // Get top articles (most viewed, top 5)
@@ -5286,6 +5487,32 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.author || undefined,
+      thumbnailUrl: null,
+      isAiGeneratedImage: false,
+      aiImageModel: null,
+      aiImagePrompt: null,
+      isAiGeneratedThumbnail: false,
+      aiThumbnailModel: null,
+      aiThumbnailPrompt: null,
+      credibilityScore: null,
+      credibilityAnalysis: null,
+      credibilityLastUpdated: null,
+      source: 'manual',
+      sourceMetadata: null,
+      sourceUrl: null,
+      verifiedBy: null,
+      verifiedAt: null,
+      isPublisherContent: false,
+      publisherStatus: null,
+      publisherReviewedBy: null,
+      publisherReviewedAt: null,
+      publisherReviewNotes: null,
+      isPublisherNews: false,
+      publisherId: null,
+      publisherCreditDeducted: false,
+      publisherSubmittedAt: null,
+      publisherApprovedAt: null,
+      publisherApprovedBy: null,
     }));
 
     return {
@@ -10699,6 +10926,32 @@ export class DatabaseStorage implements IStorage {
       ...r.article,
       category: r.category || undefined,
       author: r.reporter || r.author || undefined,
+      thumbnailUrl: null,
+      isAiGeneratedImage: false,
+      aiImageModel: null,
+      aiImagePrompt: null,
+      isAiGeneratedThumbnail: false,
+      aiThumbnailModel: null,
+      aiThumbnailPrompt: null,
+      credibilityScore: null,
+      credibilityAnalysis: null,
+      credibilityLastUpdated: null,
+      source: 'manual',
+      sourceMetadata: null,
+      sourceUrl: null,
+      verifiedBy: null,
+      verifiedAt: null,
+      isPublisherContent: false,
+      publisherStatus: null,
+      publisherReviewedBy: null,
+      publisherReviewedAt: null,
+      publisherReviewNotes: null,
+      isPublisherNews: false,
+      publisherId: null,
+      publisherCreditDeducted: false,
+      publisherSubmittedAt: null,
+      publisherApprovedAt: null,
+      publisherApprovedBy: null,
     }));
   }
 
@@ -15058,6 +15311,49 @@ export class DatabaseStorage implements IStorage {
       totalRevenue: stats?.totalRevenue || 0,
       averageROI: stats?.averageROI || 0,
     };
+  }
+  
+  /**
+   * Get performance metrics from actual AI-generated articles
+   * This reads from the articles table directly for real-time analytics
+   */
+  async getAiGeneratedArticlesMetrics(filters: {
+    publishedAtFrom?: Date;
+    publishedAtTo?: Date;
+  }): Promise<Array<{
+    id: string;
+    qualityScore: number | null;
+    bookmarkCount: number | null;
+    viewCount: number | null;
+    shareCount: number | null;
+    commentCount: number | null;
+  }>> {
+    const conditions = [
+      eq(articles.source, 'ai'), // AI-generated articles only
+      eq(articles.status, 'published'), // Published only
+    ];
+    
+    if (filters.publishedAtFrom) {
+      conditions.push(gte(articles.publishedAt, filters.publishedAtFrom));
+    }
+    
+    if (filters.publishedAtTo) {
+      conditions.push(lte(articles.publishedAt, filters.publishedAtTo));
+    }
+    
+    const results = await db
+      .select({
+        id: articles.id,
+        qualityScore: articles.qualityScore,
+        bookmarkCount: articles.bookmarkCount,
+        viewCount: articles.viewCount,
+        shareCount: articles.shareCount,
+        commentCount: articles.commentCount,
+      })
+      .from(articles)
+      .where(and(...conditions));
+    
+    return results;
   }
   
   // ============================================

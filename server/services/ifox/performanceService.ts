@@ -52,6 +52,9 @@ export class IfoxPerformanceService {
 
   /**
    * Get aggregated performance metrics for the analytics dashboard
+   * 
+   * This method queries ACTUAL articles from the articles table to provide
+   * real-time analytics, rather than relying on separate metrics table.
    */
   async getPerformanceMetrics(timeRange?: 'today' | 'week' | 'month' | 'all'): Promise<{
     articlesGenerated: number;
@@ -77,51 +80,43 @@ export class IfoxPerformanceService {
     }
     // If 'all', publishedAtFrom stays undefined
 
-    // Get all AI-generated performance metrics
-    const aiMetrics = await this.listPerformanceMetrics({
-      isAiGenerated: true,
+    // Query ACTUAL AI-generated articles from articles table
+    const articles = await storage.getAiGeneratedArticlesMetrics({
       publishedAtFrom,
+      publishedAtTo: new Date(), // up to now
     });
 
-    // Calculate KPIs
-    const articlesGenerated = aiMetrics.length;
+    // Calculate KPIs from actual articles
+    const articlesGenerated = articles.length;
     
-    const avgQualityScore = aiMetrics.length > 0
-      ? aiMetrics.reduce((sum, m) => sum + (m.qualityScore || 0), 0) / aiMetrics.length
+    const avgQualityScore = articles.length > 0
+      ? articles.reduce((sum, a) => sum + (a.qualityScore || 0), 0) / articles.length
       : 0;
 
     // Success rate = articles with quality score >= 70
-    const successfulArticles = aiMetrics.filter(m => (m.qualityScore || 0) >= 70).length;
-    const successRate = aiMetrics.length > 0
-      ? (successfulArticles / aiMetrics.length) * 100
+    const successfulArticles = articles.filter(a => (a.qualityScore || 0) >= 70).length;
+    const successRate = articles.length > 0
+      ? (successfulArticles / articles.length) * 100
       : 0;
 
-    const totalSaves = aiMetrics.reduce((sum, m) => sum + (m.bookmarkCount || 0), 0);
+    const totalSaves = articles.reduce((sum, a) => sum + (a.bookmarkCount || 0), 0);
 
-    // Calculate metrics with trends (comparing to previous period)
-    const avgViews = aiMetrics.length > 0
-      ? aiMetrics.reduce((sum, m) => sum + (m.viewCount || 0), 0) / aiMetrics.length
-      : 0;
+    // Calculate additional metrics
+    const totalViews = articles.reduce((sum, a) => sum + (a.viewCount || 0), 0);
+    const avgViews = articles.length > 0 ? totalViews / articles.length : 0;
 
-    const avgEngagement = aiMetrics.length > 0
-      ? aiMetrics.reduce((sum, m) => {
-          const engagement = (m.shareCount || 0) + (m.commentCount || 0) + (m.bookmarkCount || 0);
-          return sum + engagement;
-        }, 0) / aiMetrics.length
-      : 0;
-
-    const totalRevenue = aiMetrics.reduce((sum, m) => sum + (m.estimatedRevenue || 0), 0);
-    
-    const avgRoi = aiMetrics.length > 0
-      ? aiMetrics.reduce((sum, m) => sum + (m.roi || 0), 0) / aiMetrics.length
-      : 0;
+    const totalEngagement = articles.reduce((sum, a) => {
+      const engagement = (a.shareCount || 0) + (a.commentCount || 0) + (a.bookmarkCount || 0);
+      return sum + engagement;
+    }, 0);
+    const avgEngagement = articles.length > 0 ? totalEngagement / articles.length : 0;
 
     // For simplicity, trends are set to 0. In a real scenario, you'd compare with the previous period.
     const metrics = [
+      { name: 'إجمالي المشاهدات', value: totalViews, trend: 0 },
       { name: 'متوسط المشاهدات', value: Math.round(avgViews), trend: 0 },
+      { name: 'إجمالي التفاعل', value: totalEngagement, trend: 0 },
       { name: 'متوسط التفاعل', value: Math.round(avgEngagement), trend: 0 },
-      { name: 'إجمالي الإيرادات', value: `$${totalRevenue.toFixed(2)}`, trend: 0 },
-      { name: 'متوسط العائد', value: `${avgRoi.toFixed(1)}%`, trend: 0 },
     ];
 
     return {

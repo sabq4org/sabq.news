@@ -24,7 +24,13 @@ interface PerformanceMetrics {
 export default function PerformanceAnalyticsTab() {
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
-  const { data: metrics, isLoading } = useQuery<PerformanceMetrics>({
+  const { data: metrics = {
+    articlesGenerated: 0,
+    avgQualityScore: 0,
+    successRate: 0,
+    totalSaves: 0,
+    metrics: []
+  }, isLoading } = useQuery<PerformanceMetrics>({
     queryKey: ['/api/ifox/ai-management/metrics', { timeRange }],
   });
 
