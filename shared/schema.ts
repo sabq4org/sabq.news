@@ -7834,3 +7834,622 @@ export interface HomepageStats {
   totalViews: number;            // Sum of all article views (lifetime)
   activeUsers: number;           // Users logged in last 7 days
 }
+
+// ============================================
+// IFOX AI MANAGEMENT SYSTEM - PHASE 2
+// Comprehensive AI-powered newsroom management
+// ============================================
+
+// 1. AI Preferences & Settings - Central configuration for AI behavior
+export const ifoxAiPreferences = pgTable("ifox_ai_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Writing style preferences
+  writingStyle: varchar("writing_style", { length: 100 }).default("professional"), // professional, casual, formal, investigative
+  tone: varchar("tone", { length: 100 }).default("neutral"), // neutral, critical, supportive, analytical
+  contentDepth: varchar("content_depth", { length: 50 }).default("medium"), // short, medium, long, comprehensive
+  defaultWordCount: integer("default_word_count").default(800),
+  
+  // AI Model preferences
+  primaryModel: varchar("primary_model", { length: 100 }).default("gpt-4"), // gpt-4, gpt-5, claude-3, gemini-pro
+  fallbackModel: varchar("fallback_model", { length: 100 }).default("gpt-3.5-turbo"),
+  temperature: real("temperature").default(0.7), // 0.0-2.0
+  maxTokens: integer("max_tokens").default(2000),
+  
+  // SEO automation
+  autoGenerateSeo: boolean("auto_generate_seo").default(true),
+  seoKeywordDensity: real("seo_keyword_density").default(0.02), // 2%
+  seoProvider: varchar("seo_provider", { length: 100 }).default("openai"),
+  
+  // Image generation
+  autoGenerateImages: boolean("auto_generate_images").default(true),
+  imageStyle: varchar("image_style", { length: 100 }).default("photorealistic"), // photorealistic, artistic, infographic, minimalist
+  imageProvider: varchar("image_provider", { length: 100 }).default("visual-ai"),
+  
+  // Quality control
+  enableQualityCheck: boolean("enable_quality_check").default(true),
+  qualityThreshold: integer("quality_threshold").default(70), // 0-100
+  requireHumanReview: boolean("require_human_review").default(false),
+  
+  // Publishing automation
+  autoPublishEnabled: boolean("auto_publish_enabled").default(false),
+  autoPublishThreshold: integer("auto_publish_threshold").default(90), // Only auto-publish if quality score >= 90
+  publishDelay: integer("publish_delay").default(0), // Minutes delay before auto-publish
+  
+  // Content strategy
+  preferredCategories: jsonb("preferred_categories"), // Array of category IDs
+  contentMix: jsonb("content_mix"), // {news: 40%, analysis: 30%, opinion: 20%, other: 10%}
+  targetAudience: varchar("target_audience", { length: 100 }).default("general"), // general, tech-savvy, professionals, youth
+  
+  // Advanced settings
+  customPrompts: jsonb("custom_prompts"), // Custom prompt templates
+  bannedWords: jsonb("banned_words"), // Array of words to avoid
+  requiredDisclosures: jsonb("required_disclosures"), // Legal disclaimers, AI disclosure
+  
+  isActive: boolean("is_active").default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_ai_prefs_active_idx").on(table.isActive),
+]);
+
+// 2. Content Templates Library - Reusable AI content templates
+export const ifoxContentTemplates = pgTable("ifox_content_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Template identity
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  templateType: varchar("template_type", { length: 100 }).notNull(), // breaking_news, analysis, interview, opinion, review, tutorial
+  language: varchar("language", { length: 5 }).notNull().default("ar"), // ar, en, ur
+  
+  // Template configuration
+  promptTemplate: text("prompt_template").notNull(), // Main AI prompt with variables like {{topic}}, {{keywords}}
+  systemPrompt: text("system_prompt"), // System-level instructions
+  exampleOutput: text("example_output"), // Sample output for reference
+  
+  // Content structure
+  structure: jsonb("structure"), // {sections: ["intro", "body", "conclusion"], format: "article"}
+  wordCountRange: jsonb("word_count_range"), // {min: 500, max: 1000}
+  requiredSections: jsonb("required_sections"), // Array of section names
+  
+  // AI parameters
+  model: varchar("model", { length: 100 }).default("gpt-4"),
+  temperature: real("temperature").default(0.7),
+  maxTokens: integer("max_tokens").default(2000),
+  
+  // Metadata requirements
+  requiresImages: boolean("requires_images").default(true),
+  imageCount: integer("image_count").default(1),
+  requiresSeo: boolean("requires_seo").default(true),
+  requiresCategories: boolean("requires_categories").default(true),
+  
+  // Quality & validation
+  qualityChecks: jsonb("quality_checks"), // Array of checks to perform
+  validationRules: jsonb("validation_rules"), // Custom validation rules
+  
+  // Usage tracking
+  usageCount: integer("usage_count").default(0),
+  successRate: real("success_rate"), // Percentage of successful generations
+  averageQualityScore: real("average_quality_score"),
+  
+  // Publishing settings
+  defaultCategory: varchar("default_category").references(() => categories.id),
+  defaultStatus: varchar("default_status", { length: 50 }).default("draft"), // draft, published
+  autoPublish: boolean("auto_publish").default(false),
+  
+  isPublic: boolean("is_public").default(false), // Can other users use this template?
+  isActive: boolean("is_active").default(true),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_templates_type_idx").on(table.templateType),
+  index("ifox_templates_active_idx").on(table.isActive),
+  index("ifox_templates_creator_idx").on(table.createdBy),
+]);
+
+// 3. Automated Workflow Rules - Smart automation rules
+export const ifoxWorkflowRules = pgTable("ifox_workflow_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Rule identity
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  ruleType: varchar("rule_type", { length: 100 }).notNull(), // auto_publish, auto_review, auto_reject, escalate, notify
+  priority: integer("priority").default(5), // 1-10, higher = more important
+  
+  // Trigger conditions
+  triggerEvent: varchar("trigger_event", { length: 100 }).notNull(), // task_completed, quality_check_passed, scheduled_time
+  conditions: jsonb("conditions").notNull(), // Complex conditions like {qualityScore: {gte: 90}, wordCount: {between: [500, 1000]}}
+  
+  // Actions to perform
+  actions: jsonb("actions").notNull(), // Array of actions: [{type: "publish", params: {}}, {type: "notify", params: {users: []}}]
+  
+  // Execution settings
+  executeImmediately: boolean("execute_immediately").default(true),
+  delayMinutes: integer("delay_minutes").default(0),
+  retryOnFailure: boolean("retry_on_failure").default(true),
+  maxRetries: integer("max_retries").default(3),
+  
+  // Scope & filters
+  appliesTo: varchar("applies_to", { length: 100 }).default("all"), // all, specific_categories, specific_templates
+  categoryFilters: jsonb("category_filters"), // Array of category IDs
+  templateFilters: jsonb("template_filters"), // Array of template IDs
+  
+  // Human oversight
+  requiresApproval: boolean("requires_approval").default(false),
+  approvalRoles: jsonb("approval_roles"), // Array of role names that can approve
+  notifyOnExecution: boolean("notify_on_execution").default(true),
+  notifyUsers: jsonb("notify_users"), // Array of user IDs to notify
+  
+  // Execution tracking
+  executionCount: integer("execution_count").default(0),
+  successCount: integer("success_count").default(0),
+  failureCount: integer("failure_count").default(0),
+  lastExecutedAt: timestamp("last_executed_at"),
+  
+  isActive: boolean("is_active").default(true),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_rules_type_idx").on(table.ruleType),
+  index("ifox_rules_active_idx").on(table.isActive),
+  index("ifox_rules_priority_idx").on(table.priority),
+]);
+
+// 4. Quality Checks - AI-powered quality control logs
+export const ifoxQualityChecks = pgTable("ifox_quality_checks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Reference to content
+  articleId: varchar("article_id").references(() => articles.id),
+  taskId: varchar("task_id").references(() => aiScheduledTasks.id),
+  
+  // Overall quality score
+  overallScore: integer("overall_score").notNull(), // 0-100
+  passThreshold: integer("pass_threshold").default(70),
+  passed: boolean("passed").notNull(),
+  
+  // Individual checks
+  grammarScore: integer("grammar_score"), // 0-100
+  readabilityScore: integer("readability_score"), // 0-100 (Flesch reading ease)
+  factualAccuracyScore: integer("factual_accuracy_score"), // 0-100
+  seoScore: integer("seo_score"), // 0-100
+  biasScore: integer("bias_score"), // 0-100 (higher = less biased)
+  originalityScore: integer("originality_score"), // 0-100
+  relevanceScore: integer("relevance_score"), // 0-100
+  
+  // Detailed analysis
+  issues: jsonb("issues"), // Array of {type, severity, description, suggestion}
+  suggestions: jsonb("suggestions"), // Array of improvement suggestions
+  strengths: jsonb("strengths"), // Array of positive aspects
+  
+  // AI analysis details
+  analysisModel: varchar("analysis_model", { length: 100 }).default("gpt-4"),
+  analysisPrompt: text("analysis_prompt"),
+  rawAnalysis: jsonb("raw_analysis"),
+  
+  // Human review
+  humanReviewRequired: boolean("human_review_required").default(false),
+  humanReviewStatus: varchar("human_review_status", { length: 50 }), // pending, approved, rejected
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  
+  // Metadata
+  checkDuration: integer("check_duration"), // Milliseconds
+  apiCost: real("api_cost"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_quality_article_idx").on(table.articleId),
+  index("ifox_quality_task_idx").on(table.taskId),
+  index("ifox_quality_score_idx").on(table.overallScore),
+  index("ifox_quality_passed_idx").on(table.passed),
+]);
+
+// 5. Performance Metrics - Track AI content performance
+export const ifoxPerformanceMetrics = pgTable("ifox_performance_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Content reference
+  articleId: varchar("article_id").notNull().references(() => articles.id),
+  isAiGenerated: boolean("is_ai_generated").notNull(),
+  generationMethod: varchar("generation_method", { length: 100 }), // scheduled_task, manual_generation, email_import, whatsapp_import
+  
+  // Engagement metrics
+  viewCount: integer("view_count").default(0),
+  uniqueVisitors: integer("unique_visitors").default(0),
+  avgTimeOnPage: integer("avg_time_on_page"), // Seconds
+  bounceRate: real("bounce_rate"), // Percentage
+  shareCount: integer("share_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  bookmarkCount: integer("bookmark_count").default(0),
+  
+  // Social performance
+  facebookShares: integer("facebook_shares").default(0),
+  twitterShares: integer("twitter_shares").default(0),
+  whatsappShares: integer("whatsapp_shares").default(0),
+  linkedinShares: integer("linkedin_shares").default(0),
+  
+  // SEO performance
+  organicTraffic: integer("organic_traffic").default(0),
+  searchRankings: jsonb("search_rankings"), // {keyword: rank}
+  clickThroughRate: real("click_through_rate"), // From search results
+  
+  // Conversion metrics
+  newsletterSignups: integer("newsletter_signups").default(0),
+  leadGenerated: integer("lead_generated").default(0),
+  
+  // Quality indicators
+  qualityScore: integer("quality_score"),
+  userSatisfaction: real("user_satisfaction"), // 0-5 stars
+  reportCount: integer("report_count").default(0), // User reports
+  
+  // Financial metrics
+  generationCost: real("generation_cost"),
+  estimatedRevenue: real("estimated_revenue"),
+  roi: real("roi"), // Return on investment
+  
+  // Time tracking
+  publishedAt: timestamp("published_at"),
+  firstViewAt: timestamp("first_view_at"),
+  peakTrafficAt: timestamp("peak_traffic_at"),
+  
+  // Comparison benchmarks
+  performanceVsAverage: real("performance_vs_average"), // Percentage vs category average
+  performanceVsHuman: real("performance_vs_human"), // AI vs human-written content
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_perf_article_idx").on(table.articleId),
+  index("ifox_perf_ai_gen_idx").on(table.isAiGenerated),
+  index("ifox_perf_published_idx").on(table.publishedAt),
+]);
+
+// 6. Budget Tracking - Monitor API usage and costs
+export const ifoxBudgetTracking = pgTable("ifox_budget_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Period tracking
+  period: varchar("period", { length: 50 }).notNull(), // daily, weekly, monthly
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  
+  // API usage by provider
+  openaiCalls: integer("openai_calls").default(0),
+  openaiTokens: integer("openai_tokens").default(0),
+  openaiCost: real("openai_cost").default(0),
+  
+  anthropicCalls: integer("anthropic_calls").default(0),
+  anthropicTokens: integer("anthropic_tokens").default(0),
+  anthropicCost: real("anthropic_cost").default(0),
+  
+  geminiCalls: integer("gemini_calls").default(0),
+  geminiTokens: integer("gemini_tokens").default(0),
+  geminiCost: real("gemini_cost").default(0),
+  
+  visualAiCalls: integer("visual_ai_calls").default(0),
+  visualAiCost: real("visual_ai_cost").default(0),
+  
+  // Total costs
+  totalApiCalls: integer("total_api_calls").default(0),
+  totalTokens: integer("total_tokens").default(0),
+  totalCost: real("total_cost").default(0),
+  
+  // Budget limits
+  budgetLimit: real("budget_limit"),
+  budgetRemaining: real("budget_remaining"),
+  budgetUtilization: real("budget_utilization"), // Percentage
+  
+  // Usage breakdown
+  contentGenerationCost: real("content_generation_cost").default(0),
+  imageGenerationCost: real("image_generation_cost").default(0),
+  qualityCheckCost: real("quality_check_cost").default(0),
+  seoCost: real("seo_cost").default(0),
+  otherCost: real("other_cost").default(0),
+  
+  // Efficiency metrics
+  articlesGenerated: integer("articles_generated").default(0),
+  costPerArticle: real("cost_per_article"),
+  avgTokensPerArticle: real("avg_tokens_per_article"),
+  
+  // Alerts
+  isOverBudget: boolean("is_over_budget").default(false),
+  alertsSent: integer("alerts_sent").default(0),
+  lastAlertAt: timestamp("last_alert_at"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_budget_period_idx").on(table.period, table.periodStart),
+  index("ifox_budget_cost_idx").on(table.totalCost),
+  index("ifox_budget_alert_idx").on(table.isOverBudget),
+]);
+
+// 7. Strategy Insights - AI-powered content strategy recommendations
+export const ifoxStrategyInsights = pgTable("ifox_strategy_insights", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Insight metadata
+  insightType: varchar("insight_type", { length: 100 }).notNull(), // trending_topic, content_gap, timing_optimization, audience_preference
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description").notNull(),
+  priority: varchar("priority", { length: 50 }).default("medium"), // low, medium, high, critical
+  
+  // Data-driven recommendations
+  recommendation: text("recommendation").notNull(),
+  expectedImpact: varchar("expected_impact", { length: 100 }), // high_traffic, high_engagement, viral_potential, seo_boost
+  confidenceScore: integer("confidence_score"), // 0-100
+  
+  // Supporting data
+  supportingData: jsonb("supporting_data"), // Data that led to this insight
+  relatedTopics: jsonb("related_topics"), // Array of related topics/keywords
+  suggestedCategories: jsonb("suggested_categories"), // Array of category IDs
+  
+  // Timing recommendations
+  bestPublishTime: timestamp("best_publish_time"),
+  optimalFrequency: varchar("optimal_frequency", { length: 100 }), // daily, twice_weekly, weekly
+  estimatedLifespan: integer("estimated_lifespan"), // Days until topic becomes stale
+  
+  // Competitive analysis
+  competitorCoverage: jsonb("competitor_coverage"), // How competitors are covering this
+  contentGap: text("content_gap"), // What's missing in current coverage
+  differentiationStrategy: text("differentiation_strategy"),
+  
+  // AI analysis
+  analysisModel: varchar("analysis_model", { length: 100 }).default("gpt-4"),
+  analysisData: jsonb("analysis_data"),
+  
+  // Action tracking
+  status: varchar("status", { length: 50 }).default("active"), // active, implemented, dismissed, expired
+  implementedBy: varchar("implemented_by").references(() => users.id),
+  implementedAt: timestamp("implemented_at"),
+  resultingArticles: jsonb("resulting_articles"), // Array of article IDs created from this insight
+  
+  // Performance
+  actualImpact: jsonb("actual_impact"), // Actual results vs prediction
+  impactScore: integer("impact_score"), // 0-100, how successful was this insight
+  
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_insights_type_idx").on(table.insightType),
+  index("ifox_insights_priority_idx").on(table.priority),
+  index("ifox_insights_status_idx").on(table.status),
+  index("ifox_insights_expires_idx").on(table.expiresAt),
+]);
+
+// 8. Editorial Calendar - Smart content planning
+export const ifoxEditorialCalendar = pgTable("ifox_editorial_calendar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Scheduled content
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  slot: varchar("slot", { length: 50 }).notNull(), // morning, afternoon, evening, night
+  
+  // Content planning
+  topicIdea: text("topic_idea"),
+  plannedContentType: varchar("planned_content_type", { length: 100 }), // news, analysis, opinion, tutorial
+  targetAudience: varchar("target_audience", { length: 100 }),
+  keywords: jsonb("keywords"), // Array of target keywords
+  
+  // Assignment
+  assignmentType: varchar("assignment_type", { length: 50 }).default("ai"), // ai, human, hybrid
+  assignedToUser: varchar("assigned_to_user").references(() => users.id),
+  assignedToTask: varchar("assigned_to_task").references(() => aiScheduledTasks.id),
+  templateId: varchar("template_id").references(() => ifoxContentTemplates.id),
+  
+  // AI recommendations
+  aiSuggestion: text("ai_suggestion"),
+  suggestedCategories: jsonb("suggested_categories"),
+  estimatedEngagement: integer("estimated_engagement"), // Predicted view count
+  competitionLevel: varchar("competition_level", { length: 50 }), // low, medium, high
+  
+  // Status tracking
+  status: varchar("status", { length: 50 }).default("planned"), // planned, in_progress, completed, cancelled
+  articleId: varchar("article_id").references(() => articles.id), // Link to published article
+  
+  // Performance tracking
+  actualPublishedAt: timestamp("actual_published_at"),
+  actualEngagement: integer("actual_engagement"),
+  performanceVsPrediction: real("performance_vs_prediction"), // Percentage
+  
+  // Metadata
+  notes: text("notes"),
+  tags: jsonb("tags"),
+  
+  createdBy: varchar("created_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("ifox_calendar_date_idx").on(table.scheduledDate),
+  index("ifox_calendar_status_idx").on(table.status),
+  index("ifox_calendar_assigned_idx").on(table.assignedToUser),
+]);
+
+// Relations for iFox AI Management tables
+export const ifoxAiPreferencesRelations = relations(ifoxAiPreferences, ({ one }) => ({
+  creator: one(users, {
+    fields: [ifoxAiPreferences.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxContentTemplatesRelations = relations(ifoxContentTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [ifoxContentTemplates.createdBy],
+    references: [users.id],
+  }),
+  category: one(categories, {
+    fields: [ifoxContentTemplates.defaultCategory],
+    references: [categories.id],
+  }),
+  calendarEntries: many(ifoxEditorialCalendar),
+}));
+
+export const ifoxWorkflowRulesRelations = relations(ifoxWorkflowRules, ({ one }) => ({
+  creator: one(users, {
+    fields: [ifoxWorkflowRules.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxQualityChecksRelations = relations(ifoxQualityChecks, ({ one }) => ({
+  article: one(articles, {
+    fields: [ifoxQualityChecks.articleId],
+    references: [articles.id],
+  }),
+  task: one(aiScheduledTasks, {
+    fields: [ifoxQualityChecks.taskId],
+    references: [aiScheduledTasks.id],
+  }),
+  reviewer: one(users, {
+    fields: [ifoxQualityChecks.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxPerformanceMetricsRelations = relations(ifoxPerformanceMetrics, ({ one }) => ({
+  article: one(articles, {
+    fields: [ifoxPerformanceMetrics.articleId],
+    references: [articles.id],
+  }),
+}));
+
+export const ifoxStrategyInsightsRelations = relations(ifoxStrategyInsights, ({ one }) => ({
+  implementer: one(users, {
+    fields: [ifoxStrategyInsights.implementedBy],
+    references: [users.id],
+  }),
+}));
+
+export const ifoxEditorialCalendarRelations = relations(ifoxEditorialCalendar, ({ one }) => ({
+  assignedUser: one(users, {
+    fields: [ifoxEditorialCalendar.assignedToUser],
+    references: [users.id],
+  }),
+  task: one(aiScheduledTasks, {
+    fields: [ifoxEditorialCalendar.assignedToTask],
+    references: [aiScheduledTasks.id],
+  }),
+  template: one(ifoxContentTemplates, {
+    fields: [ifoxEditorialCalendar.templateId],
+    references: [ifoxContentTemplates.id],
+  }),
+  article: one(articles, {
+    fields: [ifoxEditorialCalendar.articleId],
+    references: [articles.id],
+  }),
+  creator: one(users, {
+    fields: [ifoxEditorialCalendar.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for iFox AI Management
+export const insertIfoxAiPreferencesSchema = createInsertSchema(ifoxAiPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIfoxContentTemplateSchema = createInsertSchema(ifoxContentTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+  successRate: true,
+  averageQualityScore: true,
+}).extend({
+  name: z.string().min(1).max(200),
+  templateType: z.enum(["breaking_news", "analysis", "interview", "opinion", "review", "tutorial", "feature", "listicle"]),
+  language: z.enum(["ar", "en", "ur"]),
+  promptTemplate: z.string().min(10),
+});
+
+export const insertIfoxWorkflowRuleSchema = createInsertSchema(ifoxWorkflowRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  executionCount: true,
+  successCount: true,
+  failureCount: true,
+  lastExecutedAt: true,
+}).extend({
+  name: z.string().min(1).max(200),
+  ruleType: z.enum(["auto_publish", "auto_review", "auto_reject", "escalate", "notify", "schedule"]),
+  triggerEvent: z.enum(["task_completed", "quality_check_passed", "quality_check_failed", "scheduled_time", "manual_trigger"]),
+});
+
+export const insertIfoxQualityCheckSchema = createInsertSchema(ifoxQualityChecks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertIfoxPerformanceMetricSchema = createInsertSchema(ifoxPerformanceMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIfoxBudgetTrackingSchema = createInsertSchema(ifoxBudgetTracking).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIfoxStrategyInsightSchema = createInsertSchema(ifoxStrategyInsights).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  insightType: z.enum(["trending_topic", "content_gap", "timing_optimization", "audience_preference", "competitive_analysis"]),
+  title: z.string().min(1).max(300),
+  priority: z.enum(["low", "medium", "high", "critical"]),
+});
+
+export const insertIfoxEditorialCalendarSchema = createInsertSchema(ifoxEditorialCalendar).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  scheduledDate: z.string().or(z.date()),
+  slot: z.enum(["morning", "afternoon", "evening", "night"]),
+  assignmentType: z.enum(["ai", "human", "hybrid"]),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+});
+
+// Select types for iFox AI Management
+export type IfoxAiPreferences = typeof ifoxAiPreferences.$inferSelect;
+export type InsertIfoxAiPreferences = z.infer<typeof insertIfoxAiPreferencesSchema>;
+
+export type IfoxContentTemplate = typeof ifoxContentTemplates.$inferSelect;
+export type InsertIfoxContentTemplate = z.infer<typeof insertIfoxContentTemplateSchema>;
+
+export type IfoxWorkflowRule = typeof ifoxWorkflowRules.$inferSelect;
+export type InsertIfoxWorkflowRule = z.infer<typeof insertIfoxWorkflowRuleSchema>;
+
+export type IfoxQualityCheck = typeof ifoxQualityChecks.$inferSelect;
+export type InsertIfoxQualityCheck = z.infer<typeof insertIfoxQualityCheckSchema>;
+
+export type IfoxPerformanceMetric = typeof ifoxPerformanceMetrics.$inferSelect;
+export type InsertIfoxPerformanceMetric = z.infer<typeof insertIfoxPerformanceMetricSchema>;
+
+export type IfoxBudgetTracking = typeof ifoxBudgetTracking.$inferSelect;
+export type InsertIfoxBudgetTracking = z.infer<typeof insertIfoxBudgetTrackingSchema>;
+
+export type IfoxStrategyInsight = typeof ifoxStrategyInsights.$inferSelect;
+export type InsertIfoxStrategyInsight = z.infer<typeof insertIfoxStrategyInsightSchema>;
+
+export type IfoxEditorialCalendar = typeof ifoxEditorialCalendar.$inferSelect;
+export type InsertIfoxEditorialCalendar = z.infer<typeof insertIfoxEditorialCalendarSchema>;
