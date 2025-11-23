@@ -11,6 +11,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ interface AudioNewsletter {
 export default function AudioNewsletterDetail() {
   const [, params] = useRoute("/audio-newsletters/:slug");
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isArticlesExpanded, setIsArticlesExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -89,7 +91,7 @@ export default function AudioNewsletterDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col" dir="rtl">
-        <Header />
+        <Header user={user} />
         <main className="flex-1 bg-background">
           <div className="container mx-auto px-4 py-8">
             <Skeleton className="h-96 w-full mb-8" />
@@ -104,7 +106,7 @@ export default function AudioNewsletterDetail() {
   if (!newsletter) {
     return (
       <div className="min-h-screen flex flex-col" dir="rtl">
-        <Header />
+        <Header user={user} />
         <main className="flex-1 bg-background flex items-center justify-center">
           <Card className="max-w-md w-full">
             <CardHeader>
@@ -130,7 +132,7 @@ export default function AudioNewsletterDetail() {
 
   return (
     <div className="min-h-screen flex flex-col" dir="rtl">
-      <Header />
+      <Header user={user} />
 
       <main className="flex-1 bg-background">
         <article className="container mx-auto px-4 py-8 max-w-4xl space-y-8">

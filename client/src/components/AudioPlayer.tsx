@@ -88,6 +88,24 @@ export function AudioPlayer({
     };
   }, [showWaveform]);
 
+  // Get computed primary color from CSS variable
+  const getPrimaryColor = useCallback(() => {
+    if (typeof window === 'undefined') return { h: 262, s: 83, l: 58 };
+    
+    const root = document.documentElement;
+    const primaryValue = getComputedStyle(root).getPropertyValue('--primary').trim();
+    
+    if (!primaryValue) return { h: 262, s: 83, l: 58 }; // Default primary color
+    
+    // Parse HSL values (format: "262 83% 58%")
+    const parts = primaryValue.split(' ');
+    return {
+      h: parseInt(parts[0]) || 262,
+      s: parseInt(parts[1]) || 83,
+      l: parseInt(parts[2]) || 58,
+    };
+  }, []);
+
   // Draw waveform visualization
   const drawWaveform = useCallback(() => {
     if (!canvasRef.current || !analyser) return;
@@ -107,13 +125,16 @@ export function AudioPlayer({
     let barHeight;
     let x = 0;
 
+    // Get actual primary color values
+    const primary = getPrimaryColor();
+
     for (let i = 0; i < bufferLength; i++) {
       barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
       
-      // Use primary color with opacity
+      // Use primary color with opacity - Canvas needs actual color values
       const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
-      gradient.addColorStop(0, "hsl(var(--primary) / 0.8)");
-      gradient.addColorStop(1, "hsl(var(--primary) / 0.3)");
+      gradient.addColorStop(0, `hsla(${primary.h}, ${primary.s}%, ${primary.l}%, 0.8)`);
+      gradient.addColorStop(1, `hsla(${primary.h}, ${primary.s}%, ${primary.l}%, 0.3)`);
       ctx.fillStyle = gradient;
       
       ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
@@ -123,7 +144,7 @@ export function AudioPlayer({
     if (isPlaying) {
       animationRef.current = requestAnimationFrame(drawWaveform);
     }
-  }, [analyser, isPlaying]);
+  }, [analyser, isPlaying, getPrimaryColor]);
 
   useEffect(() => {
     if (isPlaying && showWaveform) {

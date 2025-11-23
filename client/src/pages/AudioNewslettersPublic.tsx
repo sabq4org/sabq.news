@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AudioPlayer } from '@/components/AudioPlayer';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Grid3X3,
   List,
@@ -37,6 +40,7 @@ interface FilterOptions {
 }
 
 export default function AudioNewslettersPublic() {
+  const { user } = useAuth();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [selectedNewsletter, setSelectedNewsletter] = useState<AudioNewsletter | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
@@ -180,19 +184,24 @@ export default function AudioNewslettersPublic() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background" dir="rtl">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <p className="text-destructive text-lg mb-4">حدث خطأ في تحميل النشرات الصوتية</p>
-            <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
+      <div className="min-h-screen flex flex-col" dir="rtl">
+        <Header user={user} />
+        <main className="flex-1 bg-background">
+          <div className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <p className="text-destructive text-lg mb-4">حدث خطأ في تحميل النشرات الصوتية</p>
+              <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
+            </div>
           </div>
-        </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen flex flex-col" dir="rtl">
+      <Header user={user} />
       {/* Header */}
       <div className="bg-gradient-to-l from-primary/10 to-accent/10 border-b">
         <div className="container mx-auto px-4 py-8">
@@ -630,6 +639,8 @@ export default function AudioNewslettersPublic() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Footer />
     </div>
   );
 }
