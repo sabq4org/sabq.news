@@ -44,9 +44,9 @@ type ContentRequest = z.infer<typeof contentSchema>;
 
 interface ScheduledTask {
   id: string;
-  topic: string;
-  contentType: string;
-  scheduledFor: string;
+  topicIdea: string | null;
+  plannedContentType: string | null;
+  scheduledDate: string;
   status: string;
   createdAt: string;
 }
@@ -78,12 +78,17 @@ export default function IFoxContentGenerator() {
       return await apiRequest("/api/ifox/ai-management/calendar", {
         method: "POST",
         body: JSON.stringify({
-          title: data.topic,
-          description: data.description || "",
-          scheduledFor: new Date(data.scheduledFor),
-          contentType: data.contentType,
-          priority: data.priority,
-          status: "scheduled",
+          scheduledDate: new Date(data.scheduledFor),
+          slot: new Date(data.scheduledFor).getHours() < 12 ? "morning" : 
+                 new Date(data.scheduledFor).getHours() < 17 ? "afternoon" : 
+                 new Date(data.scheduledFor).getHours() < 21 ? "evening" : "night",
+          topicIdea: data.topic,
+          aiSuggestion: data.description || "",
+          plannedContentType: data.contentType,
+          assignmentType: "ai",
+          status: "planned",
+          keywords: [],
+          suggestedCategories: [],
         }),
       });
     },
@@ -436,12 +441,12 @@ export default function IFoxContentGenerator() {
                           </div>
                         ) : (
                           scheduledTasks.map((task, index) => {
-                            const ContentIcon = contentTypeIcons[task.contentType as keyof typeof contentTypeIcons] || FileText;
+                            const ContentIcon = contentTypeIcons[task.plannedContentType as keyof typeof contentTypeIcons] || FileText;
                             const statusColors = {
-                              scheduled: "from-blue-500 to-cyan-500",
-                              processing: "from-amber-500 to-orange-500",
+                              planned: "from-blue-500 to-cyan-500",
+                              in_progress: "from-amber-500 to-orange-500",
                               completed: "from-green-500 to-emerald-500",
-                              failed: "from-red-500 to-pink-500",
+                              cancelled: "from-red-500 to-pink-500",
                             };
 
                             return (
@@ -455,17 +460,17 @@ export default function IFoxContentGenerator() {
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-start gap-3 flex-1">
-                                    <div className={`p-2 rounded-lg bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.scheduled}`}>
+                                    <div className={`p-2 rounded-lg bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.planned}`}>
                                       <ContentIcon className="w-4 h-4 text-white" />
                                     </div>
                                     <div className="flex-1">
                                       <h4 className="text-white font-semibold mb-1 line-clamp-2">
-                                        {task.topic}
+                                        {task.topicIdea || 'محتوى جديد'}
                                       </h4>
                                       <div className="flex items-center gap-3 text-xs text-gray-300">
                                         <span className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
-                                          {new Date(task.scheduledFor).toLocaleString('ar-SA', {
+                                          {new Date(task.scheduledDate).toLocaleString('ar-SA', {
                                             dateStyle: 'short',
                                             timeStyle: 'short',
                                           })}
@@ -473,11 +478,11 @@ export default function IFoxContentGenerator() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.scheduled}`}>
-                                    {task.status === 'scheduled' && 'مجدولة'}
-                                    {task.status === 'processing' && 'قيد المعالجة'}
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.planned}`}>
+                                    {task.status === 'planned' && 'مجدولة'}
+                                    {task.status === 'in_progress' && 'قيد المعالجة'}
                                     {task.status === 'completed' && 'مكتملة'}
-                                    {task.status === 'failed' && 'فشلت'}
+                                    {task.status === 'cancelled' && 'ملغاة'}
                                   </div>
                                 </div>
                               </motion.div>

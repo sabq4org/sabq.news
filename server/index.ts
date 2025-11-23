@@ -13,6 +13,7 @@ import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
 import { startAITasksScheduler } from "./jobs/aiTasksJob";
+import { startIfoxContentGeneratorJob } from "./jobs/ifoxContentGeneratorJob";
 import { newsletterScheduler } from "./services/newsletterScheduler";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
@@ -594,6 +595,10 @@ app.use((req, res, next) => {
             startAITasksScheduler();
             console.log("[Server] ✅ AI Tasks Scheduler started successfully");
             console.log("[Server] 🤖 Checking for pending AI tasks every minute");
+            
+            // Start iFox content generator job
+            startIfoxContentGeneratorJob();
+            console.log("[Server] ✅ iFox Content Generator started successfully");
           } catch (error) {
             console.error("[Server] ⚠️  Error starting AI tasks scheduler:", error);
             console.error("[Server] Server will continue running without AI tasks automation");
