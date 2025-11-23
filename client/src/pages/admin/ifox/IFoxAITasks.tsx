@@ -93,22 +93,20 @@ export default function IFoxAITasks() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState({
-    taskName: '',
-    taskDescription: '',
+    title: '',
+    description: '',
     scheduledAt: '',
     categoryId: '',
-    priority: 'medium' as const,
     generateImage: true,
-    publishAfterGeneration: true,
+    autoPublish: true,
     contentType: 'news' as const,
-    targetWordCount: 500,
     keywords: '',
-    tone: 'professional' as const,
+    tone: 'formal' as const,
   });
 
-  // Fetch tasks
+  // Fetch tasks - use query params instead of path params
   const { data: tasksData, isLoading: tasksLoading } = useQuery<{ tasks: AITask[], total: number }>({
-    queryKey: ['/api/ai-tasks', statusFilter],
+    queryKey: ['/api/ai-tasks', { status: statusFilter !== 'all' ? statusFilter : undefined }],
   });
 
   // Fetch stats
@@ -137,17 +135,15 @@ export default function IFoxAITasks() {
       queryClient.invalidateQueries({ queryKey: ['/api/ai-tasks/stats'] });
       setIsCreateDialogOpen(false);
       setNewTask({
-        taskName: '',
-        taskDescription: '',
+        title: '',
+        description: '',
         scheduledAt: '',
         categoryId: '',
-        priority: 'medium',
         generateImage: true,
-        publishAfterGeneration: true,
+        autoPublish: true,
         contentType: 'news',
-        targetWordCount: 500,
         keywords: '',
-        tone: 'professional',
+        tone: 'formal',
       });
       toast({
         title: "تم إنشاء المهمة",
@@ -329,23 +325,23 @@ export default function IFoxAITasks() {
                 
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="taskName">اسم المهمة</Label>
+                    <Label htmlFor="title">عنوان المهمة</Label>
                     <Input
-                      id="taskName"
+                      id="title"
                       placeholder="مثال: مقال عن التطورات التكنولوجية"
-                      value={newTask.taskName}
-                      onChange={(e) => setNewTask({ ...newTask, taskName: e.target.value })}
-                      data-testid="input-task-name"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      data-testid="input-task-title"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="taskDescription">وصف المهمة</Label>
+                    <Label htmlFor="description">وصف المهمة</Label>
                     <Textarea
-                      id="taskDescription"
+                      id="description"
                       placeholder="وصف تفصيلي للموضوع الذي تريد الكتابة عنه..."
-                      value={newTask.taskDescription}
-                      onChange={(e) => setNewTask({ ...newTask, taskDescription: e.target.value })}
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                       rows={4}
                       data-testid="input-task-description"
                     />
@@ -385,31 +381,38 @@ export default function IFoxAITasks() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="priority">الأولوية</Label>
+                      <Label htmlFor="tone">أسلوب الكتابة</Label>
                       <Select 
-                        value={newTask.priority} 
-                        onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}
+                        value={newTask.tone} 
+                        onValueChange={(value: any) => setNewTask({ ...newTask, tone: value })}
                       >
-                        <SelectTrigger data-testid="select-priority">
+                        <SelectTrigger data-testid="select-tone">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">منخفض</SelectItem>
-                          <SelectItem value="medium">متوسط</SelectItem>
-                          <SelectItem value="high">عالي</SelectItem>
+                          <SelectItem value="formal">رسمي</SelectItem>
+                          <SelectItem value="casual">غير رسمي</SelectItem>
+                          <SelectItem value="professional">احترافي</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="targetWordCount">عدد الكلمات</Label>
-                      <Input
-                        id="targetWordCount"
-                        type="number"
-                        value={newTask.targetWordCount}
-                        onChange={(e) => setNewTask({ ...newTask, targetWordCount: parseInt(e.target.value) })}
-                        data-testid="input-word-count"
-                      />
+                      <Label htmlFor="contentType">نوع المحتوى</Label>
+                      <Select 
+                        value={newTask.contentType} 
+                        onValueChange={(value: any) => setNewTask({ ...newTask, contentType: value })}
+                      >
+                        <SelectTrigger data-testid="select-content-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="news">خبر</SelectItem>
+                          <SelectItem value="report">تقرير</SelectItem>
+                          <SelectItem value="analysis">تحليل</SelectItem>
+                          <SelectItem value="opinion">رأي</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   
@@ -440,12 +443,12 @@ export default function IFoxAITasks() {
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
                     <div className="flex items-center gap-2">
                       <Zap className="w-5 h-5 text-green-500" />
-                      <Label htmlFor="publishAfterGeneration" className="cursor-pointer">نشر تلقائي</Label>
+                      <Label htmlFor="autoPublish" className="cursor-pointer">نشر تلقائي</Label>
                     </div>
                     <Switch
-                      id="publishAfterGeneration"
-                      checked={newTask.publishAfterGeneration}
-                      onCheckedChange={(checked) => setNewTask({ ...newTask, publishAfterGeneration: checked })}
+                      id="autoPublish"
+                      checked={newTask.autoPublish}
+                      onCheckedChange={(checked) => setNewTask({ ...newTask, autoPublish: checked })}
                       data-testid="switch-auto-publish"
                     />
                   </div>
@@ -461,7 +464,7 @@ export default function IFoxAITasks() {
                   </Button>
                   <Button 
                     onClick={() => createTaskMutation.mutate(newTask)}
-                    disabled={createTaskMutation.isPending || !newTask.taskName || !newTask.scheduledAt || !newTask.categoryId}
+                    disabled={createTaskMutation.isPending || !newTask.title || !newTask.scheduledAt || !newTask.categoryId}
                     data-testid="button-save-task"
                   >
                     {createTaskMutation.isPending && <Loader2 className="w-4 h-4 ml-2 animate-spin" />}

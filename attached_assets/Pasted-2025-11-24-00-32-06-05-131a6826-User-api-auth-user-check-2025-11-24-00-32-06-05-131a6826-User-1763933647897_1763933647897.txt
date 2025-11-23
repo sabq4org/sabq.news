@@ -1,0 +1,105 @@
+2025-11-24 00:32:06.05
+131a6826
+User
+🔍 /api/auth/user check: {
+2025-11-24 00:32:06.05
+131a6826
+User
+}
+2025-11-24 00:32:06.05
+131a6826
+User
+userId: 'admin-sabq',
+2025-11-24 00:32:06.05
+131a6826
+User
+sessionID: 'Xs-TMa9ZQ63sVC3ysmWGnOo5YR6-CnVW'
+2025-11-24 00:32:06.06
+131a6826
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-24 00:32:06.08
+131a6826
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:32:06.08
+131a6826
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:32:06.12
+131a6826
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,editor, user has: system_admin, admin
+2025-11-24 00:32:06.13
+131a6826
+User
+9:32:06 PM [express] GET /api/ai-tasks/stats 304 in 108ms :: {"total":0,"pending":0,"processing":0,"…
+2025-11-24 00:32:06.14
+131a6826
+User
+9:32:06 PM [express] GET /api/auth/user 304 in 140ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-24 00:32:06.16
+131a6826
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:32:06.18
+131a6826
+User
+9:32:06 PM [express] GET /api/ai-tasks/all 404 in 240ms :: {"error":"Task not found"}
+2025-11-24 00:32:06.26
+131a6826
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:32:06.30
+131a6826
+User
+9:32:06 PM [express] GET /api/admin/ifox/categories 200 in 268ms :: [{"id":"6ae21e93-14bc-486f-9f27-…
+2025-11-24 00:33:00.06
+131a6826
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 00:33:00.06
+131a6826
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 00:33:00.07
+131a6826
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 00:33:00.07
+131a6826
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 00:33:00.20
+131a6826
+User
+Found 0 scheduled newsletters to process
+2025-11-24 00:33:00.20
+131a6826
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 00:33:00.20
+131a6826
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 00:33:00.21
+131a6826
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 00:33:39.59
+131a6826
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:33:39.70
+131a6826
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:33:39.73
+131a6826
+User
+9:33:39 PM [express] POST /api/ai-tasks 400 in 329ms :: {"error":"Validation error","details":[{"cod…
+2025-11-24 00:33:40.07
+131a6826
+User
+🔸 DeserializeUser called with id: admin-sabq
