@@ -8262,8 +8262,13 @@ export const ifoxEditorialCalendar = pgTable("ifox_editorial_calendar", {
   competitionLevel: varchar("competition_level", { length: 50 }), // low, medium, high
   
   // Status tracking
-  status: varchar("status", { length: 50 }).default("planned"), // planned, in_progress, completed, cancelled
+  status: varchar("status", { length: 50 }).default("planned"), // planned, in_progress, completed, cancelled, failed
   articleId: varchar("article_id").references(() => articles.id), // Link to published article
+  
+  // Retry tracking (for failed tasks)
+  retryCount: integer("retry_count").default(0).notNull(),
+  lastErrorAt: timestamp("last_error_at"),
+  lastErrorReason: text("last_error_reason"),
   
   // Performance tracking
   actualPublishedAt: timestamp("actual_published_at"),
@@ -8433,7 +8438,7 @@ export const insertIfoxEditorialCalendarSchema = createInsertSchema(ifoxEditoria
   scheduledDate: z.string().or(z.date()),
   slot: z.enum(["morning", "afternoon", "evening", "night"]),
   assignmentType: z.enum(["ai", "human", "hybrid"]),
-  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled", "failed"]),
 });
 
 // Select types for iFox AI Management

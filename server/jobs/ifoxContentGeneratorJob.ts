@@ -11,6 +11,13 @@ import { createNotification } from "../notificationEngine";
 
 let isProcessing = false;
 
+// Process at most 10 tasks per run to prevent worker monopolization
+// This protects the system even when there's a large backlog after downtime
+const MAX_BATCH_SIZE = 10;
+
+// Maximum retry attempts before moving task to 'failed' status
+const MAX_RETRY_ATTEMPTS = 3;
+
 export const processScheduledContentTasks = cron.schedule('* * * * *', async () => {
   if (isProcessing) {
     return;
@@ -21,9 +28,11 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
   try {
     const now = new Date();
     
-    // Get scheduled tasks that are ready to run
+    // Get ALL scheduled tasks that are ready to run
+    // Process all planned tasks with scheduledDate <= now (no age limit)
+    // This ensures tasks are processed even after server restarts or prolonged downtime
+    // Batch size limit protects against worker monopolization
     const entries = await ifoxCalendarService.listEntries({
-      scheduledDateFrom: new Date(now.getTime() - 60000), // 1 minute ago
       scheduledDateTo: now,
       status: 'planned',
     });
@@ -33,9 +42,18 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
       return;
     }
 
-    console.log(`[iFox Generator] 🤖 Found ${entries.length} tasks ready to process`);
+    // Limit batch size to prevent worker monopolization
+    // Remaining tasks will be picked up in subsequent runs (every minute)
+    const tasksToProcess = entries.slice(0, MAX_BATCH_SIZE);
+    
+    if (entries.length > MAX_BATCH_SIZE) {
+      console.log(`[iFox Generator] ⚠️ Found ${entries.length} tasks, processing ${MAX_BATCH_SIZE} in this batch`);
+      console.log(`[iFox Generator] ℹ️ Remaining ${entries.length - MAX_BATCH_SIZE} tasks will be processed in next run`);
+    }
 
-    for (const entry of entries) {
+    console.log(`[iFox Generator] 🤖 Found ${tasksToProcess.length} tasks ready to process`);
+
+    for (const entry of tasksToProcess) {
       try {
         const topicIdea = entry.topicIdea || 'محتوى جديد';
         console.log(`[iFox Generator] 🚀 Processing task: ${topicIdea}`);
@@ -83,15 +101,39 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
 
         console.log(`[iFox Generator] ✅ Task completed: ${topicIdea}`);
       } catch (error) {
-        console.error(`[iFox Generator] ❌ Error processing task ${entry.id}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[iFox Generator] ❌ Error processing task ${entry.id}:`, errorMessage);
         
-        // Mark as failed (reset to planned for retry)
-        try {
-          await ifoxCalendarService.updateEntry(entry.id, {
-            status: 'planned',
-          }, entry.createdBy);
-        } catch (updateError) {
-          console.error(`[iFox Generator] ❌ Failed to update task status:`, updateError);
+        // Increment retry counter and check if we should give up
+        const currentRetryCount = entry.retryCount || 0;
+        const newRetryCount = currentRetryCount + 1;
+        
+        if (newRetryCount >= MAX_RETRY_ATTEMPTS) {
+          // Move to failed status after max retries
+          console.error(`[iFox Generator] 💀 Task ${entry.id} failed after ${MAX_RETRY_ATTEMPTS} attempts, moving to 'failed' status`);
+          try {
+            await ifoxCalendarService.updateEntry(entry.id, {
+              status: 'failed',
+              retryCount: newRetryCount,
+              lastErrorAt: new Date(),
+              lastErrorReason: errorMessage,
+            }, entry.createdBy);
+          } catch (updateError) {
+            console.error(`[iFox Generator] ❌ Failed to update task to failed status:`, updateError);
+          }
+        } else {
+          // Reset to planned for retry, but increment retry counter
+          console.log(`[iFox Generator] 🔄 Task ${entry.id} will retry (attempt ${newRetryCount}/${MAX_RETRY_ATTEMPTS})`);
+          try {
+            await ifoxCalendarService.updateEntry(entry.id, {
+              status: 'planned',
+              retryCount: newRetryCount,
+              lastErrorAt: new Date(),
+              lastErrorReason: errorMessage,
+            }, entry.createdBy);
+          } catch (updateError) {
+            console.error(`[iFox Generator] ❌ Failed to update task status:`, updateError);
+          }
         }
       }
     }
