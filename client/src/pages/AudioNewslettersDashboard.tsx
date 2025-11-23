@@ -107,14 +107,14 @@ function AnalyticsCards({ analytics }: { analytics: AnalyticsData }) {
       title: "الاستماعات",
       value: analytics.totalListens.toLocaleString("ar-EG"),
       icon: Headphones,
-      description: `معدل الإكمال ${analytics.averageCompletion.toFixed(1)}%`,
+      description: `معدل الإكمال ${(analytics.averageCompletion || 0).toFixed(1)}%`,
       color: "text-green-600",
     },
     {
       title: "المستمعون النشطون",
       value: analytics.activeListeners.toLocaleString("ar-EG"),
       icon: TrendingUp,
-      description: `نمو أسبوعي ${analytics.weeklyGrowth.toFixed(1)}%`,
+      description: `نمو أسبوعي ${(analytics.weeklyGrowth || 0).toFixed(1)}%`,
       color: "text-purple-600",
       trend: analytics.weeklyGrowth > 0 ? "up" : "down",
     },
@@ -252,7 +252,7 @@ export default function AudioNewslettersDashboard() {
   });
 
   const { data: analytics, isLoading: isAnalyticsLoading } = useQuery<AnalyticsData>({
-    queryKey: ["/api/audio-newsletters/analytics"],
+    queryKey: ["/api/audio-newsletters/analytics/overview"],
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
@@ -262,7 +262,7 @@ export default function AudioNewslettersDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/admin"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/analytics/overview"] });
       toast({
         title: "تم الحذف",
         description: "تم حذف النشرة الصوتية بنجاح",
@@ -305,7 +305,7 @@ export default function AudioNewslettersDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/admin"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/audio-newsletters/analytics/overview"] });
       toast({
         title: "تم النشر",
         description: "تم نشر النشرة الصوتية بنجاح",
@@ -631,7 +631,7 @@ export default function AudioNewslettersDashboard() {
                             {newsletter.totalListens.toLocaleString("ar-EG")}
                           </TableCell>
                           <TableCell data-testid={`text-completion-${newsletter.id}`}>
-                            {newsletter.averageCompletion.toFixed(1)}%
+                            {(newsletter.averageCompletion || 0).toFixed(1)}%
                           </TableCell>
                           <TableCell data-testid={`text-published-date-${newsletter.id}`}>
                             {newsletter.publishedAt

@@ -1,0 +1,126 @@
+2025-11-23 08:57:36.69
+c867ef91
+User
+sessionID: 'VD92dE_B3OEH0m6q8hPrxrWo0cYUSrfU'
+2025-11-23 08:57:36.69
+c867ef91
+User
+hasUser: true,
+2025-11-23 08:57:36.69
+c867ef91
+User
+🔍 /api/auth/user check: {
+2025-11-23 08:57:36.73
+c867ef91
+User
+6:57:36 AM [express] GET /api/notebooklm/generations 200 in 111ms :: {"generations":[{"id":"dd742acf…
+2025-11-23 08:57:36.75
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-23 08:57:36.77
+c867ef91
+User
+6:57:36 AM [express] GET /api/auth/user 304 in 120ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-23 08:57:36.77
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:36.79
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:36.82
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:36.87
+c867ef91
+User
+6:57:36 AM [express] POST /api/accessibility/track 200 in 93ms :: {"success":true,"eventId":"f153eea…
+2025-11-23 08:57:37.09
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.09
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.09
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.10
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.11
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.11
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.12
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.13
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.13
+c867ef91
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 08:57:37.13
+c867ef91
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 08:57:37.16
+c867ef91
+User
+6:57:37 AM [express] GET /api/audio-newsletters/analytics 404 in 90ms :: {"message":"النشرة الصوتية …
+2025-11-23 08:57:37.18
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.19
+c867ef91
+User
+6:57:37 AM [express] GET /api/announcements/active 304 in 118ms :: []
+2025-11-23 08:57:37.19
+c867ef91
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:57:37.21
+c867ef91
+User
+6:57:37 AM [express] GET /api/notifications 304 in 137ms :: {"notifications":[{"id":"eb8A_0DlVMmDYUJ…
+2025-11-23 08:57:37.21
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.21
+c867ef91
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-23 08:57:37.21
+c867ef91
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:57:37.21
+c867ef91
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-23 08:57:37.23
+c867ef91
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-23 08:57:37.35
+c867ef91
+User
+6:57:37 AM [express] GET /api/audio-newsletters/admin 304 in 184ms :: [{"id":"fcba7554-3162-4df0-98b…
+
