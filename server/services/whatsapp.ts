@@ -20,11 +20,18 @@ export interface SendWhatsAppMessageOptions {
 
 export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): Promise<boolean> {
   if (!twilioClient || !whatsappNumber) {
-    console.error('[WhatsApp Service] Twilio not configured');
+    console.error('[WhatsApp Service] ❌ Twilio not configured');
+    console.error('[WhatsApp Service]   - twilioClient:', !!twilioClient);
+    console.error('[WhatsApp Service]   - whatsappNumber:', whatsappNumber);
     return false;
   }
 
   try {
+    console.log(`[WhatsApp Service] 📨 Sending WhatsApp message...`);
+    console.log(`[WhatsApp Service]   - From: whatsapp:${whatsappNumber}`);
+    console.log(`[WhatsApp Service]   - To: whatsapp:${options.to}`);
+    console.log(`[WhatsApp Service]   - Body length: ${options.body.length} chars`);
+    
     const messageOptions: any = {
       from: `whatsapp:${whatsappNumber}`,
       to: `whatsapp:${options.to}`,
@@ -33,14 +40,20 @@ export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): 
 
     if (options.mediaUrl) {
       messageOptions.mediaUrl = [options.mediaUrl];
+      console.log(`[WhatsApp Service]   - Media URL: ${options.mediaUrl}`);
     }
 
+    console.log(`[WhatsApp Service] 🔄 Calling Twilio API...`);
     const message = await twilioClient.messages.create(messageOptions);
     
-    console.log(`[WhatsApp Service] Message sent successfully: ${message.sid}`);
+    console.log(`[WhatsApp Service] ✅ Message sent successfully: ${message.sid}`);
     return true;
   } catch (error) {
-    console.error('[WhatsApp Service] Failed to send message:', error);
+    console.error('[WhatsApp Service] ❌ Failed to send message:', error instanceof Error ? error.message : error);
+    if (error instanceof Error) {
+      console.error('[WhatsApp Service] Error details:', error);
+      console.error('[WhatsApp Service] Stack:', error.stack);
+    }
     return false;
   }
 }

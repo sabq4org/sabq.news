@@ -758,17 +758,34 @@ router.post("/webhook", async (req: Request, res: Response) => {
     });
 
     const replyMessage = articleStatus === 'published'
-      ? `✅ تم نشر الخبر\nhttps://sabq.news/article/${slug}`
-      : `✅ تم حفظ الخبر كمسودة\nللمراجعة قبل النشر`;
+      ? `تم نشر الخبر بنجاح\n\nhttps://sabq.news/article/${slug}`
+      : `تم حفظ الخبر كمسودة\nسيتم مراجعته قبل النشر`;
+
+    // 🔍 DEBUG REPLY MESSAGE DETAILS
+    console.log(`[WhatsApp Agent] 📤 Preparing to send reply message:`);
+    console.log(`[WhatsApp Agent]   - From: whatsapp:${process.env.TWILIO_PHONE_NUMBER}`);
+    console.log(`[WhatsApp Agent]   - To: whatsapp:${phoneNumber}`);
+    console.log(`[WhatsApp Agent]   - Message: ${replyMessage}`);
+    console.log(`[WhatsApp Agent]   - Slug: ${slug}`);
+    console.log(`[WhatsApp Agent]   - Status: ${articleStatus}`);
 
     try {
-      await sendWhatsAppMessage({
+      console.log(`[WhatsApp Agent] 🔄 Calling sendWhatsAppMessage...`);
+      const result = await sendWhatsAppMessage({
         to: phoneNumber,
         body: replyMessage,
       });
-      console.log(`[WhatsApp Agent] ✅ Sent reply to ${phoneNumber}`);
+      
+      if (result) {
+        console.log(`[WhatsApp Agent] ✅ REPLY SENT SUCCESSFULLY to ${phoneNumber}`);
+      } else {
+        console.error(`[WhatsApp Agent] ❌ sendWhatsAppMessage returned false - Twilio not configured or failed`);
+      }
     } catch (error) {
-      console.error(`[WhatsApp Agent] ⚠️ Failed to send reply:`, error);
+      console.error(`[WhatsApp Agent] ❌ EXCEPTION while sending reply:`, error instanceof Error ? error.message : error);
+      if (error instanceof Error) {
+        console.error(`[WhatsApp Agent] Stack trace:`, error.stack);
+      }
     }
 
     console.log("[WhatsApp Agent] ============ WEBHOOK END (SUCCESS) ============");
