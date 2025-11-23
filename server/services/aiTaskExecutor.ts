@@ -34,11 +34,17 @@ export class AITaskExecutor {
         throw new Error(`Task ${taskId} is not in pending status (current: ${task.status})`);
       }
 
-      // Mark as processing
-      await storage.updateAiTaskExecution(taskId, {
+      // Mark as processing (atomic update - only if still pending)
+      // This prevents race conditions when multiple processes try to execute the same task
+      const updated = await storage.updateAiTaskExecution(taskId, {
         status: 'processing',
         executedAt: new Date()
-      });
+      }, 'pending'); // Only update if current status is 'pending'
+      
+      if (!updated) {
+        // Another process already started processing this task
+        throw new Error(`Task ${taskId} was already picked up by another process`);
+      }
 
       console.log(`[AI Task Executor] Executing task ${taskId}: ${task.title}`);
 

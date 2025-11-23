@@ -14750,13 +14750,22 @@ export class DatabaseStorage implements IStorage {
     executionTimeMs?: number;
     tokensUsed?: number;
     generationCost?: number;
-  }): Promise<AiScheduledTask> {
+  }, requiredCurrentStatus?: 'pending' | 'processing'): Promise<AiScheduledTask | null> {
+    // If requiredCurrentStatus is provided, only update if current status matches
+    // This prevents race conditions when multiple processes try to update the same task
+    const whereConditions = requiredCurrentStatus
+      ? and(
+          eq(aiScheduledTasks.id, id),
+          eq(aiScheduledTasks.status, requiredCurrentStatus)
+        )
+      : eq(aiScheduledTasks.id, id);
+      
     const [updated] = await db
       .update(aiScheduledTasks)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(aiScheduledTasks.id, id))
+      .where(whereConditions)
       .returning();
-    return updated;
+    return updated || null;
   }
   
   async deleteAiTask(id: string): Promise<void> {

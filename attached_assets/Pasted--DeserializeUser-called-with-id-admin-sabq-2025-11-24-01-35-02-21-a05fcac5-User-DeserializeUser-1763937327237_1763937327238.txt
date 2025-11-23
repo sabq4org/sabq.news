@@ -1,0 +1,109 @@
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:02.21
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:02.58
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:02.59
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:02.60
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:02.61
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:03.01
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:03.03
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:03.11
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:03.11
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:03.13
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:03.13
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:03.16
+a05fcac5
+User
+10:35:03 PM [express] GET /api/categories/ai-news/articles/latest/all 304 in 66ms
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async AITaskExecutor.executePendingTasks (file:///home/runner/workspace/dist/index.js:58485:22)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async pRetry (file:///home/runner/workspace/node_modules/p-retry/index.js:195:19)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async Timeout._onTimeout (/home/runner/workspace/node_modules/node-cron/dist/esm/scheduler/runner.js:70:44)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async AIArticleGenerator.generateArticle (file:///home/runner/workspace/dist/index.js:58202:22)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+[AI Task Executor] Task ed84d1e3-97c6-4df4-9193-f2b4536b3b6e failed: Error: openai/gpt-5.1: 400 Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at pRetry.retries (file:///home/runner/workspace/dist/index.js:16821:21)
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async file:///home/runner/workspace/dist/index.js:59320:22
+2025-11-24 01:35:04.06
+a05fcac5
+User
+at async AITaskExecutor.executeTask (file:///home/runner/workspace/dist/index.js:58398:32)
+2025-11-24 01:35:04.09
+a05fcac5
+User
+🤖 [AI Tasks Scheduler] Execution complete: 0 succeeded, 1 failed
+2025-11-24 01:35:04.09
+a05fcac5
+User
+[AI Task Executor] Execution summary: 0 succeeded, 1 failed
+2025-11-24 01:35:07.24
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:07.26
+a05fcac5
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 01:35:07.62
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 01:35:07.63
+a05fcac5
+User
+🔸 DeserializeUser called with id: admin-sabq
