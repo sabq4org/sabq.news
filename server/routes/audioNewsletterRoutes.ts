@@ -20,6 +20,7 @@ import {
   type RecurringSchedule,
   type GenerationStatus
 } from '../services/audioNewsletterService';
+import { requireAuth as rbacRequireAuth, requirePermission } from '../rbac';
 
 const router = express.Router();
 
@@ -73,29 +74,6 @@ const trackListenSchema = z.object({
   duration: z.number().min(0).optional(),
   completionRate: z.number().min(0).max(100).optional()
 });
-
-// Middleware to check authentication
-const requireAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.session?.userId) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  next();
-};
-
-// Middleware to check admin role
-const requireAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.session?.userId) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  
-  // Check if user has admin or editor role
-  const userRole = req.session.userRole || 'user';
-  if (!['admin', 'editor', 'moderator'].includes(userRole)) {
-    return res.status(403).json({ error: 'Insufficient permissions' });
-  }
-  
-  next();
-};
 
 // Get public newsletters (no auth required)
 router.get('/public', async (req, res) => {
@@ -220,7 +198,7 @@ router.get('/public/:id', async (req, res) => {
 });
 
 // Get all newsletters with pagination and filters
-router.get('/newsletters', requireAuth, async (req, res) => {
+router.get('/newsletters', rbacRequireAuth, async (req, res) => {
   try {
     const {
       page = '1',
@@ -325,7 +303,7 @@ router.get('/newsletters', requireAuth, async (req, res) => {
 });
 
 // Get single newsletter with full details
-router.get('/newsletters/:id', requireAuth, async (req, res) => {
+router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
   try {
     const newsletter = await db.query.audioNewsletters.findFirst({
       where: eq(audioNewsletters.id, req.params.id),
@@ -382,7 +360,7 @@ router.get('/newsletters/:id', requireAuth, async (req, res) => {
 });
 
 // Create new newsletter
-router.post('/newsletters', requireAdmin, async (req, res) => {
+router.post('/newsletters', requirePermission("articles.create"), async (req, res) => {
   try {
     const validatedData = createNewsletterSchema.parse(req.body);
     
@@ -417,7 +395,7 @@ router.post('/newsletters', requireAdmin, async (req, res) => {
       voiceId,
       voiceSettings,
       articleIds,
-      generatedBy: req.session.userId!,
+      generatedBy: (req as any).user?.id!,
       scheduledFor: validatedData.scheduledFor ? new Date(validatedData.scheduledFor) : undefined,
       recurringSchedule: validatedData.recurringSchedule as RecurringSchedule,
       metadata: validatedData.metadata,
@@ -452,7 +430,7 @@ router.post('/newsletters', requireAdmin, async (req, res) => {
 });
 
 // Update newsletter
-router.patch('/newsletters/:id', requireAdmin, async (req, res) => {
+router.patch('/newsletters/:id', requirePermission("articles.create"), async (req, res) => {
   try {
     const validatedData = updateNewsletterSchema.parse(req.body);
     
@@ -480,7 +458,7 @@ router.patch('/newsletters/:id', requireAdmin, async (req, res) => {
 });
 
 // Delete newsletter
-router.delete('/newsletters/:id', requireAdmin, async (req, res) => {
+router.delete('/newsletters/:id', requirePermission("articles.create"), async (req, res) => {
   try {
     await db
       .delete(audioNewsletters)
@@ -494,7 +472,7 @@ router.delete('/newsletters/:id', requireAdmin, async (req, res) => {
 });
 
 // Generate or regenerate audio for newsletter
-router.post('/newsletters/generate-audio', requireAdmin, async (req, res) => {
+router.post('/newsletters/generate-audio', requirePermission("articles.create"), async (req, res) => {
   try {
     const validatedData = generateAudioSchema.parse(req.body);
     
@@ -539,7 +517,7 @@ router.post('/newsletters/generate-audio', requireAdmin, async (req, res) => {
 });
 
 // Get job status
-router.get('/jobs/:jobId', requireAuth, async (req, res) => {
+router.get('/jobs/:jobId', rbacRequireAuth, async (req, res) => {
   const job = audioNewsletterService.getJobStatus(req.params.jobId);
   
   if (!job) {
@@ -560,7 +538,7 @@ router.get('/jobs/:jobId', requireAuth, async (req, res) => {
 });
 
 // Cancel job
-router.post('/jobs/:jobId/cancel', requireAdmin, async (req, res) => {
+router.post('/jobs/:jobId/cancel', requirePermission("articles.create"), async (req, res) => {
   const cancelled = await audioNewsletterService.cancelJob(req.params.jobId);
   
   if (!cancelled) {
@@ -571,7 +549,7 @@ router.post('/jobs/:jobId/cancel', requireAdmin, async (req, res) => {
 });
 
 // Get all active jobs
-router.get('/jobs', requireAdmin, async (req, res) => {
+router.get('/jobs', requirePermission("articles.create"), async (req, res) => {
   const jobs = audioNewsletterService.getActiveJobs();
   
   res.json({
@@ -592,7 +570,7 @@ router.post('/newsletters/:id/listen', async (req, res) => {
     const validatedData = trackListenSchema.parse(req.body);
     
     // Get user ID from session or generate anonymous ID from IP
-    const userId = req.session?.userId || `anon_${req.ip}_${req.headers['user-agent']?.substring(0, 20) || 'unknown'}`;
+    const userId = (req as any).user?.id || `anon_${req.ip}_${req.headers['user-agent']?.substring(0, 20) || 'unknown'}`;
     
     // Simple IP-based rate limiting check
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
@@ -606,7 +584,7 @@ router.post('/newsletters/:id/listen', async (req, res) => {
     );
     
     // Log anonymous listen for monitoring
-    if (!req.session?.userId) {
+    if (!(req as any).user?.id) {
       console.log(`[AudioNewsletter] Anonymous listen tracked - Newsletter: ${req.params.id}, IP: ${clientIp}`);
     }
     
@@ -621,7 +599,7 @@ router.post('/newsletters/:id/listen', async (req, res) => {
 });
 
 // Get newsletter analytics
-router.get('/newsletters/:id/analytics', requireAdmin, async (req, res) => {
+router.get('/newsletters/:id/analytics', requirePermission("analytics.view"), async (req, res) => {
   try {
     const analytics = await audioNewsletterService.getNewsletterAnalytics(req.params.id);
     res.json(analytics);
@@ -632,7 +610,7 @@ router.get('/newsletters/:id/analytics', requireAdmin, async (req, res) => {
 });
 
 // Get available voices
-router.get('/voices', requireAdmin, async (req, res) => {
+router.get('/voices', requirePermission("articles.create"), async (req, res) => {
   try {
     const elevenLabsService = await import('../services/elevenlabs').then(m => m.getElevenLabsService());
     const voices = await elevenLabsService.getVoices();
@@ -724,7 +702,7 @@ router.get('/public/:slug', async (req, res) => {
     }
     
     // Track anonymous listen if no session
-    if (!req.session?.userId) {
+    if (!(req as any).user?.id) {
       await db.update(audioNewsletters)
         .set({
           totalListens: db.sql`${audioNewsletters.totalListens} + 1`
@@ -822,7 +800,7 @@ function formatDuration(seconds: number): string {
 }
 
 // SSE endpoint for real-time job status updates
-router.get('/jobs/:jobId/stream', requireAuth, async (req, res) => {
+router.get('/jobs/:jobId/stream', rbacRequireAuth, async (req, res) => {
   // Set up SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -890,7 +868,7 @@ router.get('/jobs/:jobId/stream', requireAuth, async (req, res) => {
 // ================ ANALYTICS ENDPOINTS ================
 
 // Get analytics overview - summary metrics
-router.get('/analytics/overview', requireAdmin, async (req, res) => {
+router.get('/analytics/overview', requirePermission("analytics.view"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
@@ -1011,7 +989,7 @@ router.get('/analytics/overview', requireAdmin, async (req, res) => {
 });
 
 // Get trends data for charts
-router.get('/analytics/trends', requireAdmin, async (req, res) => {
+router.get('/analytics/trends', requirePermission("analytics.view"), async (req, res) => {
   try {
     const { 
       period = 'daily', // daily, weekly, monthly
@@ -1167,7 +1145,7 @@ router.get('/analytics/trends', requireAdmin, async (req, res) => {
 });
 
 // Get top performing newsletters
-router.get('/analytics/top-newsletters', requireAdmin, async (req, res) => {
+router.get('/analytics/top-newsletters', requirePermission("analytics.view"), async (req, res) => {
   try {
     const {
       limit = '10',
@@ -1250,7 +1228,7 @@ router.get('/analytics/top-newsletters', requireAdmin, async (req, res) => {
 });
 
 // Export analytics data as CSV
-router.get('/analytics/export', requireAdmin, async (req, res) => {
+router.get('/analytics/export', requirePermission("analytics.view"), async (req, res) => {
   try {
     const {
       type = 'overview', // overview, newsletters, listens
@@ -1398,7 +1376,7 @@ router.post('/newsletters/:id/track', async (req, res) => {
     
     // Get user ID from session or generate anonymous ID from IP
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-    const userId = req.session?.userId || `anon_${clientIp}_${Date.now()}`;
+    const userId = (req as any).user?.id || `anon_${clientIp}_${Date.now()}`;
     
     // Simple rate limiting check - max 10 tracks per IP per hour
     const rateLimitKey = `track_${req.params.id}_${clientIp}_${new Date().getHours()}`;
@@ -1426,7 +1404,7 @@ router.post('/newsletters/:id/track', async (req, res) => {
       .where(eq(audioNewsletters.id, req.params.id));
     
     // Log anonymous tracking for monitoring
-    if (!req.session?.userId) {
+    if (!(req as any).user?.id) {
       console.log(`[AudioNewsletter] Anonymous track - Newsletter: ${req.params.id}, IP: ${clientIp}, Completion: ${completionRate}%`);
     }
     
@@ -1438,7 +1416,7 @@ router.post('/newsletters/:id/track', async (req, res) => {
 });
 
 // Get admin newsletters list (existing endpoint enhanced)
-router.get('/admin', requireAdmin, async (req, res) => {
+router.get('/admin', requirePermission("articles.create"), async (req, res) => {
   try {
     const newsletters = await db
       .select({
@@ -1476,7 +1454,7 @@ router.get('/admin', requireAdmin, async (req, res) => {
 });
 
 // Get analytics summary (simpler endpoint for dashboard)
-router.get('/analytics', requireAdmin, async (req, res) => {
+router.get('/analytics', requirePermission("analytics.view"), async (req, res) => {
   try {
     // Get totals
     const [totals] = await db
