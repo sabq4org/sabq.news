@@ -52,11 +52,11 @@ export default function IFoxArticles() {
     error,
     refetch 
   } = useQuery<IFoxArticle[]>({
-    queryKey: ["/api/ifox/articles", retryCount],
+    queryKey: ["/api/ifox/articles"],
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
     refetch();
   };
 
