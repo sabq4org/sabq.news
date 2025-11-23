@@ -104,9 +104,23 @@ export default function IFoxAITasks() {
     tone: 'formal' as const,
   });
 
-  // Fetch tasks - use query params instead of path params
+  // Fetch tasks with proper query params
   const { data: tasksData, isLoading: tasksLoading } = useQuery<{ tasks: AITask[], total: number }>({
-    queryKey: ['/api/ai-tasks', { status: statusFilter !== 'all' ? statusFilter : undefined }],
+    queryKey: ['/api/ai-tasks', statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      const url = `/api/ai-tasks${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      return response.json();
+    },
   });
 
   // Fetch stats
@@ -122,11 +136,22 @@ export default function IFoxAITasks() {
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: typeof newTask) => {
+      // Convert scheduledAt to ISO string for backend
+      const scheduledAtDate = new Date(taskData.scheduledAt);
+      
       return await apiRequest('/api/ai-tasks', {
         method: 'POST',
         body: JSON.stringify({
-          ...taskData,
-          keywords: taskData.keywords.split(',').map(k => k.trim()).filter(Boolean),
+          title: taskData.title,
+          description: taskData.description || undefined,
+          scheduledAt: scheduledAtDate.toISOString(),
+          categoryId: taskData.categoryId || undefined,
+          contentType: taskData.contentType,
+          locale: 'ar',
+          keywords: taskData.keywords ? taskData.keywords.split(',').map(k => k.trim()).filter(Boolean) : [],
+          tone: taskData.tone,
+          generateImage: taskData.generateImage,
+          autoPublish: taskData.autoPublish,
         }),
       });
     },

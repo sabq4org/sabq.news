@@ -1,0 +1,109 @@
+2025-11-24 00:49:47.45
+1e638508
+User
+}
+2025-11-24 00:49:47.45
+1e638508
+User
+🔍 /api/auth/user check: {
+2025-11-24 00:49:47.45
+1e638508
+User
+sessionID: 'Xs-TMa9ZQ63sVC3ysmWGnOo5YR6-CnVW'
+2025-11-24 00:49:47.45
+1e638508
+User
+isAuthenticated: true,
+2025-11-24 00:49:47.45
+1e638508
+User
+hasUser: true,
+
+2025-11-24 00:49:47.45
+1e638508
+User
+userId: 'admin-sabq',
+2025-11-24 00:49:47.47
+1e638508
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,editor, user has: system_admin, admin
+2025-11-24 00:49:47.48
+1e638508
+User
+9:49:47 PM [express] GET /api/ai-tasks/[object%20Object] 404 in 239ms :: {"error":"Task not found"}
+2025-11-24 00:49:47.49
+1e638508
+User
+9:49:47 PM [express] GET /api/ai-tasks/stats 200 in 248ms :: {"total":0,"pending":0,"processing":0,"…
+2025-11-24 00:49:47.52
+1e638508
+User
+9:49:47 PM [express] GET /api/auth/user 200 in 282ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-24 00:49:47.63
+1e638508
+User
+9:49:47 PM [express] GET /api/admin/ifox/categories 200 in 388ms :: [{"id":"6ae21e93-14bc-486f-9f27-…
+2025-11-24 00:50:00.03
+1e638508
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-24 00:50:00.04
+1e638508
+User
+[NotificationWorker] Starting queue processing...
+2025-11-24 00:50:00.04
+1e638508
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-24 00:50:00.04
+1e638508
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-24 00:50:00.07
+1e638508
+User
+Found 0 scheduled newsletters to process
+2025-11-24 00:50:00.07
+1e638508
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-24 00:50:00.07
+1e638508
+User
+[NotificationWorker] Queue processing completed
+2025-11-24 00:50:00.07
+1e638508
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-24 00:50:06.64
+1e638508
+User
+9:50:06 PM [express] GET /api/themes/active 304 in 53ms
+2025-11-24 00:50:24.03
+1e638508
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:50:24.06
+1e638508
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:50:24.08
+1e638508
+User
+9:50:24 PM [express] POST /api/ai-tasks 400 in 244ms :: {"error":"Validation error","details":[{"rec…
+2025-11-24 00:50:24.43
+1e638508
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-24 00:50:24.45
+1e638508
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-24 00:50:24.50
+1e638508
+User
+9:50:24 PM [express] POST /api/accessibility/track 200 in 95ms :: {"success":true,"eventId":"1119421…
+2025-11-24 00:50:24.50
+1e638508
+User
+9:50:24 PM [express] POST /api/accessibility/track 200 in 95ms :: {"success":true,"eventId":"1119421…
