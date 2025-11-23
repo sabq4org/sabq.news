@@ -181,6 +181,7 @@ import AdminPublisherAnalytics from "@/pages/admin/publishers/AdminPublisherAnal
 import AIHomePage from "@/pages/ai/AIHomePage";
 import AICategoryPage from "@/pages/ai/AICategoryPage";
 import AIArticleDetail from "@/pages/ai/AIArticleDetail";
+import IFoxArticlesPage from "@/pages/IFoxArticles";
 // iFox Admin Dashboard imports
 import IFoxDashboard from "@/pages/admin/ifox/IFoxDashboard";
 import IFoxContentGenerator from "@/pages/admin/ifox/IFoxContentGenerator";
@@ -317,6 +318,7 @@ function Router() {
       <Route path="/ai" component={AIHomePage} />
       <Route path="/ai/category/:category" component={AICategoryPage} />
       <Route path="/ai/article/:slug" component={AIArticleDetail} />
+      <Route path="/ifox" component={IFoxArticlesPage} />
       
       {/* iFox Admin Dashboard Routes */}
       <Route path="/admin" component={IFoxDashboard} />

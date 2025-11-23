@@ -8265,6 +8265,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // iFox Articles endpoint - fetches all published AI articles for public page
+  app.get("/api/ifox/articles", cacheControl({ maxAge: CACHE_DURATIONS.SHORT }), async (req, res) => {
+    try {
+      // Fetch all articles with includeAI: true to get AI articles
+      const allArticles = await storage.getArticles({ includeAI: true, status: 'published' });
+      
+      // Filter to keep only AI-generated articles (based on aiGenerated flag)
+      // This ensures ALL iFox AI-generated articles appear, regardless of category
+      const aiArticles = allArticles
+        .filter(article => article.aiGenerated === true)
+        .slice(0, 50); // Limit to 50 articles
+      
+      res.json(aiArticles);
+    } catch (error) {
+      console.error("Error fetching iFox articles:", error);
+      res.status(500).json({ message: "Failed to fetch iFox articles" });
+    }
+  });
   // Homepage statistics (cached for 5 min)
   app.get("/api/homepage/stats", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
