@@ -11,6 +11,7 @@ import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
+import { startAITasksScheduler } from "./jobs/aiTasksJob";
 import { newsletterScheduler } from "./services/newsletterScheduler";
 import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
@@ -576,6 +577,27 @@ app.use((req, res, next) => {
         console.log("[Server] Newsletter scheduler skipped (background workers disabled)");
       } else {
         console.log("[Server] Newsletter scheduler disabled (set ENABLE_NEWSLETTER_SCHEDULER=true to enable)");
+      }
+      
+      // Start AI Tasks Scheduler (automated AI content generation for iFox)
+      // Enable scheduler by default unless explicitly disabled
+      const enableAITasksScheduler = process.env.ENABLE_AI_TASKS_SCHEDULER !== 'false';
+      
+      if (enableBackgroundWorkers && enableAITasksScheduler) {
+        setImmediate(() => {
+          try {
+            startAITasksScheduler();
+            console.log("[Server] ✅ AI Tasks Scheduler started successfully");
+            console.log("[Server] 🤖 Checking for pending AI tasks every minute");
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting AI tasks scheduler:", error);
+            console.error("[Server] Server will continue running without AI tasks automation");
+          }
+        });
+      } else if (!enableBackgroundWorkers) {
+        console.log("[Server] AI Tasks Scheduler skipped (background workers disabled)");
+      } else {
+        console.log("[Server] AI Tasks Scheduler disabled (set ENABLE_AI_TASKS_SCHEDULER=true to enable)");
       }
     });
 
