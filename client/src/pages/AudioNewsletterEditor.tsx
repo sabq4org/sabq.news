@@ -122,6 +122,15 @@ interface Article {
   excerpt?: string;
 }
 
+interface Voice {
+  voice_id: string;
+  name: string;
+  gender?: string;
+  accent?: string;
+  use_case?: string;
+  description?: string;
+}
+
 // Template definitions
 const TEMPLATES = [
   {
@@ -417,7 +426,7 @@ export default function AudioNewsletterEditor() {
     },
   });
 
-  const { data: newsletter, isLoading: isNewsletterLoading } = useQuery({
+  const { data: newsletter, isLoading: isNewsletterLoading } = useQuery<{ newsletter: any }>({
     queryKey: ["/api/audio-newsletters/newsletters", newsletterId],
     enabled: isEditMode,
   });

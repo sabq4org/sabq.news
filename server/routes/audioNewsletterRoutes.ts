@@ -632,8 +632,8 @@ router.get('/newsletters/:id/analytics', requirePermission("analytics.view"), as
   }
 });
 
-// Get available voices
-router.get('/voices', requirePermission("articles.create"), async (req, res) => {
+// Get available voices (public endpoint - no auth required)
+router.get('/voices', async (req, res) => {
   try {
     const elevenLabsService = await import('../services/elevenlabs').then(m => m.getElevenLabsService());
     const voices = await elevenLabsService.getVoices();
@@ -648,8 +648,8 @@ router.get('/voices', requirePermission("articles.create"), async (req, res) => 
   }
 });
 
-// Test voice with sample text
-router.post('/voices/test', requirePermission("articles.create"), async (req, res) => {
+// Test voice with sample text (public endpoint - no auth required)
+router.post('/voices/test', async (req, res) => {
   try {
     const { voiceId, sampleText, voiceSettings } = testVoiceSchema.parse(req.body);
     
