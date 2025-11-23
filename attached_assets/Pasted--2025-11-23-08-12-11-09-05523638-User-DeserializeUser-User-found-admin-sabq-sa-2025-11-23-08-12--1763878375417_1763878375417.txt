@@ -1,0 +1,133 @@
+
+2025-11-23 08:12:11.09
+05523638
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:12:11.10
+05523638
+User
+at QueryPromise.then (file:///home/runner/workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+2025-11-23 08:12:11.10
+05523638
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:62:42
+2025-11-23 08:12:11.10
+05523638
+User
+Error fetching newsletter: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+2025-11-23 08:12:11.10
+05523638
+User
+at QueryPromise._prepare (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:61:19)
+2025-11-23 08:12:11.10
+05523638
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 08:12:11.10
+05523638
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 08:12:11.10
+05523638
+User
+at PgDialect.buildRelationalQueryWithoutPK (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/dialect.js:1006:36)
+2025-11-23 08:12:11.10
+05523638
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:114:19
+2025-11-23 08:12:11.10
+05523638
+User
+at QueryPromise._toSQL (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:99:24)
+2025-11-23 08:12:11.10
+05523638
+User
+at normalizeRelation (file:///home/runner/workspace/node_modules/drizzle-orm/relations.js:212:75)
+2025-11-23 08:12:11.10
+05523638
+User
+at QueryPromise.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:113:19)
+2025-11-23 08:12:11.10
+05523638
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-23 08:12:11.10
+05523638
+User
+at QueryPromise._getQuery (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:84:25)
+2025-11-23 08:12:11.12
+05523638
+User
+6:12:11 AM [express] GET /api/audio-newsletters/newsletters/fcba7554-3162-4df0-98bc-7b831f3e7881 500…
+2025-11-23 08:12:13.08
+05523638
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:12:13.10
+05523638
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 08:12:13.10
+05523638
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:114:19
+2025-11-23 08:12:13.10
+05523638
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 08:12:13.10
+05523638
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:62:42
+2025-11-23 08:12:13.10
+05523638
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-11-23 08:12:13.10
+05523638
+User
+at normalizeRelation (file:///home/runner/workspace/node_modules/drizzle-orm/relations.js:212:75)
+2025-11-23 08:12:13.10
+05523638
+User
+at PgDialect.buildRelationalQueryWithoutPK (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/dialect.js:1006:36)
+2025-11-23 08:12:13.10
+05523638
+User
+at QueryPromise.then (file:///home/runner/workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+2025-11-23 08:12:13.10
+05523638
+User
+at QueryPromise.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:113:19)
+2025-11-23 08:12:13.10
+05523638
+User
+at QueryPromise._getQuery (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:84:25)
+2025-11-23 08:12:13.10
+05523638
+User
+Error fetching newsletter: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+2025-11-23 08:12:13.10
+05523638
+User
+at QueryPromise._prepare (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:61:19)
+2025-11-23 08:12:13.10
+05523638
+User
+at QueryPromise._toSQL (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/query.js:99:24)
+2025-11-23 08:12:13.10
+05523638
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-23 08:12:13.12
+05523638
+User
+6:12:13 AM [express] GET /api/audio-newsletters/newsletters/fcba7554-3162-4df0-98bc-7b831f3e7881 500…
+2025-11-23 08:12:15.07
+05523638
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 08:12:15.09
+05523638
+User
+✅ DeserializeUser: User found: admin@sabq.sa

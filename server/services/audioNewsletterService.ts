@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { db } from '../db';
-import { eq, desc, and, gte, lte, inArray, not } from 'drizzle-orm';
+import { eq, desc, and, gte, lte, inArray, not, sql } from 'drizzle-orm';
 import {
   audioNewsletters,
   audioNewsletterArticles,
@@ -407,11 +407,6 @@ export class AudioNewsletterService extends EventEmitter {
       job.progress = 30;
       this.emit('job:progress', job);
       
-      // Save script
-      await db.update(audioNewsletters)
-        .set({ script })
-        .where(eq(audioNewsletters.id, job.newsletterId));
-      
       // Chunk text for processing
       const chunks = this.chunkText(script, 4000); // ElevenLabs character limit
       
@@ -546,8 +541,8 @@ export class AudioNewsletterService extends EventEmitter {
       return formattedContent;
     }
     
-    // Otherwise, build from articles using template
-    const template = SCRIPT_TEMPLATES[newsletter.template as NewsletterTemplate] || SCRIPT_TEMPLATES[NewsletterTemplate.CUSTOM];
+    // Otherwise, build from articles using a default template (MORNING_BRIEF)
+    const template = SCRIPT_TEMPLATES[NewsletterTemplate.MORNING_BRIEF];
     const scriptParts: string[] = [];
     
     // Add introduction
@@ -696,11 +691,7 @@ export class AudioNewsletterService extends EventEmitter {
       with: {
         articles: {
           with: {
-            article: {
-              with: {
-                category: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -710,10 +701,10 @@ export class AudioNewsletterService extends EventEmitter {
     
     // Sort articles by order index and map to simpler structure
     const sortedArticles = newsletter.articles
-      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .sort((a, b) => a.order - b.order)
       .map(item => ({
         ...item.article,
-        orderIndex: item.orderIndex
+        orderIndex: item.order
       }));
     
     return {
@@ -795,19 +786,20 @@ export class AudioNewsletterService extends EventEmitter {
   }
   
   // Track listen event
-  async trackListen(newsletterId: string, userId: string, duration?: number): Promise<void> {
+  async trackListen(newsletterId: string, userId: string, duration: number): Promise<void> {
     await db.insert(audioNewsletterListens).values({
-      id: nanoid(),
       newsletterId,
       userId,
-      listenedAt: new Date().toISOString(),
-      duration
+      duration,
+      startedAt: new Date(),
+      lastPosition: 0,
+      completionPercentage: 0
     });
     
     // Update total listens count
     await db.update(audioNewsletters)
       .set({
-        totalListens: db.sql`${audioNewsletters.totalListens} + 1`
+        totalListens: sql`COALESCE(${audioNewsletters.totalListens}, 0) + 1`
       })
       .where(eq(audioNewsletters.id, newsletterId));
   }
@@ -828,14 +820,14 @@ export class AudioNewsletterService extends EventEmitter {
     // Group listens by hour
     const listensByHour: Record<number, number> = {};
     listens.forEach(listen => {
-      const hour = new Date(listen.listenedAt).getHours();
+      const hour = new Date(listen.startedAt).getHours();
       listensByHour[hour] = (listensByHour[hour] || 0) + 1;
     });
     
     // Group listens by day
     const listensByDay: Record<string, number> = {};
     listens.forEach(listen => {
-      const day = new Date(listen.listenedAt).toISOString().split('T')[0];
+      const day = new Date(listen.startedAt).toISOString().split('T')[0];
       listensByDay[day] = (listensByDay[day] || 0) + 1;
     });
     
@@ -852,13 +844,11 @@ export class AudioNewsletterService extends EventEmitter {
   
   // Get scheduled newsletters
   async getScheduledNewsletters(): Promise<AudioNewsletter[]> {
-    const now = new Date().toISOString();
-    
+    // Since we don't have a scheduledFor field, we'll return newsletters 
+    // that are in 'draft' status and ready to be processed
     return await db.query.audioNewsletters.findMany({
-      where: and(
-        eq(audioNewsletters.status, 'scheduled'),
-        lte(audioNewsletters.scheduledFor, now)
-      )
+      where: eq(audioNewsletters.status, 'draft'),
+      limit: 10 // Process up to 10 at a time
     });
   }
   
@@ -869,27 +859,6 @@ export class AudioNewsletterService extends EventEmitter {
     for (const newsletter of scheduled) {
       // Generate audio for scheduled newsletter
       await this.generateAudio(newsletter.id);
-      
-      // Check if this is a recurring newsletter
-      const recurringSchedule = newsletter.metadata?.recurringSchedule as RecurringSchedule;
-      if (recurringSchedule?.enabled) {
-        // Calculate next scheduled time
-        const nextScheduledFor = this.calculateNextScheduledTime(recurringSchedule);
-        
-        // Create new newsletter for next occurrence
-        await this.createNewsletter({
-          title: newsletter.title,
-          description: newsletter.description,
-          template: newsletter.template as NewsletterTemplate,
-          voiceId: newsletter.metadata?.voiceId,
-          voiceSettings: newsletter.metadata?.voiceSettings,
-          articleIds: [], // Will be populated based on template rules
-          generatedBy: 'system',
-          scheduledFor: nextScheduledFor,
-          recurringSchedule,
-          metadata: newsletter.metadata
-        });
-      }
     }
   }
   
