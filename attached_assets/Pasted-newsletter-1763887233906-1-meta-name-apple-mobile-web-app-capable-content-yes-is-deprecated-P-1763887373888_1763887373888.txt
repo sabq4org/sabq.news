@@ -1,0 +1,45 @@
+newsletter-1763887233906:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-CpBQn3KA.js:40 SyntaxError: Failed to execute 'addColorStop' on 'CanvasGradient': The value provided ('hsl(var(--primary) / 0.8)') could not be parsed as a color.
+    at index-CpBQn3KA.js:7802:194444
+    at index-CpBQn3KA.js:7802:194664
+    at _se (index-CpBQn3KA.js:40:24440)
+    at sk (index-CpBQn3KA.js:40:42750)
+    at rlt (index-CpBQn3KA.js:40:41568)
+    at Z1 (index-CpBQn3KA.js:40:40598)
+    at pwe (index-CpBQn3KA.js:40:37160)
+    at x1 (index-CpBQn3KA.js:38:3319)
+    at index-CpBQn3KA.js:40:34507
+Vde @ index-CpBQn3KA.js:40
+index-CpBQn3KA.js:38 Uncaught SyntaxError: Failed to execute 'addColorStop' on 'CanvasGradient': The value provided ('hsl(var(--primary) / 0.8)') could not be parsed as a color.
+    at index-CpBQn3KA.js:7802:194444
+    at index-CpBQn3KA.js:7802:194664
+    at _se (index-CpBQn3KA.js:40:24440)
+    at sk (index-CpBQn3KA.js:40:42750)
+    at rlt (index-CpBQn3KA.js:40:41568)
+    at Z1 (index-CpBQn3KA.js:40:40598)
+    at pwe (index-CpBQn3KA.js:40:37160)
+    at x1 (index-CpBQn3KA.js:38:3319)
+    at index-CpBQn3KA.js:40:34507
+
+
+newsletter-1763887233906:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-CpBQn3KA.js:40 SyntaxError: Failed to execute 'addColorStop' on 'CanvasGradient': The value provided ('hsl(var(--primary) / 0.8)') could not be parsed as a color.
+    at index-CpBQn3KA.js:7802:194444
+    at index-CpBQn3KA.js:7802:194664
+    at _se (index-CpBQn3KA.js:40:24440)
+    at sk (index-CpBQn3KA.js:40:42750)
+    at rlt (index-CpBQn3KA.js:40:41568)
+    at Z1 (index-CpBQn3KA.js:40:40598)
+    at pwe (index-CpBQn3KA.js:40:37160)
+    at x1 (index-CpBQn3KA.js:38:3319)
+    at index-CpBQn3KA.js:40:34507
+Vde @ index-CpBQn3KA.js:40
+index-CpBQn3KA.js:38 Uncaught SyntaxError: Failed to execute 'addColorStop' on 'CanvasGradient': The value provided ('hsl(var(--primary) / 0.8)') could not be parsed as a color.
+    at index-CpBQn3KA.js:7802:194444
+    at index-CpBQn3KA.js:7802:194664
+    at _se (index-CpBQn3KA.js:40:24440)
+    at sk (index-CpBQn3KA.js:40:42750)
+    at rlt (index-CpBQn3KA.js:40:41568)
+    at Z1 (index-CpBQn3KA.js:40:40598)
+    at pwe (index-CpBQn3KA.js:40:37160)
+    at x1 (index-CpBQn3KA.js:38:3319)

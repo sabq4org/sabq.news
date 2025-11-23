@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { 
   Plus, Edit, Trash, PlayCircle, Eye, BarChart, Radio, Clock, Calendar,
   TrendingUp, Headphones, CheckCircle, AlertCircle, Filter, CalendarDays,
-  Loader2, Sparkles, Timer, Search
+  Loader2, Sparkles, Timer, Search, Pause
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -241,6 +241,11 @@ export default function AudioNewslettersDashboard() {
   const [templateFilter, setTemplateFilter] = useState("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  
+  // Audio player state management
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [audioLoading, setAudioLoading] = useState<string | null>(null);
 
   const { data: newsletters, isLoading } = useQuery<AudioNewsletter[]>({
     queryKey: ["/api/audio-newsletters/admin"],
@@ -319,6 +324,85 @@ export default function AudioNewslettersDashboard() {
       });
     },
   });
+
+  // Handle audio playback - stop current audio if playing, start new one
+  const handlePlayAudio = (newsletterId: string, audioUrl: string) => {
+    // If clicking the same newsletter that's playing, pause it
+    if (playingId === newsletterId && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlayingId(null);
+      return;
+    }
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    // Start loading new audio
+    setAudioLoading(newsletterId);
+    setPlayingId(null);
+
+    try {
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.addEventListener('loadeddata', () => {
+        setAudioLoading(null);
+        setPlayingId(newsletterId);
+      });
+
+      audio.addEventListener('ended', () => {
+        setPlayingId(null);
+        audioRef.current = null;
+      });
+
+      audio.addEventListener('error', (err) => {
+        console.error('Audio playback error:', err);
+        setAudioLoading(null);
+        setPlayingId(null);
+        audioRef.current = null;
+        toast({
+          title: "خطأ في التشغيل",
+          description: "فشل تشغيل الملف الصوتي. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+      });
+
+      audio.play().catch(err => {
+        console.error('Failed to play audio:', err);
+        setAudioLoading(null);
+        setPlayingId(null);
+        audioRef.current = null;
+        toast({
+          title: "خطأ في التشغيل",
+          description: "فشل تشغيل الملف الصوتي. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error('Error creating audio element:', error);
+      setAudioLoading(null);
+      audioRef.current = null;
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحميل الملف الصوتي",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string; icon?: React.ElementType }> = {
@@ -700,6 +784,39 @@ export default function AudioNewslettersDashboard() {
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p>نشر</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+
+                              {(newsletter.status === "published" || newsletter.status === "completed") && newsletter.audioUrl && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => handlePlayAudio(newsletter.id, newsletter.audioUrl!)}
+                                        disabled={audioLoading === newsletter.id}
+                                        data-testid={`button-play-${newsletter.id}`}
+                                      >
+                                        {audioLoading === newsletter.id ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : playingId === newsletter.id ? (
+                                          <Pause className="h-4 w-4" />
+                                        ) : (
+                                          <Headphones className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        {audioLoading === newsletter.id
+                                          ? "جاري التحميل..."
+                                          : playingId === newsletter.id
+                                          ? "إيقاف مؤقت"
+                                          : "استماع"}
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
