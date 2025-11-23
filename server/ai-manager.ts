@@ -127,6 +127,8 @@ class AIManager {
     // Always use GPT-5.1 settings (no temperature, use max_completion_tokens)
     completionParams.max_completion_tokens = config.maxTokens || 4000;
     
+    console.log('[AI Manager] completionParams:', JSON.stringify(completionParams, null, 2));
+    
     const response = await this.openai.chat.completions.create(completionParams);
 
     return {
