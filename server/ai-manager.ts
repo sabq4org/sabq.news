@@ -116,20 +116,16 @@ class AIManager {
     // Use gpt-5.1 for all OpenAI models unless specifically o3-mini
     const model = config.model === 'o3-mini' ? 'o3-mini' : 'gpt-5.1';
     
+    console.log(`[AI Manager] config.model="${config.model}", resolved model="${model}"`);
+    
     // GPT-5.1 specific configuration: uses max_completion_tokens and doesn't support temperature
     const completionParams: any = {
       model,
       messages: [{ role: 'user', content: prompt }],
     };
     
-    if (model === 'gpt-5.1') {
-      // GPT-5.1: use max_completion_tokens, no temperature (only default 1 is supported)
-      completionParams.max_completion_tokens = config.maxTokens || 4000;
-    } else {
-      // Other models: use max_tokens and temperature
-      completionParams.max_tokens = config.maxTokens || 500;
-      completionParams.temperature = config.temperature || 0.7;
-    }
+    // Always use GPT-5.1 settings (no temperature, use max_completion_tokens)
+    completionParams.max_completion_tokens = config.maxTokens || 4000;
     
     const response = await this.openai.chat.completions.create(completionParams);
 

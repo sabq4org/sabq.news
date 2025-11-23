@@ -105,8 +105,7 @@ Rules:
     const response = await aiManager.generate(prompt, {
       provider: 'openai',
       model: 'gpt-5.1',
-      maxTokens: 4000,
-      temperature: 0.7
+      maxTokens: 4000
     });
 
     if (response.error) {
@@ -211,8 +210,20 @@ Rules:
   ): Promise<InsertArticle> {
     const now = new Date();
     
+    // Generate slug from title (max 140 chars to leave room for suffix)
+    const baseSlug = generatedContent.title
+      .toLowerCase()
+      .replace(/[^\u0600-\u06FF\w\s-]/g, '') // Keep Arabic, alphanumeric, spaces, hyphens
+      .trim()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .substring(0, 140); // Max 140 chars (leaving 10 for suffix)
+    
+    const { nanoid } = await import('nanoid');
+    const slug = baseSlug + '-' + nanoid(8); // Total max 150 chars
+    
     return {
       title: generatedContent.title,
+      slug,
       content: generatedContent.content,
       summary: generatedContent.summary,
       locale: task.locale,
