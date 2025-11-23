@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db';
-import { eq, desc, and, or, gte, lte, ilike, inArray, isNotNull } from 'drizzle-orm';
+import { eq, desc, and, or, gte, lte, ilike, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   audioNewsletters,
   audioNewsletterArticles,
@@ -133,7 +133,7 @@ router.get('/public', async (req, res) => {
     
     // Get total count
     const [{ count }] = await db
-      .select({ count: db.sql`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(audioNewsletters)
       .where(whereClause);
     
@@ -141,7 +141,7 @@ router.get('/public', async (req, res) => {
     const categories = await db
       .select({
         template: audioNewsletters.template,
-        count: db.sql`count(*)`
+        count: sql`count(*)`
       })
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'published'))
@@ -283,7 +283,7 @@ router.get('/newsletters', rbacRequireAuth, async (req, res) => {
     
     // Get total count
     const [{ count }] = await db
-      .select({ count: db.sql`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(audioNewsletters)
       .where(whereClause);
     
@@ -705,7 +705,7 @@ router.get('/public/:slug', async (req, res) => {
     if (!(req as any).user?.id) {
       await db.update(audioNewsletters)
         .set({
-          totalListens: db.sql`${audioNewsletters.totalListens} + 1`
+          totalListens: sql`${audioNewsletters.totalListens} + 1`
         })
         .where(eq(audioNewsletters.id, newsletter.id));
     }
@@ -875,26 +875,26 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
     // Get total newsletters
     const [{ totalNewsletters }] = await db
-      .select({ totalNewsletters: db.sql`count(*)` })
+      .select({ totalNewsletters: sql`count(*)` })
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'published'));
     
     // Get total listens and unique listeners
     const listensData = await db
       .select({
-        totalListens: db.sql`count(*)`,
-        uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-        totalDuration: db.sql`sum(${audioNewsletterListens.duration})`,
-        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+        totalListens: sql`count(*)`,
+        uniqueListeners: sql`count(distinct ${audioNewsletterListens.userId})`,
+        totalDuration: sql`COALESCE(sum(${audioNewsletterListens.duration}), 0)`,
+        avgCompletion: sql`COALESCE(avg(${audioNewsletterListens.completionPercentage}), 0)`
       })
       .from(audioNewsletterListens)
       .where(dateClause);
@@ -905,14 +905,14 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     
     const [{ activeListeners }] = await db
       .select({
-        activeListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`
+        activeListeners: sql`count(distinct ${audioNewsletterListens.userId})`
       })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.listenedAt, thirtyDaysAgo.toISOString()));
+      .where(gte(audioNewsletterListens.startedAt, thirtyDaysAgo.toISOString()));
     
     // Get scheduled newsletters count
     const [{ scheduledCount }] = await db
-      .select({ scheduledCount: db.sql`count(*)` })
+      .select({ scheduledCount: sql`count(*)` })
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'scheduled'));
     
@@ -921,7 +921,7 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     today.setHours(0, 0, 0, 0);
     
     const [{ publishedToday }] = await db
-      .select({ publishedToday: db.sql`count(*)` })
+      .select({ publishedToday: sql`count(*)` })
       .from(audioNewsletters)
       .where(
         and(
@@ -937,17 +937,17 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
     
     const [{ thisWeekListens }] = await db
-      .select({ thisWeekListens: db.sql`count(*)` })
+      .select({ thisWeekListens: sql`count(*)` })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString()));
+      .where(gte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString()));
     
     const [{ lastWeekListens }] = await db
-      .select({ lastWeekListens: db.sql`count(*)` })
+      .select({ lastWeekListens: sql`count(*)` })
       .from(audioNewsletterListens)
       .where(
         and(
-          gte(audioNewsletterListens.listenedAt, twoWeeksAgo.toISOString()),
-          lte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString())
+          gte(audioNewsletterListens.startedAt, twoWeeksAgo.toISOString()),
+          lte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString())
         )
       );
     
@@ -958,7 +958,7 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
     const topNewsletter = await db
       .select({
         title: audioNewsletters.title,
-        listens: db.sql`count(${audioNewsletterListens.id})`
+        listens: sql`count(${audioNewsletterListens.id})`
       })
       .from(audioNewsletters)
       .leftJoin(
@@ -967,7 +967,7 @@ router.get('/analytics/overview', requirePermission("analytics.view"), async (re
       )
       .where(eq(audioNewsletters.status, 'published'))
       .groupBy(audioNewsletters.id, audioNewsletters.title)
-      .orderBy(db.sql`count(${audioNewsletterListens.id}) desc`)
+      .orderBy(sql`count(${audioNewsletterListens.id}) desc`)
       .limit(1);
     
     res.json({
@@ -1001,15 +1001,15 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
     } else {
       // Default to last 30 days if no end date
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      dateConditions.push(gte(audioNewsletterListens.listenedAt, thirtyDaysAgo.toISOString()));
+      dateConditions.push(gte(audioNewsletterListens.startedAt, thirtyDaysAgo.toISOString()));
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -1020,19 +1020,19 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
     switch (period) {
       case 'hourly':
         dateFormat = 'YYYY-MM-DD HH24:00';
-        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-MM-DD HH24:00')`;
+        groupByExpression = sql`to_char(${audioNewsletterListens.startedAt}::timestamp, 'YYYY-MM-DD HH24:00')`;
         break;
       case 'weekly':
         dateFormat = 'YYYY-WW';
-        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-WW')`;
+        groupByExpression = sql`to_char(${audioNewsletterListens.startedAt}::timestamp, 'YYYY-WW')`;
         break;
       case 'monthly':
         dateFormat = 'YYYY-MM';
-        groupByExpression = db.sql`to_char(${audioNewsletterListens.listenedAt}::timestamp, 'YYYY-MM')`;
+        groupByExpression = sql`to_char(${audioNewsletterListens.startedAt}::timestamp, 'YYYY-MM')`;
         break;
       default: // daily
         dateFormat = 'YYYY-MM-DD';
-        groupByExpression = db.sql`date(${audioNewsletterListens.listenedAt})`;
+        groupByExpression = sql`date(${audioNewsletterListens.startedAt})`;
     }
     
     // Get trends data based on metric
@@ -1043,8 +1043,8 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
         trendsQuery = db
           .select({
             date: groupByExpression,
-            value: db.sql`avg(${audioNewsletterListens.completionRate})`,
-            count: db.sql`count(*)`
+            value: sql`avg(${audioNewsletterListens.completionPercentage})`,
+            count: sql`count(*)`
           })
           .from(audioNewsletterListens)
           .where(dateClause)
@@ -1056,9 +1056,9 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
         trendsQuery = db
           .select({
             date: groupByExpression,
-            value: db.sql`avg(${audioNewsletterListens.duration})`,
-            total: db.sql`sum(${audioNewsletterListens.duration})`,
-            count: db.sql`count(*)`
+            value: sql`avg(${audioNewsletterListens.duration})`,
+            total: sql`sum(${audioNewsletterListens.duration})`,
+            count: sql`count(*)`
           })
           .from(audioNewsletterListens)
           .where(dateClause)
@@ -1070,8 +1070,8 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
         trendsQuery = db
           .select({
             date: groupByExpression,
-            value: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-            count: db.sql`count(*)`
+            value: sql`count(distinct ${audioNewsletterListens.userId})`,
+            count: sql`count(*)`
           })
           .from(audioNewsletterListens)
           .where(dateClause)
@@ -1083,8 +1083,8 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
         trendsQuery = db
           .select({
             date: groupByExpression,
-            value: db.sql`count(*)`,
-            uniqueUsers: db.sql`count(distinct ${audioNewsletterListens.userId})`
+            value: sql`count(*)`,
+            uniqueUsers: sql`count(distinct ${audioNewsletterListens.userId})`
           })
           .from(audioNewsletterListens)
           .where(dateClause)
@@ -1097,23 +1097,23 @@ router.get('/analytics/trends', requirePermission("analytics.view"), async (req,
     // Get peak listening hours (for heatmap)
     const hoursData = await db
       .select({
-        hour: db.sql`extract(hour from ${audioNewsletterListens.listenedAt}::timestamp)`,
-        dayOfWeek: db.sql`extract(dow from ${audioNewsletterListens.listenedAt}::timestamp)`,
-        count: db.sql`count(*)`
+        hour: sql`extract(hour from ${audioNewsletterListens.startedAt}::timestamp)`,
+        dayOfWeek: sql`extract(dow from ${audioNewsletterListens.startedAt}::timestamp)`,
+        count: sql`count(*)`
       })
       .from(audioNewsletterListens)
       .where(dateClause)
       .groupBy(
-        db.sql`extract(hour from ${audioNewsletterListens.listenedAt}::timestamp)`,
-        db.sql`extract(dow from ${audioNewsletterListens.listenedAt}::timestamp)`
+        sql`extract(hour from ${audioNewsletterListens.startedAt}::timestamp)`,
+        sql`extract(dow from ${audioNewsletterListens.startedAt}::timestamp)`
       );
     
     // Get device type distribution
     const deviceData = await db
       .select({
         deviceType: audioNewsletterListens.deviceType,
-        count: db.sql`count(*)`,
-        percentage: db.sql`count(*)::float / (select count(*) from ${audioNewsletterListens} where ${dateClause}) * 100`
+        count: sql`count(*)`,
+        percentage: sql`count(*)::float / (select count(*) from ${audioNewsletterListens} where ${dateClause}) * 100`
       })
       .from(audioNewsletterListens)
       .where(dateClause)
@@ -1157,10 +1157,10 @@ router.get('/analytics/top-newsletters', requirePermission("analytics.view"), as
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -1168,27 +1168,26 @@ router.get('/analytics/top-newsletters', requirePermission("analytics.view"), as
     let orderByExpression;
     switch (sortBy) {
       case 'completion':
-        orderByExpression = db.sql`avg(${audioNewsletterListens.completionRate}) desc`;
+        orderByExpression = sql`avg(${audioNewsletterListens.completionPercentage}) desc`;
         break;
       case 'duration':
-        orderByExpression = db.sql`avg(${audioNewsletterListens.duration}) desc`;
+        orderByExpression = sql`avg(${audioNewsletterListens.duration}) desc`;
         break;
       default: // listens
-        orderByExpression = db.sql`count(${audioNewsletterListens.id}) desc`;
+        orderByExpression = sql`count(${audioNewsletterListens.id}) desc`;
     }
     
     const topNewsletters = await db
       .select({
         id: audioNewsletters.id,
         title: audioNewsletters.title,
-        template: audioNewsletters.template,
         publishedAt: audioNewsletters.publishedAt,
         duration: audioNewsletters.duration,
-        totalListens: db.sql`count(${audioNewsletterListens.id})`,
-        uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`,
-        avgDuration: db.sql`avg(${audioNewsletterListens.duration})`,
-        totalDuration: db.sql`sum(${audioNewsletterListens.duration})`
+        totalListens: sql`count(${audioNewsletterListens.id})`,
+        uniqueListeners: sql`count(distinct ${audioNewsletterListens.userId})`,
+        avgCompletion: sql`COALESCE(avg(${audioNewsletterListens.completionPercentage}), 0)`,
+        avgDuration: sql`COALESCE(avg(${audioNewsletterListens.duration}), 0)`,
+        totalDuration: sql`COALESCE(sum(${audioNewsletterListens.duration}), 0)`
       })
       .from(audioNewsletters)
       .leftJoin(
@@ -1239,10 +1238,10 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
     // Build date conditions
     const dateConditions = [];
     if (startDate) {
-      dateConditions.push(gte(audioNewsletterListens.listenedAt, startDate as string));
+      dateConditions.push(gte(audioNewsletterListens.startedAt, startDate as string));
     }
     if (endDate) {
-      dateConditions.push(lte(audioNewsletterListens.listenedAt, endDate as string));
+      dateConditions.push(lte(audioNewsletterListens.startedAt, endDate as string));
     }
     const dateClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
     
@@ -1261,9 +1260,9 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
             duration: audioNewsletters.duration,
             publishedAt: audioNewsletters.publishedAt,
             createdAt: audioNewsletters.createdAt,
-            totalListens: db.sql`count(${audioNewsletterListens.id})`,
-            uniqueListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-            avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+            totalListens: sql`count(${audioNewsletterListens.id})`,
+            uniqueListeners: sql`count(distinct ${audioNewsletterListens.userId})`,
+            avgCompletion: sql`avg(${audioNewsletterListens.completionPercentage})`
           })
           .from(audioNewsletters)
           .leftJoin(
@@ -1296,9 +1295,9 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
           .select({
             newsletterTitle: audioNewsletters.title,
             userId: audioNewsletterListens.userId,
-            listenedAt: audioNewsletterListens.listenedAt,
+            listenedAt: audioNewsletterListens.startedAt,
             duration: audioNewsletterListens.duration,
-            completionRate: audioNewsletterListens.completionRate,
+            completionRate: audioNewsletterListens.completionPercentage,
             deviceType: audioNewsletterListens.deviceType,
             userAgent: audioNewsletterListens.userAgent
           })
@@ -1308,7 +1307,7 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
             eq(audioNewsletterListens.newsletterId, audioNewsletters.id)
           )
           .where(dateClause)
-          .orderBy(desc(audioNewsletterListens.listenedAt));
+          .orderBy(desc(audioNewsletterListens.startedAt));
         
         // Create CSV
         csvData = 'Newsletter,User ID,Listened At,Duration (seconds),Completion (%),Device Type,User Agent\n';
@@ -1323,17 +1322,17 @@ router.get('/analytics/export', requirePermission("analytics.view"), async (req,
         // Export summary statistics
         const stats = await db
           .select({
-            date: db.sql`date(${audioNewsletterListens.listenedAt})`,
-            listens: db.sql`count(*)`,
-            uniqueUsers: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-            avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`,
-            avgDuration: db.sql`avg(${audioNewsletterListens.duration})`,
-            totalDuration: db.sql`sum(${audioNewsletterListens.duration})`
+            date: sql`date(${audioNewsletterListens.startedAt})`,
+            listens: sql`count(*)`,
+            uniqueUsers: sql`count(distinct ${audioNewsletterListens.userId})`,
+            avgCompletion: sql`avg(${audioNewsletterListens.completionPercentage})`,
+            avgDuration: sql`avg(${audioNewsletterListens.duration})`,
+            totalDuration: sql`sum(${audioNewsletterListens.duration})`
           })
           .from(audioNewsletterListens)
           .where(dateClause)
-          .groupBy(db.sql`date(${audioNewsletterListens.listenedAt})`)
-          .orderBy(db.sql`date(${audioNewsletterListens.listenedAt})`);
+          .groupBy(sql`date(${audioNewsletterListens.startedAt})`)
+          .orderBy(sql`date(${audioNewsletterListens.startedAt})`);
         
         // Create CSV
         csvData = 'Date,Total Listens,Unique Users,Avg Completion (%),Avg Duration (seconds),Total Hours\n';
@@ -1399,7 +1398,7 @@ router.post('/newsletters/:id/track', async (req, res) => {
     await db
       .update(audioNewsletters)
       .set({
-        listenCount: db.sql`${audioNewsletters.listenCount} + 1`
+        listenCount: sql`${audioNewsletters.listenCount} + 1`
       })
       .where(eq(audioNewsletters.id, req.params.id));
     
@@ -1429,12 +1428,12 @@ router.get('/admin', requirePermission("articles.create"), async (req, res) => {
         publishedAt: audioNewsletters.publishedAt,
         createdAt: audioNewsletters.createdAt,
         totalListens: audioNewsletters.listenCount,
-        averageCompletion: db.sql`(
+        averageCompletion: sql`(
           select avg(completion_rate) 
           from ${audioNewsletterListens} 
           where newsletter_id = ${audioNewsletters.id}
         )`,
-        articlesCount: db.sql`(
+        articlesCount: sql`(
           select count(*) 
           from ${audioNewsletterArticles} 
           where newsletter_id = ${audioNewsletters.id}
@@ -1459,10 +1458,10 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
     // Get totals
     const [totals] = await db
       .select({
-        totalNewsletters: db.sql`count(distinct ${audioNewsletters.id})`,
-        totalListens: db.sql`count(${audioNewsletterListens.id})`,
-        activeListeners: db.sql`count(distinct ${audioNewsletterListens.userId})`,
-        avgCompletion: db.sql`avg(${audioNewsletterListens.completionRate})`
+        totalNewsletters: sql`count(distinct ${audioNewsletters.id})`,
+        totalListens: sql`count(${audioNewsletterListens.id})`,
+        activeListeners: sql`count(distinct ${audioNewsletterListens.userId})`,
+        avgCompletion: sql`avg(${audioNewsletterListens.completionPercentage})`
       })
       .from(audioNewsletters)
       .leftJoin(
@@ -1473,7 +1472,7 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
     
     // Get scheduled count
     const [{ scheduledCount }] = await db
-      .select({ scheduledCount: db.sql`count(*)` })
+      .select({ scheduledCount: sql`count(*)` })
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'scheduled'));
     
@@ -1482,7 +1481,7 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
     today.setHours(0, 0, 0, 0);
     
     const [{ publishedToday }] = await db
-      .select({ publishedToday: db.sql`count(*)` })
+      .select({ publishedToday: sql`count(*)` })
       .from(audioNewsletters)
       .where(
         and(
@@ -1498,17 +1497,17 @@ router.get('/analytics', requirePermission("analytics.view"), async (req, res) =
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
     
     const [{ thisWeek }] = await db
-      .select({ thisWeek: db.sql`count(*)` })
+      .select({ thisWeek: sql`count(*)` })
       .from(audioNewsletterListens)
-      .where(gte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString()));
+      .where(gte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString()));
     
     const [{ lastWeek }] = await db
-      .select({ lastWeek: db.sql`count(*)` })
+      .select({ lastWeek: sql`count(*)` })
       .from(audioNewsletterListens)
       .where(
         and(
-          gte(audioNewsletterListens.listenedAt, twoWeeksAgo.toISOString()),
-          lte(audioNewsletterListens.listenedAt, oneWeekAgo.toISOString())
+          gte(audioNewsletterListens.startedAt, twoWeeksAgo.toISOString()),
+          lte(audioNewsletterListens.startedAt, oneWeekAgo.toISOString())
         )
       );
     

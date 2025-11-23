@@ -70,7 +70,6 @@ interface TrendsData {
 interface TopNewsletter {
   id: string;
   title: string;
-  template: string;
   publishedAt: string;
   totalListens: number;
   uniqueListeners: number;
@@ -398,8 +397,7 @@ export default function AudioNewsletterAnalytics() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>العنوان</TableHead>
-                    <TableHead>القالب</TableHead>
+                    <TableHead colSpan={2}>العنوان</TableHead>
                     <TableHead className="text-center">الاستماعات</TableHead>
                     <TableHead className="text-center">مستمعون فريدون</TableHead>
                     <TableHead className="text-center">معدل الإكمال</TableHead>
@@ -410,13 +408,8 @@ export default function AudioNewsletterAnalytics() {
                 <TableBody>
                   {topNewsletters?.newsletters.map((newsletter) => (
                     <TableRow key={newsletter.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium" colSpan={2}>
                         {newsletter.title}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {templateLabels[newsletter.template] || newsletter.template}
-                        </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         {newsletter.totalListens.toLocaleString()}
@@ -426,14 +419,14 @@ export default function AudioNewsletterAnalytics() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <span>{newsletter.avgCompletion.toFixed(1)}%</span>
+                          <span>{(newsletter.avgCompletion || 0).toFixed(1)}%</span>
                           {newsletter.avgCompletion >= 75 && (
                             <div className="h-2 w-2 rounded-full bg-green-500" />
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        {newsletter.totalHours}
+                        {newsletter.totalHours || 0}
                       </TableCell>
                       <TableCell className="text-left text-muted-foreground">
                         {format(new Date(newsletter.publishedAt), "dd MMM yyyy", { locale: ar })}
