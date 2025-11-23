@@ -84,6 +84,16 @@ const trackListenSchema = z.object({
   completionRate: z.number().min(0).max(100).optional()
 });
 
+const testVoiceSchema = z.object({
+  voiceId: z.string(),
+  sampleText: z.string().optional(),
+  voiceSettings: z.object({
+    stability: z.number().min(0).max(1).optional(),
+    similarityBoost: z.number().min(0).max(1).optional(),
+    speed: z.number().min(0.5).max(2).optional()
+  }).optional()
+});
+
 // Get public newsletters (no auth required)
 router.get('/public', async (req, res) => {
   try {
@@ -628,26 +638,49 @@ router.get('/voices', requirePermission("articles.create"), async (req, res) => 
     const elevenLabsService = await import('../services/elevenlabs').then(m => m.getElevenLabsService());
     const voices = await elevenLabsService.getVoices();
     
-    // Add preset voices
-    const presetVoices = Object.entries(ARABIC_VOICES).map(([key, config]) => ({
-      id: config.id,
-      name: config.name,
-      preset: key,
-      settings: config.settings,
-      category: 'preset'
-    }));
-    
+    // Return curated Arabic voices
     res.json({
-      presets: presetVoices,
-      custom: voices.filter(v => 
-        v.labels?.language === 'ar' || 
-        v.labels?.accent === 'arabic' ||
-        v.category === 'multilingual'
-      )
+      voices: voices
     });
   } catch (error) {
     console.error('Error fetching voices:', error);
     res.status(500).json({ error: 'Failed to fetch voices' });
+  }
+});
+
+// Test voice with sample text
+router.post('/voices/test', requirePermission("articles.create"), async (req, res) => {
+  try {
+    const { voiceId, sampleText, voiceSettings } = testVoiceSchema.parse(req.body);
+    
+    const elevenLabsService = await import('../services/elevenlabs').then(m => m.getElevenLabsService());
+    
+    // Create voice settings
+    const settings = voiceSettings ? {
+      stability: voiceSettings.stability ?? 0.5,
+      similarity_boost: voiceSettings.similarityBoost ?? 0.75,
+      use_speaker_boost: true
+    } : undefined;
+    
+    // Generate test audio
+    const audioBuffer = await elevenLabsService.testVoice(
+      voiceId,
+      sampleText || 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار من سبق اليوم.'
+    );
+    
+    // Return audio as base64 for immediate playback
+    const base64Audio = audioBuffer.toString('base64');
+    
+    res.json({
+      success: true,
+      audio: `data:audio/mpeg;base64,${base64Audio}`
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid input', details: error.errors });
+    }
+    console.error('Error testing voice:', error);
+    res.status(500).json({ error: 'Failed to test voice', message: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 

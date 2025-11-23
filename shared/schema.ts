@@ -3302,6 +3302,9 @@ export const audioNewsletters = pgTable("audio_newsletters", {
   publishedAt: timestamp("published_at"),
   scheduledFor: timestamp("scheduled_for"), // موعد النشر المجدول
   
+  // Template type
+  template: text("template"), // morning_brief, evening_digest, etc.
+  
   // Additional metadata (retry count, recurrence settings, etc)
   metadata: jsonb("metadata").$type<{
     retryCount?: number;
@@ -3312,6 +3315,7 @@ export const audioNewsletters = pgTable("audio_newsletters", {
   }>(),
   
   // Analytics
+  listenCount: integer("listen_count").default(0).notNull(), // Total listen count (alias for totalListens)
   totalListens: integer("total_listens").default(0).notNull(),
   uniqueListeners: integer("unique_listeners").default(0).notNull(),
   averageCompletionRate: real("average_completion_rate").default(0).notNull(), // 0-100%

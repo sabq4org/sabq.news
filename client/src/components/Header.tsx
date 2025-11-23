@@ -29,7 +29,7 @@ import logoImage from "@assets/Artboard 5@3x-8_1759572465922.png";
 import type { Category } from "@shared/schema";
 
 interface HeaderProps {
-  user?: { name?: string | null; email?: string; role?: string; profileImageUrl?: string | null };
+  user?: { name?: string | null; email?: string; role?: string; profileImageUrl?: string | null } | null;
   onMenuClick?: () => void;
 }
 

@@ -18,7 +18,89 @@ export interface Voice {
   preview_url?: string;
   category?: string;
   labels?: Record<string, string>;
+  description?: string;
+  gender?: string;
+  accent?: string;
+  age?: string;
+  use_case?: string;
 }
+
+// Curated Arabic voices for news broadcasting
+export const ARABIC_NEWS_VOICES = [
+  // Male Voices - Professional News Anchors
+  {
+    voice_id: 'pNInz6obpgDQGcFmaJgB',
+    name: 'آدم - صوت إخباري رسمي',
+    gender: 'male',
+    accent: 'neutral',
+    age: 'middle_aged',
+    use_case: 'formal_news',
+    description: 'صوت رجالي رسمي ومتزن، مثالي للنشرات الإخبارية الرئيسية'
+  },
+  {
+    voice_id: 'onwK4e9ZLuTAKqWW03F9',
+    name: 'دانيال - مذيع رياضي حماسي',
+    gender: 'male',
+    accent: 'neutral',
+    age: 'young',
+    use_case: 'sports_news',
+    description: 'صوت شاب حيوي وحماسي، ممتاز للأخبار الرياضية والتقارير الميدانية'
+  },
+  {
+    voice_id: 'VR6AewLTigWG4xSOukaG',
+    name: 'أرنولد - محلل سياسي',
+    gender: 'male',
+    accent: 'neutral',
+    age: 'mature',
+    description: 'صوت ناضج وواثق، مناسب للتحليلات السياسية والاقتصادية'
+  },
+  {
+    voice_id: 'ErXwobaYiN019PkySvjV',
+    name: 'أنتوني - مقدم برامج',
+    gender: 'male',
+    accent: 'neutral',
+    age: 'middle_aged',
+    use_case: 'talk_shows',
+    description: 'صوت ودود وجذاب، رائع للبرامج الحوارية والمقابلات'
+  },
+  // Female Voices - Professional News Anchors
+  {
+    voice_id: 'EXAVITQu4vr4xnSDxMaL',
+    name: 'بيلا - مذيعة أخبار رئيسية',
+    gender: 'female',
+    accent: 'neutral',
+    age: 'middle_aged',
+    use_case: 'formal_news',
+    description: 'صوت نسائي رسمي وواضح، ممتاز للنشرات الإخبارية المسائية'
+  },
+  {
+    voice_id: 'ThT5KcBeYPX3keUQqHPh',
+    name: 'دوروثي - مراسلة ميدانية',
+    gender: 'female',
+    accent: 'neutral',
+    age: 'young',
+    use_case: 'field_reports',
+    description: 'صوت نسائي شاب ونشيط، مثالي للتقارير الميدانية والأخبار العاجلة'
+  },
+  {
+    voice_id: 'MF3mGyEYCl7XYWbV9V6O',
+    name: 'إيرين - محللة اقتصادية',
+    gender: 'female',
+    accent: 'neutral',
+    age: 'mature',
+    use_case: 'business_news',
+    description: 'صوت نسائي محترف ومتمكن، رائع للأخبار الاقتصادية والتحليلات'
+  },
+  {
+    voice_id: 'AZnzlk1XvdvUeBnXmlld',
+    name: 'دومي - مقدمة صباحية',
+    gender: 'female',
+    accent: 'neutral',
+    age: 'young',
+    use_case: 'morning_shows',
+    description: 'صوت نسائي مشرق ومبهج، مثالي للنشرات الصباحية'
+  }
+];
 
 export class ElevenLabsService {
   private apiKey: string;
@@ -94,23 +176,21 @@ export class ElevenLabsService {
 
   async getVoices(): Promise<Voice[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/voices`, {
-        method: 'GET',
-        headers: {
-          'xi-api-key': this.apiKey
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch voices: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.voices || [];
+      // Return curated Arabic voices instead of fetching all voices
+      return ARABIC_NEWS_VOICES;
     } catch (error) {
       console.error('ElevenLabs get voices error:', error);
       throw new Error(`Failed to fetch voices: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // Test voice with sample text
+  async testVoice(voiceId: string, sampleText: string = 'مرحباً، هذا اختبار للصوت. سنقرأ لكم أهم الأخبار اليوم.'): Promise<Buffer> {
+    return this.textToSpeech({
+      text: sampleText,
+      voiceId,
+      model: 'eleven_flash_v2_5' // Use Flash v2.5 for faster preview
+    }, 15000); // 15 second timeout for preview
   }
 
   async getVoiceById(voiceId: string): Promise<Voice | null> {
