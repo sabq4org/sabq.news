@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
@@ -129,11 +129,9 @@ export default function IFoxContentGenerator() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950" dir="rtl">
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-6">
+    <IFoxLayout>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -524,10 +522,6 @@ export default function IFoxContentGenerator() {
             </div>
           </div>
         </ScrollArea>
-      </div>
-
-      {/* Sidebar */}
-      <IFoxSidebar className="hidden lg:block" />
-    </div>
+    </IFoxLayout>
   );
 }

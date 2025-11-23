@@ -189,10 +189,10 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
     <motion.div
       className={cn(
         "w-64 h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950",
-        "border-l border-white/10",
+        "border-r border-white/10",
         className
       )}
-      initial={{ x: 100, opacity: 0 }}
+      initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
@@ -329,11 +329,6 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
                       {item.badge && (
                         <span className="px-2 py-0.5 text-xs bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-full">
                           {item.badge}
-                        </span>
-                      )}
-                      {item.titleEn && (
-                        <span className="text-xs text-white/40 group-hover:text-white/60">
-                          {item.titleEn}
                         </span>
                       )}
                     </Button>
