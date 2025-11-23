@@ -1,0 +1,113 @@
+2025-11-23 12:25:59.34
+e37aaa38
+User
+[NotificationWorker] Starting notification worker...
+
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[NotificationWorker] Notification worker started successfully
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[ScheduledPublisher] Scheduled article publisher started successfully
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[AnnouncementScheduler] Announcement scheduler started successfully
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[REC WORKER] Smart recommendation worker started successfully
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[DigestWorker] Daily digest worker started successfully
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[NotificationWorker] Starting queue processing...
+2025-11-23 12:25:59.36
+e37aaa38
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-23 12:25:59.41
+e37aaa38
+User
+[Server] ✅ Job queue handlers registered successfully
+2025-11-23 12:25:59.42
+e37aaa38
+User
+[Seasonal Categories Job] ⏰ Seasonal categories job scheduled (every 6 hours)
+2025-11-23 12:25:59.42
+e37aaa38
+User
+[Dynamic Categories] 🔥 Updating "الآن" category...
+2025-11-23 12:25:59.42
+e37aaa38
+User
+[Dynamic Categories] 🔄 Starting update cycle...
+2025-11-23 12:25:59.42
+e37aaa38
+User
+[Dynamic Categories Job] 🚀 Running initial update...
+2025-11-23 12:25:59.42
+e37aaa38
+User
+[Dynamic Categories Job] ⏰ Job scheduled (every 60 minutes)
+2025-11-23 12:25:59.43
+e37aaa38
+User
+📻 Initializing audio newsletter job scheduler...
+2025-11-23 12:25:59.43
+e37aaa38
+User
+[Campaign Daily Reset Job] ⏰ Job scheduled (every day at midnight)
+2025-11-23 12:25:59.45
+e37aaa38
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-23 12:25:59.45
+e37aaa38
+User
+✅ Audio newsletter jobs initialized
+2025-11-23 12:25:59.45
+e37aaa38
+User
+[Server] ✅ Audio newsletter jobs started successfully
+2025-11-23 12:25:59.45
+e37aaa38
+User
+[NewsletterScheduler] Starting scheduled jobs
+2025-11-23 12:25:59.46
+e37aaa38
+User
+[NewsletterScheduler] Scheduled job: newsletter_morning_brief with cron: 0 6 * * *
+2025-11-23 12:25:59.46
+e37aaa38
+User
+[NewsletterScheduler] Scheduled job: newsletter_evening_digest with cron: 0 20 * * *
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[NewsletterScheduler] Started 3 scheduled jobs
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[Server] ✅ Newsletter scheduler started successfully
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[Server] - weekly_roundup: 0 10 * * 0 (تحليل معمق لأبرز أحداث الأسبوع)
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[NewsletterScheduler] Scheduled job: newsletter_weekly_roundup with cron: 0 10 * * 0
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[Server] - morning_brief: 0 6 * * * (أبرز أخبار اليوم لبداية يومك)
+2025-11-23 12:25:59.47
+e37aaa38
+User
+[Server] 🔄 Scheduler is RUNNING
