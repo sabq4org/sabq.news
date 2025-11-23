@@ -78,9 +78,13 @@ interface TaskStats {
 
 interface Category {
   id: string;
-  name: string;
+  nameAr: string;
   nameEn: string;
-  nameUr: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  status?: string;
 }
 
 export default function IFoxAITasks() {
@@ -114,7 +118,7 @@ export default function IFoxAITasks() {
 
   // Fetch categories for iFox
   const { data: categories } = useQuery<Category[]>({
-    queryKey: ['/api/categories?section=ifox'],
+    queryKey: ['/api/admin/ifox/categories'],
   });
 
   // Create task mutation
@@ -371,7 +375,7 @@ export default function IFoxAITasks() {
                         <SelectContent>
                           {categories?.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
+                              {cat.nameAr}
                             </SelectItem>
                           ))}
                         </SelectContent>
