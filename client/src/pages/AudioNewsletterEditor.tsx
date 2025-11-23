@@ -436,10 +436,9 @@ export default function AudioNewsletterEditor() {
     enabled: !!user,
   });
 
-  // Fetch voices from API
+  // Fetch voices from API (public endpoint - no auth required)
   const { data: voicesData, isLoading: isVoicesLoading } = useQuery<{ voices: Voice[] }>({
     queryKey: ["/api/audio-newsletters/voices"],
-    enabled: !!user,
   });
 
   const voices = voicesData?.voices || [];

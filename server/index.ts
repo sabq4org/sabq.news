@@ -249,6 +249,11 @@ app.use((req, res, next) => {
       }
     }
 
+    // Register Audio Newsletter routes FIRST to avoid conflicts with catch-all routes in main routes.ts
+    const audioNewsletterRoutes = await import("./routes/audioNewsletterRoutes");
+    app.use("/api/audio-newsletters", audioNewsletterRoutes.default);
+    console.log("[Server] ✅ Audio Newsletter routes registered (priority)");
+
     const server = await registerRoutes(app);
     console.log("[Server] ✅ Routes registered successfully");
 
@@ -281,11 +286,6 @@ app.use((req, res, next) => {
     app.patch("/api/story-cards/:cardId", storyCardsRouter.patch["/:cardId"]);
     app.delete("/api/story-cards/:cardId", storyCardsRouter.delete["/:cardId"]);
     console.log("[Server] ✅ Story Cards routes registered");
-    
-    // Register Audio Newsletter routes
-    const audioNewsletterRoutes = await import("./routes/audioNewsletterRoutes");
-    app.use("/api/audio-newsletters", audioNewsletterRoutes.default);
-    console.log("[Server] ✅ Audio Newsletter routes registered");
 
     // Register RSS Feed routes
     app.use("/api/rss", rssFeedRoutes);
