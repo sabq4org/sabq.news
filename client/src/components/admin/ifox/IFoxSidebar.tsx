@@ -51,11 +51,26 @@ const navigationItems: NavItem[] = [
     gradient: "from-violet-500 to-purple-500",
   },
   {
+    title: "محرك المحتوى الذكي",
+    titleEn: "AI Content Generator",
+    href: "/dashboard/admin/ifox/content-generator",
+    icon: Zap,
+    gradient: "from-fuchsia-500 to-pink-500",
+    badge: "تجربة",
+  },
+  {
     title: "إدارة المقالات",
     titleEn: "Articles",
     href: "/dashboard/admin/ifox/articles",
     icon: FileText,
     gradient: "from-blue-500 to-cyan-500",
+  },
+  {
+    title: "نظام الإدارة الذكي",
+    titleEn: "AI Management System",
+    href: "/dashboard/admin/ifox/ai-management",
+    icon: Cpu,
+    gradient: "from-purple-500 to-violet-600",
     badge: "جديد",
   },
   {
@@ -174,10 +189,10 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
     <motion.div
       className={cn(
         "w-64 h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950",
-        "border-r border-white/10",
+        "border-l border-white/10",
         className
       )}
-      initial={{ x: -100, opacity: 0 }}
+      initial={{ x: 100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
@@ -291,8 +306,8 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
                       {/* Active indicator */}
                       {active && (
                         <motion.div
-                          className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-l-full"
-                          initial={{ x: 10 }}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-r-full"
+                          initial={{ x: -10 }}
                           animate={{ x: 0 }}
                           transition={{ type: "spring" }}
                         />

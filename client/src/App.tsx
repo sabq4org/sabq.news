@@ -183,6 +183,7 @@ import AICategoryPage from "@/pages/ai/AICategoryPage";
 import AIArticleDetail from "@/pages/ai/AIArticleDetail";
 // iFox Admin Dashboard imports
 import IFoxDashboard from "@/pages/admin/ifox/IFoxDashboard";
+import IFoxContentGenerator from "@/pages/admin/ifox/IFoxContentGenerator";
 import IFoxArticles from "@/pages/admin/ifox/IFoxArticles";
 import IFoxArticleEditor from "@/pages/admin/ifox/IFoxArticleEditor";
 import IFoxMedia from "@/pages/admin/ifox/IFoxMedia";
@@ -444,6 +445,7 @@ function Router() {
       
       {/* iFox Admin Dashboard Routes */}
       <Route path="/dashboard/admin/ifox" component={IFoxDashboard} />
+      <Route path="/dashboard/admin/ifox/content-generator" component={IFoxContentGenerator} />
       <Route path="/dashboard/admin/ifox/articles" component={IFoxArticles} />
       <Route path="/dashboard/admin/ifox/articles/new" component={IFoxArticleEditor} />
       <Route path="/dashboard/admin/ifox/articles/edit/:id" component={IFoxArticleEditor} />
@@ -454,6 +456,7 @@ function Router() {
       <Route path="/dashboard/admin/ifox/analytics" component={IFoxAnalytics} />
       <Route path="/dashboard/admin/ifox/settings" component={IFoxSettings} />
       <Route path="/dashboard/admin/ifox/ai-management" component={AIManagementDashboard} />
+      <Route path="/dashboard/admin/ifox/ai-tasks" component={IFoxAITasks} />
       
       {/* Onboarding routes - Arabic */}
       <Route path="/ar/onboarding/welcome" component={Welcome} />

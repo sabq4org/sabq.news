@@ -125,10 +125,7 @@ export default function IFoxDashboard() {
   ];
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
-      {/* Sidebar */}
-      <IFoxSidebar className="hidden lg:block" />
-
+    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950" dir="rtl">
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <ScrollArea className="h-full">
@@ -539,6 +536,9 @@ export default function IFoxDashboard() {
           </div>
         </ScrollArea>
       </div>
+
+      {/* Sidebar */}
+      <IFoxSidebar className="hidden lg:block" />
     </div>
   );
 }
