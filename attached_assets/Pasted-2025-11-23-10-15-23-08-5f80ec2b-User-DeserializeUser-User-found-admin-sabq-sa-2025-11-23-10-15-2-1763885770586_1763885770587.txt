@@ -1,0 +1,125 @@
+2025-11-23 10:15:23.08
+5f80ec2b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:15:23.14
+5f80ec2b
+User
+8:15:23 AM [express] GET /api/categories 304 in 252ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55…
+2025-11-23 10:15:23.15
+5f80ec2b
+User
+8:15:23 AM [express] GET /api/themes/active 304 in 253ms
+
+2025-11-23 10:15:23.19
+5f80ec2b
+User
+8:15:23 AM [express] GET /api/audio-newsletters/newsletter-1763885703300 200 in 305ms :: {"id":"2eaa…
+2025-11-23 10:15:23.65
+5f80ec2b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 10:15:23.67
+5f80ec2b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:15:23.69
+5f80ec2b
+User
+8:15:23 AM [express] GET /api/audio/newsletters/audio_2eaaecd5-e1ac-4d18-b811-4cdfc6671caa_176388570…
+2025-11-23 10:15:24.01
+5f80ec2b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 10:15:24.03
+5f80ec2b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:15:24.06
+5f80ec2b
+User
+8:15:24 AM [express] GET /api/audio/newsletters/audio_2eaaecd5-e1ac-4d18-b811-4cdfc6671caa_176388570…
+2025-11-23 10:15:24.31
+5f80ec2b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-23 10:15:24.34
+5f80ec2b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-23 10:15:24.36
+5f80ec2b
+User
+8:15:24 AM [express] GET /api/audio/newsletters/audio_2eaaecd5-e1ac-4d18-b811-4cdfc6671caa_176388570…
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+}
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+isAuthenticated: false,
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+🔍 /api/auth/user check: {
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+hasUser: false,
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+sessionID: 'F8_Pvfocb4mKmQGirqw06fcO-molFEYp'
+2025-11-23 10:15:38.26
+5f80ec2b
+User
+userId: undefined,
+2025-11-23 10:15:38.27
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+2025-11-23 10:15:38.37
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/news/stats 200 in 124ms :: {"totalNews":73,"todayNews":0,"topViewedThi…
+2025-11-23 10:15:38.45
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/themes/active 200 in 175ms
+2025-11-23 10:15:38.45
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/categories 200 in 182ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7baae55…
+2025-11-23 10:15:38.49
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/articles 200 in 204ms :: [{"id":"o6dASMRjkDa_RAhpKKCrT","title":"الإسب…
+2025-11-23 10:15:38.54
+5f80ec2b
+User
+8:15:38 AM [express] GET /api/news/analytics 200 in 278ms :: {"period":{"today":0,"week":73,"month":…
+2025-11-23 10:15:39.23
+5f80ec2b
+User
+8:15:39 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
+2025-11-23 10:15:40.01
+5f80ec2b
+User
+8:15:40 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
+2025-11-23 10:15:40.23
+5f80ec2b
+User
+8:15:40 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
+2025-11-23 10:15:40.48
+5f80ec2b
+User
+8:15:40 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
+2025-11-23 10:15:40.48
+5f80ec2b
+User
+8:15:40 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
+2025-11-23 10:15:40.48
+5f80ec2b
+User
+8:15:40 AM [express] GET /api/public-media/replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138/publ…
