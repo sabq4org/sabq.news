@@ -1,5 +1,10 @@
 import cron from "node-cron";
 import { ifoxCalendarService } from "../services/ifox";
+import { AIArticleGenerator } from "../services/aiArticleGenerator";
+import { aiImageGenerator } from "../services/aiImageGenerator";
+import { sendArticleNotification } from "../notificationService";
+import { storage } from "../storage";
+import { nanoid } from "nanoid";
 
 /**
  * iFox Content Generator Job
@@ -64,30 +69,169 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
           status: 'in_progress',
         }, userId);
 
-        // Here you would call your AI content generation service
-        // For now, we'll just mark it as completed
-        // In a real implementation, you'd:
-        // 1. Call AI service to generate content
-        // 2. Create article draft
-        // 3. Link article to calendar entry
-        // 4. Send notification to creator
+        // ========================================
+        // STEP 1: Extract parameters from calendar entry
+        // ========================================
+        const articleTitle = entry.topicIdea || 'محتوى جديد';
+        const contentType = (entry.plannedContentType || 'news') as 'news' | 'analysis' | 'report' | 'interview' | 'opinion';
+        const keywords = Array.isArray(entry.keywords) ? entry.keywords : [];
+        
+        // Extract category from suggestedCategories (take first one or default)
+        let categoryId = 'ai-news'; // Default category
+        if (entry.suggestedCategories && Array.isArray(entry.suggestedCategories) && entry.suggestedCategories.length > 0) {
+          categoryId = entry.suggestedCategories[0];
+        }
 
-        // Simulate AI processing delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(`[iFox Generator] 📝 Generating article: "${articleTitle}"`);
+        console.log(`[iFox Generator] 📊 Category: ${categoryId}, Type: ${contentType}, Keywords: ${keywords.join(', ')}`);
 
-        // Mark as completed
-        await ifoxCalendarService.updateEntry(entry.id, {
-          status: 'completed',
-          actualPublishedAt: new Date(),
-        }, userId);
+        // ========================================
+        // STEP 2: Generate AI Article Content
+        // ========================================
+        const aiGenerator = new AIArticleGenerator();
+        let generatedArticle;
+        
+        try {
+          generatedArticle = await aiGenerator.generateArticle({
+            title: articleTitle,
+            categoryId,
+            locale: 'ar', // iFox is Arabic-first
+            contentType,
+            keywords,
+            tone: 'neutral',
+            length: 'medium',
+          });
+          
+          console.log(`[iFox Generator] ✅ Article generated successfully`);
+          console.log(`[iFox Generator] 📈 Tokens used: ${generatedArticle.tokensUsed}, Time: ${generatedArticle.generationTimeMs}ms`);
+        } catch (aiError) {
+          console.error(`[iFox Generator] ❌ Failed to generate article content:`, aiError);
+          throw new Error(`AI article generation failed: ${aiError instanceof Error ? aiError.message : String(aiError)}`);
+        }
 
-        // TODO: When AI article generation is implemented:
-        // 1. Call AI service to generate content
-        // 2. Create article draft
-        // 3. Link article to calendar entry
-        // 4. Send notification to creator via createNotification()
+        // ========================================
+        // STEP 3: Generate AI Image (optional, graceful failure)
+        // ========================================
+        let featuredImageUrl: string | undefined;
+        
+        try {
+          console.log(`[iFox Generator] 🎨 Generating featured image...`);
+          const generatedImage = await aiImageGenerator.generateImageFromArticle(
+            generatedArticle.title,
+            generatedArticle.summary,
+            categoryId,
+            'ar'
+          );
+          
+          featuredImageUrl = generatedImage.imageUrl;
+          console.log(`[iFox Generator] ✅ Image generated successfully: ${featuredImageUrl}`);
+        } catch (imageError) {
+          console.warn(`[iFox Generator] ⚠️ Image generation failed (continuing without image):`, imageError);
+          // Continue without image - non-critical failure
+        }
 
-        console.log(`[iFox Generator] ✅ Task completed: ${topicIdea}`);
+        // ========================================
+        // STEP 4: Create Article in Database
+        // ========================================
+        const now = new Date();
+        
+        // Generate slug from title (max 140 chars to leave room for nanoid suffix)
+        const baseSlug = generatedArticle.title
+          .toLowerCase()
+          .replace(/[^\u0600-\u06FF\w\s-]/g, '') // Keep Arabic, alphanumeric, spaces, hyphens
+          .trim()
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .substring(0, 140); // Max 140 chars (leaving 10 for suffix)
+        
+        const slug = baseSlug + '-' + nanoid(8); // Total max 150 chars
+        
+        // Build article data conforming STRICTLY to InsertArticle schema
+        // InsertArticle schema omits: id, createdAt, updatedAt, views, aiGenerated, credibilityScore, credibilityAnalysis, credibilityLastUpdated, authorId
+        // Storage layer will handle these backend-managed fields
+        const articleData = {
+          // Core article content
+          title: generatedArticle.title,
+          slug,
+          content: generatedArticle.content,
+          excerpt: generatedArticle.summary.substring(0, 200),
+          aiSummary: generatedArticle.summary,
+          locale: 'ar',
+          
+          // Category
+          categoryId,
+          
+          // Article classification
+          articleType: 'news' as const,
+          newsType: 'regular' as const,
+          publishType: 'instant' as const,
+          
+          // Publishing status
+          status: 'published' as const,
+          publishedAt: now,
+          
+          // Media
+          imageUrl: featuredImageUrl,
+          
+          // SEO (required by schema)
+          seo: {
+            metaTitle: generatedArticle.title,
+            metaDescription: generatedArticle.metaDescription,
+            keywords: generatedArticle.seoKeywords,
+          },
+          
+          // SEO metadata (required by schema) - only include supported fields
+          seoMetadata: {
+            status: 'generated' as const,
+            generatedAt: now.toISOString(),
+            generatedBy: 'system', // Required for generated content
+          },
+          
+          // Source metadata (required by schema)
+          sourceMetadata: {
+            type: 'manual' as const,
+          },
+        };
+
+        let createdArticle;
+        try {
+          createdArticle = await storage.createArticle(articleData);
+          console.log(`[iFox Generator] ✅ Article created in database: ${createdArticle.id}`);
+        } catch (dbError) {
+          console.error(`[iFox Generator] ❌ Failed to create article in database:`, dbError);
+          throw new Error(`Database error: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+        }
+
+        // ========================================
+        // STEP 5: Link Article to Calendar Entry
+        // ========================================
+        try {
+          await ifoxCalendarService.updateEntry(entry.id, {
+            status: 'completed',
+            articleId: createdArticle.id,
+            actualPublishedAt: new Date(),
+          }, userId);
+          
+          console.log(`[iFox Generator] ✅ Calendar entry updated with article link`);
+        } catch (updateError) {
+          console.error(`[iFox Generator] ⚠️ Failed to update calendar entry (article created successfully):`, updateError);
+          // Non-critical - article is created, just the link failed
+        }
+
+        // ========================================
+        // STEP 6: Send Notifications
+        // ========================================
+        if (articleData.status === 'published') {
+          try {
+            await sendArticleNotification(createdArticle, 'published');
+            console.log(`[iFox Generator] 📢 Notification sent for published article`);
+          } catch (notifError) {
+            console.warn(`[iFox Generator] ⚠️ Failed to send notification (non-critical):`, notifError);
+            // Non-critical - article is published, notification just failed
+          }
+        }
+
+        console.log(`[iFox Generator] ✅ Task completed successfully: ${topicIdea}`);
+        console.log(`[iFox Generator] 📰 Article published: ${createdArticle.id} - "${createdArticle.title}"`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[iFox Generator] ❌ Error processing task ${entry.id}:`, errorMessage);
