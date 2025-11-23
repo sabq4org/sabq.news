@@ -6,6 +6,7 @@ import visualAiRoutes from "./routes/visualAiRoutes";
 import autoImageRoutes from "./routes/autoImageRoutes";
 import notebookLmRoutes from "./routes/notebookLmRoutes";
 import rssFeedRoutes from "./routes/rssFeedRoutes";
+import aiTasksRoutes from "./routes/aiTasksRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
@@ -291,6 +292,10 @@ app.use((req, res, next) => {
     // Register RSS Feed routes
     app.use("/api/rss", rssFeedRoutes);
     console.log("[Server] ✅ RSS Feed routes registered");
+    
+    // Register AI Tasks routes (iFox AI Autonomous Newsroom)
+    app.use("/api/ai-tasks", aiTasksRoutes);
+    console.log("[Server] ✅ AI Tasks routes registered");
 
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags
