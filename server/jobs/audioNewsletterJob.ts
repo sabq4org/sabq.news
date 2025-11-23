@@ -122,11 +122,15 @@ async function processScheduledNewsletters() {
     
     const now = new Date();
     
-    // Find newsletters that are scheduled (scheduledFor field doesn't exist in schema)
-    // Using status 'scheduled' only
+    // Find newsletters that are scheduled and ready to publish
     const scheduledNewsletters = await db.select()
       .from(audioNewsletters)
-      .where(eq(audioNewsletters.status, 'scheduled'));
+      .where(
+        and(
+          eq(audioNewsletters.status, 'scheduled'),
+          lte(audioNewsletters.scheduledFor, now)
+        )
+      );
     
     console.log(`Found ${scheduledNewsletters.length} scheduled newsletters to process`);
     
@@ -142,8 +146,10 @@ async function processScheduledNewsletters() {
       // Add to queue with normal priority
       audioNewsletterQueue.addJob(newsletter.id, 'normal');
       
-      // Note: Recurring newsletters feature disabled - metadata field doesn't exist in schema
-      // To enable, add metadata jsonb field to audioNewsletters table
+      // Handle recurring newsletters
+      if (newsletter.metadata?.isRecurring && newsletter.metadata?.recurrencePattern) {
+        await createNextRecurringNewsletter(newsletter);
+      }
     }
   } catch (error) {
     console.error('Error processing scheduled newsletters:', error);
@@ -151,18 +157,20 @@ async function processScheduledNewsletters() {
 }
 
 // Create next recurring newsletter
-async function createNextRecurringNewsletter(
-  newsletter: any, 
-  schedule: any
-) {
+async function createNextRecurringNewsletter(newsletter: any) {
   try {
-    const nextScheduledFor = calculateNextScheduledTime(schedule);
+    if (!newsletter.metadata?.recurrencePattern) {
+      console.log('No recurrence pattern found for recurring newsletter');
+      return;
+    }
+    
+    const nextScheduledFor = calculateNextScheduledTime(newsletter.metadata.recurrencePattern);
     
     // Get articles for the new newsletter based on template
-    // Note: metadata field doesn't exist, using default maxArticles value
+    const maxArticles = newsletter.metadata?.maxArticles || 10;
     const articleIds = await getArticlesForTemplate(
-      newsletter.template,
-      10
+      newsletter.template || 'custom',
+      maxArticles
     );
     
     if (articleIds.length === 0) {
@@ -170,10 +178,9 @@ async function createNextRecurringNewsletter(
       return;
     }
     
-    // Create new newsletter
-    // Note: metadata field doesn't exist, using available fields only
+    // Create new newsletter with recurring metadata
     await audioNewsletterService.createNewsletter({
-      title: generateNewsletterTitle(newsletter.template, nextScheduledFor),
+      title: generateNewsletterTitle(newsletter.template || 'custom', nextScheduledFor),
       description: newsletter.description,
       template: newsletter.template,
       voiceId: newsletter.voiceId,
@@ -181,7 +188,11 @@ async function createNextRecurringNewsletter(
       articleIds,
       generatedBy: newsletter.generatedBy,
       scheduledFor: nextScheduledFor,
-      recurringSchedule: schedule
+      metadata: {
+        isRecurring: true,
+        recurrencePattern: newsletter.metadata.recurrencePattern,
+        maxArticles: maxArticles
+      }
     });
     
     console.log(`Created next recurring newsletter scheduled for ${nextScheduledFor}`);
@@ -334,24 +345,43 @@ async function getArticlesForTemplate(
 }
 
 // Process failed jobs (retry mechanism)
-// Note: Retry mechanism simplified - metadata field doesn't exist in schema
-// To enable retry tracking, add metadata jsonb field to audioNewsletters table
 async function processFailedJobs() {
   try {
     console.log('🔄 Checking for failed audio newsletters...');
     
-    // Note: Without metadata field, we cannot track retry count
-    // Simply log failed newsletters without retrying to avoid infinite loops
     const failedNewsletters = await db.select()
       .from(audioNewsletters)
       .where(eq(audioNewsletters.status, 'failed'));
     
-    console.log(`Found ${failedNewsletters.length} failed newsletters (retry disabled - no metadata field)`);
+    console.log(`Found ${failedNewsletters.length} failed newsletters`);
     
-    // Retry mechanism disabled until metadata field is added to schema
-    // for (const newsletter of failedNewsletters) {
-    //   audioNewsletterQueue.addJob(newsletter.id, 'low');
-    // }
+    const maxRetries = 3;
+    
+    for (const newsletter of failedNewsletters) {
+      const retryCount = newsletter.metadata?.retryCount || 0;
+      
+      if (retryCount < maxRetries) {
+        console.log(`Retrying newsletter ${newsletter.id} (attempt ${retryCount + 1}/${maxRetries})`);
+        
+        // Update metadata with retry information
+        await db.update(audioNewsletters)
+          .set({
+            metadata: {
+              ...newsletter.metadata,
+              retryCount: retryCount + 1,
+              lastRetryAt: new Date().toISOString()
+            },
+            status: 'pending',
+            updatedAt: new Date()
+          })
+          .where(eq(audioNewsletters.id, newsletter.id));
+        
+        // Add to queue with low priority
+        audioNewsletterQueue.addJob(newsletter.id, 'low');
+      } else {
+        console.log(`Newsletter ${newsletter.id} exceeded max retries (${maxRetries})`);
+      }
+    }
   } catch (error) {
     console.error('Error processing failed jobs:', error);
   }
