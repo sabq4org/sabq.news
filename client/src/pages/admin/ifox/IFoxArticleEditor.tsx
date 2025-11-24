@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { ArticleWithDetails } from "@shared/schema";
 import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -127,7 +128,7 @@ export default function IFoxArticleEditor() {
   const [exitDialog, setExitDialog] = useState(false);
 
   // Fetch article data if in edit mode
-  const { data: articleData, isLoading } = useQuery({
+  const { data: articleData, isLoading } = useQuery<ArticleWithDetails>({
     queryKey: [`/api/admin/ifox/articles/${articleId}`],
     enabled: isEditMode,
   });
@@ -155,21 +156,21 @@ export default function IFoxArticleEditor() {
     if (articleData) {
       form.reset({
         title: articleData.title || "",
-        titleEn: articleData.titleEn || "",
+        titleEn: articleData.subtitle || "",
         slug: articleData.slug || "",
         excerpt: articleData.excerpt || "",
         content: articleData.content || "",
-        category: articleData.category || "",
-        tags: articleData.tags || [],
-        featuredImage: articleData.featuredImage || "",
-        status: articleData.status || "draft",
-        publishDate: articleData.publishDate ? new Date(articleData.publishDate) : undefined,
-        seoTitle: articleData.seoTitle || "",
-        seoDescription: articleData.seoDescription || "",
-        seoKeywords: articleData.seoKeywords || [],
+        category: articleData.category?.id || "",
+        tags: [],
+        featuredImage: articleData.imageUrl || "",
+        status: (articleData.status === "published" || articleData.status === "scheduled") ? articleData.status : "draft",
+        publishDate: articleData.publishedAt ? new Date(articleData.publishedAt) : undefined,
+        seoTitle: articleData.seo?.metaTitle || "",
+        seoDescription: articleData.seo?.metaDescription || "",
+        seoKeywords: articleData.seo?.keywords || [],
       });
-      setAiScore(articleData.aiScore || 0);
-      setSentimentScore(articleData.sentimentScore || null);
+      setAiScore(0);
+      setSentimentScore(null);
     }
   }, [articleData, form]);
 

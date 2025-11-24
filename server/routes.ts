@@ -28623,6 +28623,31 @@ Allow: /
     }
   );
 
+  // GET /api/admin/ifox/articles/:id - Get single iFox article by ID for editing
+  app.get("/api/admin/ifox/articles/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const article = await storage.getArticleById(id);
+      
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+      
+      // Verify it's an iFox article (must be in one of the 5 iFox categories AND aiGenerated)
+      const IFOX_CATEGORY_SLUGS = ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'];
+      const isIFoxArticle = article.category?.slug && IFOX_CATEGORY_SLUGS.includes(article.category.slug) && article.aiGenerated;
+      
+      if (!isIFoxArticle) {
+        return res.status(404).json({ message: "iFox article not found" });
+      }
+      
+      res.json(article);
+    } catch (error: any) {
+      console.error("Error fetching iFox article:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // GET /api/admin/ifox/articles/stats - Get iFox article statistics
   app.get("/api/admin/ifox/articles/stats",
     requireAuth,
