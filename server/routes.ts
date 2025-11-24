@@ -8281,14 +8281,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // iFox Articles endpoint - fetches all published AI articles for public page
   app.get("/api/ifox/articles", cacheControl({ maxAge: CACHE_DURATIONS.SHORT }), async (req, res) => {
     try {
+      // Parse query parameters
+      const {
+        status,
+        categorySlug,
+        search,
+        limit = '12',
+        page = '1'
+      } = req.query;
+
       // Fetch iFox articles from the 5 designated categories + AI-generated only
       const result = await storage.listIFoxArticles({ 
-        status: 'published',
-        limit: 50,
-        page: 1
+        status: status as string | undefined,
+        categorySlug: categorySlug as string | undefined,
+        search: search as string | undefined,
+        limit: parseInt(limit as string, 10),
+        page: parseInt(page as string, 10)
       });
       
-      res.json(result.articles);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching iFox articles:", error);
       res.status(500).json({ message: "Failed to fetch iFox articles" });
