@@ -5447,10 +5447,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all articles with filtering (admin only)
   app.get("/api/admin/articles", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
     try {
-      const { search, status, articleType, categoryId, authorId, featured } = req.query;
+      const { search, status, articleType, categoryId, authorId, featured, includeAI } = req.query;
 
       const reporterAlias = aliasedTable(users, 'reporter');
 
+      // Build where conditions array
+      const whereConditions = [];
+
+      if (search) {
+        whereConditions.push(
+          or(
+            ilike(articles.title, `%${search}%`),
+            ilike(articles.content, `%${search}%`),
+            ilike(articles.excerpt, `%${search}%`)
+          )
+        );
+      }
+
+      if (status && status !== "all") {
+        whereConditions.push(eq(articles.status, status));
+      }
+
+      if (articleType && articleType !== "all") {
+        whereConditions.push(eq(articles.articleType, articleType));
+      }
+
+      if (categoryId) {
+        whereConditions.push(eq(articles.categoryId, categoryId));
+      }
+
+      if (authorId) {
+        whereConditions.push(eq(articles.authorId, authorId));
+      }
+
+      if (featured !== undefined) {
+        whereConditions.push(eq(articles.isFeatured, featured === "true"));
+      }
+
+      // IMPORTANT: Include AI articles by default in admin panel
+      const shouldIncludeAI = includeAI !== 'false'; // Only exclude if explicitly set to 'false'
+
+      if (!shouldIncludeAI) {
+        // Exclude AI articles if explicitly requested
+        const aiCategoryIds = await db
+          .select({ id: categories.id })
+          .from(categories)
+          .where(
+            or(
+              eq(categories.slug, 'ifox-ai'),
+              sql`${categories.slug} LIKE 'ai-%'`
+            )
+          );
+        
+        const aiCategoryIdList = aiCategoryIds.map(c => c.id);
+        
+        if (aiCategoryIdList.length > 0) {
+          whereConditions.push(
+            or(
+              isNull(articles.categoryId),
+              not(inArray(articles.categoryId, aiCategoryIdList))
+            )
+          );
+        }
+      }
+
+      // Build query with all conditions
       let query = db
         .select({
           article: articles,
@@ -5480,34 +5541,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
         .$dynamic();
 
-      if (search) {
-        query = query.where(
-          or(
-            ilike(articles.title, `%${search}%`),
-            ilike(articles.content, `%${search}%`),
-            ilike(articles.excerpt, `%${search}%`)
-          )
-        );
-      }
-
-      if (status && status !== "all") {
-        query = query.where(eq(articles.status, status));
-      }
-
-      if (articleType && articleType !== "all") {
-        query = query.where(eq(articles.articleType, articleType));
-      }
-
-      if (categoryId) {
-        query = query.where(eq(articles.categoryId, categoryId));
-      }
-
-      if (authorId) {
-        query = query.where(eq(articles.authorId, authorId));
-      }
-
-      if (featured !== undefined) {
-        query = query.where(eq(articles.isFeatured, featured === "true"));
+      // Apply all conditions
+      if (whereConditions.length > 0) {
+        query = query.where(and(...whereConditions));
       }
 
       query = query.orderBy(desc(articles.createdAt));
@@ -5526,6 +5562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch articles" });
     }
   });
+
 
   // Get articles metrics
   app.get("/api/admin/articles/metrics", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
