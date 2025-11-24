@@ -144,7 +144,9 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
         
         // Build article data conforming STRICTLY to InsertArticle schema
         // InsertArticle schema omits: id, createdAt, updatedAt, views, aiGenerated, credibilityScore, credibilityAnalysis, credibilityLastUpdated, authorId
-        // Storage layer will handle these backend-managed fields
+        // We explicitly add these backend-managed fields here and cast to bypass schema validation
+        const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z'; // "سبق AI" (sabqai@sabq.org)
+        
         const articleData = {
           // Core article content
           title: generatedArticle.title,
@@ -157,6 +159,9 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
           // Category
           categoryId,
           
+          // Author: Always use "سبق AI" for iFox articles
+          authorId: SABQ_AI_AUTHOR_ID,
+          
           // Article classification
           articleType: 'news' as const,
           newsType: 'regular' as const,
@@ -165,6 +170,9 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
           // Publishing status
           status: 'published' as const,
           publishedAt: now,
+          
+          // CRITICAL: Mark as AI-generated to filter from Sabq main site
+          aiGenerated: true,
           
           // Media
           imageUrl: featuredImageUrl,
@@ -187,7 +195,7 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
           sourceMetadata: {
             type: 'manual' as const,
           },
-        };
+        } as any; // Cast to bypass InsertArticle schema (authorId + aiGenerated are excluded but required here)
 
         let createdArticle;
         try {
