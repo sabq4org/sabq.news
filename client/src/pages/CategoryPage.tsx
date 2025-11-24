@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Link } from "wouter";
-import type { Category, ArticleWithDetails } from "@shared/schema";
+import type { Category, ArticleWithDetails, User } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -169,7 +169,7 @@ export default function CategoryPage() {
     if (allArticles.length === 0) return null;
     
     // Count articles per author
-    const authorCounts = new Map<string, { author: any, count: number }>();
+    const authorCounts = new Map<string, { author: User, count: number }>();
     
     allArticles.forEach(article => {
       const author = article.author;
@@ -185,7 +185,7 @@ export default function CategoryPage() {
     
     // Find author with most articles
     let maxCount = 0;
-    let topAuthor = null;
+    let topAuthor: { author: User, count: number } | null = null;
     
     authorCounts.forEach(({ author, count }) => {
       if (count > maxCount) {
