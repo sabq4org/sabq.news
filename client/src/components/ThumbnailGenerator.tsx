@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ImageIcon, AlertCircle, Check, Sparkles, Crop } from "lucide-react";
+import { Loader2, ImageIcon, AlertCircle, Check, Sparkles, Crop, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -138,6 +138,29 @@ export function ThumbnailGenerator({
                 تم توليد صورة الغلاف المصغرة وستظهر في قوائم الأخبار
               </AlertDescription>
             </Alert>
+            
+            {/* Delete Thumbnail Button */}
+            <div className="flex justify-end">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setCurrentThumbnail(undefined);
+                  if (onThumbnailGenerated) {
+                    onThumbnailGenerated("");
+                  }
+                  toast({
+                    title: "تم حذف صورة الغلاف",
+                    description: "تم حذف صورة الغلاف المصغرة بنجاح",
+                  });
+                }}
+                className="gap-2"
+                data-testid="button-delete-thumbnail"
+              >
+                <X className="h-4 w-4" />
+                حذف صورة الغلاف
+              </Button>
+            </div>
           </div>
         ) : (
           <Alert>
