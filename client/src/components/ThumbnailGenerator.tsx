@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,6 +37,9 @@ export function ThumbnailGenerator({
   );
   const [method, setMethod] = useState<ThumbnailMethod>('ai-smart');
   const [style, setStyle] = useState<ThumbnailStyle>('news');
+  
+  // Track if user manually deleted the thumbnail
+  const manuallyDeletedRef = useRef(false);
 
   const generateThumbnail = async (selectedMethod?: ThumbnailMethod) => {
     if (!imageUrl) {
@@ -74,6 +77,9 @@ export function ThumbnailGenerator({
         const thumbnailWithTimestamp = `${response.thumbnailUrl}?t=${Date.now()}`;
         setCurrentThumbnail(thumbnailWithTimestamp);
         
+        // Reset the manually deleted flag since we have a new thumbnail
+        manuallyDeletedRef.current = false;
+        
         if (onThumbnailGenerated) {
           onThumbnailGenerated(response.thumbnailUrl);
         }
@@ -97,18 +103,26 @@ export function ThumbnailGenerator({
     }
   };
 
+  // Reset manually deleted flag when article changes
+  useEffect(() => {
+    manuallyDeletedRef.current = false;
+  }, [articleId]);
+
   // Sync currentThumbnail with thumbnailUrl prop changes
   useEffect(() => {
     if (thumbnailUrl && thumbnailUrl !== "") {
       setCurrentThumbnail(`${thumbnailUrl}?t=${Date.now()}`);
+      // Reset manually deleted flag if we receive a valid thumbnail URL
+      manuallyDeletedRef.current = false;
     } else if (thumbnailUrl === "") {
       setCurrentThumbnail(undefined);
     }
   }, [thumbnailUrl]);
 
   // Auto-generate thumbnail when image changes (using AI Smart by default)
+  // BUT: Don't auto-generate if user manually deleted the thumbnail
   useEffect(() => {
-    if (autoGenerate && imageUrl && !currentThumbnail && articleId) {
+    if (autoGenerate && imageUrl && !currentThumbnail && articleId && !manuallyDeletedRef.current) {
       generateThumbnail('ai-smart');
     }
   }, [imageUrl, articleId]);
@@ -155,6 +169,9 @@ export function ThumbnailGenerator({
                 size="sm"
                 onClick={() => {
                   setCurrentThumbnail(undefined);
+                  // Mark that user manually deleted the thumbnail
+                  // This prevents auto-generation from creating a new one
+                  manuallyDeletedRef.current = true;
                   if (onThumbnailGenerated) {
                     onThumbnailGenerated("");
                   }
