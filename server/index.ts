@@ -13,6 +13,7 @@ import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
 import { startAITasksScheduler } from "./jobs/aiTasksJob";
+import { startAiTasksCleanupJob } from "./jobs/aiTasksCleanup";
 import { startIfoxContentGeneratorJob } from "./jobs/ifoxContentGeneratorJob";
 import { newsletterScheduler } from "./services/newsletterScheduler";
 import { storage } from "./storage";
@@ -595,6 +596,10 @@ app.use((req, res, next) => {
             startAITasksScheduler();
             console.log("[Server] ✅ AI Tasks Scheduler started successfully");
             console.log("[Server] 🤖 Checking for pending AI tasks every minute");
+            
+            // Start cleanup job for stuck tasks
+            startAiTasksCleanupJob();
+            console.log("[Server] ✅ AI Tasks Cleanup job started successfully");
             
             // Start iFox content generator job
             startIfoxContentGeneratorJob();

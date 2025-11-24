@@ -5,6 +5,7 @@ import type { AiScheduledTask } from '@shared/schema';
 
 export interface TaskExecutionResult {
   success: boolean;
+  skipped?: boolean;
   articleId?: string;
   imageUrl?: string;
   error?: string;
@@ -27,7 +28,14 @@ export class AITaskExecutor {
       // This will only succeed if the task is still 'pending'
       const task = await storage.markAiTaskProcessing(taskId);
       if (!task) {
-        throw new Error(`Task ${taskId} not found or already being processed`);
+        // Task already claimed by another worker - skip silently
+        return {
+          success: true,
+          skipped: true,
+          executionTimeMs: Date.now() - startTime,
+          tokensUsed: 0,
+          generationCost: 0
+        };
       }
 
       console.log(`[AI Task Executor] Executing task ${taskId}: ${task.title}`);
@@ -111,14 +119,19 @@ export class AITaskExecutor {
     } catch (error) {
       console.error(`[AI Task Executor] Task ${taskId} failed:`, error);
 
-      // Mark task as failed
-      await storage.updateAiTaskExecution(taskId, {
-        status: 'failed',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        executionTimeMs: Date.now() - startTime,
-        tokensUsed: totalTokens,
-        generationCost: totalCost
-      });
+      // Mark task as failed (rollback from processing → failed)
+      try {
+        await storage.updateAiTaskExecution(taskId, {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          executionTimeMs: Date.now() - startTime,
+          tokensUsed: totalTokens,
+          generationCost: totalCost
+        });
+      } catch (updateError) {
+        console.error(`[AI Task Executor] Failed to update task status:`, updateError);
+        // Task will be stuck in 'processing' - consider adding a cleanup job
+      }
 
       return {
         success: false,
@@ -151,11 +164,12 @@ export class AITaskExecutor {
     // Execute tasks sequentially (to avoid overwhelming AI APIs)
     for (const task of pendingTasks) {
       const result = await this.executeTask(task.id);
-      if (result.success) {
+      if (result.success && !result.skipped) {
         succeeded++;
-      } else {
+      } else if (!result.success) {
         failed++;
       }
+      // Skipped tasks don't count as succeeded or failed
     }
 
     console.log(`[AI Task Executor] Execution summary: ${succeeded} succeeded, ${failed} failed`);
