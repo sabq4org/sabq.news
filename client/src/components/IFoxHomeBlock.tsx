@@ -135,13 +135,15 @@ export function IFoxHomeBlock() {
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl md:text-4xl font-bold mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-              آي فوكس
-            </span>
-            {" "}
-            <span className="text-gray-400 text-xl md:text-2xl">| iFox AI</span>
-          </h2>
+          <Link href="/ifox">
+            <h2 className="text-2xl md:text-4xl font-bold mb-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                آي فوكس
+              </span>
+              {" "}
+              <span className="text-gray-400 text-xl md:text-2xl">| iFox AI</span>
+            </h2>
+          </Link>
 
           <p className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-4">
             بوابتك المتخصصة لعالم الذكاء الاصطناعي - أخبار، تحليلات، وأدوات عملية
