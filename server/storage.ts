@@ -4303,6 +4303,10 @@ export class DatabaseStorage implements IStorage {
           or(
             isNull(articles.articleType),
             ne(articles.articleType, 'opinion')
+          ),
+          or(
+            isNull(articles.aiGenerated),
+            eq(articles.aiGenerated, false)
           )
         )
       )
@@ -4455,6 +4459,10 @@ export class DatabaseStorage implements IStorage {
           or(
             isNull(articles.articleType),
             ne(articles.articleType, 'opinion')
+          ),
+          or(
+            isNull(articles.aiGenerated),
+            eq(articles.aiGenerated, false)
           )
         )
       )
@@ -4607,6 +4615,10 @@ export class DatabaseStorage implements IStorage {
           or(
             isNull(articles.articleType),
             ne(articles.articleType, "opinion")
+          ),
+          or(
+            isNull(articles.aiGenerated),
+            eq(articles.aiGenerated, false)
           )
         )
       )
@@ -4760,6 +4772,10 @@ export class DatabaseStorage implements IStorage {
           or(
             isNull(articles.articleType),
             ne(articles.articleType, 'opinion')
+          ),
+          or(
+            isNull(articles.aiGenerated),
+            eq(articles.aiGenerated, false)
           )
         )
       )
@@ -4912,6 +4928,10 @@ export class DatabaseStorage implements IStorage {
         or(
           isNull(articles.articleType),
           ne(articles.articleType, 'opinion')
+        ),
+        or(
+          isNull(articles.aiGenerated),
+          eq(articles.aiGenerated, false)
         )
       ))
       .orderBy(desc(articles.publishedAt), desc(articles.createdAt))
