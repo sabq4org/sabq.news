@@ -172,6 +172,35 @@ export default function AIArticleDetail() {
 
           {/* Article Header */}
           <header className="mb-8">
+            {/* Category and AI Badges - Above Title */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {/* Category Badge */}
+              {article.category && (
+                <Badge
+                  variant="outline"
+                  className="bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20 text-sm px-3 py-1"
+                  data-testid="badge-category"
+                >
+                  {typeof article.category === 'string' ? article.category : article.category.nameAr || article.category.name}
+                </Badge>
+              )}
+              
+              {/* AI Generated Badge */}
+              {article.aiGenerated && (
+                <Badge
+                  variant="outline"
+                  className="bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20 text-sm px-3 py-1 flex items-center gap-1.5"
+                  data-testid="badge-ai-generated"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                  </span>
+                  {language === "ar" ? "تم إنشاؤها بواسطة الذكاء الاصطناعي" : "AI Generated Content"}
+                </Badge>
+              )}
+            </div>
+
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
               {article.title}
             </h1>
@@ -182,162 +211,191 @@ export default function AIArticleDetail() {
               </p>
             )}
 
-            {/* Author Section */}
-            <div className="flex items-center gap-4 mb-6 p-4 bg-slate-900/50 rounded-lg">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                {(() => {
-                  if (typeof article.author === 'string') {
-                    return article.author.charAt(0);
-                  } else if (article.author?.firstName) {
-                    return article.author.firstName.charAt(0);
-                  }
-                  return "S";
-                })()}
-              </div>
-              <div className="flex-1">
-                <div className="text-white font-semibold">
+            {/* Enhanced Author & Meta Section */}
+            <div className="grid sm:grid-cols-2 gap-4 mb-6">
+              {/* Author Card */}
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-slate-900/80 to-slate-900/40 rounded-lg border border-slate-800/50 backdrop-blur-sm">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20">
                   {(() => {
                     if (typeof article.author === 'string') {
-                      return article.author;
-                    } else if (article.author) {
-                      return `${article.author.firstName || ''} ${article.author.lastName || ''}`.trim();
+                      return article.author.charAt(0);
+                    } else if (article.author?.firstName) {
+                      return article.author.firstName.charAt(0);
                     }
-                    return language === "ar" ? "فريق سبق الرقمي" : "Sabq Digital Team";
+                    return "S";
                   })()}
                 </div>
-                <div className="text-gray-500 text-sm">
-                  {language === "ar" ? "محرر تقني" : "Tech Editor"}
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-semibold text-base mb-0.5 truncate" data-testid="text-author-name">
+                    {(() => {
+                      if (typeof article.author === 'string') {
+                        return article.author;
+                      } else if (article.author) {
+                        return `${article.author.firstName || ''} ${article.author.lastName || ''}`.trim();
+                      }
+                      return language === "ar" ? "سبق AI" : "Sabq AI";
+                    })()}
+                  </div>
+                  <div className="text-gray-400 text-xs flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    <span>{language === "ar" ? "محرر ذكاء اصطناعي" : "AI Editor"}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Article Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>
-                  {format(new Date(article.createdAt), "PPP", {
-                    locale: language === "ar" ? ar : enUS
-                  })}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                <span>{article.views || 0} {language === "ar" ? "مشاهدة" : "views"}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MessageCircle className="w-4 h-4" />
-                <span>0 {language === "ar" ? "تعليق" : "comments"}</span>
+
+              {/* Article Stats Card */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 p-4 bg-gradient-to-br from-slate-900/80 to-slate-900/40 rounded-lg border border-slate-800/50 backdrop-blur-sm">
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <span className="text-gray-300">
+                    {format(new Date(article.createdAt), "PPP", {
+                      locale: language === "ar" ? ar : enUS
+                    })}
+                  </span>
+                </div>
+                <div className="w-px h-5 bg-slate-700 hidden sm:block" />
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Eye className="w-4 h-4 text-green-400" />
+                  <span className="text-gray-300 font-medium" data-testid="text-views">
+                    {(article.views || 0).toLocaleString(language === "ar" ? "ar-SA" : "en-US")}
+                  </span>
+                  <span className="text-gray-400 text-xs">{language === "ar" ? "مشاهدة" : "views"}</span>
+                </div>
               </div>
             </div>
           </header>
 
-          {/* Share and Actions Bar */}
-          <div className="flex flex-wrap justify-between items-center gap-4 p-4 bg-slate-900/50 rounded-lg mb-8 border border-slate-800">
-            <div className="flex items-center gap-3">
-              {/* Like Button with Counter */}
-              <Button
-                variant={liked ? "default" : "outline"}
-                size="sm"
-                className={`flex items-center gap-2 transition-all ${
-                  liked 
-                    ? "bg-red-600 hover:bg-red-700 border-red-600" 
-                    : "border-slate-700 hover:bg-slate-800 hover:border-red-500"
-                }`}
-                onClick={toggleLike}
-                data-testid="button-like"
-                title={language === "ar" ? "أعجبني" : "Like"}
-              >
-                <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
-                <span className="font-semibold">{likesCount}</span>
-              </Button>
-
-              <div className="w-px h-8 bg-slate-700" />
-
-              {/* Share Buttons Group */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400 mr-2">
-                  {language === "ar" ? "شارك:" : "Share:"}
-                </span>
+          {/* Enhanced Share and Actions Bar */}
+          <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/50 rounded-xl p-4 sm:p-5 mb-8 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Like & Share Section */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Like Button with Counter */}
                 <Button
-                  variant="outline"
+                  variant={liked ? "default" : "outline"}
                   size="sm"
-                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-500 transition-all"
-                  onClick={() => handleShare("twitter")}
-                  data-testid="button-share-twitter"
-                  title={language === "ar" ? "شارك على تويتر" : "Share on Twitter"}
-                >
-                  <Twitter className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-600 transition-all"
-                  onClick={() => handleShare("facebook")}
-                  data-testid="button-share-facebook"
-                  title={language === "ar" ? "شارك على فيسبوك" : "Share on Facebook"}
-                >
-                  <Facebook className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-slate-700 hover:bg-slate-800 hover:border-blue-700 transition-all"
-                  onClick={() => handleShare("linkedin")}
-                  data-testid="button-share-linkedin"
-                  title={language === "ar" ? "شارك على لينكد إن" : "Share on LinkedIn"}
-                >
-                  <Linkedin className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`border-slate-700 hover:bg-slate-800 transition-all ${
-                    copied ? "border-green-500 bg-green-500/10" : ""
+                  className={`flex items-center gap-2 transition-all ${
+                    liked 
+                      ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 border-0 shadow-lg shadow-red-500/30" 
+                      : "border-slate-700 hover:bg-slate-800 hover:border-red-400"
                   }`}
-                  onClick={() => handleShare("copy")}
-                  data-testid="button-copy-link"
-                  title={language === "ar" ? "نسخ الرابط" : "Copy Link"}
+                  onClick={toggleLike}
+                  data-testid="button-like"
+                  title={language === "ar" ? "أعجبني" : "Like"}
                 >
-                  {copied ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
+                  <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+                  <span className="font-semibold">{likesCount.toLocaleString(language === "ar" ? "ar-SA" : "en-US")}</span>
                 </Button>
-              </div>
-            </div>
 
-            {/* Bookmark Button */}
-            <Button
-              variant={bookmarked ? "default" : "outline"}
-              size="sm"
-              className={`flex items-center gap-2 transition-all ${
-                bookmarked 
-                  ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600" 
-                  : "border-slate-700 hover:bg-slate-800 hover:border-yellow-500"
-              }`}
-              onClick={toggleBookmark}
-              data-testid="button-bookmark"
-              title={language === "ar" ? "حفظ المقال" : "Save Article"}
-            >
-              <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
-              <span>
-                {bookmarked 
-                  ? (language === "ar" ? "محفوظ" : "Saved")
-                  : (language === "ar" ? "حفظ" : "Save")}
-              </span>
-            </Button>
+                <div className="w-px h-8 bg-slate-700 hidden sm:block" />
+
+                {/* Share Buttons Group */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-gray-400 font-medium hidden sm:inline">
+                    {language === "ar" ? "مشاركة:" : "Share:"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-700 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-400 transition-all"
+                      onClick={() => handleShare("twitter")}
+                      data-testid="button-share-twitter"
+                      title={language === "ar" ? "شارك على تويتر" : "Share on Twitter"}
+                    >
+                      <Twitter className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-700 hover:bg-blue-600/10 hover:border-blue-500 hover:text-blue-500 transition-all"
+                      onClick={() => handleShare("facebook")}
+                      data-testid="button-share-facebook"
+                      title={language === "ar" ? "شارك على فيسبوك" : "Share on Facebook"}
+                    >
+                      <Facebook className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-700 hover:bg-blue-700/10 hover:border-blue-600 hover:text-blue-600 transition-all"
+                      onClick={() => handleShare("linkedin")}
+                      data-testid="button-share-linkedin"
+                      title={language === "ar" ? "شارك على لينكد إن" : "Share on LinkedIn"}
+                    >
+                      <Linkedin className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`border-slate-700 transition-all ${
+                        copied 
+                          ? "border-green-400 bg-green-500/10 text-green-400" 
+                          : "hover:bg-gray-500/10 hover:border-gray-400"
+                      }`}
+                      onClick={() => handleShare("copy")}
+                      data-testid="button-copy-link"
+                      title={language === "ar" ? "نسخ الرابط" : "Copy Link"}
+                    >
+                      {copied ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bookmark Button */}
+              <Button
+                variant={bookmarked ? "default" : "outline"}
+                size="sm"
+                className={`flex items-center gap-2 transition-all w-full sm:w-auto ${
+                  bookmarked 
+                    ? "bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 border-0 shadow-lg shadow-yellow-500/30" 
+                    : "border-slate-700 hover:bg-slate-800 hover:border-yellow-400"
+                }`}
+                onClick={toggleBookmark}
+                data-testid="button-bookmark"
+                title={language === "ar" ? "حفظ المقال" : "Save Article"}
+              >
+                <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
+                <span className="font-medium">
+                  {bookmarked 
+                    ? (language === "ar" ? "محفوظ" : "Saved")
+                    : (language === "ar" ? "حفظ للقراءة لاحقاً" : "Save for Later")}
+                </span>
+              </Button>
+            </div>
           </div>
 
-          {/* Featured Image */}
+          {/* Featured Image with AI Badge */}
           {article.imageUrl && (
-            <div className="mb-8 rounded-xl overflow-hidden">
+            <div className="mb-8 rounded-xl overflow-hidden relative group">
               <img
                 src={article.imageUrl}
                 alt={article.title}
                 className="w-full h-auto rounded-xl"
+                data-testid="img-featured"
               />
+              
+              {/* AI Image Badge - Overlay on Image */}
+              {article.aiGenerated && (
+                <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
+                  <Badge
+                    variant="default"
+                    className="bg-black/80 backdrop-blur-sm border-purple-500/50 text-purple-300 hover:bg-black/90 text-xs sm:text-sm px-3 py-1.5 flex items-center gap-2 shadow-lg"
+                    data-testid="badge-ai-image"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
+                    </span>
+                    {language === "ar" ? "صورة بالذكاء الاصطناعي" : "AI Generated Image"}
+                  </Badge>
+                </div>
+              )}
             </div>
           )}
 
