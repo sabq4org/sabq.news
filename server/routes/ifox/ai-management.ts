@@ -114,6 +114,42 @@ router.post("/preferences/reset", async (req, res) => {
   }
 });
 
+// ==================== IFOX CATEGORIES ====================
+
+/**
+ * GET /api/ifox/ai-management/categories
+ * Get all iFox AI categories
+ */
+router.get("/categories", async (req, res) => {
+  try {
+    const { db } = await import("../../db");
+    const { categories } = await import("@shared/schema");
+    const { or, like, eq } = await import("drizzle-orm");
+    
+    const ifoxCategories = await db
+      .select({
+        id: categories.id,
+        slug: categories.slug,
+        name_ar: categories.nameAr,
+        name_en: categories.nameEn,
+        type: categories.type,
+      })
+      .from(categories)
+      .where(
+        or(
+          eq(categories.slug, 'ifox-ai'),
+          like(categories.slug, 'ai-%')
+        )
+      )
+      .orderBy(categories.slug);
+    
+    res.json(ifoxCategories);
+  } catch (error) {
+    console.error("Get iFox categories error:", error);
+    res.status(500).json({ error: "Failed to get iFox categories" });
+  }
+});
+
 // ==================== CONTENT TEMPLATES ====================
 
 /**

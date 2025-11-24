@@ -36,6 +36,7 @@ const contentSchema = z.object({
   topic: z.string().min(10, "الموضوع يجب أن يكون 10 أحرف على الأقل"),
   description: z.string().optional(),
   contentType: z.enum(["news", "article", "analysis", "opinion"]),
+  categoryId: z.string().min(1, "يجب اختيار التصنيف"),
   scheduledFor: z.string(),
   priority: z.enum(["low", "medium", "high"]),
 });
@@ -63,9 +64,15 @@ export default function IFoxContentGenerator() {
       topic: "",
       description: "",
       contentType: "news",
+      categoryId: "112b3ebd-ab7c-424c-a2d8-ee0287df5506",
       scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16), // 1 hour from now
       priority: "medium",
     },
+  });
+
+  // Fetch iFox categories
+  const { data: ifoxCategories = [] } = useQuery<any[]>({
+    queryKey: ["/api/ifox/ai-management/categories"],
   });
 
   // Fetch scheduled tasks
@@ -86,6 +93,7 @@ export default function IFoxContentGenerator() {
           topicIdea: data.topic,
           aiSuggestion: data.description || "",
           plannedContentType: data.contentType,
+          categoryId: data.categoryId,
           assignmentType: "ai",
           status: "planned",
           keywords: [],
@@ -354,6 +362,35 @@ export default function IFoxContentGenerator() {
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Category */}
+                        <FormField
+                          control={form.control}
+                          name="categoryId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[hsl(var(--ifox-text-primary))]">التصنيف *</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger 
+                                    className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" 
+                                    data-testid="select-category"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {ifoxCategories.map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name_ar}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />

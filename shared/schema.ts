@@ -8248,6 +8248,7 @@ export const ifoxEditorialCalendar = pgTable("ifox_editorial_calendar", {
   plannedContentType: varchar("planned_content_type", { length: 100 }), // news, analysis, opinion, tutorial
   targetAudience: varchar("target_audience", { length: 100 }),
   keywords: jsonb("keywords"), // Array of target keywords
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: 'set null' }),
   
   // Assignment
   assignmentType: varchar("assignment_type", { length: 50 }).default("ai"), // ai, human, hybrid
@@ -8439,6 +8440,7 @@ export const insertIfoxEditorialCalendarSchema = createInsertSchema(ifoxEditoria
   slot: z.enum(["morning", "afternoon", "evening", "night"]),
   assignmentType: z.enum(["ai", "human", "hybrid"]),
   status: z.enum(["planned", "in_progress", "completed", "cancelled", "failed"]),
+  categoryId: z.string().optional(),
 });
 
 // Select types for iFox AI Management

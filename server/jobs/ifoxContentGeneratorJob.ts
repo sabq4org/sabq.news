@@ -76,11 +76,8 @@ export const processScheduledContentTasks = cron.schedule('* * * * *', async () 
         const contentType = (entry.plannedContentType || 'news') as 'news' | 'analysis' | 'report' | 'interview' | 'opinion';
         const keywords = Array.isArray(entry.keywords) ? entry.keywords : [];
         
-        // Extract category from suggestedCategories (take first one or default)
-        let categoryId = 'ai-news'; // Default category
-        if (entry.suggestedCategories && Array.isArray(entry.suggestedCategories) && entry.suggestedCategories.length > 0) {
-          categoryId = entry.suggestedCategories[0];
-        }
+        // Use categoryId from calendar entry, or default to ifox-ai
+        const categoryId = entry.categoryId || '112b3ebd-ab7c-424c-a2d8-ee0287df5506';
 
         console.log(`[iFox Generator] 📝 Generating article: "${articleTitle}"`);
         console.log(`[iFox Generator] 📊 Category: ${categoryId}, Type: ${contentType}, Keywords: ${keywords.join(', ')}`);

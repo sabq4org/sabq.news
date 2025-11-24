@@ -43,7 +43,7 @@ export class AITaskExecutor {
       // Step 1: Generate article content
       const generatedArticle = await aiArticleGenerator.generateArticle({
         title: task.title,
-        categoryId: task.categoryId || 'general',
+        categoryId: task.categoryId || '112b3ebd-ab7c-424c-a2d8-ee0287df5506',
         locale: task.locale as 'ar' | 'en' | 'ur',
         contentType: task.contentType as 'news' | 'analysis' | 'report' | 'interview' | 'opinion',
         keywords: Array.isArray(task.keywords) ? task.keywords : undefined,
