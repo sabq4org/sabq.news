@@ -159,7 +159,7 @@ export default function AICategoryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Header */}
-      <AIHeader />
+      <AIHeader logoUrl="/ifox" />
 
       {/* Category Hero */}
       <section className="relative px-4 py-8 border-b border-slate-800">

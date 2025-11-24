@@ -110,7 +110,7 @@ export default function AIArticleDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
-        <AIHeader />
+        <AIHeader logoUrl="/ifox" />
         <div className="container mx-auto max-w-4xl px-4 py-12">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-slate-800 rounded w-3/4" />
@@ -126,7 +126,7 @@ export default function AIArticleDetail() {
   if (!article) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
-        <AIHeader />
+        <AIHeader logoUrl="/ifox" />
         <div className="container mx-auto max-w-4xl px-4 py-12">
           <Card className="bg-slate-900/50 border-slate-800">
             <CardContent className="p-12 text-center">
@@ -149,7 +149,7 @@ export default function AIArticleDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Header */}
-      <AIHeader />
+      <AIHeader logoUrl="/ifox" />
 
       {/* Article Content */}
       <article className="container mx-auto max-w-4xl px-4 py-8">

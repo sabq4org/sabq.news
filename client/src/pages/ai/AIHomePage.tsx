@@ -133,7 +133,7 @@ export default function AIHomePage() {
       </div>
 
       {/* Header */}
-      <AIHeader />
+      <AIHeader logoUrl="/ifox" />
 
       {/* Hero Section */}
       <section className="relative px-4 py-12 md:py-20">
