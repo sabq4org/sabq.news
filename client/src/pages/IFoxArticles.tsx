@@ -6,8 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Sparkles, AlertCircle, RefreshCw, Bot, Zap } from "lucide-react";
-import { Link } from "wouter";
+import { Clock, Sparkles, AlertCircle, RefreshCw, Bot, Zap, BarChart3, FileText, Laptop, Mic } from "lucide-react";
+import { Link, useSearch, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -35,8 +35,23 @@ interface IFoxArticle {
   } | null;
 }
 
+// iFox category definitions
+const IFOX_CATEGORIES = [
+  { slug: 'ai-news', nameAr: 'آي سبق - أخبار AI', icon: Sparkles },
+  { slug: 'ai-insights', nameAr: 'آي عمق - تحليلات', icon: BarChart3 },
+  { slug: 'ai-opinions', nameAr: 'آي رأي - آراء', icon: FileText },
+  { slug: 'ai-tools', nameAr: 'آي تطبيق - أدوات', icon: Laptop },
+  { slug: 'ai-voice', nameAr: 'آي صوت - بودكاست', icon: Mic },
+];
+
 export default function IFoxArticles() {
   const [retryCount, setRetryCount] = useState(0);
+  const searchParams = useSearch();
+  const [, setLocation] = useLocation();
+  
+  // Read category from URL query params
+  const categoryFromUrl = new URLSearchParams(searchParams).get('category') || 'all';
+  const categoryFilter = categoryFromUrl;
 
   // Fetch current user
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
@@ -44,7 +59,16 @@ export default function IFoxArticles() {
     retry: false,
   });
 
-  // Fetch iFox articles
+  // Build query params for API
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    if (categoryFilter && categoryFilter !== 'all') {
+      params.append('categorySlug', categoryFilter);
+    }
+    return params.toString();
+  };
+
+  // Fetch iFox articles with category filter
   const { 
     data: articles = [], 
     isLoading, 
@@ -52,12 +76,28 @@ export default function IFoxArticles() {
     error,
     refetch 
   } = useQuery<IFoxArticle[]>({
-    queryKey: ["/api/ifox/articles"],
+    queryKey: ['/api/ifox/articles', categoryFilter],
+    queryFn: async () => {
+      const queryString = buildQueryParams();
+      const url = `/api/ifox/articles${queryString ? `?${queryString}` : ''}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch articles');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const handleRetry = () => {
     refetch();
+  };
+
+  // Handle category change
+  const handleCategoryChange = (categorySlug: string) => {
+    if (categorySlug === 'all') {
+      setLocation('/ifox');
+    } else {
+      setLocation(`/ifox?category=${categorySlug}`);
+    }
   };
 
   // Format excerpt to max 150 chars
@@ -125,6 +165,44 @@ export default function IFoxArticles() {
               <span>محتوى ذكي • تحديثات مستمرة • جودة عالية</span>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Category Filter Tabs */}
+      <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
+            {/* All Categories Tab */}
+            <Button
+              variant={categoryFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleCategoryChange('all')}
+              className="gap-2 whitespace-nowrap"
+              data-testid="button-category-all"
+            >
+              <Bot className="h-4 w-4" />
+              جميع الفئات
+            </Button>
+
+            {/* Individual Category Tabs */}
+            {IFOX_CATEGORIES.map((category) => {
+              const Icon = category.icon;
+              const isActive = categoryFilter === category.slug;
+              return (
+                <Button
+                  key={category.slug}
+                  variant={isActive ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleCategoryChange(category.slug)}
+                  className="gap-2 whitespace-nowrap"
+                  data-testid={`button-category-${category.slug}`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {category.nameAr}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </section>
 

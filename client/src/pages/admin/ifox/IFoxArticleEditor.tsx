@@ -80,7 +80,8 @@ import {
   BarChart3,
   X,
   FileText,
-  Mic
+  Mic,
+  Loader2
 } from "lucide-react";
 
 // iFox Categories
@@ -127,6 +128,13 @@ export default function IFoxArticleEditor() {
   const [tagInput, setTagInput] = useState("");
   const [exitDialog, setExitDialog] = useState(false);
 
+  // Fetch iFox categories using dedicated endpoint
+  const { data: ifoxCategories, isLoading: categoriesLoading, isError: categoriesError } = useQuery<Array<{ id: string; slug: string; nameAr: string }>>({
+    queryKey: ['/api/admin/ifox/categories'], // New dedicated endpoint
+    staleTime: 1000 * 60 * 60, // 1 hour (matches server cache)
+    retry: 2, // Allow 2 retries
+  });
+
   // Fetch article data if in edit mode
   const { data: articleData, isLoading } = useQuery<ArticleWithDetails>({
     queryKey: ['/api/admin/ifox/articles', articleId],
@@ -137,6 +145,17 @@ export default function IFoxArticleEditor() {
     },
     enabled: isEditMode && !!articleId,
   });
+
+  // Build mapping from iFox categories (no filtering needed - endpoint returns only iFox categories)
+  const categorySlugToId: Record<string, string> = {};
+  ifoxCategories?.forEach(cat => {
+    categorySlugToId[cat.slug] = cat.id;
+  });
+
+  // Fallback: if fetch failed in edit mode, use article's current category
+  if (isEditMode && articleData?.category && (!ifoxCategories || ifoxCategories.length === 0)) {
+    categorySlugToId[articleData.category.slug] = articleData.category.id;
+  }
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -158,14 +177,17 @@ export default function IFoxArticleEditor() {
 
   // Update form when article data is loaded
   useEffect(() => {
-    if (articleData) {
+    if (isEditMode && articleData) {
+      // In edit mode, use the category slug directly from article data
+      const categorySlug = articleData.category?.slug || "";
+      
       form.reset({
         title: articleData.title || "",
         titleEn: articleData.subtitle || "",
         slug: articleData.slug || "",
         excerpt: articleData.excerpt || "",
         content: articleData.content || "",
-        category: articleData.category?.slug || "",
+        category: categorySlug,
         tags: [],
         featuredImage: articleData.imageUrl || "",
         status: (articleData.status === "published" || articleData.status === "scheduled") ? articleData.status : "draft",
@@ -177,18 +199,49 @@ export default function IFoxArticleEditor() {
       setAiScore(0);
       setSentimentScore(null);
     }
-  }, [articleData, form]);
+  }, [articleData, isEditMode, form]);
 
   // Save/Update mutation
   const saveMutation = useMutation({
     mutationFn: async (data: ArticleFormData) => {
+      // Validate category slug exists
+      if (!data.category) {
+        throw new Error("يرجى اختيار تصنيف صحيح");
+      }
+      
       const url = isEditMode 
         ? `/api/admin/ifox/articles/${articleId}`
         : "/api/admin/ifox/articles";
       
+      // Prepare payload matching backend schema
+      const payload: any = {
+        title: data.title,
+        subtitle: data.titleEn,
+        slug: data.slug,
+        content: data.content,
+        excerpt: data.excerpt,
+        categorySlug: data.category, // ✅ Send slug (string), backend converts to UUID
+        imageUrl: data.featuredImage,
+        status: data.status,
+        seo: {
+          metaTitle: data.seoTitle || '',
+          metaDescription: data.seoDescription || '',
+          keywords: data.seoKeywords || [],
+        },
+        aiScore,
+        sentimentScore,
+      };
+      
+      // Handle publish date based on status
+      if (data.status === 'scheduled' && data.publishDate) {
+        payload.scheduledAt = data.publishDate.toISOString();
+      } else if (data.status === 'published' && data.publishDate) {
+        payload.publishedAt = data.publishDate.toISOString();
+      }
+      
       return apiRequest(url, {
         method: isEditMode ? "PATCH" : "POST",
-        body: JSON.stringify({ ...data, aiScore, sentimentScore }),
+        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
     },
@@ -351,6 +404,13 @@ export default function IFoxArticleEditor() {
       </div>
     );
   }
+
+  // Check if categories are ready
+  const isCategoriesReady = isEditMode 
+    ? ( Object.keys(categorySlugToId).length > 0 ) // Edit: need at least 1
+    : ( ifoxCategories && ifoxCategories.length === 5 ); // Create: need all 5
+
+  const canSave = !saveMutation.isPending && isCategoriesReady;
 
   return (
     <div className="flex h-screen bg-[hsl(var(--ifox-surface-primary))]">
@@ -660,7 +720,7 @@ export default function IFoxArticleEditor() {
                     <div className="flex gap-2 pt-2 sm:pt-4">
                       <Button
                         type="submit"
-                        disabled={saveMutation.isPending}
+                        disabled={!canSave || form.formState.isSubmitting}
                         className="flex-1 gap-1 sm:gap-2"
                         size="sm"
                         data-testid="button-save"
@@ -675,7 +735,8 @@ export default function IFoxArticleEditor() {
                           <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                         <span className="text-xs sm:text-sm">
-                          {form.watch("status") === "published" ? "نشر" : 
+                          {saveMutation.isPending ? "جاري الحفظ..." :
+                           form.watch("status") === "published" ? "نشر" : 
                            form.watch("status") === "scheduled" ? "جدولة" : "حفظ"}
                         </span>
                       </Button>
@@ -689,6 +750,27 @@ export default function IFoxArticleEditor() {
                     <CardTitle className="text-base sm:text-lg md:text-xl">التصنيف</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 sm:p-4 md:p-6">
+                    {categoriesLoading && (
+                      <div className="text-sm text-muted-foreground flex items-center gap-2 mb-4 p-3 rounded-lg bg-muted/50">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        جاري تحميل التصنيفات...
+                      </div>
+                    )}
+
+                    {isEditMode && !categoriesLoading && ifoxCategories && ifoxCategories.length < 5 && articleData?.category && (
+                      <div className="text-sm text-amber-600 dark:text-amber-500 flex items-center gap-2 mb-4 p-3 rounded-lg bg-amber-100 dark:bg-amber-900/20">
+                        <AlertCircle className="h-4 w-4" />
+                        تم تحميل التصنيف الحالي فقط. لتغيير التصنيف، يرجى إعادة تحميل الصفحة.
+                      </div>
+                    )}
+
+                    {!isEditMode && categoriesError && (
+                      <div className="text-sm text-destructive flex items-center gap-2 mb-4 p-3 rounded-lg bg-destructive/10">
+                        <AlertCircle className="h-4 w-4" />
+                        فشل تحميل التصنيفات. يرجى إعادة تحميل الصفحة.
+                      </div>
+                    )}
+
                     <FormField
                       control={form.control}
                       name="category"

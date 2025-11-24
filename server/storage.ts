@@ -1656,6 +1656,9 @@ export interface IStorage {
     trend: 'up' | 'down' | 'stable';
   }>;
   
+  // iFox Category Mapping
+  getIFoxCategoryMap(): Promise<Record<string, string>>;
+  
   // ============================================
   // AI Scheduled Tasks Operations - مهام AI المجدولة
   // ============================================
@@ -1844,6 +1847,10 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // In-memory cache for iFox category mapping
+  private ifoxCategoryMapCache: Record<string, string> | null = null;
+  private ifoxCategoryMapCacheTime: number = 0;
+  private readonly CATEGORY_MAP_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
@@ -14808,6 +14815,32 @@ export class DatabaseStorage implements IStorage {
       topCategories: topCategoriesResult,
       trend
     };
+  }
+
+  // iFox Category Mapping
+  async getIFoxCategoryMap(): Promise<Record<string, string>> {
+    // Check cache first
+    if (this.ifoxCategoryMapCache && (Date.now() - this.ifoxCategoryMapCacheTime < this.CATEGORY_MAP_CACHE_TTL)) {
+      return this.ifoxCategoryMapCache;
+    }
+    
+    const IFOX_CATEGORY_SLUGS = ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'];
+    
+    const categoriesData = await db
+      .select({ id: categories.id, slug: categories.slug })
+      .from(categories)
+      .where(inArray(categories.slug, IFOX_CATEGORY_SLUGS));
+    
+    const mapping: Record<string, string> = {};
+    categoriesData.forEach(cat => {
+      mapping[cat.slug] = cat.id;
+    });
+    
+    // Cache for 1 hour
+    this.ifoxCategoryMapCache = mapping;
+    this.ifoxCategoryMapCacheTime = Date.now();
+    
+    return mapping;
   }
   
   // ============================================

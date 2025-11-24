@@ -1758,6 +1758,56 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   seoMetadata: seoMetadataSchema,
   sourceMetadata: sourceMetadataSchema,
 });
+
+// iFox Article Schemas - Accept categorySlug instead of categoryId
+export const insertIFoxArticleSchema = z.object({
+  title: z.string().min(10, "العنوان يجب أن يكون 10 أحرف على الأقل"),
+  subtitle: z.string().optional(),
+  slug: z.string().max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف").optional(),
+  content: z.string().min(100, "المحتوى يجب أن يكون 100 حرف على الأقل"),
+  excerpt: z.string().min(50, "الوصف يجب أن يكون 50 حرف على الأقل"),
+  categorySlug: z.string().min(1, "يرجى اختيار التصنيف"),
+  imageUrl: z.string().url("رابط الصورة غير صحيح").optional(),
+  status: z.enum(["draft", "published", "scheduled"]).default("draft"),
+  publishedAt: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
+  scheduledAt: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
+  seo: z.object({
+    metaTitle: z.string().max(70, "عنوان SEO يجب ألا يتجاوز 70 حرف").optional(),
+    metaDescription: z.string().max(160, "وصف SEO يجب ألا يتجاوز 160 حرف").optional(),
+    keywords: z.array(z.string()).optional(),
+  }).optional(),
+  aiScore: z.number().min(0).max(100).optional(),
+  sentimentScore: z.object({
+    positive: z.number(),
+    negative: z.number(),
+    neutral: z.number(),
+  }).nullable().optional(),
+});
+
+export const updateIFoxArticleSchema = z.object({
+  title: z.string().min(10, "العنوان يجب أن يكون 10 أحرف على الأقل").optional(),
+  subtitle: z.string().optional(),
+  slug: z.string().max(150, "الرابط (slug) يجب أن لا يتجاوز 150 حرف").optional(),
+  content: z.string().min(100, "المحتوى يجب أن يكون 100 حرف على الأقل").optional(),
+  excerpt: z.string().min(50, "الوصف يجب أن يكون 50 حرف على الأقل").optional(),
+  categorySlug: z.string().min(1, "يرجى اختيار التصنيف").optional(),
+  imageUrl: z.string().url("رابط الصورة غير صحيح").optional(),
+  status: z.enum(["draft", "published", "scheduled"]).optional(),
+  publishedAt: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
+  scheduledAt: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
+  seo: z.object({
+    metaTitle: z.string().max(70, "عنوان SEO يجب ألا يتجاوز 70 حرف").optional(),
+    metaDescription: z.string().max(160, "وصف SEO يجب ألا يتجاوز 160 حرف").optional(),
+    keywords: z.array(z.string()).optional(),
+  }).optional(),
+  aiScore: z.number().min(0).max(100).optional(),
+  sentimentScore: z.object({
+    positive: z.number(),
+    negative: z.number(),
+    neutral: z.number(),
+  }).nullable().optional(),
+});
+
 export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({ 
   id: true, 
   createdAt: true,
