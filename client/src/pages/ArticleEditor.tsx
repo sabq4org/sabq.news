@@ -109,6 +109,7 @@ export default function ArticleEditor() {
   }, [articleType]);
   const [imageUrl, setImageUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailManuallyDeleted, setThumbnailManuallyDeleted] = useState(false);
   const [heroImageMediaId, setHeroImageMediaId] = useState<string | null>(null);
   const [imageFocalPoint, setImageFocalPoint] = useState<{ x: number; y: number } | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -204,6 +205,7 @@ export default function ArticleEditor() {
         (article as any).thumbnailUrl.match(/^https?:\/\/.+/) || (article as any).thumbnailUrl.startsWith('/')
       ) ? (article as any).thumbnailUrl : "";
       setThumbnailUrl(validThumbnailUrl);
+      setThumbnailManuallyDeleted((article as any).thumbnailManuallyDeleted || false);
       setImageFocalPoint((article as any).imageFocalPoint || null);
       const loadedArticleType = (article.articleType as any) || "news";
       setArticleType(loadedArticleType);
@@ -448,6 +450,7 @@ export default function ArticleEditor() {
         categoryId: categoryId || null,
         imageUrl: imageUrl || "",
         thumbnailUrl: thumbnailUrl || "",
+        thumbnailManuallyDeleted: thumbnailManuallyDeleted,
         imageFocalPoint: imageFocalPoint || null,
         articleType,
         publishType,
@@ -1658,10 +1661,14 @@ const generateSlug = (text: string) => {
                 articleId={id}
                 imageUrl={imageUrl}
                 thumbnailUrl={thumbnailUrl}
+                thumbnailManuallyDeleted={thumbnailManuallyDeleted}
                 articleTitle={title}
                 articleExcerpt={excerpt}
-                onThumbnailGenerated={(url) => {
+                onThumbnailGenerated={(url, manuallyDeleted) => {
                   setThumbnailUrl(url);
+                  if (manuallyDeleted !== undefined) {
+                    setThumbnailManuallyDeleted(manuallyDeleted);
+                  }
                 }}
                 autoGenerate={true}
               />

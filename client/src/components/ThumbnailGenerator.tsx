@@ -13,9 +13,10 @@ interface ThumbnailGeneratorProps {
   articleId?: string;
   imageUrl?: string;
   thumbnailUrl?: string;
+  thumbnailManuallyDeleted?: boolean;
   articleTitle?: string;
   articleExcerpt?: string;
-  onThumbnailGenerated?: (thumbnailUrl: string) => void;
+  onThumbnailGenerated?: (thumbnailUrl: string, manuallyDeleted?: boolean) => void;
   autoGenerate?: boolean;
 }
 
@@ -26,6 +27,7 @@ export function ThumbnailGenerator({
   articleId,
   imageUrl,
   thumbnailUrl,
+  thumbnailManuallyDeleted = false,
   articleTitle,
   articleExcerpt,
   onThumbnailGenerated,
@@ -37,9 +39,6 @@ export function ThumbnailGenerator({
   );
   const [method, setMethod] = useState<ThumbnailMethod>('ai-smart');
   const [style, setStyle] = useState<ThumbnailStyle>('news');
-  
-  // Track if user manually deleted the thumbnail
-  const manuallyDeletedRef = useRef(false);
 
   const generateThumbnail = async (selectedMethod?: ThumbnailMethod) => {
     if (!imageUrl) {
@@ -77,11 +76,9 @@ export function ThumbnailGenerator({
         const thumbnailWithTimestamp = `${response.thumbnailUrl}?t=${Date.now()}`;
         setCurrentThumbnail(thumbnailWithTimestamp);
         
-        // Reset the manually deleted flag since we have a new thumbnail
-        manuallyDeletedRef.current = false;
-        
         if (onThumbnailGenerated) {
-          onThumbnailGenerated(response.thumbnailUrl);
+          // Reset manually deleted flag since we generated a new thumbnail
+          onThumbnailGenerated(response.thumbnailUrl, false);
         }
 
         const methodLabel = useMethod === 'ai-smart' ? 'بالذكاء الاصطناعي' : 'بالقص الذكي';
@@ -103,31 +100,23 @@ export function ThumbnailGenerator({
     }
   };
 
-  // Reset manually deleted flag when article changes
-  useEffect(() => {
-    manuallyDeletedRef.current = false;
-  }, [articleId]);
-
   // Sync currentThumbnail with thumbnailUrl prop changes
   useEffect(() => {
     if (thumbnailUrl && thumbnailUrl !== "") {
       setCurrentThumbnail(`${thumbnailUrl}?t=${Date.now()}`);
-      // Reset manually deleted flag if we receive a valid thumbnail URL
-      manuallyDeletedRef.current = false;
     } else if (thumbnailUrl === "") {
       setCurrentThumbnail(undefined);
     }
   }, [thumbnailUrl]);
 
   // Auto-generate thumbnail when image changes (using AI Smart by default)
-  // BUT ONLY for new articles - existing articles require manual generation
-  // This prevents auto-regeneration after user manually deletes thumbnail and saves
+  // BUT: Don't auto-generate if user manually deleted the thumbnail
+  // thumbnailManuallyDeleted flag is persisted in database to survive page reloads
   useEffect(() => {
-    const isNewArticle = !articleId || articleId === 'new' || articleId === 'undefined';
-    if (autoGenerate && imageUrl && !currentThumbnail && isNewArticle && !manuallyDeletedRef.current) {
+    if (autoGenerate && imageUrl && !currentThumbnail && articleId && !thumbnailManuallyDeleted) {
       generateThumbnail('ai-smart');
     }
-  }, [imageUrl, articleId]);
+  }, [imageUrl, articleId, thumbnailManuallyDeleted]);
 
   if (!imageUrl) {
     return null;
@@ -171,11 +160,9 @@ export function ThumbnailGenerator({
                 size="sm"
                 onClick={() => {
                   setCurrentThumbnail(undefined);
-                  // Mark that user manually deleted the thumbnail
-                  // This prevents auto-generation from creating a new one
-                  manuallyDeletedRef.current = true;
                   if (onThumbnailGenerated) {
-                    onThumbnailGenerated("");
+                    // Mark thumbnail as manually deleted to prevent auto-generation
+                    onThumbnailGenerated("", true);
                   }
                   toast({
                     title: "تم حذف صورة الغلاف",

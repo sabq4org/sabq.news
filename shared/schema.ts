@@ -2186,6 +2186,12 @@ export const updateArticleSchema = z.object({
     z.string().startsWith("/", "رابط الصورة غير صحيح"),
     z.literal("")
   ]).optional(),
+  thumbnailUrl: z.union([
+    z.string().url("رابط الصورة المصغرة غير صحيح"),
+    z.string().startsWith("/", "رابط الصورة المصغرة غير صحيح"),
+    z.literal("")
+  ]).optional(),
+  thumbnailManuallyDeleted: z.boolean().optional(),
   imageFocalPoint: z.object({
     x: z.number().min(0).max(100),
     y: z.number().min(0).max(100),
