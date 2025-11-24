@@ -97,6 +97,15 @@ export function ThumbnailGenerator({
     }
   };
 
+  // Sync currentThumbnail with thumbnailUrl prop changes
+  useEffect(() => {
+    if (thumbnailUrl && thumbnailUrl !== "") {
+      setCurrentThumbnail(`${thumbnailUrl}?t=${Date.now()}`);
+    } else if (thumbnailUrl === "") {
+      setCurrentThumbnail(undefined);
+    }
+  }, [thumbnailUrl]);
+
   // Auto-generate thumbnail when image changes (using AI Smart by default)
   useEffect(() => {
     if (autoGenerate && imageUrl && !currentThumbnail && articleId) {
