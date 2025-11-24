@@ -14829,7 +14829,12 @@ export class DatabaseStorage implements IStorage {
     const categoriesData = await db
       .select({ id: categories.id, slug: categories.slug })
       .from(categories)
-      .where(inArray(categories.slug, IFOX_CATEGORY_SLUGS));
+      .where(
+        and(
+          inArray(categories.slug, IFOX_CATEGORY_SLUGS),
+          ne(categories.status, 'deleted')
+        )
+      );
     
     const mapping: Record<string, string> = {};
     categoriesData.forEach(cat => {

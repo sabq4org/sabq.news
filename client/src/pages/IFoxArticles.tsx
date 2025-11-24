@@ -35,14 +35,20 @@ interface IFoxArticle {
   } | null;
 }
 
-// iFox category definitions
-const IFOX_CATEGORIES = [
-  { slug: 'ai-news', nameAr: 'آي سبق - أخبار AI', icon: Sparkles },
-  { slug: 'ai-insights', nameAr: 'آي عمق - تحليلات', icon: BarChart3 },
-  { slug: 'ai-opinions', nameAr: 'آي رأي - آراء', icon: FileText },
-  { slug: 'ai-tools', nameAr: 'آي تطبيق - أدوات', icon: Laptop },
-  { slug: 'ai-voice', nameAr: 'آي صوت - بودكاست', icon: Mic },
-];
+interface IFoxCategory {
+  id: string;
+  slug: string;
+  nameAr: string;
+}
+
+// Icon mapping for iFox categories
+const CATEGORY_ICONS: Record<string, typeof Sparkles> = {
+  'ai-news': Sparkles,
+  'ai-insights': BarChart3,
+  'ai-opinions': FileText,
+  'ai-tools': Laptop,
+  'ai-voice': Mic,
+};
 
 export default function IFoxArticles() {
   const [retryCount, setRetryCount] = useState(0);
@@ -57,6 +63,12 @@ export default function IFoxArticles() {
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
     retry: false,
+  });
+
+  // Fetch iFox categories (only active, non-deleted categories)
+  const { data: categories = [] } = useQuery<IFoxCategory[]>({
+    queryKey: ["/api/ifox/categories"],
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
   });
 
   // Build query params for API
@@ -187,8 +199,8 @@ export default function IFoxArticles() {
             </Button>
 
             {/* Individual Category Tabs */}
-            {IFOX_CATEGORIES.map((category) => {
-              const Icon = category.icon;
+            {categories.map((category) => {
+              const Icon = CATEGORY_ICONS[category.slug] || Sparkles;
               const isActive = categoryFilter === category.slug;
               return (
                 <Button

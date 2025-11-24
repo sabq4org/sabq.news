@@ -49,10 +49,15 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 - **Architecture:** Dedicated endpoint `GET /api/admin/ifox/categories` with 1-hour server-side in-memory cache via `storage.getIFoxCategoryMap()` method
 - **Request Contract:** Frontend sends `categorySlug` (string), backend converts to UUID internally using cached category map, eliminating frontend UUID exposure
 - **Schemas:** Dedicated `insertIFoxArticleSchema` and `updateIFoxArticleSchema` in `shared/schema.ts` for iFox-specific validation
-- **API Endpoints:** `POST /api/admin/ifox/articles` and `PATCH /api/admin/ifox/articles/:id` handle slug→UUID conversion with proper validation
+- **API Endpoints:** 
+  - Admin: `POST /api/admin/ifox/articles` and `PATCH /api/admin/ifox/articles/:id` handle slug→UUID conversion with proper validation
+  - Public: `GET /api/ifox/categories` returns active (non-deleted) iFox categories for public pages
 - **Public Filtering:** `GET /api/ifox/articles?categorySlug={slug}` returns `{ articles: [...], total: number }` structure
-- **Frontend:** `IFoxArticleEditor.tsx` uses dedicated categories endpoint, `IFoxArticles.tsx` implements URL-based category filtering with sticky tabs
-- **Reliability:** Server-side caching (1 hour TTL) + client-side caching prevents auth failures, guarantees consistent slug→UUID mappings for all 5 iFox categories
+- **Frontend:** 
+  - `IFoxArticleEditor.tsx` uses admin categories endpoint
+  - `IFoxArticles.tsx` uses public categories endpoint with URL-based category filtering and sticky tabs
+- **Deleted Categories Filtering:** `getIFoxCategoryMap()` filters out deleted categories (status != 'deleted'), preventing deleted categories from appearing in headers and public pages
+- **Reliability:** Server-side caching (1 hour TTL) + client-side caching prevents auth failures, guarantees consistent slug→UUID mappings for active iFox categories only
 
 **AI Tasks System (GPT-5.1 Compliance - November 2025):**
 - **ai-manager.ts:** GPT-5.1 integration without temperature parameter, uses `response_format: { type: "json_object" }` for structured JSON responses, omits `max_completion_tokens` to use intelligent defaults

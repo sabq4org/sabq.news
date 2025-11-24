@@ -8298,6 +8298,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch iFox articles" });
     }
   });
+  // iFox Categories endpoint - fetches active iFox categories for public page
+  app.get("/api/ifox/categories", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
+    try {
+      const categoryMap = await storage.getIFoxCategoryMap();
+      
+      // Return as array of {slug, id, nameAr} for easier frontend use
+      const CATEGORY_NAMES: Record<string, string> = {
+        'ai-news': 'آي سبق - أخبار AI',
+        'ai-insights': 'آي عمق - تحليلات',
+        'ai-opinions': 'آي رأي - آراء',
+        'ai-tools': 'آي تطبيق - أدوات',
+        'ai-voice': 'آي صوت - بودكاست',
+      };
+      
+      const categories = Object.entries(categoryMap).map(([slug, id]) => ({
+        id,
+        slug,
+        nameAr: CATEGORY_NAMES[slug] || slug
+      }));
+      
+      res.json(categories);
+    } catch (error: any) {
+      console.error("Error fetching iFox categories:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Homepage statistics (cached for 5 min)
   app.get("/api/homepage/stats", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
