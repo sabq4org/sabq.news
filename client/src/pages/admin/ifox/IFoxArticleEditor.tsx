@@ -78,18 +78,18 @@ import {
   ChevronRight,
   Wand2,
   BarChart3,
-  X
+  X,
+  FileText,
+  Mic
 } from "lucide-react";
 
 // iFox Categories
-const categories = [
-  { id: "technology", label: "التقنية", icon: Laptop, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
-  { id: "ai", label: "الذكاء الاصطناعي", icon: Brain, color: "text-[hsl(var(--ifox-accent-primary))]", bgColor: "bg-[hsl(var(--ifox-accent-primary)/.1)]" },
-  { id: "web", label: "الويب", icon: Globe, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
-  { id: "education", label: "التعليم", icon: BookOpen, color: "text-[hsl(var(--ifox-warning))]", bgColor: "bg-[hsl(var(--ifox-warning)/.1)]" },
-  { id: "gaming", label: "الألعاب", icon: Gamepad2, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
-  { id: "health", label: "الصحة", icon: Heart, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
-  { id: "business", label: "الأعمال", icon: DollarSign, color: "text-[hsl(var(--ifox-success))]", bgColor: "bg-[hsl(var(--ifox-success)/.1)]" }
+const IFOX_CATEGORIES = [
+  { slug: 'ai-news', nameAr: 'آي سبق - أخبار AI', icon: Sparkles, color: "text-[hsl(var(--ifox-accent-primary))]", bgColor: "bg-[hsl(var(--ifox-accent-primary)/.1)]" },
+  { slug: 'ai-insights', nameAr: 'آي عمق - تحليلات', icon: BarChart3, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
+  { slug: 'ai-opinions', nameAr: 'آي رأي - آراء', icon: FileText, color: "text-[hsl(var(--ifox-warning))]", bgColor: "bg-[hsl(var(--ifox-warning)/.1)]" },
+  { slug: 'ai-tools', nameAr: 'آي تطبيق - أدوات', icon: Laptop, color: "text-[hsl(var(--ifox-success))]", bgColor: "bg-[hsl(var(--ifox-success)/.1)]" },
+  { slug: 'ai-voice', nameAr: 'آي صوت - بودكاست', icon: Mic, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
 ];
 
 const articleSchema = z.object({
@@ -165,7 +165,7 @@ export default function IFoxArticleEditor() {
         slug: articleData.slug || "",
         excerpt: articleData.excerpt || "",
         content: articleData.content || "",
-        category: articleData.category?.id || "",
+        category: articleData.category?.slug || "",
         tags: [],
         featuredImage: articleData.imageUrl || "",
         status: (articleData.status === "published" || articleData.status === "scheduled") ? articleData.status : "draft",
@@ -696,26 +696,26 @@ export default function IFoxArticleEditor() {
                         <FormItem>
                           <FormControl>
                             <div className="space-y-2 overflow-x-auto max-h-[60vh] overflow-y-auto">
-                              {categories.map((category) => {
+                              {IFOX_CATEGORIES.map((category) => {
                                 const Icon = category.icon;
-                                const isSelected = field.value === category.id;
+                                const isSelected = field.value === category.slug;
                                 return (
                                   <button
-                                    key={category.id}
+                                    key={category.slug}
                                     type="button"
-                                    onClick={() => field.onChange(category.id)}
+                                    onClick={() => field.onChange(category.slug)}
                                     className={cn(
                                       "w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all min-w-0",
                                       isSelected
                                         ? `${category.bgColor} ${category.color} ring-2 ring-primary`
                                         : "hover:bg-muted"
                                     )}
-                                    data-testid={`button-category-${category.id}`}
+                                    data-testid={`button-category-${category.slug}`}
                                   >
                                     <div className={cn("p-1.5 sm:p-2 rounded-lg shrink-0", category.bgColor)}>
                                       <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                                     </div>
-                                    <span className="font-medium text-xs sm:text-sm truncate flex-1 text-right">{category.label}</span>
+                                    <span className="font-medium text-xs sm:text-sm truncate flex-1 text-right">{category.nameAr}</span>
                                     {isSelected && (
                                       <ChevronRight className="w-4 h-4 ml-auto shrink-0" />
                                     )}
