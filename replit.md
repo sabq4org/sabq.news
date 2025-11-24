@@ -43,7 +43,14 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 -   **Accessibility:** Comprehensive WCAG 2.1 AA compliance infrastructure, including global state management, skip links, ARIA labels, semantic HTML, live regions, form/loading state announcements, and a Voice Assistant with Reading/Dyslexia Mode.
 
 ### System Design Choices
-Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5. The platform includes scope-aware theme management, a Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with versioned migrations manages database schema. The publisher content sales system uses a three-table architecture (`publishers`, `publisher_credits`, `publisher_credit_logs`) with RBAC and atomic credit deductions. Article ordering uses a hybrid approach of curated sections and chronological feeds.
+Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5.1 with intelligent defaults (no max_completion_tokens parameter). The platform includes scope-aware theme management, a Content Import System (RSS feeds with AI), and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with versioned migrations manages database schema. The publisher content sales system uses a three-table architecture (`publishers`, `publisher_credits`, `publisher_credit_logs`) with RBAC and atomic credit deductions. Article ordering uses a hybrid approach of curated sections and chronological feeds.
+
+**AI Tasks System (GPT-5.1 Compliance - November 2025):**
+- **ai-manager.ts:** GPT-5.1 integration without temperature parameter, uses `response_format: { type: "json_object" }` for structured JSON responses, omits `max_completion_tokens` to use intelligent defaults
+- **aiTaskExecutor.ts:** Atomic race condition prevention via `markAiTaskProcessing()` with `skipped` flag, sequential task execution prevents duplicate processing
+- **aiArticleGenerator.ts:** Database schema compliance - uses `typeof articles.$inferInsert` return type, includes `authorId` field, removes legacy fields (featured, trending, viewCount, createdAt, updatedAt) that have database defaults, super admin fallback when `task.createdBy` is null
+- **aiTasksCleanup.ts:** Automated cleanup job (runs every 5 minutes) that fails tasks stuck in "processing" status for >10 minutes, includes null/NaN validation for `updatedAt` field to prevent race conditions
+- **Known Limitation:** 30+ other files (`calendarAi.ts`, `smartLinks.ts`, `contentAnalyzer.ts`, etc.) still call OpenAI directly with temperature parameter - requires systematic refactoring in future iterations
 
 ## External Dependencies
 
