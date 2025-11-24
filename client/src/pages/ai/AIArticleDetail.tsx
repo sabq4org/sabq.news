@@ -29,7 +29,6 @@ import { useToast } from "@/hooks/use-toast";
 import AIHeader from "@/components/ai/AIHeader";
 import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ImageWithCaption } from "@/components/ImageWithCaption";
 import type { ArticleWithDetails } from "@shared/schema";
 
 export default function AIArticleDetail() {
@@ -380,8 +379,8 @@ export default function AIArticleDetail() {
               />
               
               {/* AI Image Badge - Top Left Overlay */}
-              {article.aiGenerated && (
-                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
+              {article.isAiGeneratedImage && (
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
                   <Badge
                     variant="default"
                     className="bg-black/80 backdrop-blur-sm border-purple-500/50 text-purple-300 hover:bg-black/90 text-xs sm:text-sm px-3 py-1.5 flex items-center gap-2 shadow-lg"
