@@ -351,93 +351,96 @@ export default function IFoxArticleEditor() {
       <IFoxSidebar className="hidden lg:block" />
       <div className="flex-1 overflow-y-auto">
         <ScrollArea className="h-full">
-          <div className="max-w-7xl mx-auto p-6 space-y-6" dir="rtl">
+          <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6" dir="rtl">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
               onClick={() => setExitDialog(true)}
-              className="gap-2"
+              className="gap-1 sm:gap-2 shrink-0"
+              size="sm"
               data-testid="button-back"
             >
-              <ArrowLeft className="h-4 w-4" />
-              العودة
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">العودة</span>
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">
                 {isEditMode ? "تحرير المقال" : "مقال جديد"}
               </h1>
-              <p className="text-muted-foreground">آي فوكس - المحتوى التقني</p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">آي فوكس - المحتوى التقني</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => setPreviewMode(!previewMode)}
-              className="gap-2"
+              className="gap-1 sm:gap-2 flex-1 sm:flex-none"
+              size="sm"
               data-testid="button-preview"
             >
-              <Eye className="h-4 w-4" />
-              {previewMode ? "إغلاق المعاينة" : "معاينة"}
+              <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-xs sm:text-sm">{previewMode ? "إغلاق المعاينة" : "معاينة"}</span>
             </Button>
           </div>
         </div>
 
         {/* AI Score Card */}
         <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Sparkles className="h-8 w-8 text-primary" />
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="p-2 sm:p-3 rounded-lg bg-primary/10 shrink-0">
+                  <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">تقييم جودة المحتوى</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Progress value={aiScore} className="h-2 w-32" />
-                    <span className={cn("text-2xl font-bold", getAIScoreColor(aiScore))}>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">تقييم جودة المحتوى</p>
+                  <div className="flex items-center gap-2 mt-1 overflow-x-auto">
+                    <Progress value={aiScore} className="h-2 w-24 sm:w-32" />
+                    <span className={cn("text-lg sm:text-xl md:text-2xl font-bold whitespace-nowrap", getAIScoreColor(aiScore))}>
                       {aiScore}%
                     </span>
-                    <Badge variant="secondary">{getAIScoreLabel(aiScore)}</Badge>
+                    <Badge variant="secondary" className="text-xs">{getAIScoreLabel(aiScore)}</Badge>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   onClick={analyzeContent}
                   disabled={analyzingContent || !form.getValues("content")}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 flex-1 sm:flex-none"
+                  size="sm"
                   data-testid="button-analyze"
                 >
                   {analyzingContent ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
-                    <BarChart3 className="h-4 w-4" />
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
-                  تحليل المحتوى
+                  <span className="text-xs sm:text-sm">تحليل المحتوى</span>
                 </Button>
               </div>
             </div>
 
             {/* Sentiment Analysis */}
             {sentimentScore && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium mb-2">تحليل المشاعر</p>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                <p className="text-xs sm:text-sm font-medium mb-2">تحليل المشاعر</p>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">إيجابي</p>
-                    <p className="text-lg font-bold text-[hsl(var(--ifox-success))]">{sentimentScore.positive}%</p>
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-[hsl(var(--ifox-success))]">{sentimentScore.positive}%</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">محايد</p>
-                    <p className="text-lg font-bold text-[hsl(var(--ifox-text-secondary))]">{sentimentScore.neutral}%</p>
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-[hsl(var(--ifox-text-secondary))]">{sentimentScore.neutral}%</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">سلبي</p>
-                    <p className="text-lg font-bold text-[hsl(var(--ifox-error))]">{sentimentScore.negative}%</p>
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-[hsl(var(--ifox-error))]">{sentimentScore.negative}%</p>
                   </div>
                 </div>
               </div>
@@ -447,42 +450,43 @@ export default function IFoxArticleEditor() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 sm:gap-4 md:gap-6">
               {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
                 {/* Basic Info */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>المعلومات الأساسية</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="text-base sm:text-lg md:text-xl">المعلومات الأساسية</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
                     <FormField
                       control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>العنوان (عربي) *</FormLabel>
-                          <div className="flex gap-2">
+                          <FormLabel className="text-xs sm:text-sm">العنوان (عربي) *</FormLabel>
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <FormControl>
-                              <Input {...field} dir="rtl" placeholder="أدخل عنوان المقال" />
+                              <Input {...field} dir="rtl" placeholder="أدخل عنوان المقال" className="text-xs sm:text-sm md:text-base" data-testid="input-title" />
                             </FormControl>
                             <Button
                               type="button"
                               variant="outline"
                               onClick={generateAITitle}
                               disabled={generatingTitle || !form.getValues("content")}
-                              className="gap-2"
+                              className="gap-1 sm:gap-2 whitespace-nowrap w-full sm:w-auto"
+                              size="sm"
                               data-testid="button-generate-title"
                             >
                               {generatingTitle ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                               ) : (
-                                <Wand2 className="h-4 w-4" />
+                                <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
                               )}
-                              توليد بـ AI
+                              <span className="text-xs sm:text-sm">توليد بـ AI</span>
                             </Button>
                           </div>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -492,11 +496,11 @@ export default function IFoxArticleEditor() {
                       name="titleEn"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>العنوان (إنجليزي)</FormLabel>
+                          <FormLabel className="text-xs sm:text-sm">العنوان (إنجليزي)</FormLabel>
                           <FormControl>
-                            <Input {...field} dir="ltr" placeholder="Enter article title" />
+                            <Input {...field} dir="ltr" placeholder="Enter article title" className="text-xs sm:text-sm md:text-base" data-testid="input-title-en" />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -506,19 +510,21 @@ export default function IFoxArticleEditor() {
                       name="excerpt"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الوصف المختصر *</FormLabel>
+                          <FormLabel className="text-xs sm:text-sm">الوصف المختصر *</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
                               dir="rtl"
                               rows={3}
                               placeholder="أدخل وصف مختصر للمقال"
+                              className="text-xs sm:text-sm md:text-base"
+                              data-testid="textarea-excerpt"
                             />
                           </FormControl>
-                          <FormDescription>
+                          <FormDescription className="text-xs">
                             سيظهر هذا الوصف في قوائم المقالات ونتائج البحث
                           </FormDescription>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -527,28 +533,28 @@ export default function IFoxArticleEditor() {
 
                 {/* Content Editor */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>محتوى المقال</span>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-base sm:text-lg md:text-xl">
+                      <span className="truncate">محتوى المقال</span>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={generateSuggestions}
                         disabled={generatingSuggestions || !form.getValues("title")}
-                        className="gap-2"
+                        className="gap-1 sm:gap-2 w-full sm:w-auto whitespace-nowrap"
                         data-testid="button-suggestions"
                       >
                         {generatingSuggestions ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         ) : (
-                          <Lightbulb className="h-4 w-4" />
+                          <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
-                        اقتراحات AI
+                        <span className="text-xs sm:text-sm">اقتراحات AI</span>
                       </Button>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 sm:p-4 md:p-6">
                     <FormField
                       control={form.control}
                       name="content"
@@ -561,7 +567,7 @@ export default function IFoxArticleEditor() {
                               placeholder="ابدأ بكتابة محتوى المقال..."
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -570,22 +576,22 @@ export default function IFoxArticleEditor() {
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
                 {/* Publishing Options */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>خيارات النشر</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="text-base sm:text-lg md:text-xl">خيارات النشر</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
                     <FormField
                       control={form.control}
                       name="status"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الحالة</FormLabel>
+                          <FormLabel className="text-xs sm:text-sm">الحالة</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger data-testid="select-status">
+                              <SelectTrigger data-testid="select-status" className="text-xs sm:text-sm md:text-base">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -595,7 +601,7 @@ export default function IFoxArticleEditor() {
                               <SelectItem value="scheduled">مجدول</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -606,24 +612,27 @@ export default function IFoxArticleEditor() {
                         name="publishDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>تاريخ النشر</FormLabel>
+                            <FormLabel className="text-xs sm:text-sm">تاريخ النشر</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
                                     variant="outline"
+                                    size="sm"
                                     className={cn(
-                                      "w-full justify-start text-right",
+                                      "w-full justify-start text-right gap-1 sm:gap-2",
                                       !field.value && "text-muted-foreground"
                                     )}
                                     data-testid="button-publish-date"
                                   >
-                                    <CalendarIcon className="ml-2 h-4 w-4" />
-                                    {field.value ? (
-                                      format(field.value, "PPP", { locale: ar })
-                                    ) : (
-                                      <span>اختر التاريخ</span>
-                                    )}
+                                    <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                                    <span className="text-xs sm:text-sm truncate">
+                                      {field.value ? (
+                                        format(field.value, "PPP", { locale: ar })
+                                      ) : (
+                                        "اختر التاريخ"
+                                      )}
+                                    </span>
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
@@ -636,30 +645,33 @@ export default function IFoxArticleEditor() {
                                 />
                               </PopoverContent>
                             </Popover>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                           </FormItem>
                         )}
                       />
                     )}
 
-                    <div className="flex gap-2 pt-4">
+                    <div className="flex gap-2 pt-2 sm:pt-4">
                       <Button
                         type="submit"
                         disabled={saveMutation.isPending}
-                        className="flex-1 gap-2"
+                        className="flex-1 gap-1 sm:gap-2"
+                        size="sm"
                         data-testid="button-save"
                       >
                         {saveMutation.isPending ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         ) : form.watch("status") === "published" ? (
-                          <Send className="h-4 w-4" />
+                          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : form.watch("status") === "scheduled" ? (
-                          <Clock className="h-4 w-4" />
+                          <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <Save className="h-4 w-4" />
+                          <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
-                        {form.watch("status") === "published" ? "نشر" : 
-                         form.watch("status") === "scheduled" ? "جدولة" : "حفظ"}
+                        <span className="text-xs sm:text-sm">
+                          {form.watch("status") === "published" ? "نشر" : 
+                           form.watch("status") === "scheduled" ? "جدولة" : "حفظ"}
+                        </span>
                       </Button>
                     </div>
                   </CardContent>
@@ -667,17 +679,17 @@ export default function IFoxArticleEditor() {
 
                 {/* Category */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>التصنيف</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="text-base sm:text-lg md:text-xl">التصنيف</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 sm:p-4 md:p-6">
                     <FormField
                       control={form.control}
                       name="category"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <div className="space-y-2">
+                            <div className="space-y-2 overflow-x-auto max-h-[60vh] overflow-y-auto">
                               {categories.map((category) => {
                                 const Icon = category.icon;
                                 const isSelected = field.value === category.id;
@@ -687,26 +699,26 @@ export default function IFoxArticleEditor() {
                                     type="button"
                                     onClick={() => field.onChange(category.id)}
                                     className={cn(
-                                      "w-full flex items-center gap-3 p-3 rounded-lg transition-all",
+                                      "w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all min-w-0",
                                       isSelected
                                         ? `${category.bgColor} ${category.color} ring-2 ring-primary`
                                         : "hover:bg-muted"
                                     )}
                                     data-testid={`button-category-${category.id}`}
                                   >
-                                    <div className={cn("p-2 rounded-lg", category.bgColor)}>
-                                      <Icon className="h-5 w-5" />
+                                    <div className={cn("p-1.5 sm:p-2 rounded-lg shrink-0", category.bgColor)}>
+                                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                                     </div>
-                                    <span className="font-medium">{category.label}</span>
+                                    <span className="font-medium text-xs sm:text-sm truncate flex-1 text-right">{category.label}</span>
                                     {isSelected && (
-                                      <ChevronRight className="h-4 w-4 ml-auto" />
+                                      <ChevronRight className="w-4 h-4 ml-auto shrink-0" />
                                     )}
                                   </button>
                                 );
                               })}
                             </div>
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -715,15 +727,16 @@ export default function IFoxArticleEditor() {
 
                 {/* Tags */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>الكلمات المفتاحية</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="text-base sm:text-lg md:text-xl">الكلمات المفتاحية</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
                     <div className="flex gap-2">
                       <Input
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         placeholder="أضف كلمة مفتاحية"
+                        className="text-xs sm:text-sm md:text-base"
                         onKeyPress={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -736,21 +749,24 @@ export default function IFoxArticleEditor() {
                         type="button"
                         variant="outline"
                         onClick={handleAddTag}
+                        size="sm"
+                        className="shrink-0"
                         data-testid="button-add-tag"
                       >
-                        <Tag className="h-4 w-4" />
+                        <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto max-h-48 overflow-y-auto">
                       {form.watch("tags")?.map((tag) => (
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="gap-1 cursor-pointer"
+                          className="gap-1 cursor-pointer text-xs whitespace-nowrap"
                           onClick={() => handleRemoveTag(tag)}
+                          data-testid={`badge-tag-${tag}`}
                         >
-                          {tag}
-                          <X className="h-3 w-3" />
+                          <span className="truncate max-w-[120px]">{tag}</span>
+                          <X className="w-3 h-3 shrink-0" />
                         </Badge>
                       ))}
                     </div>
@@ -759,23 +775,23 @@ export default function IFoxArticleEditor() {
 
                 {/* Featured Image */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>الصورة البارزة</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 md:p-6">
+                    <CardTitle className="text-base sm:text-lg md:text-xl">الصورة البارزة</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 sm:p-4 md:p-6">
                     <FormField
                       control={form.control}
                       name="featuredImage"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               {field.value ? (
                                 <div className="relative">
                                   <img
                                     src={field.value}
                                     alt="Featured"
-                                    className="w-full h-40 object-cover rounded-lg"
+                                    className="w-full h-32 sm:h-40 object-cover rounded-lg"
                                   />
                                   <Button
                                     type="button"
@@ -783,14 +799,15 @@ export default function IFoxArticleEditor() {
                                     size="icon"
                                     className="absolute top-2 left-2"
                                     onClick={() => field.onChange("")}
+                                    data-testid="button-remove-featured-image"
                                   >
-                                    <X className="h-4 w-4" />
+                                    <X className="w-4 h-4" />
                                   </Button>
                                 </div>
                               ) : (
-                                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                                  <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                  <p className="text-sm text-muted-foreground">
+                                <div className="border-2 border-dashed rounded-lg p-4 sm:p-6 text-center">
+                                  <ImagePlus className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-muted-foreground mb-2" />
+                                  <p className="text-xs sm:text-sm text-muted-foreground">
                                     اختر صورة بارزة
                                   </p>
                                 </div>
@@ -800,11 +817,12 @@ export default function IFoxArticleEditor() {
                                 placeholder="رابط الصورة"
                                 value={field.value}
                                 onChange={field.onChange}
+                                className="text-xs sm:text-sm md:text-base"
                                 data-testid="input-featured-image"
                               />
                             </div>
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -817,17 +835,19 @@ export default function IFoxArticleEditor() {
 
         {/* Exit Confirmation Dialog */}
         <AlertDialog open={exitDialog} onOpenChange={setExitDialog}>
-          <AlertDialogContent data-testid="dialog-exit">
+          <AlertDialogContent data-testid="dialog-exit" className="max-w-[90vw] sm:max-w-lg">
             <AlertDialogHeader>
-              <AlertDialogTitle>هل تريد المغادرة؟</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-base sm:text-lg md:text-xl">هل تريد المغادرة؟</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs sm:text-sm">
                 قد تفقد التغييرات غير المحفوظة. هل أنت متأكد من المغادرة؟
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>البقاء</AlertDialogCancel>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel className="text-xs sm:text-sm m-0" data-testid="button-stay">البقاء</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => setLocation("/dashboard/admin/ifox/articles")}
+                className="text-xs sm:text-sm m-0"
+                data-testid="button-leave"
               >
                 المغادرة
               </AlertDialogAction>
