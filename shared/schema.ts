@@ -688,6 +688,7 @@ export const articles = pgTable("articles", {
   excerpt: text("excerpt"),
   imageUrl: text("image_url"),
   thumbnailUrl: text("thumbnail_url"), // صورة الغلاف المصغرة 16:9 للعرض في القوائم
+  thumbnailManuallyDeleted: boolean("thumbnail_manually_deleted").default(false), // Flag to prevent auto-generation after manual deletion
   imageFocalPoint: jsonb("image_focal_point").$type<{
     x: number; // percentage 0-100 from left
     y: number; // percentage 0-100 from top

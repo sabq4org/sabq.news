@@ -120,9 +120,11 @@ export function ThumbnailGenerator({
   }, [thumbnailUrl]);
 
   // Auto-generate thumbnail when image changes (using AI Smart by default)
-  // BUT: Don't auto-generate if user manually deleted the thumbnail
+  // BUT ONLY for new articles - existing articles require manual generation
+  // This prevents auto-regeneration after user manually deletes thumbnail and saves
   useEffect(() => {
-    if (autoGenerate && imageUrl && !currentThumbnail && articleId && !manuallyDeletedRef.current) {
+    const isNewArticle = !articleId || articleId === 'new' || articleId === 'undefined';
+    if (autoGenerate && imageUrl && !currentThumbnail && isNewArticle && !manuallyDeletedRef.current) {
       generateThumbnail('ai-smart');
     }
   }, [imageUrl, articleId]);
