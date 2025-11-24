@@ -243,7 +243,7 @@ export function IFoxHomeBlock() {
                 <TrendingUp className="w-5 h-5 text-violet-400" />
                 أحدث مقالات آي فوكس
               </h3>
-              <Link href="/ai">
+              <Link href="/ifox">
                 <Button
                   variant="ghost"
                   className="text-gray-300 hover:text-white group"
@@ -255,8 +255,8 @@ export function IFoxHomeBlock() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {articles.slice(0, 3).map((article, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {articles.slice(0, 4).map((article, index) => (
                 <motion.div
                   key={article.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -336,7 +336,7 @@ export function IFoxHomeBlock() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-center mt-8"
         >
-          <Link href="/ai">
+          <Link href="/ifox">
             <Button
               size="default"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
