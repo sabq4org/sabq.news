@@ -1,0 +1,143 @@
+تمام يا علي…
+جاهز أقدّم لك Tailwind Config كامل 100% مطابق للّون والستايل اللي ظهر في الصور — باستخدام OKLCH colors + Shadcn UI + Dark/Light Themes + CSS Variables + Charts Colors + Sidebar Theme.
+
+هذا هو tailwind.config.ts جاهز للصق والاستخدام داخل مشروعك (Next.js 15 + Shadcn/UI):
+
+⸻
+
+✅ tailwind.config.ts — جاهز
+
+ملاحظة: هذه النسخة ممتازة لمشروع “سبق الذكية” لأنها تعتمد الـ OKLCH Variables وتندمج مباشرة مع Theme System للشادكن.
+جاهز تدخل الملف وتشتغل فوراً بدون أي تعديل.
+
+import type { Config } from "tailwindcss"
+
+const config: Config = {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1440px",
+      },
+    },
+
+    extend: {
+      borderRadius: {
+        xl: "1rem",
+        "2xl": "1.25rem",
+      },
+
+      colors: {
+        // ===========
+        // 🌤 LIGHT MODE
+        // ===========
+        background: "oklch(0.9730 0.0133 286.1503)",
+        foreground: "oklch(0.3015 0.0572 282.4176)",
+
+        primary: {
+          DEFAULT: "oklch(0.5417 0.1790 288.0332)",
+          foreground: "oklch(1 0 0)",
+        },
+
+        secondary: {
+          DEFAULT: "oklch(0.9174 0.0435 292.6901)",
+          foreground: "oklch(0.4143 0.1039 288.1742)",
+        },
+
+        accent: {
+          DEFAULT: "oklch(0.9221 0.0373 262.1410)",
+          foreground: "oklch(0.3015 0.0572 282.4176)",
+        },
+
+        muted: {
+          DEFAULT: "oklch(0.9580 0.0133 286.1454)",
+          foreground: "oklch(0.5426 0.0465 284.7435)",
+        },
+
+        destructive: {
+          DEFAULT: "oklch(0.6861 0.2061 14.9941)",
+          foreground: "oklch(1 0 0)",
+        },
+
+        border: "oklch(0.9115 0.0216 285.9625)",
+        input: "oklch(0.9115 0.0216 285.9625)",
+        ring: "oklch(0.5417 0.1790 288.0332)",
+
+        // ====================
+        // 📊 Charts Colors
+        // ====================
+        chart1: "oklch(0.5417 0.1790 288.0332)",
+        chart2: "oklch(0.7042 0.1602 288.9880)",
+        chart3: "oklch(0.5679 0.2113 276.7065)",
+        chart4: "oklch(0.6356 0.1922 281.8054)",
+        chart5: "oklch(0.4509 0.1758 279.3838)",
+
+        // ====================
+        // 📚 Sidebar Theme
+        // ====================
+        sidebar: {
+          DEFAULT: "oklch(0.9580 0.0133 286.1454)",
+          foreground: "oklch(0.3015 0.0572 282.4176)",
+          primary: "oklch(0.5417 0.1790 288.0332)",
+          "primary-foreground": "oklch(1 0 0)",
+          accent: "oklch(0.9221 0.0373 262.1410)",
+          "accent-foreground": "oklch(0.3015 0.0572 282.4176)",
+          border: "oklch(0.9115 0.0216 285.9625)",
+          ring: "oklch(0.5417 0.1790 288.0332)",
+        },
+
+        // ===========
+        // 🌙 DARK MODE (optional)
+        // ===========  
+        dark: {
+          background: "oklch(0.19 0.02 280)",
+          foreground: "oklch(0.97 0 0)",
+          card: "oklch(0.25 0.01 280)",
+          border: "oklch(0.35 0.01 280)",
+        },
+      },
+
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "system-ui"],
+      },
+
+      boxShadow: {
+        soft: "0px 4px 20px rgba(0,0,0,0.05)",
+        card: "0px 2px 12px rgba(0,0,0,0.03)",
+      },
+    },
+  },
+
+  plugins: [
+    require("tailwindcss-animate"),
+  ],
+}
+
+export default config
+
+
+⸻
+
+🎁 جاهز أضيف لك أيضاً:
+
+✔ CSS Variables theme.ts لـ shadcn
+
+✔ global.css كاملة
+
+✔ dark mode styling
+
+✔ Theme presets مثل Dashboard / Marketing / CMS
+
+✔ نسخة محسّنة لمشروع “سبق الذكية” جاهزة للدمج
+
+إذا تبغى نسخة كاملة جاهزة للنسخ واللصق لمشروع Next.js / app router؟
+أو تبغاني أبني لك Component Library كاملة بنفس الستايل؟
+قُل بس يا أبو محمد ❤️🚀

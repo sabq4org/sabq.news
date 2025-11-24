@@ -1,0 +1,154 @@
+علي يا ملك الـ UX 👑…
+جبت لك أقوى برومبت ممكن يُولِّد نفس الستايل الموجود في الصور 100% — نفس:
+الألوان، الظلال، المساحات، Modern UI، شادكن، Tailwind، Dashboard Vibes، خطوط رشيقة، بطاقات ناعمة، Purple Accent، Charts شفافة، Cards مرتّبة، Light Mode أنيق.
+
+هذا هو البرومبت الكامل جاهز تنسخه وتستخدمه في أي منصة تصميم (مثل v0 أو Framer أو Locofy أو Figma AI أو Midjourney UI أو أي مولّد واجهات):
+
+⸻
+
+🎨 🧠 Full Design Prompt — Sabq Smart Dashboard UI
+
+استخدم التعليمات التالية لتوليد واجهة Dashboard احترافية، حديثة، وأنيقة، مشابهة للتصميم المرفق، مع الالتزام بأعلى معايير UX/UI الحديثة:
+
+⸻
+
+🔥 Style Direction
+	•	Modern SaaS Dashboard UI
+	•	Soft & clean visual hierarchy
+	•	Rounded corners (border-radius: 16px to 20px)
+	•	Smooth shadows (subtle elevation)
+	•	Spacing generous (Tailwind spacing system)
+	•	Minimalistic look
+	•	Light Mode primarily
+	•	Purple / Lavender accent color
+	•	Neutral gray backgrounds
+	•	Soft contrast
+	•	Airy layout with clear white space
+	•	Components inspired by Radix UI + Shadcn/UI + Vercel Dashboard + Linear.app aesthetics
+
+⸻
+
+🎨 Color Palette (OKLCH Accurate — From Screenshots)
+
+Primary Colors
+
+primary: oklch(0.5417 0.1790 288.0332)
+primary-foreground: oklch(1 0 0)
+
+Secondary
+
+secondary: oklch(0.9174 0.0435 292.6901)
+secondary-foreground: oklch(0.4143 0.1039 288.1742)
+
+Accent
+
+accent: oklch(0.9221 0.0373 262.1410)
+accent-foreground: oklch(0.3015 0.0572 282.4176)
+
+Background / Foreground
+
+background: oklch(0.9730 0.0133 286.1503)
+foreground: oklch(0.3015 0.0572 282.4176)
+
+Card
+
+card: oklch(1 0 0)
+card-foreground: oklch(0.3015 0.0572 282.4176)
+
+Popover
+
+popover: oklch(1 0 0)
+popover-foreground: oklch(0.3015 0.0572 282.4176)
+
+Muted
+
+muted: oklch(0.9580 0.0133 286.1454)
+muted-foreground: oklch(0.5426 0.0465 284.7435)
+
+Destructive
+
+destructive: oklch(0.6861 0.2061 14.9941)
+destructive-foreground: oklch(1 0 0)
+
+Border / Input
+
+border: oklch(0.9115 0.0216 285.9625)
+input: oklch(0.9115 0.0216 285.9625)
+
+Charts
+
+chart-1: oklch(0.5417 0.1790 288.0332)
+chart-2: oklch(0.7042 0.1602 288.9880)
+chart-3: oklch(0.5679 0.2113 276.7065)
+chart-4: oklch(0.6356 0.1922 281.8054)
+chart-5: oklch(0.4509 0.1758 279.3838)
+
+Sidebar
+
+sidebar: oklch(0.9580 0.0133 286.1454)
+sidebar-foreground: oklch(0.3015 0.0572 282.4176)
+sidebar-primary: oklch(0.5417 0.1790 288.0332)
+sidebar-primary-foreground: oklch(1 0 0)
+sidebar-accent: oklch(0.9221 0.0373 262.1410)
+sidebar-accent-foreground: oklch(0.3015 0.0572 282.4176)
+sidebar-border: oklch(0.9115 0.0216 285.9625)
+sidebar-ring: oklch(0.5417 0.1790 288.0332)
+
+
+⸻
+
+🧩 Component Design Language
+	•	Cards with subtle drop-shadows
+	•	Inside-card padding: 24–32px
+	•	Charts with transparent filled areas
+	•	Smooth animated transitions (Framer Motion)
+	•	Navigation sidebar with active highlight
+	•	Tables clean and borderless
+	•	Inputs with light borders + soft focus ring
+	•	Buttons in filled + ghost + subtle variants
+	•	Calendar with simple date indicators
+	•	Widgets modular: revenue, charts, goals, users, analytics
+
+⸻
+
+🖥 Layout Structure
+	•	Left sidebar (width ~240px)
+	•	Top spacing large
+	•	Main content in 2–3 responsive columns
+	•	Widgets arranged in a grid system (Tailwind grid + gap-6+)
+	•	Charts appear with minimal axis lines
+
+⸻
+
+📚 Fonts & Typography
+	•	Inter, SF Pro, or Geist font
+	•	Headings bold & clean
+	•	Body text weight 400–500
+	•	Letter spacing tight
+	•	Text in oklch neutral grays
+	•	Numbers (metrics) large and prominent
+
+⸻
+
+⚙️ Tailwind Config Instructions
+	•	Enable borderRadius large (16px)
+	•	Enable OKLCH colors
+	•	Enable shadcn/ui components
+	•	Use container: { center: true }
+	•	Enable dark mode via class
+	•	Include animate utilities (Framer Motion optional)
+
+⸻
+
+🪄 Final Prompt Sentence (Ready to paste)
+
+“أنشئ لي واجهة Dashboard احترافية بأسلوب SaaS حديث، تعتمد على لوحة ألوان OKLCH التالية (مع القيم المذكورة)، وتستخدم تصميم حديث جداً مشابه لتصاميم Vercel وLinear وShadcn. استخدم بطاقات ناعمة، زوايا دائرية، ظلال خفيفة، Charts ذات لون بنفسجي شفاف، Sidebar مرتب مع Active State واضح، Typography نظيفة، Spacing واسع، وأيقونات Lucide. الواجهة يجب أن تحتوي على Widgets مثل: Revenue, Total Visitors, Growth Rate, Active Accounts, Calendar, Charts, Activity Goals، ومعاينات مستوحاة من الصور المرفقة.”
+
+⸻
+
+علي…
+لو تبغى ملف Tailwind Config جاهز؟
+أو Theme JSON كامل لشادكن؟
+أو أحول التصميم هذا إلى Next.js + Tailwind + shadcn؟
+
+بس قل لي، وأنا أركب لك النظام كامل من الصفر.
