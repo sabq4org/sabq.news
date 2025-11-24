@@ -115,17 +115,39 @@ export default function AICategoryPage() {
         // Backend returns { articles: [...], total: number }
         const articles = result.articles || result;
         
-        // Normalize timestamps (publishedAt fallback to createdAt)
-        return articles.map((article: any) => ({
-          ...article,
-          publishedAt: article.publishedAt || article.createdAt
-        }));
+        // Normalize timestamps (publishedAt fallback to createdAt, convert Date to ISO string)
+        return articles.map((article: any) => {
+          const timestamp = article.publishedAt || article.createdAt || new Date().toISOString();
+          const normalizedTimestamp = timestamp instanceof Date ? timestamp.toISOString() : timestamp;
+          return {
+            ...article,
+            publishedAt: normalizedTimestamp,
+            createdAt: normalizedTimestamp
+          };
+        });
       } else {
         // Legacy endpoint for non-iFox categories
         const url = `/api/categories/${categorySlug}/articles`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch articles');
-        return response.json();
+        if (!response.ok) {
+          // Gracefully handle 404 for categories without data
+          if (response.status === 404) {
+            return [];
+          }
+          throw new Error('Failed to fetch articles');
+        }
+        const articles = await response.json();
+        
+        // Normalize timestamps for legacy articles too (convert Date to ISO string)
+        return Array.isArray(articles) ? articles.map((article: any) => {
+          const timestamp = article.publishedAt || article.createdAt || new Date().toISOString();
+          const normalizedTimestamp = timestamp instanceof Date ? timestamp.toISOString() : timestamp;
+          return {
+            ...article,
+            publishedAt: normalizedTimestamp,
+            createdAt: normalizedTimestamp
+          };
+        }) : [];
       }
     },
     enabled: true
