@@ -1,25 +1,34 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Link, useSearch, useLocation } from "wouter";
+import { 
+  Newspaper, 
+  ChartBar, 
+  MessageSquare, 
+  Wrench, 
+  Mic, 
+  Sparkles,
+  TrendingUp,
+  Zap,
+  Bot,
+  Activity,
+  ArrowRight
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Sparkles, AlertCircle, RefreshCw, Bot, Zap, BarChart3, FileText, Laptop, Mic } from "lucide-react";
-import { Link, useSearch, useLocation } from "wouter";
-import { formatDistanceToNow } from "date-fns";
-import { arSA } from "date-fns/locale";
-import { motion } from "framer-motion";
-import { ViewsCount } from "@/components/ViewsCount";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AIHeader from "@/components/ai/AIHeader";
+import AIAnimatedLogo from "@/components/ai/AIAnimatedLogo";
+import AINewsCard from "@/components/ai/AINewsCard";
+import AITrendsWidget from "@/components/ai/AITrendsWidget";
 
 interface IFoxArticle {
   id: string;
   title: string;
   slug: string;
   excerpt: string | null;
-  imageUrl: string | null; // Correct field name matching backend
-  image?: string | null; // Legacy fallback (optional)
+  imageUrl: string | null;
   publishedAt: Date | string | null;
   categoryId: string;
   views: number | null;
@@ -33,6 +42,9 @@ interface IFoxArticle {
     color: string | null;
     icon: string | null;
   } | null;
+  createdAt: Date | string;
+  aiClassification?: string | null;
+  articleType?: string | null;
 }
 
 interface IFoxCategory {
@@ -41,17 +53,37 @@ interface IFoxCategory {
   nameAr: string;
 }
 
-// Icon mapping for iFox categories
-const CATEGORY_ICONS: Record<string, typeof Sparkles> = {
-  'ai-news': Sparkles,
-  'ai-insights': BarChart3,
-  'ai-opinions': FileText,
-  'ai-tools': Laptop,
-  'ai-voice': Mic,
+// Static metadata for category icons and colors
+const categoryMetadata: Record<string, { icon: typeof Sparkles; color: string; description: string }> = {
+  "ai-news": { 
+    icon: Newspaper, 
+    color: "#22C55E",
+    description: "أخبار عاجلة وانفرادات حصرية"
+  },
+  "ai-insights": { 
+    icon: ChartBar, 
+    color: "#8B5CF6",
+    description: "تحليلات وتقارير استقصائية"
+  },
+  "ai-opinions": { 
+    icon: MessageSquare, 
+    color: "#F59E0B",
+    description: "مقالات خبراء ونقاشات"
+  },
+  "ai-tools": { 
+    icon: Wrench, 
+    color: "#EF4444",
+    description: "مراجعات أدوات وتطبيقات"
+  },
+  "ai-voice": { 
+    icon: Mic, 
+    color: "#EC4899",
+    description: "بودكاست وفيديوهات"
+  }
 };
 
 export default function IFoxArticles() {
-  const [retryCount, setRetryCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("latest");
   const searchParams = useSearch();
   const [, setLocation] = useLocation();
   
@@ -59,14 +91,8 @@ export default function IFoxArticles() {
   const categoryFromUrl = new URLSearchParams(searchParams).get('category') || 'all';
   const categoryFilter = categoryFromUrl;
 
-  // Fetch current user
-  const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
-
   // Fetch iFox categories (only active, non-deleted categories)
-  const { data: categories = [] } = useQuery<IFoxCategory[]>({
+  const { data: apiCategories = [] } = useQuery<IFoxCategory[]>({
     queryKey: ["/api/ifox/categories"],
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
   });
@@ -83,10 +109,7 @@ export default function IFoxArticles() {
   // Fetch iFox articles with category filter
   const { 
     data: articles = [], 
-    isLoading, 
-    isError, 
-    error,
-    refetch 
+    isLoading
   } = useQuery<IFoxArticle[]>({
     queryKey: ['/api/ifox/articles', categoryFilter],
     queryFn: async () => {
@@ -101,297 +124,251 @@ export default function IFoxArticles() {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  const handleRetry = () => {
-    refetch();
+  // AI trends (placeholder for now)
+  const trends: any[] = [];
+
+  // Handle category navigation
+  const handleCategoryClick = (categorySlug: string) => {
+    setLocation(`/ifox?category=${categorySlug}`);
   };
 
-  // Handle category change
-  const handleCategoryChange = (categorySlug: string) => {
-    if (categorySlug === 'all') {
-      setLocation('/ifox');
-    } else {
-      setLocation(`/ifox?category=${categorySlug}`);
-    }
-  };
+  // Merge API categories with static metadata
+  const enrichedCategories = apiCategories.map(cat => ({
+    ...cat,
+    ...(categoryMetadata[cat.slug] || {
+      icon: Sparkles,
+      color: "#3B82F6",
+      description: cat.nameAr
+    })
+  }));
 
-  // Format excerpt to max 150 chars
-  const formatExcerpt = (excerpt: string | null) => {
-    if (!excerpt) return "";
-    return excerpt.length > 150 ? excerpt.slice(0, 150) + "..." : excerpt;
-  };
-
-  // Format published date
-  const formatPublishedDate = (publishedAt: Date | string | null) => {
-    if (!publishedAt) return null;
-    return formatDistanceToNow(new Date(publishedAt), {
-      addSuffix: true,
-      locale: arSA,
-    });
-  };
-
-  // Get category color classes
-  const getCategoryColorClass = (color: string | null) => {
-    if (!color) return "bg-primary/20 text-primary border-primary/50";
+  // Transform articles to match AINewsCard interface
+  const transformedArticles = articles.map(article => {
+    // Use publishedAt if available, fallback to createdAt, then current time
+    const timestamp = article.publishedAt || article.createdAt || new Date().toISOString();
+    const createdAtString = timestamp instanceof Date ? timestamp.toISOString() : timestamp;
     
-    // Handle hex colors by converting to tailwind classes
-    const colorMap: Record<string, string> = {
-      "#3b82f6": "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/50",
-      "#8b5cf6": "bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/50",
-      "#10b981": "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50",
-      "#f59e0b": "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/50",
-      "#ef4444": "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/50",
-      "#ec4899": "bg-pink-500/20 text-pink-700 dark:text-pink-400 border-pink-500/50",
+    return {
+      id: article.id,
+      title: article.title,
+      summary: article.excerpt,
+      slug: article.slug,
+      imageUrl: article.imageUrl,
+      viewCount: article.views,
+      commentCount: article.commentsCount,
+      createdAt: createdAtString,
+      categoryId: article.category?.id,
+      categorySlug: article.category?.slug,
+      aiClassification: article.aiClassification,
+      articleType: article.articleType,
+      featured: false,
+      trending: false
     };
-    
-    return colorMap[color] || "bg-primary/20 text-primary border-primary/50";
-  };
+  });
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header user={user} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute -top-10 -right-10 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+        <motion.div
+          className="absolute -bottom-10 -left-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+      </div>
+
+      {/* Header */}
+      <AIHeader />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 border-b">
-        <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16">
+      <section className="relative px-4 py-12 md:py-20">
+        <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto space-y-4"
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="relative">
-                <Bot className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
-                <Sparkles className="h-6 w-6 text-accent absolute -top-1 -right-1 animate-pulse" />
+            <div className="flex justify-center mb-6">
+              <AIAnimatedLogo />
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4" data-testid="text-page-title">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                آي فوكس
+              </span>
+              {" "}
+              <span className="text-gray-300">|</span>
+              {" "}
+              <span className="text-2xl md:text-4xl text-gray-400">iFox AI</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto" data-testid="text-page-subtitle">
+              بوابتك المتخصصة لعالم الذكاء الاصطناعي - أخبار، تحليلات، وأدوات عملية
+            </p>
+
+            {/* Live Indicator */}
+            <div className="flex justify-center mt-6">
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm text-green-400">متابعة حية لآخر التطورات</span>
               </div>
             </div>
-            <h1 
-              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
-              data-testid="text-page-title"
-            >
-              iFox - مقالات الذكاء الاصطناعي
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-page-subtitle">
-              مقالات مختارة ومُنشأة بواسطة الذكاء الاصطناعي لتقديم أفضل المحتوى التقني والإخباري
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Zap className="h-4 w-4 text-primary" />
-              <span>محتوى ذكي • تحديثات مستمرة • جودة عالية</span>
-            </div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Category Filter Tabs */}
-      <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-            {/* All Categories Tab */}
-            <Button
-              variant={categoryFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleCategoryChange('all')}
-              className="gap-2 whitespace-nowrap"
-              data-testid="button-category-all"
-            >
-              <Bot className="h-4 w-4" />
-              جميع الفئات
-            </Button>
-
-            {/* Individual Category Tabs */}
-            {categories.map((category) => {
-              const Icon = CATEGORY_ICONS[category.slug] || Sparkles;
-              const isActive = categoryFilter === category.slug;
-              return (
-                <Button
-                  key={category.slug}
-                  variant={isActive ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleCategoryChange(category.slug)}
-                  className="gap-2 whitespace-nowrap"
-                  data-testid={`button-category-${category.slug}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {category.nameAr}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 md:py-12">
-        {/* Loading State */}
-        {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden" data-testid={`skeleton-card-${i}`}>
-                <Skeleton className="h-44 sm:h-48 w-full" />
-                <CardContent className="p-4 space-y-3">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <div className="flex gap-2 pt-2">
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-24" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Error State */}
-        {isError && !isLoading && (
-          <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4" data-testid="error-state">
-            <div className="rounded-full bg-destructive/10 p-6">
-              <AlertCircle className="h-16 w-16 text-destructive" />
-            </div>
-            <h2 className="text-2xl font-bold text-center">حدث خطأ في تحميل المقالات</h2>
-            <p className="text-muted-foreground text-center max-w-md">
-              {error instanceof Error ? error.message : "فشل في جلب مقالات iFox. يرجى المحاولة مرة أخرى."}
-            </p>
-            <Button 
-              onClick={handleRetry} 
-              className="gap-2"
-              data-testid="button-retry"
-            >
-              <RefreshCw className="h-4 w-4" />
-              إعادة المحاولة
-            </Button>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && !isError && articles.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4" data-testid="empty-state">
-            <div className="rounded-full bg-muted p-6">
-              <Bot className="h-16 w-16 text-muted-foreground" />
-            </div>
-            <h2 className="text-2xl font-bold text-center">لا توجد مقالات متاحة</h2>
-            <p className="text-muted-foreground text-center max-w-md">
-              لم يتم العثور على مقالات من iFox حالياً. تحقق لاحقاً للحصول على محتوى جديد.
-            </p>
-          </div>
-        )}
-
-        {/* Articles Grid */}
-        {!isLoading && !isError && articles.length > 0 && (
+          {/* Category Navigation */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-12"
           >
-            {articles.map((article, index) => {
-              const timeAgo = formatPublishedDate(article.publishedAt);
-              const categoryColorClass = getCategoryColorClass(article.category?.color || null);
-              
+            {enrichedCategories.map((category, index) => {
+              const CategoryIcon = category.icon || Sparkles;
               return (
                 <motion.div
-                  key={article.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  key={category.slug}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Link href={`/article/${article.slug}`}>
-                    <Card 
-                      className="group hover-elevate active-elevate-2 cursor-pointer h-full overflow-hidden transition-all duration-300"
-                      data-testid={`card-article-${article.id}`}
-                    >
-                      {/* Featured Image */}
-                      {article.imageUrl && (
-                        <div className="relative h-44 sm:h-48 overflow-hidden">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                            data-testid={`img-article-${article.id}`}
-                          />
-                          
-                          {/* AI Badge */}
-                          <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                            <Badge 
-                              className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 gap-1.5 shadow-md text-xs"
-                              data-testid={`badge-ai-${article.id}`}
-                            >
-                              <Sparkles className="h-3 w-3" />
-                              محتوى بالذكاء الاصطناعي
-                            </Badge>
-                          </div>
-
-                          {/* Category Badge */}
-                          {article.category && (
-                            <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-                              <Badge 
-                                className={`${categoryColorClass} border shadow-md text-xs gap-1`}
-                                data-testid={`badge-category-${article.id}`}
-                              >
-                                {article.category.icon && <span>{article.category.icon}</span>}
-                                {article.category.nameAr}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Card Content */}
-                      <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                        {/* Title */}
-                        <h3 
-                          className="text-base sm:text-lg font-semibold line-clamp-2 leading-tight group-hover:text-primary transition-colors"
-                          data-testid={`text-title-${article.id}`}
+                  <div
+                    onClick={() => handleCategoryClick(category.slug)}
+                    data-testid={`button-category-${category.slug}`}
+                  >
+                    <Card className={`bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group ${
+                      categoryFilter === category.slug ? 'border-blue-500/50 bg-slate-900/70' : ''
+                    }`}>
+                      <CardContent className="p-4 text-center">
+                        <div 
+                          className="w-12 h-12 mx-auto mb-2 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110"
+                          style={{ backgroundColor: `${category.color}20` }}
                         >
-                          {article.title}
-                        </h3>
-
-                        {/* Excerpt */}
-                        {article.excerpt && (
-                          <p 
-                            className="text-sm text-muted-foreground line-clamp-2"
-                            data-testid={`text-excerpt-${article.id}`}
-                          >
-                            {formatExcerpt(article.excerpt)}
-                          </p>
-                        )}
-
-                        {/* Meta Information */}
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t">
-                          {timeAgo && (
-                            <span className="flex items-center gap-1" data-testid={`text-date-${article.id}`}>
-                              <Clock className="h-3 w-3" />
-                              {timeAgo}
-                            </span>
-                          )}
-                          {article.views !== null && (
-                            <ViewsCount 
-                              views={article.views}
-                              iconClassName="h-3 w-3"
-                            />
-                          )}
+                          <CategoryIcon className="w-6 h-6" style={{ color: category.color }} />
                         </div>
+                        <h3 className="text-sm font-bold text-white mb-1">{category.nameAr}</h3>
+                        <p className="text-xs text-gray-500">{category.description}</p>
                       </CardContent>
                     </Card>
-                  </Link>
+                  </div>
                 </motion.div>
               );
             })}
           </motion.div>
-        )}
 
-        {/* Articles Count */}
-        {!isLoading && !isError && articles.length > 0 && (
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p data-testid="text-articles-count">
-              عرض {articles.length} مقالة من مقالات iFox
-            </p>
-          </div>
-        )}
-      </main>
+          {/* Main Content Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-12">
+            <TabsList className="bg-slate-900/50 border border-slate-800">
+              <TabsTrigger value="latest" className="data-[state=active]:bg-slate-800">
+                <Sparkles className="w-4 h-4 mr-2" />
+                الأحدث
+              </TabsTrigger>
+              <TabsTrigger value="trending" className="data-[state=active]:bg-slate-800">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                الأكثر رواجاً
+              </TabsTrigger>
+              <TabsTrigger value="featured" className="data-[state=active]:bg-slate-800">
+                <Zap className="w-4 h-4 mr-2" />
+                المميز
+              </TabsTrigger>
+            </TabsList>
 
-      <Footer />
+            <TabsContent value="latest" className="mt-6">
+              <div className="grid md:grid-cols-3 gap-6" dir="rtl">
+                {/* News Section - Always First */}
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2" dir="rtl">
+                    آخر الأخبار والتطورات
+                    <Activity className="w-6 h-6 text-blue-500" />
+                  </h2>
+                  <div className="space-y-4">
+                    {isLoading ? (
+                      <div className="text-center py-12" data-testid="loading-state">
+                        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
+                      </div>
+                    ) : transformedArticles.length > 0 ? (
+                      transformedArticles.slice(0, 10).map((article) => (
+                        <AINewsCard 
+                          key={article.id} 
+                          article={article} 
+                        />
+                      ))
+                    ) : (
+                      <Card className="bg-slate-900/50 border-slate-800" data-testid="empty-state">
+                        <CardContent className="p-8 text-center">
+                          <Bot className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                          <p className="text-gray-400">لا توجد مقالات متاحة حالياً في قسم iFox</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sidebar - Always Second */}
+                <div className="space-y-6 md:col-span-1">
+                  <AITrendsWidget trends={trends} />
+
+                  {/* Newsletter CTA */}
+                  <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 border-slate-700">
+                    <CardContent className="p-6">
+                      <h3 className="text-lg font-bold text-white mb-2">
+                        نشرة AI اليومية
+                      </h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        احصل على ملخص يومي لأهم تطورات الذكاء الاصطناعي
+                      </p>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        data-testid="button-newsletter-subscribe"
+                      >
+                        اشترك الآن
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="trending">
+              <div className="text-center py-12">
+                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                <p className="text-gray-400">قسم الأكثر رواجاً قيد التطوير</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="featured">
+              <div className="text-center py-12">
+                <Zap className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                <p className="text-gray-400">قسم المحتوى المميز قيد التطوير</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
     </div>
   );
 }
