@@ -221,6 +221,18 @@ Rules:
     const { nanoid } = await import('nanoid');
     const slug = baseSlug + '-' + nanoid(8); // Total max 150 chars
     
+    // Get author: use task creator or fall back to first super_admin user
+    let authorId = task.createdBy;
+    if (!authorId) {
+      const { storage } = await import('../storage');
+      const adminUsers = await storage.getUsersByRole('super_admin');
+      if (adminUsers.length > 0) {
+        authorId = adminUsers[0].id;
+      } else {
+        throw new Error('No author_id available: task.createdBy is null and no super_admin found');
+      }
+    }
+    
     return {
       title: generatedContent.title,
       slug,
@@ -228,7 +240,7 @@ Rules:
       summary: generatedContent.summary,
       locale: task.locale,
       categoryId: task.categoryId,
-      authorId: task.createdBy,
+      authorId,
       status: task.autoPublish ? 'published' : 'draft',
       publishedAt: task.autoPublish ? now : undefined,
       metaDescription: generatedContent.metaDescription,

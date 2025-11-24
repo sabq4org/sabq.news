@@ -232,8 +232,7 @@ async function generateWithOpenAI(
 
   const response = await client.chat.completions.create({
     model: model,
-    temperature: 0.3,
-    max_tokens: 1024,
+    max_completion_tokens: 1024,
     response_format: { type: "json_object" },
     messages: [
       {

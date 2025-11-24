@@ -221,8 +221,7 @@ export async function generateSocialPost(
 }`,
         },
       ],
-      max_tokens: 500,
-      temperature: 0.7,
+      max_completion_tokens: 500,
     });
 
     const content = response.choices[0].message.content || "{}";
@@ -476,8 +475,7 @@ ${context ? `السياق: ${context}` : ''}
             },
             { role: "user", content: prompt },
           ],
-          max_tokens: 1500,
-          temperature: 0.3,
+          max_completion_tokens: 1500,
         });
 
         const content = response.choices[0].message.content || "";

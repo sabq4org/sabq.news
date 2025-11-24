@@ -13,7 +13,6 @@ export interface CreateAIResponseParams {
   reasoningEffort?: "none" | "medium" | "high";
   enableCache?: boolean;
   cacheTTL?: number;
-  temperature?: number;
   maxTokens?: number;
   responseFormat?: { type: "json_object" };
 }
@@ -35,17 +34,16 @@ export async function createAIResponse(params: CreateAIResponseParams) {
     reasoningEffort,
     enableCache = false,
     cacheTTL = 86400,
-    temperature = 0.7,
     maxTokens = 2048,
     responseFormat,
   } = params;
 
   // Build the request configuration for gpt-5.1
+  // NOTE: GPT-5.1 does not support custom temperature (only default 1)
   const requestConfig: any = {
     model: "gpt-5.1",
     messages,
-    temperature,
-    max_tokens: maxTokens,
+    max_completion_tokens: maxTokens,
   };
 
   // Add response format if specified (e.g., JSON mode)
@@ -803,7 +801,6 @@ export async function generateIFoxTitle(
       ],
       responseFormat: { type: "json_object" },
       maxTokens: 512,
-      temperature: 0.7,
     });
 
     const messageContent = response.choices[0]?.message?.content;
@@ -877,7 +874,6 @@ export async function generateIFoxContentSuggestions(
       ],
       responseFormat: { type: "json_object" },
       maxTokens: 1024,
-      temperature: 0.7,
     });
 
     const messageContent = response.choices[0]?.message?.content;
@@ -975,7 +971,6 @@ export async function analyzeIFoxContent(
       ],
       responseFormat: { type: "json_object" },
       maxTokens: 1536,
-      temperature: 0.7,
     });
 
     const messageContent = response.choices[0]?.message?.content;

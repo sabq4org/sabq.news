@@ -10901,7 +10901,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       // Generate titles from 3 different AI models in parallel
       const results = await aiManager.generateMultiple(prompt, [
-        { ...AI_MODELS.GPT5, maxTokens: 512, temperature: 0.8 },
+        { ...AI_MODELS.GPT5, maxTokens: 512 },
         { ...AI_MODELS.CLAUDE_SONNET, maxTokens: 512, temperature: 0.8 },
         { ...AI_MODELS.GEMINI_FLASH, maxTokens: 512, temperature: 0.8 },
       ]);
@@ -21801,7 +21801,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             content: context
           }
         ],
-        temperature: 0.7,
+        
         max_tokens: 200,
       });
 
@@ -28747,7 +28747,7 @@ Allow: /
           ai: {
             provider: 'openai' as const,
             model: 'gpt-4',
-            temperature: 0.7,
+            
             maxTokens: 2000,
             autoClassification: true,
             autoSEO: true,

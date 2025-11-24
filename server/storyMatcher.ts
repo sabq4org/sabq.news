@@ -76,7 +76,7 @@ ${JSON.stringify(storiesContext, null, 2)}
           content: prompt
         }
       ],
-      temperature: 0.3,
+      max_completion_tokens: 1024,
       response_format: { type: "json_object" }
     });
 
@@ -286,7 +286,7 @@ export async function extractEntitiesAndTags(article: Article): Promise<{
           content: prompt
         }
       ],
-      temperature: 0.2,
+      max_completion_tokens: 512,
       response_format: { type: "json_object" }
     });
 

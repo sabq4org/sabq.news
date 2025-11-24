@@ -106,8 +106,8 @@ ${Array.from(termsMap.keys()).join(", ")}
           content: content.substring(0, 10000), // حد أقصى للطول
         },
       ],
-      temperature: 0.3,
       response_format: { type: "json_object" },
+      max_completion_tokens: 2048,
     });
 
     const result = JSON.parse(completion.choices[0].message.content || "{}");

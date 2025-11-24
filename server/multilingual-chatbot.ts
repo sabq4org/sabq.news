@@ -26,7 +26,6 @@ const LANGUAGE_MODEL_MAPPING: Record<ChatLanguage, AIModelConfig> = {
   en: {
     ...AI_MODELS.GPT4,
     maxTokens: 1000,
-    temperature: 0.7,
   },
   ur: {
     ...AI_MODELS.GEMINI_PRO,
@@ -133,7 +132,6 @@ export async function chatWithAssistantFallback(
   const fallback = fallbackModel || {
     ...AI_MODELS.GPT4,
     maxTokens: 1000,
-    temperature: 0.7,
   };
 
   try {

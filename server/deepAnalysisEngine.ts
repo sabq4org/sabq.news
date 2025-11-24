@@ -100,7 +100,7 @@ export class DeepAnalysisEngine {
     const fullPrompt = `${DEEP_ANALYSIS_GOLDEN_TEMPLATE}\n\n${userPrompt}`;
     
     const configs = [
-      { ...AI_MODELS.GPT5, temperature: 0.7, maxTokens: 16000 },
+      { ...AI_MODELS.GPT5, maxTokens: 16000 },
       { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.7, maxTokens: 16000 },
       { ...AI_MODELS.GEMINI_FLASH, temperature: 0.7, maxTokens: 16000 },
     ];
@@ -279,9 +279,13 @@ ${analysis}
       : model === 'gemini' ? AI_MODELS.GEMINI_FLASH 
       : AI_MODELS.CLAUDE_SONNET;
 
+    const configWithSettings = model === 'openai' 
+      ? { ...modelConfig, maxTokens: 16000 }
+      : { ...modelConfig, temperature: 0.7, maxTokens: 16000 };
+
     const result = await aiManager.generate(
       fullPrompt,
-      { ...modelConfig, temperature: 0.7, maxTokens: 16000 }
+      configWithSettings
     );
 
     return {

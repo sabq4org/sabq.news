@@ -72,7 +72,6 @@ export async function generateCalendarEventIdeas(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 2048,
-      temperature: 0.8
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -112,7 +111,6 @@ export async function generateHeadlineVariations(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 512,
-      temperature: 0.9
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -159,7 +157,6 @@ export async function generateSocialMediaContent(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 1024,
-      temperature: 0.8
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -205,7 +202,6 @@ export async function generateInfographicDataPoints(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 768,
-      temperature: 0.7
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -245,7 +241,6 @@ export async function generateSEOContent(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 512,
-      temperature: 0.7
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -291,7 +286,6 @@ export async function generateArticleDraft(
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 3072,
-      temperature: 0.7
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");

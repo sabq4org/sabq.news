@@ -71,7 +71,6 @@ ${params.content}
       const response = await aiManager.generate(prompt, {
         provider: "openai",
         model: "gpt-4",
-        temperature: 0.3,
         maxTokens: 2000,
       });
 

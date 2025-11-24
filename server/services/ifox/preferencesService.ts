@@ -58,7 +58,6 @@ export class IfoxPreferencesService {
       contentDepth: "medium",
       defaultWordCount: 800,
       primaryModel: "gpt-4",
-      temperature: 0.7,
       autoGenerateSeo: true,
       autoGenerateImages: true,
       enableQualityCheck: true,

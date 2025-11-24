@@ -430,7 +430,6 @@ Clean news, professionally edited, ready for immediate publication per Sabq stan
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 3000,
-      temperature: 0.7,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -815,8 +814,7 @@ ${articleLead}
         { role: "system", content: "You are an expert in generating SEO-optimized, accessible alt text for news images." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.3,
-      max_tokens: 300,
+      max_completion_tokens: 300,
       response_format: { type: "json_object" }
     });
 
