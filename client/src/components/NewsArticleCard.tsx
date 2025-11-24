@@ -84,39 +84,6 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                       : 'center'
                   }}
                 />
-                
-                {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
-                {article.thumbnailUrl && (
-                  <div className="absolute top-3 right-3" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                    <Badge className="gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
-                      الصورة
-                      <Brain className="h-3 w-3" aria-hidden="true" />
-                    </Badge>
-                  </div>
-                )}
-
-                {/* Content Type Badges - Right Side (RTL: use left-*) */}
-                <div className="absolute top-3 left-3 flex gap-2" data-testid={`badge-content-type-${article.id}`}>
-                  {article.newsType === "breaking" ? (
-                    <Badge variant="destructive" className="gap-1">
-                      <Zap className="h-3 w-3" aria-hidden="true" />
-                      عاجل
-                    </Badge>
-                  ) : isNewArticle(article.publishedAt) ? (
-                    <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                      <Flame className="h-3 w-3" aria-hidden="true" />
-                      جديد
-                    </Badge>
-                  ) : article.articleType === 'infographic' ? (
-                    <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                      إنفوجرافيك
-                    </Badge>
-                  ) : article.category ? (
-                    <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                      {article.category.nameAr}
-                    </Badge>
-                  ) : null}
-                </div>
 
                 {isHovered && (
                   <div className="absolute bottom-3 left-3 right-3 flex gap-2">
@@ -152,6 +119,38 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
             )}
 
             <CardContent className="p-5 space-y-3">
+              {/* Badges above title */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* AI Generated Thumbnail Badge */}
+                {article.thumbnailUrl && (
+                  <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                    الصورة
+                    <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                  </Badge>
+                )}
+
+                {/* Content Type Badge */}
+                {article.newsType === "breaking" ? (
+                  <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
+                    <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                    عاجل
+                  </Badge>
+                ) : isNewArticle(article.publishedAt) ? (
+                  <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                    <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                    جديد
+                  </Badge>
+                ) : article.articleType === 'infographic' ? (
+                  <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                    إنفوجرافيك
+                  </Badge>
+                ) : article.category ? (
+                  <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                    {article.category.nameAr}
+                  </Badge>
+                ) : null}
+              </div>
+
               <h3
                 className={`font-bold text-lg line-clamp-2 leading-snug ${
                   article.newsType === "breaking"
@@ -219,50 +218,40 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                           : 'center'
                       }}
                     />
-                    
-                    {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
-                    {article.thumbnailUrl && (
-                      <div className="absolute top-2 right-2" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                        <Badge className="gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
-                          الصورة
-                          <Brain className="h-3 w-3" aria-hidden="true" />
-                        </Badge>
-                      </div>
-                    )}
-
-                    {/* Content Type Badge - Right Side (RTL: use left-*) */}
-                    <div className="absolute top-2 left-2" data-testid={`badge-content-type-${article.id}`}>
-                      {article.newsType === "breaking" ? (
-                        <Badge variant="destructive" className="gap-1">
-                          <Zap className="h-3 w-3" aria-hidden="true" />
-                          عاجل
-                        </Badge>
-                      ) : isNewArticle(article.publishedAt) ? (
-                        <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                          <Flame className="h-3 w-3" aria-hidden="true" />
-                          جديد
-                        </Badge>
-                      ) : article.articleType === 'infographic' ? (
-                        <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                          إنفوجرافيك
-                        </Badge>
-                      ) : article.category ? (
-                        <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                          {article.category.nameAr}
-                        </Badge>
-                      ) : null}
-                    </div>
                   </div>
                 )}
 
                 <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2">
-                    {article.articleType === 'infographic' && (
-                      <InfographicBadge 
-                        size="md" 
-                        dataTestId={`badge-infographic-${article.id}`}
-                      />
+                  {/* Badges above title */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* AI Generated Thumbnail Badge */}
+                    {article.thumbnailUrl && (
+                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                        الصورة
+                        <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                      </Badge>
                     )}
+
+                    {/* Content Type Badge */}
+                    {article.newsType === "breaking" ? (
+                      <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
+                        <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                        عاجل
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                        <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                        جديد
+                      </Badge>
+                    ) : article.articleType === 'infographic' ? (
+                      <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                        إنفوجرافيك
+                      </Badge>
+                    ) : article.category ? (
+                      <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                        {article.category.nameAr}
+                      </Badge>
+                    ) : null}
                   </div>
 
                   <h3
