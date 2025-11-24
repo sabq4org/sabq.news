@@ -1,0 +1,34 @@
+[Error] TypeError: i.map is not a function. (In 'i.map(h=>e.jsxs(Te.div,{initial:{opacity:0},animate:{opacity:1},className:"p-2.5 sm:p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)] transition-all duration-200 cursor-pointer border border-[hsl(var(--ifox-surface-overlay))] hover:border-[hsl(var(--ifox-surface-overlay))]","data-testid":`recent-article-${h.id}`,children:[e.jsxs("div",{className:"flex items-start justify-between mb-2",children:[e.jsxs("div",{className:"flex-1 min-w-0",children:[e.jsx("h4",{className:"text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))] mb-1 line-clamp-1",children:h.title}),e.jsxs("div",{className:"flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]",children:[e.jsx("span",{className:"truncate",children:h.author}),e.jsx("span",{className:"hidden sm:inline",children:"•"}),e.jsx("span",{children:St(new Date(h.publishedAt),"dd MMM",{locale:Tt})}),e.jsx("span",{className:"hidden sm:inline",children:"•"}),e.jsxs("span",{className:"flex items-center gap-1",children:[e.jsx(it,{className:"w-3 h-3"}),h.views.toLocaleString("ar-SA")]})]})]}),e.jsxs(q,{className:`
+                                px-2 py-0.5 text-xs
+                                ${h.aiScore>=90?"bg-gradient-to-r from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]":h.aiScore>=80?"bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]":"bg-gradient-to-r from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]"}
+                                text-[hsl(var(--ifox-text-primary))] border-0
+                              `,children:["AI ",h.aiScore]})]}),e.jsxs("div",{className:"flex items-center gap-3",children:[e.jsx(q,{variant:"outline",className:"text-xs text-[hsl(var(--ifox-accent-primary))] border-[hsl(var(--ifox-accent-primary)/.4)]",children:h.category}),e.jsxs("div",{className:"flex items-center gap-1 text-xs text-[hsl(var(--ifox-text-primary))]",children:[e.jsx(Ir,{className:"w-3 h-3"}),e.jsxs("span",{children:[h.engagement,"%"]})]})]})]},h.id))', 'i.map' is undefined)
+Qce — index-uEHWBdmX.js:9197:21911
+Wxe — index-uEHWBdmX.js:38:17133
+Yde — index-uEHWBdmX.js:40:3171
+HOe — index-uEHWBdmX.js:40:40108
+mlt — index-uEHWBdmX.js:40:40031
+QJ — index-uEHWBdmX.js:40:39879
+rue — index-uEHWBdmX.js:40:36203
+bwe — index-uEHWBdmX.js:40:37015
+yy — index-uEHWBdmX.js:38:3321
+(anonymous function) — index-uEHWBdmX.js:40:34510
+
+	Gde (index-uEHWBdmX.js:40:169)
+	(anonymous function) (index-uEHWBdmX.js:40:396)
+	twe (index-uEHWBdmX.js:38:15647)
+	gwe (index-uEHWBdmX.js:40:32280)
+	BOe (index-uEHWBdmX.js:40:31695)
+	dlt (index-uEHWBdmX.js:40:31239)
+	plt (index-uEHWBdmX.js:40:41256)
+	a1 (index-uEHWBdmX.js:40:40602)
+	bwe (index-uEHWBdmX.js:40:37163)
+	yy (index-uEHWBdmX.js:38:3321)
+	(anonymous function) (index-uEHWBdmX.js:40:34510)
+[Error] TypeError: i.map is not a function. (In 'i.map(h=>e.jsxs(Te.div,{initial:{opacity:0},animate:{opacity:1},className:"p-2.5 sm:p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)] transition-all duration-200 cursor-pointer border border-[hsl(var(--ifox-surface-overlay))] hover:border-[hsl(var(--ifox-surface-overlay))]","data-testid":`recent-article-${h.id}`,children:[e.jsxs("div",{className:"flex items-start justify-between mb-2",children:[e.jsxs("div",{className:"flex-1 min-w-0",children:[e.jsx("h4",{className:"text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))] mb-1 line-clamp-1",children:h.title}),e.jsxs("div",{className:"flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]",children:[e.jsx("span",{className:"truncate",children:h.author}),e.jsx("span",{className:"hidden sm:inline",children:"•"}),e.jsx("span",{children:St(new Date(h.publishedAt),"dd MMM",{locale:Tt})}),e.jsx("span",{className:"hidden sm:inline",children:"•"}),e.jsxs("span",{className:"flex items-center gap-1",children:[e.jsx(it,{className:"w-3 h-3"}),h.views.toLocaleString("ar-SA")]})]})]}),e.jsxs(q,{className:`
+                                px-2 py-0.5 text-xs
+                                ${h.aiScore>=90?"bg-gradient-to-r from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]":h.aiScore>=80?"bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]":"bg-gradient-to-r from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]"}
+                                text-[hsl(var(--ifox-text-primary))] border-0
+                              `,children:["AI ",h.aiScore]})]}),e.jsxs("div",{className:"flex items-center gap-3",children:[e.jsx(q,{variant:"outline",className:"text-xs text-[hsl(var(--ifox-accent-primary))] border-[hsl(var(--ifox-accent-primary)/.4)]",children:h.category}),e.jsxs("div",{className:"flex items-center gap-1 text-xs text-[hsl(var(--ifox-text-primary))]",children:[e.jsx(Ir,{className:"w-3 h-3"}),e.jsxs("span",{children:[h.engagement,"%"]})]})]})]},h.id))', 'i.map' is undefined)
+	yy (index-uEHWBdmX.js:38:3415)
+	(anonymous function) (index-uEHWBdmX.js:40:34510)
