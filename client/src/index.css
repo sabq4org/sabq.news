@@ -114,69 +114,6 @@
   --ai-background: 220 100% 97%;
   --ai-background-muted: 220 100% 99%;
 
-  /* ===================================
-   🦊 iFox Dashboard Theme - OKLCH Colors
-   Modern SaaS Dashboard UI with Purple Accent
-   Light Mode Only (Professional & Airy)
-   RTL-Ready with WCAG AA+ Contrast
-   =================================== */
-  
-  /* Background & Foreground */
-  --ifox-background: 0.9730 0.0133 286.1503;
-  --ifox-foreground: 0.3015 0.0572 282.4176;
-  
-  /* Primary (Purple Accent) */
-  --ifox-primary: 0.5417 0.1790 288.0332;
-  --ifox-primary-foreground: 1 0 0;
-  
-  /* Secondary (Light Purple) */
-  --ifox-secondary: 0.9174 0.0435 292.6901;
-  --ifox-secondary-foreground: 0.4143 0.1039 288.1742;
-  
-  /* Accent (Lavender) */
-  --ifox-accent: 0.9221 0.0373 262.1410;
-  --ifox-accent-foreground: 0.3015 0.0572 282.4176;
-  
-  /* Muted (Soft Gray) */
-  --ifox-muted: 0.9580 0.0133 286.1454;
-  --ifox-muted-foreground: 0.5426 0.0465 284.7435;
-  
-  /* Card (White) */
-  --ifox-card: 1 0 0;
-  --ifox-card-foreground: 0.3015 0.0572 282.4176;
-  --ifox-card-border: 0.9115 0.0216 285.9625;
-  
-  /* Borders & Inputs */
-  --ifox-border: 0.9115 0.0216 285.9625;
-  --ifox-input: 0.9115 0.0216 285.9625;
-  --ifox-ring: 0.5417 0.1790 288.0332;
-  
-  /* Charts (Purple Shades) */
-  --ifox-chart-1: 0.5417 0.1790 288.0332;
-  --ifox-chart-2: 0.7042 0.1602 288.9880;
-  --ifox-chart-3: 0.5679 0.2113 276.7065;
-  --ifox-chart-4: 0.6356 0.1922 281.8054;
-  --ifox-chart-5: 0.4509 0.1758 279.3838;
-  
-  /* Sidebar (Soft Purple-Gray) */
-  --ifox-sidebar: 0.9580 0.0133 286.1454;
-  --ifox-sidebar-foreground: 0.3015 0.0572 282.4176;
-  --ifox-sidebar-primary: 0.5417 0.1790 288.0332;
-  --ifox-sidebar-primary-foreground: 1 0 0;
-  --ifox-sidebar-accent: 0.9221 0.0373 262.1410;
-  --ifox-sidebar-accent-foreground: 0.3015 0.0572 282.4176;
-  --ifox-sidebar-border: 0.9115 0.0216 285.9625;
-  --ifox-sidebar-ring: 0.5417 0.1790 288.0332;
-  
-  /* Destructive (remains same for consistency) */
-  --ifox-destructive: 0.6861 0.2061 14.9941;
-  --ifox-destructive-foreground: 1 0 0;
-  
-  /* Shadows (Soft & Modern) */
-  --ifox-shadow-soft: 0px 4px 20px oklch(0 0 0 / 0.05);
-  --ifox-shadow-card: 0px 2px 12px oklch(0 0 0 / 0.03);
-  --ifox-shadow-lg: 0px 8px 24px oklch(0 0 0 / 0.08);
-
   --font-sans: 'Inter', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -1292,6 +1229,69 @@
    * ============================================ */
   
   .ifox-theme {
+    /* ===================================
+     🦊 iFox Dashboard Theme - OKLCH Colors
+     Modern SaaS Dashboard UI with Purple Accent
+     Light Mode Only (Professional & Airy)
+     RTL-Ready with WCAG AA+ Contrast
+     =================================== */
+    
+    /* Background & Foreground */
+    --ifox-background: 0.9730 0.0133 286.1503;
+    --ifox-foreground: 0.3015 0.0572 282.4176;
+    
+    /* Primary (Purple Accent) */
+    --ifox-primary: 0.5417 0.1790 288.0332;
+    --ifox-primary-foreground: 1 0 0;
+    
+    /* Secondary (Light Purple) */
+    --ifox-secondary: 0.9174 0.0435 292.6901;
+    --ifox-secondary-foreground: 0.4143 0.1039 288.1742;
+    
+    /* Accent (Lavender) */
+    --ifox-accent: 0.9221 0.0373 262.1410;
+    --ifox-accent-foreground: 0.3015 0.0572 282.4176;
+    
+    /* Muted (Soft Gray) */
+    --ifox-muted: 0.9580 0.0133 286.1454;
+    --ifox-muted-foreground: 0.5426 0.0465 284.7435;
+    
+    /* Card (White) */
+    --ifox-card: 1 0 0;
+    --ifox-card-foreground: 0.3015 0.0572 282.4176;
+    --ifox-card-border: 0.9115 0.0216 285.9625;
+    
+    /* Borders & Inputs */
+    --ifox-border: 0.9115 0.0216 285.9625;
+    --ifox-input: 0.9115 0.0216 285.9625;
+    --ifox-ring: 0.5417 0.1790 288.0332;
+    
+    /* Charts (Purple Shades) */
+    --ifox-chart-1: 0.5417 0.1790 288.0332;
+    --ifox-chart-2: 0.7042 0.1602 288.9880;
+    --ifox-chart-3: 0.5679 0.2113 276.7065;
+    --ifox-chart-4: 0.6356 0.1922 281.8054;
+    --ifox-chart-5: 0.4509 0.1758 279.3838;
+    
+    /* Sidebar (Soft Purple-Gray) */
+    --ifox-sidebar: 0.9580 0.0133 286.1454;
+    --ifox-sidebar-foreground: 0.3015 0.0572 282.4176;
+    --ifox-sidebar-primary: 0.5417 0.1790 288.0332;
+    --ifox-sidebar-primary-foreground: 1 0 0;
+    --ifox-sidebar-accent: 0.9221 0.0373 262.1410;
+    --ifox-sidebar-accent-foreground: 0.3015 0.0572 282.4176;
+    --ifox-sidebar-border: 0.9115 0.0216 285.9625;
+    --ifox-sidebar-ring: 0.5417 0.1790 288.0332;
+    
+    /* Destructive (remains same for consistency) */
+    --ifox-destructive: 0.6861 0.2061 14.9941;
+    --ifox-destructive-foreground: 1 0 0;
+    
+    /* Shadows (Soft & Modern) */
+    --ifox-shadow-soft: 0px 4px 20px oklch(0 0 0 / 0.05);
+    --ifox-shadow-card: 0px 2px 12px oklch(0 0 0 / 0.03);
+    --ifox-shadow-lg: 0px 8px 24px oklch(0 0 0 / 0.08);
+
     /* Override global theme with iFox OKLCH colors */
     --background: var(--ifox-background);
     --foreground: var(--ifox-foreground);

@@ -258,9 +258,8 @@ export default function IFoxCategory() {
 
   return (
     <IFoxLayout>
-      <div className="flex-1 overflow-y-auto">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-6" dir="rtl">
+      <ScrollArea className="h-screen w-full">
+        <div className="p-6 space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -481,9 +480,8 @@ export default function IFoxCategory() {
                 </div>
               )}
             </motion.div>
-          </div>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
     </IFoxLayout>
   );
 }
