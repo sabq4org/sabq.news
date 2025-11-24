@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { IFoxSidebar } from "@/components/admin/ifox/IFoxSidebar";
+import { IFoxLayout } from "@/components/admin/ifox/IFoxLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -257,11 +257,7 @@ export default function IFoxCategory() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
-      {/* Sidebar */}
-      <IFoxSidebar className="hidden lg:block" />
-
-      {/* Main Content */}
+    <IFoxLayout>
       <div className="flex-1 overflow-y-auto">
         <ScrollArea className="h-full">
           <div className="p-6 space-y-6" dir="rtl">
@@ -488,6 +484,6 @@ export default function IFoxCategory() {
           </div>
         </ScrollArea>
       </div>
-    </div>
+    </IFoxLayout>
   );
 }

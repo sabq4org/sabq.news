@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { IFoxSidebar } from "./IFoxSidebar";
+import { IFoxThemeProvider } from "@/components/IFoxThemeProvider";
 
 interface IFoxLayoutProps {
   children: ReactNode;
@@ -9,20 +10,23 @@ interface IFoxLayoutProps {
 /**
  * RTL-aware layout wrapper for iFox admin pages
  * Ensures sidebar appears on the right side for Arabic interface
+ * Applies OKLCH-based modern SaaS theme
  */
 export function IFoxLayout({ children, showSidebar = true }: IFoxLayoutProps) {
   return (
-    <div 
-      className="flex flex-row-reverse h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950" 
-      dir="rtl"
-    >
-      {/* Sidebar on the right (first in flex-row-reverse) */}
-      {showSidebar && <IFoxSidebar className="hidden lg:block" />}
-      
-      {/* Main content area */}
-      <div className="flex-1 overflow-hidden">
-        {children}
+    <IFoxThemeProvider>
+      <div 
+        className="flex flex-row-reverse h-screen bg-background" 
+        dir="rtl"
+      >
+        {/* Sidebar on the right (first in flex-row-reverse) */}
+        {showSidebar && <IFoxSidebar className="hidden lg:block" />}
+        
+        {/* Main content area */}
+        <div className="flex-1 overflow-hidden">
+          {children}
+        </div>
       </div>
-    </div>
+    </IFoxThemeProvider>
   );
 }
