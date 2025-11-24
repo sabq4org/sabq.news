@@ -135,7 +135,7 @@ export function IFoxHomeBlock() {
           </div>
 
           {/* Title */}
-          <Link href="/ifox">
+          <Link href="/ifox" data-testid="link-ifox-title">
             <h2 className="text-2xl md:text-4xl font-bold mb-2 cursor-pointer hover:opacity-80 transition-opacity">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
                 آي فوكس

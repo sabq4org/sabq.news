@@ -227,6 +227,16 @@ Rules:
     const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z';
     const authorId = SABQ_AI_AUTHOR_ID;
     
+    // Map contentType to supported articleType for auto-image generation and other features
+    const contentTypeToArticleType: Record<string, string> = {
+      'news': 'news',
+      'analysis': 'analysis',
+      'opinion': 'opinion',
+      'report': 'news',      // Reports are treated as news articles
+      'interview': 'news',   // Interviews are treated as news articles
+    };
+    const articleType = contentTypeToArticleType[task.contentType || 'news'] || 'news';
+    
     return {
       title: generatedContent.title,
       slug,
@@ -236,6 +246,7 @@ Rules:
       authorId: authorId,
       status: task.autoPublish ? 'published' : 'draft',
       publishedAt: task.autoPublish ? now : undefined,
+      articleType, // ← Mapped from contentType for auto-image generation compatibility
       aiGenerated: true, // ← CRITICAL: Mark as AI-generated for iFox filtering
       // Database defaults handle: createdAt, updatedAt, views
     } as any; // Cast to bypass insertArticleSchema omit
