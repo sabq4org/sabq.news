@@ -356,49 +356,40 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                         : 'center'
                     }}
                   />
-                  
-                  {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
-                  {article.thumbnailUrl && (
-                    <div className="absolute top-1 right-1" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
-                        الصورة
-                        <Brain className="h-2.5 w-2.5" aria-hidden="true" />
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* Content Type Badge - Right Side (RTL: use left-*) */}
-                  <div className="absolute top-1 left-1" data-testid={`badge-content-type-${article.id}`}>
-                    {article.newsType === "breaking" ? (
-                      <Badge variant="destructive" className="text-xs h-5 gap-1">
-                        <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-                        عاجل
-                      </Badge>
-                    ) : isNewArticle(article.publishedAt) ? (
-                      <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                        <Flame className="h-2.5 w-2.5" aria-hidden="true" />
-                        جديد
-                      </Badge>
-                    ) : article.articleType === 'infographic' ? (
-                      <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                        إنفوجرافيك
-                      </Badge>
-                    ) : article.category ? (
-                      <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                        {article.category.nameAr}
-                      </Badge>
-                    ) : null}
-                  </div>
                 </div>
               )}
 
               <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center gap-2">
-                  {article.articleType === 'infographic' && (
-                    <InfographicBadgeIcon 
-                      dataTestId={`badge-infographic-${article.id}`}
-                    />
+                {/* Badges moved above title */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* AI Generated Thumbnail Badge */}
+                  {article.thumbnailUrl && (
+                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                      الصورة
+                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                    </Badge>
                   )}
+
+                  {/* Content Type Badge */}
+                  {article.newsType === "breaking" ? (
+                    <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
+                      <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                      عاجل
+                    </Badge>
+                  ) : isNewArticle(article.publishedAt) ? (
+                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                      <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                      جديد
+                    </Badge>
+                  ) : article.articleType === 'infographic' ? (
+                    <InfographicBadgeIcon 
+                      dataTestId={`badge-content-type-${article.id}`}
+                    />
+                  ) : article.category ? (
+                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                      {article.category.nameAr}
+                    </Badge>
+                  ) : null}
                 </div>
 
                 <h4
