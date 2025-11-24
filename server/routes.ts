@@ -3428,7 +3428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let articlesList;
 
       // Check if this is an AI category
-      const isAICategory = category.slug === 'ifox-ai' || category.slug.startsWith('ai-');
+      const isAICategory = ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'].includes(category.slug);
 
       // For smart/dynamic categories, use articleSmartCategories table
       if (category.type === "dynamic" || category.type === "smart") {
@@ -5493,10 +5493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .select({ id: categories.id })
           .from(categories)
           .where(
-            or(
-              eq(categories.slug, 'ifox-ai'),
-              sql`${categories.slug} LIKE 'ai-%'`
-            )
+            inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
           );
         
         const aiCategoryIdList = aiCategoryIds.map(c => c.id);
@@ -8193,10 +8190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select({ id: categories.id })
         .from(categories)
         .where(
-          or(
-            eq(categories.slug, 'ifox-ai'),
-            sql`${categories.slug} LIKE 'ai-%'`
-          )
+          inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
         );
       
       const aiCategoryIds = aiCategories.map(c => c.id);
@@ -8247,10 +8241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(articles.status, 'published')
         ))
         .where(
-          or(
-            eq(categories.slug, 'ifox-ai'),
-            sql`${categories.slug} LIKE 'ai-%'`
-          )
+          inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
         )
         .groupBy(categories.id);
       
@@ -29598,10 +29589,7 @@ Allow: /
           .from(articles)
           .innerJoin(categories, eq(articles.categoryId, categories.id))
           .where(
-            or(
-              eq(categories.slug, 'ifox-ai'),
-              sql`${categories.slug} LIKE 'ai-%'`
-            )
+            inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
           )
           .orderBy(desc(articles.views))
           .limit(10);
@@ -29670,10 +29658,7 @@ Allow: /
           })
           .from(categories)
           .where(
-            or(
-              eq(categories.slug, 'ifox-ai'),
-              sql`${categories.slug} LIKE 'ai-%'`
-            )
+            inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
           );
 
         // Enrich with article counts and stats

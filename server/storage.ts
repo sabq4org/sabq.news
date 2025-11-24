@@ -2662,10 +2662,7 @@ export class DatabaseStorage implements IStorage {
         .select({ id: categories.id })
         .from(categories)
         .where(
-          or(
-            eq(categories.slug, 'ifox-ai'),
-            sql`${categories.slug} LIKE 'ai-%'`
-          )
+          inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
         );
       
       const aiCategoryIds = aiCategories.map(c => c.id);
@@ -2909,10 +2906,7 @@ export class DatabaseStorage implements IStorage {
       .select({ id: categories.id })
       .from(categories)
       .where(
-        or(
-          eq(categories.slug, 'ifox-ai'),
-          sql`${categories.slug} LIKE 'ai-%'`
-        )
+        inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
       );
     
     const aiCategoryIds = aiCategories.map(c => c.id);
@@ -14184,7 +14178,7 @@ export class DatabaseStorage implements IStorage {
     page?: number;
     limit?: number;
     search?: string;
-  }): Promise<{ articles: Article[], total: number }> {
+  }): Promise<{ articles: ArticleWithDetails[], total: number }> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 10;
     const offset = (page - 1) * limit;
@@ -14225,9 +14219,12 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
+    // Create reporter alias for reporter field
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
     // Build queries based on whether we need specific category filtering
     let totalCount: number;
-    let articlesList: Article[];
+    let articlesList: ArticleWithDetails[];
     
     if (params.categorySlug) {
       // Filter by specific iFox category
@@ -14240,10 +14237,14 @@ export class DatabaseStorage implements IStorage {
         db
           .select({
             article: articles,
-            categorySlug: categories.slug
+            category: categories,
+            author: users,
+            reporter: reporterAlias,
           })
           .from(articles)
           .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .leftJoin(users, eq(articles.authorId, users.id))
+          .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
           .where(and(...baseConditions, eq(categories.slug, params.categorySlug)))
           .orderBy(desc(articles.createdAt))
           .limit(limit)
@@ -14251,7 +14252,11 @@ export class DatabaseStorage implements IStorage {
       ]);
       
       totalCount = countResult[0]?.count ?? 0;
-      articlesList = articlesResult.map(row => row.article);
+      articlesList = articlesResult.map(row => ({
+        ...row.article,
+        category: row.category || undefined,
+        author: row.reporter || row.author || undefined,
+      }));
     } else {
       // All iFox articles across all 5 categories
       const [countResult, articlesResult] = await Promise.all([
@@ -14260,8 +14265,16 @@ export class DatabaseStorage implements IStorage {
           .from(articles)
           .where(and(...baseConditions)),
         db
-          .select()
+          .select({
+            article: articles,
+            category: categories,
+            author: users,
+            reporter: reporterAlias,
+          })
           .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .leftJoin(users, eq(articles.authorId, users.id))
+          .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
           .where(and(...baseConditions))
           .orderBy(desc(articles.createdAt))
           .limit(limit)
@@ -14269,7 +14282,11 @@ export class DatabaseStorage implements IStorage {
       ]);
       
       totalCount = countResult[0]?.count ?? 0;
-      articlesList = articlesResult;
+      articlesList = articlesResult.map(row => ({
+        ...row.article,
+        category: row.category || undefined,
+        author: row.reporter || row.author || undefined,
+      }));
     }
     
     return {

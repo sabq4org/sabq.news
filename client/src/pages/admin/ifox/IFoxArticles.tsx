@@ -55,14 +55,12 @@ import {
 } from "lucide-react";
 
 // iFox Categories
-const categories = [
-  { id: "technology", label: "التقنية", icon: Laptop, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
-  { id: "ai", label: "الذكاء الاصطناعي", icon: Brain, color: "text-[hsl(var(--ifox-accent-primary))]", bgColor: "bg-[hsl(var(--ifox-accent-primary)/.1)]" },
-  { id: "web", label: "الويب", icon: Globe, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
-  { id: "education", label: "التعليم", icon: BookOpen, color: "text-[hsl(var(--ifox-warning))]", bgColor: "bg-[hsl(var(--ifox-warning)/.1)]" },
-  { id: "gaming", label: "الألعاب", icon: Gamepad2, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
-  { id: "health", label: "الصحة", icon: Heart, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
-  { id: "business", label: "الأعمال", icon: DollarSign, color: "text-[hsl(var(--ifox-success))]", bgColor: "bg-[hsl(var(--ifox-success)/.1)]" }
+const IFOX_CATEGORIES = [
+  { slug: 'ai-news', nameAr: 'آي سبق - أخبار AI', icon: Sparkles, color: "text-[hsl(var(--ifox-accent-primary))]", bgColor: "bg-[hsl(var(--ifox-accent-primary)/.1)]" },
+  { slug: 'ai-insights', nameAr: 'آي عمق - تحليلات', icon: BarChart3, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
+  { slug: 'ai-opinions', nameAr: 'آي رأي - آراء', icon: FileText, color: "text-[hsl(var(--ifox-warning))]", bgColor: "bg-[hsl(var(--ifox-warning)/.1)]" },
+  { slug: 'ai-tools', nameAr: 'آي تطبيق - أدوات', icon: Laptop, color: "text-[hsl(var(--ifox-success))]", bgColor: "bg-[hsl(var(--ifox-success)/.1)]" },
+  { slug: 'ai-voice', nameAr: 'آي صوت - بودكاست', icon: Brain, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
 ];
 
 const statusConfig = {
@@ -99,7 +97,7 @@ export default function IFoxArticles() {
   const { toast } = useToast();
   
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [categorySlugFilter, setCategorySlugFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -111,7 +109,7 @@ export default function IFoxArticles() {
   const buildQueryParams = () => {
     const params = new URLSearchParams();
     if (statusFilter !== "all") params.append("status", statusFilter);
-    if (categoryFilter !== "all") params.append("category", categoryFilter);
+    if (categorySlugFilter !== "all") params.append("categorySlug", categorySlugFilter);
     if (searchQuery) params.append("search", searchQuery);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
@@ -120,7 +118,7 @@ export default function IFoxArticles() {
 
   // Fetch articles
   const { data, isLoading, error } = useQuery<ArticlesResponse>({
-    queryKey: ["/api/ifox/articles", statusFilter, categoryFilter, searchQuery, page],
+    queryKey: ["/api/ifox/articles", statusFilter, categorySlugFilter, searchQuery, page],
     queryFn: async () => {
       const response = await fetch(`/api/ifox/articles?${buildQueryParams()}`);
       if (!response.ok) throw new Error("Failed to fetch articles");
@@ -164,9 +162,9 @@ export default function IFoxArticles() {
     }
   };
 
-  const getCategoryInfo = (categoryId: string | undefined) => {
-    if (!categoryId) return null;
-    return categories.find(cat => cat.id === categoryId);
+  const getCategoryInfo = (category?: { slug: string; nameAr: string }) => {
+    if (!category) return IFOX_CATEGORIES[0];
+    return IFOX_CATEGORIES.find(c => c.slug === category.slug) || IFOX_CATEGORIES[0];
   };
 
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
@@ -236,15 +234,15 @@ export default function IFoxArticles() {
                   </Select>
 
                   {/* Category Filter */}
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <Select value={categorySlugFilter} onValueChange={setCategorySlugFilter}>
                     <SelectTrigger className="w-full sm:w-[180px] bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-border-secondary))]" data-testid="select-category-filter">
                       <SelectValue placeholder="التصنيف" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">جميع التصنيفات</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.label}
+                      {IFOX_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>
+                          {cat.nameAr}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -313,11 +311,11 @@ export default function IFoxArticles() {
                 </motion.div>
                 <h3 className="text-lg sm:text-xl font-semibold text-[hsl(var(--ifox-text-primary))]">لا توجد مقالات</h3>
                 <p className="text-[hsl(var(--ifox-text-secondary))] text-center max-w-md">
-                  {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
+                  {searchQuery || statusFilter !== "all" || categorySlugFilter !== "all"
                     ? "لم يتم العثور على مقالات تطابق معايير البحث"
                     : "ابدأ بإنشاء أول مقال آي فوكس الخاص بك"}
                 </p>
-                {(!searchQuery && statusFilter === "all" && categoryFilter === "all") && (
+                {(!searchQuery && statusFilter === "all" && categorySlugFilter === "all") && (
                   <Button
                     onClick={() => setLocation("/dashboard/admin/ifox/articles/new")}
                     className="bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:opacity-90 gap-2 mt-2"
@@ -342,7 +340,7 @@ export default function IFoxArticles() {
               >
                 <AnimatePresence mode="popLayout">
                   {data.articles.map((article, index) => {
-                    const categoryInfo = getCategoryInfo(article.categoryId || undefined);
+                    const categoryInfo = getCategoryInfo(article.category);
                     const statusInfo = statusConfig[article.status as keyof typeof statusConfig];
                     const StatusIcon = statusInfo?.icon || FileText;
 
@@ -369,7 +367,7 @@ export default function IFoxArticles() {
                                   data-testid={`badge-category-${article.id}`}
                                 >
                                   <categoryInfo.icon className="w-3 h-3" />
-                                  {categoryInfo.label}
+                                  {categoryInfo.nameAr}
                                 </Badge>
                               )}
 
