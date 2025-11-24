@@ -222,28 +222,10 @@ Rules:
     const { nanoid } = await import('nanoid');
     const slug = baseSlug + '-' + nanoid(8); // Total max 150 chars
     
-    // Get author: use task creator or fall back to first super_admin user
-    let authorId = task.createdBy;
-    if (!authorId) {
-      const { db } = await import('../db');
-      const { users, userRoles, roles } = await import('../../shared/schema');
-      const { eq } = await import('drizzle-orm');
-      
-      // Find first super_admin user
-      const adminUsers = await db
-        .select({ id: users.id })
-        .from(users)
-        .innerJoin(userRoles, eq(users.id, userRoles.userId))
-        .innerJoin(roles, eq(userRoles.roleId, roles.id))
-        .where(eq(roles.name, 'super_admin'))
-        .limit(1);
-      
-      if (adminUsers.length > 0) {
-        authorId = adminUsers[0].id;
-      } else {
-        throw new Error('No author_id available: task.createdBy is null and no super_admin found');
-      }
-    }
+    // Always use "سبق AI" as the author for all AI-generated articles
+    // This ensures consistent branding and attribution for iFox content
+    const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z';
+    const authorId = SABQ_AI_AUTHOR_ID;
     
     return {
       title: generatedContent.title,
