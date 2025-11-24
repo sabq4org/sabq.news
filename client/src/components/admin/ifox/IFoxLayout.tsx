@@ -16,7 +16,7 @@ export function IFoxLayout({ children, showSidebar = true }: IFoxLayoutProps) {
   return (
     <IFoxThemeProvider>
       <div 
-        className="flex flex-row-reverse h-screen bg-background" 
+        className="flex flex-row-reverse h-screen bg-background text-foreground" 
         dir="rtl"
       >
         {/* Sidebar on the right (first in flex-row-reverse) */}
