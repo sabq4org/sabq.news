@@ -129,8 +129,13 @@ export default function IFoxArticleEditor() {
 
   // Fetch article data if in edit mode
   const { data: articleData, isLoading } = useQuery<ArticleWithDetails>({
-    queryKey: [`/api/admin/ifox/articles/${articleId}`],
-    enabled: isEditMode,
+    queryKey: ['/api/admin/ifox/articles', articleId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/ifox/articles/${articleId}`);
+      if (!response.ok) throw new Error('Failed to fetch article');
+      return response.json();
+    },
+    enabled: isEditMode && !!articleId,
   });
 
   const form = useForm<ArticleFormData>({
