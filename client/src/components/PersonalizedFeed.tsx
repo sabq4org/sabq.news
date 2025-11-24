@@ -121,9 +121,9 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                                   }}
                                 />
                                 
-                                {/* AI Generated Thumbnail Badge - Left Side */}
+                                {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
                                 {(article as any).thumbnailUrl && (
-                                  <div className="absolute top-1 left-1">
+                                  <div className="absolute top-1 right-1" data-testid={`badge-ai-thumbnail-${article.id}`}>
                                     <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
                                       الصورة
                                       <Brain className="h-2.5 w-2.5" aria-hidden="true" />
@@ -131,8 +131,8 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                                   </div>
                                 )}
 
-                                {/* Content Type Badge - Right Side */}
-                                <div className="absolute top-1 right-1">
+                                {/* Content Type Badge - Right Side (RTL: use left-*) */}
+                                <div className="absolute top-1 left-1" data-testid={`badge-content-type-${article.id}`}>
                                   {article.newsType === "breaking" ? (
                                     <Badge variant="destructive" className="text-xs h-5 gap-1">
                                       <Zap className="h-2.5 w-2.5" aria-hidden="true" />
@@ -226,9 +226,9 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                     }}
                   />
                   
-                  {/* AI Generated Thumbnail Badge - Left Side */}
+                  {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
                   {(article as any).thumbnailUrl && (
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute top-3 right-3" data-testid={`badge-ai-thumbnail-${article.id}`}>
                       <Badge className="gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
                         الصورة
                         <Brain className="h-3 w-3" aria-hidden="true" />
@@ -236,8 +236,8 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                     </div>
                   )}
 
-                  {/* Content Type Badges - Right Side */}
-                  <div className="absolute top-3 right-3">
+                  {/* Content Type Badges - Right Side (RTL: use left-*) */}
+                  <div className="absolute top-3 left-3" data-testid={`badge-content-type-${article.id}`}>
                     {article.newsType === "breaking" ? (
                       <Badge variant="destructive" className="gap-1">
                         <Zap className="h-3 w-3" aria-hidden="true" />
