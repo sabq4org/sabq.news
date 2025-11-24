@@ -1,5 +1,6 @@
 import { aiManager } from '../ai-manager';
 import type { InsertArticle, AiScheduledTask } from '@shared/schema';
+import { articles } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 export interface ArticleGenerationConfig {
@@ -104,8 +105,8 @@ Rules:
     
     const response = await aiManager.generate(prompt, {
       provider: 'openai',
-      model: 'gpt-5.1',
-      maxTokens: 4000
+      model: 'gpt-5.1'
+      // maxTokens omitted - GPT-5.1 uses intelligent defaults
     });
 
     if (response.error) {
@@ -207,7 +208,7 @@ Rules:
   async convertTaskToArticleData(
     task: AiScheduledTask,
     generatedContent: GeneratedArticle
-  ): Promise<InsertArticle> {
+  ): Promise<typeof articles.$inferInsert> {
     const now = new Date();
     
     // Generate slug from title (max 140 chars to leave room for suffix)
@@ -224,8 +225,19 @@ Rules:
     // Get author: use task creator or fall back to first super_admin user
     let authorId = task.createdBy;
     if (!authorId) {
-      const { storage } = await import('../storage');
-      const adminUsers = await storage.getUsersByRole('super_admin');
+      const { db } = await import('../db');
+      const { users, userRoles, roles } = await import('../../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      // Find first super_admin user
+      const adminUsers = await db
+        .select({ id: users.id })
+        .from(users)
+        .innerJoin(userRoles, eq(users.id, userRoles.userId))
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(roles.name, 'super_admin'))
+        .limit(1);
+      
       if (adminUsers.length > 0) {
         authorId = adminUsers[0].id;
       } else {
@@ -237,27 +249,12 @@ Rules:
       title: generatedContent.title,
       slug,
       content: generatedContent.content,
-      summary: generatedContent.summary,
-      locale: task.locale,
+      excerpt: generatedContent.summary.substring(0, 200), // Use summary as excerpt
       categoryId: task.categoryId,
-      authorId,
+      authorId: authorId, // Backend will handle this
       status: task.autoPublish ? 'published' : 'draft',
       publishedAt: task.autoPublish ? now : undefined,
-      metaDescription: generatedContent.metaDescription,
-      seoKeywords: generatedContent.seoKeywords,
-      readingTime: generatedContent.estimatedReadTime,
-      featured: false,
-      trending: false,
-      viewCount: 0,
-      shareCount: 0,
-      
-      // AI-generated metadata
-      aiGenerated: true,
-      aiProvider: 'openai',
-      aiModel: 'gpt-5.1',
-      
-      createdAt: now,
-      updatedAt: now
+      // Database defaults handle: createdAt, updatedAt, views, aiGenerated
     };
   }
 }

@@ -120,9 +120,14 @@ class AIManager {
     const completionParams: any = {
       model,
       messages: [{ role: 'user', content: prompt }],
-      max_completion_tokens: config.maxTokens || 4000,
       response_format: { type: "json_object" }
     };
+    
+    // Only add max_completion_tokens if explicitly specified
+    // GPT-5.1 uses intelligent defaults when omitted
+    if (config.maxTokens) {
+      completionParams.max_completion_tokens = config.maxTokens;
+    }
     
     console.log('[AI Manager] 📊 Calling OpenAI:', { model, hasTemp: ('temperature' in completionParams) });
     

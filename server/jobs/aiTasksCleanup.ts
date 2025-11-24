@@ -35,7 +35,20 @@ async function cleanupStuckTasks() {
     let resetCount = 0;
 
     for (const task of stuckTasks) {
+      // Skip tasks with invalid updatedAt (race condition edge case)
+      if (!task.updatedAt) {
+        console.warn(`[AI Tasks Cleanup] Task ${task.id} has null updatedAt, skipping`);
+        continue;
+      }
+
       const updatedAt = new Date(task.updatedAt).getTime();
+      
+      // Skip if updatedAt is invalid (NaN)
+      if (isNaN(updatedAt)) {
+        console.warn(`[AI Tasks Cleanup] Task ${task.id} has invalid updatedAt: ${task.updatedAt}, skipping`);
+        continue;
+      }
+
       const elapsed = now - updatedAt;
 
       if (elapsed > PROCESSING_TIMEOUT_MS) {
