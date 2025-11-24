@@ -5918,6 +5918,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.categoryId = null;
       }
 
+      // Convert empty thumbnailUrl to null (for proper deletion)
+      if (updateData.thumbnailUrl === "") {
+        updateData.thumbnailUrl = null;
+      }
+
       console.log('[UPDATE ARTICLE] Update data:', {
         reporterId: updateData.reporterId,
         reporterIdInBody: req.body.reporterId,
@@ -9631,6 +9636,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert empty categoryId to null
       if (updateData.categoryId === "") {
         updateData.categoryId = null;
+      }
+
+      // Convert empty thumbnailUrl to null (for proper deletion)
+      if (updateData.thumbnailUrl === "") {
+        updateData.thumbnailUrl = null;
       }
 
       const [updatedArticle] = await db
@@ -28212,6 +28222,11 @@ Allow: /
           status: 'draft' as const, // Ensure it stays draft
         };
         
+        // Convert empty thumbnailUrl to null (for proper deletion)
+        if (updateData.thumbnailUrl === "") {
+          updateData.thumbnailUrl = null;
+        }
+        
         // CRITICAL: Use secure storage method that verifies:
         // 1. Publisher owns the article (userId matches authorId)
         // 2. Article is still in draft status
@@ -28865,6 +28880,11 @@ Allow: /
           
           updateData.categoryId = categoryId;
           delete updateData.categorySlug;
+        }
+        
+        // Convert empty thumbnailUrl to null (for proper deletion)
+        if (updateData.thumbnailUrl === "") {
+          updateData.thumbnailUrl = null;
         }
         
         // Handle timestamps
