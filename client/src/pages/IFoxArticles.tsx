@@ -82,7 +82,9 @@ export default function IFoxArticles() {
       const url = `/api/ifox/articles${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch articles');
-      return response.json();
+      const data = await response.json();
+      // Backend returns { articles: [...], total: number }, extract articles
+      return data.articles || data;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
