@@ -14189,21 +14189,20 @@ export class DatabaseStorage implements IStorage {
     const limit = params.limit ?? 10;
     const offset = (page - 1) * limit;
     
-    const conditions = [];
+    // Base condition: filter by AI-generated articles and Sabq AI author
+    const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z'; // "سبق AI" author
+    const baseConditions = [
+      eq(articles.aiGenerated, true),
+      eq(articles.authorId, SABQ_AI_AUTHOR_ID)
+    ];
     
-    // Filter by iFox category
-    conditions.push(eq(articles.categorySlug, 'ifox'));
-    
-    if (params.categorySlug) {
-      conditions.push(eq(articles.categorySlug, params.categorySlug));
-    }
-    
+    // Additional article-specific conditions
     if (params.status) {
-      conditions.push(eq(articles.status, params.status));
+      baseConditions.push(eq(articles.status, params.status));
     }
     
     if (params.search) {
-      conditions.push(
+      baseConditions.push(
         or(
           sql`${articles.title} ILIKE ${`%${params.search}%`}`,
           sql`${articles.content} ILIKE ${`%${params.search}%`}`
@@ -14211,23 +14210,57 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    const [totalCountResult, articlesList] = await Promise.all([
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(articles)
-        .where(conditions.length > 0 ? and(...conditions) : undefined),
-      db
-        .select()
-        .from(articles)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(articles.createdAt))
-        .limit(limit)
-        .offset(offset)
-    ]);
+    // Build queries based on whether we need category filtering
+    let totalCount: number;
+    let articlesList: Article[];
+    
+    if (params.categorySlug) {
+      // With category filter: use join and structured select
+      const [countResult, articlesResult] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(and(...baseConditions, eq(categories.slug, params.categorySlug))),
+        db
+          .select({
+            article: articles,
+            categorySlug: categories.slug
+          })
+          .from(articles)
+          .leftJoin(categories, eq(articles.categoryId, categories.id))
+          .where(and(...baseConditions, eq(categories.slug, params.categorySlug)))
+          .orderBy(desc(articles.createdAt))
+          .limit(limit)
+          .offset(offset)
+      ]);
+      
+      totalCount = countResult[0]?.count ?? 0;
+      // Extract articles from structured result
+      articlesList = articlesResult.map(row => row.article);
+    } else {
+      // Without category filter: simple query
+      const [countResult, articlesResult] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(articles)
+          .where(and(...baseConditions)),
+        db
+          .select()
+          .from(articles)
+          .where(and(...baseConditions))
+          .orderBy(desc(articles.createdAt))
+          .limit(limit)
+          .offset(offset)
+      ]);
+      
+      totalCount = countResult[0]?.count ?? 0;
+      articlesList = articlesResult;
+    }
     
     return {
       articles: articlesList,
-      total: totalCountResult[0]?.count ?? 0
+      total: totalCount
     };
   }
 
@@ -14237,17 +14270,26 @@ export class DatabaseStorage implements IStorage {
     scheduled: number;
     total: number;
   }> {
-    // Get stats for iFox articles
+    // Get stats for iFox articles (Sabq AI authored, AI-generated articles)
+    const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z'; // "سبق AI" author
+    
     const [categoryStats, statusStats, scheduledCount, totalCount] = await Promise.all([
-      // By category
+      // By category (join with categories to get slug)
       db
         .select({
-          categorySlug: articles.categorySlug,
+          categoryId: articles.categoryId,
+          categorySlug: categories.slug,
           count: sql<number>`count(*)::int`
         })
         .from(articles)
-        .where(eq(articles.categorySlug, 'ifox'))
-        .groupBy(articles.categorySlug),
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .where(
+          and(
+            eq(articles.aiGenerated, true),
+            eq(articles.authorId, SABQ_AI_AUTHOR_ID)
+          )
+        )
+        .groupBy(articles.categoryId, categories.slug),
       
       // By status
       db
@@ -14256,7 +14298,12 @@ export class DatabaseStorage implements IStorage {
           count: sql<number>`count(*)::int`
         })
         .from(articles)
-        .where(eq(articles.categorySlug, 'ifox'))
+        .where(
+          and(
+            eq(articles.aiGenerated, true),
+            eq(articles.authorId, SABQ_AI_AUTHOR_ID)
+          )
+        )
         .groupBy(articles.status),
       
       // Scheduled count
@@ -14265,7 +14312,8 @@ export class DatabaseStorage implements IStorage {
         .from(articles)
         .where(
           and(
-            eq(articles.categorySlug, 'ifox'),
+            eq(articles.aiGenerated, true),
+            eq(articles.authorId, SABQ_AI_AUTHOR_ID),
             eq(articles.status, 'scheduled')
           )
         ),
@@ -14274,12 +14322,19 @@ export class DatabaseStorage implements IStorage {
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(articles)
-        .where(eq(articles.categorySlug, 'ifox'))
+        .where(
+          and(
+            eq(articles.aiGenerated, true),
+            eq(articles.authorId, SABQ_AI_AUTHOR_ID)
+          )
+        )
     ]);
     
     const byCategory: Record<string, number> = {};
     categoryStats.forEach(stat => {
-      byCategory[stat.categorySlug] = stat.count;
+      if (stat.categorySlug) {
+        byCategory[stat.categorySlug] = stat.count;
+      }
     });
     
     const byStatus: Record<string, number> = {};
@@ -14302,14 +14357,21 @@ export class DatabaseStorage implements IStorage {
     archived: number;
     total: number;
   }> {
-    // Get metrics for iFox articles by status
+    // Get metrics for iFox articles by status (Sabq AI authored, AI-generated articles)
+    const SABQ_AI_AUTHOR_ID = 'bkIhDx7BM8quPu2W1tB6Z'; // "سبق AI" author
+    
     const statusCounts = await db
       .select({
         status: articles.status,
         count: sql<number>`count(*)::int`
       })
       .from(articles)
-      .where(eq(articles.categorySlug, 'ifox'))
+      .where(
+        and(
+          eq(articles.aiGenerated, true),
+          eq(articles.authorId, SABQ_AI_AUTHOR_ID)
+        )
+      )
       .groupBy(articles.status);
     
     const metrics = {
