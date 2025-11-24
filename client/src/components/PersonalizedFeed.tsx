@@ -107,9 +107,9 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                         <div className="flex gap-3">
                           {/* Image */}
                           <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
-                            {article.imageUrl ? (
+                            {(article.imageUrl || article.thumbnailUrl) ? (
                               <img
-                                src={article.imageUrl}
+                                src={article.thumbnailUrl ?? article.imageUrl}
                                 alt={article.title}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 loading="lazy"
@@ -203,10 +203,10 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
               }`}
               data-testid={`card-article-${article.id}`}
             >
-              {article.imageUrl && (
+              {(article.imageUrl || article.thumbnailUrl) && (
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={article.imageUrl}
+                    src={article.thumbnailUrl ?? article.imageUrl}
                     alt={article.title}
                     className="w-full h-full object-cover"
                     loading="lazy"
