@@ -519,19 +519,19 @@ export default function IFoxDashboard() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex items-center justify-center gap-8 py-6"
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 py-4 sm:py-6"
             >
               <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-[hsl(var(--ifox-warning))]" />
-                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">AI Performance: 92%</span>
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-warning))]" />
+                <span className="text-xs sm:text-sm text-[hsl(var(--ifox-text-primary))]">AI Performance: 92%</span>
               </div>
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
-                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Neural Network: Active</span>
+                <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-accent-primary))]" />
+                <span className="text-xs sm:text-sm text-[hsl(var(--ifox-text-primary))]">Neural Network: Active</span>
               </div>
               <div className="flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-[hsl(var(--ifox-info))]" />
-                <span className="text-sm text-[hsl(var(--ifox-text-primary))]">Processing: Optimal</span>
+                <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-info))]" />
+                <span className="text-xs sm:text-sm text-[hsl(var(--ifox-text-primary))]">Processing: Optimal</span>
               </div>
             </motion.div>
           </div>
