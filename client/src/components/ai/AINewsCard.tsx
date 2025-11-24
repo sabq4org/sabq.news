@@ -63,12 +63,12 @@ export default function AINewsCard({ article }: AINewsCardProps) {
       data-testid={`card-news-${article.id}`}
     >
       <Link href={`/ai/article/${article.slug}`}>
-        <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group overflow-hidden">
+        <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group overflow-hidden rounded-xl">
           <CardContent className="p-0">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Image Section */}
               {article.imageUrl && (
-                <div className="relative w-full md:w-48 aspect-video md:aspect-auto md:h-32 flex-shrink-0 overflow-hidden bg-slate-800/50">
+                <div className="relative w-full md:w-48 aspect-video md:aspect-auto md:h-32 flex-shrink-0 overflow-hidden bg-slate-800/50 rounded-tl-xl md:rounded-tr-none rounded-tr-xl md:rounded-bl-xl md:rounded-br-none">
                   <img
                     src={article.imageUrl}
                     alt={article.title}
@@ -126,13 +126,13 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                 )}
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors" dir="rtl">
                   {article.title}
                 </h3>
 
                 {/* Summary */}
                 {article.summary && (
-                  <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                  <p className="text-sm text-gray-400 line-clamp-2 mb-3" dir="rtl">
                     {article.summary}
                   </p>
                 )}

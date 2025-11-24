@@ -159,14 +159,17 @@ export default function AIArticleDetail() {
           transition={{ duration: 0.6 }}
         >
           {/* Back Button */}
-          <Link href="/ai">
+          <Link href={article.aiGenerated ? "/ifox" : "/ai"}>
             <Button
               variant="ghost"
               className="text-gray-400 hover:text-white mb-6"
               data-testid="button-back-to-ai"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {language === "ar" ? "العودة لـ iFox" : "Back to iFox"}
+              {article.aiGenerated 
+                ? (language === "ar" ? "العودة لـ iFox" : "Back to iFox")
+                : (language === "ar" ? "العودة لقسم AI" : "Back to AI Section")
+              }
             </Button>
           </Link>
 
