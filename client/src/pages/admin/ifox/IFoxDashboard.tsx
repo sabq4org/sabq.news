@@ -59,8 +59,17 @@ interface DashboardStats {
 interface RecentArticle {
   id: string;
   title: string;
-  category: string;
-  author: string;
+  category: {
+    id: string;
+    nameAr: string;
+    slug: string;
+    color?: string;
+  };
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
   publishedAt: string;
   views: number;
   engagement: number;
@@ -477,7 +486,7 @@ export default function IFoxDashboard() {
                                 {article.title}
                               </h4>
                               <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]">
-                                <span className="truncate">{article.author}</span>
+                                <span className="truncate">{article.author?.firstName} {article.author?.lastName}</span>
                                 <span className="hidden sm:inline">•</span>
                                 <span>{format(new Date(article.publishedAt), 'dd MMM', { locale: ar })}</span>
                                 <span className="hidden sm:inline">•</span>
@@ -501,7 +510,7 @@ export default function IFoxDashboard() {
                           </div>
                           <div className="flex items-center gap-3">
                             <Badge variant="outline" className="text-xs text-[hsl(var(--ifox-accent-primary))] border-[hsl(var(--ifox-accent-primary)/.4)]">
-                              {article.category}
+                              {article.category?.nameAr || 'غير محدد'}
                             </Badge>
                             <div className="flex items-center gap-1 text-xs text-[hsl(var(--ifox-text-primary))]">
                               <Activity className="w-3 h-3" />
