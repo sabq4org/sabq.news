@@ -305,20 +305,19 @@ export default function IFoxArticles() {
             </TabsList>
 
             <TabsContent value="latest" className="mt-6">
-              <div className="grid md:grid-cols-3 gap-6" dir="rtl">
-                {/* News Section - Always First */}
-                <div className="md:col-span-2">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2" dir="rtl">
-                    آخر الأخبار والتطورات
-                    <Activity className="w-6 h-6 text-blue-500" />
-                  </h2>
-                  {isLoading ? (
-                    <div className="text-center py-12" data-testid="loading-state">
-                      <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
-                    </div>
-                  ) : transformedArticles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {transformedArticles.slice(0, 12).map((article) => (
+              {/* News Section - Full Width */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2" dir="rtl">
+                  آخر الأخبار والتطورات
+                  <Activity className="w-6 h-6 text-blue-500" />
+                </h2>
+                {isLoading ? (
+                  <div className="text-center py-12" data-testid="loading-state">
+                    <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
+                  </div>
+                ) : transformedArticles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+                    {transformedArticles.slice(0, 8).map((article) => (
                         <motion.div
                           key={article.id}
                           initial={{ opacity: 0, scale: 0.95 }}
@@ -384,30 +383,34 @@ export default function IFoxArticles() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
-
-                {/* Sidebar - Always Second */}
-                <div className="space-y-6 md:col-span-1">
-                  <AITrendsWidget trends={trends} />
+                
+                {/* Blocks Below Articles: Trending & Newsletter */}
+                <div className="grid md:grid-cols-2 gap-6 mt-12">
+                  {/* Trending Widget */}
+                  <div>
+                    <AITrendsWidget trends={trends} />
+                  </div>
 
                   {/* Newsletter CTA */}
-                  <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 border-slate-700">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-bold text-white mb-2">
-                        نشرة AI اليومية
-                      </h3>
-                      <p className="text-sm text-gray-400 mb-4">
-                        احصل على ملخص يومي لأهم تطورات الذكاء الاصطناعي
-                      </p>
-                      <Button 
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                        data-testid="button-newsletter-subscribe"
-                      >
-                        اشترك الآن
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div>
+                    <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 border-slate-700 h-full">
+                      <CardContent className="p-6">
+                        <h3 className="text-lg font-bold text-white mb-2">
+                          نشرة AI اليومية
+                        </h3>
+                        <p className="text-sm text-gray-400 mb-4">
+                          احصل على ملخص يومي لأهم تطورات الذكاء الاصطناعي
+                        </p>
+                        <Button 
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                          data-testid="button-newsletter-subscribe"
+                        >
+                          اشترك الآن
+                          <ArrowRight className="w-4 h-4 mr-2" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </TabsContent>
