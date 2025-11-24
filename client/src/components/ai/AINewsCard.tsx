@@ -112,7 +112,7 @@ export default function AINewsCard({ article }: AINewsCardProps) {
                       {(() => {
                         const categoryMap: Record<string, string> = {
                           "ai-news": "أخبار",
-                          "ai-insights": "رؤى",
+                          "ai-insights": "تحليلات",
                           "ai-opinions": "آراء",
                           "ai-tools": "أدوات",
                           "ai-voice": "صوت",

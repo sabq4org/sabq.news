@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIHeader from "@/components/ai/AIHeader";
 import AIAnimatedLogo from "@/components/ai/AIAnimatedLogo";
@@ -206,7 +207,7 @@ export default function IFoxArticles() {
       </div>
 
       {/* Header */}
-      <AIHeader categories={headerCategories} baseUrl="/ai" />
+      <AIHeader categories={headerCategories} baseUrl="/ai" logoUrl="/ifox" />
 
       {/* Hero Section */}
       <section className="relative px-4 py-12 md:py-20">
@@ -311,27 +312,78 @@ export default function IFoxArticles() {
                     آخر الأخبار والتطورات
                     <Activity className="w-6 h-6 text-blue-500" />
                   </h2>
-                  <div className="space-y-4">
-                    {isLoading ? (
-                      <div className="text-center py-12" data-testid="loading-state">
-                        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
-                      </div>
-                    ) : transformedArticles.length > 0 ? (
-                      transformedArticles.slice(0, 10).map((article) => (
-                        <AINewsCard 
-                          key={article.id} 
-                          article={article} 
-                        />
-                      ))
-                    ) : (
-                      <Card className="bg-slate-900/50 border-slate-800" data-testid="empty-state">
-                        <CardContent className="p-8 text-center">
-                          <Bot className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                          <p className="text-gray-400">لا توجد مقالات متاحة حالياً في قسم iFox</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+                  {isLoading ? (
+                    <div className="text-center py-12" data-testid="loading-state">
+                      <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
+                    </div>
+                  ) : transformedArticles.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {transformedArticles.slice(0, 12).map((article) => (
+                        <motion.div
+                          key={article.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Card className="bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-900/90 transition-all cursor-pointer group h-full">
+                            <Link href={`/ai/article/${article.slug}`}>
+                              <CardContent className="p-0">
+                                {/* Image */}
+                                {article.imageUrl && (
+                                  <div className="relative w-full aspect-video overflow-hidden">
+                                    <img
+                                      src={article.imageUrl}
+                                      alt={article.title}
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                )}
+                                
+                                {/* Content */}
+                                <div className="p-4">
+                                  {/* Category Badge */}
+                                  {article.categorySlug && (
+                                    <Badge className="mb-2 text-xs">
+                                      {(() => {
+                                        const categoryNames: Record<string, string> = {
+                                          "ai-news": "أخبار",
+                                          "ai-insights": "تحليلات",
+                                          "ai-opinions": "آراء",
+                                          "ai-tools": "أدوات",
+                                          "ai-voice": "صوت"
+                                        };
+                                        return categoryNames[article.categorySlug] || "عام";
+                                      })()}
+                                    </Badge>
+                                  )}
+                                  
+                                  {/* Title */}
+                                  <h3 className="text-base font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                                    {article.title}
+                                  </h3>
+                                  
+                                  {/* Summary */}
+                                  {article.summary && (
+                                    <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                                      {article.summary}
+                                    </p>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Link>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="bg-slate-900/50 border-slate-800" data-testid="empty-state">
+                      <CardContent className="p-8 text-center">
+                        <Bot className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                        <p className="text-gray-400">لا توجد مقالات متاحة حالياً في قسم iFox</p>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Sidebar - Always Second */}

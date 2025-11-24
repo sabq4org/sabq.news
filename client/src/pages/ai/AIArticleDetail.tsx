@@ -18,7 +18,8 @@ import {
   Linkedin,
   Copy,
   CheckCircle,
-  Heart
+  Heart,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -201,15 +202,9 @@ export default function AIArticleDetail() {
               )}
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
               {article.title}
             </h1>
-            
-            {article.excerpt && (
-              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                {article.excerpt}
-              </p>
-            )}
 
             {/* Enhanced Author & Meta Section */}
             <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -217,10 +212,14 @@ export default function AIArticleDetail() {
               <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-slate-900/80 to-slate-900/40 rounded-lg border border-slate-800/50 backdrop-blur-sm">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20">
                   {(() => {
-                    if (typeof article.author === 'string') {
-                      return article.author.charAt(0);
-                    } else if (article.author?.firstName) {
-                      return article.author.firstName.charAt(0);
+                    const author = article.author;
+                    if (typeof author === 'string' && author.length > 0) {
+                      return author.charAt(0);
+                    } else if (author && typeof author === 'object' && 'firstName' in author) {
+                      const firstName = author.firstName;
+                      if (firstName && typeof firstName === 'string') {
+                        return firstName.charAt(0);
+                      }
                     }
                     return "S";
                   })()}
@@ -372,7 +371,7 @@ export default function AIArticleDetail() {
 
           {/* Featured Image with AI Badge */}
           {article.imageUrl && (
-            <div className="mb-8 rounded-xl overflow-hidden relative group">
+            <div className="mb-8 relative">
               <img
                 src={article.imageUrl}
                 alt={article.title}
@@ -380,9 +379,9 @@ export default function AIArticleDetail() {
                 data-testid="img-featured"
               />
               
-              {/* AI Image Badge - Overlay on Image */}
+              {/* AI Image Badge - Top Left Overlay */}
               {article.aiGenerated && (
-                <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
+                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
                   <Badge
                     variant="default"
                     className="bg-black/80 backdrop-blur-sm border-purple-500/50 text-purple-300 hover:bg-black/90 text-xs sm:text-sm px-3 py-1.5 flex items-center gap-2 shadow-lg"
@@ -396,6 +395,19 @@ export default function AIArticleDetail() {
                   </Badge>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Smart Summary / Excerpt */}
+          {article.excerpt && (
+            <div className="mb-8 p-6 bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-slate-800 rounded-xl">
+              <h3 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                {language === "ar" ? "الموجز الذكي" : "Smart Summary"}
+              </h3>
+              <p className="text-gray-300 leading-relaxed">
+                {article.excerpt}
+              </p>
             </div>
           )}
 
@@ -415,20 +427,47 @@ export default function AIArticleDetail() {
                 {language === "ar" ? "مقالات ذات صلة" : "Related Articles"}
                 <ChevronRight className="w-6 h-6" />
               </h2>
-              <div className="grid gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {relatedArticles.slice(0, 3).map((relatedArticle) => (
-                  <AINewsCard 
-                    key={relatedArticle.id} 
-                    article={{
-                      ...relatedArticle,
-                      summary: relatedArticle.excerpt,
-                      viewCount: relatedArticle.views,
-                      commentCount: 0,
-                      createdAt: relatedArticle.createdAt instanceof Date ? relatedArticle.createdAt.toISOString() : relatedArticle.createdAt,
-                      featured: relatedArticle.isFeatured,
-                      trending: false
-                    }}
-                  />
+                  <Card key={relatedArticle.id} className="bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-900/90 transition-all cursor-pointer group h-full">
+                    <Link href={`/ai/article/${relatedArticle.slug}`}>
+                      <CardContent className="p-0">
+                        {/* Image */}
+                        {relatedArticle.imageUrl && (
+                          <div className="relative w-full aspect-video overflow-hidden">
+                            <img
+                              src={relatedArticle.imageUrl}
+                              alt={relatedArticle.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Content */}
+                        <div className="p-4">
+                          {/* Category Badge */}
+                          {relatedArticle.category && (
+                            <Badge className="mb-2 text-xs">
+                              {typeof relatedArticle.category === 'string' ? relatedArticle.category : (relatedArticle.category.nameAr || '')}
+                            </Badge>
+                          )}
+                          
+                          {/* Title */}
+                          <h3 className="text-base font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                            {relatedArticle.title}
+                          </h3>
+                          
+                          {/* Summary */}
+                          {relatedArticle.excerpt && (
+                            <p className="text-sm text-gray-400 line-clamp-2">
+                              {relatedArticle.excerpt}
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Card>
                 ))}
               </div>
             </section>

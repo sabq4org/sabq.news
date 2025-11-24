@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AIHeader from "@/components/ai/AIHeader";
-import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const categoryInfo: Record<string, any> = {
@@ -260,9 +259,54 @@ export default function AICategoryPage() {
               <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
             </div>
           ) : articles.length > 0 ? (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {articles.map((article: any) => (
-                <AINewsCard key={article.id} article={article} />
+                <motion.div
+                  key={article.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-900/90 transition-all cursor-pointer group h-full">
+                    <Link href={`/ai/article/${article.slug}`}>
+                      <CardContent className="p-0">
+                        {/* Image */}
+                        {article.imageUrl && (
+                          <div className="relative w-full aspect-video overflow-hidden">
+                            <img
+                              src={article.imageUrl}
+                              alt={article.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Content */}
+                        <div className="p-4">
+                          {/* Category Badge */}
+                          {article.category && (
+                            <Badge className="mb-2 text-xs">
+                              {typeof article.category === 'string' ? article.category : (article.category.nameAr || '')}
+                            </Badge>
+                          )}
+                          
+                          {/* Title */}
+                          <h3 className="text-base font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                            {article.title}
+                          </h3>
+                          
+                          {/* Summary */}
+                          {article.excerpt && (
+                            <p className="text-sm text-gray-400 line-clamp-2">
+                              {article.excerpt}
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           ) : (

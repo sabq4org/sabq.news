@@ -31,6 +31,7 @@ interface Category {
 interface AIHeaderProps {
   categories?: Category[];
   baseUrl?: string;
+  logoUrl?: string;
 }
 
 // Default categories (full AI section - 7 categories)
@@ -44,7 +45,8 @@ const defaultCategories: Category[] = [
   { slug: "ai-community", nameAr: "آي تواصل - مجتمع", nameEn: "AI Community" },
 ];
 
-export default function AIHeader({ categories = defaultCategories, baseUrl = "/ai" }: AIHeaderProps) {
+export default function AIHeader({ categories = defaultCategories, baseUrl = "/ai", logoUrl }: AIHeaderProps) {
+  const actualLogoUrl = logoUrl || baseUrl;
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -80,7 +82,7 @@ export default function AIHeader({ categories = defaultCategories, baseUrl = "/a
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <div className="flex items-center gap-4">
-            <Link href="/ai">
+            <Link href={actualLogoUrl}>
               <div className="flex items-center gap-2 cursor-pointer group">
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 10 }}
