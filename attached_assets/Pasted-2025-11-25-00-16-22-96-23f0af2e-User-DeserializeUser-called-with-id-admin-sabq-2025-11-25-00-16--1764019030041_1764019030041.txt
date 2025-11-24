@@ -1,0 +1,109 @@
+2025-11-25 00:16:22.96
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:22.96
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:22.98
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:22.98
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+
+2025-11-25 00:16:22.99
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:22.99
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:22.99
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:23.00
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:23.01
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:23.03
+23f0af2e
+User
+sessionID: 'OlviQANiWDgwyQJehgK3tAAnMAlpd6y6'
+2025-11-25 00:16:23.03
+23f0af2e
+User
+userId: 'admin-sabq',
+2025-11-25 00:16:23.03
+23f0af2e
+User
+isAuthenticated: true,
+2025-11-25 00:16:23.03
+23f0af2e
+User
+}
+2025-11-25 00:16:23.03
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:23.03
+23f0af2e
+User
+hasUser: true,
+2025-11-25 00:16:23.03
+23f0af2e
+User
+🔍 /api/auth/user check: {
+2025-11-25 00:16:23.12
+23f0af2e
+User
+9:16:23 PM [express] GET /api/auth/user 304 in 152ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-11-25 00:16:23.17
+23f0af2e
+User
+9:16:23 PM [express] GET /api/homepage 304 in 210ms :: {"hero":[{"id":"pJXnExzGOlyLB8GSd2IKM","title…
+2025-11-25 00:16:23.17
+23f0af2e
+User
+9:16:23 PM [express] GET /api/categories/smart 304 in 219ms :: [{"id":"3a1e94e6-91e2-4203-88e7-42bc7…
+2025-11-25 00:16:23.42
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.44
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.44
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.44
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.45
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.45
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 00:16:23.45
+23f0af2e
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 00:16:23.47
+23f0af2e
+User
+✅ DeserializeUser: User found: admin@sabq.sa
