@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame, Loader2, ChevronDown } from "lucide-react";
+import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame, Loader2, ChevronDown, Brain } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -108,17 +108,52 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                           {/* Image */}
                           <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
                             {(article.imageUrl || article.thumbnailUrl) ? (
-                              <img
-                                src={article.thumbnailUrl ?? article.imageUrl ?? ''}
-                                alt={article.title}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                loading="lazy"
-                                style={{
-                                  objectPosition: (article as any).imageFocalPoint
-                                    ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                    : 'center'
-                                }}
-                              />
+                              <>
+                                <img
+                                  src={article.thumbnailUrl ?? article.imageUrl ?? ''}
+                                  alt={article.title}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                  loading="lazy"
+                                  style={{
+                                    objectPosition: (article as any).imageFocalPoint
+                                      ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                      : 'center'
+                                  }}
+                                />
+                                
+                                {/* AI Generated Thumbnail Badge - Left Side */}
+                                {(article as any).thumbnailUrl && (
+                                  <div className="absolute top-1 left-1">
+                                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
+                                      الصورة
+                                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                                    </Badge>
+                                  </div>
+                                )}
+
+                                {/* Content Type Badge - Right Side */}
+                                <div className="absolute top-1 right-1">
+                                  {article.newsType === "breaking" ? (
+                                    <Badge variant="destructive" className="text-xs h-5 gap-1">
+                                      <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                                      عاجل
+                                    </Badge>
+                                  ) : isNewArticle(article.publishedAt) ? (
+                                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
+                                      <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                                      جديد
+                                    </Badge>
+                                  ) : (article as any).articleType === 'infographic' ? (
+                                    <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
+                                      إنفوجرافيك
+                                    </Badge>
+                                  ) : article.category ? (
+                                    <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
+                                      {article.category.nameAr}
+                                    </Badge>
+                                  ) : null}
+                                </div>
+                              </>
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
                             )}
@@ -126,32 +161,6 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
 
                           {/* Content */}
                           <div className="flex-1 min-w-0 space-y-2">
-                            {/* Breaking/Featured/Category Badge */}
-                            {article.newsType === "breaking" ? (
-                              <Badge 
-                                variant="destructive" 
-                                className="text-xs h-5 gap-1"
-                                data-testid={`badge-breaking-${article.id}`}
-                              >
-                                <Zap className="h-3 w-3" />
-                                عاجل
-                              </Badge>
-                            ) : isNewArticle(article.publishedAt) ? (
-                              <Badge 
-                                className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
-                                data-testid={`badge-new-${article.id}`}
-                              >
-                                <Flame className="h-3 w-3" />
-                                جديد
-                              </Badge>
-                            ) : article.category ? (
-                              <Badge 
-                                className="text-xs h-5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0"
-                                data-testid={`badge-article-category-${article.id}`}
-                              >
-                                {article.category.nameAr}
-                              </Badge>
-                            ) : null}
 
                             {/* Title */}
                             <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
@@ -216,39 +225,39 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                         : 'center'
                     }}
                   />
-                  {article.newsType === "breaking" ? (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute top-3 right-3 gap-1" 
-                      data-testid={`badge-breaking-${article.id}`}
-                    >
-                      <Zap className="h-3 w-3" />
-                      عاجل
-                    </Badge>
-                  ) : isNewArticle(article.publishedAt) ? (
-                    <Badge 
-                      className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
-                      data-testid={`badge-new-${article.id}`}
-                    >
-                      <Flame className="h-3 w-3" />
-                      جديد
-                    </Badge>
-                  ) : article.category ? (
-                    <Badge 
-                      className="absolute top-3 right-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-0" 
-                      data-testid={`badge-category-${article.id}`}
-                    >
-                      {article.category.nameAr}
-                    </Badge>
-                  ) : null}
-                  {article.aiSummary && (
+                  
+                  {/* AI Generated Thumbnail Badge - Left Side */}
+                  {(article as any).thumbnailUrl && (
                     <div className="absolute top-3 left-3">
-                      <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-                        <Sparkles className="h-3 w-3 ml-1" />
-                        ذكاء اصطناعي
+                      <Badge className="gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
+                        الصورة
+                        <Brain className="h-3 w-3" aria-hidden="true" />
                       </Badge>
                     </div>
                   )}
+
+                  {/* Content Type Badges - Right Side */}
+                  <div className="absolute top-3 right-3">
+                    {article.newsType === "breaking" ? (
+                      <Badge variant="destructive" className="gap-1">
+                        <Zap className="h-3 w-3" aria-hidden="true" />
+                        عاجل
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
+                        <Flame className="h-3 w-3" aria-hidden="true" />
+                        جديد
+                      </Badge>
+                    ) : (article as any).articleType === 'infographic' ? (
+                      <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
+                        إنفوجرافيك
+                      </Badge>
+                    ) : article.category ? (
+                      <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
+                        {article.category.nameAr}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </div>
               )}
               
