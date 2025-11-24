@@ -84,9 +84,11 @@ export default function IFoxDashboard() {
   });
 
   // Fetch recent articles
-  const { data: recentArticles, isLoading: articlesLoading, error: articlesError } = useQuery<RecentArticle[]>({
+  const { data: recentArticlesData, isLoading: articlesLoading, error: articlesError } = useQuery<{ articles: RecentArticle[], total: number }>({
     queryKey: ["/api/admin/ifox/articles?limit=5&sort=publishedAt"]
   });
+  
+  const recentArticles = recentArticlesData?.articles;
 
   // Fetch activity data
   const { data: activityData, error: analyticsError } = useQuery<PublishingActivity[]>({
